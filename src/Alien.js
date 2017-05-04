@@ -21,7 +21,7 @@ export { XHR } from './util/XHR';
 export { Stage } from './view/Stage';
 
 // Polyfills
-if (typeof Promise !== 'undefined' && typeof Promise.create === 'undefined') Promise.create = () => {
+if (typeof Promise !== 'undefined' && !Promise.create) Promise.create = () => {
     let resolve,
         reject,
         promise = new Promise((res, rej) => {
@@ -34,14 +34,14 @@ if (typeof Promise !== 'undefined' && typeof Promise.create === 'undefined') Pro
 };
 
 // Globals
-if (typeof window.getURL === 'undefined') window.getURL = (url, target = '_blank') => window.open(url, target);
+if (!window.getURL) window.getURL = (url, target = '_blank') => window.open(url, target);
 
-if (typeof window.Delayed === 'undefined') window.Delayed = (callback, time = 0, params) => window.setTimeout(() => {
+if (!window.Delayed) window.Delayed = (callback, time = 0, params) => window.setTimeout(() => {
     callback && callback(params);
 }, time);
 
-if (typeof window.Global === 'undefined') window.Global = {};
-if (typeof window.Config === 'undefined') window.Config = {};
+if (!window.Global) window.Global = {};
+if (!window.Config) window.Config = {};
 
 // Illegal reassignment for instances
 Function((() => {

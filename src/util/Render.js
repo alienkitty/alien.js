@@ -5,7 +5,7 @@
  */
 
 // Shim layer with setTimeout fallback
-if (window.requestAnimationFrame === undefined) {
+if (!window.requestAnimationFrame) {
     window.requestAnimationFrame = (() => {
         return window.webkitRequestAnimationFrame || window.mozRequestAnimationFrame || window.oRequestAnimationFrame || window.msRequestAnimationFrame || (callback => {
             Delayed(callback, 1000 / 60);

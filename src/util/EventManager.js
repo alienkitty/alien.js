@@ -4,7 +4,7 @@
  * @author Patrick Schroen / https://github.com/pschroen
  */
 
-if (window.Events === undefined) window.Events = {
+if (!window.Events) window.Events = {
     BROWSER_FOCUS: 'browser_focus',
     COMPLETE:      'complete',
     PROGRESS:      'progress',
@@ -35,6 +35,6 @@ class EventManager {
     }
 }
 
-if (window.events === undefined) window.events = new EventManager();
+if (!window.events) window.events = new EventManager();
 
 export { EventManager };

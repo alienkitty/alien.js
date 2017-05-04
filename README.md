@@ -1,5 +1,9 @@
 # Alien.js
-[![Build Status](https://travis-ci.org/pschroen/alien.js.svg)](https://travis-ci.org/pschroen/alien.js)
+[![Build Status](https://travis-ci.org/pschroen/alien.js.svg)]()
+[![Latest NPM release](https://img.shields.io/npm/v/alien.js.svg)]()
+[![License](https://img.shields.io/npm/l/alien.js.svg)]()
+[![Dependencies](https://img.shields.io/david/pschroen/alien.js.svg)]()
+[![Dev Dependencies](https://img.shields.io/david/dev/pschroen/alien.js.svg)]()
 
 A lightweight web framework abducted from Active Theory’s [Hydra](https://medium.com/@activetheory/mira-exploring-the-potential-of-the-future-web-e1f7f326d58e) and ported to an ES6 module bundler.
 

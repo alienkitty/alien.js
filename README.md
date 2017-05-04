@@ -65,7 +65,7 @@ npm run dev
 
 ### Links
 
-* [Website](https://pschroen.github.io/alien.js/)
+* [Website](https://alien.js.org/)
 
 ### License
 

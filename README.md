@@ -5,7 +5,7 @@
 [![Dependencies](https://img.shields.io/david/pschroen/alien.js.svg)]()
 [![Dev Dependencies](https://img.shields.io/david/dev/pschroen/alien.js.svg)]()
 
-A lightweight web framework abducted from Active Theory’s [Hydra](https://medium.com/@activetheory/mira-exploring-the-potential-of-the-future-web-e1f7f326d58e) and ported to an ES6 module bundler.
+A lightweight web framework abducted from Active Theory's [Hydra](https://medium.com/@activetheory/mira-exploring-the-potential-of-the-future-web-e1f7f326d58e) and ported to an ES6 module bundler.
 
 ### Features
 
@@ -19,7 +19,7 @@ A lightweight web framework abducted from Active Theory’s [Hydra](https://medi
 
 To build a project, make sure you have [Node.js](https://nodejs.org/) installed (at least version 6).
 
-```sh
+```
 mkdir project
 cd project
 git init
@@ -35,13 +35,13 @@ open dist/index.html
 
 ### Updating
 
-```sh
+```
 git submodule update
 ```
 
 ### Workflow
 
-```sh
+```
 npm run dev
 ```
 
@@ -64,7 +64,7 @@ npm run dev
 ### References
 
 * [Active Theory](https://activetheory.net/)
-* Active Theory’s [Mira](https://medium.com/@activetheory/mira-exploring-the-potential-of-the-future-web-e1f7f326d58e)
+* Active Theory's [Mira](https://medium.com/@activetheory/mira-exploring-the-potential-of-the-future-web-e1f7f326d58e)
 * [How to Set Up Smaller, More Efficient JavaScript Bundling Using Rollup](https://code.lengstorf.com/learn-rollup-js/)
 
 ### Links

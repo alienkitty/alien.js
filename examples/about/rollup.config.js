@@ -1,7 +1,7 @@
 import eslint from 'rollup-plugin-eslint';
 import babel from 'rollup-plugin-babel';
 import uglify from 'rollup-plugin-uglify';
-import { minify } from 'uglify-js-harmony';
+import { minify } from 'uglify-es';
 
 import path from 'path';
 import replace from 'replace';

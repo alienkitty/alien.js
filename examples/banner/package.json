@@ -6,7 +6,8 @@
   "scripts": {
     "build": "rollup -c || exit 0",
     "dev": "rollup -c -w -m inline || exit 0",
-    "lint": "eslint src || exit 0"
+    "lint": "eslint src || exit 0",
+    "pngquant": "rm -f dist/assets/*.png; cp src/images/*.png dist/assets/; find dist/assets -name '*.png' -exec pngquant --strip --ext=.png --force {} \\;"
   },
   "devDependencies": {
     "babel-preset-es2015-rollup": "*",

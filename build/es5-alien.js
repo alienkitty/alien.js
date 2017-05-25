@@ -86,7 +86,7 @@ var possibleConstructorReturn = function (self, call) {
  * @author Patrick Schroen / https://github.com/pschroen
  */
 
-if (window.Events === undefined) window.Events = {
+if (!window.Events) window.Events = {
     BROWSER_FOCUS: 'browser_focus',
     COMPLETE: 'complete',
     PROGRESS: 'progress',
@@ -122,7 +122,7 @@ var EventManager = function EventManager() {
     };
 };
 
-if (window.events === undefined) window.events = new EventManager();
+if (!window.events) window.events = new EventManager();
 
 /**
  * Render loop.
@@ -131,7 +131,7 @@ if (window.events === undefined) window.events = new EventManager();
  */
 
 // Shim layer with setTimeout fallback
-if (window.requestAnimationFrame === undefined) {
+if (!window.requestAnimationFrame) {
     window.requestAnimationFrame = function () {
         return window.webkitRequestAnimationFrame || window.mozRequestAnimationFrame || window.oRequestAnimationFrame || window.msRequestAnimationFrame || function (callback) {
             Delayed(callback, 1000 / 60);
@@ -610,9 +610,9 @@ var MathTween = function MathTween(object, props, time, ease, delay, callback) {
         }TweenManager.removeMathTween(self);
     }
 
-    this.update = function (time) {
-        if (paused || time < startTime) return;
-        elapsed = (time - startTime) / time;
+    this.update = function (t) {
+        if (paused || t < startTime) return;
+        elapsed = (t - startTime) / time;
         elapsed = elapsed > 1 ? 1 : elapsed;
         var delta = ease(elapsed);
         for (var prop in startValues) {
@@ -700,8 +700,8 @@ var SpringTween = function SpringTween(object, props, friction, ease, delay, cal
         }TweenManager.removeMathTween(self);
     }
 
-    this.update = function (time) {
-        if (paused || time < startTime) return;
+    this.update = function (t) {
+        if (paused || t < startTime) return;
         var vel = void 0;
         for (var prop in startValues) {
             if (typeof startValues[prop] === 'number') {
@@ -775,10 +775,10 @@ var TweenManager = function () {
         var tweens = [],
             rendering = false;
 
-        var updateTweens = function updateTweens(time) {
+        var updateTweens = function updateTweens(t) {
             if (tweens.length) {
                 for (var i = 0; i < tweens.length; i++) {
-                    tweens[i].update(time);
+                    tweens[i].update(t);
                 }
             } else {
                 rendering = false;
@@ -1794,7 +1794,7 @@ var Stage = function (_Interface) {
  */
 
 // Polyfills
-if (typeof Promise !== 'undefined' && typeof Promise.create === 'undefined') Promise.create = function () {
+if (typeof Promise !== 'undefined' && !Promise.create) Promise.create = function () {
     var resolve = void 0,
         reject = void 0,
         promise = new Promise(function (res, rej) {
@@ -1807,12 +1807,12 @@ if (typeof Promise !== 'undefined' && typeof Promise.create === 'undefined') Pro
 };
 
 // Globals
-if (typeof window.getURL === 'undefined') window.getURL = function (url) {
+if (!window.getURL) window.getURL = function (url) {
     var target = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : '_blank';
     return window.open(url, target);
 };
 
-if (typeof window.Delayed === 'undefined') window.Delayed = function (callback) {
+if (!window.Delayed) window.Delayed = function (callback) {
     var time = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 0;
     var params = arguments[2];
     return window.setTimeout(function () {
@@ -1820,8 +1820,8 @@ if (typeof window.Delayed === 'undefined') window.Delayed = function (callback) 
     }, time);
 };
 
-if (typeof window.Global === 'undefined') window.Global = {};
-if (typeof window.Config === 'undefined') window.Config = {};
+if (!window.Global) window.Global = {};
+if (!window.Config) window.Config = {};
 
 // Illegal reassignment for instances
 Function(function () {

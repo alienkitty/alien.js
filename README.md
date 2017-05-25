@@ -20,14 +20,12 @@ A lightweight web framework abducted from Active Theory's [Hydra](https://medium
 To build a project, make sure you have [Node.js](https://nodejs.org/) installed (at least version 6).
 
 ```
-mkdir project
-cd project
+mkdir about
+cd about
 git init
 git submodule add https://github.com/pschroen/alien.js
 cp -r alien.js/examples/about/* .
-cp alien.js/.babelrc .
-cp alien.js/.eslintrc.json .
-cp alien.js/.gitignore .
+cp alien.js/.babelrc alien.js/.eslintrc.json alien.js/.gitignore .
 npm install
 npm run build
 open dist/index.html

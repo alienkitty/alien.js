@@ -10,7 +10,7 @@
  * @author Patrick Schroen / https://github.com/pschroen
  */
 
-if (window.Events === undefined) window.Events = {
+if (!window.Events) window.Events = {
     BROWSER_FOCUS: 'browser_focus',
     COMPLETE:      'complete',
     PROGRESS:      'progress',
@@ -41,7 +41,7 @@ class EventManager {
     }
 }
 
-if (window.events === undefined) window.events = new EventManager();
+if (!window.events) window.events = new EventManager();
 
 /**
  * Render loop.
@@ -50,7 +50,7 @@ if (window.events === undefined) window.events = new EventManager();
  */
 
 // Shim layer with setTimeout fallback
-if (window.requestAnimationFrame === undefined) {
+if (!window.requestAnimationFrame) {
     window.requestAnimationFrame = (() => {
         return window.webkitRequestAnimationFrame || window.mozRequestAnimationFrame || window.oRequestAnimationFrame || window.msRequestAnimationFrame || (callback => {
             Delayed(callback, 1000 / 60);
@@ -505,9 +505,9 @@ class MathTween {
             TweenManager.removeMathTween(self);
         }
 
-        this.update = time => {
-            if (paused || time < startTime) return;
-            elapsed = (time - startTime) / time;
+        this.update = t => {
+            if (paused || t < startTime) return;
+            elapsed = (t - startTime) / time;
             elapsed = elapsed > 1 ? 1 : elapsed;
             let delta = ease(elapsed);
             for (let prop in startValues) {
@@ -587,8 +587,8 @@ class SpringTween {
             TweenManager.removeMathTween(self);
         }
 
-        this.update = time => {
-            if (paused || time < startTime) return;
+        this.update = t => {
+            if (paused || t < startTime) return;
             let vel;
             for (let prop in startValues) {
                 if (typeof startValues[prop] === 'number') {
@@ -660,9 +660,9 @@ class TweenManager {
         let tweens = [],
             rendering = false;
 
-        let updateTweens = time => {
+        let updateTweens = t => {
             if (tweens.length) {
-                for (let i = 0; i < tweens.length; i++) tweens[i].update(time);
+                for (let i = 0; i < tweens.length; i++) tweens[i].update(t);
             } else {
                 rendering = false;
                 Render.stop(updateTweens);
@@ -1546,7 +1546,7 @@ class Stage extends Interface {
  */
 
 // Polyfills
-if (typeof Promise !== 'undefined' && typeof Promise.create === 'undefined') Promise.create = () => {
+if (typeof Promise !== 'undefined' && !Promise.create) Promise.create = () => {
     let resolve,
         reject,
         promise = new Promise((res, rej) => {
@@ -1559,14 +1559,14 @@ if (typeof Promise !== 'undefined' && typeof Promise.create === 'undefined') Pro
 };
 
 // Globals
-if (typeof window.getURL === 'undefined') window.getURL = (url, target = '_blank') => window.open(url, target);
+if (!window.getURL) window.getURL = (url, target = '_blank') => window.open(url, target);
 
-if (typeof window.Delayed === 'undefined') window.Delayed = (callback, time = 0, params) => window.setTimeout(() => {
+if (!window.Delayed) window.Delayed = (callback, time = 0, params) => window.setTimeout(() => {
     callback && callback(params);
 }, time);
 
-if (typeof window.Global === 'undefined') window.Global = {};
-if (typeof window.Config === 'undefined') window.Config = {};
+if (!window.Global) window.Global = {};
+if (!window.Config) window.Config = {};
 
 // Illegal reassignment for instances
 Function((() => {

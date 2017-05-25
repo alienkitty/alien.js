@@ -1,6 +1,6 @@
 {
   "name": "alien.js",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Future web library",
   "homepage": "https://alien.js.org/",
   "keywords": [
@@ -22,11 +22,13 @@
   "license": "MIT",
   "scripts": {
     "build": "rollup -c && npm run build-uglify && npm run build-uglify-module && npm run build-babel && npm run build-babel-uglify && npm run build-babel-uglify-module",
-    "build-uglify": "uglifyjs build/alien.js -c unused=false --preamble \"//   _  /._  _  r1 `date +%Y-%m-%d`\n//  /_|///_'/ /\" > build/alien.min.js",
-    "build-uglify-module": "uglifyjs build/alien.module.js -c unused=false --preamble \"//   _  /._  _  r1 `date +%Y-%m-%d`\n//  /_|///_'/ /\" > build/alien.module.min.js",
+    "build-uglify": "uglifyjs build/alien.js -c unused=false --preamble \"//   _  /._  _  r2 `date +%Y-%m-%d`\n//  /_|///_'/ /\" > build/alien.min.js",
+    "build-uglify-module": "uglifyjs build/alien.module.js -c unused=false --preamble \"//   _  /._  _  r2 `date +%Y-%m-%d`\n//  /_|///_'/ /\" > build/alien.module.min.js",
     "build-babel": "rollup -c --environment babel",
-    "build-babel-uglify": "uglifyjs build/es5-alien.js -c unused=false --preamble \"//   _  /._  _  r1 `date +%Y-%m-%d`\n//  /_|///_'/ /\" > build/es5-alien.min.js",
-    "build-babel-uglify-module": "uglifyjs build/es5-alien.module.js -c unused=false --preamble \"//   _  /._  _  r1 `date +%Y-%m-%d`\n//  /_|///_'/ /\" > build/es5-alien.module.min.js",
+    "build-babel-uglify": "uglifyjs build/es5-alien.js -c unused=false --preamble \"//   _  /._  _  r2 `date +%Y-%m-%d`\n//  /_|///_'/ /\" > build/es5-alien.min.js",
+    "build-babel-uglify-module": "uglifyjs build/es5-alien.module.js -c unused=false --preamble \"//   _  /._  _  r2 `date +%Y-%m-%d`\n//  /_|///_'/ /\" > build/es5-alien.module.min.js",
+    "build-examples": "for x in `find examples -name 'rollup.config.js' -maxdepth 2 ! -path 'alien.js*' -exec dirname {} \\;`; do `cd \"$PWD/$x\"; ln -sfn ../.. alien.js; rollup -c; rm -rf alien.js`; done",
+    "build-world": "npm run build && npm run build-examples",
     "dev": "rollup -c -w -m inline",
     "lint": "eslint src || exit 0"
   },

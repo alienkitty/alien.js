@@ -1,11 +1,11 @@
 {
   "name": "alien-build-projects",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "author": "Patrick Schroen",
   "private": true,
   "scripts": {
-    "build": "find . -name 'rollup.config.js' -maxdepth 2 -execdir rollup -c {} \\;",
-    "pngquant": "for x in `find . -name 'rollup.config.js' -maxdepth 2 -exec dirname {} \\;`; do `cd $PWD/$x; rm -f dist/assets/*.png; cp src/images/*.png dist/assets/; find dist/assets -name '*.png' -exec pngquant --strip --ext=.png --force {} \\;`; done"
+    "build": "find . -name 'rollup.config.js' -maxdepth 2 ! -path 'alien.js*' -execdir rollup -c {} \\;",
+    "pngquant": "for x in `find . -name 'rollup.config.js' -maxdepth 2 ! -path 'alien.js*' -exec dirname {} \\;`; do `cd \"$PWD/$x\"; rm -f dist/assets/*.png; cp src/images/*.png dist/assets/; find dist/assets -name '*.png' -exec pngquant --strip --ext=.png --force {} \\;`; done"
   },
   "devDependencies": {
     "babel-preset-es2015-rollup": "*",

@@ -36,7 +36,7 @@ open dist/index.html
 ### Updating
 
 ```
-git submodule update
+git submodule update --remote --merge
 ```
 
 ### Workflow

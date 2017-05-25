@@ -25,10 +25,10 @@ class Main {
         function initStage() {
             Stage.size(300, 250).enable3D(2000);
             wrapper = Stage.create('.wrapper');
-            wrapper.size(90, 86).center().enable3D();
+            wrapper.size(90, 86).center().transform({z:-300}).enable3D();
             alienkitty = wrapper.create('.alienkitty').size(90, 86).css({opacity:0});
-            eyelid1 = alienkitty.create('.eyelid1').size(24, 14).css({left:35, top:25}).transform({scaleX:1.5, scaleY:.01}).transformPoint('50%', '0%');
-            eyelid2 = alienkitty.create('.eyelid2').size(24, 14).css({left:53, top:26}).transform({scaleX:1, scaleY:.01}).transformPoint('0%', '0%');
+            eyelid1 = alienkitty.create('.eyelid1').size(24, 14).css({left:35, top:25}).transformPoint('50%', 0).transform({scaleX:1.5, scaleY:.01});
+            eyelid2 = alienkitty.create('.eyelid2').size(24, 14).css({left:53, top:26}).transformPoint(0, 0).transform({scaleX:1, scaleY:.01});
             Stage.url = window.clickTag;
             Stage.interact(hover, click);
         }
@@ -61,11 +61,9 @@ class Main {
         }
 
         function complete() {
+            self.playing = true;
             Stage.startRender(loop);
-
-            wrapper.z = -300;
             TweenManager.tween(wrapper, {z:0}, 7000, 'easeOutCubic');
-
             alienkitty.tween({opacity:1}, 500, 'easeOutQuart');
             blink();
         }

@@ -51,8 +51,8 @@ class SpringTween {
             TweenManager.removeMathTween(self);
         }
 
-        this.update = time => {
-            if (paused || time < startTime) return;
+        this.update = t => {
+            if (paused || t < startTime) return;
             let vel;
             for (let prop in startValues) {
                 if (typeof startValues[prop] === 'number') {

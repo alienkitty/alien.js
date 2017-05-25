@@ -42,9 +42,9 @@ class TweenManager {
         let tweens = [],
             rendering = false;
 
-        let updateTweens = time => {
+        let updateTweens = t => {
             if (tweens.length) {
-                for (let i = 0; i < tweens.length; i++) tweens[i].update(time);
+                for (let i = 0; i < tweens.length; i++) tweens[i].update(t);
             } else {
                 rendering = false;
                 Render.stop(updateTweens);

@@ -33,9 +33,9 @@ class MathTween {
             TweenManager.removeMathTween(self);
         }
 
-        this.update = time => {
-            if (paused || time < startTime) return;
-            elapsed = (time - startTime) / time;
+        this.update = t => {
+            if (paused || t < startTime) return;
+            elapsed = (t - startTime) / time;
             elapsed = elapsed > 1 ? 1 : elapsed;
             let delta = ease(elapsed);
             for (let prop in startValues) {

@@ -24,8 +24,8 @@ class Interface {
         this.name = name;
     }
 
-    initClass(object, params) {
-        let child = new object(params);
+    initClass(object, ...params) {
+        let child = new object(...params);
         if (child.element) this.element.appendChild(child.element);
         child.parent = this;
         return child;

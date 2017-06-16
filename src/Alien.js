@@ -4,9 +4,13 @@
  * @author Patrick Schroen / https://github.com/pschroen
  */
 
+// Core
 export { EventManager } from './util/EventManager';
 export { Interface } from './util/Interface';
-export { Canvas } from './util/Canvas';
+export { Canvas } from './canvas/Canvas';
+export { CanvasGraphics } from './canvas/CanvasGraphics';
+export { CanvasImage } from './canvas/CanvasImage';
+export { Color } from './util/Color';
 export { Render } from './util/Render';
 export { DynamicObject } from './util/DynamicObject';
 export { Utils } from './util/Utils';
@@ -17,11 +21,14 @@ export { Interpolation } from './tween/Interpolation';
 export { MathTween } from './tween/MathTween';
 export { SpringTween } from './tween/SpringTween';
 export { AssetLoader } from './util/AssetLoader';
+export { FontLoader } from './util/FontLoader';
+export { Images } from './util/Images';
+export { SVG } from './util/SVG';
 export { XHR } from './util/XHR';
 export { Stage } from './view/Stage';
 
 // Polyfills
-if (typeof Promise !== 'undefined' && !Promise.create) Promise.create = () => {
+if (typeof Promise !== 'undefined') Promise.create = () => {
     let resolve,
         reject,
         promise = new Promise((res, rej) => {
@@ -34,10 +41,9 @@ if (typeof Promise !== 'undefined' && !Promise.create) Promise.create = () => {
 };
 
 // Globals
-if (!window.getURL) window.getURL = (url, target = '_blank') => window.open(url, target);
-
-if (!window.Delayed) window.Delayed = (callback, time = 0, params) => window.setTimeout(() => {
-    callback && callback(params);
+window.getURL = (url, target = '_blank') => window.open(url, target);
+window.Delayed = (callback, time = 0, params) => window.setTimeout(() => {
+    if (callback) callback(params);
 }, time);
 
 if (!window.Global) window.Global = {};
@@ -46,7 +52,7 @@ if (!window.Config) window.Config = {};
 // Illegal reassignment for instances
 Function((() => {
     let instances = '';
-    ['Render', 'Utils', 'Device', 'Mouse', 'TweenManager', 'Interpolation', 'XHR', 'Stage'].forEach(i => {
+    ['Render', 'Utils', 'Device', 'Mouse', 'TweenManager', 'Interpolation', 'Images', 'XHR', 'Stage'].forEach(i => {
         instances += `try {${i} = new ${i}();} catch(e) {}`;
     });
     return instances;

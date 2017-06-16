@@ -34,8 +34,8 @@ class Utils {
     }
 
     findDistance(p1, p2) {
-        let dx = p2.x - p1.x;
-        let dy = p2.y - p1.y;
+        let dx = p2.x - p1.x,
+            dy = p2.y - p1.y;
         return Math.sqrt(dx * dx + dy * dy);
     }
 
@@ -52,10 +52,15 @@ class Utils {
     }
 
     convertRange(oldValue, oldMin, oldMax, newMin, newMax, constrain) {
-        let oldRange = oldMax - oldMin;
-        let newRange = newMax - newMin;
-        let newValue = (oldValue - oldMin) * newRange / oldRange + newMin;
+        let oldRange = oldMax - oldMin,
+            newRange = newMax - newMin,
+            newValue = (oldValue - oldMin) * newRange / oldRange + newMin;
         return constrain ? this.constrain(newValue, newMin, newMax) : newValue;
+    }
+
+    nullObject(object) {
+        for (let key in object) if (typeof object[key] !== 'undefined') object[key] = null;
+        return null;
     }
 
     cloneObject(object) {
@@ -66,6 +71,10 @@ class Utils {
         let object = {};
         for (let obj of objects) for (let key in obj) object[key] = obj[key];
         return object;
+    }
+
+    cloneArray(array) {
+        return array.slice(0);
     }
 
     queryString(key) {

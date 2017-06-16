@@ -1,5 +1,5 @@
 /**
- * Event based asset loader.
+ * Asset loader with promise method.
  *
  * Currently only images are supported.
  * Currently no CORS support.
@@ -39,5 +39,12 @@ class AssetLoader {
         }
     }
 }
+
+AssetLoader.loadAssets = (assets, callback) => {
+    let promise = Promise.create();
+    if (!callback) callback = promise.resolve;
+    new AssetLoader(assets, callback);
+    return promise;
+};
 
 export { AssetLoader };

@@ -1,0 +1,22 @@
+{
+  "name": "alien-project",
+  "version": "1.0.1",
+  "author": "Patrick Schroen",
+  "private": true,
+  "scripts": {
+    "build": "rollup -c || exit 0",
+    "dev": "rollup -c -w -m inline || exit 0",
+    "lint": "eslint src || exit 0"
+  },
+  "devDependencies": {
+    "babel-preset-es2015-rollup": "*",
+    "eslint": "*",
+    "replace": "*",
+    "rollup": "*",
+    "rollup-plugin-babel": "*",
+    "rollup-plugin-eslint": "*",
+    "rollup-plugin-uglify": "*",
+    "rollup-watch": "*",
+    "uglify-es": "*"
+  }
+}

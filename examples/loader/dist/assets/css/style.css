@@ -52,8 +52,11 @@ body, html {
     height: 100%;
     overflow: hidden;
     background: #000;
+    touch-action: none;
 }
 * {
+    outline: none;
+    border: none;
     user-select: none;
     -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
     -webkit-text-size-adjust: none;
@@ -61,10 +64,8 @@ body, html {
 
 a {
     color: white;
-    text-decoration: none;
-    text-shadow: 0 1px 1px rgba(0, 0, 0, 0.8);
     opacity: 0.5;
-    transition: all .2s ease-in-out;
+    transition: all 0.2s ease-in-out;
 }
 a:hover, a:focus {
     opacity: 1;

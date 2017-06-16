@@ -16,19 +16,17 @@ if (!window.requestAnimationFrame) {
 class Render {
 
     constructor() {
-        this.TIME = Date.now();
-        this.TARGET_FPS = 60;
         let last,
             render = [],
             time = Date.now(),
             timeSinceRender = 0,
             rendering = false;
 
-        let focus = e => {
+        function focus(e) {
             if (e.type === 'focus') last = Date.now();
-        };
+        }
 
-        let step = () => {
+        function step() {
             let t = Date.now(),
                 timeSinceLoad = t - time,
                 diff = 0,
@@ -38,10 +36,6 @@ class Render {
                 fps = 1000 / diff;
             }
             last = t;
-            this.FPS = fps;
-            this.TIME = t;
-            this.DELTA = diff;
-            this.TSL = timeSinceLoad;
             for (let i = render.length - 1; i > -1; i--) {
                 let callback = render[i];
                 if (!callback) continue;
@@ -58,11 +52,9 @@ class Render {
                 rendering = false;
                 window.events.remove(Events.BROWSER_FOCUS, focus);
             }
-        };
+        }
 
-        this.start = (callback, fps) => {
-            if (this.TARGET_FPS < 60) fps = this.TARGET_FPS;
-            if (typeof fps === 'number') callback.fps = fps;
+        this.start = callback => {
             callback.frameCount = 0;
             if (render.indexOf(callback) === -1) render.push(callback);
             if (render.length && !rendering) {

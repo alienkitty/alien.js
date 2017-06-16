@@ -4,7 +4,7 @@
  * @author Patrick Schroen / https://github.com/pschroen
  */
 
-import { Stage, Interface, Mouse, DynamicObject, Utils, TweenManager } from '../alien.js/src/Alien';
+import { Stage, Interface, Mouse, DynamicObject, Utils, FontLoader, TweenManager } from '../alien.js/src/Alien';
 
 Config.UI_COLOR = 'white';
 Config.UI_OFFSET = 15;
@@ -64,7 +64,7 @@ class UIAboutIcons extends Interface {
         }
 
         this.animateIn = () => {
-            this.tween({z:-50, x:-10, scale:1, opacity:1}, 2000, 'easeOutCubic');
+            this.tween({z:-50, x:-10, opacity:1}, 2000, 'easeOutCubic');
         };
 
         this.animateOut = () => {
@@ -176,7 +176,6 @@ class UIAbout extends Interface {
         initHTML();
         addListeners();
         resizeHandler();
-
         this.startRender(loop);
         Delayed(() => this.animateIn(), 300);
 
@@ -190,14 +189,6 @@ class UIAbout extends Interface {
             icons = wrapper.initClass(UIAboutIcons);
         }
 
-        function loop() {
-            // UI rotation
-            mouse.lerp(Mouse, 0.05);
-            wrapper.rotationY = Utils.convertRange(mouse.x, 0, Stage.width, 8, -8);
-            wrapper.rotationX = Utils.convertRange(mouse.y, 0, Stage.height, -4, 4);
-            wrapper.transform();
-        }
-
         function click() {
             Stage.events.fire(Events.CLOSE_ABOUT);
         }
@@ -207,9 +198,17 @@ class UIAbout extends Interface {
         }
 
         function resizeHandler() {
-            var scaleX = Utils.convertRange(Stage.width, 0, 1700, 0, 1.1, true);
-            var scaleY = Utils.convertRange(Stage.height, 0, 1500, 0, 1.1, true);
+            let scaleX = Utils.convertRange(Stage.width, 0, 1700, 0, 1.1, true),
+                scaleY = Utils.convertRange(Stage.height, 0, 1500, 0, 1.1, true);
             wrapper.scale = Math.min(scaleX, scaleY);
+            wrapper.transform();
+        }
+
+        function loop() {
+            // UI rotation
+            mouse.lerp(Mouse, 0.05);
+            wrapper.rotationY = Utils.convertRange(mouse.x, 0, Stage.width, 8, -8);
+            wrapper.rotationX = Utils.convertRange(mouse.y, 0, Stage.height, -4, 4);
             wrapper.transform();
         }
 
@@ -239,7 +238,7 @@ class Main {
 
         initStage();
         addListeners();
-        openAbout();
+        FontLoader.loadFonts(['Titillium Web', 'Lato', 'icomoon']).then(openAbout);
 
         function initStage() {
             Stage.size('100%');
@@ -263,12 +262,12 @@ class Main {
         }
 
         function openAbout() {
-            Stage.hit.hide();
+            Stage.hit.mouseEnabled(false);
             about = Stage.initClass(UIAbout);
         }
 
         function closeAbout() {
-            Stage.hit.show();
+            Stage.hit.mouseEnabled(true);
             if (about) about.animateOut(() => {
                 if (about) about = about.destroy();
             });

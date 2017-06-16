@@ -4,7 +4,7 @@
  * @author Patrick Schroen / https://github.com/pschroen
  */
 
-import { Stage, Interface, Canvas, Utils, AssetLoader, FontLoader, TweenManager } from '../alien.js/src/Alien';
+import { Stage, Interface, Canvas, CanvasGraphics, Utils, AssetLoader, FontLoader, Images, TweenManager } from '../alien.js/src/Alien';
 
 Config.UI_COLOR = 'white';
 
@@ -13,34 +13,52 @@ Config.ASSETS = [
     'assets/images/alienkitty_eyelid.svg'
 ];
 
-class AlienKitty extends Interface {
+class AlienKittyCanvas extends Interface {
 
     constructor() {
-        super('AlienKitty');
+        super('AlienKittyCanvas');
         let self = this;
-        let alienkitty, eyelid1, eyelid2,
-            size = 90;
+        let canvas, alienkittyimg, eyelidimg, alienkitty, eyelid1, eyelid2;
 
         initHTML();
-        addListeners();
+        initCanvas();
+        initImages();
 
         function initHTML() {
-            self.size(size).center().css({opacity:0});
-            alienkitty = self.create('.alienkitty').size(90, 86).center().transform({scale:size / 90});
-            eyelid1 = alienkitty.create('.eyelid1').size(24, 14).css({left:35, top:25}).transformPoint('50%', 0).transform({scaleX:1.5, scaleY:0.01});
-            eyelid2 = alienkitty.create('.eyelid2').size(24, 14).css({left:53, top:26}).transformPoint(0, 0).transform({scaleX:1, scaleY:0.01});
+            self.size(90, 86).center().css({opacity:0});
         }
 
-        function addListeners() {
-            Stage.events.add(Events.COMPLETE, loadComplete);
+        function initCanvas() {
+            canvas = self.initClass(Canvas, '.alienkitty', 90, 86, true);
         }
 
-        function loadComplete() {
-            self.loaded = true;
-            alienkitty.bg('assets/images/alienkitty.svg');
-            eyelid1.bg('assets/images/alienkitty_eyelid.svg');
-            eyelid2.bg('assets/images/alienkitty_eyelid.svg');
-            blink();
+        function initImages() {
+            let promise = img => {
+                let p = Promise.create();
+                img.onload = p.resolve;
+                return p;
+            };
+            alienkittyimg = Images.createImg('assets/images/alienkitty.svg');
+            eyelidimg = Images.createImg('assets/images/alienkitty_eyelid.svg');
+            Promise.all([promise(alienkittyimg), promise(eyelidimg)]).then(finishSetup);
+        }
+
+        function finishSetup() {
+            alienkitty = self.initClass(CanvasGraphics, 90, 86);
+            alienkitty.drawImage(alienkittyimg);
+            eyelid1 = self.initClass(CanvasGraphics, 24, 14);
+            eyelid1.transform({x:35, y:25, scaleX:1.5, scaleY:0.01}).transformPoint('50%', 0);
+            eyelid1.drawImage(eyelidimg);
+            eyelid2 = self.initClass(CanvasGraphics, 24, 14);
+            eyelid2.transform({x:53, y:26, scaleX:1, scaleY:0.01}).transformPoint(0, 0);
+            eyelid2.drawImage(eyelidimg);
+            canvas.add(alienkitty);
+            canvas.add(eyelid1);
+            canvas.add(eyelid2);
+        }
+
+        function loop() {
+            canvas.render();
         }
 
         function blink() {
@@ -48,32 +66,38 @@ class AlienKitty extends Interface {
         }
 
         function blink1() {
-            eyelid1.tween({scaleY:1.5}, 120, 'easeOutCubic', () => {
-                eyelid1.tween({scaleY:0.01}, 180, 'easeOutCubic');
+            TweenManager.tween(eyelid1, {scaleY:1.5}, 120, 'easeOutCubic', () => {
+                TweenManager.tween(eyelid1, {scaleY:0.01}, 180, 'easeOutCubic');
             });
-            eyelid2.tween({scaleX:1.3, scaleY:1.3}, 120, 'easeOutCubic', () => {
-                eyelid2.tween({scaleX:1, scaleY:0.01}, 180, 'easeOutCubic', () => {
+            TweenManager.tween(eyelid2, {scaleX:1.3, scaleY:1.3}, 120, 'easeOutCubic', () => {
+                TweenManager.tween(eyelid2, {scaleX:1, scaleY:0.01}, 180, 'easeOutCubic', () => {
                     blink();
                 });
             });
         }
 
         function blink2() {
-            eyelid1.tween({scaleY:1.5}, 120, 'easeOutCubic', () => {
-                eyelid1.tween({scaleY:0.01}, 180, 'easeOutCubic');
+            TweenManager.tween(eyelid1, {scaleY:1.5}, 120, 'easeOutCubic', () => {
+                TweenManager.tween(eyelid1, {scaleY:0.01}, 180, 'easeOutCubic');
             });
-            eyelid2.tween({scaleX:1.3, scaleY:1.3}, 180, 'easeOutCubic', () => {
-                eyelid2.tween({scaleX:1, scaleY:0.01}, 240, 'easeOutCubic', () => {
+            TweenManager.tween(eyelid2, {scaleX:1.3, scaleY:1.3}, 180, 'easeOutCubic', () => {
+                TweenManager.tween(eyelid2, {scaleX:1, scaleY:0.01}, 240, 'easeOutCubic', () => {
                     blink();
                 });
             });
         }
 
         this.animateIn = () => {
+            blink();
             this.tween({opacity:1}, 500, 'easeOutQuart');
+            this.startRender(loop);
         };
 
-        this.animateOut = () => {
+        this.animateOut = callback => {
+            this.tween({opacity:0}, 500, 'easeInOutQuad', () => {
+                self.stopRender(loop);
+                if (callback) callback();
+            });
         };
     }
 }
@@ -92,7 +116,7 @@ class Progress extends Interface {
         this.startRender(loop);
 
         function initHTML() {
-            self.size(size, size).center();
+            self.size(size).center();
         }
 
         function initCanvas() {
@@ -189,7 +213,7 @@ class Main {
             Stage.size('100%').enable3D(2000);
             wrapper = Stage.create('.wrapper');
             wrapper.size('100%').transform({z:-300}).enable3D();
-            alienkitty = wrapper.initClass(AlienKitty);
+            alienkitty = wrapper.initClass(AlienKittyCanvas);
         }
 
         function initLoader() {

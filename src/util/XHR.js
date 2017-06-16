@@ -11,7 +11,7 @@ class XHR {
         this.options = {};
         let serial = [];
 
-        let serialize = (key, data) => {
+        function serialize(key, data) {
             if (typeof data === 'object') {
                 for (let i in data) {
                     let newKey = key + '[' + i + ']';
@@ -21,7 +21,7 @@ class XHR {
             } else {
                 serial.push(key + '=' + data);
             }
-        };
+        }
 
         this.get = (url, data, callback, type) => {
             if (typeof data === 'function') {

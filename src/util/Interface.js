@@ -6,22 +6,31 @@
 
 import { EventManager } from './EventManager';
 import { Render } from './Render';
+import { Utils } from './Utils';
 import { Device } from './Device';
 import { TweenManager } from '../tween/TweenManager';
 import { CSSTransition } from '../tween/CSSTransition';
+import { SVG } from './SVG';
 
 class Interface {
 
-    constructor(name, node) {
+    constructor(name, type = 'div', detached) {
         this.events = new EventManager();
-        let stage = window.Alien && window.Alien.Stage ? window.Alien.Stage : document.body,
-            element = node || document.createElement('div');
-        if (name[0] === '.') element.className = name.substr(1);
-        else element.id = name;
-        element.style.position = 'absolute';
-        stage.appendChild(element);
-        this.element = element;
         this.name = name;
+        this.type = type;
+        if (this.type === 'svg') {
+            this.element = document.createElementNS('http://www.w3.org/2000/svg', this.type);
+            this.element.setAttributeNS('http://www.w3.org/2000/xmlns/', 'xmlns:xlink', 'http://www.w3.org/1999/xlink');
+        } else {
+            this.element = document.createElement(this.type);
+            if (name[0] === '.') this.element.className = name.substr(1);
+            else this.element.id = name;
+        }
+        this.element.style.position = 'absolute';
+        if (!detached) {
+            let stage = window.Alien && window.Alien.Stage ? window.Alien.Stage : document.body;
+            stage.appendChild(this.element);
+        }
     }
 
     initClass(object, ...params) {
@@ -31,8 +40,8 @@ class Interface {
         return child;
     }
 
-    create(name, node) {
-        let child = new Interface(name, node);
+    create(name, type) {
+        let child = new Interface(name, type);
         this.element.appendChild(child.element);
         child.parent = this;
         return child;
@@ -41,7 +50,7 @@ class Interface {
     destroy() {
         if (this.loop) Render.stop(this.loop);
         this.element.parentNode.removeChild(this.element);
-        return null;
+        return Utils.nullObject(this);
     }
 
     empty() {
@@ -50,21 +59,15 @@ class Interface {
     }
 
     text(text) {
-        if (typeof text !== 'undefined') {
-            this.element.textContent = text;
-            return this;
-        } else {
-            return this.element.textContent;
-        }
+        if (typeof text === 'undefined') return this.element.textContent;
+        else this.element.textContent = text;
+        return this;
     }
 
     html(text) {
-        if (typeof text !== 'undefined') {
-            this.element.innerHTML = text;
-            return this;
-        } else {
-            return this.element.innerHTML;
-        }
+        if (typeof text === 'undefined') return this.element.innerHTML;
+        else this.element.innerHTML = text;
+        return this;
     }
 
     hide() {
@@ -115,7 +118,7 @@ class Interface {
         return this;
     }
 
-    enablePointer(bool) {
+    mouseEnabled(bool) {
         this.element.style.pointerEvents = bool ? 'auto' : 'none';
         return this;
     }
@@ -277,13 +280,15 @@ class Interface {
     }
 
     attr(attr, value) {
-        if (attr && value) {
-            if (value === '') this.element.removeAttribute(attr);
-            else this.element.setAttribute(attr, value);
-        } else if (attr) {
-            return this.element.getAttribute(attr);
-        }
+        if (typeof value === 'undefined') return this.element.getAttribute(attr);
+        else if (value === '') this.element.removeAttribute(attr);
+        else this.element.setAttribute(attr, value);
         return this;
+    }
+
+    svgSymbol(id, width, height) {
+        let config = SVG.getSymbolConfig(id);
+        this.html(`<svg viewBox="0 0 ${config.width} ${config.height}" width="${width}" height="${height}"><use xlink:href="#${config.id}" x="0" y="0"/></svg>`);
     }
 
     startRender(callback) {
@@ -297,30 +302,45 @@ class Interface {
     }
 
     click(callback) {
-        this.element.addEventListener('click', e => {
+        let clicked = e => {
             e.object = this.element.className === 'hit' ? this.parent : this;
             e.action = 'click';
-            if (!e.pageX) {
-                e.pageX = e.clientX;
-                e.pageY = e.clientY;
-            }
             if (callback) callback(e);
-        }, false);
+        };
+        this.element.addEventListener('click', clicked, true);
         this.element.style.cursor = 'pointer';
         return this;
     }
 
     hover(callback) {
-        this.element.addEventListener('mouseover', e => {
+        let hovered = e => {
             e.object = this.element.className === 'hit' ? this.parent : this;
-            e.action = 'over';
+            e.action = e.type === 'mouseout' ? 'out' : 'over';
             if (callback) callback(e);
-        }, false);
-        this.element.addEventListener('mouseout', e => {
+        };
+        this.element.addEventListener('mouseover', hovered, true);
+        this.element.addEventListener('mouseout', hovered, true);
+        return this;
+    }
+
+    press(callback) {
+        let pressed = e => {
             e.object = this.element.className === 'hit' ? this.parent : this;
-            e.action = 'out';
+            e.action = e.type === 'mousedown' ? 'down' : 'up';
             if (callback) callback(e);
-        }, false);
+        };
+        this.element.addEventListener('mousedown', pressed, true);
+        this.element.addEventListener('mouseup', pressed, true);
+        return this;
+    }
+
+    bind(event, callback) {
+        this.element.addEventListener(event, callback, true);
+        return this;
+    }
+
+    unbind(event, callback) {
+        this.element.removeEventListener(event, callback, true);
         return this;
     }
 
@@ -332,7 +352,9 @@ class Interface {
             width: '100%',
             height: '100%',
             zIndex: 99999
-        }).enablePointer(true).hover(overCallback).click(clickCallback);
+        });
+        this.hit.hover(overCallback).click(clickCallback);
+        return this;
     }
 
     split(by = '') {
@@ -350,8 +372,8 @@ class Interface {
         this.empty();
         for (let i = 0; i < split.length; i++) {
             if (split[i] === ' ') split[i] = '&nbsp;';
-            array.push(this.create('.t', document.createElement('span')).html(split[i]).css(style));
-            if (by !== '' && i < split.length - 1) array.push(this.create('.t', document.createElement('span')).html(by).css(style));
+            array.push(this.create('.t', 'span').html(split[i]).css(style));
+            if (by !== '' && i < split.length - 1) array.push(this.create('.t', 'span').html(by).css(style));
         }
         return array;
     }

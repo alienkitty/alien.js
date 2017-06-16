@@ -5,15 +5,19 @@
  */
 
 if (!window.Events) window.Events = {
-    BROWSER_FOCUS: 'browser_focus',
-    COMPLETE:      'complete',
-    PROGRESS:      'progress',
-    UPDATE:        'update',
-    LOADED:        'loaded',
-    ERROR:         'error',
-    RESIZE:        'resize',
-    HOVER:         'hover',
-    CLICK:         'click'
+    BROWSER_FOCUS:  'browser_focus',
+    KEYBOARD_DOWN:  'keyboard_down',
+    KEYBOARD_UP:    'keyboard_up',
+    KEYBOARD_PRESS: 'keyboard_press',
+    RESIZE:         'resize',
+    COMPLETE:       'complete',
+    PROGRESS:       'progress',
+    UPDATE:         'update',
+    LOADED:         'loaded',
+    ERROR:          'error',
+    READY:          'ready',
+    HOVER:          'hover',
+    CLICK:          'click'
 };
 
 class EventManager {

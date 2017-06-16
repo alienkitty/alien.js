@@ -44,8 +44,6 @@ class Device {
             }
             return pre;
         })();
-        this.system = {};
-        this.system.retina = window.devicePixelRatio > 1;
     }
 
     detect(array) {

@@ -11,9 +11,11 @@ A lightweight web framework abducted from Active Theory's [Hydra](https://medium
 
 * [Rollup](https://rollupjs.org/) module bundler with [Tree Shaking](https://github.com/rollup/rollup#tree-shaking), only the classes you use are compiled into your project.
 * Simple design pattern with inheritance, `Stage`, `Interface`, `Canvas`, `Device`, `Mouse`, `Render`, etc.
-* Event based or use promises
-* CSS3 animations
-* Math and Spring animations
+* Event based or use promises.
+* CSS3 animations.
+* Math and Spring animations.
+* Canvas graphics engine.
+* SVG support.
 
 ### Quickstart
 
@@ -35,12 +37,20 @@ open dist/index.html
 
 ```
 git submodule update --remote --merge
+cp alien.js/examples/about/package.json alien.js/examples/about/rollup.config.js .
+cp alien.js/.babelrc alien.js/.eslintrc.json alien.js/.gitignore .
+rm -rf node_modules
+npm install
 ```
 
 ### Workflow
 
 ```
+npm run lint
+npm run build
+open dist/index.html
 npm run dev
+npm run build
 ```
 
 ### Roadmap
@@ -51,7 +61,6 @@ npm run dev
 * Particle emitter
 * FX
 * Audio
-* Input
 * Mixin examples, ThreeJS, PixiJS
 * Error handling
 

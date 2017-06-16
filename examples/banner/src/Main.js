@@ -27,8 +27,8 @@ class Main {
             wrapper = Stage.create('.wrapper');
             wrapper.size(90, 86).center().transform({z:-300}).enable3D();
             alienkitty = wrapper.create('.alienkitty').size(90, 86).css({opacity:0});
-            eyelid1 = alienkitty.create('.eyelid1').size(24, 14).css({left:35, top:25}).transformPoint('50%', 0).transform({scaleX:1.5, scaleY:.01});
-            eyelid2 = alienkitty.create('.eyelid2').size(24, 14).css({left:53, top:26}).transformPoint(0, 0).transform({scaleX:1, scaleY:.01});
+            eyelid1 = alienkitty.create('.eyelid1').size(24, 14).css({left:35, top:25}).transformPoint('50%', 0).transform({scaleX:1.5, scaleY:0.01});
+            eyelid2 = alienkitty.create('.eyelid2').size(24, 14).css({left:53, top:26}).transformPoint(0, 0).transform({scaleX:1, scaleY:0.01});
             Stage.url = window.clickTag;
             Stage.interact(hover, click);
         }
@@ -78,10 +78,10 @@ class Main {
 
         function blink1() {
             eyelid1.tween({scaleY:1.5}, 120, 'easeOutCubic', () => {
-                eyelid1.tween({scaleY:.01}, 180, 'easeOutCubic');
+                eyelid1.tween({scaleY:0.01}, 180, 'easeOutCubic');
             });
             eyelid2.tween({scaleX:1.3, scaleY:1.3}, 120, 'easeOutCubic', () => {
-                eyelid2.tween({scaleX:1, scaleY:.01}, 180, 'easeOutCubic', () => {
+                eyelid2.tween({scaleX:1, scaleY:0.01}, 180, 'easeOutCubic', () => {
                     blink();
                 });
             });
@@ -89,10 +89,10 @@ class Main {
 
         function blink2() {
             eyelid1.tween({scaleY:1.5}, 120, 'easeOutCubic', () => {
-                eyelid1.tween({scaleY:.01}, 180, 'easeOutCubic');
+                eyelid1.tween({scaleY:0.01}, 180, 'easeOutCubic');
             });
             eyelid2.tween({scaleX:1.3, scaleY:1.3}, 180, 'easeOutCubic', () => {
-                eyelid2.tween({scaleX:1, scaleY:.01}, 240, 'easeOutCubic', () => {
+                eyelid2.tween({scaleX:1, scaleY:0.01}, 240, 'easeOutCubic', () => {
                     blink();
                 });
             });

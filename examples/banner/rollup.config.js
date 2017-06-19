@@ -18,14 +18,18 @@ replace({
 });
 
 function timestamp() {
+
+    function pad(number) {
+        return number < 10 ? '0' + number : number;
+    }
+
     let now = new Date(),
         hours = now.getHours(),
         minutes = now.getMinutes(),
         ampm = hours >= 12 ? 'pm' : 'am';
     hours = hours % 12;
     hours = hours ? hours : 12;
-    minutes = minutes < 10 ? '0' + minutes : minutes;
-    return `${now.toISOString(now.getTimezoneOffset()).slice(0, 10)} ${hours}:${minutes}${ampm}`;
+    return `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())} ${hours}:${pad(minutes)}${ampm}`;
 }
 
 export default {

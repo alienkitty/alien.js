@@ -17,6 +17,10 @@ class CSSTransition {
         initProperties();
         initCSSTween();
 
+        function killed() {
+            return !object || !object.element;
+        }
+
         function initProperties() {
             for (let key in props) {
                 if (TweenManager.checkTransform(key)) {
@@ -32,15 +36,18 @@ class CSSTransition {
         }
 
         function initCSSTween() {
+            if (killed()) return;
             TweenManager.clearCSSTween(object);
             object.cssTween = self;
             let transition = '';
             for (let i = 0; i < properties.length; i++) transition += (transition.length ? ', ' : '') + properties[i] + ' ' + time + 'ms ' + TweenManager.getEase(ease) + ' ' + delay + 'ms';
             Delayed(() => {
+                if (killed()) return;
                 object.element.style[Device.vendor('Transition')] = transition;
                 object.css(props);
                 object.transform(transform);
                 Delayed(() => {
+                    if (killed()) return;
                     clear();
                     if (callback) callback();
                 }, time + delay);
@@ -48,6 +55,7 @@ class CSSTransition {
         }
 
         function clear() {
+            if (killed()) return;
             object.element.style[Device.vendor('Transition')] = '';
             object.cssTween = null;
         }

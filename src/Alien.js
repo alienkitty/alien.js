@@ -25,6 +25,7 @@ export { FontLoader } from './util/FontLoader';
 export { Images } from './util/Images';
 export { SVG } from './util/SVG';
 export { XHR } from './util/XHR';
+export { WebAudio } from './util/WebAudio';
 export { Stage } from './view/Stage';
 
 // Polyfills
@@ -52,7 +53,7 @@ if (!window.Config) window.Config = {};
 // Illegal reassignment for instances
 Function((() => {
     let instances = '';
-    ['Render', 'Utils', 'Device', 'Mouse', 'TweenManager', 'Interpolation', 'Images', 'XHR', 'Stage'].forEach(i => {
+    ['Render', 'Utils', 'Device', 'Mouse', 'TweenManager', 'Interpolation', 'Images', 'SVG', 'XHR', 'WebAudio', 'Stage'].forEach(i => {
         instances += `try {${i} = new ${i}();} catch(e) {}`;
     });
     return instances;

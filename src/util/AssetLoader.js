@@ -1,13 +1,15 @@
 /**
  * Asset loader with promise method.
  *
- * Currently only images are supported.
  * Currently no CORS support.
  *
  * @author Patrick Schroen / https://github.com/pschroen
  */
 
 import { EventManager } from './EventManager';
+import { Images } from './Images';
+import { XHR } from './XHR';
+import { WebAudio } from './WebAudio';
 
 class AssetLoader {
 
@@ -22,9 +24,21 @@ class AssetLoader {
         for (let i = 0; i < assets.length; i++) loadAsset(this.CDN + assets[i]);
 
         function loadAsset(asset) {
-            let image = new Image();
-            image.src = asset;
-            image.onload = assetLoaded;
+            let name = asset.split('/');
+            name = name[name.length - 1];
+            let split = name.split('.'),
+                ext = split[split.length - 1].split('?')[0];
+            switch (ext) {
+            case 'mp3':
+                if (!window.AudioContext) return assetLoaded(asset);
+                XHR.get(asset, contents => {
+                    WebAudio.createSound(split[0], contents, () => assetLoaded(asset));
+                }, 'arraybuffer');
+                break;
+            default:
+                Images.createImg(asset, () => assetLoaded(asset));
+                break;
+            }
         }
 
         function assetLoaded() {

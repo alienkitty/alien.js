@@ -38,6 +38,7 @@ class XHR {
             }
             let xhr = new XMLHttpRequest();
             xhr.open('GET', url, true);
+            if (type === 'arraybuffer') xhr.responseType = 'arraybuffer';
             if (type === 'text') xhr.overrideMimeType('text/plain');
             if (type === 'json') xhr.setRequestHeader('Accept', 'application/json');
             for (let key in this.headers) xhr.setRequestHeader(key, this.headers[key]);
@@ -51,12 +52,13 @@ class XHR {
             xhr.send();
             xhr.onreadystatechange = () => {
                 if (xhr.readyState === 4 && xhr.status === 200) {
-                    let data = xhr.responseText;
-                    if (type === 'text') {
-                        if (callback) callback(data);
+                    if (type === 'arraybuffer') {
+                        if (callback) callback(xhr.response);
+                    } else if (type === 'text') {
+                        if (callback) callback(xhr.responseText);
                     } else {
                         try {
-                            if (callback) callback(JSON.parse(data));
+                            if (callback) callback(JSON.parse(xhr.responseText));
                         } catch (e) {
                             throw e;
                         }
@@ -90,6 +92,7 @@ class XHR {
             }
             let xhr = new XMLHttpRequest();
             xhr.open('POST', url, true);
+            if (type === 'arraybuffer') xhr.responseType = 'arraybuffer';
             if (type === 'text') xhr.overrideMimeType('text/plain');
             if (type === 'json') xhr.setRequestHeader('Accept', 'application/json');
             xhr.setRequestHeader('Content-Type', type === 'json' ? 'application/json' : 'application/x-www-form-urlencoded');
@@ -104,12 +107,13 @@ class XHR {
             xhr.send();
             xhr.onreadystatechange = () => {
                 if (xhr.readyState === 4 && xhr.status === 200) {
-                    let data = xhr.responseText;
-                    if (type === 'text') {
-                        if (callback) callback(data);
+                    if (type === 'arraybuffer') {
+                        if (callback) callback(xhr.response);
+                    } else if (type === 'text') {
+                        if (callback) callback(xhr.responseText);
                     } else {
                         try {
-                            if (callback) callback(JSON.parse(data));
+                            if (callback) callback(JSON.parse(xhr.responseText));
                         } catch (e) {
                             throw e;
                         }

@@ -15,6 +15,7 @@ A lightweight web framework abducted from Active Theory's [Hydra](https://medium
 * CSS3 animations.
 * Math and Spring animations.
 * Canvas graphics engine.
+* Web audio engine.
 * SVG support.
 
 ### Quickstart
@@ -60,7 +61,6 @@ npm run build
 * Mobile
 * Particle emitter
 * FX
-* Audio
 * Mixin examples, ThreeJS, PixiJS
 * Error handling
 

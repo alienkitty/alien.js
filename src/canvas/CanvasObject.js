@@ -4,6 +4,8 @@
  * @author Patrick Schroen / https://github.com/pschroen
  */
 
+import { CanvasValues } from './CanvasValues';
+import { Color } from '../util/Color';
 import { Utils } from '../util/Utils';
 
 class CanvasObject {
@@ -24,12 +26,15 @@ class CanvasObject {
         this.rotation = 0;
         this.scale = 1;
         this.opacity = 1;
+        this.values = new CanvasValues();
+        this.styles = new CanvasValues(true);
         this.children = [];
     }
 
     updateValues() {
-        this.scaleX = this.scaleX || this.scale;
-        this.scaleY = this.scaleY || this.scale;
+        this.values.setTRSA(this.x, this.y, Utils.toRadians(this.rotation), this.scaleX || this.scale, this.scaleY || this.scale, this.opacity);
+        if (this.parent.values) this.values.calculate(this.parent.values);
+        if (this.parent.styles) this.styles.calculateStyle(this.parent.styles);
     }
 
     render(override) {
@@ -39,14 +44,24 @@ class CanvasObject {
         for (let i = 0; i < this.children.length; i++) this.children[i].render(override);
     }
 
-    startDraw(override) {
-        let context = this.canvas.context;
+    startDraw(ox, oy, override) {
+        let context = this.canvas.context,
+            v = this.values.data,
+            x = v[0] + (ox || 0),
+            y = v[1] + (oy || 0);
         context.save();
         if (!override) context.globalCompositeOperation = this.blendMode;
-        context.translate(this.x + this.px, this.y + this.py);
-        context.rotate(this.rotation);
-        context.scale(this.scaleX, this.scaleY);
-        context.globalAlpha = this.opacity;
+        context.translate(x, y);
+        context.rotate(v[2]);
+        context.scale(v[3], v[4]);
+        context.globalAlpha = v[5];
+        if (this.styles.styled) {
+            let values = this.styles.values;
+            for (let key in values) {
+                let val = values[key];
+                context[key] = val instanceof Color ? val.getHexString() : val;
+            }
+        }
     }
 
     endDraw() {
@@ -138,6 +153,15 @@ class CanvasObject {
         this.clipWidth = w;
         this.clipHeight = h;
         return this;
+    }
+
+    hit(e) {
+        if (!this.ignoreHit) if (Utils.hitTestObject(e, this.values.hit(this))) return this;
+        for (let i = this.children.length - 1; i > -1; i--) {
+            let child = this.children[i];
+            if (child.hit(e)) return child;
+        }
+        return false;
     }
 
     destroy() {

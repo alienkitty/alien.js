@@ -51,21 +51,12 @@ class XHR {
             }
             xhr.send();
             xhr.onreadystatechange = () => {
-                if (xhr.readyState === 4 && xhr.status === 200) {
-                    if (type === 'arraybuffer') {
-                        if (callback) callback(xhr.response);
-                    } else if (type === 'text') {
-                        if (callback) callback(xhr.responseText);
-                    } else {
-                        try {
-                            if (callback) callback(JSON.parse(xhr.responseText));
-                        } catch (e) {
-                            throw e;
-                        }
-                    }
-                }
-                if (xhr.status == 0 || xhr.status == 400 || xhr.status == 401 || xhr.status == 404 || xhr.status == 500) {
-                    if (callback) {
+                if (callback) {
+                    if (xhr.readyState === 4 && xhr.status === 200) {
+                        if (type === 'arraybuffer') callback(xhr.response);
+                        else if (type === 'text') callback(xhr.responseText);
+                        else callback(JSON.parse(xhr.responseText));
+                    } else if (xhr.status == 0 || xhr.status == 400 || xhr.status == 401 || xhr.status == 404 || xhr.status == 500) {
                         if (promise) promise.reject(xhr);
                         else callback(xhr);
                     }
@@ -106,21 +97,12 @@ class XHR {
             }
             xhr.send();
             xhr.onreadystatechange = () => {
-                if (xhr.readyState === 4 && xhr.status === 200) {
-                    if (type === 'arraybuffer') {
-                        if (callback) callback(xhr.response);
-                    } else if (type === 'text') {
-                        if (callback) callback(xhr.responseText);
-                    } else {
-                        try {
-                            if (callback) callback(JSON.parse(xhr.responseText));
-                        } catch (e) {
-                            throw e;
-                        }
-                    }
-                }
-                if (xhr.status == 0 || xhr.status == 400 || xhr.status == 401 || xhr.status == 404 || xhr.status == 500) {
-                    if (callback) {
+                if (callback) {
+                    if (xhr.readyState === 4 && xhr.status === 200) {
+                        if (type === 'arraybuffer') callback(xhr.response);
+                        else if (type === 'text') callback(xhr.responseText);
+                        else callback(JSON.parse(xhr.responseText));
+                    } else if (xhr.status == 0 || xhr.status == 400 || xhr.status == 401 || xhr.status == 404 || xhr.status == 500) {
                         if (promise) promise.reject(xhr);
                         else callback(xhr);
                     }

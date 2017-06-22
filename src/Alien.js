@@ -10,6 +10,7 @@ export { Interface } from './util/Interface';
 export { Canvas } from './canvas/Canvas';
 export { CanvasGraphics } from './canvas/CanvasGraphics';
 export { CanvasImage } from './canvas/CanvasImage';
+export { CanvasFont } from './canvas/CanvasFont';
 export { Color } from './util/Color';
 export { Render } from './util/Render';
 export { DynamicObject } from './util/DynamicObject';
@@ -53,7 +54,7 @@ if (!window.Config) window.Config = {};
 // Illegal reassignment for instances
 Function((() => {
     let instances = '';
-    ['Render', 'Utils', 'Device', 'Mouse', 'TweenManager', 'Interpolation', 'Images', 'SVG', 'XHR', 'WebAudio', 'Stage'].forEach(i => {
+    ['Render', 'Utils', 'Device', 'Mouse', 'TweenManager', 'Interpolation', 'CanvasFont', 'Images', 'SVG', 'XHR', 'WebAudio', 'Stage'].forEach(i => {
         instances += `try {${i} = new ${i}();} catch(e) {}`;
     });
     return instances;

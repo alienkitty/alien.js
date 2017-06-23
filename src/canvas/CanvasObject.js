@@ -12,7 +12,7 @@ class CanvasObject {
 
     constructor() {
         this.visible = true;
-        this.blendMode = 'normal';
+        this.blendMode = 'source-over';
         this.x = 0;
         this.y = 0;
         this.px = 0;

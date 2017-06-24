@@ -106,6 +106,12 @@ class Utils {
         return array.slice(0);
     }
 
+    toArray(object) {
+        return Object.keys(object).map(key => {
+            return object[key];
+        });
+    }
+
     queryString(key) {
         return decodeURI(window.location.search.replace(new RegExp('^(?:.*[&\\?]' + encodeURI(key).replace(/[\.\+\*]/g, '\\$&') + '(?:\\=([^&]*))?)?.*$', 'i'), '$1'));
     }

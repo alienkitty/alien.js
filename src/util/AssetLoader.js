@@ -7,6 +7,7 @@
  */
 
 import { EventManager } from './EventManager';
+import { Utils } from './Utils';
 import { Images } from './Images';
 import { XHR } from './XHR';
 import { WebAudio } from './WebAudio';
@@ -14,11 +15,7 @@ import { WebAudio } from './WebAudio';
 class AssetLoader {
 
     constructor(assets, callback) {
-        if (typeof assets === 'object') {
-            assets = Object.keys(assets).map(key => {
-                return assets[key];
-            });
-        }
+        if (typeof assets === 'object') assets = Utils.toArray(assets);
         let self = this;
         this.events = new EventManager();
         this.CDN = Config.CDN || '';

@@ -12,7 +12,6 @@ class Images {
         let img = new Image();
         img.src = src;
         img.onload = () => {
-            img.complete = true;
             if (callback) callback();
         };
         return img;
@@ -20,8 +19,7 @@ class Images {
 
     promise(img) {
         let p = Promise.create();
-        if (img.complete) return p.resolve();
-        else img.onload = p.resolve;
+        img.onload = p.resolve;
         return p;
     }
 }

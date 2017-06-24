@@ -45,6 +45,10 @@ class Utils {
         return (Date.now() + this.doRandom(0, 99999)).toString();
     }
 
+    pad(number) {
+        return number < 10 ? '0' + number : number;
+    }
+
     hitTestObject(obj1, obj2) {
         let x1 = obj1.x,
             y1 = obj1.y,

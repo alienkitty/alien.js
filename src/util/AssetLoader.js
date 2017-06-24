@@ -14,6 +14,11 @@ import { WebAudio } from './WebAudio';
 class AssetLoader {
 
     constructor(assets, callback) {
+        if (typeof assets === 'object') {
+            assets = Object.keys(assets).map(key => {
+                return assets[key];
+            });
+        }
         let self = this;
         this.events = new EventManager();
         this.CDN = Config.CDN || '';

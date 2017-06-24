@@ -4,6 +4,8 @@
  * @author Patrick Schroen / https://github.com/pschroen
  */
 
+let Mouse = new ( // Singleton pattern
+
 class Mouse {
 
     constructor() {
@@ -28,5 +30,7 @@ class Mouse {
         };
     }
 }
+
+)(); // Singleton pattern
 
 export { Mouse };

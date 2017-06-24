@@ -4,6 +4,8 @@
  * @author Patrick Schroen / https://github.com/pschroen
  */
 
+let XHR = new ( // Singleton pattern
+
 class XHR {
 
     constructor() {
@@ -112,5 +114,7 @@ class XHR {
         };
     }
 }
+
+)(); // Singleton pattern
 
 export { XHR };

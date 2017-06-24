@@ -4,6 +4,8 @@
  * @author Patrick Schroen / https://github.com/pschroen
  */
 
+let Device = new ( // Singleton pattern
+
 class Device {
 
     constructor() {
@@ -56,5 +58,7 @@ class Device {
         return this.prefix.js + style;
     }
 }
+
+)(); // Singleton pattern
 
 export { Device };

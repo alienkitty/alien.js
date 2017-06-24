@@ -4,6 +4,8 @@
  * @author Patrick Schroen / https://github.com/pschroen
  */
 
+let SVG = new ( // Singleton pattern
+
 class SVG {
 
     constructor() {
@@ -26,5 +28,7 @@ class SVG {
         };
     }
 }
+
+)(); // Singleton pattern
 
 export { SVG };

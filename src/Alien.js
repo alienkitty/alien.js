@@ -4,7 +4,6 @@
  * @author Patrick Schroen / https://github.com/pschroen
  */
 
-// Core
 export { EventManager } from './util/EventManager';
 export { Interface } from './util/Interface';
 export { Canvas } from './canvas/Canvas';
@@ -50,12 +49,3 @@ window.Delayed = (callback, time = 0, params) => window.setTimeout(() => {
 
 if (!window.Global) window.Global = {};
 if (!window.Config) window.Config = {};
-
-// Illegal reassignment for instances
-Function((() => {
-    let instances = '';
-    ['Render', 'Utils', 'Device', 'Mouse', 'TweenManager', 'Interpolation', 'CanvasFont', 'Images', 'SVG', 'XHR', 'WebAudio', 'Stage'].forEach(i => {
-        instances += `try {${i} = new ${i}();} catch(e) {}`;
-    });
-    return instances;
-})())();

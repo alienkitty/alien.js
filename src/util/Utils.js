@@ -6,6 +6,8 @@
 
 import { DynamicObject } from './DynamicObject';
 
+let Utils = new ( // Singleton pattern
+
 class Utils {
 
     rand(min, max) {
@@ -104,5 +106,7 @@ class Utils {
         return decodeURI(window.location.search.replace(new RegExp('^(?:.*[&\\?]' + encodeURI(key).replace(/[\.\+\*]/g, '\\$&') + '(?:\\=([^&]*))?)?.*$', 'i'), '$1'));
     }
 }
+
+)(); // Singleton pattern
 
 export { Utils };

@@ -8,6 +8,8 @@ import { TweenManager } from '../tween/TweenManager';
 
 if (!window.AudioContext) window.AudioContext = window.webkitAudioContext || window.mozAudioContext || window.oAudioContext;
 
+let WebAudio = new ( // Singleton pattern
+
 class WebAudio {
 
     constructor() {
@@ -57,5 +59,7 @@ class WebAudio {
         };
     }
 }
+
+)(); // Singleton pattern
 
 export { WebAudio };

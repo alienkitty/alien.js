@@ -15,13 +15,13 @@ class CanvasFont {
                 graphics = canvas.initClass(CanvasGraphics, width, height);
             graphics.font = font;
             graphics.fillStyle = fillStyle;
+            graphics.totalWidth = 0;
             let chr,
                 characters = str.split(''),
                 index = 0,
-                currentPosition = 0,
-                totalWidth = 0;
+                currentPosition = 0;
             context.font = font;
-            for (let i = 0; i < characters.length; i++) totalWidth += context.measureText(characters[i]).width + letterSpacing;
+            for (let i = 0; i < characters.length; i++) graphics.totalWidth += context.measureText(characters[i]).width + letterSpacing;
             switch (textAlign) {
             case 'start':
             case 'left':
@@ -29,10 +29,10 @@ class CanvasFont {
                 break;
             case 'end':
             case 'right':
-                currentPosition = width - totalWidth;
+                currentPosition = width - graphics.totalWidth;
                 break;
             case 'center':
-                currentPosition = (width - totalWidth) / 2;
+                currentPosition = (width - graphics.totalWidth) / 2;
                 break;
             }
             do {

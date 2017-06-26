@@ -15,17 +15,27 @@ import { WebAudio } from './WebAudio';
 class AssetLoader {
 
     constructor(assets, callback) {
-        if (typeof assets === 'object') assets = Utils.toArray(assets);
+        if (Array.isArray(assets)) {
+            assets = (() => {
+                let keys = assets.map(path => {
+                    return Utils.basename(path);
+                });
+                return keys.reduce((o, k, i) => {
+                    o[k] = assets[i];
+                    return o;
+                }, {});
+            })();
+        }
         let self = this;
         this.events = new EventManager();
         this.CDN = Config.CDN || '';
-        let total = assets.length,
+        let total = Object.keys(assets).length,
             loaded = 0,
             percent = 0;
 
-        for (let i = 0; i < assets.length; i++) loadAsset(this.CDN + assets[i]);
+        for (let key in assets) loadAsset(key, this.CDN + assets[key]);
 
-        function loadAsset(asset) {
+        function loadAsset(key, asset) {
             let name = asset.split('/');
             name = name[name.length - 1];
             let split = name.split('.'),
@@ -34,8 +44,15 @@ class AssetLoader {
             case 'mp3':
                 if (!window.AudioContext) return assetLoaded(asset);
                 XHR.get(asset, contents => {
-                    WebAudio.createSound(split[0], contents, () => assetLoaded(asset));
+                    WebAudio.createSound(key, contents, () => assetLoaded(asset));
                 }, 'arraybuffer');
+                break;
+            case 'mp4':
+                XHR.get(asset, contents => {
+                    let vid = document.createElement('video');
+                    vid.src = URL.createObjectURL(contents);
+                    vid.oncanplay = assetLoaded(asset);
+                }, 'blob');
                 break;
             default:
                 Images.createImg(asset, () => assetLoaded(asset));

@@ -115,6 +115,10 @@ class Utils {
     queryString(key) {
         return decodeURI(window.location.search.replace(new RegExp('^(?:.*[&\\?]' + encodeURI(key).replace(/[\.\+\*]/g, '\\$&') + '(?:\\=([^&]*))?)?.*$', 'i'), '$1'));
     }
+
+    basename(path) {
+        return path.replace(/.*\//, '').replace(/(.*)\..*$/, '$1');
+    }
 }
 
 )(); // Singleton pattern

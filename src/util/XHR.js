@@ -41,6 +41,7 @@ class XHR {
             let xhr = new XMLHttpRequest();
             xhr.open('GET', url, true);
             if (type === 'arraybuffer') xhr.responseType = 'arraybuffer';
+            if (type === 'blob') xhr.responseType = 'blob';
             if (type === 'text') xhr.overrideMimeType('text/plain');
             if (type === 'json') xhr.setRequestHeader('Accept', 'application/json');
             for (let key in this.headers) xhr.setRequestHeader(key, this.headers[key]);
@@ -55,7 +56,7 @@ class XHR {
             xhr.onreadystatechange = () => {
                 if (callback) {
                     if (xhr.readyState === 4 && xhr.status === 200) {
-                        if (type === 'arraybuffer') callback(xhr.response);
+                        if (type === 'arraybuffer' || type === 'blob') callback(xhr.response);
                         else if (type === 'text') callback(xhr.responseText);
                         else callback(JSON.parse(xhr.responseText));
                     } else if (xhr.status == 0 || xhr.status == 400 || xhr.status == 401 || xhr.status == 404 || xhr.status == 500) {
@@ -86,6 +87,7 @@ class XHR {
             let xhr = new XMLHttpRequest();
             xhr.open('POST', url, true);
             if (type === 'arraybuffer') xhr.responseType = 'arraybuffer';
+            if (type === 'blob') xhr.responseType = 'blob';
             if (type === 'text') xhr.overrideMimeType('text/plain');
             if (type === 'json') xhr.setRequestHeader('Accept', 'application/json');
             xhr.setRequestHeader('Content-Type', type === 'json' ? 'application/json' : 'application/x-www-form-urlencoded');
@@ -101,7 +103,7 @@ class XHR {
             xhr.onreadystatechange = () => {
                 if (callback) {
                     if (xhr.readyState === 4 && xhr.status === 200) {
-                        if (type === 'arraybuffer') callback(xhr.response);
+                        if (type === 'arraybuffer' || type === 'blob') callback(xhr.response);
                         else if (type === 'text') callback(xhr.responseText);
                         else callback(JSON.parse(xhr.responseText));
                     } else if (xhr.status == 0 || xhr.status == 400 || xhr.status == 401 || xhr.status == 404 || xhr.status == 500) {

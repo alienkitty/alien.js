@@ -42,20 +42,18 @@ class AssetLoader {
                 ext = split[split.length - 1].split('?')[0];
             switch (ext) {
             case 'mp3':
-                if (!window.AudioContext) return assetLoaded(asset);
+                if (!window.AudioContext) return assetLoaded();
                 XHR.get(asset, contents => {
-                    WebAudio.createSound(key, contents, () => assetLoaded(asset));
+                    WebAudio.createSound(key, contents, assetLoaded);
                 }, 'arraybuffer');
                 break;
             case 'mp4':
-                XHR.get(asset, contents => {
-                    let vid = document.createElement('video');
-                    vid.src = URL.createObjectURL(contents);
-                    vid.oncanplay = assetLoaded(asset);
+                XHR.get(asset, () => {
+                    assetLoaded();
                 }, 'blob');
                 break;
             default:
-                Images.createImg(asset, () => assetLoaded(asset));
+                Images.createImg(asset, assetLoaded);
                 break;
             }
         }

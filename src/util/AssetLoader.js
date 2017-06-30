@@ -47,11 +47,6 @@ class AssetLoader {
                     WebAudio.createSound(key, contents, assetLoaded);
                 }, 'arraybuffer');
                 break;
-            case 'mp4':
-                XHR.get(asset, () => {
-                    assetLoaded();
-                }, 'blob');
-                break;
             default:
                 Images.createImg(asset, assetLoaded);
                 break;

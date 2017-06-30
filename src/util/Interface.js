@@ -129,8 +129,8 @@ class Interface {
     }
 
     bg(src, x, y, repeat) {
-        if (src.indexOf('.') === -1) this.element.style.backgroundColor = src;
-        else this.element.style.backgroundImage = 'url(' + src + ')';
+        if (src.indexOf('.') > -1 || src.indexOf('data:') > -1) this.element.style.backgroundImage = 'url(' + src + ')';
+        else this.element.style.backgroundColor = src;
         if (typeof x !== 'undefined') {
             x = typeof x === 'number' ? x + 'px' : x;
             y = typeof y === 'number' ? y + 'px' : y;

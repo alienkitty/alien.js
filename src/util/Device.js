@@ -46,6 +46,7 @@ class Device {
             }
             return pre;
         })();
+        this.mobile = !!('ontouchstart' in window || 'onpointerdown' in window) && this.detect(['ios', 'iphone', 'ipad', 'android', 'blackberry']) ? {} : false;
     }
 
     detect(array) {

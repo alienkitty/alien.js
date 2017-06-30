@@ -5,6 +5,7 @@
  */
 
 import { Interface } from '../util/Interface';
+import { Device } from '../util/Device';
 
 let Stage = new ( // Singleton pattern
 
@@ -39,8 +40,10 @@ class Stage extends Interface {
             window.addEventListener('keydown', () => window.events.fire(Events.KEYBOARD_DOWN), true);
             window.addEventListener('keyup', () => window.events.fire(Events.KEYBOARD_UP), true);
             window.addEventListener('keypress', () => window.events.fire(Events.KEYBOARD_PRESS), true);
-            window.addEventListener('resize', () => window.events.fire(Events.RESIZE), true);
-            window.events.add(Events.RESIZE, resizeHandler);
+            if (!Device.mobile) {
+                window.addEventListener('resize', () => window.events.fire(Events.RESIZE), true);
+                window.events.add(Events.RESIZE, resizeHandler);
+            }
         }
 
         function resizeHandler() {

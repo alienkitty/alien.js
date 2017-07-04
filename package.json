@@ -22,6 +22,7 @@
     "url": "https://github.com/pschroen/alien.js/issues"
   },
   "license": "MIT",
+  "main": "build/alien.module.js",
   "scripts": {
     "build": "rollup -c && npm run build-uglify && npm run build-uglify-module && npm run build-babel && npm run build-babel-uglify && npm run build-babel-uglify-module",
     "build-uglify": "uglifyjs build/alien.js -c unused=false --preamble \"//   _  /._  _  r3 `date +%Y-%m-%d`\n//  /_|///_'/ /\" > build/alien.min.js",

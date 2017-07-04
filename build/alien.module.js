@@ -11,15 +11,19 @@
  */
 
 if (!window.Events) window.Events = {
-    BROWSER_FOCUS: 'browser_focus',
-    COMPLETE:      'complete',
-    PROGRESS:      'progress',
-    UPDATE:        'update',
-    LOADED:        'loaded',
-    ERROR:         'error',
-    RESIZE:        'resize',
-    HOVER:         'hover',
-    CLICK:         'click'
+    BROWSER_FOCUS:  'browser_focus',
+    KEYBOARD_DOWN:  'keyboard_down',
+    KEYBOARD_UP:    'keyboard_up',
+    KEYBOARD_PRESS: 'keyboard_press',
+    RESIZE:         'resize',
+    COMPLETE:       'complete',
+    PROGRESS:       'progress',
+    UPDATE:         'update',
+    LOADED:         'loaded',
+    ERROR:          'error',
+    READY:          'ready',
+    HOVER:          'hover',
+    CLICK:          'click'
 };
 
 class EventManager {
@@ -49,31 +53,24 @@ if (!window.events) window.events = new EventManager();
  * @author Patrick Schroen / https://github.com/pschroen
  */
 
-// Shim layer with setTimeout fallback
-if (!window.requestAnimationFrame) {
-    window.requestAnimationFrame = (() => {
-        return window.webkitRequestAnimationFrame || window.mozRequestAnimationFrame || window.oRequestAnimationFrame || window.msRequestAnimationFrame || (callback => {
-            Delayed(callback, 1000 / 60);
-        });
-    })();
-}
+if (!window.requestAnimationFrame) window.requestAnimationFrame = window.webkitRequestAnimationFrame || window.mozRequestAnimationFrame || window.oRequestAnimationFrame || window.msRequestAnimationFrame || (callback => Delayed(callback, 1000 / 60));
+
+let Render = new ( // Singleton pattern
 
 class Render {
 
     constructor() {
-        this.TIME = Date.now();
-        this.TARGET_FPS = 60;
         let last,
             render = [],
             time = Date.now(),
             timeSinceRender = 0,
             rendering = false;
 
-        let focus = e => {
+        function focus(e) {
             if (e.type === 'focus') last = Date.now();
-        };
+        }
 
-        let step = () => {
+        function step() {
             let t = Date.now(),
                 timeSinceLoad = t - time,
                 diff = 0,
@@ -83,10 +80,6 @@ class Render {
                 fps = 1000 / diff;
             }
             last = t;
-            this.FPS = fps;
-            this.TIME = t;
-            this.DELTA = diff;
-            this.TSL = timeSinceLoad;
             for (let i = render.length - 1; i > -1; i--) {
                 let callback = render[i];
                 if (!callback) continue;
@@ -103,11 +96,9 @@ class Render {
                 rendering = false;
                 window.events.remove(Events.BROWSER_FOCUS, focus);
             }
-        };
+        }
 
-        this.start = (callback, fps) => {
-            if (this.TARGET_FPS < 60) fps = this.TARGET_FPS;
-            if (typeof fps === 'number') callback.fps = fps;
+        this.start = callback => {
             callback.frameCount = 0;
             if (render.indexOf(callback) === -1) render.push(callback);
             if (render.length && !rendering) {
@@ -124,11 +115,156 @@ class Render {
     }
 }
 
+)(); // Singleton pattern
+
+/**
+ * Dynamic object with linear interpolation.
+ *
+ * @author Patrick Schroen / https://github.com/pschroen
+ */
+
+class DynamicObject {
+
+    constructor(props) {
+        for (let key in props) this[key] = props[key];
+
+        this.lerp = (v, ratio) => {
+            for (let key in props) this[key] += (v[key] - this[key]) * ratio;
+            return this;
+        };
+    }
+}
+
+/**
+ * Alien utilities.
+ *
+ * @author Patrick Schroen / https://github.com/pschroen
+ */
+
+let Utils = new ( // Singleton pattern
+
+class Utils {
+
+    rand(min, max) {
+        return (new DynamicObject({v:min})).lerp({v:max}, Math.random()).v;
+    }
+
+    doRandom(min, max, precision) {
+        if (typeof precision === 'number') {
+            let p = Math.pow(10, precision);
+            return Math.round(this.rand(min, max) * p) / p;
+        } else {
+            return Math.round(this.rand(min - 0.5, max + 0.5));
+        }
+    }
+
+    headsTails(heads, tails) {
+        return !this.doRandom(0, 1) ? heads : tails;
+    }
+
+    toDegrees(rad) {
+        return rad * (180 / Math.PI);
+    }
+
+    toRadians(deg) {
+        return deg * (Math.PI / 180);
+    }
+
+    findDistance(p1, p2) {
+        let dx = p2.x - p1.x,
+            dy = p2.y - p1.y;
+        return Math.sqrt(dx * dx + dy * dy);
+    }
+
+    timestamp() {
+        return (Date.now() + this.doRandom(0, 99999)).toString();
+    }
+
+    pad(number) {
+        return number < 10 ? '0' + number : number;
+    }
+
+    hitTestObject(obj1, obj2) {
+        let x1 = obj1.x,
+            y1 = obj1.y,
+            w = obj1.width,
+            h = obj1.height;
+        let xp1 = obj2.x,
+            yp1 = obj2.y,
+            wp = obj2.width,
+            hp = obj2.height;
+        let x2 = x1 + w,
+            y2 = y1 + h,
+            xp2 = xp1 + wp,
+            yp2 = yp1 + hp;
+        if (xp1 >= x1 && xp1 <= x2) {
+            if (yp1 >= y1 && yp1 <= y2) return true;
+            else if (y1 >= yp1 && y1 <= yp2) return true;
+        } else if (x1 >= xp1 && x1 <= xp2) {
+            if (yp1 >= y1 && yp1 <= y2) return true;
+            else if (y1 >= yp1 && y1 <= yp2) return true;
+        }
+        return false;
+    }
+
+    clamp(num, min, max) {
+        return Math.min(Math.max(num, min), max);
+    }
+
+    constrain(num, min, max) {
+        return Math.min(Math.max(num, Math.min(min, max)), Math.max(min, max));
+    }
+
+    convertRange(oldValue, oldMin, oldMax, newMin, newMax, constrain) {
+        let oldRange = oldMax - oldMin,
+            newRange = newMax - newMin,
+            newValue = (oldValue - oldMin) * newRange / oldRange + newMin;
+        return constrain ? this.constrain(newValue, newMin, newMax) : newValue;
+    }
+
+    nullObject(object) {
+        for (let key in object) if (typeof object[key] !== 'undefined') object[key] = null;
+        return null;
+    }
+
+    cloneObject(object) {
+        return JSON.parse(JSON.stringify(object));
+    }
+
+    mergeObject(...objects) {
+        let object = {};
+        for (let obj of objects) for (let key in obj) object[key] = obj[key];
+        return object;
+    }
+
+    cloneArray(array) {
+        return array.slice(0);
+    }
+
+    toArray(object) {
+        return Object.keys(object).map(key => {
+            return object[key];
+        });
+    }
+
+    queryString(key) {
+        return decodeURI(window.location.search.replace(new RegExp('^(?:.*[&\\?]' + encodeURI(key).replace(/[\.\+\*]/g, '\\$&') + '(?:\\=([^&]*))?)?.*$', 'i'), '$1'));
+    }
+
+    basename(path) {
+        return path.replace(/.*\//, '').replace(/(.*)\..*$/, '$1');
+    }
+}
+
+)(); // Singleton pattern
+
 /**
  * Browser detection and vendor prefixes.
  *
  * @author Patrick Schroen / https://github.com/pschroen
  */
+
+let Device = new ( // Singleton pattern
 
 class Device {
 
@@ -152,26 +288,25 @@ class Device {
         this.transformProperty = (() => {
             let pre;
             switch (this.prefix.lowercase) {
-            case 'webkit':
-                pre = '-webkit-transform';
-                break;
-            case 'moz':
-                pre = '-moz-transform';
-                break;
-            case 'o':
-                pre = '-o-transform';
-                break;
-            case 'ms':
-                pre = '-ms-transform';
-                break;
-            default:
-                pre = 'transform';
-                break;
+                case 'webkit':
+                    pre = '-webkit-transform';
+                    break;
+                case 'moz':
+                    pre = '-moz-transform';
+                    break;
+                case 'o':
+                    pre = '-o-transform';
+                    break;
+                case 'ms':
+                    pre = '-ms-transform';
+                    break;
+                default:
+                    pre = 'transform';
+                    break;
             }
             return pre;
         })();
-        this.system = {};
-        this.system.retina = window.devicePixelRatio > 1;
+        this.mobile = !!('ontouchstart' in window || 'onpointerdown' in window) && this.detect(['ios', 'iphone', 'ipad', 'android', 'blackberry']) ? {} : false;
     }
 
     detect(array) {
@@ -185,11 +320,15 @@ class Device {
     }
 }
 
+)(); // Singleton pattern
+
 /**
  * Interpolation helper class.
  *
  * @author Patrick Schroen / https://github.com/pschroen
  */
+
+let Interpolation = new ( // Singleton pattern
 
 class Interpolation {
 
@@ -198,99 +337,99 @@ class Interpolation {
             return (() => {
                 let fn;
                 switch (ease) {
-                case 'easeInQuad':
-                    fn = this.Quad.In;
-                    break;
-                case 'easeInCubic':
-                    fn = this.Cubic.In;
-                    break;
-                case 'easeInQuart':
-                    fn = this.Quart.In;
-                    break;
-                case 'easeInQuint':
-                    fn = this.Quint.In;
-                    break;
-                case 'easeInSine':
-                    fn = this.Sine.In;
-                    break;
-                case 'easeInExpo':
-                    fn = this.Expo.In;
-                    break;
-                case 'easeInCirc':
-                    fn = this.Circ.In;
-                    break;
-                case 'easeInElastic':
-                    fn = this.Elastic.In;
-                    break;
-                case 'easeInBack':
-                    fn = this.Back.In;
-                    break;
-                case 'easeInBounce':
-                    fn = this.Bounce.In;
-                    break;
-                case 'easeOutQuad':
-                    fn = this.Quad.Out;
-                    break;
-                case 'easeOutCubic':
-                    fn = this.Cubic.Out;
-                    break;
-                case 'easeOutQuart':
-                    fn = this.Quart.Out;
-                    break;
-                case 'easeOutQuint':
-                    fn = this.Quint.Out;
-                    break;
-                case 'easeOutSine':
-                    fn = this.Sine.Out;
-                    break;
-                case 'easeOutExpo':
-                    fn = this.Expo.Out;
-                    break;
-                case 'easeOutCirc':
-                    fn = this.Circ.Out;
-                    break;
-                case 'easeOutElastic':
-                    fn = this.Elastic.Out;
-                    break;
-                case 'easeOutBack':
-                    fn = this.Back.Out;
-                    break;
-                case 'easeOutBounce':
-                    fn = this.Bounce.Out;
-                    break;
-                case 'easeInOutQuad':
-                    fn = this.Quad.InOut;
-                    break;
-                case 'easeInOutCubic':
-                    fn = this.Cubic.InOut;
-                    break;
-                case 'easeInOutQuart':
-                    fn = this.Quart.InOut;
-                    break;
-                case 'easeInOutQuint':
-                    fn = this.Quint.InOut;
-                    break;
-                case 'easeInOutSine':
-                    fn = this.Sine.InOut;
-                    break;
-                case 'easeInOutExpo':
-                    fn = this.Expo.InOut;
-                    break;
-                case 'easeInOutCirc':
-                    fn = this.Circ.InOut;
-                    break;
-                case 'easeInOutElastic':
-                    fn = this.Elastic.InOut;
-                    break;
-                case 'easeInOutBack':
-                    fn = this.Back.InOut;
-                    break;
-                case 'easeInOutBounce':
-                    fn = this.Bounce.InOut;
-                    break;
-                case 'linear':
-                    fn = this.Linear.None;
-                    break;
+                    case 'easeInQuad':
+                        fn = this.Quad.In;
+                        break;
+                    case 'easeInCubic':
+                        fn = this.Cubic.In;
+                        break;
+                    case 'easeInQuart':
+                        fn = this.Quart.In;
+                        break;
+                    case 'easeInQuint':
+                        fn = this.Quint.In;
+                        break;
+                    case 'easeInSine':
+                        fn = this.Sine.In;
+                        break;
+                    case 'easeInExpo':
+                        fn = this.Expo.In;
+                        break;
+                    case 'easeInCirc':
+                        fn = this.Circ.In;
+                        break;
+                    case 'easeInElastic':
+                        fn = this.Elastic.In;
+                        break;
+                    case 'easeInBack':
+                        fn = this.Back.In;
+                        break;
+                    case 'easeInBounce':
+                        fn = this.Bounce.In;
+                        break;
+                    case 'easeOutQuad':
+                        fn = this.Quad.Out;
+                        break;
+                    case 'easeOutCubic':
+                        fn = this.Cubic.Out;
+                        break;
+                    case 'easeOutQuart':
+                        fn = this.Quart.Out;
+                        break;
+                    case 'easeOutQuint':
+                        fn = this.Quint.Out;
+                        break;
+                    case 'easeOutSine':
+                        fn = this.Sine.Out;
+                        break;
+                    case 'easeOutExpo':
+                        fn = this.Expo.Out;
+                        break;
+                    case 'easeOutCirc':
+                        fn = this.Circ.Out;
+                        break;
+                    case 'easeOutElastic':
+                        fn = this.Elastic.Out;
+                        break;
+                    case 'easeOutBack':
+                        fn = this.Back.Out;
+                        break;
+                    case 'easeOutBounce':
+                        fn = this.Bounce.Out;
+                        break;
+                    case 'easeInOutQuad':
+                        fn = this.Quad.InOut;
+                        break;
+                    case 'easeInOutCubic':
+                        fn = this.Cubic.InOut;
+                        break;
+                    case 'easeInOutQuart':
+                        fn = this.Quart.InOut;
+                        break;
+                    case 'easeInOutQuint':
+                        fn = this.Quint.InOut;
+                        break;
+                    case 'easeInOutSine':
+                        fn = this.Sine.InOut;
+                        break;
+                    case 'easeInOutExpo':
+                        fn = this.Expo.InOut;
+                        break;
+                    case 'easeInOutCirc':
+                        fn = this.Circ.InOut;
+                        break;
+                    case 'easeInOutElastic':
+                        fn = this.Elastic.InOut;
+                        break;
+                    case 'easeInOutBack':
+                        fn = this.Back.InOut;
+                        break;
+                    case 'easeInOutBounce':
+                        fn = this.Bounce.InOut;
+                        break;
+                    case 'linear':
+                        fn = this.Linear.None;
+                        break;
                 }
                 return fn;
             })() || this.Cubic.Out;
@@ -455,15 +594,10 @@ class Interpolation {
                 return 1 - this.Bounce.Out(1 - k);
             },
             Out: k => {
-                if (k < 1 / 2.75) {
-                    return 7.5625 * k * k;
-                } else if (k < 2 / 2.75) {
-                    return 7.5625 * (k -= 1.5 / 2.75) * k + 0.75;
-                } else if (k < 2.5 / 2.75) {
-                    return 7.5625 * (k -= 2.25 / 2.75) * k + 0.9375;
-                } else {
-                    return 7.5625 * (k -= 2.625 / 2.75) * k + 0.984375;
-                }
+                if (k < 1 / 2.75) return 7.5625 * k * k;
+                else if (k < 2 / 2.75) return 7.5625 * (k -= 1.5 / 2.75) * k + 0.75;
+                else if (k < 2.5 / 2.75) return 7.5625 * (k -= 2.25 / 2.75) * k + 0.9375;
+                else return 7.5625 * (k -= 2.625 / 2.75) * k + 0.984375;
             },
             InOut: k => {
                 if (k < 0.5) return this.Bounce.In(k * 2) * 0.5;
@@ -472,6 +606,8 @@ class Interpolation {
         };
     }
 }
+
+)(); // Singleton pattern
 
 /**
  * Mathematical.
@@ -626,6 +762,8 @@ class SpringTween {
  * @author Patrick Schroen / https://github.com/pschroen
  */
 
+let TweenManager = new ( // Singleton pattern
+
 class TweenManager {
 
     constructor() {
@@ -660,14 +798,14 @@ class TweenManager {
         let tweens = [],
             rendering = false;
 
-        let updateTweens = t => {
+        function updateTweens(t) {
             if (tweens.length) {
                 for (let i = 0; i < tweens.length; i++) tweens[i].update(t);
             } else {
                 rendering = false;
                 Render.stop(updateTweens);
             }
-        };
+        }
 
         this.addMathTween = tween => {
             tweens.push(tween);
@@ -754,6 +892,8 @@ class TweenManager {
     }
 }
 
+)(); // Singleton pattern
+
 /**
  * CSS3 transition animation.
  *
@@ -770,6 +910,10 @@ class CSSTransition {
         initProperties();
         initCSSTween();
 
+        function killed() {
+            return !object || !object.element;
+        }
+
         function initProperties() {
             for (let key in props) {
                 if (TweenManager.checkTransform(key)) {
@@ -785,15 +929,18 @@ class CSSTransition {
         }
 
         function initCSSTween() {
+            if (killed()) return;
             TweenManager.clearCSSTween(object);
             object.cssTween = self;
             let transition = '';
             for (let i = 0; i < properties.length; i++) transition += (transition.length ? ', ' : '') + properties[i] + ' ' + time + 'ms ' + TweenManager.getEase(ease) + ' ' + delay + 'ms';
             Delayed(() => {
+                if (killed()) return;
                 object.element.style[Device.vendor('Transition')] = transition;
                 object.css(props);
                 object.transform(transform);
                 Delayed(() => {
+                    if (killed()) return;
                     clear();
                     if (callback) callback();
                 }, time + delay);
@@ -801,6 +948,7 @@ class CSSTransition {
         }
 
         function clear() {
+            if (killed()) return;
             object.element.style[Device.vendor('Transition')] = '';
             object.cssTween = null;
         }
@@ -810,6 +958,39 @@ class CSSTransition {
 }
 
 /**
+ * SVG helper class.
+ *
+ * @author Patrick Schroen / https://github.com/pschroen
+ */
+
+let SVG = new ( // Singleton pattern
+
+class SVG {
+
+    constructor() {
+        let symbols = [];
+
+        this.defineSymbol = (id, width, height, innerHTML) => {
+            let svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+            svg.setAttribute('style', 'display: none;');
+            svg.setAttribute('width', width);
+            svg.setAttribute('height', height);
+            svg.setAttributeNS('http://www.w3.org/2000/xmlns/', 'xmlns:xlink', 'http://www.w3.org/1999/xlink');
+            svg.innerHTML = `<symbol id="${id}">${innerHTML}</symbol>`;
+            document.body.insertBefore(svg, document.body.firstChild);
+            symbols.push({id, width, height});
+        };
+
+        this.getSymbolConfig = id => {
+            for (let i = 0; i < symbols.length; i++) if (symbols[i].id === id) return symbols[i];
+            return null;
+        };
+    }
+}
+
+)(); // Singleton pattern
+
+/**
  * Alien interface.
  *
  * @author Patrick Schroen / https://github.com/pschroen
@@ -817,27 +998,34 @@ class CSSTransition {
 
 class Interface {
 
-    constructor(name, node) {
+    constructor(name, type = 'div', detached) {
         this.events = new EventManager();
-        let stage = window.Alien && window.Alien.Stage ? window.Alien.Stage : document.body,
-            element = node || document.createElement('div');
-        if (name[0] === '.') element.className = name.substr(1);
-        else element.id = name;
-        element.style.position = 'absolute';
-        stage.appendChild(element);
-        this.element = element;
         this.name = name;
+        this.type = type;
+        if (this.type === 'svg') {
+            this.element = document.createElementNS('http://www.w3.org/2000/svg', this.type);
+            this.element.setAttributeNS('http://www.w3.org/2000/xmlns/', 'xmlns:xlink', 'http://www.w3.org/1999/xlink');
+        } else {
+            this.element = document.createElement(this.type);
+            if (name[0] === '.') this.element.className = name.substr(1);
+            else this.element.id = name;
+        }
+        this.element.style.position = 'absolute';
+        if (!detached) {
+            let stage = window.Alien && window.Alien.Stage ? window.Alien.Stage : document.body;
+            stage.appendChild(this.element);
+        }
     }
 
-    initClass(object, params) {
-        let child = new object(params);
+    initClass(object, ...params) {
+        let child = new object(...params);
         if (child.element) this.element.appendChild(child.element);
         child.parent = this;
         return child;
     }
 
-    create(name, node) {
-        let child = new Interface(name, node);
+    create(name, type) {
+        let child = new Interface(name, type);
         this.element.appendChild(child.element);
         child.parent = this;
         return child;
@@ -846,7 +1034,7 @@ class Interface {
     destroy() {
         if (this.loop) Render.stop(this.loop);
         this.element.parentNode.removeChild(this.element);
-        return null;
+        return Utils.nullObject(this);
     }
 
     empty() {
@@ -855,21 +1043,15 @@ class Interface {
     }
 
     text(text) {
-        if (typeof text !== 'undefined') {
-            this.element.textContent = text;
-            return this;
-        } else {
-            return this.element.textContent;
-        }
+        if (typeof text === 'undefined') return this.element.textContent;
+        else this.element.textContent = text;
+        return this;
     }
 
     html(text) {
-        if (typeof text !== 'undefined') {
-            this.element.innerHTML = text;
-            return this;
-        } else {
-            return this.element.innerHTML;
-        }
+        if (typeof text === 'undefined') return this.element.innerHTML;
+        else this.element.innerHTML = text;
+        return this;
     }
 
     hide() {
@@ -920,7 +1102,7 @@ class Interface {
         return this;
     }
 
-    enablePointer(bool) {
+    mouseEnabled(bool) {
         this.element.style.pointerEvents = bool ? 'auto' : 'none';
         return this;
     }
@@ -931,8 +1113,8 @@ class Interface {
     }
 
     bg(src, x, y, repeat) {
-        if (src.indexOf('.') === -1) this.element.style.backgroundColor = src;
-        else this.element.style.backgroundImage = 'url(' + src + ')';
+        if (src.indexOf('.') > -1 || src.indexOf('data:') > -1) this.element.style.backgroundImage = 'url(' + src + ')';
+        else this.element.style.backgroundColor = src;
         if (typeof x !== 'undefined') {
             x = typeof x === 'number' ? x + 'px' : x;
             y = typeof y === 'number' ? y + 'px' : y;
@@ -1082,13 +1264,15 @@ class Interface {
     }
 
     attr(attr, value) {
-        if (attr && value) {
-            if (value === '') this.element.removeAttribute(attr);
-            else this.element.setAttribute(attr, value);
-        } else if (attr) {
-            return this.element.getAttribute(attr);
-        }
+        if (typeof value === 'undefined') return this.element.getAttribute(attr);
+        else if (value === '') this.element.removeAttribute(attr);
+        else this.element.setAttribute(attr, value);
         return this;
+    }
+
+    svgSymbol(id, width, height) {
+        let config = SVG.getSymbolConfig(id);
+        this.html(`<svg viewBox="0 0 ${config.width} ${config.height}" width="${width}" height="${height}"><use xlink:href="#${config.id}" x="0" y="0"/></svg>`);
     }
 
     startRender(callback) {
@@ -1102,30 +1286,45 @@ class Interface {
     }
 
     click(callback) {
-        this.element.addEventListener('click', e => {
+        let clicked = e => {
             e.object = this.element.className === 'hit' ? this.parent : this;
             e.action = 'click';
-            if (!e.pageX) {
-                e.pageX = e.clientX;
-                e.pageY = e.clientY;
-            }
             if (callback) callback(e);
-        }, false);
+        };
+        this.element.addEventListener('click', clicked, true);
         this.element.style.cursor = 'pointer';
         return this;
     }
 
     hover(callback) {
-        this.element.addEventListener('mouseover', e => {
+        let hovered = e => {
             e.object = this.element.className === 'hit' ? this.parent : this;
-            e.action = 'over';
+            e.action = e.type === 'mouseout' ? 'out' : 'over';
             if (callback) callback(e);
-        }, false);
-        this.element.addEventListener('mouseout', e => {
+        };
+        this.element.addEventListener('mouseover', hovered, true);
+        this.element.addEventListener('mouseout', hovered, true);
+        return this;
+    }
+
+    press(callback) {
+        let pressed = e => {
             e.object = this.element.className === 'hit' ? this.parent : this;
-            e.action = 'out';
+            e.action = e.type === 'mousedown' ? 'down' : 'up';
             if (callback) callback(e);
-        }, false);
+        };
+        this.element.addEventListener('mousedown', pressed, true);
+        this.element.addEventListener('mouseup', pressed, true);
+        return this;
+    }
+
+    bind(event, callback) {
+        this.element.addEventListener(event, callback, true);
+        return this;
+    }
+
+    unbind(event, callback) {
+        this.element.removeEventListener(event, callback, true);
         return this;
     }
 
@@ -1137,7 +1336,9 @@ class Interface {
             width: '100%',
             height: '100%',
             zIndex: 99999
-        }).enablePointer(true).hover(overCallback).click(clickCallback);
+        });
+        this.hit.hover(overCallback).click(clickCallback);
+        return this;
     }
 
     split(by = '') {
@@ -1155,8 +1356,8 @@ class Interface {
         this.empty();
         for (let i = 0; i < split.length; i++) {
             if (split[i] === ' ') split[i] = '&nbsp;';
-            array.push(this.create('.t', document.createElement('span')).html(split[i]).css(style));
-            if (by !== '' && i < split.length - 1) array.push(this.create('.t', document.createElement('span')).html(by).css(style));
+            array.push(this.create('.t', 'span').html(split[i]).css(style));
+            if (by !== '' && i < split.length - 1) array.push(this.create('.t', 'span').html(by).css(style));
         }
         return array;
     }
@@ -1170,29 +1371,60 @@ class Interface {
 
 class Canvas extends Interface {
 
-    constructor(name, w, h) {
-        super(name, document.createElement('canvas'));
+    constructor(name, w, h = w, retina, detached) {
+        super(name, 'canvas', detached);
+        this.children = [];
+        this.retina = retina;
         this.context = this.element.getContext('2d');
-        let ratio = Device.system.retina ? 2 : 1;
+        let ratio = retina ? 2 : 1;
         this.element.width = w * ratio;
         this.element.height = h * ratio;
-        this.size(w, h);
         this.context.scale(ratio, ratio);
+        this.size(w, h);
     }
 
     toDataURL(type, quality) {
         return this.element.toDataURL(type, quality);
     }
 
-    getImageData(x = 0, y = 0, w = this.width, h = this.height) {
+    render(noClear) {
+        if (!(typeof noClear === 'boolean' && noClear)) this.clear();
+        for (let i = 0; i < this.children.length; i++) this.children[i].render();
+    }
+
+    clear() {
+        this.context.clearRect(0, 0, this.element.width, this.element.height);
+    }
+
+    add(display) {
+        display.setCanvas(this);
+        display.parent = this;
+        this.children.push(display);
+        display.z = this.children.length;
+    }
+
+    remove(display) {
+        display.canvas = null;
+        display.parent = null;
+        let i = this.children.indexOf(display);
+        if (i > -1) this.children.splice(i, 1);
+    }
+
+    destroy() {
+        this.stopRender();
+        for (let i = 0; i < this.children.length; i++) this.children[i].destroy();
+        return Utils.nullObject(this);
+    }
+
+    getImageData(x = 0, y = 0, w = this.element.width, h = this.element.height) {
         this.imageData = this.context.getImageData(x, y, w, h);
         return this.imageData;
     }
 
     getPixel(x, y, dirty) {
-        if (!this.imageData || dirty) this.getImageData(0, 0, this.width, this.height);
+        if (!this.imageData || dirty) this.getImageData();
         let imgData = {},
-            index = (x + y * this.width) * 4,
+            index = (x + y * this.element.width) * 4,
             pixels = this.imageData.data;
         imgData.r = pixels[index];
         imgData.g = pixels[index + 1];
@@ -1200,104 +1432,842 @@ class Canvas extends Interface {
         imgData.a = pixels[index + 3];
         return imgData;
     }
+
+    putImageData(imageData) {
+        this.context.putImageData(imageData, 0, 0);
+    }
 }
 
 /**
- * Dynamic object with linear interpolation.
+ * Canvas values.
  *
  * @author Patrick Schroen / https://github.com/pschroen
  */
 
-class DynamicObject {
+class CanvasValues {
 
-    constructor(props) {
-        for (let key in props) this[key] = props[key];
+    constructor(style) {
+        this.styles = {};
+        let hit = {
+            x: 0,
+            y: 0,
+            width: 0,
+            height: 0
+        };
+        if (!style) this.data = new Float32Array(6);
+        else this.styled = false;
 
-        this.lerp = (v, ratio) => {
-            for (let key in props) this[key] += (v[key] - this[key]) * ratio;
+        this.hit = object => {
+            hit.x = this.data[0];
+            hit.y = this.data[1];
+            hit.width = object.width;
+            hit.height = object.height;
+            return hit;
+        };
+    }
+
+    set shadowOffsetX(val) {
+        this.styled = true;
+        this.styles.shadowOffsetX = val;
+    }
+
+    get shadowOffsetX() {
+        return this.styles.shadowOffsetX;
+    }
+
+    set shadowOffsetY(val) {
+        this.styled = true;
+        this.styles.shadowOffsetY = val;
+    }
+
+    get shadowOffsetY() {
+        return this.styles.shadowOffsetY;
+    }
+
+    set shadowBlur(val) {
+        this.styled = true;
+        this.styles.shadowBlur = val;
+    }
+
+    get shadowBlur() {
+        return this.styles.shadowBlur;
+    }
+
+    set shadowColor(val) {
+        this.styled = true;
+        this.styles.shadowColor = val;
+    }
+
+    get shadowColor() {
+        return this.styles.shadowColor;
+    }
+
+    get values() {
+        return this.styles;
+    }
+
+    setTRSA(x, y, r, sx, sy, a) {
+        let m = this.data;
+        m[0] = x;
+        m[1] = y;
+        m[2] = r;
+        m[3] = sx;
+        m[4] = sy;
+        m[5] = a;
+    }
+
+    calculate(values) {
+        let v = values.data,
+            m = this.data;
+        m[0] = m[0] + v[0];
+        m[1] = m[1] + v[1];
+        m[2] = m[2] + v[2];
+        m[3] = m[3] * v[3];
+        m[4] = m[4] * v[4];
+        m[5] = m[5] * v[5];
+    }
+
+    calculateStyle(parent) {
+        if (!parent.styled) return false;
+        this.styled = true;
+        let values = parent.values;
+        for (let key in values) if (!this.styles[key]) this.styles[key] = values[key];
+    }
+}
+
+/**
+ * Color helper class.
+ *
+ * @author Patrick Schroen / https://github.com/pschroen
+ */
+
+class Color {
+
+    constructor(value) {
+        let self = this;
+        this.r = 1;
+        this.g = 1;
+        this.b = 1;
+
+        set(value);
+
+        function set(value) {
+            if (value instanceof Color) copy(value);
+            else if (typeof value === 'number') setHex(value);
+            else if (Array.isArray(value)) setRGB(value);
+            else setHex(Number('0x' + value.slice(1)));
+        }
+
+        function copy(color) {
+            self.r = color.r;
+            self.g = color.g;
+            self.b = color.b;
+        }
+
+        function setHex(hex) {
+            hex = Math.floor(hex);
+            self.r = (hex >> 16 & 255) / 255;
+            self.g = (hex >> 8 & 255) / 255;
+            self.b = (hex & 255) / 255;
+        }
+
+        function setRGB(values) {
+            self.r = values[0];
+            self.g = values[1];
+            self.b = values[2];
+        }
+
+        function hue2rgb(p, q, t) {
+            if (t < 0) t += 1;
+            if (t > 1) t -= 1;
+            if (t < 1 / 6) return p + (q - p) * 6 * t;
+            if (t < 1 / 2) return q;
+            if (t < 2 / 3) return p + (q - p) * 6 * (2 / 3 - t);
+            return p;
+        }
+
+        this.set = value => {
+            set(value);
+            return this;
+        };
+
+        this.setRGB = (r, g, b) => {
+            this.r = r;
+            this.g = g;
+            this.b = b;
+            return this;
+        };
+
+        this.setHSL = (h, s, l) => {
+            if (s === 0) {
+                this.r = this.g = this.b = l;
+            } else {
+                let p = l <= 0.5 ? l * (1 + s) : l + s - l * s,
+                    q = 2 * l - p;
+                this.r = hue2rgb(q, p, h + 1 / 3);
+                this.g = hue2rgb(q, p, h);
+                this.b = hue2rgb(q, p, h - 1 / 3);
+            }
+            return this;
+        };
+
+        this.offsetHSL = (h, s, l) => {
+            let hsl = this.getHSL();
+            hsl.h += h;
+            hsl.s += s;
+            hsl.l += l;
+            this.setHSL(hsl.h, hsl.s, hsl.l);
+            return this;
+        };
+
+        this.getStyle = () => {
+            return 'rgb(' + (this.r * 255 | 0) + ',' + (this.g * 255 | 0) + ',' + (this.b * 255 | 0) + ')';
+        };
+
+        this.getHex = () => {
+            return this.r * 255 << 16 ^ this.g * 255 << 8 ^ this.b * 255 << 0;
+        };
+
+        this.getHexString = () => {
+            return '#' + ('000000' + this.getHex().toString(16)).slice(-6);
+        };
+
+        this.getHSL = () => {
+            this.hsl = this.hsl || {h:0, s:0, l:0};
+            let hsl = this.hsl,
+                r = this.r,
+                g = this.g,
+                b = this.b,
+                max = Math.max(r, g, b),
+                min = Math.min(r, g, b),
+                hue,
+                saturation,
+                lightness = (min + max) / 2;
+            if (min === max) {
+                hue = 0;
+                saturation = 0;
+            } else {
+                let delta = max - min;
+                saturation = lightness <= 0.5 ? delta / (max + min) : delta / (2 - max - min);
+                switch (max) {
+                    case r:
+                        hue = (g - b) / delta + (g < b ? 6 : 0);
+                        break;
+                    case g:
+                        hue = (b - r) / delta + 2;
+                        break;
+                    case b:
+                        hue = (r - g) / delta + 4;
+                        break;
+                }
+                hue /= 6;
+            }
+            hsl.h = hue;
+            hsl.s = saturation;
+            hsl.l = lightness;
+            return hsl;
+        };
+
+        this.add = color => {
+            this.r += color.r;
+            this.g += color.g;
+            this.b += color.b;
+        };
+
+        this.mix = (color, percent) => {
+            this.r *= (1 - percent) + color.r * percent;
+            this.g *= (1 - percent) + color.g * percent;
+            this.b *= (1 - percent) + color.b * percent;
+        };
+
+        this.addScalar = s => {
+            this.r += s;
+            this.g += s;
+            this.b += s;
+        };
+
+        this.multiply = color => {
+            this.r *= color.r;
+            this.g *= color.g;
+            this.b *= color.b;
+        };
+
+        this.multiplyScalar = s => {
+            this.r *= s;
+            this.g *= s;
+            this.b *= s;
+        };
+
+        this.clone = () => {
+            return new Color([this.r, this.g, this.b]);
+        };
+
+        this.toArray = () => {
+            if (!this.array) this.array = [];
+            this.array[0] = this.r;
+            this.array[1] = this.g;
+            this.array[2] = this.b;
+            return this.array;
+        };
+    }
+}
+
+/**
+ * Canvas object.
+ *
+ * @author Patrick Schroen / https://github.com/pschroen
+ */
+
+class CanvasObject {
+
+    constructor() {
+        this.visible = true;
+        this.blendMode = 'source-over';
+        this.x = 0;
+        this.y = 0;
+        this.px = 0;
+        this.py = 0;
+        this.clipX = 0;
+        this.clipY = 0;
+        this.clipWidth = 0;
+        this.clipHeight = 0;
+        this.width = 0;
+        this.height = 0;
+        this.rotation = 0;
+        this.scale = 1;
+        this.opacity = 1;
+        this.values = new CanvasValues();
+        this.styles = new CanvasValues(true);
+        this.children = [];
+    }
+
+    updateValues() {
+        this.values.setTRSA(this.x, this.y, Utils.toRadians(this.rotation), this.scaleX || this.scale, this.scaleY || this.scale, this.opacity);
+        if (this.parent.values) this.values.calculate(this.parent.values);
+        if (this.parent.styles) this.styles.calculateStyle(this.parent.styles);
+    }
+
+    render(override) {
+        if (!this.visible) return false;
+        this.updateValues();
+        if (this.draw) this.draw(override);
+        for (let i = 0; i < this.children.length; i++) this.children[i].render(override);
+    }
+
+    startDraw(ox, oy, override) {
+        let context = this.canvas.context,
+            v = this.values.data,
+            x = v[0] + (ox || 0),
+            y = v[1] + (oy || 0);
+        context.save();
+        if (!override) context.globalCompositeOperation = this.blendMode;
+        context.translate(x, y);
+        context.rotate(v[2]);
+        context.scale(v[3], v[4]);
+        context.globalAlpha = v[5];
+        if (this.styles.styled) {
+            let values = this.styles.values;
+            for (let key in values) {
+                let val = values[key];
+                context[key] = val instanceof Color ? val.getHexString() : val;
+            }
+        }
+    }
+
+    endDraw() {
+        this.canvas.context.restore();
+    }
+
+    add(display) {
+        display.canvas = this.canvas;
+        display.parent = this;
+        this.children.push(display);
+        display.z = this.children.length;
+    }
+
+    setCanvas(canvas) {
+        this.canvas = canvas;
+        for (let i = this.children.length - 1; i > -1; i--) this.children[i].setCanvas(canvas);
+    }
+
+    remove(display) {
+        display.canvas = null;
+        display.parent = null;
+        let i = this.children.indexOf(display);
+        if (i > -1) this.children.splice(i, 1);
+    }
+
+    isMask() {
+        let obj = this;
+        while (obj) {
+            if (obj.masked) return true;
+            obj = obj.parent;
+        }
+        return false;
+    }
+
+    unmask() {
+        this.masked.mask(null);
+        this.masked = null;
+    }
+
+    setZ(z) {
+        this.z = z;
+        this.parent.children.sort((a, b) => {
+            return a.z - b.z;
+        });
+    }
+
+    follow(object) {
+        this.x = object.x;
+        this.y = object.y;
+        this.px = object.px;
+        this.py = object.py;
+        this.clipX = object.clipX;
+        this.clipY = object.clipY;
+        this.clipWidth = object.clipWidth;
+        this.clipHeight = object.clipHeight;
+        this.width = object.width;
+        this.height = object.height;
+        this.rotation = object.rotation;
+        this.scale = object.scale;
+        this.scaleX = object.scaleX || object.scale;
+        this.scaleY = object.scaleY || object.scale;
+        return this;
+    }
+
+    visible() {
+        this.visible = true;
+        return this;
+    }
+
+    invisible() {
+        this.visible = false;
+        return this;
+    }
+
+    transform(props) {
+        for (let key in props) if (typeof props[key] === 'number') this[key] = props[key];
+        return this;
+    }
+
+    transformPoint(x, y) {
+        this.px = typeof x === 'number' ? x : this.width * (parseFloat(x) / 100);
+        this.py = typeof y === 'number' ? y : this.height * (parseFloat(y) / 100);
+        return this;
+    }
+
+    clip(x, y, w, h) {
+        this.clipX = x;
+        this.clipY = y;
+        this.clipWidth = w;
+        this.clipHeight = h;
+        return this;
+    }
+
+    hit(e) {
+        if (!this.ignoreHit) if (Utils.hitTestObject(e, this.values.hit(this))) return this;
+        for (let i = this.children.length - 1; i > -1; i--) {
+            let child = this.children[i];
+            if (child.hit(e)) return child;
+        }
+        return false;
+    }
+
+    destroy() {
+        for (let i = 0; i < this.children.length; i++) this.children[i].destroy();
+        return Utils.nullObject(this);
+    }
+}
+
+/**
+ * Image helper class with promise method.
+ *
+ * Currently no CORS support.
+ *
+ * @author Patrick Schroen / https://github.com/pschroen
+ */
+
+let Images = new ( // Singleton pattern
+
+class Images {
+
+    createImg(src, callback) {
+        let img = new Image();
+        img.src = (Config.CDN || '') + src;
+        img.onload = () => {
+            if (callback) callback();
+        };
+        return img;
+    }
+
+    promise(img) {
+        let p = Promise.create();
+        img.onload = p.resolve;
+        return p;
+    }
+}
+
+)(); // Singleton pattern
+
+/**
+ * Canvas graphics.
+ *
+ * @author Patrick Schroen / https://github.com/pschroen
+ */
+
+class CanvasGraphics extends CanvasObject {
+
+    constructor(w = 0, h = w) {
+        super();
+        let self = this;
+        this.width = w;
+        this.height = h;
+        this.props = {};
+        let images = {},
+            draw = [],
+            mask;
+
+        function setProperties(context) {
+            for (let key in self.props) {
+                let val = self.props[key];
+                context[key] = val instanceof Color ? val.getHexString() : val;
+            }
+        }
+
+        this.draw = override => {
+            if (this.isMask() && !override) return false;
+            let context = this.canvas.context;
+            this.startDraw(-this.px, -this.py, override);
+            setProperties(context);
+            if (this.clipWidth && this.clipHeight) {
+                context.beginPath();
+                context.rect(this.clipX, this.clipY, this.clipWidth, this.clipHeight);
+                context.clip();
+            }
+            for (let i = 0; i < draw.length; i++) {
+                let cmd = draw[i];
+                if (!cmd) continue;
+                let fn = cmd.shift();
+                context[fn].apply(context, cmd);
+                cmd.unshift(fn);
+            }
+            this.endDraw();
+            if (mask) {
+                context.globalCompositeOperation = mask.blendMode;
+                mask.render(true);
+            }
+        };
+
+        this.clear = () => {
+            for (let i = 0; i < draw.length; i++) draw[i].length = 0;
+            draw.length = 0;
+        };
+
+        this.arc = (x = 0, y = 0, endAngle = 0, radius = this.radius || this.width / 2, startAngle = 0, counterclockwise = false) => {
+            if (x && !y) {
+                endAngle = x;
+                x = 0;
+                y = 0;
+            }
+            endAngle -= 90;
+            startAngle -= 90;
+            draw.push(['beginPath']);
+            draw.push(['arc', x, y, radius, Utils.toRadians(startAngle), Utils.toRadians(endAngle), counterclockwise]);
+        };
+
+        this.quadraticCurveTo = (cpx, cpy, x, y) => {
+            draw.push(['quadraticCurveTo', cpx, cpy, x, y]);
+        };
+
+        this.bezierCurveTo = (cp1x, cp1y, cp2x, cp2y, x, y) => {
+            draw.push(['bezierCurveTo', cp1x, cp1y, cp2x, cp2y, x, y]);
+        };
+
+        this.fillRect = (x, y, w, h) => {
+            draw.push(['fillRect', x, y, w, h]);
+        };
+
+        this.clearRect = (x, y, w, h) => {
+            draw.push(['clearRect', x, y, w, h]);
+        };
+
+        this.strokeRect = (x, y, w, h) => {
+            draw.push(['strokeRect', x, y, w, h]);
+        };
+
+        this.moveTo = (x, y) => {
+            draw.push(['moveTo', x, y]);
+        };
+
+        this.lineTo = (x, y) => {
+            draw.push(['lineTo', x, y]);
+        };
+
+        this.stroke = () => {
+            draw.push(['stroke']);
+        };
+
+        this.fill = () => {
+            if (!mask) draw.push(['fill']);
+        };
+
+        this.beginPath = () => {
+            draw.push(['beginPath']);
+        };
+
+        this.closePath = () => {
+            draw.push(['closePath']);
+        };
+
+        this.fillText = (text, x, y) => {
+            draw.push(['fillText', text, x, y]);
+        };
+
+        this.strokeText = (text, x, y) => {
+            draw.push(['strokeText', text, x, y]);
+        };
+
+        this.setLineDash = value => {
+            draw.push(['setLineDash', value]);
+        };
+
+        this.createImage = (src, force) => {
+            if (!images[src] || force) {
+                let img = Images.createImg(src);
+                if (force) return img;
+                images[src] = img;
+            }
+            return images[src];
+        };
+
+        this.drawImage = (img, sx = 0, sy = 0, sWidth = img.width, sHeight = img.height, dx = 0, dy = 0, dWidth = img.width, dHeight = img.height) => {
+            if (typeof img === 'string') img = this.createImage(img);
+            draw.push(['drawImage', img, sx, sy, sWidth, sHeight, dx, dy, dWidth, dHeight]);
+        };
+
+        this.mask = object => {
+            if (!object) return mask = null;
+            mask = object;
+            object.masked = this;
+            for (let i = 0; i < draw.length; i++) {
+                if (draw[i][0] === 'fill' || draw[i][0] === 'stroke') {
+                    draw[i].length = 0;
+                    draw.splice(i, 1);
+                }
+            }
+        };
+
+        this.clone = () => {
+            let object = new CanvasGraphics(this.width, this.height);
+            object.visible = this.visible;
+            object.blendMode = this.blendMode;
+            object.opacity = this.opacity;
+            object.follow(this);
+            object.props = Utils.cloneObject(this.props);
+            object.setDraw(Utils.cloneArray(draw));
+            return object;
+        };
+
+        this.setDraw = array => {
+            draw = array;
+        };
+    }
+
+    set strokeStyle(val) {
+        this.props.strokeStyle = val;
+    }
+
+    get strokeStyle() {
+        return this.props.strokeStyle;
+    }
+
+    set fillStyle(val) {
+        this.props.fillStyle = val;
+    }
+
+    get fillStyle() {
+        return this.props.fillStyle;
+    }
+
+    set lineWidth(val) {
+        this.props.lineWidth = val;
+    }
+
+    get lineWidth() {
+        return this.props.lineWidth;
+    }
+
+    set lineCap(val) {
+        this.props.lineCap = val;
+    }
+
+    get lineCap() {
+        return this.props.lineCap;
+    }
+
+    set lineDashOffset(val) {
+        this.props.lineDashOffset = val;
+    }
+
+    get lineDashOffset() {
+        return this.props.lineDashOffset;
+    }
+
+    set lineJoin(val) {
+        this.props.lineJoin = val;
+    }
+
+    get lineJoin() {
+        return this.props.lineJoin;
+    }
+
+    set miterLimit(val) {
+        this.props.miterLimit = val;
+    }
+
+    get miterLimit() {
+        return this.props.miterLimit;
+    }
+
+    set font(val) {
+        this.props.font = val;
+    }
+
+    get font() {
+        return this.props.font;
+    }
+
+    set textAlign(val) {
+        this.props.textAlign = val;
+    }
+
+    get textAlign() {
+        return this.props.textAlign;
+    }
+
+    set textBaseline(val) {
+        this.props.textBaseline = val;
+    }
+
+    get textBaseline() {
+        return this.props.textBaseline;
+    }
+}
+
+/**
+ * Canvas with a single image.
+ *
+ * @author Patrick Schroen / https://github.com/pschroen
+ */
+
+class CanvasImage extends CanvasGraphics {
+
+    constructor(parent, name, w, h = w) {
+        super(w, h);
+        let canvas = parent.initClass(Canvas, name, w, h);
+
+        this.img = src => {
+            this.drawImage(src, 0, 0, w, h);
+            canvas.add(this);
             return this;
         };
     }
 }
 
 /**
- * Alien utilities.
+ * Canvas font utilities.
  *
  * @author Patrick Schroen / https://github.com/pschroen
  */
 
-class Utils {
+let CanvasFont = new ( // Singleton pattern
 
-    rand(min, max) {
-        return (new DynamicObject({v:min})).lerp({v:max}, Math.random()).v;
-    }
+class CanvasFont {
 
-    doRandom(min, max, precision) {
-        if (typeof precision === 'number') {
-            let p = Math.pow(10, precision);
-            return Math.round(this.rand(min, max) * p) / p;
-        } else {
-            return Math.round(this.rand(min - 0.5, max + 0.5));
+    constructor() {
+
+        function createText(canvas, width, height, str, font, fillStyle, letterSpacing, textAlign) {
+            let context = canvas.context,
+                graphics = canvas.initClass(CanvasGraphics, width, height);
+            graphics.font = font;
+            graphics.fillStyle = fillStyle;
+            graphics.totalWidth = 0;
+            let chr,
+                characters = str.split(''),
+                index = 0,
+                currentPosition = 0;
+            context.font = font;
+            for (let i = 0; i < characters.length; i++) graphics.totalWidth += context.measureText(characters[i]).width + letterSpacing;
+            switch (textAlign) {
+                case 'start':
+                case 'left':
+                    currentPosition = 0;
+                    break;
+                case 'end':
+                case 'right':
+                    currentPosition = width - graphics.totalWidth;
+                    break;
+                case 'center':
+                    currentPosition = (width - graphics.totalWidth) / 2;
+                    break;
+            }
+            do {
+                chr = characters[index++];
+                graphics.fillText(chr, currentPosition, 0);
+                currentPosition += context.measureText(chr).width + letterSpacing;
+            } while (index < str.length);
+            return graphics;
         }
-    }
 
-    headsTails(heads, tails) {
-        return !this.doRandom(0, 1) ? heads : tails;
-    }
-
-    toDegrees(rad) {
-        return rad * (180 / Math.PI);
-    }
-
-    toRadians(deg) {
-        return deg * (Math.PI / 180);
-    }
-
-    findDistance(p1, p2) {
-        let dx = p2.x - p1.x;
-        let dy = p2.y - p1.y;
-        return Math.sqrt(dx * dx + dy * dy);
-    }
-
-    timestamp() {
-        return (Date.now() + this.doRandom(0, 99999)).toString();
-    }
-
-    clamp(num, min, max) {
-        return Math.min(Math.max(num, min), max);
-    }
-
-    constrain(num, min, max) {
-        return Math.min(Math.max(num, Math.min(min, max)), Math.max(min, max));
-    }
-
-    convertRange(oldValue, oldMin, oldMax, newMin, newMax, constrain) {
-        let oldRange = oldMax - oldMin;
-        let newRange = newMax - newMin;
-        let newValue = (oldValue - oldMin) * newRange / oldRange + newMin;
-        return constrain ? this.constrain(newValue, newMin, newMax) : newValue;
-    }
-
-    cloneObject(object) {
-        return JSON.parse(JSON.stringify(object));
-    }
-
-    mergeObject(...objects) {
-        let object = {};
-        for (let obj of objects) for (let key in obj) object[key] = obj[key];
-        return object;
-    }
-
-    queryString(key) {
-        return decodeURI(window.location.search.replace(new RegExp('^(?:.*[&\\?]' + encodeURI(key).replace(/[\.\+\*]/g, '\\$&') + '(?:\\=([^&]*))?)?.*$', 'i'), '$1'));
+        this.createText = (canvas, width, height, str, font, fillStyle, {letterSpacing = 0, lineHeight = height, textAlign = 'start'}) => {
+            let context = canvas.context;
+            if (height === lineHeight) {
+                return createText(canvas, width, height, str, font, fillStyle, letterSpacing, textAlign);
+            } else {
+                let text = canvas.initClass(CanvasGraphics, width, height),
+                    words = str.split(' '),
+                    line = '',
+                    lines = [];
+                text.totalWidth = 0;
+                text.totalHeight = 0;
+                context.font = font;
+                for (let n = 0; n < words.length; n++) {
+                    let testLine = line + words[n] + ' ',
+                        characters = testLine.split(''),
+                        testWidth = 0;
+                    for (let i = 0; i < characters.length; i++) testWidth += context.measureText(characters[i]).width + letterSpacing;
+                    if (testWidth > width && n > 0) {
+                        lines.push(line);
+                        line = words[n] + ' ';
+                    } else {
+                        line = testLine;
+                    }
+                }
+                lines.push(line);
+                lines.every((e, i) => {
+                    let graphics = createText(canvas, width, lineHeight, e, font, fillStyle, letterSpacing, textAlign);
+                    graphics.y = i * lineHeight;
+                    text.add(graphics);
+                    text.totalWidth = Math.max(graphics.totalWidth, text.totalWidth);
+                    text.totalHeight += lineHeight;
+                    return true;
+                });
+                return text;
+            }
+        };
     }
 }
+
+)(); // Singleton pattern
 
 /**
  * Mouse helper class.
  *
  * @author Patrick Schroen / https://github.com/pschroen
  */
+
+let Mouse = new ( // Singleton pattern
 
 class Mouse {
 
@@ -1313,62 +2283,26 @@ class Mouse {
         this.capture = () => {
             this.x = 0;
             this.y = 0;
-            window.addEventListener('mousemove', moved, false);
+            window.addEventListener('mousemove', moved, true);
         };
 
         this.stop = () => {
             this.x = 0;
             this.y = 0;
-            window.removeEventListener('mousemove', moved, false);
+            window.removeEventListener('mousemove', moved, true);
         };
     }
 }
 
-/**
- * Event based asset loader.
- *
- * Currently only images are supported.
- * Currently no CORS support.
- *
- * @author Patrick Schroen / https://github.com/pschroen
- */
-
-class AssetLoader {
-
-    constructor(assets, callback) {
-        let self = this;
-        this.events = new EventManager();
-        this.CDN = Config.CDN || '';
-        let total = assets.length,
-            loaded = 0,
-            percent = 0;
-
-        for (let i = 0; i < assets.length; i++) loadAsset(this.CDN + assets[i]);
-
-        function loadAsset(asset) {
-            let image = new Image();
-            image.src = asset;
-            image.onload = assetLoaded;
-        }
-
-        function assetLoaded() {
-            loaded++;
-            percent = loaded / total;
-            self.events.fire(Events.PROGRESS, {percent});
-            if (loaded === total) {
-                self.complete = true;
-                self.events.fire(Events.COMPLETE);
-                if (callback) callback();
-            }
-        }
-    }
-}
+)(); // Singleton pattern
 
 /**
  * XMLHttpRequest helper class with promise support.
  *
  * @author Patrick Schroen / https://github.com/pschroen
  */
+
+let XHR = new ( // Singleton pattern
 
 class XHR {
 
@@ -1377,7 +2311,7 @@ class XHR {
         this.options = {};
         let serial = [];
 
-        let serialize = (key, data) => {
+        function serialize(key, data) {
             if (typeof data === 'object') {
                 for (let i in data) {
                     let newKey = key + '[' + i + ']';
@@ -1387,7 +2321,7 @@ class XHR {
             } else {
                 serial.push(key + '=' + data);
             }
-        };
+        }
 
         this.get = (url, data, callback, type) => {
             if (typeof data === 'function') {
@@ -1404,6 +2338,8 @@ class XHR {
             }
             let xhr = new XMLHttpRequest();
             xhr.open('GET', url, true);
+            if (type === 'arraybuffer') xhr.responseType = 'arraybuffer';
+            if (type === 'blob') xhr.responseType = 'blob';
             if (type === 'text') xhr.overrideMimeType('text/plain');
             if (type === 'json') xhr.setRequestHeader('Accept', 'application/json');
             for (let key in this.headers) xhr.setRequestHeader(key, this.headers[key]);
@@ -1416,20 +2352,12 @@ class XHR {
             }
             xhr.send();
             xhr.onreadystatechange = () => {
-                if (xhr.readyState === 4 && xhr.status === 200) {
-                    let data = xhr.responseText;
-                    if (type === 'text') {
-                        if (callback) callback(data);
-                    } else {
-                        try {
-                            if (callback) callback(JSON.parse(data));
-                        } catch (e) {
-                            throw e;
-                        }
-                    }
-                }
-                if (xhr.status == 0 || xhr.status == 400 || xhr.status == 401 || xhr.status == 404 || xhr.status == 500) {
-                    if (callback) {
+                if (callback) {
+                    if (xhr.readyState === 4 && xhr.status === 200) {
+                        if (type === 'arraybuffer' || type === 'blob') callback(xhr.response);
+                        else if (type === 'text') callback(xhr.responseText);
+                        else callback(JSON.parse(xhr.responseText));
+                    } else if (xhr.status == 0 || xhr.status == 400 || xhr.status == 401 || xhr.status == 404 || xhr.status == 500) {
                         if (promise) promise.reject(xhr);
                         else callback(xhr);
                     }
@@ -1456,6 +2384,8 @@ class XHR {
             }
             let xhr = new XMLHttpRequest();
             xhr.open('POST', url, true);
+            if (type === 'arraybuffer') xhr.responseType = 'arraybuffer';
+            if (type === 'blob') xhr.responseType = 'blob';
             if (type === 'text') xhr.overrideMimeType('text/plain');
             if (type === 'json') xhr.setRequestHeader('Accept', 'application/json');
             xhr.setRequestHeader('Content-Type', type === 'json' ? 'application/json' : 'application/x-www-form-urlencoded');
@@ -1469,20 +2399,12 @@ class XHR {
             }
             xhr.send();
             xhr.onreadystatechange = () => {
-                if (xhr.readyState === 4 && xhr.status === 200) {
-                    let data = xhr.responseText;
-                    if (type === 'text') {
-                        if (callback) callback(data);
-                    } else {
-                        try {
-                            if (callback) callback(JSON.parse(data));
-                        } catch (e) {
-                            throw e;
-                        }
-                    }
-                }
-                if (xhr.status == 0 || xhr.status == 400 || xhr.status == 401 || xhr.status == 404 || xhr.status == 500) {
-                    if (callback) {
+                if (callback) {
+                    if (xhr.readyState === 4 && xhr.status === 200) {
+                        if (type === 'arraybuffer' || type === 'blob') callback(xhr.response);
+                        else if (type === 'text') callback(xhr.responseText);
+                        else callback(JSON.parse(xhr.responseText));
+                    } else if (xhr.status == 0 || xhr.status == 400 || xhr.status == 401 || xhr.status == 404 || xhr.status == 500) {
                         if (promise) promise.reject(xhr);
                         else callback(xhr);
                     }
@@ -1493,11 +2415,146 @@ class XHR {
     }
 }
 
+)(); // Singleton pattern
+
+/**
+ * WebAudio helper class.
+ *
+ * @author Patrick Schroen / https://github.com/pschroen
+ */
+
+if (!window.AudioContext) window.AudioContext = window.webkitAudioContext || window.mozAudioContext || window.oAudioContext;
+
+let WebAudio = new ( // Singleton pattern
+
+class WebAudio {
+
+    constructor() {
+        let context,
+            sounds = [];
+
+        this.init = () => {
+            context = new window.AudioContext();
+            this.globalGain = context.createGain();
+            this.globalGain.connect(context.destination);
+        };
+
+        this.createSound = (id, audioData, callback) => {
+            let sound = {id};
+            context.decodeAudioData(audioData, buffer => {
+                sound.buffer = buffer;
+                sound.audioGain = context.createGain();
+                sound.audioGain.connect(this.globalGain);
+                sound.complete = true;
+                if (callback) callback();
+            });
+            sounds.push(sound);
+        };
+
+        this.getSound = id => {
+            for (let i = 0; i < sounds.length; i++) if (sounds[i].id === id) return sounds[i];
+            return null;
+        };
+
+        this.trigger = id => {
+            if (!context) return;
+            let sound = this.getSound(id),
+                source = context.createBufferSource();
+            source.buffer = sound.buffer;
+            source.connect(sound.audioGain);
+            source.start(0);
+        };
+
+        this.mute = () => {
+            if (!context) return;
+            TweenManager.tween(this.globalGain.gain, {value:0}, 300, 'easeOutSine');
+        };
+
+        this.unmute = () => {
+            if (!context) return;
+            TweenManager.tween(this.globalGain.gain, {value:1}, 500, 'easeOutSine');
+        };
+    }
+}
+
+)(); // Singleton pattern
+
+/**
+ * Asset loader with promise method.
+ *
+ * Currently no CORS support.
+ *
+ * @author Patrick Schroen / https://github.com/pschroen
+ */
+
+class AssetLoader {
+
+    constructor(assets, callback) {
+        if (Array.isArray(assets)) {
+            assets = (() => {
+                let keys = assets.map(path => {
+                    return Utils.basename(path);
+                });
+                return keys.reduce((o, k, i) => {
+                    o[k] = assets[i];
+                    return o;
+                }, {});
+            })();
+        }
+        let self = this;
+        this.events = new EventManager();
+        this.CDN = Config.CDN || '';
+        let total = Object.keys(assets).length,
+            loaded = 0,
+            percent = 0;
+
+        for (let key in assets) loadAsset(key, this.CDN + assets[key]);
+
+        function loadAsset(key, asset) {
+            let name = asset.split('/');
+            name = name[name.length - 1];
+            let split = name.split('.'),
+                ext = split[split.length - 1].split('?')[0];
+            switch (ext) {
+                case 'mp3':
+                    if (!window.AudioContext) return assetLoaded();
+                    XHR.get(asset, contents => {
+                        WebAudio.createSound(key, contents, assetLoaded);
+                    }, 'arraybuffer');
+                    break;
+                default:
+                    Images.createImg(asset, assetLoaded);
+                    break;
+            }
+        }
+
+        function assetLoaded() {
+            loaded++;
+            percent = loaded / total;
+            self.events.fire(Events.PROGRESS, {percent});
+            if (loaded === total) {
+                self.complete = true;
+                self.events.fire(Events.COMPLETE);
+                if (callback) callback();
+            }
+        }
+    }
+}
+
+AssetLoader.loadAssets = (assets, callback) => {
+    let promise = Promise.create();
+    if (!callback) callback = promise.resolve;
+    new AssetLoader(assets, callback);
+    return promise;
+};
+
 /**
  * Stage reference class.
  *
  * @author Patrick Schroen / https://github.com/pschroen
  */
+
+let Stage = new ( // Singleton pattern
 
 class Stage extends Interface {
 
@@ -1520,17 +2577,20 @@ class Stage extends Interface {
                     last = 'focus';
                     window.events.fire(Events.BROWSER_FOCUS, {type:'focus'});
                 }
-            }, false);
+            }, true);
             window.addEventListener('blur', () => {
                 if (last !== 'blur') {
                     last = 'blur';
                     window.events.fire(Events.BROWSER_FOCUS, {type:'blur'});
                 }
-            }, false);
-            window.addEventListener('resize', () => {
-                window.events.fire(Events.RESIZE);
-            }, false);
-            window.events.add(Events.RESIZE, resizeHandler);
+            }, true);
+            window.addEventListener('keydown', () => window.events.fire(Events.KEYBOARD_DOWN), true);
+            window.addEventListener('keyup', () => window.events.fire(Events.KEYBOARD_UP), true);
+            window.addEventListener('keypress', () => window.events.fire(Events.KEYBOARD_PRESS), true);
+            if (!Device.mobile) {
+                window.addEventListener('resize', () => window.events.fire(Events.RESIZE), true);
+                window.events.add(Events.RESIZE, resizeHandler);
+            }
         }
 
         function resizeHandler() {
@@ -1539,6 +2599,48 @@ class Stage extends Interface {
     }
 }
 
+)(); // Singleton pattern
+
+/**
+ * Font loader with promise method.
+ *
+ * @author Patrick Schroen / https://github.com/pschroen
+ */
+
+class FontLoader {
+
+    constructor(fonts, callback) {
+        let self = this;
+        this.events = new EventManager();
+        let element;
+
+        initFonts();
+        finish();
+
+        function initFonts() {
+            if (!Array.isArray(fonts)) fonts = [fonts];
+            element = Stage.create('FontLoader');
+            for (let i = 0; i < fonts.length; i++) element.create('font').fontStyle(fonts[i], 12, '#000').text('LOAD').css({top:-999});
+        }
+
+        function finish() {
+            Delayed(() => {
+                element.destroy();
+                self.complete = true;
+                self.events.fire(Events.COMPLETE);
+                if (callback) callback();
+            }, 500);
+        }
+    }
+}
+
+FontLoader.loadFonts = (fonts, callback) => {
+    let promise = Promise.create();
+    if (!callback) callback = promise.resolve;
+    new FontLoader(fonts, callback);
+    return promise;
+};
+
 /**
  * Alien abduction point.
  *
@@ -1546,7 +2648,7 @@ class Stage extends Interface {
  */
 
 // Polyfills
-if (typeof Promise !== 'undefined' && !Promise.create) Promise.create = () => {
+if (typeof Promise !== 'undefined') Promise.create = () => {
     let resolve,
         reject,
         promise = new Promise((res, rej) => {
@@ -1559,27 +2661,21 @@ if (typeof Promise !== 'undefined' && !Promise.create) Promise.create = () => {
 };
 
 // Globals
-if (!window.getURL) window.getURL = (url, target = '_blank') => window.open(url, target);
-
-if (!window.Delayed) window.Delayed = (callback, time = 0, params) => window.setTimeout(() => {
-    callback && callback(params);
+window.getURL = (url, target = '_blank') => window.open(url, target);
+window.Delayed = (callback, time = 0, params) => window.setTimeout(() => {
+    if (callback) callback(params);
 }, time);
 
 if (!window.Global) window.Global = {};
 if (!window.Config) window.Config = {};
 
-// Illegal reassignment for instances
-Function((() => {
-    let instances = '';
-    ['Render', 'Utils', 'Device', 'Mouse', 'TweenManager', 'Interpolation', 'XHR', 'Stage'].forEach(i => {
-        instances += `try {${i} = new ${i}();} catch(e) {}`;
-    });
-    return instances;
-})())();
-
 exports.EventManager = EventManager;
 exports.Interface = Interface;
 exports.Canvas = Canvas;
+exports.CanvasGraphics = CanvasGraphics;
+exports.CanvasImage = CanvasImage;
+exports.CanvasFont = CanvasFont;
+exports.Color = Color;
 exports.Render = Render;
 exports.DynamicObject = DynamicObject;
 exports.Utils = Utils;
@@ -1590,7 +2686,11 @@ exports.Interpolation = Interpolation;
 exports.MathTween = MathTween;
 exports.SpringTween = SpringTween;
 exports.AssetLoader = AssetLoader;
+exports.FontLoader = FontLoader;
+exports.Images = Images;
+exports.SVG = SVG;
 exports.XHR = XHR;
+exports.WebAudio = WebAudio;
 exports.Stage = Stage;
 
 Object.defineProperty(exports, '__esModule', { value: true });

@@ -88,12 +88,16 @@ var possibleConstructorReturn = function (self, call) {
 
 if (!window.Events) window.Events = {
     BROWSER_FOCUS: 'browser_focus',
+    KEYBOARD_DOWN: 'keyboard_down',
+    KEYBOARD_UP: 'keyboard_up',
+    KEYBOARD_PRESS: 'keyboard_press',
+    RESIZE: 'resize',
     COMPLETE: 'complete',
     PROGRESS: 'progress',
     UPDATE: 'update',
     LOADED: 'loaded',
     ERROR: 'error',
-    RESIZE: 'resize',
+    READY: 'ready',
     HOVER: 'hover',
     CLICK: 'click'
 };
@@ -130,33 +134,26 @@ if (!window.events) window.events = new EventManager();
  * @author Patrick Schroen / https://github.com/pschroen
  */
 
-// Shim layer with setTimeout fallback
-if (!window.requestAnimationFrame) {
-    window.requestAnimationFrame = function () {
-        return window.webkitRequestAnimationFrame || window.mozRequestAnimationFrame || window.oRequestAnimationFrame || window.msRequestAnimationFrame || function (callback) {
-            Delayed(callback, 1000 / 60);
-        };
-    }();
-}
+if (!window.requestAnimationFrame) window.requestAnimationFrame = window.webkitRequestAnimationFrame || window.mozRequestAnimationFrame || window.oRequestAnimationFrame || window.msRequestAnimationFrame || function (callback) {
+    return Delayed(callback, 1000 / 60);
+};
 
-var Render = function Render() {
-    var _this = this;
+var Render = new // Singleton pattern
 
+function Render() {
     classCallCheck(this, Render);
 
-    this.TIME = Date.now();
-    this.TARGET_FPS = 60;
     var last = void 0,
         render = [],
         time = Date.now(),
         timeSinceRender = 0,
         rendering = false;
 
-    var focus = function focus(e) {
+    function focus(e) {
         if (e.type === 'focus') last = Date.now();
-    };
+    }
 
-    var step = function step() {
+    function step() {
         var t = Date.now(),
             timeSinceLoad = t - time,
             diff = 0,
@@ -166,10 +163,6 @@ var Render = function Render() {
             fps = 1000 / diff;
         }
         last = t;
-        _this.FPS = fps;
-        _this.TIME = t;
-        _this.DELTA = diff;
-        _this.TSL = timeSinceLoad;
         for (var i = render.length - 1; i > -1; i--) {
             var callback = render[i];
             if (!callback) continue;
@@ -186,11 +179,9 @@ var Render = function Render() {
             rendering = false;
             window.events.remove(Events.BROWSER_FOCUS, focus);
         }
-    };
+    }
 
-    this.start = function (callback, fps) {
-        if (_this.TARGET_FPS < 60) fps = _this.TARGET_FPS;
-        if (typeof fps === 'number') callback.fps = fps;
+    this.start = function (callback) {
         callback.frameCount = 0;
         if (render.indexOf(callback) === -1) render.push(callback);
         if (render.length && !rendering) {
@@ -204,7 +195,202 @@ var Render = function Render() {
         var i = render.indexOf(callback);
         if (i > -1) render.splice(i, 1);
     };
+}(); // Singleton pattern
+
+/**
+ * Dynamic object with linear interpolation.
+ *
+ * @author Patrick Schroen / https://github.com/pschroen
+ */
+
+var DynamicObject = function DynamicObject(props) {
+    var _this = this;
+
+    classCallCheck(this, DynamicObject);
+
+    for (var key in props) {
+        this[key] = props[key];
+    }this.lerp = function (v, ratio) {
+        for (var _key in props) {
+            _this[_key] += (v[_key] - _this[_key]) * ratio;
+        }return _this;
+    };
 };
+
+/**
+ * Alien utilities.
+ *
+ * @author Patrick Schroen / https://github.com/pschroen
+ */
+
+var Utils = new ( // Singleton pattern
+
+function () {
+    function Utils() {
+        classCallCheck(this, Utils);
+    }
+
+    createClass(Utils, [{
+        key: 'rand',
+        value: function rand(min, max) {
+            return new DynamicObject({ v: min }).lerp({ v: max }, Math.random()).v;
+        }
+    }, {
+        key: 'doRandom',
+        value: function doRandom(min, max, precision) {
+            if (typeof precision === 'number') {
+                var p = Math.pow(10, precision);
+                return Math.round(this.rand(min, max) * p) / p;
+            } else {
+                return Math.round(this.rand(min - 0.5, max + 0.5));
+            }
+        }
+    }, {
+        key: 'headsTails',
+        value: function headsTails(heads, tails) {
+            return !this.doRandom(0, 1) ? heads : tails;
+        }
+    }, {
+        key: 'toDegrees',
+        value: function toDegrees(rad) {
+            return rad * (180 / Math.PI);
+        }
+    }, {
+        key: 'toRadians',
+        value: function toRadians(deg) {
+            return deg * (Math.PI / 180);
+        }
+    }, {
+        key: 'findDistance',
+        value: function findDistance(p1, p2) {
+            var dx = p2.x - p1.x,
+                dy = p2.y - p1.y;
+            return Math.sqrt(dx * dx + dy * dy);
+        }
+    }, {
+        key: 'timestamp',
+        value: function timestamp() {
+            return (Date.now() + this.doRandom(0, 99999)).toString();
+        }
+    }, {
+        key: 'pad',
+        value: function pad(number) {
+            return number < 10 ? '0' + number : number;
+        }
+    }, {
+        key: 'hitTestObject',
+        value: function hitTestObject(obj1, obj2) {
+            var x1 = obj1.x,
+                y1 = obj1.y,
+                w = obj1.width,
+                h = obj1.height;
+            var xp1 = obj2.x,
+                yp1 = obj2.y,
+                wp = obj2.width,
+                hp = obj2.height;
+            var x2 = x1 + w,
+                y2 = y1 + h,
+                xp2 = xp1 + wp,
+                yp2 = yp1 + hp;
+            if (xp1 >= x1 && xp1 <= x2) {
+                if (yp1 >= y1 && yp1 <= y2) return true;else if (y1 >= yp1 && y1 <= yp2) return true;
+            } else if (x1 >= xp1 && x1 <= xp2) {
+                if (yp1 >= y1 && yp1 <= y2) return true;else if (y1 >= yp1 && y1 <= yp2) return true;
+            }
+            return false;
+        }
+    }, {
+        key: 'clamp',
+        value: function clamp(num, min, max) {
+            return Math.min(Math.max(num, min), max);
+        }
+    }, {
+        key: 'constrain',
+        value: function constrain(num, min, max) {
+            return Math.min(Math.max(num, Math.min(min, max)), Math.max(min, max));
+        }
+    }, {
+        key: 'convertRange',
+        value: function convertRange(oldValue, oldMin, oldMax, newMin, newMax, constrain) {
+            var oldRange = oldMax - oldMin,
+                newRange = newMax - newMin,
+                newValue = (oldValue - oldMin) * newRange / oldRange + newMin;
+            return constrain ? this.constrain(newValue, newMin, newMax) : newValue;
+        }
+    }, {
+        key: 'nullObject',
+        value: function nullObject(object) {
+            for (var key in object) {
+                if (typeof object[key] !== 'undefined') object[key] = null;
+            }return null;
+        }
+    }, {
+        key: 'cloneObject',
+        value: function cloneObject(object) {
+            return JSON.parse(JSON.stringify(object));
+        }
+    }, {
+        key: 'mergeObject',
+        value: function mergeObject() {
+            var object = {};
+
+            for (var _len = arguments.length, objects = Array(_len), _key = 0; _key < _len; _key++) {
+                objects[_key] = arguments[_key];
+            }
+
+            var _iteratorNormalCompletion = true;
+            var _didIteratorError = false;
+            var _iteratorError = undefined;
+
+            try {
+                for (var _iterator = objects[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
+                    var obj = _step.value;
+                    for (var key in obj) {
+                        object[key] = obj[key];
+                    }
+                }
+            } catch (err) {
+                _didIteratorError = true;
+                _iteratorError = err;
+            } finally {
+                try {
+                    if (!_iteratorNormalCompletion && _iterator.return) {
+                        _iterator.return();
+                    }
+                } finally {
+                    if (_didIteratorError) {
+                        throw _iteratorError;
+                    }
+                }
+            }
+
+            return object;
+        }
+    }, {
+        key: 'cloneArray',
+        value: function cloneArray(array) {
+            return array.slice(0);
+        }
+    }, {
+        key: 'toArray',
+        value: function toArray$$1(object) {
+            return Object.keys(object).map(function (key) {
+                return object[key];
+            });
+        }
+    }, {
+        key: 'queryString',
+        value: function queryString(key) {
+            return decodeURI(window.location.search.replace(new RegExp('^(?:.*[&\\?]' + encodeURI(key).replace(/[\.\+\*]/g, '\\$&') + '(?:\\=([^&]*))?)?.*$', 'i'), '$1'));
+        }
+    }, {
+        key: 'basename',
+        value: function basename(path) {
+            return path.replace(/.*\//, '').replace(/(.*)\..*$/, '$1');
+        }
+    }]);
+    return Utils;
+}())(); // Singleton pattern
 
 /**
  * Browser detection and vendor prefixes.
@@ -212,7 +398,9 @@ var Render = function Render() {
  * @author Patrick Schroen / https://github.com/pschroen
  */
 
-var Device = function () {
+var Device = new ( // Singleton pattern
+
+function () {
     function Device() {
         var _this = this;
 
@@ -255,8 +443,7 @@ var Device = function () {
             }
             return pre;
         }();
-        this.system = {};
-        this.system.retina = window.devicePixelRatio > 1;
+        this.mobile = !!('ontouchstart' in window || 'onpointerdown' in window) && this.detect(['ios', 'iphone', 'ipad', 'android', 'blackberry']) ? {} : false;
     }
 
     createClass(Device, [{
@@ -274,7 +461,7 @@ var Device = function () {
         }
     }]);
     return Device;
-}();
+}())(); // Singleton pattern
 
 /**
  * Interpolation helper class.
@@ -282,7 +469,9 @@ var Device = function () {
  * @author Patrick Schroen / https://github.com/pschroen
  */
 
-var Interpolation = function Interpolation() {
+var Interpolation = new // Singleton pattern
+
+function Interpolation() {
     var _this = this;
 
     classCallCheck(this, Interpolation);
@@ -554,22 +743,14 @@ var Interpolation = function Interpolation() {
             return 1 - _this.Bounce.Out(1 - k);
         },
         Out: function Out(k) {
-            if (k < 1 / 2.75) {
-                return 7.5625 * k * k;
-            } else if (k < 2 / 2.75) {
-                return 7.5625 * (k -= 1.5 / 2.75) * k + 0.75;
-            } else if (k < 2.5 / 2.75) {
-                return 7.5625 * (k -= 2.25 / 2.75) * k + 0.9375;
-            } else {
-                return 7.5625 * (k -= 2.625 / 2.75) * k + 0.984375;
-            }
+            if (k < 1 / 2.75) return 7.5625 * k * k;else if (k < 2 / 2.75) return 7.5625 * (k -= 1.5 / 2.75) * k + 0.75;else if (k < 2.5 / 2.75) return 7.5625 * (k -= 2.25 / 2.75) * k + 0.9375;else return 7.5625 * (k -= 2.625 / 2.75) * k + 0.984375;
         },
         InOut: function InOut(k) {
             if (k < 0.5) return _this.Bounce.In(k * 2) * 0.5;
             return _this.Bounce.Out(k * 2 - 1) * 0.5 + 0.5;
         }
     };
-};
+}(); // Singleton pattern
 
 /**
  * Mathematical.
@@ -740,7 +921,9 @@ var SpringTween = function SpringTween(object, props, friction, ease, delay, cal
  * @author Patrick Schroen / https://github.com/pschroen
  */
 
-var TweenManager = function () {
+var TweenManager = new ( // Singleton pattern
+
+function () {
     function TweenManager() {
         classCallCheck(this, TweenManager);
 
@@ -775,7 +958,7 @@ var TweenManager = function () {
         var tweens = [],
             rendering = false;
 
-        var updateTweens = function updateTweens(t) {
+        function updateTweens(t) {
             if (tweens.length) {
                 for (var i = 0; i < tweens.length; i++) {
                     tweens[i].update(t);
@@ -784,7 +967,7 @@ var TweenManager = function () {
                 rendering = false;
                 Render.stop(updateTweens);
             }
-        };
+        }
 
         this.addMathTween = function (tween) {
             tweens.push(tween);
@@ -879,7 +1062,7 @@ var TweenManager = function () {
         }
     }]);
     return TweenManager;
-}();
+}())(); // Singleton pattern
 
 /**
  * CSS3 transition animation.
@@ -897,6 +1080,10 @@ var CSSTransition = function CSSTransition(object, props, time, ease, delay, cal
     initProperties();
     initCSSTween();
 
+    function killed() {
+        return !object || !object.element;
+    }
+
     function initProperties() {
         for (var key in props) {
             if (TweenManager.checkTransform(key)) {
@@ -912,16 +1099,19 @@ var CSSTransition = function CSSTransition(object, props, time, ease, delay, cal
     }
 
     function initCSSTween() {
+        if (killed()) return;
         TweenManager.clearCSSTween(object);
         object.cssTween = self;
         var transition = '';
         for (var i = 0; i < properties.length; i++) {
             transition += (transition.length ? ', ' : '') + properties[i] + ' ' + time + 'ms ' + TweenManager.getEase(ease) + ' ' + delay + 'ms';
         }Delayed(function () {
+            if (killed()) return;
             object.element.style[Device.vendor('Transition')] = transition;
             object.css(props);
             object.transform(transform);
             Delayed(function () {
+                if (killed()) return;
                 clear();
                 if (callback) callback();
             }, time + delay);
@@ -929,6 +1119,7 @@ var CSSTransition = function CSSTransition(object, props, time, ease, delay, cal
     }
 
     function clear() {
+        if (killed()) return;
         object.element.style[Device.vendor('Transition')] = '';
         object.cssTween = null;
     }
@@ -939,37 +1130,81 @@ var CSSTransition = function CSSTransition(object, props, time, ease, delay, cal
 };
 
 /**
+ * SVG helper class.
+ *
+ * @author Patrick Schroen / https://github.com/pschroen
+ */
+
+var SVG = new // Singleton pattern
+
+function SVG() {
+    classCallCheck(this, SVG);
+
+    var symbols = [];
+
+    this.defineSymbol = function (id, width, height, innerHTML) {
+        var svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+        svg.setAttribute('style', 'display: none;');
+        svg.setAttribute('width', width);
+        svg.setAttribute('height', height);
+        svg.setAttributeNS('http://www.w3.org/2000/xmlns/', 'xmlns:xlink', 'http://www.w3.org/1999/xlink');
+        svg.innerHTML = '<symbol id="' + id + '">' + innerHTML + '</symbol>';
+        document.body.insertBefore(svg, document.body.firstChild);
+        symbols.push({ id: id, width: width, height: height });
+    };
+
+    this.getSymbolConfig = function (id) {
+        for (var i = 0; i < symbols.length; i++) {
+            if (symbols[i].id === id) return symbols[i];
+        }return null;
+    };
+}(); // Singleton pattern
+
+/**
  * Alien interface.
  *
  * @author Patrick Schroen / https://github.com/pschroen
  */
 
 var Interface = function () {
-    function Interface(name, node) {
+    function Interface(name) {
+        var type = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 'div';
+        var detached = arguments[2];
         classCallCheck(this, Interface);
 
         this.events = new EventManager();
-        var stage = window.Alien && window.Alien.Stage ? window.Alien.Stage : document.body,
-            element = node || document.createElement('div');
-        if (name[0] === '.') element.className = name.substr(1);else element.id = name;
-        element.style.position = 'absolute';
-        stage.appendChild(element);
-        this.element = element;
         this.name = name;
+        this.type = type;
+        if (this.type === 'svg') {
+            this.element = document.createElementNS('http://www.w3.org/2000/svg', this.type);
+            this.element.setAttributeNS('http://www.w3.org/2000/xmlns/', 'xmlns:xlink', 'http://www.w3.org/1999/xlink');
+        } else {
+            this.element = document.createElement(this.type);
+            if (name[0] === '.') this.element.className = name.substr(1);else this.element.id = name;
+        }
+        this.element.style.position = 'absolute';
+        if (!detached) {
+            var stage = window.Alien && window.Alien.Stage ? window.Alien.Stage : document.body;
+            stage.appendChild(this.element);
+        }
     }
 
     createClass(Interface, [{
         key: 'initClass',
-        value: function initClass(object, params) {
-            var child = new object(params);
+        value: function initClass(object) {
+            for (var _len = arguments.length, params = Array(_len > 1 ? _len - 1 : 0), _key = 1; _key < _len; _key++) {
+                params[_key - 1] = arguments[_key];
+            }
+
+            var child = new (Function.prototype.bind.apply(object, [null].concat(params)))();
             if (child.element) this.element.appendChild(child.element);
             child.parent = this;
             return child;
         }
     }, {
         key: 'create',
-        value: function create(name, node) {
-            var child = new Interface(name, node);
+        value: function create(name, type) {
+            var child = new Interface(name, type);
             this.element.appendChild(child.element);
             child.parent = this;
             return child;
@@ -979,7 +1214,7 @@ var Interface = function () {
         value: function destroy() {
             if (this.loop) Render.stop(this.loop);
             this.element.parentNode.removeChild(this.element);
-            return null;
+            return Utils.nullObject(this);
         }
     }, {
         key: 'empty',
@@ -990,22 +1225,14 @@ var Interface = function () {
     }, {
         key: 'text',
         value: function text(_text) {
-            if (typeof _text !== 'undefined') {
-                this.element.textContent = _text;
-                return this;
-            } else {
-                return this.element.textContent;
-            }
+            if (typeof _text === 'undefined') return this.element.textContent;else this.element.textContent = _text;
+            return this;
         }
     }, {
         key: 'html',
         value: function html(text) {
-            if (typeof text !== 'undefined') {
-                this.element.innerHTML = text;
-                return this;
-            } else {
-                return this.element.innerHTML;
-            }
+            if (typeof text === 'undefined') return this.element.innerHTML;else this.element.innerHTML = text;
+            return this;
         }
     }, {
         key: 'hide',
@@ -1063,8 +1290,8 @@ var Interface = function () {
             return this;
         }
     }, {
-        key: 'enablePointer',
-        value: function enablePointer(bool) {
+        key: 'mouseEnabled',
+        value: function mouseEnabled(bool) {
             this.element.style.pointerEvents = bool ? 'auto' : 'none';
             return this;
         }
@@ -1077,7 +1304,7 @@ var Interface = function () {
     }, {
         key: 'bg',
         value: function bg(src, x, y, repeat) {
-            if (src.indexOf('.') === -1) this.element.style.backgroundColor = src;else this.element.style.backgroundImage = 'url(' + src + ')';
+            if (src.indexOf('.') > -1 || src.indexOf('data:') > -1) this.element.style.backgroundImage = 'url(' + src + ')';else this.element.style.backgroundColor = src;
             if (typeof x !== 'undefined') {
                 x = typeof x === 'number' ? x + 'px' : x;
                 y = typeof y === 'number' ? y + 'px' : y;
@@ -1239,12 +1466,14 @@ var Interface = function () {
     }, {
         key: 'attr',
         value: function attr(_attr, value) {
-            if (_attr && value) {
-                if (value === '') this.element.removeAttribute(_attr);else this.element.setAttribute(_attr, value);
-            } else if (_attr) {
-                return this.element.getAttribute(_attr);
-            }
+            if (typeof value === 'undefined') return this.element.getAttribute(_attr);else if (value === '') this.element.removeAttribute(_attr);else this.element.setAttribute(_attr, value);
             return this;
+        }
+    }, {
+        key: 'svgSymbol',
+        value: function svgSymbol(id, width, height) {
+            var config = SVG.getSymbolConfig(id);
+            this.html('<svg viewBox="0 0 ' + config.width + ' ' + config.height + '" width="' + width + '" height="' + height + '"><use xlink:href="#' + config.id + '" x="0" y="0"/></svg>');
         }
     }, {
         key: 'startRender',
@@ -1263,15 +1492,12 @@ var Interface = function () {
         value: function click(callback) {
             var _this = this;
 
-            this.element.addEventListener('click', function (e) {
+            var clicked = function clicked(e) {
                 e.object = _this.element.className === 'hit' ? _this.parent : _this;
                 e.action = 'click';
-                if (!e.pageX) {
-                    e.pageX = e.clientX;
-                    e.pageY = e.clientY;
-                }
                 if (callback) callback(e);
-            }, false);
+            };
+            this.element.addEventListener('click', clicked, true);
             this.element.style.cursor = 'pointer';
             return this;
         }
@@ -1280,16 +1506,39 @@ var Interface = function () {
         value: function hover(callback) {
             var _this2 = this;
 
-            this.element.addEventListener('mouseover', function (e) {
+            var hovered = function hovered(e) {
                 e.object = _this2.element.className === 'hit' ? _this2.parent : _this2;
-                e.action = 'over';
+                e.action = e.type === 'mouseout' ? 'out' : 'over';
                 if (callback) callback(e);
-            }, false);
-            this.element.addEventListener('mouseout', function (e) {
-                e.object = _this2.element.className === 'hit' ? _this2.parent : _this2;
-                e.action = 'out';
+            };
+            this.element.addEventListener('mouseover', hovered, true);
+            this.element.addEventListener('mouseout', hovered, true);
+            return this;
+        }
+    }, {
+        key: 'press',
+        value: function press(callback) {
+            var _this3 = this;
+
+            var pressed = function pressed(e) {
+                e.object = _this3.element.className === 'hit' ? _this3.parent : _this3;
+                e.action = e.type === 'mousedown' ? 'down' : 'up';
                 if (callback) callback(e);
-            }, false);
+            };
+            this.element.addEventListener('mousedown', pressed, true);
+            this.element.addEventListener('mouseup', pressed, true);
+            return this;
+        }
+    }, {
+        key: 'bind',
+        value: function bind(event, callback) {
+            this.element.addEventListener(event, callback, true);
+            return this;
+        }
+    }, {
+        key: 'unbind',
+        value: function unbind(event, callback) {
+            this.element.removeEventListener(event, callback, true);
             return this;
         }
     }, {
@@ -1302,7 +1551,9 @@ var Interface = function () {
                 width: '100%',
                 height: '100%',
                 zIndex: 99999
-            }).enablePointer(true).hover(overCallback).click(clickCallback);
+            });
+            this.hit.hover(overCallback).click(clickCallback);
+            return this;
         }
     }, {
         key: 'split',
@@ -1323,8 +1574,8 @@ var Interface = function () {
             this.empty();
             for (var i = 0; i < split.length; i++) {
                 if (split[i] === ' ') split[i] = '&nbsp;';
-                array.push(this.create('.t', document.createElement('span')).html(split[i]).css(style));
-                if (by !== '' && i < split.length - 1) array.push(this.create('.t', document.createElement('span')).html(by).css(style));
+                array.push(this.create('.t', 'span').html(split[i]).css(style));
+                if (by !== '' && i < split.length - 1) array.push(this.create('.t', 'span').html(by).css(style));
             }
             return array;
         }
@@ -1341,17 +1592,22 @@ var Interface = function () {
 var Canvas = function (_Interface) {
     inherits(Canvas, _Interface);
 
-    function Canvas(name, w, h) {
+    function Canvas(name, w) {
+        var h = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : w;
+        var retina = arguments[3];
+        var detached = arguments[4];
         classCallCheck(this, Canvas);
 
-        var _this = possibleConstructorReturn(this, (Canvas.__proto__ || Object.getPrototypeOf(Canvas)).call(this, name, document.createElement('canvas')));
+        var _this = possibleConstructorReturn(this, (Canvas.__proto__ || Object.getPrototypeOf(Canvas)).call(this, name, 'canvas', detached));
 
+        _this.children = [];
+        _this.retina = retina;
         _this.context = _this.element.getContext('2d');
-        var ratio = Device.system.retina ? 2 : 1;
+        var ratio = retina ? 2 : 1;
         _this.element.width = w * ratio;
         _this.element.height = h * ratio;
-        _this.size(w, h);
         _this.context.scale(ratio, ratio);
+        _this.size(w, h);
         return _this;
     }
 
@@ -1361,12 +1617,49 @@ var Canvas = function (_Interface) {
             return this.element.toDataURL(type, quality);
         }
     }, {
+        key: 'render',
+        value: function render(noClear) {
+            if (!(typeof noClear === 'boolean' && noClear)) this.clear();
+            for (var i = 0; i < this.children.length; i++) {
+                this.children[i].render();
+            }
+        }
+    }, {
+        key: 'clear',
+        value: function clear() {
+            this.context.clearRect(0, 0, this.element.width, this.element.height);
+        }
+    }, {
+        key: 'add',
+        value: function add(display) {
+            display.setCanvas(this);
+            display.parent = this;
+            this.children.push(display);
+            display.z = this.children.length;
+        }
+    }, {
+        key: 'remove',
+        value: function remove(display) {
+            display.canvas = null;
+            display.parent = null;
+            var i = this.children.indexOf(display);
+            if (i > -1) this.children.splice(i, 1);
+        }
+    }, {
+        key: 'destroy',
+        value: function destroy() {
+            this.stopRender();
+            for (var i = 0; i < this.children.length; i++) {
+                this.children[i].destroy();
+            }return Utils.nullObject(this);
+        }
+    }, {
         key: 'getImageData',
         value: function getImageData() {
             var x = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : 0;
             var y = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 0;
-            var w = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : this.width;
-            var h = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : this.height;
+            var w = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : this.element.width;
+            var h = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : this.element.height;
 
             this.imageData = this.context.getImageData(x, y, w, h);
             return this.imageData;
@@ -1374,9 +1667,9 @@ var Canvas = function (_Interface) {
     }, {
         key: 'getPixel',
         value: function getPixel(x, y, dirty) {
-            if (!this.imageData || dirty) this.getImageData(0, 0, this.width, this.height);
+            if (!this.imageData || dirty) this.getImageData();
             var imgData = {},
-                index = (x + y * this.width) * 4,
+                index = (x + y * this.element.width) * 4,
                 pixels = this.imageData.data;
             imgData.r = pixels[index];
             imgData.g = pixels[index + 1];
@@ -1384,151 +1677,921 @@ var Canvas = function (_Interface) {
             imgData.a = pixels[index + 3];
             return imgData;
         }
+    }, {
+        key: 'putImageData',
+        value: function putImageData(imageData) {
+            this.context.putImageData(imageData, 0, 0);
+        }
     }]);
     return Canvas;
 }(Interface);
 
 /**
- * Dynamic object with linear interpolation.
+ * Canvas values.
  *
  * @author Patrick Schroen / https://github.com/pschroen
  */
 
-var DynamicObject = function DynamicObject(props) {
+var CanvasValues = function () {
+    function CanvasValues(style) {
+        var _this = this;
+
+        classCallCheck(this, CanvasValues);
+
+        this.styles = {};
+        var hit = {
+            x: 0,
+            y: 0,
+            width: 0,
+            height: 0
+        };
+        if (!style) this.data = new Float32Array(6);else this.styled = false;
+
+        this.hit = function (object) {
+            hit.x = _this.data[0];
+            hit.y = _this.data[1];
+            hit.width = object.width;
+            hit.height = object.height;
+            return hit;
+        };
+    }
+
+    createClass(CanvasValues, [{
+        key: "setTRSA",
+        value: function setTRSA(x, y, r, sx, sy, a) {
+            var m = this.data;
+            m[0] = x;
+            m[1] = y;
+            m[2] = r;
+            m[3] = sx;
+            m[4] = sy;
+            m[5] = a;
+        }
+    }, {
+        key: "calculate",
+        value: function calculate(values) {
+            var v = values.data,
+                m = this.data;
+            m[0] = m[0] + v[0];
+            m[1] = m[1] + v[1];
+            m[2] = m[2] + v[2];
+            m[3] = m[3] * v[3];
+            m[4] = m[4] * v[4];
+            m[5] = m[5] * v[5];
+        }
+    }, {
+        key: "calculateStyle",
+        value: function calculateStyle(parent) {
+            if (!parent.styled) return false;
+            this.styled = true;
+            var values = parent.values;
+            for (var key in values) {
+                if (!this.styles[key]) this.styles[key] = values[key];
+            }
+        }
+    }, {
+        key: "shadowOffsetX",
+        set: function set$$1(val) {
+            this.styled = true;
+            this.styles.shadowOffsetX = val;
+        },
+        get: function get$$1() {
+            return this.styles.shadowOffsetX;
+        }
+    }, {
+        key: "shadowOffsetY",
+        set: function set$$1(val) {
+            this.styled = true;
+            this.styles.shadowOffsetY = val;
+        },
+        get: function get$$1() {
+            return this.styles.shadowOffsetY;
+        }
+    }, {
+        key: "shadowBlur",
+        set: function set$$1(val) {
+            this.styled = true;
+            this.styles.shadowBlur = val;
+        },
+        get: function get$$1() {
+            return this.styles.shadowBlur;
+        }
+    }, {
+        key: "shadowColor",
+        set: function set$$1(val) {
+            this.styled = true;
+            this.styles.shadowColor = val;
+        },
+        get: function get$$1() {
+            return this.styles.shadowColor;
+        }
+    }, {
+        key: "values",
+        get: function get$$1() {
+            return this.styles;
+        }
+    }]);
+    return CanvasValues;
+}();
+
+/**
+ * Color helper class.
+ *
+ * @author Patrick Schroen / https://github.com/pschroen
+ */
+
+var Color = function Color(value) {
     var _this = this;
 
-    classCallCheck(this, DynamicObject);
+    classCallCheck(this, Color);
 
-    for (var key in props) {
-        this[key] = props[key];
-    }this.lerp = function (v, ratio) {
-        for (var _key in props) {
-            _this[_key] += (v[_key] - _this[_key]) * ratio;
-        }return _this;
+    var self = this;
+    this.r = 1;
+    this.g = 1;
+    this.b = 1;
+
+    set$$1(value);
+
+    function set$$1(value) {
+        if (value instanceof Color) copy(value);else if (typeof value === 'number') setHex(value);else if (Array.isArray(value)) setRGB(value);else setHex(Number('0x' + value.slice(1)));
+    }
+
+    function copy(color) {
+        self.r = color.r;
+        self.g = color.g;
+        self.b = color.b;
+    }
+
+    function setHex(hex) {
+        hex = Math.floor(hex);
+        self.r = (hex >> 16 & 255) / 255;
+        self.g = (hex >> 8 & 255) / 255;
+        self.b = (hex & 255) / 255;
+    }
+
+    function setRGB(values) {
+        self.r = values[0];
+        self.g = values[1];
+        self.b = values[2];
+    }
+
+    function hue2rgb(p, q, t) {
+        if (t < 0) t += 1;
+        if (t > 1) t -= 1;
+        if (t < 1 / 6) return p + (q - p) * 6 * t;
+        if (t < 1 / 2) return q;
+        if (t < 2 / 3) return p + (q - p) * 6 * (2 / 3 - t);
+        return p;
+    }
+
+    this.set = function (value) {
+        set$$1(value);
+        return _this;
+    };
+
+    this.setRGB = function (r, g, b) {
+        _this.r = r;
+        _this.g = g;
+        _this.b = b;
+        return _this;
+    };
+
+    this.setHSL = function (h, s, l) {
+        if (s === 0) {
+            _this.r = _this.g = _this.b = l;
+        } else {
+            var p = l <= 0.5 ? l * (1 + s) : l + s - l * s,
+                q = 2 * l - p;
+            _this.r = hue2rgb(q, p, h + 1 / 3);
+            _this.g = hue2rgb(q, p, h);
+            _this.b = hue2rgb(q, p, h - 1 / 3);
+        }
+        return _this;
+    };
+
+    this.offsetHSL = function (h, s, l) {
+        var hsl = _this.getHSL();
+        hsl.h += h;
+        hsl.s += s;
+        hsl.l += l;
+        _this.setHSL(hsl.h, hsl.s, hsl.l);
+        return _this;
+    };
+
+    this.getStyle = function () {
+        return 'rgb(' + (_this.r * 255 | 0) + ',' + (_this.g * 255 | 0) + ',' + (_this.b * 255 | 0) + ')';
+    };
+
+    this.getHex = function () {
+        return _this.r * 255 << 16 ^ _this.g * 255 << 8 ^ _this.b * 255 << 0;
+    };
+
+    this.getHexString = function () {
+        return '#' + ('000000' + _this.getHex().toString(16)).slice(-6);
+    };
+
+    this.getHSL = function () {
+        _this.hsl = _this.hsl || { h: 0, s: 0, l: 0 };
+        var hsl = _this.hsl,
+            r = _this.r,
+            g = _this.g,
+            b = _this.b,
+            max = Math.max(r, g, b),
+            min = Math.min(r, g, b),
+            hue = void 0,
+            saturation = void 0,
+            lightness = (min + max) / 2;
+        if (min === max) {
+            hue = 0;
+            saturation = 0;
+        } else {
+            var delta = max - min;
+            saturation = lightness <= 0.5 ? delta / (max + min) : delta / (2 - max - min);
+            switch (max) {
+                case r:
+                    hue = (g - b) / delta + (g < b ? 6 : 0);
+                    break;
+                case g:
+                    hue = (b - r) / delta + 2;
+                    break;
+                case b:
+                    hue = (r - g) / delta + 4;
+                    break;
+            }
+            hue /= 6;
+        }
+        hsl.h = hue;
+        hsl.s = saturation;
+        hsl.l = lightness;
+        return hsl;
+    };
+
+    this.add = function (color) {
+        _this.r += color.r;
+        _this.g += color.g;
+        _this.b += color.b;
+    };
+
+    this.mix = function (color, percent) {
+        _this.r *= 1 - percent + color.r * percent;
+        _this.g *= 1 - percent + color.g * percent;
+        _this.b *= 1 - percent + color.b * percent;
+    };
+
+    this.addScalar = function (s) {
+        _this.r += s;
+        _this.g += s;
+        _this.b += s;
+    };
+
+    this.multiply = function (color) {
+        _this.r *= color.r;
+        _this.g *= color.g;
+        _this.b *= color.b;
+    };
+
+    this.multiplyScalar = function (s) {
+        _this.r *= s;
+        _this.g *= s;
+        _this.b *= s;
+    };
+
+    this.clone = function () {
+        return new Color([_this.r, _this.g, _this.b]);
+    };
+
+    this.toArray = function () {
+        if (!_this.array) _this.array = [];
+        _this.array[0] = _this.r;
+        _this.array[1] = _this.g;
+        _this.array[2] = _this.b;
+        return _this.array;
     };
 };
 
 /**
- * Alien utilities.
+ * Canvas object.
  *
  * @author Patrick Schroen / https://github.com/pschroen
  */
 
-var Utils = function () {
-    function Utils() {
-        classCallCheck(this, Utils);
+var CanvasObject = function () {
+    function CanvasObject() {
+        classCallCheck(this, CanvasObject);
+
+        this.visible = true;
+        this.blendMode = 'source-over';
+        this.x = 0;
+        this.y = 0;
+        this.px = 0;
+        this.py = 0;
+        this.clipX = 0;
+        this.clipY = 0;
+        this.clipWidth = 0;
+        this.clipHeight = 0;
+        this.width = 0;
+        this.height = 0;
+        this.rotation = 0;
+        this.scale = 1;
+        this.opacity = 1;
+        this.values = new CanvasValues();
+        this.styles = new CanvasValues(true);
+        this.children = [];
     }
 
-    createClass(Utils, [{
-        key: 'rand',
-        value: function rand(min, max) {
-            return new DynamicObject({ v: min }).lerp({ v: max }, Math.random()).v;
+    createClass(CanvasObject, [{
+        key: 'updateValues',
+        value: function updateValues() {
+            this.values.setTRSA(this.x, this.y, Utils.toRadians(this.rotation), this.scaleX || this.scale, this.scaleY || this.scale, this.opacity);
+            if (this.parent.values) this.values.calculate(this.parent.values);
+            if (this.parent.styles) this.styles.calculateStyle(this.parent.styles);
         }
     }, {
-        key: 'doRandom',
-        value: function doRandom(min, max, precision) {
-            if (typeof precision === 'number') {
-                var p = Math.pow(10, precision);
-                return Math.round(this.rand(min, max) * p) / p;
-            } else {
-                return Math.round(this.rand(min - 0.5, max + 0.5));
+        key: 'render',
+        value: function render(override) {
+            if (!this.visible) return false;
+            this.updateValues();
+            if (this.draw) this.draw(override);
+            for (var i = 0; i < this.children.length; i++) {
+                this.children[i].render(override);
             }
         }
     }, {
-        key: 'headsTails',
-        value: function headsTails(heads, tails) {
-            return !this.doRandom(0, 1) ? heads : tails;
-        }
-    }, {
-        key: 'toDegrees',
-        value: function toDegrees(rad) {
-            return rad * (180 / Math.PI);
-        }
-    }, {
-        key: 'toRadians',
-        value: function toRadians(deg) {
-            return deg * (Math.PI / 180);
-        }
-    }, {
-        key: 'findDistance',
-        value: function findDistance(p1, p2) {
-            var dx = p2.x - p1.x;
-            var dy = p2.y - p1.y;
-            return Math.sqrt(dx * dx + dy * dy);
-        }
-    }, {
-        key: 'timestamp',
-        value: function timestamp() {
-            return (Date.now() + this.doRandom(0, 99999)).toString();
-        }
-    }, {
-        key: 'clamp',
-        value: function clamp(num, min, max) {
-            return Math.min(Math.max(num, min), max);
-        }
-    }, {
-        key: 'constrain',
-        value: function constrain(num, min, max) {
-            return Math.min(Math.max(num, Math.min(min, max)), Math.max(min, max));
-        }
-    }, {
-        key: 'convertRange',
-        value: function convertRange(oldValue, oldMin, oldMax, newMin, newMax, constrain) {
-            var oldRange = oldMax - oldMin;
-            var newRange = newMax - newMin;
-            var newValue = (oldValue - oldMin) * newRange / oldRange + newMin;
-            return constrain ? this.constrain(newValue, newMin, newMax) : newValue;
-        }
-    }, {
-        key: 'cloneObject',
-        value: function cloneObject(object) {
-            return JSON.parse(JSON.stringify(object));
-        }
-    }, {
-        key: 'mergeObject',
-        value: function mergeObject() {
-            var object = {};
-
-            for (var _len = arguments.length, objects = Array(_len), _key = 0; _key < _len; _key++) {
-                objects[_key] = arguments[_key];
-            }
-
-            var _iteratorNormalCompletion = true;
-            var _didIteratorError = false;
-            var _iteratorError = undefined;
-
-            try {
-                for (var _iterator = objects[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
-                    var obj = _step.value;
-                    for (var key in obj) {
-                        object[key] = obj[key];
-                    }
-                }
-            } catch (err) {
-                _didIteratorError = true;
-                _iteratorError = err;
-            } finally {
-                try {
-                    if (!_iteratorNormalCompletion && _iterator.return) {
-                        _iterator.return();
-                    }
-                } finally {
-                    if (_didIteratorError) {
-                        throw _iteratorError;
-                    }
+        key: 'startDraw',
+        value: function startDraw(ox, oy, override) {
+            var context = this.canvas.context,
+                v = this.values.data,
+                x = v[0] + (ox || 0),
+                y = v[1] + (oy || 0);
+            context.save();
+            if (!override) context.globalCompositeOperation = this.blendMode;
+            context.translate(x, y);
+            context.rotate(v[2]);
+            context.scale(v[3], v[4]);
+            context.globalAlpha = v[5];
+            if (this.styles.styled) {
+                var values = this.styles.values;
+                for (var key in values) {
+                    var val = values[key];
+                    context[key] = val instanceof Color ? val.getHexString() : val;
                 }
             }
-
-            return object;
         }
     }, {
-        key: 'queryString',
-        value: function queryString(key) {
-            return decodeURI(window.location.search.replace(new RegExp('^(?:.*[&\\?]' + encodeURI(key).replace(/[\.\+\*]/g, '\\$&') + '(?:\\=([^&]*))?)?.*$', 'i'), '$1'));
+        key: 'endDraw',
+        value: function endDraw() {
+            this.canvas.context.restore();
+        }
+    }, {
+        key: 'add',
+        value: function add(display) {
+            display.canvas = this.canvas;
+            display.parent = this;
+            this.children.push(display);
+            display.z = this.children.length;
+        }
+    }, {
+        key: 'setCanvas',
+        value: function setCanvas(canvas) {
+            this.canvas = canvas;
+            for (var i = this.children.length - 1; i > -1; i--) {
+                this.children[i].setCanvas(canvas);
+            }
+        }
+    }, {
+        key: 'remove',
+        value: function remove(display) {
+            display.canvas = null;
+            display.parent = null;
+            var i = this.children.indexOf(display);
+            if (i > -1) this.children.splice(i, 1);
+        }
+    }, {
+        key: 'isMask',
+        value: function isMask() {
+            var obj = this;
+            while (obj) {
+                if (obj.masked) return true;
+                obj = obj.parent;
+            }
+            return false;
+        }
+    }, {
+        key: 'unmask',
+        value: function unmask() {
+            this.masked.mask(null);
+            this.masked = null;
+        }
+    }, {
+        key: 'setZ',
+        value: function setZ(z) {
+            this.z = z;
+            this.parent.children.sort(function (a, b) {
+                return a.z - b.z;
+            });
+        }
+    }, {
+        key: 'follow',
+        value: function follow(object) {
+            this.x = object.x;
+            this.y = object.y;
+            this.px = object.px;
+            this.py = object.py;
+            this.clipX = object.clipX;
+            this.clipY = object.clipY;
+            this.clipWidth = object.clipWidth;
+            this.clipHeight = object.clipHeight;
+            this.width = object.width;
+            this.height = object.height;
+            this.rotation = object.rotation;
+            this.scale = object.scale;
+            this.scaleX = object.scaleX || object.scale;
+            this.scaleY = object.scaleY || object.scale;
+            return this;
+        }
+    }, {
+        key: 'visible',
+        value: function visible() {
+            this.visible = true;
+            return this;
+        }
+    }, {
+        key: 'invisible',
+        value: function invisible() {
+            this.visible = false;
+            return this;
+        }
+    }, {
+        key: 'transform',
+        value: function transform(props) {
+            for (var key in props) {
+                if (typeof props[key] === 'number') this[key] = props[key];
+            }return this;
+        }
+    }, {
+        key: 'transformPoint',
+        value: function transformPoint(x, y) {
+            this.px = typeof x === 'number' ? x : this.width * (parseFloat(x) / 100);
+            this.py = typeof y === 'number' ? y : this.height * (parseFloat(y) / 100);
+            return this;
+        }
+    }, {
+        key: 'clip',
+        value: function clip(x, y, w, h) {
+            this.clipX = x;
+            this.clipY = y;
+            this.clipWidth = w;
+            this.clipHeight = h;
+            return this;
+        }
+    }, {
+        key: 'hit',
+        value: function hit(e) {
+            if (!this.ignoreHit) if (Utils.hitTestObject(e, this.values.hit(this))) return this;
+            for (var i = this.children.length - 1; i > -1; i--) {
+                var child = this.children[i];
+                if (child.hit(e)) return child;
+            }
+            return false;
+        }
+    }, {
+        key: 'destroy',
+        value: function destroy() {
+            for (var i = 0; i < this.children.length; i++) {
+                this.children[i].destroy();
+            }return Utils.nullObject(this);
         }
     }]);
-    return Utils;
+    return CanvasObject;
 }();
+
+/**
+ * Image helper class with promise method.
+ *
+ * Currently no CORS support.
+ *
+ * @author Patrick Schroen / https://github.com/pschroen
+ */
+
+var Images = new ( // Singleton pattern
+
+function () {
+    function Images() {
+        classCallCheck(this, Images);
+    }
+
+    createClass(Images, [{
+        key: 'createImg',
+        value: function createImg(src, callback) {
+            var img = new Image();
+            img.src = (Config.CDN || '') + src;
+            img.onload = function () {
+                if (callback) callback();
+            };
+            return img;
+        }
+    }, {
+        key: 'promise',
+        value: function promise(img) {
+            var p = Promise.create();
+            img.onload = p.resolve;
+            return p;
+        }
+    }]);
+    return Images;
+}())(); // Singleton pattern
+
+/**
+ * Canvas graphics.
+ *
+ * @author Patrick Schroen / https://github.com/pschroen
+ */
+
+var CanvasGraphics = function (_CanvasObject) {
+    inherits(CanvasGraphics, _CanvasObject);
+
+    function CanvasGraphics() {
+        var w = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : 0;
+        var h = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : w;
+        classCallCheck(this, CanvasGraphics);
+
+        var _this = possibleConstructorReturn(this, (CanvasGraphics.__proto__ || Object.getPrototypeOf(CanvasGraphics)).call(this));
+
+        var self = _this;
+        _this.width = w;
+        _this.height = h;
+        _this.props = {};
+        var images = {},
+            draw = [],
+            mask = void 0;
+
+        function setProperties(context) {
+            for (var key in self.props) {
+                var val = self.props[key];
+                context[key] = val instanceof Color ? val.getHexString() : val;
+            }
+        }
+
+        _this.draw = function (override) {
+            if (_this.isMask() && !override) return false;
+            var context = _this.canvas.context;
+            _this.startDraw(-_this.px, -_this.py, override);
+            setProperties(context);
+            if (_this.clipWidth && _this.clipHeight) {
+                context.beginPath();
+                context.rect(_this.clipX, _this.clipY, _this.clipWidth, _this.clipHeight);
+                context.clip();
+            }
+            for (var i = 0; i < draw.length; i++) {
+                var cmd = draw[i];
+                if (!cmd) continue;
+                var fn = cmd.shift();
+                context[fn].apply(context, cmd);
+                cmd.unshift(fn);
+            }
+            _this.endDraw();
+            if (mask) {
+                context.globalCompositeOperation = mask.blendMode;
+                mask.render(true);
+            }
+        };
+
+        _this.clear = function () {
+            for (var i = 0; i < draw.length; i++) {
+                draw[i].length = 0;
+            }draw.length = 0;
+        };
+
+        _this.arc = function () {
+            var x = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : 0;
+            var y = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 0;
+            var endAngle = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : 0;
+            var radius = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : _this.radius || _this.width / 2;
+            var startAngle = arguments.length > 4 && arguments[4] !== undefined ? arguments[4] : 0;
+            var counterclockwise = arguments.length > 5 && arguments[5] !== undefined ? arguments[5] : false;
+
+            if (x && !y) {
+                endAngle = x;
+                x = 0;
+                y = 0;
+            }
+            endAngle -= 90;
+            startAngle -= 90;
+            draw.push(['beginPath']);
+            draw.push(['arc', x, y, radius, Utils.toRadians(startAngle), Utils.toRadians(endAngle), counterclockwise]);
+        };
+
+        _this.quadraticCurveTo = function (cpx, cpy, x, y) {
+            draw.push(['quadraticCurveTo', cpx, cpy, x, y]);
+        };
+
+        _this.bezierCurveTo = function (cp1x, cp1y, cp2x, cp2y, x, y) {
+            draw.push(['bezierCurveTo', cp1x, cp1y, cp2x, cp2y, x, y]);
+        };
+
+        _this.fillRect = function (x, y, w, h) {
+            draw.push(['fillRect', x, y, w, h]);
+        };
+
+        _this.clearRect = function (x, y, w, h) {
+            draw.push(['clearRect', x, y, w, h]);
+        };
+
+        _this.strokeRect = function (x, y, w, h) {
+            draw.push(['strokeRect', x, y, w, h]);
+        };
+
+        _this.moveTo = function (x, y) {
+            draw.push(['moveTo', x, y]);
+        };
+
+        _this.lineTo = function (x, y) {
+            draw.push(['lineTo', x, y]);
+        };
+
+        _this.stroke = function () {
+            draw.push(['stroke']);
+        };
+
+        _this.fill = function () {
+            if (!mask) draw.push(['fill']);
+        };
+
+        _this.beginPath = function () {
+            draw.push(['beginPath']);
+        };
+
+        _this.closePath = function () {
+            draw.push(['closePath']);
+        };
+
+        _this.fillText = function (text, x, y) {
+            draw.push(['fillText', text, x, y]);
+        };
+
+        _this.strokeText = function (text, x, y) {
+            draw.push(['strokeText', text, x, y]);
+        };
+
+        _this.setLineDash = function (value) {
+            draw.push(['setLineDash', value]);
+        };
+
+        _this.createImage = function (src, force) {
+            if (!images[src] || force) {
+                var img = Images.createImg(src);
+                if (force) return img;
+                images[src] = img;
+            }
+            return images[src];
+        };
+
+        _this.drawImage = function (img) {
+            var sx = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 0;
+            var sy = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : 0;
+            var sWidth = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : img.width;
+            var sHeight = arguments.length > 4 && arguments[4] !== undefined ? arguments[4] : img.height;
+            var dx = arguments.length > 5 && arguments[5] !== undefined ? arguments[5] : 0;
+            var dy = arguments.length > 6 && arguments[6] !== undefined ? arguments[6] : 0;
+            var dWidth = arguments.length > 7 && arguments[7] !== undefined ? arguments[7] : img.width;
+            var dHeight = arguments.length > 8 && arguments[8] !== undefined ? arguments[8] : img.height;
+
+            if (typeof img === 'string') img = _this.createImage(img);
+            draw.push(['drawImage', img, sx, sy, sWidth, sHeight, dx, dy, dWidth, dHeight]);
+        };
+
+        _this.mask = function (object) {
+            if (!object) return mask = null;
+            mask = object;
+            object.masked = _this;
+            for (var i = 0; i < draw.length; i++) {
+                if (draw[i][0] === 'fill' || draw[i][0] === 'stroke') {
+                    draw[i].length = 0;
+                    draw.splice(i, 1);
+                }
+            }
+        };
+
+        _this.clone = function () {
+            var object = new CanvasGraphics(_this.width, _this.height);
+            object.visible = _this.visible;
+            object.blendMode = _this.blendMode;
+            object.opacity = _this.opacity;
+            object.follow(_this);
+            object.props = Utils.cloneObject(_this.props);
+            object.setDraw(Utils.cloneArray(draw));
+            return object;
+        };
+
+        _this.setDraw = function (array) {
+            draw = array;
+        };
+        return _this;
+    }
+
+    createClass(CanvasGraphics, [{
+        key: 'strokeStyle',
+        set: function set$$1(val) {
+            this.props.strokeStyle = val;
+        },
+        get: function get$$1() {
+            return this.props.strokeStyle;
+        }
+    }, {
+        key: 'fillStyle',
+        set: function set$$1(val) {
+            this.props.fillStyle = val;
+        },
+        get: function get$$1() {
+            return this.props.fillStyle;
+        }
+    }, {
+        key: 'lineWidth',
+        set: function set$$1(val) {
+            this.props.lineWidth = val;
+        },
+        get: function get$$1() {
+            return this.props.lineWidth;
+        }
+    }, {
+        key: 'lineCap',
+        set: function set$$1(val) {
+            this.props.lineCap = val;
+        },
+        get: function get$$1() {
+            return this.props.lineCap;
+        }
+    }, {
+        key: 'lineDashOffset',
+        set: function set$$1(val) {
+            this.props.lineDashOffset = val;
+        },
+        get: function get$$1() {
+            return this.props.lineDashOffset;
+        }
+    }, {
+        key: 'lineJoin',
+        set: function set$$1(val) {
+            this.props.lineJoin = val;
+        },
+        get: function get$$1() {
+            return this.props.lineJoin;
+        }
+    }, {
+        key: 'miterLimit',
+        set: function set$$1(val) {
+            this.props.miterLimit = val;
+        },
+        get: function get$$1() {
+            return this.props.miterLimit;
+        }
+    }, {
+        key: 'font',
+        set: function set$$1(val) {
+            this.props.font = val;
+        },
+        get: function get$$1() {
+            return this.props.font;
+        }
+    }, {
+        key: 'textAlign',
+        set: function set$$1(val) {
+            this.props.textAlign = val;
+        },
+        get: function get$$1() {
+            return this.props.textAlign;
+        }
+    }, {
+        key: 'textBaseline',
+        set: function set$$1(val) {
+            this.props.textBaseline = val;
+        },
+        get: function get$$1() {
+            return this.props.textBaseline;
+        }
+    }]);
+    return CanvasGraphics;
+}(CanvasObject);
+
+/**
+ * Canvas with a single image.
+ *
+ * @author Patrick Schroen / https://github.com/pschroen
+ */
+
+var CanvasImage = function (_CanvasGraphics) {
+    inherits(CanvasImage, _CanvasGraphics);
+
+    function CanvasImage(parent, name, w) {
+        var h = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : w;
+        classCallCheck(this, CanvasImage);
+
+        var _this = possibleConstructorReturn(this, (CanvasImage.__proto__ || Object.getPrototypeOf(CanvasImage)).call(this, w, h));
+
+        var canvas = parent.initClass(Canvas, name, w, h);
+
+        _this.img = function (src) {
+            _this.drawImage(src, 0, 0, w, h);
+            canvas.add(_this);
+            return _this;
+        };
+        return _this;
+    }
+
+    return CanvasImage;
+}(CanvasGraphics);
+
+/**
+ * Canvas font utilities.
+ *
+ * @author Patrick Schroen / https://github.com/pschroen
+ */
+
+var CanvasFont = new // Singleton pattern
+
+function CanvasFont() {
+    classCallCheck(this, CanvasFont);
+
+
+    function createText(canvas, width, height, str, font, fillStyle, letterSpacing, textAlign) {
+        var context = canvas.context,
+            graphics = canvas.initClass(CanvasGraphics, width, height);
+        graphics.font = font;
+        graphics.fillStyle = fillStyle;
+        graphics.totalWidth = 0;
+        var chr = void 0,
+            characters = str.split(''),
+            index = 0,
+            currentPosition = 0;
+        context.font = font;
+        for (var i = 0; i < characters.length; i++) {
+            graphics.totalWidth += context.measureText(characters[i]).width + letterSpacing;
+        }switch (textAlign) {
+            case 'start':
+            case 'left':
+                currentPosition = 0;
+                break;
+            case 'end':
+            case 'right':
+                currentPosition = width - graphics.totalWidth;
+                break;
+            case 'center':
+                currentPosition = (width - graphics.totalWidth) / 2;
+                break;
+        }
+        do {
+            chr = characters[index++];
+            graphics.fillText(chr, currentPosition, 0);
+            currentPosition += context.measureText(chr).width + letterSpacing;
+        } while (index < str.length);
+        return graphics;
+    }
+
+    this.createText = function (canvas, width, height, str, font, fillStyle, _ref) {
+        var _ref$letterSpacing = _ref.letterSpacing,
+            letterSpacing = _ref$letterSpacing === undefined ? 0 : _ref$letterSpacing,
+            _ref$lineHeight = _ref.lineHeight,
+            lineHeight = _ref$lineHeight === undefined ? height : _ref$lineHeight,
+            _ref$textAlign = _ref.textAlign,
+            textAlign = _ref$textAlign === undefined ? 'start' : _ref$textAlign;
+
+        var context = canvas.context;
+        if (height === lineHeight) {
+            return createText(canvas, width, height, str, font, fillStyle, letterSpacing, textAlign);
+        } else {
+            var text = canvas.initClass(CanvasGraphics, width, height),
+                words = str.split(' '),
+                line = '',
+                lines = [];
+            text.totalWidth = 0;
+            text.totalHeight = 0;
+            context.font = font;
+            for (var n = 0; n < words.length; n++) {
+                var testLine = line + words[n] + ' ',
+                    characters = testLine.split(''),
+                    testWidth = 0;
+                for (var i = 0; i < characters.length; i++) {
+                    testWidth += context.measureText(characters[i]).width + letterSpacing;
+                }if (testWidth > width && n > 0) {
+                    lines.push(line);
+                    line = words[n] + ' ';
+                } else {
+                    line = testLine;
+                }
+            }
+            lines.push(line);
+            lines.every(function (e, i) {
+                var graphics = createText(canvas, width, lineHeight, e, font, fillStyle, letterSpacing, textAlign);
+                graphics.y = i * lineHeight;
+                text.add(graphics);
+                text.totalWidth = Math.max(graphics.totalWidth, text.totalWidth);
+                text.totalHeight += lineHeight;
+                return true;
+            });
+            return text;
+        }
+    };
+}(); // Singleton pattern
 
 /**
  * Mouse helper class.
@@ -1536,7 +2599,9 @@ var Utils = function () {
  * @author Patrick Schroen / https://github.com/pschroen
  */
 
-var Mouse = function Mouse() {
+var Mouse = new // Singleton pattern
+
+function Mouse() {
     var _this = this;
 
     classCallCheck(this, Mouse);
@@ -1552,54 +2617,15 @@ var Mouse = function Mouse() {
     this.capture = function () {
         _this.x = 0;
         _this.y = 0;
-        window.addEventListener('mousemove', moved, false);
+        window.addEventListener('mousemove', moved, true);
     };
 
     this.stop = function () {
         _this.x = 0;
         _this.y = 0;
-        window.removeEventListener('mousemove', moved, false);
+        window.removeEventListener('mousemove', moved, true);
     };
-};
-
-/**
- * Event based asset loader.
- *
- * Currently only images are supported.
- * Currently no CORS support.
- *
- * @author Patrick Schroen / https://github.com/pschroen
- */
-
-var AssetLoader = function AssetLoader(assets, callback) {
-    classCallCheck(this, AssetLoader);
-
-    var self = this;
-    this.events = new EventManager();
-    this.CDN = Config.CDN || '';
-    var total = assets.length,
-        loaded = 0,
-        percent = 0;
-
-    for (var i = 0; i < assets.length; i++) {
-        loadAsset(this.CDN + assets[i]);
-    }function loadAsset(asset) {
-        var image = new Image();
-        image.src = asset;
-        image.onload = assetLoaded;
-    }
-
-    function assetLoaded() {
-        loaded++;
-        percent = loaded / total;
-        self.events.fire(Events.PROGRESS, { percent: percent });
-        if (loaded === total) {
-            self.complete = true;
-            self.events.fire(Events.COMPLETE);
-            if (callback) callback();
-        }
-    }
-};
+}(); // Singleton pattern
 
 /**
  * XMLHttpRequest helper class with promise support.
@@ -1607,7 +2633,9 @@ var AssetLoader = function AssetLoader(assets, callback) {
  * @author Patrick Schroen / https://github.com/pschroen
  */
 
-var XHR = function XHR() {
+var XHR = new // Singleton pattern
+
+function XHR() {
     var _this = this;
 
     classCallCheck(this, XHR);
@@ -1616,7 +2644,7 @@ var XHR = function XHR() {
     this.options = {};
     var serial = [];
 
-    var serialize = function serialize(key, data) {
+    function serialize(key, data) {
         if ((typeof data === 'undefined' ? 'undefined' : _typeof(data)) === 'object') {
             for (var i in data) {
                 var newKey = key + '[' + i + ']';
@@ -1625,7 +2653,7 @@ var XHR = function XHR() {
         } else {
             serial.push(key + '=' + data);
         }
-    };
+    }
 
     this.get = function (url, data, callback, type) {
         if (typeof data === 'function') {
@@ -1643,6 +2671,8 @@ var XHR = function XHR() {
         }
         var xhr = new XMLHttpRequest();
         xhr.open('GET', url, true);
+        if (type === 'arraybuffer') xhr.responseType = 'arraybuffer';
+        if (type === 'blob') xhr.responseType = 'blob';
         if (type === 'text') xhr.overrideMimeType('text/plain');
         if (type === 'json') xhr.setRequestHeader('Accept', 'application/json');
         for (var _key in _this.headers) {
@@ -1657,20 +2687,10 @@ var XHR = function XHR() {
         }
         xhr.send();
         xhr.onreadystatechange = function () {
-            if (xhr.readyState === 4 && xhr.status === 200) {
-                var _data = xhr.responseText;
-                if (type === 'text') {
-                    if (callback) callback(_data);
-                } else {
-                    try {
-                        if (callback) callback(JSON.parse(_data));
-                    } catch (e) {
-                        throw e;
-                    }
-                }
-            }
-            if (xhr.status == 0 || xhr.status == 400 || xhr.status == 401 || xhr.status == 404 || xhr.status == 500) {
-                if (callback) {
+            if (callback) {
+                if (xhr.readyState === 4 && xhr.status === 200) {
+                    if (type === 'arraybuffer' || type === 'blob') callback(xhr.response);else if (type === 'text') callback(xhr.responseText);else callback(JSON.parse(xhr.responseText));
+                } else if (xhr.status == 0 || xhr.status == 400 || xhr.status == 401 || xhr.status == 404 || xhr.status == 500) {
                     if (promise) promise.reject(xhr);else callback(xhr);
                 }
             }
@@ -1697,6 +2717,8 @@ var XHR = function XHR() {
         }
         var xhr = new XMLHttpRequest();
         xhr.open('POST', url, true);
+        if (type === 'arraybuffer') xhr.responseType = 'arraybuffer';
+        if (type === 'blob') xhr.responseType = 'blob';
         if (type === 'text') xhr.overrideMimeType('text/plain');
         if (type === 'json') xhr.setRequestHeader('Accept', 'application/json');
         xhr.setRequestHeader('Content-Type', type === 'json' ? 'application/json' : 'application/x-www-form-urlencoded');
@@ -1712,26 +2734,146 @@ var XHR = function XHR() {
         }
         xhr.send();
         xhr.onreadystatechange = function () {
-            if (xhr.readyState === 4 && xhr.status === 200) {
-                var _data2 = xhr.responseText;
-                if (type === 'text') {
-                    if (callback) callback(_data2);
-                } else {
-                    try {
-                        if (callback) callback(JSON.parse(_data2));
-                    } catch (e) {
-                        throw e;
-                    }
-                }
-            }
-            if (xhr.status == 0 || xhr.status == 400 || xhr.status == 401 || xhr.status == 404 || xhr.status == 500) {
-                if (callback) {
+            if (callback) {
+                if (xhr.readyState === 4 && xhr.status === 200) {
+                    if (type === 'arraybuffer' || type === 'blob') callback(xhr.response);else if (type === 'text') callback(xhr.responseText);else callback(JSON.parse(xhr.responseText));
+                } else if (xhr.status == 0 || xhr.status == 400 || xhr.status == 401 || xhr.status == 404 || xhr.status == 500) {
                     if (promise) promise.reject(xhr);else callback(xhr);
                 }
             }
         };
         return promise || xhr;
     };
+}(); // Singleton pattern
+
+/**
+ * WebAudio helper class.
+ *
+ * @author Patrick Schroen / https://github.com/pschroen
+ */
+
+if (!window.AudioContext) window.AudioContext = window.webkitAudioContext || window.mozAudioContext || window.oAudioContext;
+
+var WebAudio = new // Singleton pattern
+
+function WebAudio() {
+    var _this = this;
+
+    classCallCheck(this, WebAudio);
+
+    var context = void 0,
+        sounds = [];
+
+    this.init = function () {
+        context = new window.AudioContext();
+        _this.globalGain = context.createGain();
+        _this.globalGain.connect(context.destination);
+    };
+
+    this.createSound = function (id, audioData, callback) {
+        var sound = { id: id };
+        context.decodeAudioData(audioData, function (buffer) {
+            sound.buffer = buffer;
+            sound.audioGain = context.createGain();
+            sound.audioGain.connect(_this.globalGain);
+            sound.complete = true;
+            if (callback) callback();
+        });
+        sounds.push(sound);
+    };
+
+    this.getSound = function (id) {
+        for (var i = 0; i < sounds.length; i++) {
+            if (sounds[i].id === id) return sounds[i];
+        }return null;
+    };
+
+    this.trigger = function (id) {
+        if (!context) return;
+        var sound = _this.getSound(id),
+            source = context.createBufferSource();
+        source.buffer = sound.buffer;
+        source.connect(sound.audioGain);
+        source.start(0);
+    };
+
+    this.mute = function () {
+        if (!context) return;
+        TweenManager.tween(_this.globalGain.gain, { value: 0 }, 300, 'easeOutSine');
+    };
+
+    this.unmute = function () {
+        if (!context) return;
+        TweenManager.tween(_this.globalGain.gain, { value: 1 }, 500, 'easeOutSine');
+    };
+}(); // Singleton pattern
+
+/**
+ * Asset loader with promise method.
+ *
+ * Currently no CORS support.
+ *
+ * @author Patrick Schroen / https://github.com/pschroen
+ */
+
+var AssetLoader = function AssetLoader(assets, callback) {
+    classCallCheck(this, AssetLoader);
+
+    if (Array.isArray(assets)) {
+        assets = function () {
+            var keys = assets.map(function (path) {
+                return Utils.basename(path);
+            });
+            return keys.reduce(function (o, k, i) {
+                o[k] = assets[i];
+                return o;
+            }, {});
+        }();
+    }
+    var self = this;
+    this.events = new EventManager();
+    this.CDN = Config.CDN || '';
+    var total = Object.keys(assets).length,
+        loaded = 0,
+        percent = 0;
+
+    for (var key in assets) {
+        loadAsset(key, this.CDN + assets[key]);
+    }function loadAsset(key, asset) {
+        var name = asset.split('/');
+        name = name[name.length - 1];
+        var split = name.split('.'),
+            ext = split[split.length - 1].split('?')[0];
+        switch (ext) {
+            case 'mp3':
+                if (!window.AudioContext) return assetLoaded();
+                XHR.get(asset, function (contents) {
+                    WebAudio.createSound(key, contents, assetLoaded);
+                }, 'arraybuffer');
+                break;
+            default:
+                Images.createImg(asset, assetLoaded);
+                break;
+        }
+    }
+
+    function assetLoaded() {
+        loaded++;
+        percent = loaded / total;
+        self.events.fire(Events.PROGRESS, { percent: percent });
+        if (loaded === total) {
+            self.complete = true;
+            self.events.fire(Events.COMPLETE);
+            if (callback) callback();
+        }
+    }
+};
+
+AssetLoader.loadAssets = function (assets, callback) {
+    var promise = Promise.create();
+    if (!callback) callback = promise.resolve;
+    new AssetLoader(assets, callback);
+    return promise;
 };
 
 /**
@@ -1740,7 +2882,9 @@ var XHR = function XHR() {
  * @author Patrick Schroen / https://github.com/pschroen
  */
 
-var Stage = function (_Interface) {
+var Stage = new ( // Singleton pattern
+
+function (_Interface) {
     inherits(Stage, _Interface);
 
     function Stage() {
@@ -1765,17 +2909,28 @@ var Stage = function (_Interface) {
                     last = 'focus';
                     window.events.fire(Events.BROWSER_FOCUS, { type: 'focus' });
                 }
-            }, false);
+            }, true);
             window.addEventListener('blur', function () {
                 if (last !== 'blur') {
                     last = 'blur';
                     window.events.fire(Events.BROWSER_FOCUS, { type: 'blur' });
                 }
-            }, false);
-            window.addEventListener('resize', function () {
-                window.events.fire(Events.RESIZE);
-            }, false);
-            window.events.add(Events.RESIZE, resizeHandler);
+            }, true);
+            window.addEventListener('keydown', function () {
+                return window.events.fire(Events.KEYBOARD_DOWN);
+            }, true);
+            window.addEventListener('keyup', function () {
+                return window.events.fire(Events.KEYBOARD_UP);
+            }, true);
+            window.addEventListener('keypress', function () {
+                return window.events.fire(Events.KEYBOARD_PRESS);
+            }, true);
+            if (!Device.mobile) {
+                window.addEventListener('resize', function () {
+                    return window.events.fire(Events.RESIZE);
+                }, true);
+                window.events.add(Events.RESIZE, resizeHandler);
+            }
         }
 
         function resizeHandler() {
@@ -1785,7 +2940,48 @@ var Stage = function (_Interface) {
     }
 
     return Stage;
-}(Interface);
+}(Interface))(); // Singleton pattern
+
+/**
+ * Font loader with promise method.
+ *
+ * @author Patrick Schroen / https://github.com/pschroen
+ */
+
+var FontLoader = function FontLoader(fonts, callback) {
+    classCallCheck(this, FontLoader);
+
+    var self = this;
+    this.events = new EventManager();
+    var element = void 0;
+
+    initFonts();
+    finish();
+
+    function initFonts() {
+        if (!Array.isArray(fonts)) fonts = [fonts];
+        element = Stage.create('FontLoader');
+        for (var i = 0; i < fonts.length; i++) {
+            element.create('font').fontStyle(fonts[i], 12, '#000').text('LOAD').css({ top: -999 });
+        }
+    }
+
+    function finish() {
+        Delayed(function () {
+            element.destroy();
+            self.complete = true;
+            self.events.fire(Events.COMPLETE);
+            if (callback) callback();
+        }, 500);
+    }
+};
+
+FontLoader.loadFonts = function (fonts, callback) {
+    var promise = Promise.create();
+    if (!callback) callback = promise.resolve;
+    new FontLoader(fonts, callback);
+    return promise;
+};
 
 /**
  * Alien abduction point.
@@ -1794,7 +2990,7 @@ var Stage = function (_Interface) {
  */
 
 // Polyfills
-if (typeof Promise !== 'undefined' && !Promise.create) Promise.create = function () {
+if (typeof Promise !== 'undefined') Promise.create = function () {
     var resolve = void 0,
         reject = void 0,
         promise = new Promise(function (res, rej) {
@@ -1807,27 +3003,17 @@ if (typeof Promise !== 'undefined' && !Promise.create) Promise.create = function
 };
 
 // Globals
-if (!window.getURL) window.getURL = function (url) {
+window.getURL = function (url) {
     var target = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : '_blank';
     return window.open(url, target);
 };
-
-if (!window.Delayed) window.Delayed = function (callback) {
+window.Delayed = function (callback) {
     var time = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 0;
     var params = arguments[2];
     return window.setTimeout(function () {
-        callback && callback(params);
+        if (callback) callback(params);
     }, time);
 };
 
 if (!window.Global) window.Global = {};
 if (!window.Config) window.Config = {};
-
-// Illegal reassignment for instances
-Function(function () {
-    var instances = '';
-    ['Render', 'Utils', 'Device', 'Mouse', 'TweenManager', 'Interpolation', 'XHR', 'Stage'].forEach(function (i) {
-        instances += 'try {' + i + ' = new ' + i + '();} catch(e) {}';
-    });
-    return instances;
-}())();

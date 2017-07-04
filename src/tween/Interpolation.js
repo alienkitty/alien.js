@@ -13,99 +13,99 @@ class Interpolation {
             return (() => {
                 let fn;
                 switch (ease) {
-                case 'easeInQuad':
-                    fn = this.Quad.In;
-                    break;
-                case 'easeInCubic':
-                    fn = this.Cubic.In;
-                    break;
-                case 'easeInQuart':
-                    fn = this.Quart.In;
-                    break;
-                case 'easeInQuint':
-                    fn = this.Quint.In;
-                    break;
-                case 'easeInSine':
-                    fn = this.Sine.In;
-                    break;
-                case 'easeInExpo':
-                    fn = this.Expo.In;
-                    break;
-                case 'easeInCirc':
-                    fn = this.Circ.In;
-                    break;
-                case 'easeInElastic':
-                    fn = this.Elastic.In;
-                    break;
-                case 'easeInBack':
-                    fn = this.Back.In;
-                    break;
-                case 'easeInBounce':
-                    fn = this.Bounce.In;
-                    break;
-                case 'easeOutQuad':
-                    fn = this.Quad.Out;
-                    break;
-                case 'easeOutCubic':
-                    fn = this.Cubic.Out;
-                    break;
-                case 'easeOutQuart':
-                    fn = this.Quart.Out;
-                    break;
-                case 'easeOutQuint':
-                    fn = this.Quint.Out;
-                    break;
-                case 'easeOutSine':
-                    fn = this.Sine.Out;
-                    break;
-                case 'easeOutExpo':
-                    fn = this.Expo.Out;
-                    break;
-                case 'easeOutCirc':
-                    fn = this.Circ.Out;
-                    break;
-                case 'easeOutElastic':
-                    fn = this.Elastic.Out;
-                    break;
-                case 'easeOutBack':
-                    fn = this.Back.Out;
-                    break;
-                case 'easeOutBounce':
-                    fn = this.Bounce.Out;
-                    break;
-                case 'easeInOutQuad':
-                    fn = this.Quad.InOut;
-                    break;
-                case 'easeInOutCubic':
-                    fn = this.Cubic.InOut;
-                    break;
-                case 'easeInOutQuart':
-                    fn = this.Quart.InOut;
-                    break;
-                case 'easeInOutQuint':
-                    fn = this.Quint.InOut;
-                    break;
-                case 'easeInOutSine':
-                    fn = this.Sine.InOut;
-                    break;
-                case 'easeInOutExpo':
-                    fn = this.Expo.InOut;
-                    break;
-                case 'easeInOutCirc':
-                    fn = this.Circ.InOut;
-                    break;
-                case 'easeInOutElastic':
-                    fn = this.Elastic.InOut;
-                    break;
-                case 'easeInOutBack':
-                    fn = this.Back.InOut;
-                    break;
-                case 'easeInOutBounce':
-                    fn = this.Bounce.InOut;
-                    break;
-                case 'linear':
-                    fn = this.Linear.None;
-                    break;
+                    case 'easeInQuad':
+                        fn = this.Quad.In;
+                        break;
+                    case 'easeInCubic':
+                        fn = this.Cubic.In;
+                        break;
+                    case 'easeInQuart':
+                        fn = this.Quart.In;
+                        break;
+                    case 'easeInQuint':
+                        fn = this.Quint.In;
+                        break;
+                    case 'easeInSine':
+                        fn = this.Sine.In;
+                        break;
+                    case 'easeInExpo':
+                        fn = this.Expo.In;
+                        break;
+                    case 'easeInCirc':
+                        fn = this.Circ.In;
+                        break;
+                    case 'easeInElastic':
+                        fn = this.Elastic.In;
+                        break;
+                    case 'easeInBack':
+                        fn = this.Back.In;
+                        break;
+                    case 'easeInBounce':
+                        fn = this.Bounce.In;
+                        break;
+                    case 'easeOutQuad':
+                        fn = this.Quad.Out;
+                        break;
+                    case 'easeOutCubic':
+                        fn = this.Cubic.Out;
+                        break;
+                    case 'easeOutQuart':
+                        fn = this.Quart.Out;
+                        break;
+                    case 'easeOutQuint':
+                        fn = this.Quint.Out;
+                        break;
+                    case 'easeOutSine':
+                        fn = this.Sine.Out;
+                        break;
+                    case 'easeOutExpo':
+                        fn = this.Expo.Out;
+                        break;
+                    case 'easeOutCirc':
+                        fn = this.Circ.Out;
+                        break;
+                    case 'easeOutElastic':
+                        fn = this.Elastic.Out;
+                        break;
+                    case 'easeOutBack':
+                        fn = this.Back.Out;
+                        break;
+                    case 'easeOutBounce':
+                        fn = this.Bounce.Out;
+                        break;
+                    case 'easeInOutQuad':
+                        fn = this.Quad.InOut;
+                        break;
+                    case 'easeInOutCubic':
+                        fn = this.Cubic.InOut;
+                        break;
+                    case 'easeInOutQuart':
+                        fn = this.Quart.InOut;
+                        break;
+                    case 'easeInOutQuint':
+                        fn = this.Quint.InOut;
+                        break;
+                    case 'easeInOutSine':
+                        fn = this.Sine.InOut;
+                        break;
+                    case 'easeInOutExpo':
+                        fn = this.Expo.InOut;
+                        break;
+                    case 'easeInOutCirc':
+                        fn = this.Circ.InOut;
+                        break;
+                    case 'easeInOutElastic':
+                        fn = this.Elastic.InOut;
+                        break;
+                    case 'easeInOutBack':
+                        fn = this.Back.InOut;
+                        break;
+                    case 'easeInOutBounce':
+                        fn = this.Bounce.InOut;
+                        break;
+                    case 'linear':
+                        fn = this.Linear.None;
+                        break;
                 }
                 return fn;
             })() || this.Cubic.Out;

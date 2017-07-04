@@ -113,15 +113,15 @@ class Color {
                 let delta = max - min;
                 saturation = lightness <= 0.5 ? delta / (max + min) : delta / (2 - max - min);
                 switch (max) {
-                case r:
-                    hue = (g - b) / delta + (g < b ? 6 : 0);
-                    break;
-                case g:
-                    hue = (b - r) / delta + 2;
-                    break;
-                case b:
-                    hue = (r - g) / delta + 4;
-                    break;
+                    case r:
+                        hue = (g - b) / delta + (g < b ? 6 : 0);
+                        break;
+                    case g:
+                        hue = (b - r) / delta + 2;
+                        break;
+                    case b:
+                        hue = (r - g) / delta + 4;
+                        break;
                 }
                 hue /= 6;
             }

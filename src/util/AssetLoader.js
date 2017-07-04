@@ -41,15 +41,15 @@ class AssetLoader {
             let split = name.split('.'),
                 ext = split[split.length - 1].split('?')[0];
             switch (ext) {
-            case 'mp3':
-                if (!window.AudioContext) return assetLoaded();
-                XHR.get(asset, contents => {
-                    WebAudio.createSound(key, contents, assetLoaded);
-                }, 'arraybuffer');
-                break;
-            default:
-                Images.createImg(asset, assetLoaded);
-                break;
+                case 'mp3':
+                    if (!window.AudioContext) return assetLoaded();
+                    XHR.get(asset, contents => {
+                        WebAudio.createSound(key, contents, assetLoaded);
+                    }, 'arraybuffer');
+                    break;
+                default:
+                    Images.createImg(asset, assetLoaded);
+                    break;
             }
         }
 

@@ -28,21 +28,21 @@ class Device {
         this.transformProperty = (() => {
             let pre;
             switch (this.prefix.lowercase) {
-            case 'webkit':
-                pre = '-webkit-transform';
-                break;
-            case 'moz':
-                pre = '-moz-transform';
-                break;
-            case 'o':
-                pre = '-o-transform';
-                break;
-            case 'ms':
-                pre = '-ms-transform';
-                break;
-            default:
-                pre = 'transform';
-                break;
+                case 'webkit':
+                    pre = '-webkit-transform';
+                    break;
+                case 'moz':
+                    pre = '-moz-transform';
+                    break;
+                case 'o':
+                    pre = '-o-transform';
+                    break;
+                case 'ms':
+                    pre = '-ms-transform';
+                    break;
+                default:
+                    pre = 'transform';
+                    break;
             }
             return pre;
         })();

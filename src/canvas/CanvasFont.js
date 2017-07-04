@@ -25,17 +25,17 @@ class CanvasFont {
             context.font = font;
             for (let i = 0; i < characters.length; i++) graphics.totalWidth += context.measureText(characters[i]).width + letterSpacing;
             switch (textAlign) {
-            case 'start':
-            case 'left':
-                currentPosition = 0;
-                break;
-            case 'end':
-            case 'right':
-                currentPosition = width - graphics.totalWidth;
-                break;
-            case 'center':
-                currentPosition = (width - graphics.totalWidth) / 2;
-                break;
+                case 'start':
+                case 'left':
+                    currentPosition = 0;
+                    break;
+                case 'end':
+                case 'right':
+                    currentPosition = width - graphics.totalWidth;
+                    break;
+                case 'center':
+                    currentPosition = (width - graphics.totalWidth) / 2;
+                    break;
             }
             do {
                 chr = characters[index++];

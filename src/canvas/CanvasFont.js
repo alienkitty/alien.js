@@ -54,6 +54,8 @@ class CanvasFont {
                     words = str.split(' '),
                     line = '',
                     lines = [];
+                text.totalWidth = 0;
+                text.totalHeight = 0;
                 context.font = font;
                 for (let n = 0; n < words.length; n++) {
                     let testLine = line + words[n] + ' ',
@@ -72,6 +74,8 @@ class CanvasFont {
                     let graphics = createText(canvas, width, lineHeight, e, font, fillStyle, letterSpacing, textAlign);
                     graphics.y = i * lineHeight;
                     text.add(graphics);
+                    text.totalWidth = Math.max(graphics.totalWidth, text.totalWidth);
+                    text.totalHeight += lineHeight;
                     return true;
                 });
                 return text;

@@ -73,6 +73,7 @@ class CanvasObject {
         display.parent = this;
         this.children.push(display);
         display.z = this.children.length;
+        for (let i = this.children.length - 1; i > -1; i--) this.children[i].setCanvas(this.canvas);
     }
 
     setCanvas(canvas) {

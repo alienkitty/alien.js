@@ -30,24 +30,31 @@ class Stage extends Interface {
                     last = 'focus';
                     window.events.fire(Events.BROWSER_FOCUS, {type:'focus'});
                 }
-            }, true);
+            });
             window.addEventListener('blur', () => {
                 if (last !== 'blur') {
                     last = 'blur';
                     window.events.fire(Events.BROWSER_FOCUS, {type:'blur'});
                 }
-            }, true);
-            window.addEventListener('keydown', () => window.events.fire(Events.KEYBOARD_DOWN), true);
-            window.addEventListener('keyup', () => window.events.fire(Events.KEYBOARD_UP), true);
-            window.addEventListener('keypress', () => window.events.fire(Events.KEYBOARD_PRESS), true);
-            if (!Device.mobile) {
-                window.addEventListener('resize', () => window.events.fire(Events.RESIZE), true);
-                window.events.add(Events.RESIZE, resizeHandler);
-            }
+            });
+            window.addEventListener('keydown', () => window.events.fire(Events.KEYBOARD_DOWN));
+            window.addEventListener('keyup', () => window.events.fire(Events.KEYBOARD_UP));
+            window.addEventListener('keypress', () => window.events.fire(Events.KEYBOARD_PRESS));
+            window.addEventListener('resize', () => window.events.fire(Events.RESIZE));
+            self.events.subscribe(Events.RESIZE, resizeHandler);
         }
 
         function resizeHandler() {
             self.size();
+            if (Device.mobile) {
+                self.tablet = (() => {
+                    if (window.innerWidth > window.innerHeight) return document.body.clientWidth > 800;
+                    else return document.body.clientHeight > 800;
+                })();
+                self.phone = !self.tablet;
+                self.type = self.phone ? 'phone' : 'tablet';
+                self.orientation = window.innerWidth > window.innerHeight ? 'landscape' : 'portrait';
+            }
         }
     }
 }

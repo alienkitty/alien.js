@@ -23,9 +23,9 @@ class Interface {
             this.element.setAttributeNS('http://www.w3.org/2000/xmlns/', 'xmlns:xlink', 'http://www.w3.org/1999/xlink');
         } else {
             this.element = document.createElement(this.type);
-            if (name[0] === '.') this.element.className = name.substr(1);
-            else this.element.id = name;
         }
+        if (name[0] === '.') this.element.className = name.substr(1);
+        else this.element.id = name;
         this.element.style.position = 'absolute';
         if (!detached) {
             let stage = window.Alien && window.Alien.Stage ? window.Alien.Stage : document.body;
@@ -49,6 +49,7 @@ class Interface {
 
     destroy() {
         if (this.loop) Render.stop(this.loop);
+        this.events = this.events.destroy();
         this.element.parentNode.removeChild(this.element);
         return Utils.nullObject(this);
     }
@@ -307,7 +308,7 @@ class Interface {
             e.action = 'click';
             if (callback) callback(e);
         };
-        this.element.addEventListener('click', clicked, true);
+        this.element.addEventListener('click', clicked);
         this.element.style.cursor = 'pointer';
         return this;
     }
@@ -318,8 +319,8 @@ class Interface {
             e.action = e.type === 'mouseout' ? 'out' : 'over';
             if (callback) callback(e);
         };
-        this.element.addEventListener('mouseover', hovered, true);
-        this.element.addEventListener('mouseout', hovered, true);
+        this.element.addEventListener('mouseover', hovered);
+        this.element.addEventListener('mouseout', hovered);
         return this;
     }
 
@@ -329,18 +330,18 @@ class Interface {
             e.action = e.type === 'mousedown' ? 'down' : 'up';
             if (callback) callback(e);
         };
-        this.element.addEventListener('mousedown', pressed, true);
-        this.element.addEventListener('mouseup', pressed, true);
+        this.element.addEventListener('mousedown', pressed);
+        this.element.addEventListener('mouseup', pressed);
         return this;
     }
 
     bind(event, callback) {
-        this.element.addEventListener(event, callback, true);
+        this.element.addEventListener(event, callback);
         return this;
     }
 
     unbind(event, callback) {
-        this.element.removeEventListener(event, callback, true);
+        this.element.removeEventListener(event, callback);
         return this;
     }
 

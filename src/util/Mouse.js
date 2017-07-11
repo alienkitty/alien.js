@@ -20,13 +20,13 @@ class Mouse {
         this.capture = () => {
             this.x = 0;
             this.y = 0;
-            window.addEventListener('mousemove', moved, true);
+            window.addEventListener('mousemove', moved);
         };
 
         this.stop = () => {
             this.x = 0;
             this.y = 0;
-            window.removeEventListener('mousemove', moved, true);
+            window.removeEventListener('mousemove', moved);
         };
     }
 }

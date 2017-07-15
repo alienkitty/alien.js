@@ -369,8 +369,7 @@ class Interface {
         let startX, startY,
             moving = false,
             move = {};
-
-        function touchStart(e) {
+        let touchStart = e => {
             let touch = Utils.touchEvent(e);
             if (e.touches.length === 1) {
                 startX = touch.x;
@@ -378,9 +377,8 @@ class Interface {
                 moving = true;
                 this.element.addEventListener('touchmove', touchMove, {passive:true});
             }
-        }
-
-        function touchMove(e) {
+        };
+        let touchMove = e => {
             if (moving) {
                 let touch = Utils.touchEvent(e),
                     dx = startX - touch.x,
@@ -403,18 +401,14 @@ class Interface {
                 }
                 if (callback) callback(move, e);
             }
-        }
-
-        function touchEnd() {
+        };
+        let touchEnd = () => {
             startX = startY = moving = false;
             this.element.removeEventListener('touchmove', touchMove);
-        }
-
-        if (Device.mobile) {
-            this.element.addEventListener('touchstart', touchStart, {passive:true});
-            this.element.addEventListener('touchend', touchEnd, {passive:true});
-            this.element.addEventListener('touchcancel', touchEnd, {passive:true});
-        }
+        };
+        this.element.addEventListener('touchstart', touchStart, {passive:true});
+        this.element.addEventListener('touchend', touchEnd, {passive:true});
+        this.element.addEventListener('touchcancel', touchEnd, {passive:true});
         return this;
     }
 
@@ -422,31 +416,27 @@ class Interface {
         let time, move,
             start = {},
             touch = {};
-
-        function touchMove(e) {
+        let touchMove = e => {
             touch = Utils.touchEvent(e);
             move = Utils.findDistance(start, touch) > 5;
-        }
-
-        function setTouch(e) {
+        };
+        let setTouch = e => {
             let touch = Utils.touchEvent(e);
             e.touchX = touch.x;
             e.touchY = touch.y;
             start.x = e.touchX;
             start.y = e.touchY;
-        }
-
-        function touchStart(e) {
+        };
+        let touchStart = e => {
             time = Date.now();
             e.action = 'over';
-            e.object = this.element.className === 'hit' ? this.parent() : this;
+            e.object = this.element.className === 'hit' ? this.parent : this;
             setTouch(e);
             if (hover && !move) hover(e);
-        }
-
-        function touchEnd(e) {
+        };
+        let touchEnd = e => {
             let t = Date.now();
-            e.object = this.element.className === 'hit' ? this.parent() : this;
+            e.object = this.element.className === 'hit' ? this.parent : this;
             setTouch(e);
             if (time && t - time < 750) {
                 if (click && !move) {
@@ -459,13 +449,10 @@ class Interface {
                 hover(e);
             }
             move = false;
-        }
-
-        if (Device.mobile) {
-            this.element.addEventListener('touchmove', touchMove, {passive:true});
-            this.element.addEventListener('touchstart', touchStart, {passive:true});
-            this.element.addEventListener('touchend', touchEnd, {passive:true});
-        }
+        };
+        this.element.addEventListener('touchmove', touchMove, {passive:true});
+        this.element.addEventListener('touchstart', touchStart, {passive:true});
+        this.element.addEventListener('touchend', touchEnd, {passive:true});
         return this;
     }
 

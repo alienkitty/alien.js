@@ -10,7 +10,6 @@ export { Canvas } from './canvas/Canvas';
 export { CanvasGraphics } from './canvas/CanvasGraphics';
 export { CanvasImage } from './canvas/CanvasImage';
 export { CanvasFont } from './canvas/CanvasFont';
-export { Color } from './util/Color';
 export { Render } from './util/Render';
 export { DynamicObject } from './util/DynamicObject';
 export { Utils } from './util/Utils';

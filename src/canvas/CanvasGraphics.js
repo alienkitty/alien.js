@@ -5,7 +5,6 @@
  */
 
 import { CanvasObject } from './CanvasObject';
-import { Color } from '../util/Color';
 import { Utils } from '../util/Utils';
 import { Images } from '../util/Images';
 
@@ -22,10 +21,7 @@ class CanvasGraphics extends CanvasObject {
             mask;
 
         function setProperties(context) {
-            for (let key in self.props) {
-                let val = self.props[key];
-                context[key] = val instanceof Color ? val.getHexString() : val;
-            }
+            for (let key in self.props) context[key] = self.props[key];
         }
 
         this.draw = override => {

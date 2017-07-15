@@ -18,6 +18,7 @@ class CanvasFont {
             graphics.font = font;
             graphics.fillStyle = fillStyle;
             graphics.totalWidth = 0;
+            graphics.totalHeight = height;
             let chr,
                 characters = str.split(''),
                 index = 0,

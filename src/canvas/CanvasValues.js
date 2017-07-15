@@ -8,22 +8,8 @@ class CanvasValues {
 
     constructor(style) {
         this.styles = {};
-        let hit = {
-            x: 0,
-            y: 0,
-            width: 0,
-            height: 0
-        };
         if (!style) this.data = new Float32Array(6);
         else this.styled = false;
-
-        this.hit = object => {
-            hit.x = this.data[0];
-            hit.y = this.data[1];
-            hit.width = object.width;
-            hit.height = object.height;
-            return hit;
-        };
     }
 
     set shadowOffsetX(val) {

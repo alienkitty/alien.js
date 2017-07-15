@@ -5,7 +5,6 @@
  */
 
 import { CanvasValues } from './CanvasValues';
-import { Color } from '../util/Color';
 import { Utils } from '../util/Utils';
 
 class CanvasObject {
@@ -57,10 +56,7 @@ class CanvasObject {
         context.globalAlpha = v[5];
         if (this.styles.styled) {
             let values = this.styles.values;
-            for (let key in values) {
-                let val = values[key];
-                context[key] = val instanceof Color ? val.getHexString() : val;
-            }
+            for (let key in values) context[key] = values[key];
         }
     }
 
@@ -154,15 +150,6 @@ class CanvasObject {
         this.clipWidth = w;
         this.clipHeight = h;
         return this;
-    }
-
-    hit(e) {
-        if (!this.ignoreHit) if (Utils.hitTestObject(e, this.values.hit(this))) return this;
-        for (let i = this.children.length - 1; i > -1; i--) {
-            let child = this.children[i];
-            if (child.hit(e)) return child;
-        }
-        return false;
     }
 
     destroy() {

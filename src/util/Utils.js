@@ -50,29 +50,6 @@ class Utils {
         return number < 10 ? '0' + number : number;
     }
 
-    hitTestObject(obj1, obj2) {
-        let x1 = obj1.x,
-            y1 = obj1.y,
-            w = obj1.width,
-            h = obj1.height;
-        let xp1 = obj2.x,
-            yp1 = obj2.y,
-            wp = obj2.width,
-            hp = obj2.height;
-        let x2 = x1 + w,
-            y2 = y1 + h,
-            xp2 = xp1 + wp,
-            yp2 = yp1 + hp;
-        if (xp1 >= x1 && xp1 <= x2) {
-            if (yp1 >= y1 && yp1 <= y2) return true;
-            else if (y1 >= yp1 && y1 <= yp2) return true;
-        } else if (x1 >= xp1 && x1 <= xp2) {
-            if (yp1 >= y1 && yp1 <= y2) return true;
-            else if (y1 >= yp1 && y1 <= yp2) return true;
-        }
-        return false;
-    }
-
     touchEvent(e) {
         let touchEvent = {};
         touchEvent.x = 0;

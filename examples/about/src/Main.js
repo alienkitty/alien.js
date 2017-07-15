@@ -194,7 +194,7 @@ class UIAbout extends Interface {
         }
 
         function addListeners() {
-            window.events.add(Events.RESIZE, resizeHandler);
+            self.events.subscribe(Events.RESIZE, resizeHandler);
         }
 
         function resizeHandler() {

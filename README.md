@@ -18,6 +18,50 @@ A lightweight web framework abducted from Active Theory's [Hydra](https://medium
 * Web audio engine.
 * SVG support.
 
+### Example `Interface` design pattern
+
+```javascript
+import { Stage, Interface, Device } from '../alien.js/src/Alien';
+
+Config.UI_OFFSET = Device.phone ? 20 : 35;
+
+class UILogo extends Interface {
+
+    constructor() {
+        super('UILogo');
+        let self = this;
+        let size = Device.phone ? 40 : 64;
+
+        initHTML();
+        addListeners();
+
+        function initHTML() {
+            self.size(size).css({
+                left: Config.UI_OFFSET,
+                top: Config.UI_OFFSET,
+                opacity: 0
+            });
+            self.bg('assets/images/logo.svg', 'cover');
+            self.tween({opacity:1}, 1000, 'easeOutQuart');
+        }
+
+        function addListeners() {
+            self.interact(hover, click);
+            self.hit.mouseEnabled(true);
+        }
+
+        function hover(e) {
+            if (e.action === 'over') self.tween({opacity:0.7}, 100, 'easeOutSine');
+            else self.tween({opacity:1}, 300, 'easeOutSine');
+        }
+
+        function click() {
+            getURL('https://alien.js.org/');
+        }
+    }
+}
+```
+
 ### Quickstart
 
 To build a project, make sure you have [Node.js](https://nodejs.org/) installed (at least version 6).
@@ -58,7 +102,6 @@ npm run build
 
 * Docs
 * Tests
-* Mobile
 * Particle emitter
 * FX
 * Mixin examples, ThreeJS, PixiJS

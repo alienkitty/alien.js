@@ -46,15 +46,7 @@ class Stage extends Interface {
 
         function resizeHandler() {
             self.size();
-            if (Device.mobile) {
-                self.tablet = (() => {
-                    if (window.innerWidth > window.innerHeight) return document.body.clientWidth > 800;
-                    else return document.body.clientHeight > 800;
-                })();
-                self.phone = !self.tablet;
-                self.type = self.phone ? 'phone' : 'tablet';
-                self.orientation = window.innerWidth > window.innerHeight ? 'landscape' : 'portrait';
-            }
+            if (Device.mobile) self.orientation = window.innerWidth > window.innerHeight ? 'landscape' : 'portrait';
         }
     }
 }

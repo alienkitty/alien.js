@@ -5,6 +5,7 @@
  */
 
 import { DynamicObject } from './DynamicObject';
+import { Device } from './Device';
 
 let Utils = new ( // Singleton pattern
 
@@ -70,6 +71,26 @@ class Utils {
             else if (y1 >= yp1 && y1 <= yp2) return true;
         }
         return false;
+    }
+
+    touchEvent(e) {
+        let touchEvent = {};
+        touchEvent.x = 0;
+        touchEvent.y = 0;
+        if (!e) return touchEvent;
+        if (Device.mobile && (e.touches || e.changedTouches)) {
+            if (e.touches.length) {
+                touchEvent.x = e.touches[0].pageX;
+                touchEvent.y = e.touches[0].pageY;
+            } else {
+                touchEvent.x = e.changedTouches[0].pageX;
+                touchEvent.y = e.changedTouches[0].pageY;
+            }
+        } else {
+            touchEvent.x = e.pageX;
+            touchEvent.y = e.pageY;
+        }
+        return touchEvent;
     }
 
     clamp(num, min, max) {

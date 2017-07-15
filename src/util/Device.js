@@ -47,6 +47,12 @@ class Device {
             return pre;
         })();
         this.mobile = !!('ontouchstart' in window || 'onpointerdown' in window) && this.detect(['ios', 'iphone', 'ipad', 'android', 'blackberry']) ? {} : false;
+        this.tablet = (() => {
+            if (window.innerWidth > window.innerHeight) return document.body.clientWidth > 800;
+            else return document.body.clientHeight > 800;
+        })();
+        this.phone = !this.tablet;
+        this.type = this.phone ? 'phone' : 'tablet';
     }
 
     detect(array) {
@@ -57,6 +63,10 @@ class Device {
 
     vendor(style) {
         return this.prefix.js + style;
+    }
+
+    vibrate(time) {
+        navigator.vibrate && navigator.vibrate(time);
     }
 }
 

@@ -336,11 +336,17 @@ class Interface {
     }
 
     bind(event, callback) {
+        if (event === 'touchstart' && !Device.mobile) event = 'mousedown';
+        else if (event === 'touchmove' && !Device.mobile) event = 'mousemove';
+        else if (event === 'touchend' && !Device.mobile) event = 'mouseup';
         this.element.addEventListener(event, callback);
         return this;
     }
 
     unbind(event, callback) {
+        if (event === 'touchstart' && !Device.mobile) event = 'mousedown';
+        else if (event === 'touchmove' && !Device.mobile) event = 'mousemove';
+        else if (event === 'touchend' && !Device.mobile) event = 'mouseup';
         this.element.removeEventListener(event, callback);
         return this;
     }
@@ -354,7 +360,112 @@ class Interface {
             height: '100%',
             zIndex: 99999
         });
-        this.hit.hover(overCallback).click(clickCallback);
+        if (!Device.mobile) this.hit.hover(overCallback).click(clickCallback);
+        else this.hit.touchClick(overCallback, clickCallback);
+        return this;
+    }
+
+    touchSwipe(callback, distance = 75) {
+        let startX, startY,
+            moving = false,
+            move = {};
+
+        function touchStart(e) {
+            let touch = Utils.touchEvent(e);
+            if (e.touches.length === 1) {
+                startX = touch.x;
+                startY = touch.y;
+                moving = true;
+                this.element.addEventListener('touchmove', touchMove, {passive:true});
+            }
+        }
+
+        function touchMove(e) {
+            if (moving) {
+                let touch = Utils.touchEvent(e),
+                    dx = startX - touch.x,
+                    dy = startY - touch.y;
+                move.direction = null;
+                move.moving = null;
+                move.x = null;
+                move.y = null;
+                move.evt = e;
+                if (Math.abs(dx) >= distance) {
+                    touchEnd();
+                    move.direction = dx > 0 ? 'left' : 'right';
+                } else if (Math.abs(dy) >= distance) {
+                    touchEnd();
+                    move.direction = dy > 0 ? 'up' : 'down';
+                } else {
+                    move.moving = true;
+                    move.x = dx;
+                    move.y = dy;
+                }
+                if (callback) callback(move, e);
+            }
+        }
+
+        function touchEnd() {
+            startX = startY = moving = false;
+            this.element.removeEventListener('touchmove', touchMove);
+        }
+
+        if (Device.mobile) {
+            this.element.addEventListener('touchstart', touchStart, {passive:true});
+            this.element.addEventListener('touchend', touchEnd, {passive:true});
+            this.element.addEventListener('touchcancel', touchEnd, {passive:true});
+        }
+        return this;
+    }
+
+    touchClick(hover, click) {
+        let time, move,
+            start = {},
+            touch = {};
+
+        function touchMove(e) {
+            touch = Utils.touchEvent(e);
+            move = Utils.findDistance(start, touch) > 5;
+        }
+
+        function setTouch(e) {
+            let touch = Utils.touchEvent(e);
+            e.touchX = touch.x;
+            e.touchY = touch.y;
+            start.x = e.touchX;
+            start.y = e.touchY;
+        }
+
+        function touchStart(e) {
+            time = Date.now();
+            e.action = 'over';
+            e.object = this.element.className === 'hit' ? this.parent() : this;
+            setTouch(e);
+            if (hover && !move) hover(e);
+        }
+
+        function touchEnd(e) {
+            let t = Date.now();
+            e.object = this.element.className === 'hit' ? this.parent() : this;
+            setTouch(e);
+            if (time && t - time < 750) {
+                if (click && !move) {
+                    e.action = 'click';
+                    if (click && !move) click(e);
+                }
+            }
+            if (hover) {
+                e.action = 'out';
+                hover(e);
+            }
+            move = false;
+        }
+
+        if (Device.mobile) {
+            this.element.addEventListener('touchmove', touchMove, {passive:true});
+            this.element.addEventListener('touchstart', touchStart, {passive:true});
+            this.element.addEventListener('touchend', touchEnd, {passive:true});
+        }
         return this;
     }
 

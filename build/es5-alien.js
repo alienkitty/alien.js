@@ -103,17 +103,40 @@ if (!window.Events) window.Events = {
 };
 
 var EventManager = function EventManager() {
+    var _this = this;
+
     classCallCheck(this, EventManager);
 
     var events = [];
 
-    this.add = function (event, callback) {
-        events.push({ event: event, callback: callback });
+    this.add = function (event, callback, object) {
+        events.push({ event: event, callback: callback, object: object });
     };
 
     this.remove = function (eventString, callback) {
         for (var i = events.length - 1; i > -1; i--) {
-            if (events[i].event === eventString && events[i].callback === callback) events.splice(i, 1);
+            if (events[i].event === eventString && events[i].callback === callback) {
+                events[i] = null;
+                events.splice(i, 1);
+            }
+        }
+    };
+
+    this.destroy = function (object) {
+        if (object) {
+            for (var i = events.length - 1; i > -1; i--) {
+                if (events[i].object === object) {
+                    events[i] = null;
+                    events.splice(i, 1);
+                }
+            }
+        } else {
+            window.events.destroy(_this);
+            for (var _i = events.length - 1; _i > -1; _i--) {
+                events[_i] = null;
+                events.splice(_i, 1);
+            }
+            return null;
         }
     };
 
@@ -123,6 +146,15 @@ var EventManager = function EventManager() {
         for (var i = 0; i < events.length; i++) {
             if (events[i].event === eventString) events[i].callback(object);
         }
+    };
+
+    this.subscribe = function (event, callback) {
+        window.events.add(event, callback, _this);
+        return callback;
+    };
+
+    this.unsubscribe = function (event, callback) {
+        window.events.remove(event, callback, _this);
     };
 };
 
@@ -218,6 +250,87 @@ var DynamicObject = function DynamicObject(props) {
 };
 
 /**
+ * Browser detection and vendor prefixes.
+ *
+ * @author Patrick Schroen / https://github.com/pschroen
+ */
+
+var Device = new ( // Singleton pattern
+
+function () {
+    function Device() {
+        var _this = this;
+
+        classCallCheck(this, Device);
+
+        this.agent = navigator.userAgent.toLowerCase();
+        this.prefix = function () {
+            var pre = '',
+                dom = '',
+                styles = window.getComputedStyle(document.documentElement, '');
+            pre = (Array.prototype.slice.call(styles).join('').match(/-(moz|webkit|ms)-/) || styles.OLink === '' && ['', 'o'])[1];
+            dom = 'WebKit|Moz|MS|O'.match(new RegExp('(' + pre + ')', 'i'))[1];
+            var IE = _this.detect('trident');
+            return {
+                unprefixed: IE && !_this.detect('msie 9'),
+                dom: dom,
+                lowercase: pre,
+                css: '-' + pre + '-',
+                js: (IE ? pre[0] : pre[0].toUpperCase()) + pre.substr(1)
+            };
+        }();
+        this.transformProperty = function () {
+            var pre = void 0;
+            switch (_this.prefix.lowercase) {
+                case 'webkit':
+                    pre = '-webkit-transform';
+                    break;
+                case 'moz':
+                    pre = '-moz-transform';
+                    break;
+                case 'o':
+                    pre = '-o-transform';
+                    break;
+                case 'ms':
+                    pre = '-ms-transform';
+                    break;
+                default:
+                    pre = 'transform';
+                    break;
+            }
+            return pre;
+        }();
+        this.mobile = !!('ontouchstart' in window || 'onpointerdown' in window) && this.detect(['ios', 'iphone', 'ipad', 'android', 'blackberry']) ? {} : false;
+        this.tablet = function () {
+            if (window.innerWidth > window.innerHeight) return document.body.clientWidth > 800;else return document.body.clientHeight > 800;
+        }();
+        this.phone = !this.tablet;
+        this.type = this.phone ? 'phone' : 'tablet';
+    }
+
+    createClass(Device, [{
+        key: 'detect',
+        value: function detect(array) {
+            if (typeof array === 'string') array = [array];
+            for (var i = 0; i < array.length; i++) {
+                if (this.agent.indexOf(array[i]) > -1) return true;
+            }return false;
+        }
+    }, {
+        key: 'vendor',
+        value: function vendor(style) {
+            return this.prefix.js + style;
+        }
+    }, {
+        key: 'vibrate',
+        value: function vibrate(time) {
+            navigator.vibrate && navigator.vibrate(time);
+        }
+    }]);
+    return Device;
+}())(); // Singleton pattern
+
+/**
  * Alien utilities.
  *
  * @author Patrick Schroen / https://github.com/pschroen
@@ -278,26 +391,25 @@ function () {
             return number < 10 ? '0' + number : number;
         }
     }, {
-        key: 'hitTestObject',
-        value: function hitTestObject(obj1, obj2) {
-            var x1 = obj1.x,
-                y1 = obj1.y,
-                w = obj1.width,
-                h = obj1.height;
-            var xp1 = obj2.x,
-                yp1 = obj2.y,
-                wp = obj2.width,
-                hp = obj2.height;
-            var x2 = x1 + w,
-                y2 = y1 + h,
-                xp2 = xp1 + wp,
-                yp2 = yp1 + hp;
-            if (xp1 >= x1 && xp1 <= x2) {
-                if (yp1 >= y1 && yp1 <= y2) return true;else if (y1 >= yp1 && y1 <= yp2) return true;
-            } else if (x1 >= xp1 && x1 <= xp2) {
-                if (yp1 >= y1 && yp1 <= y2) return true;else if (y1 >= yp1 && y1 <= yp2) return true;
+        key: 'touchEvent',
+        value: function touchEvent(e) {
+            var touchEvent = {};
+            touchEvent.x = 0;
+            touchEvent.y = 0;
+            if (!e) return touchEvent;
+            if (Device.mobile && (e.touches || e.changedTouches)) {
+                if (e.touches.length) {
+                    touchEvent.x = e.touches[0].pageX;
+                    touchEvent.y = e.touches[0].pageY;
+                } else {
+                    touchEvent.x = e.changedTouches[0].pageX;
+                    touchEvent.y = e.changedTouches[0].pageY;
+                }
+            } else {
+                touchEvent.x = e.pageX;
+                touchEvent.y = e.pageY;
             }
-            return false;
+            return touchEvent;
         }
     }, {
         key: 'clamp',
@@ -381,6 +493,7 @@ function () {
     }, {
         key: 'queryString',
         value: function queryString(key) {
+            // eslint-disable-next-line no-useless-escape
             return decodeURI(window.location.search.replace(new RegExp('^(?:.*[&\\?]' + encodeURI(key).replace(/[\.\+\*]/g, '\\$&') + '(?:\\=([^&]*))?)?.*$', 'i'), '$1'));
         }
     }, {
@@ -390,77 +503,6 @@ function () {
         }
     }]);
     return Utils;
-}())(); // Singleton pattern
-
-/**
- * Browser detection and vendor prefixes.
- *
- * @author Patrick Schroen / https://github.com/pschroen
- */
-
-var Device = new ( // Singleton pattern
-
-function () {
-    function Device() {
-        var _this = this;
-
-        classCallCheck(this, Device);
-
-        this.agent = navigator.userAgent.toLowerCase();
-        this.prefix = function () {
-            var pre = '',
-                dom = '',
-                styles = window.getComputedStyle(document.documentElement, '');
-            pre = (Array.prototype.slice.call(styles).join('').match(/-(moz|webkit|ms)-/) || styles.OLink === '' && ['', 'o'])[1];
-            dom = 'WebKit|Moz|MS|O'.match(new RegExp('(' + pre + ')', 'i'))[1];
-            var IE = _this.detect('trident');
-            return {
-                unprefixed: IE && !_this.detect('msie 9'),
-                dom: dom,
-                lowercase: pre,
-                css: '-' + pre + '-',
-                js: (IE ? pre[0] : pre[0].toUpperCase()) + pre.substr(1)
-            };
-        }();
-        this.transformProperty = function () {
-            var pre = void 0;
-            switch (_this.prefix.lowercase) {
-                case 'webkit':
-                    pre = '-webkit-transform';
-                    break;
-                case 'moz':
-                    pre = '-moz-transform';
-                    break;
-                case 'o':
-                    pre = '-o-transform';
-                    break;
-                case 'ms':
-                    pre = '-ms-transform';
-                    break;
-                default:
-                    pre = 'transform';
-                    break;
-            }
-            return pre;
-        }();
-        this.mobile = !!('ontouchstart' in window || 'onpointerdown' in window) && this.detect(['ios', 'iphone', 'ipad', 'android', 'blackberry']) ? {} : false;
-    }
-
-    createClass(Device, [{
-        key: 'detect',
-        value: function detect(array) {
-            if (typeof array === 'string') array = [array];
-            for (var i = 0; i < array.length; i++) {
-                if (this.agent.indexOf(array[i]) > -1) return true;
-            }return false;
-        }
-    }, {
-        key: 'vendor',
-        value: function vendor(style) {
-            return this.prefix.js + style;
-        }
-    }]);
-    return Device;
 }())(); // Singleton pattern
 
 /**
@@ -1180,8 +1222,8 @@ var Interface = function () {
             this.element.setAttributeNS('http://www.w3.org/2000/xmlns/', 'xmlns:xlink', 'http://www.w3.org/1999/xlink');
         } else {
             this.element = document.createElement(this.type);
-            if (name[0] === '.') this.element.className = name.substr(1);else this.element.id = name;
         }
+        if (name[0] === '.') this.element.className = name.substr(1);else this.element.id = name;
         this.element.style.position = 'absolute';
         if (!detached) {
             var stage = window.Alien && window.Alien.Stage ? window.Alien.Stage : document.body;
@@ -1213,6 +1255,7 @@ var Interface = function () {
         key: 'destroy',
         value: function destroy() {
             if (this.loop) Render.stop(this.loop);
+            this.events = this.events.destroy();
             this.element.parentNode.removeChild(this.element);
             return Utils.nullObject(this);
         }
@@ -1497,7 +1540,7 @@ var Interface = function () {
                 e.action = 'click';
                 if (callback) callback(e);
             };
-            this.element.addEventListener('click', clicked, true);
+            this.element.addEventListener('click', clicked);
             this.element.style.cursor = 'pointer';
             return this;
         }
@@ -1511,8 +1554,8 @@ var Interface = function () {
                 e.action = e.type === 'mouseout' ? 'out' : 'over';
                 if (callback) callback(e);
             };
-            this.element.addEventListener('mouseover', hovered, true);
-            this.element.addEventListener('mouseout', hovered, true);
+            this.element.addEventListener('mouseover', hovered);
+            this.element.addEventListener('mouseout', hovered);
             return this;
         }
     }, {
@@ -1525,20 +1568,22 @@ var Interface = function () {
                 e.action = e.type === 'mousedown' ? 'down' : 'up';
                 if (callback) callback(e);
             };
-            this.element.addEventListener('mousedown', pressed, true);
-            this.element.addEventListener('mouseup', pressed, true);
+            this.element.addEventListener('mousedown', pressed);
+            this.element.addEventListener('mouseup', pressed);
             return this;
         }
     }, {
         key: 'bind',
         value: function bind(event, callback) {
-            this.element.addEventListener(event, callback, true);
+            if (event === 'touchstart' && !Device.mobile) event = 'mousedown';else if (event === 'touchmove' && !Device.mobile) event = 'mousemove';else if (event === 'touchend' && !Device.mobile) event = 'mouseup';
+            this.element.addEventListener(event, callback);
             return this;
         }
     }, {
         key: 'unbind',
         value: function unbind(event, callback) {
-            this.element.removeEventListener(event, callback, true);
+            if (event === 'touchstart' && !Device.mobile) event = 'mousedown';else if (event === 'touchmove' && !Device.mobile) event = 'mousemove';else if (event === 'touchend' && !Device.mobile) event = 'mouseup';
+            this.element.removeEventListener(event, callback);
             return this;
         }
     }, {
@@ -1552,7 +1597,108 @@ var Interface = function () {
                 height: '100%',
                 zIndex: 99999
             });
-            this.hit.hover(overCallback).click(clickCallback);
+            if (!Device.mobile) this.hit.hover(overCallback).click(clickCallback);else this.hit.touchClick(overCallback, clickCallback);
+            return this;
+        }
+    }, {
+        key: 'touchSwipe',
+        value: function touchSwipe(callback) {
+            var _this4 = this;
+
+            var distance = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 75;
+
+            var startX = void 0,
+                startY = void 0,
+                moving = false,
+                move = {};
+            var touchStart = function touchStart(e) {
+                var touch = Utils.touchEvent(e);
+                if (e.touches.length === 1) {
+                    startX = touch.x;
+                    startY = touch.y;
+                    moving = true;
+                    _this4.element.addEventListener('touchmove', touchMove, { passive: true });
+                }
+            };
+            var touchMove = function touchMove(e) {
+                if (moving) {
+                    var touch = Utils.touchEvent(e),
+                        dx = startX - touch.x,
+                        dy = startY - touch.y;
+                    move.direction = null;
+                    move.moving = null;
+                    move.x = null;
+                    move.y = null;
+                    move.evt = e;
+                    if (Math.abs(dx) >= distance) {
+                        touchEnd();
+                        move.direction = dx > 0 ? 'left' : 'right';
+                    } else if (Math.abs(dy) >= distance) {
+                        touchEnd();
+                        move.direction = dy > 0 ? 'up' : 'down';
+                    } else {
+                        move.moving = true;
+                        move.x = dx;
+                        move.y = dy;
+                    }
+                    if (callback) callback(move, e);
+                }
+            };
+            var touchEnd = function touchEnd() {
+                startX = startY = moving = false;
+                _this4.element.removeEventListener('touchmove', touchMove);
+            };
+            this.element.addEventListener('touchstart', touchStart, { passive: true });
+            this.element.addEventListener('touchend', touchEnd, { passive: true });
+            this.element.addEventListener('touchcancel', touchEnd, { passive: true });
+            return this;
+        }
+    }, {
+        key: 'touchClick',
+        value: function touchClick(hover, click) {
+            var _this5 = this;
+
+            var time = void 0,
+                move = void 0,
+                start = {},
+                touch = {};
+            var touchMove = function touchMove(e) {
+                touch = Utils.touchEvent(e);
+                move = Utils.findDistance(start, touch) > 5;
+            };
+            var setTouch = function setTouch(e) {
+                var touch = Utils.touchEvent(e);
+                e.touchX = touch.x;
+                e.touchY = touch.y;
+                start.x = e.touchX;
+                start.y = e.touchY;
+            };
+            var touchStart = function touchStart(e) {
+                time = Date.now();
+                e.action = 'over';
+                e.object = _this5.element.className === 'hit' ? _this5.parent : _this5;
+                setTouch(e);
+                if (hover && !move) hover(e);
+            };
+            var touchEnd = function touchEnd(e) {
+                var t = Date.now();
+                e.object = _this5.element.className === 'hit' ? _this5.parent : _this5;
+                setTouch(e);
+                if (time && t - time < 750) {
+                    if (click && !move) {
+                        e.action = 'click';
+                        if (click && !move) click(e);
+                    }
+                }
+                if (hover) {
+                    e.action = 'out';
+                    hover(e);
+                }
+                move = false;
+            };
+            this.element.addEventListener('touchmove', touchMove, { passive: true });
+            this.element.addEventListener('touchstart', touchStart, { passive: true });
+            this.element.addEventListener('touchend', touchEnd, { passive: true });
             return this;
         }
     }, {
@@ -1694,26 +1840,10 @@ var Canvas = function (_Interface) {
 
 var CanvasValues = function () {
     function CanvasValues(style) {
-        var _this = this;
-
         classCallCheck(this, CanvasValues);
 
         this.styles = {};
-        var hit = {
-            x: 0,
-            y: 0,
-            width: 0,
-            height: 0
-        };
         if (!style) this.data = new Float32Array(6);else this.styled = false;
-
-        this.hit = function (object) {
-            hit.x = _this.data[0];
-            hit.y = _this.data[1];
-            hit.width = object.width;
-            hit.height = object.height;
-            return hit;
-        };
     }
 
     createClass(CanvasValues, [{
@@ -1795,181 +1925,6 @@ var CanvasValues = function () {
 }();
 
 /**
- * Color helper class.
- *
- * @author Patrick Schroen / https://github.com/pschroen
- */
-
-var Color = function Color(value) {
-    var _this = this;
-
-    classCallCheck(this, Color);
-
-    var self = this;
-    this.r = 1;
-    this.g = 1;
-    this.b = 1;
-
-    set$$1(value);
-
-    function set$$1(value) {
-        if (value instanceof Color) copy(value);else if (typeof value === 'number') setHex(value);else if (Array.isArray(value)) setRGB(value);else setHex(Number('0x' + value.slice(1)));
-    }
-
-    function copy(color) {
-        self.r = color.r;
-        self.g = color.g;
-        self.b = color.b;
-    }
-
-    function setHex(hex) {
-        hex = Math.floor(hex);
-        self.r = (hex >> 16 & 255) / 255;
-        self.g = (hex >> 8 & 255) / 255;
-        self.b = (hex & 255) / 255;
-    }
-
-    function setRGB(values) {
-        self.r = values[0];
-        self.g = values[1];
-        self.b = values[2];
-    }
-
-    function hue2rgb(p, q, t) {
-        if (t < 0) t += 1;
-        if (t > 1) t -= 1;
-        if (t < 1 / 6) return p + (q - p) * 6 * t;
-        if (t < 1 / 2) return q;
-        if (t < 2 / 3) return p + (q - p) * 6 * (2 / 3 - t);
-        return p;
-    }
-
-    this.set = function (value) {
-        set$$1(value);
-        return _this;
-    };
-
-    this.setRGB = function (r, g, b) {
-        _this.r = r;
-        _this.g = g;
-        _this.b = b;
-        return _this;
-    };
-
-    this.setHSL = function (h, s, l) {
-        if (s === 0) {
-            _this.r = _this.g = _this.b = l;
-        } else {
-            var p = l <= 0.5 ? l * (1 + s) : l + s - l * s,
-                q = 2 * l - p;
-            _this.r = hue2rgb(q, p, h + 1 / 3);
-            _this.g = hue2rgb(q, p, h);
-            _this.b = hue2rgb(q, p, h - 1 / 3);
-        }
-        return _this;
-    };
-
-    this.offsetHSL = function (h, s, l) {
-        var hsl = _this.getHSL();
-        hsl.h += h;
-        hsl.s += s;
-        hsl.l += l;
-        _this.setHSL(hsl.h, hsl.s, hsl.l);
-        return _this;
-    };
-
-    this.getStyle = function () {
-        return 'rgb(' + (_this.r * 255 | 0) + ',' + (_this.g * 255 | 0) + ',' + (_this.b * 255 | 0) + ')';
-    };
-
-    this.getHex = function () {
-        return _this.r * 255 << 16 ^ _this.g * 255 << 8 ^ _this.b * 255 << 0;
-    };
-
-    this.getHexString = function () {
-        return '#' + ('000000' + _this.getHex().toString(16)).slice(-6);
-    };
-
-    this.getHSL = function () {
-        _this.hsl = _this.hsl || { h: 0, s: 0, l: 0 };
-        var hsl = _this.hsl,
-            r = _this.r,
-            g = _this.g,
-            b = _this.b,
-            max = Math.max(r, g, b),
-            min = Math.min(r, g, b),
-            hue = void 0,
-            saturation = void 0,
-            lightness = (min + max) / 2;
-        if (min === max) {
-            hue = 0;
-            saturation = 0;
-        } else {
-            var delta = max - min;
-            saturation = lightness <= 0.5 ? delta / (max + min) : delta / (2 - max - min);
-            switch (max) {
-                case r:
-                    hue = (g - b) / delta + (g < b ? 6 : 0);
-                    break;
-                case g:
-                    hue = (b - r) / delta + 2;
-                    break;
-                case b:
-                    hue = (r - g) / delta + 4;
-                    break;
-            }
-            hue /= 6;
-        }
-        hsl.h = hue;
-        hsl.s = saturation;
-        hsl.l = lightness;
-        return hsl;
-    };
-
-    this.add = function (color) {
-        _this.r += color.r;
-        _this.g += color.g;
-        _this.b += color.b;
-    };
-
-    this.mix = function (color, percent) {
-        _this.r *= 1 - percent + color.r * percent;
-        _this.g *= 1 - percent + color.g * percent;
-        _this.b *= 1 - percent + color.b * percent;
-    };
-
-    this.addScalar = function (s) {
-        _this.r += s;
-        _this.g += s;
-        _this.b += s;
-    };
-
-    this.multiply = function (color) {
-        _this.r *= color.r;
-        _this.g *= color.g;
-        _this.b *= color.b;
-    };
-
-    this.multiplyScalar = function (s) {
-        _this.r *= s;
-        _this.g *= s;
-        _this.b *= s;
-    };
-
-    this.clone = function () {
-        return new Color([_this.r, _this.g, _this.b]);
-    };
-
-    this.toArray = function () {
-        if (!_this.array) _this.array = [];
-        _this.array[0] = _this.r;
-        _this.array[1] = _this.g;
-        _this.array[2] = _this.b;
-        return _this.array;
-    };
-};
-
-/**
  * Canvas object.
  *
  * @author Patrick Schroen / https://github.com/pschroen
@@ -2032,8 +1987,7 @@ var CanvasObject = function () {
             if (this.styles.styled) {
                 var values = this.styles.values;
                 for (var key in values) {
-                    var val = values[key];
-                    context[key] = val instanceof Color ? val.getHexString() : val;
+                    context[key] = values[key];
                 }
             }
         }
@@ -2049,6 +2003,9 @@ var CanvasObject = function () {
             display.parent = this;
             this.children.push(display);
             display.z = this.children.length;
+            for (var i = this.children.length - 1; i > -1; i--) {
+                this.children[i].setCanvas(this.canvas);
+            }
         }
     }, {
         key: 'setCanvas',
@@ -2145,16 +2102,6 @@ var CanvasObject = function () {
             return this;
         }
     }, {
-        key: 'hit',
-        value: function hit(e) {
-            if (!this.ignoreHit) if (Utils.hitTestObject(e, this.values.hit(this))) return this;
-            for (var i = this.children.length - 1; i > -1; i--) {
-                var child = this.children[i];
-                if (child.hit(e)) return child;
-            }
-            return false;
-        }
-    }, {
         key: 'destroy',
         value: function destroy() {
             for (var i = 0; i < this.children.length; i++) {
@@ -2227,8 +2174,7 @@ var CanvasGraphics = function (_CanvasObject) {
 
         function setProperties(context) {
             for (var key in self.props) {
-                var val = self.props[key];
-                context[key] = val instanceof Color ? val.getHexString() : val;
+                context[key] = self.props[key];
             }
         }
 
@@ -2519,6 +2465,7 @@ function CanvasFont() {
         graphics.font = font;
         graphics.fillStyle = fillStyle;
         graphics.totalWidth = 0;
+        graphics.totalHeight = height;
         var chr = void 0,
             characters = str.split(''),
             index = 0,
@@ -2617,13 +2564,23 @@ function Mouse() {
     this.capture = function () {
         _this.x = 0;
         _this.y = 0;
-        window.addEventListener('mousemove', moved, true);
+        if (!Device.mobile) {
+            window.addEventListener('mousemove', moved);
+        } else {
+            window.addEventListener('touchmove', moved);
+            window.addEventListener('touchstart', moved);
+        }
     };
 
     this.stop = function () {
         _this.x = 0;
         _this.y = 0;
-        window.removeEventListener('mousemove', moved, true);
+        if (!Device.mobile) {
+            window.removeEventListener('mousemove', moved);
+        } else {
+            window.removeEventListener('touchmove', moved);
+            window.removeEventListener('touchstart', moved);
+        }
     };
 }(); // Singleton pattern
 
@@ -2909,32 +2866,31 @@ function (_Interface) {
                     last = 'focus';
                     window.events.fire(Events.BROWSER_FOCUS, { type: 'focus' });
                 }
-            }, true);
+            });
             window.addEventListener('blur', function () {
                 if (last !== 'blur') {
                     last = 'blur';
                     window.events.fire(Events.BROWSER_FOCUS, { type: 'blur' });
                 }
-            }, true);
+            });
             window.addEventListener('keydown', function () {
                 return window.events.fire(Events.KEYBOARD_DOWN);
-            }, true);
+            });
             window.addEventListener('keyup', function () {
                 return window.events.fire(Events.KEYBOARD_UP);
-            }, true);
+            });
             window.addEventListener('keypress', function () {
                 return window.events.fire(Events.KEYBOARD_PRESS);
-            }, true);
-            if (!Device.mobile) {
-                window.addEventListener('resize', function () {
-                    return window.events.fire(Events.RESIZE);
-                }, true);
-                window.events.add(Events.RESIZE, resizeHandler);
-            }
+            });
+            window.addEventListener('resize', function () {
+                return window.events.fire(Events.RESIZE);
+            });
+            self.events.subscribe(Events.RESIZE, resizeHandler);
         }
 
         function resizeHandler() {
             self.size();
+            if (Device.mobile) self.orientation = window.innerWidth > window.innerHeight ? 'landscape' : 'portrait';
         }
         return _this;
     }

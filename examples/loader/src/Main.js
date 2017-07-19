@@ -210,13 +210,8 @@ class Main {
         }
 
         function complete() {
-            Stage.startRender(loop);
-            TweenManager.tween(wrapper, {z:0}, 7000, 'easeOutCubic');
+            wrapper.tween({z:0}, 7000, 'easeOutCubic');
             alienkitty.animateIn();
-        }
-
-        function loop() {
-            wrapper.transform();
         }
     }
 }

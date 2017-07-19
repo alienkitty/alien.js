@@ -4,7 +4,7 @@
  * @author Patrick Schroen / https://github.com/pschroen
  */
 
-import { Stage, Utils, AssetLoader, TweenManager } from '../alien.js/src/Alien';
+import { Stage, Utils, AssetLoader } from '../alien.js/src/Alien';
 
 Config.ASSETS = [
     'assets/alienkitty.svg',
@@ -35,8 +35,8 @@ class Main {
 
         function hover(e) {
             if (!self.loaded) return;
-            if (e.action === 'over') TweenManager.tween(wrapper, {z:50}, 100, 'easeOutCubic');
-            else TweenManager.tween(wrapper, {z:0}, 300, 'easeOutCubic');
+            if (e.action === 'over') wrapper.tween({z:50}, 100, 'easeOutCubic');
+            else wrapper.tween({z:0}, 300, 'easeOutCubic');
         }
 
         function click(e) {
@@ -62,14 +62,9 @@ class Main {
 
         function complete() {
             self.playing = true;
-            Stage.startRender(loop);
-            TweenManager.tween(wrapper, {z:0}, 7000, 'easeOutCubic');
+            wrapper.tween({z:0}, 7000, 'easeOutCubic');
             alienkitty.tween({opacity:1}, 500, 'easeOutQuart');
             blink();
-        }
-
-        function loop() {
-            wrapper.transform();
         }
 
         function blink() {

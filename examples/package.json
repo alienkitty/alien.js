@@ -1,6 +1,6 @@
 {
   "name": "alien-build-projects",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "author": "Patrick Schroen",
   "private": true,
   "scripts": {
@@ -9,13 +9,13 @@
   },
   "devDependencies": {
     "babel-preset-es2015-rollup": "^3.0.0",
-    "eslint": "^3.19.0",
+    "eslint": "^4.2.0",
     "replace": "^0.3.0",
-    "rollup": "^0.43.0",
+    "rollup": "^0.45.2",
     "rollup-plugin-babel": "^2.7.1",
-    "rollup-plugin-eslint": "^3.0.0",
+    "rollup-plugin-eslint": "^4.0.0",
     "rollup-plugin-uglify": "^2.0.1",
-    "rollup-watch": "^4.0.0",
-    "uglify-es": "^3.0.23"
+    "rollup-watch": "^4.3.1",
+    "uglify-es": "^3.0.25"
   }
 }

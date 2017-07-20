@@ -1,13 +1,14 @@
 {
-  "name": "alien-project",
-  "version": "1.0.2",
+  "name": "alien-banner-project",
+  "version": "1.0.4",
   "author": "Patrick Schroen",
   "private": true,
   "scripts": {
     "build": "rollup -c || exit 0",
     "dev": "rollup -c -w -m inline || exit 0",
     "lint": "eslint src || exit 0",
-    "pngquant": "rm -f dist/assets/*.png; cp src/images/*.png dist/assets/; find dist/assets -name '*.png' -exec pngquant --strip --ext=.png --force {} \\;"
+    "pngquant": "rm -rf dist/assets/images; cp -r src/images dist/assets/; find dist/assets/images -name '**.png' -exec pngquant --strip --ext=.png --force {} \\;",
+    "pngquant-flat": "rm -f dist/assets/*.png; cp src/images/*.png dist/assets/; find dist/assets -name '*.png' -exec pngquant --strip --ext=.png --force {} \\;"
   },
   "devDependencies": {
     "babel-preset-es2015-rollup": "^3.0.0",

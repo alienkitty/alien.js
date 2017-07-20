@@ -36,7 +36,6 @@ export default {
     entry: 'src/Main.js',
     dest: `dist/assets/${project}.js`,
     format: 'es',
-    context: 'window',
     plugins: [
         eslint(),
         babel(),

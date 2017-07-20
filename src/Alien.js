@@ -24,6 +24,7 @@ export { FontLoader } from './util/FontLoader';
 export { Images } from './util/Images';
 export { SVG } from './util/SVG';
 export { XHR } from './util/XHR';
+export { Storage } from './util/Storage';
 export { WebAudio } from './util/WebAudio';
 export { Stage } from './view/Stage';
 

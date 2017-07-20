@@ -118,6 +118,12 @@ class Utils {
     basename(path) {
         return path.replace(/.*\//, '').replace(/(.*)\..*$/, '$1');
     }
+
+    base64(str) {
+        return window.btoa(encodeURIComponent(str).replace(/%([0-9A-F]{2})/g, (match, p1) => {
+            return String.fromCharCode('0x' + p1);
+        }));
+    }
 }
 
 )(); // Singleton pattern

@@ -20,24 +20,28 @@ class Mouse {
         };
 
         this.capture = () => {
-            this.x = 0;
-            this.y = 0;
-            if (!Device.mobile) {
-                window.addEventListener('mousemove', moved);
-            } else {
-                window.addEventListener('touchmove', moved);
-                window.addEventListener('touchstart', moved);
+            if (!this.active) {
+                this.active = true;
+                this.x = 0;
+                this.y = 0;
+                if (Device.mobile) {
+                    window.addEventListener('touchmove', moved);
+                    window.addEventListener('touchstart', moved);
+                } else {
+                    window.addEventListener('mousemove', moved);
+                }
             }
         };
 
         this.stop = () => {
+            this.active = false;
             this.x = 0;
             this.y = 0;
-            if (!Device.mobile) {
-                window.removeEventListener('mousemove', moved);
-            } else {
+            if (Device.mobile) {
                 window.removeEventListener('touchmove', moved);
                 window.removeEventListener('touchstart', moved);
+            } else {
+                window.removeEventListener('mousemove', moved);
             }
         };
     }

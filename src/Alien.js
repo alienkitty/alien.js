@@ -15,6 +15,7 @@ export { DynamicObject } from './util/DynamicObject';
 export { Utils } from './util/Utils';
 export { Device } from './util/Device';
 export { Mouse } from './util/Mouse';
+export { Accelerometer } from './mobile/Accelerometer';
 export { TweenManager } from './tween/TweenManager';
 export { Interpolation } from './tween/Interpolation';
 export { MathTween } from './tween/MathTween';

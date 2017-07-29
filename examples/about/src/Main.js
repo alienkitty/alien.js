@@ -4,10 +4,10 @@
  * @author Patrick Schroen / https://github.com/pschroen
  */
 
-import { Stage, Interface, Mouse, DynamicObject, Utils, FontLoader, TweenManager } from '../alien.js/src/Alien';
+import { Stage, Interface, Device, Mouse, Accelerometer, Utils, FontLoader, TweenManager } from '../alien.js/src/Alien';
 
 Config.UI_COLOR = 'white';
-Config.UI_OFFSET = 15;
+Config.UI_OFFSET = Device.phone ? 20 : 35;
 Config.ABOUT_COPY = ['A lightweight web framework abducted from Active Theory’s <a href="https://medium.com/@activetheory/mira-exploring-the-potential-of-the-future-web-e1f7f326d58e" target="_blank">Hydra</a> and ported to an ES6 module bundler.'];
 Config.ABOUT_DOWNLOAD_URL = 'https://raw.github.com/pschroen/alien.js/master/build/alien.min.js';
 Config.ABOUT_GITHUB_URL = 'https://github.com/pschroen/alien.js';
@@ -167,11 +167,12 @@ class UIAbout extends Interface {
     constructor() {
         super('UIAbout');
         let self = this;
-        let wrapper, title, copy, icons;
-        let mouse = new DynamicObject({
-            x: Mouse.x,
-            y: Mouse.y
-        });
+        let wrapper, title, copy, icons,
+            tilt = {
+                x: 4,
+                y: 8,
+                ease: 0.05
+            };
 
         initHTML();
         addListeners();
@@ -184,6 +185,8 @@ class UIAbout extends Interface {
             self.click(click);
             wrapper = self.create('.wrapper');
             wrapper.size(800, 650).center().enable3D();
+            wrapper.rotationX = 0;
+            wrapper.rotationY = 0;
             title = wrapper.initClass(UIAboutTitle);
             copy = wrapper.initClass(UIAboutCopy);
             icons = wrapper.initClass(UIAboutIcons);
@@ -199,23 +202,33 @@ class UIAbout extends Interface {
 
         function resizeHandler() {
             let scaleX = Utils.convertRange(Stage.width, 0, 1700, 0, 1.1, true),
-                scaleY = Utils.convertRange(Stage.height, 0, 1500, 0, 1.1, true);
-            wrapper.scale = Math.min(scaleX, scaleY);
+                scaleY = Utils.convertRange(Stage.height, 0, 1500, 0, 1.1, true),
+                scale = Math.min(scaleX, scaleY);
+            if (Device.mobile) scale = Math.min(1, scale * (Stage.width > Stage.height ? 1.5 : 1.8));
+            wrapper.scale = scale;
             wrapper.transform();
+            if (Device.mobile) {
+                if (Stage.width > Stage.height) wrapper.size(1100, 500).center();
+                else wrapper.size(700, 700).center();
+            }
         }
 
         function loop() {
             // UI rotation
-            mouse.lerp(Mouse, 0.05);
-            wrapper.rotationY = Utils.convertRange(mouse.x, 0, Stage.width, 8, -8);
-            wrapper.rotationX = Utils.convertRange(mouse.y, 0, Stage.height, -4, 4);
+            if (Device.mobile) {
+                wrapper.rotationX += (Utils.convertRange(Accelerometer.y, -10, 10, -tilt.x, tilt.x) - wrapper.rotationX) * tilt.ease;
+                wrapper.rotationY += (Utils.convertRange(Accelerometer.x, -5, 5, tilt.y, -tilt.y) - wrapper.rotationY) * tilt.ease;
+            } else {
+                wrapper.rotationX += (Utils.convertRange(Mouse.y, 0, Stage.height, -tilt.x, tilt.x) - wrapper.rotationX) * tilt.ease;
+                wrapper.rotationY += (Utils.convertRange(Mouse.x, 0, Stage.width, tilt.y, -tilt.y) - wrapper.rotationY) * tilt.ease;
+            }
             wrapper.transform();
         }
 
         this.animateIn = () => {
             Delayed(title.animateIn, 200);
-            Delayed(copy.animateIn, 800);
-            Delayed(icons.animateIn, 1200);
+            Delayed(copy.animateIn, 600);
+            Delayed(icons.animateIn, 1300);
             // Use math tween with UI rotation
             wrapper.z = -300;
             TweenManager.tween(wrapper, {z:0}, 7000, 'easeOutCubic');
@@ -245,6 +258,7 @@ class Main {
             Stage.interact(hover, click);
 
             Mouse.capture();
+            Accelerometer.capture();
             Mouse.x = Stage.width / 2;
             Mouse.y = Stage.height / 2;
         }

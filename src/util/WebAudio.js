@@ -1,5 +1,5 @@
 /**
- * WebAudio helper class.
+ * WebAudio engine.
  *
  * @author Patrick Schroen / https://github.com/pschroen
  */

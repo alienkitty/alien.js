@@ -10,7 +10,7 @@ import { Utils } from './Utils';
 import { Device } from './Device';
 import { TweenManager } from '../tween/TweenManager';
 import { CSSTransition } from '../tween/CSSTransition';
-import { SVG } from './SVG';
+import { SVGSymbol } from '../svg/SVGSymbol';
 
 class Interface {
 
@@ -19,7 +19,9 @@ class Interface {
         this.name = name;
         this.type = type;
         if (this.type === 'svg') {
-            this.element = document.createElementNS('http://www.w3.org/2000/svg', this.type);
+            let qualifiedName = detached || 'svg';
+            detached = true;
+            this.element = document.createElementNS('http://www.w3.org/2000/svg', qualifiedName);
             this.element.setAttributeNS('http://www.w3.org/2000/xmlns/', 'xmlns:xlink', 'http://www.w3.org/1999/xlink');
         } else {
             this.element = document.createElement(this.type);
@@ -27,10 +29,7 @@ class Interface {
         if (name[0] === '.') this.element.className = name.substr(1);
         else this.element.id = name;
         this.element.style.position = 'absolute';
-        if (!detached) {
-            let stage = window.Alien && window.Alien.Stage ? window.Alien.Stage : document.body;
-            stage.appendChild(this.element);
-        }
+        if (!detached) (window.Alien && window.Alien.Stage ? window.Alien.Stage : document.body).appendChild(this.element);
     }
 
     initClass(object, ...params) {
@@ -288,7 +287,7 @@ class Interface {
     }
 
     svgSymbol(id, width, height) {
-        let config = SVG.getSymbolConfig(id);
+        let config = SVGSymbol.getConfig(id);
         this.html(`<svg viewBox="0 0 ${config.width} ${config.height}" width="${width}" height="${height}"><use xlink:href="#${config.id}" x="0" y="0"/></svg>`);
     }
 

@@ -5,12 +5,11 @@
  */
 
 import { Interface } from '../util/Interface';
-import { Utils } from '../util/Utils';
 
 class Canvas extends Interface {
 
-    constructor(name, w, h = w, retina, detached) {
-        super(name, 'canvas', detached);
+    constructor(name, w, h = w, retina) {
+        super(name, 'canvas', true);
         this.children = [];
         this.retina = retina;
         this.context = this.element.getContext('2d');
@@ -49,9 +48,8 @@ class Canvas extends Interface {
     }
 
     destroy() {
-        this.stopRender();
         for (let i = 0; i < this.children.length; i++) this.children[i].destroy();
-        return Utils.nullObject(this);
+        return super.destroy();
     }
 
     getImageData(x = 0, y = 0, w = this.element.width, h = this.element.height) {

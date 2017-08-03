@@ -27,7 +27,7 @@ class CanvasGraphics extends CanvasObject {
         this.draw = override => {
             if (this.isMask() && !override) return false;
             let context = this.canvas.context;
-            this.startDraw(-this.px, -this.py, override);
+            this.startDraw(this.px, this.py, override);
             setProperties(context);
             if (this.clipWidth && this.clipHeight) {
                 context.beginPath();
@@ -132,7 +132,7 @@ class CanvasGraphics extends CanvasObject {
 
         this.drawImage = (img, sx = 0, sy = 0, sWidth = img.width, sHeight = img.height, dx = 0, dy = 0, dWidth = img.width, dHeight = img.height) => {
             if (typeof img === 'string') img = this.createImage(img);
-            draw.push(['drawImage', img, sx, sy, sWidth, sHeight, dx, dy, dWidth, dHeight]);
+            draw.push(['drawImage', img, sx, sy, sWidth, sHeight, dx + -this.px, dy + -this.py, dWidth, dHeight]);
         };
 
         this.mask = object => {

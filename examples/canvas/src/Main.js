@@ -47,10 +47,10 @@ class AlienKittyCanvas extends Interface {
             alienkitty = self.initClass(CanvasGraphics, 90, 86);
             alienkitty.drawImage(alienkittyimg);
             eyelid1 = self.initClass(CanvasGraphics, 24, 14);
-            eyelid1.transform({x:35, y:25, scaleX:1.5, scaleY:0.01}).transformPoint('50%', 0);
+            eyelid1.transformPoint('50%', 0).transform({x:35, y:25, scaleX:1.5, scaleY:0.01});
             eyelid1.drawImage(eyelidimg);
             eyelid2 = self.initClass(CanvasGraphics, 24, 14);
-            eyelid2.transform({x:53, y:26, scaleX:1, scaleY:0.01}).transformPoint(0, 0);
+            eyelid2.transformPoint(0, 0).transform({x:53, y:26, scaleX:1, scaleY:0.01});
             eyelid2.drawImage(eyelidimg);
             canvas.add(alienkitty);
             canvas.add(eyelid1);
@@ -234,13 +234,8 @@ class Main {
         }
 
         function complete() {
-            Stage.startRender(loop);
-            TweenManager.tween(wrapper, {z:0}, 7000, 'easeOutCubic');
+            wrapper.tween({z:0}, 7000, 'easeOutCubic');
             alienkitty.animateIn();
-        }
-
-        function loop() {
-            wrapper.transform();
         }
     }
 }

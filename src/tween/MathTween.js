@@ -15,7 +15,13 @@ class MathTween {
 
         initMathTween();
 
+        function killed() {
+            return !self || self.kill || !object;
+        }
+
         function initMathTween() {
+            if (killed()) return;
+            if (object.mathTween) object.mathTween.kill = true;
             TweenManager.clearTween(object);
             TweenManager.addMathTween(self);
             object.mathTween = self;
@@ -28,12 +34,18 @@ class MathTween {
         }
 
         function clear(stop) {
-            object.mathTween = null;
-            if (!stop) for (let prop in endValues) if (typeof endValues[prop] === 'number') object[prop] = endValues[prop];
+            if (killed()) return;
+            self.kill = true;
+            if (!stop) {
+                for (let prop in endValues) if (typeof endValues[prop] === 'number') object[prop] = endValues[prop];
+                if (object.transform) object.transform();
+            }
             TweenManager.removeMathTween(self);
+            object.mathTween = null;
         }
 
         this.update = t => {
+            if (killed()) return;
             if (paused || t < startTime) return;
             elapsed = (t - startTime) / time;
             elapsed = elapsed > 1 ? 1 : elapsed;
@@ -49,6 +61,7 @@ class MathTween {
                 clear();
                 if (callback) callback();
             }
+            if (object.transform) object.transform();
         };
 
         this.pause = () => {

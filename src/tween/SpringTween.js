@@ -14,7 +14,13 @@ class SpringTween {
 
         initSpringTween();
 
+        function killed() {
+            return !self || self.kill || !object;
+        }
+
         function initSpringTween() {
+            if (killed()) return;
+            if (object.mathTween) object.mathTween.kill = true;
             TweenManager.clearTween(object);
             TweenManager.addMathTween(self);
             object.mathTween = self;
@@ -46,12 +52,18 @@ class SpringTween {
         }
 
         function clear(stop) {
-            object.mathTween = null;
-            if (!stop) for (let prop in endValues) if (typeof endValues[prop] === 'number') object[prop] = endValues[prop];
+            if (killed()) return;
+            self.kill = true;
+            if (!stop) {
+                for (let prop in endValues) if (typeof endValues[prop] === 'number') object[prop] = endValues[prop];
+                if (object.transform) object.transform();
+            }
             TweenManager.removeMathTween(self);
+            object.mathTween = null;
         }
 
         this.update = t => {
+            if (killed()) return;
             if (paused || t < startTime) return;
             let vel;
             for (let prop in startValues) {
@@ -74,6 +86,7 @@ class SpringTween {
                     if (callback) callback();
                 }
             }
+            if (object.transform) object.transform();
         };
 
         this.pause = () => {

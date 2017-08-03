@@ -67,8 +67,9 @@ class TweenManager {
         };
     }
 
-    tween(object, props, time, ease, delay, callback) {
+    tween(object, props, time, ease, delay, callback, update) {
         if (typeof delay !== 'number') {
+            update = callback;
             callback = delay;
             delay = 0;
         }
@@ -78,7 +79,7 @@ class TweenManager {
             if (callback) promise.then(callback);
             callback = promise.resolve;
         }
-        let tween = ease === 'spring' ? new SpringTween(object, props, time, ease, delay, callback) : new MathTween(object, props, time, ease, delay, callback);
+        let tween = ease === 'spring' ? new SpringTween(object, props, time, ease, delay, update, callback) : new MathTween(object, props, time, ease, delay, update, callback);
         return promise || tween;
     }
 

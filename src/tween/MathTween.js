@@ -9,7 +9,7 @@ import { Interpolation } from './Interpolation';
 
 class MathTween {
 
-    constructor(object, props, time, ease, delay, callback) {
+    constructor(object, props, time, ease, delay, update, callback) {
         let self = this;
         let startTime, startValues, endValues, paused, elapsed;
 
@@ -57,6 +57,7 @@ class MathTween {
                     object[prop] = start + (end - start) * delta;
                 }
             }
+            if (update) update(delta);
             if (elapsed === 1) {
                 clear();
                 if (callback) callback();

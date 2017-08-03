@@ -8,7 +8,7 @@ import { TweenManager } from './TweenManager';
 
 class SpringTween {
 
-    constructor(object, props, friction, ease, delay, callback) {
+    constructor(object, props, friction, ease, delay, update, callback) {
         let self = this;
         let startTime, velocityValues, endValues, startValues, damping, count, paused;
 
@@ -79,6 +79,7 @@ class SpringTween {
                     vel = velocityValues[prop];
                 }
             }
+            if (update) update(t);
             if (Math.abs(vel) < 0.001) {
                 count++;
                 if (count > 30) {

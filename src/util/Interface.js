@@ -16,46 +16,73 @@ class Interface {
 
     constructor(name, type = 'div', detached) {
         this.events = new EventManager();
-        this.name = name;
-        this.type = type;
-        if (this.type === 'svg') {
-            let qualifiedName = detached || 'svg';
-            detached = true;
-            this.element = document.createElementNS('http://www.w3.org/2000/svg', qualifiedName);
-            this.element.setAttributeNS('http://www.w3.org/2000/xmlns/', 'xmlns:xlink', 'http://www.w3.org/1999/xlink');
+        if (typeof name !== 'string') {
+            this.element = name;
         } else {
-            this.element = document.createElement(this.type);
+            this.name = name;
+            this.type = type;
+            if (this.type === 'svg') {
+                let qualifiedName = detached || 'svg';
+                detached = true;
+                this.element = document.createElementNS('http://www.w3.org/2000/svg', qualifiedName);
+                this.element.setAttributeNS('http://www.w3.org/2000/xmlns/', 'xmlns:xlink', 'http://www.w3.org/1999/xlink');
+            } else {
+                this.element = document.createElement(this.type);
+            }
+            if (name[0] !== '.') this.element.id = name;
+            else this.element.className = name.substr(1);
         }
-        if (name[0] === '.') this.element.className = name.substr(1);
-        else this.element.id = name;
         this.element.style.position = 'absolute';
+        this.element.object = this;
         if (!detached) (window.Alien && window.Alien.Stage ? window.Alien.Stage : document.body).appendChild(this.element);
     }
 
     initClass(object, ...params) {
         let child = new object(...params);
-        if (child.element) this.element.appendChild(child.element);
-        child.parent = this;
+        this.add(child);
         return child;
+    }
+
+    clone() {
+        return new Interface(this.element.cloneNode(true));
     }
 
     create(name, type) {
         let child = new Interface(name, type);
-        this.element.appendChild(child.element);
-        child.parent = this;
+        this.add(child);
         return child;
-    }
-
-    destroy() {
-        if (this.loop) Render.stop(this.loop);
-        this.events = this.events.destroy();
-        this.element.parentNode.removeChild(this.element);
-        return Utils.nullObject(this);
     }
 
     empty() {
         this.element.innerHTML = '';
         return this;
+    }
+
+    add(child) {
+        if (child.element) {
+            this.element.appendChild(child.element);
+            child.parent = this;
+            child.element.parentNode = this.element;
+        } else if (child.nodeName) {
+            this.element.appendChild(child);
+            child.parentNode = this.element;
+        }
+        return this;
+    }
+
+    remove(child) {
+        if (child.element) child.destroy();
+        else if (child.nodeName) child.parentNode.removeChild(child);
+        return this;
+    }
+
+    destroy() {
+        if (this.loop) Render.stop(this.loop);
+        this.events = this.events.destroy();
+        this.removed = true;
+        let parent = this.parent;
+        if (parent && !parent.removed && parent.remove) parent.remove(this.element);
+        return Utils.nullObject(this);
     }
 
     text(text) {
@@ -359,8 +386,8 @@ class Interface {
             height: '100%',
             zIndex: 99999
         });
-        if (!Device.mobile) this.hit.hover(overCallback).click(clickCallback);
-        else this.hit.touchClick(overCallback, clickCallback);
+        if (Device.mobile) this.hit.touchClick(overCallback, clickCallback);
+        else this.hit.hover(overCallback).click(clickCallback);
         return this;
     }
 

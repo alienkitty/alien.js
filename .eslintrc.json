@@ -15,7 +15,7 @@
         "sourceType": "module"
     },
     "rules": {
-        "indent-legacy": [
+        "indent": [
             "error",
             4,
             { "SwitchCase": 1 }

@@ -4,8 +4,6 @@
  * @author Patrick Schroen / https://github.com/pschroen
  */
 
-let Storage = new ( // Singleton pattern
-
 class Storage {
 
     constructor() {
@@ -81,7 +79,5 @@ class Storage {
         };
     }
 }
-
-)(); // Singleton pattern
 
 export { Storage };

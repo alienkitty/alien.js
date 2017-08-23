@@ -6,8 +6,6 @@
 
 import { Device } from './Device';
 
-let Mouse = new ( // Singleton pattern
-
 class Mouse {
 
     constructor() {
@@ -46,7 +44,5 @@ class Mouse {
         };
     }
 }
-
-)(); // Singleton pattern
 
 export { Mouse };

@@ -6,8 +6,6 @@
 
 import { CanvasGraphics } from './CanvasGraphics';
 
-let CanvasFont = new ( // Singleton pattern
-
 class CanvasFont {
 
     constructor() {
@@ -84,7 +82,5 @@ class CanvasFont {
         };
     }
 }
-
-)(); // Singleton pattern
 
 export { CanvasFont };

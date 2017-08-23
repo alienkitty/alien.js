@@ -1,5 +1,5 @@
 /**
- * WebAudio engine.
+ * Web audio engine.
  *
  * @author Patrick Schroen / https://github.com/pschroen
  */
@@ -7,8 +7,6 @@
 import { TweenManager } from '../tween/TweenManager';
 
 if (!window.AudioContext) window.AudioContext = window.webkitAudioContext || window.mozAudioContext || window.oAudioContext;
-
-let WebAudio = new ( // Singleton pattern
 
 class WebAudio {
 
@@ -59,7 +57,5 @@ class WebAudio {
         };
     }
 }
-
-)(); // Singleton pattern
 
 export { WebAudio };

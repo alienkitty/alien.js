@@ -8,8 +8,6 @@ import { Render } from '../util/Render';
 import { MathTween } from './MathTween';
 import { SpringTween } from './SpringTween';
 
-let TweenManager = new ( // Singleton pattern
-
 class TweenManager {
 
     constructor() {
@@ -138,7 +136,5 @@ class TweenManager {
         return transforms;
     }
 }
-
-)(); // Singleton pattern
 
 export { TweenManager };

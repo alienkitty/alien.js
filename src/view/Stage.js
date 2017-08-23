@@ -7,8 +7,6 @@
 import { Interface } from '../util/Interface';
 import { Device } from '../util/Device';
 
-let Stage = new ( // Singleton pattern
-
 class Stage extends Interface {
 
     constructor() {
@@ -50,7 +48,5 @@ class Stage extends Interface {
         }
     }
 }
-
-)(); // Singleton pattern
 
 export { Stage };

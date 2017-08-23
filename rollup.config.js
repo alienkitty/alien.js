@@ -1,38 +1,16 @@
+import singletons from './src/singletons.js';
+import { unexport, timestamp } from './src/utils.js';
+
 import babel from 'rollup-plugin-babel';
 import uglify from 'rollup-plugin-uglify';
 import { minify } from 'uglify-es';
 
 let pkg = require('./package.json');
 
-function timestamp() {
-
-    function pad(number) {
-        return number < 10 ? '0' + number : number;
-    }
-
-    let now = new Date(),
-        hours = now.getHours(),
-        minutes = now.getMinutes(),
-        ampm = hours >= 12 ? 'pm' : 'am';
-    hours = hours % 12;
-    hours = hours ? hours : 12;
-    return `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())} ${hours}:${pad(minutes)}${ampm}`;
-}
-
-function unexport() {
-    return {
-        transformBundle: code => {
-            return {
-                code: code.replace(/\n{2,}export.*$/g, ''),
-                map: { mappings: '' }
-            };
-        }
-    };
-}
-
 export default {
     entry: 'src/Alien.js',
     plugins: [
+        singletons(),
         unexport(),
         process.env.babel ? babel() : {},
         process.env.uglify ? uglify({

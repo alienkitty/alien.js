@@ -4,8 +4,6 @@
  * @author Patrick Schroen / https://github.com/pschroen
  */
 
-let Interpolation = new ( // Singleton pattern
-
 class Interpolation {
 
     constructor() {
@@ -282,7 +280,5 @@ class Interpolation {
         };
     }
 }
-
-)(); // Singleton pattern
 
 export { Interpolation };

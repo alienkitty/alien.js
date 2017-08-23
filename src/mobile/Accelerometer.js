@@ -6,8 +6,6 @@
 
 import { Device } from '../util/Device';
 
-let Accelerometer = new ( // Singleton pattern
-
 class Accelerometer {
 
     constructor() {
@@ -134,7 +132,5 @@ class Accelerometer {
         };
     }
 }
-
-)(); // Singleton pattern
 
 export { Accelerometer };

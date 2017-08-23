@@ -7,8 +7,6 @@
 import { DynamicObject } from './DynamicObject';
 import { Device } from './Device';
 
-let Utils = new ( // Singleton pattern
-
 class Utils {
 
     rand(min, max) {
@@ -125,7 +123,5 @@ class Utils {
         }));
     }
 }
-
-)(); // Singleton pattern
 
 export { Utils };

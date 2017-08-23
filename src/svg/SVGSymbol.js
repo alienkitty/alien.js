@@ -4,8 +4,6 @@
  * @author Patrick Schroen / https://github.com/pschroen
  */
 
-let SVGSymbol = new ( // Singleton pattern
-
 class SVGSymbol {
 
     constructor() {
@@ -31,7 +29,5 @@ class SVGSymbol {
         };
     }
 }
-
-)(); // Singleton pattern
 
 export { SVGSymbol };

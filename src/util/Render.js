@@ -6,8 +6,6 @@
 
 if (!window.requestAnimationFrame) window.requestAnimationFrame = window.webkitRequestAnimationFrame || window.mozRequestAnimationFrame || window.oRequestAnimationFrame || window.msRequestAnimationFrame || (callback => Delayed(callback, 1000 / 60));
 
-let Render = new ( // Singleton pattern
-
 class Render {
 
     constructor() {
@@ -65,7 +63,5 @@ class Render {
         };
     }
 }
-
-)(); // Singleton pattern
 
 export { Render };

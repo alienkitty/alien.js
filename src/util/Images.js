@@ -6,8 +6,6 @@
  * @author Patrick Schroen / https://github.com/pschroen
  */
 
-let Images = new ( // Singleton pattern
-
 class Images {
 
     createImg(src, callback) {
@@ -25,7 +23,5 @@ class Images {
         return p;
     }
 }
-
-)(); // Singleton pattern
 
 export { Images };

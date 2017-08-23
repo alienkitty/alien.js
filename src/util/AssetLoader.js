@@ -10,7 +10,6 @@ import { EventManager } from './EventManager';
 import { Utils } from './Utils';
 import { Images } from './Images';
 import { XHR } from './XHR';
-import { WebAudio } from './WebAudio';
 
 class AssetLoader {
 
@@ -42,10 +41,16 @@ class AssetLoader {
                 ext = split[split.length - 1].split('?')[0];
             switch (ext) {
                 case 'mp3':
-                    if (!window.AudioContext) return assetLoaded();
-                    XHR.get(asset, contents => {
-                        WebAudio.createSound(key, contents, assetLoaded);
-                    }, 'arraybuffer');
+                    /* eslint-disable no-undef */
+                    if (typeof WebAudio !== 'undefined') {
+                        if (!window.AudioContext) return assetLoaded();
+                        XHR.get(asset, contents => {
+                            WebAudio.createSound(key, contents, assetLoaded);
+                        }, 'arraybuffer');
+                    } else {
+                        return assetLoaded();
+                    }
+                    /* eslint-enable no-undef */
                     break;
                 default:
                     Images.createImg(asset, assetLoaded);

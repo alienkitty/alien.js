@@ -4,8 +4,6 @@
  * @author Patrick Schroen / https://github.com/pschroen
  */
 
-let Device = new ( // Singleton pattern
-
 class Device {
 
     constructor() {
@@ -69,7 +67,5 @@ class Device {
         navigator.vibrate && navigator.vibrate(time);
     }
 }
-
-)(); // Singleton pattern
 
 export { Device };

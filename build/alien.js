@@ -352,6 +352,12 @@ class Utils {
     basename(path) {
         return path.replace(/.*\//, '').replace(/(.*)\..*$/, '$1');
     }
+
+    base64(str) {
+        return window.btoa(encodeURIComponent(str).replace(/%([0-9A-F]{2})/g, (match, p1) => {
+            return String.fromCharCode('0x' + p1);
+        }));
+    }
 }
 
 )(); // Singleton pattern
@@ -651,13 +657,19 @@ class Interpolation {
 
 class MathTween {
 
-    constructor(object, props, time, ease, delay, callback) {
+    constructor(object, props, time, ease, delay, update, callback) {
         let self = this;
         let startTime, startValues, endValues, paused, elapsed;
 
         initMathTween();
 
+        function killed() {
+            return !self || self.kill || !object;
+        }
+
         function initMathTween() {
+            if (killed()) return;
+            if (object.mathTween) object.mathTween.kill = true;
             TweenManager.clearTween(object);
             TweenManager.addMathTween(self);
             object.mathTween = self;
@@ -670,12 +682,18 @@ class MathTween {
         }
 
         function clear(stop) {
-            object.mathTween = null;
-            if (!stop) for (let prop in endValues) if (typeof endValues[prop] === 'number') object[prop] = endValues[prop];
+            if (killed()) return;
+            self.kill = true;
+            if (!stop) {
+                for (let prop in endValues) if (typeof endValues[prop] === 'number') object[prop] = endValues[prop];
+                if (object.transform) object.transform();
+            }
             TweenManager.removeMathTween(self);
+            object.mathTween = null;
         }
 
         this.update = t => {
+            if (killed()) return;
             if (paused || t < startTime) return;
             elapsed = (t - startTime) / time;
             elapsed = elapsed > 1 ? 1 : elapsed;
@@ -687,10 +705,12 @@ class MathTween {
                     object[prop] = start + (end - start) * delta;
                 }
             }
+            if (update) update(delta);
             if (elapsed === 1) {
                 clear();
                 if (callback) callback();
             }
+            if (object.transform) object.transform();
         };
 
         this.pause = () => {
@@ -714,13 +734,19 @@ class MathTween {
 
 class SpringTween {
 
-    constructor(object, props, friction, ease, delay, callback) {
+    constructor(object, props, friction, ease, delay, update, callback) {
         let self = this;
         let startTime, velocityValues, endValues, startValues, damping, count, paused;
 
         initSpringTween();
 
+        function killed() {
+            return !self || self.kill || !object;
+        }
+
         function initSpringTween() {
+            if (killed()) return;
+            if (object.mathTween) object.mathTween.kill = true;
             TweenManager.clearTween(object);
             TweenManager.addMathTween(self);
             object.mathTween = self;
@@ -752,12 +778,18 @@ class SpringTween {
         }
 
         function clear(stop) {
-            object.mathTween = null;
-            if (!stop) for (let prop in endValues) if (typeof endValues[prop] === 'number') object[prop] = endValues[prop];
+            if (killed()) return;
+            self.kill = true;
+            if (!stop) {
+                for (let prop in endValues) if (typeof endValues[prop] === 'number') object[prop] = endValues[prop];
+                if (object.transform) object.transform();
+            }
             TweenManager.removeMathTween(self);
+            object.mathTween = null;
         }
 
         this.update = t => {
+            if (killed()) return;
             if (paused || t < startTime) return;
             let vel;
             for (let prop in startValues) {
@@ -773,6 +805,7 @@ class SpringTween {
                     vel = velocityValues[prop];
                 }
             }
+            if (update) update(t);
             if (Math.abs(vel) < 0.001) {
                 count++;
                 if (count > 30) {
@@ -780,6 +813,7 @@ class SpringTween {
                     if (callback) callback();
                 }
             }
+            if (object.transform) object.transform();
         };
 
         this.pause = () => {
@@ -855,8 +889,9 @@ class TweenManager {
         };
     }
 
-    tween(object, props, time, ease, delay, callback) {
+    tween(object, props, time, ease, delay, callback, update) {
         if (typeof delay !== 'number') {
+            update = callback;
             callback = delay;
             delay = 0;
         }
@@ -866,7 +901,7 @@ class TweenManager {
             if (callback) promise.then(callback);
             callback = promise.resolve;
         }
-        let tween = ease === 'spring' ? new SpringTween(object, props, time, ease, delay, callback) : new MathTween(object, props, time, ease, delay, callback);
+        let tween = ease === 'spring' ? new SpringTween(object, props, time, ease, delay, update, callback) : new MathTween(object, props, time, ease, delay, update, callback);
         return promise || tween;
     }
 
@@ -945,7 +980,7 @@ class CSSTransition {
         initCSSTween();
 
         function killed() {
-            return !object || !object.element;
+            return !self || self.kill || !object || !object.element;
         }
 
         function initProperties() {
@@ -964,7 +999,7 @@ class CSSTransition {
 
         function initCSSTween() {
             if (killed()) return;
-            TweenManager.clearCSSTween(object);
+            if (object.cssTween) object.cssTween.kill = true;
             object.cssTween = self;
             let transition = '';
             for (let i = 0; i < properties.length; i++) transition += (transition.length ? ', ' : '') + properties[i] + ' ' + time + 'ms ' + TweenManager.getEase(ease) + ' ' + delay + 'ms';
@@ -983,6 +1018,7 @@ class CSSTransition {
 
         function clear() {
             if (killed()) return;
+            self.kill = true;
             object.element.style[Device.vendor('Transition')] = '';
             object.cssTween = null;
         }
@@ -990,39 +1026,6 @@ class CSSTransition {
         this.stop = () => clear();
     }
 }
-
-/**
- * SVG helper class.
- *
- * @author Patrick Schroen / https://github.com/pschroen
- */
-
-let SVG = new ( // Singleton pattern
-
-class SVG {
-
-    constructor() {
-        let symbols = [];
-
-        this.defineSymbol = (id, width, height, innerHTML) => {
-            let svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-            svg.setAttribute('style', 'display: none;');
-            svg.setAttribute('width', width);
-            svg.setAttribute('height', height);
-            svg.setAttributeNS('http://www.w3.org/2000/xmlns/', 'xmlns:xlink', 'http://www.w3.org/1999/xlink');
-            svg.innerHTML = `<symbol id="${id}">${innerHTML}</symbol>`;
-            document.body.insertBefore(svg, document.body.firstChild);
-            symbols.push({id, width, height});
-        };
-
-        this.getSymbolConfig = id => {
-            for (let i = 0; i < symbols.length; i++) if (symbols[i].id === id) return symbols[i];
-            return null;
-        };
-    }
-}
-
-)(); // Singleton pattern
 
 /**
  * Alien interface.
@@ -1034,47 +1037,71 @@ class Interface {
 
     constructor(name, type = 'div', detached) {
         this.events = new EventManager();
-        this.name = name;
-        this.type = type;
-        if (this.type === 'svg') {
-            this.element = document.createElementNS('http://www.w3.org/2000/svg', this.type);
-            this.element.setAttributeNS('http://www.w3.org/2000/xmlns/', 'xmlns:xlink', 'http://www.w3.org/1999/xlink');
+        if (typeof name !== 'string') {
+            this.element = name;
         } else {
-            this.element = document.createElement(this.type);
+            this.name = name;
+            this.type = type;
+            if (this.type === 'svg') {
+                let qualifiedName = detached || 'svg';
+                detached = true;
+                this.element = document.createElementNS('http://www.w3.org/2000/svg', qualifiedName);
+                this.element.setAttributeNS('http://www.w3.org/2000/xmlns/', 'xmlns:xlink', 'http://www.w3.org/1999/xlink');
+            } else {
+                this.element = document.createElement(this.type);
+            }
+            if (name[0] !== '.') this.element.id = name;
+            else this.element.className = name.substr(1);
         }
-        if (name[0] === '.') this.element.className = name.substr(1);
-        else this.element.id = name;
         this.element.style.position = 'absolute';
-        if (!detached) {
-            let stage = window.Alien && window.Alien.Stage ? window.Alien.Stage : document.body;
-            stage.appendChild(this.element);
-        }
+        this.element.object = this;
+        if (!detached) (window.Alien && window.Alien.Stage ? window.Alien.Stage : document.body).appendChild(this.element);
     }
 
     initClass(object, ...params) {
         let child = new object(...params);
-        if (child.element) this.element.appendChild(child.element);
-        child.parent = this;
+        this.add(child);
         return child;
+    }
+
+    clone() {
+        return new Interface(this.element.cloneNode(true));
     }
 
     create(name, type) {
         let child = new Interface(name, type);
-        this.element.appendChild(child.element);
-        child.parent = this;
+        this.add(child);
         return child;
-    }
-
-    destroy() {
-        if (this.loop) Render.stop(this.loop);
-        this.events = this.events.destroy();
-        this.element.parentNode.removeChild(this.element);
-        return Utils.nullObject(this);
     }
 
     empty() {
         this.element.innerHTML = '';
         return this;
+    }
+
+    add(child) {
+        if (child.element) {
+            this.element.appendChild(child.element);
+            child.parent = this;
+        } else if (child.nodeName) {
+            this.element.appendChild(child);
+        }
+        return this;
+    }
+
+    remove(child) {
+        if (child.element) child.destroy();
+        else if (child.nodeName) child.parentNode.removeChild(child);
+        return this;
+    }
+
+    destroy() {
+        if (this.loop) Render.stop(this.loop);
+        this.events = this.events.destroy();
+        this.removed = true;
+        let parent = this.parent;
+        if (parent && !parent.removed && parent.remove) parent.remove(this.element);
+        return Utils.nullObject(this);
     }
 
     text(text) {
@@ -1306,8 +1333,12 @@ class Interface {
     }
 
     svgSymbol(id, width, height) {
-        let config = SVG.getSymbolConfig(id);
-        this.html(`<svg viewBox="0 0 ${config.width} ${config.height}" width="${width}" height="${height}"><use xlink:href="#${config.id}" x="0" y="0"/></svg>`);
+        /* eslint-disable no-undef */
+        if (typeof SVGSymbol !== 'undefined') {
+            let config = SVGSymbol.getConfig(id);
+            this.html(`<svg viewBox="0 0 ${config.width} ${config.height}" width="${width}" height="${height}"><use xlink:href="#${config.id}" x="0" y="0"/></svg>`);
+        }
+        /* eslint-enable no-undef */
     }
 
     startRender(callback) {
@@ -1378,55 +1409,8 @@ class Interface {
             height: '100%',
             zIndex: 99999
         });
-        if (!Device.mobile) this.hit.hover(overCallback).click(clickCallback);
-        else this.hit.touchClick(overCallback, clickCallback);
-        return this;
-    }
-
-    touchSwipe(callback, distance = 75) {
-        let startX, startY,
-            moving = false,
-            move = {};
-        let touchStart = e => {
-            let touch = Utils.touchEvent(e);
-            if (e.touches.length === 1) {
-                startX = touch.x;
-                startY = touch.y;
-                moving = true;
-                this.element.addEventListener('touchmove', touchMove, {passive:true});
-            }
-        };
-        let touchMove = e => {
-            if (moving) {
-                let touch = Utils.touchEvent(e),
-                    dx = startX - touch.x,
-                    dy = startY - touch.y;
-                move.direction = null;
-                move.moving = null;
-                move.x = null;
-                move.y = null;
-                move.evt = e;
-                if (Math.abs(dx) >= distance) {
-                    touchEnd();
-                    move.direction = dx > 0 ? 'left' : 'right';
-                } else if (Math.abs(dy) >= distance) {
-                    touchEnd();
-                    move.direction = dy > 0 ? 'up' : 'down';
-                } else {
-                    move.moving = true;
-                    move.x = dx;
-                    move.y = dy;
-                }
-                if (callback) callback(move, e);
-            }
-        };
-        let touchEnd = () => {
-            startX = startY = moving = false;
-            this.element.removeEventListener('touchmove', touchMove);
-        };
-        this.element.addEventListener('touchstart', touchStart, {passive:true});
-        this.element.addEventListener('touchend', touchEnd, {passive:true});
-        this.element.addEventListener('touchcancel', touchEnd, {passive:true});
+        if (Device.mobile) this.hit.touchClick(overCallback, clickCallback);
+        else this.hit.hover(overCallback).click(clickCallback);
         return this;
     }
 
@@ -1502,72 +1486,72 @@ class Interface {
  * @author Patrick Schroen / https://github.com/pschroen
  */
 
-class Canvas extends Interface {
+class Canvas {
 
-    constructor(name, w, h = w, retina, detached) {
-        super(name, 'canvas', detached);
+    constructor(name, w, h = w, retina) {
+        let canvas = new Interface(name, 'canvas', true);
+        this.element = canvas.element;
+        this.context = this.element.getContext('2d');
         this.children = [];
         this.retina = retina;
-        this.context = this.element.getContext('2d');
         let ratio = retina ? 2 : 1;
         this.element.width = w * ratio;
         this.element.height = h * ratio;
         this.context.scale(ratio, ratio);
-        this.size(w, h);
-    }
+        canvas.size(w, h);
 
-    toDataURL(type, quality) {
-        return this.element.toDataURL(type, quality);
-    }
+        this.toDataURL = (type, quality) => {
+            return this.element.toDataURL(type, quality);
+        };
 
-    render(noClear) {
-        if (!(typeof noClear === 'boolean' && noClear)) this.clear();
-        for (let i = 0; i < this.children.length; i++) this.children[i].render();
-    }
+        this.render = noClear => {
+            if (!(typeof noClear === 'boolean' && noClear)) this.clear();
+            for (let i = 0; i < this.children.length; i++) this.children[i].render();
+        };
 
-    clear() {
-        this.context.clearRect(0, 0, this.element.width, this.element.height);
-    }
+        this.clear = () => {
+            this.context.clearRect(0, 0, this.element.width, this.element.height);
+        };
 
-    add(display) {
-        display.setCanvas(this);
-        display.parent = this;
-        this.children.push(display);
-        display.z = this.children.length;
-    }
+        this.add = display => {
+            display.setCanvas(this);
+            display.parent = this;
+            this.children.push(display);
+            display.z = this.children.length;
+        };
 
-    remove(display) {
-        display.canvas = null;
-        display.parent = null;
-        let i = this.children.indexOf(display);
-        if (i > -1) this.children.splice(i, 1);
-    }
+        this.remove = display => {
+            display.canvas = null;
+            display.parent = null;
+            let i = this.children.indexOf(display);
+            if (i > -1) this.children.splice(i, 1);
+        };
 
-    destroy() {
-        this.stopRender();
-        for (let i = 0; i < this.children.length; i++) this.children[i].destroy();
-        return Utils.nullObject(this);
-    }
+        this.destroy = () => {
+            for (let i = 0; i < this.children.length; i++) this.children[i].destroy();
+            return canvas = canvas.destroy();
+        };
 
-    getImageData(x = 0, y = 0, w = this.element.width, h = this.element.height) {
-        this.imageData = this.context.getImageData(x, y, w, h);
-        return this.imageData;
-    }
+        this.getImageData = (x = 0, y = 0, w = this.element.width, h = this.element.height) => {
+            this.imageData = this.context.getImageData(x, y, w, h);
+            return this.imageData;
+        };
 
-    getPixel(x, y, dirty) {
-        if (!this.imageData || dirty) this.getImageData();
-        let imgData = {},
-            index = (x + y * this.element.width) * 4,
-            pixels = this.imageData.data;
-        imgData.r = pixels[index];
-        imgData.g = pixels[index + 1];
-        imgData.b = pixels[index + 2];
-        imgData.a = pixels[index + 3];
-        return imgData;
-    }
+        this.getPixel = (x, y, dirty) => {
+            if (!this.imageData || dirty) this.getImageData();
+            let imgData = {},
+                index = (x + y * this.element.width) * 4,
+                pixels = this.imageData.data;
+            imgData.r = pixels[index];
+            imgData.g = pixels[index + 1];
+            imgData.b = pixels[index + 2];
+            imgData.a = pixels[index + 3];
+            return imgData;
+        };
 
-    putImageData(imageData) {
-        this.context.putImageData(imageData, 0, 0);
+        this.putImageData = imageData => {
+            this.context.putImageData(imageData, 0, 0);
+        };
     }
 }
 
@@ -1866,7 +1850,7 @@ class CanvasGraphics extends CanvasObject {
         this.draw = override => {
             if (this.isMask() && !override) return false;
             let context = this.canvas.context;
-            this.startDraw(-this.px, -this.py, override);
+            this.startDraw(this.px, this.py, override);
             setProperties(context);
             if (this.clipWidth && this.clipHeight) {
                 context.beginPath();
@@ -1971,7 +1955,7 @@ class CanvasGraphics extends CanvasObject {
 
         this.drawImage = (img, sx = 0, sy = 0, sWidth = img.width, sHeight = img.height, dx = 0, dy = 0, dWidth = img.width, dHeight = img.height) => {
             if (typeof img === 'string') img = this.createImage(img);
-            draw.push(['drawImage', img, sx, sy, sWidth, sHeight, dx, dy, dWidth, dHeight]);
+            draw.push(['drawImage', img, sx, sy, sWidth, sHeight, dx + -this.px, dy + -this.py, dWidth, dHeight]);
         };
 
         this.mask = object => {
@@ -2210,25 +2194,166 @@ class Mouse {
         };
 
         this.capture = () => {
-            this.x = 0;
-            this.y = 0;
-            if (!Device.mobile) {
-                window.addEventListener('mousemove', moved);
-            } else {
-                window.addEventListener('touchmove', moved);
-                window.addEventListener('touchstart', moved);
+            if (!this.active) {
+                this.active = true;
+                this.x = 0;
+                this.y = 0;
+                if (Device.mobile) {
+                    window.addEventListener('touchmove', moved);
+                    window.addEventListener('touchstart', moved);
+                } else {
+                    window.addEventListener('mousemove', moved);
+                }
             }
         };
 
         this.stop = () => {
+            this.active = false;
             this.x = 0;
             this.y = 0;
-            if (!Device.mobile) {
-                window.removeEventListener('mousemove', moved);
-            } else {
+            if (Device.mobile) {
                 window.removeEventListener('touchmove', moved);
                 window.removeEventListener('touchstart', moved);
+            } else {
+                window.removeEventListener('mousemove', moved);
             }
+        };
+    }
+}
+
+)(); // Singleton pattern
+
+/**
+ * Accelerometer helper class.
+ *
+ * @author Patrick Schroen / https://github.com/pschroen
+ */
+
+let Accelerometer = new ( // Singleton pattern
+
+class Accelerometer {
+
+    constructor() {
+        let self = this;
+        this.x = 0;
+        this.y = 0;
+        this.z = 0;
+        this.alpha = 0;
+        this.beta = 0;
+        this.gamma = 0;
+        this.heading = 0;
+        this.rotationRate = {};
+        this.rotationRate.alpha = 0;
+        this.rotationRate.beta = 0;
+        this.rotationRate.gamma = 0;
+        this.toRadians = Device.os === 'iOS' ? Math.PI / 180 : 1;
+
+        function updateAccel(e) {
+            switch (window.orientation) {
+                case 0:
+                    self.x = -e.accelerationIncludingGravity.x;
+                    self.y = e.accelerationIncludingGravity.y;
+                    self.z = e.accelerationIncludingGravity.z;
+                    if (e.rotationRate) {
+                        self.rotationRate.alpha = e.rotationRate.beta * self.toRadians;
+                        self.rotationRate.beta = -e.rotationRate.alpha * self.toRadians;
+                        self.rotationRate.gamma = e.rotationRate.gamma * self.toRadians;
+                    }
+                    break;
+                case 180:
+                    self.x = e.accelerationIncludingGravity.x;
+                    self.y = -e.accelerationIncludingGravity.y;
+                    self.z = e.accelerationIncludingGravity.z;
+                    if (e.rotationRate) {
+                        self.rotationRate.alpha = -e.rotationRate.beta * self.toRadians;
+                        self.rotationRate.beta = e.rotationRate.alpha * self.toRadians;
+                        self.rotationRate.gamma = e.rotationRate.gamma * self.toRadians;
+                    }
+                    break;
+                case 90:
+                    self.x = e.accelerationIncludingGravity.y;
+                    self.y = e.accelerationIncludingGravity.x;
+                    self.z = e.accelerationIncludingGravity.z;
+                    if (e.rotationRate) {
+                        self.rotationRate.alpha = e.rotationRate.alpha * self.toRadians;
+                        self.rotationRate.beta = e.rotationRate.beta * self.toRadians;
+                        self.rotationRate.gamma = e.rotationRate.gamma * self.toRadians;
+                    }
+                    break;
+                case -90:
+                    self.x = -e.accelerationIncludingGravity.y;
+                    self.y = -e.accelerationIncludingGravity.x;
+                    self.z = e.accelerationIncludingGravity.z;
+                    if (e.rotationRate) {
+                        self.rotationRate.alpha = -e.rotationRate.alpha * self.toRadians;
+                        self.rotationRate.beta = -e.rotationRate.beta * self.toRadians;
+                        self.rotationRate.gamma = e.rotationRate.gamma * self.toRadians;
+                    }
+                    break;
+            }
+        }
+
+        function updateOrientation(e) {
+            for (var key in e) if (key.toLowerCase().indexOf('heading') !== -1) self.heading = e[key];
+            switch (window.orientation) {
+                case 0:
+                    self.alpha = e.beta * self.toRadians;
+                    self.beta = -e.alpha * self.toRadians;
+                    self.gamma = e.gamma * self.toRadians;
+                    break;
+                case 180:
+                    self.alpha = -e.beta * self.toRadians;
+                    self.beta = e.alpha * self.toRadians;
+                    self.gamma = e.gamma * self.toRadians;
+                    break;
+                case 90:
+                    self.alpha = e.alpha * self.toRadians;
+                    self.beta = e.beta * self.toRadians;
+                    self.gamma = e.gamma * self.toRadians;
+                    break;
+                case -90:
+                    self.alpha = -e.alpha * self.toRadians;
+                    self.beta = -e.beta * self.toRadians;
+                    self.gamma = e.gamma * self.toRadians;
+                    break;
+            }
+            self.tilt = e.beta * self.toRadians;
+            self.yaw = e.alpha * self.toRadians;
+            self.roll = -e.gamma * self.toRadians;
+            if (Device.os === 'Android') self.heading = compassHeading(e.alpha, e.beta, e.gamma);
+        }
+
+        function compassHeading(alpha, beta, gamma) {
+            let degtorad = Math.PI / 180,
+                x = beta ? beta * degtorad : 0,
+                y = gamma ? gamma * degtorad : 0,
+                z = alpha ? alpha * degtorad : 0,
+                cY = Math.cos(y),
+                cZ = Math.cos(z),
+                sX = Math.sin(x),
+                sY = Math.sin(y),
+                sZ = Math.sin(z),
+                Vx = -cZ * sY - sZ * sX * cY,
+                Vy = -sZ * sY + cZ * sX * cY,
+                compassHeading = Math.atan(Vx / Vy);
+            if (Vy < 0) compassHeading += Math.PI;
+            else if (Vx < 0) compassHeading += 2 * Math.PI;
+            return compassHeading * (180 / Math.PI);
+        }
+
+        this.capture = () => {
+            if (!this.active) {
+                this.active = true;
+                window.addEventListener('devicemotion', updateAccel);
+                window.addEventListener('deviceorientation', updateOrientation);
+            }
+        };
+
+        this.stop = () => {
+            this.active = false;
+            this.x = this.y = this.z = 0;
+            window.removeEventListener('devicemotion', updateAccel);
+            window.removeEventListener('deviceorientation', updateOrientation);
         };
     }
 }
@@ -2357,68 +2482,6 @@ class XHR {
 )(); // Singleton pattern
 
 /**
- * WebAudio helper class.
- *
- * @author Patrick Schroen / https://github.com/pschroen
- */
-
-if (!window.AudioContext) window.AudioContext = window.webkitAudioContext || window.mozAudioContext || window.oAudioContext;
-
-let WebAudio = new ( // Singleton pattern
-
-class WebAudio {
-
-    constructor() {
-        let context,
-            sounds = [];
-
-        this.init = () => {
-            context = new window.AudioContext();
-            this.globalGain = context.createGain();
-            this.globalGain.connect(context.destination);
-        };
-
-        this.createSound = (id, audioData, callback) => {
-            let sound = {id};
-            context.decodeAudioData(audioData, buffer => {
-                sound.buffer = buffer;
-                sound.audioGain = context.createGain();
-                sound.audioGain.connect(this.globalGain);
-                sound.complete = true;
-                if (callback) callback();
-            });
-            sounds.push(sound);
-        };
-
-        this.getSound = id => {
-            for (let i = 0; i < sounds.length; i++) if (sounds[i].id === id) return sounds[i];
-            return null;
-        };
-
-        this.trigger = id => {
-            if (!context) return;
-            let sound = this.getSound(id),
-                source = context.createBufferSource();
-            source.buffer = sound.buffer;
-            source.connect(sound.audioGain);
-            source.start(0);
-        };
-
-        this.mute = () => {
-            if (!context) return;
-            TweenManager.tween(this.globalGain.gain, {value:0}, 300, 'easeOutSine');
-        };
-
-        this.unmute = () => {
-            if (!context) return;
-            TweenManager.tween(this.globalGain.gain, {value:1}, 500, 'easeOutSine');
-        };
-    }
-}
-
-)(); // Singleton pattern
-
-/**
  * Asset loader with promise method.
  *
  * Currently no CORS support.
@@ -2456,10 +2519,16 @@ class AssetLoader {
                 ext = split[split.length - 1].split('?')[0];
             switch (ext) {
                 case 'mp3':
-                    if (!window.AudioContext) return assetLoaded();
-                    XHR.get(asset, contents => {
-                        WebAudio.createSound(key, contents, assetLoaded);
-                    }, 'arraybuffer');
+                    /* eslint-disable no-undef */
+                    if (typeof WebAudio !== 'undefined') {
+                        if (!window.AudioContext) return assetLoaded();
+                        XHR.get(asset, contents => {
+                            WebAudio.createSound(key, contents, assetLoaded);
+                        }, 'arraybuffer');
+                    } else {
+                        return assetLoaded();
+                    }
+                    /* eslint-enable no-undef */
                     break;
                 default:
                     Images.createImg(asset, assetLoaded);
@@ -2578,6 +2647,279 @@ FontLoader.loadFonts = (fonts, callback) => {
     new FontLoader(fonts, callback);
     return promise;
 };
+
+/**
+ * SVG interface.
+ *
+ * @author Patrick Schroen / https://github.com/pschroen
+ */
+
+class SVG {
+
+    constructor(name, type, params) {
+        let self = this;
+        let svg;
+
+        createSVG();
+
+        function createSVG() {
+            switch (type) {
+                case 'svg':
+                    createView();
+                    break;
+                case 'radialGradient':
+                    createGradient();
+                    break;
+                case 'linearGradient':
+                    createGradient();
+                    break;
+                default:
+                    createElement();
+                    break;
+            }
+        }
+
+        function createView() {
+            svg = new Interface(name, 'svg');
+            svg.element.setAttribute('preserveAspectRatio', 'xMinYMid meet');
+            svg.element.setAttribute('version', '1.1');
+            svg.element.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
+            if (params.width) {
+                svg.element.setAttribute('viewBox', '0 0 ' + params.width + ' ' + params.height);
+                svg.element.style.width = params.width + 'px';
+                svg.element.style.height = params.height + 'px';
+            }
+            self.object = svg;
+        }
+
+        function createElement() {
+            svg = new Interface(name, 'svg', type);
+            if (type === 'circle') setCircle();
+            else if (type === 'radialGradient') setGradient();
+            self.object = svg;
+        }
+
+        function setCircle() {
+            ['cx', 'cy', 'r'].forEach(attr => {
+                if (params.stroke && attr === 'r') svg.element.setAttributeNS(null, attr, params.width / 2 - params.stroke);
+                else svg.element.setAttributeNS(null, attr, params.width / 2);
+            });
+        }
+
+        function setGradient() {
+            ['cx', 'cy', 'r', 'fx', 'fy', 'name'].forEach(attr => {
+                svg.element.setAttributeNS(null, attr === 'name' ? 'id' : attr, params[attr]);
+            });
+            svg.element.setAttributeNS(null, 'gradientUnits', 'userSpaceOnUse');
+        }
+
+        function createColorStop(obj) {
+            let stop = document.createElementNS('http://www.w3.org/2000/svg', 'stop');
+            ['offset', 'style'].forEach(attr => {
+                stop.setAttributeNS(null, attr, attr === 'style' ? 'stop-color:' + obj[attr] : obj[attr]);
+            });
+            return stop;
+        }
+
+        function createGradient() {
+            createElement();
+            params.colors.forEach(param => {
+                svg.element.appendChild(createColorStop(param));
+            });
+        }
+
+        this.addTo = element => {
+            if (element.points) element = element.points;
+            else if (element.element) element = element.element;
+            else if (element.object) element = element.object.element;
+            element.appendChild(svg.element);
+        };
+    }
+}
+
+/**
+ * SVG symbol helper class.
+ *
+ * @author Patrick Schroen / https://github.com/pschroen
+ */
+
+let SVGSymbol = new ( // Singleton pattern
+
+class SVGSymbol$1 {
+
+    constructor() {
+        let symbols = [];
+
+        this.define = (id, width, height, innerHTML) => {
+            let svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+            svg.setAttribute('preserveAspectRatio', 'xMinYMid meet');
+            svg.setAttribute('version', '1.1');
+            svg.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
+            svg.setAttribute('style', 'display: none;');
+            svg.setAttribute('width', width);
+            svg.setAttribute('height', height);
+            svg.setAttributeNS('http://www.w3.org/2000/xmlns/', 'xmlns:xlink', 'http://www.w3.org/1999/xlink');
+            svg.innerHTML = `<symbol id="${id}">${innerHTML}</symbol>`;
+            document.body.insertBefore(svg, document.body.firstChild);
+            symbols.push({id, width, height});
+        };
+
+        this.getConfig = id => {
+            for (let i = 0; i < symbols.length; i++) if (symbols[i].id === id) return symbols[i];
+            return null;
+        };
+    }
+}
+
+)(); // Singleton pattern
+
+/**
+ * Storage helper class.
+ *
+ * @author Patrick Schroen / https://github.com/pschroen
+ */
+
+let Storage = new ( // Singleton pattern
+
+class Storage {
+
+    constructor() {
+        let storage;
+
+        testStorage();
+
+        function testStorage() {
+            if (window.localStorage) {
+                try {
+                    window.localStorage['test'] = 1;
+                    window.localStorage.removeItem('test');
+                    storage = true;
+                } catch (e) {
+                    storage = false;
+                }
+            } else {
+                storage = false;
+            }
+        }
+
+        function cookie(key, value, expires) {
+            let options;
+            if (arguments.length > 1 && (value === null || typeof value !== 'object')) {
+                options = {};
+                options.path = '/';
+                options.expires = expires || 1;
+                if (value === null) options.expires = -1;
+                if (typeof options.expires === 'number') {
+                    let days = options.expires,
+                        t = options.expires = new Date();
+                    t.setDate(t.getDate() + days);
+                }
+                return document.cookie = [encodeURIComponent(key), '=', encodeURIComponent(String(value)), options.expires ? '; expires=' + options.expires.toUTCString() : '', '; path=' + options.path].join('');
+            }
+            options = value || {};
+            let result,
+                decode = options.raw ? s => {
+                    return s;
+                } : decodeURIComponent;
+            return result = new RegExp('(?:^|; )' + encodeURIComponent(key) + '=([^;]*)').exec(document.cookie) ? decode(result[1]) : null;
+        }
+
+        this.setCookie = (key, value, expires) => {
+            cookie(key, value, expires);
+        };
+
+        this.getCookie = key => {
+            return cookie(key);
+        };
+
+        this.set = (key, value) => {
+            if (value !== null && typeof value === 'object') value = JSON.stringify(value);
+            if (storage) {
+                if (value === null) window.localStorage.removeItem(key);
+                else window.localStorage[key] = value;
+            } else {
+                cookie(key, value, 365);
+            }
+        };
+
+        this.get = key => {
+            let value;
+            if (storage) value = window.localStorage[key];
+            else value = cookie(key);
+            if (value) {
+                let char0;
+                if (value.charAt) char0 = value.charAt(0);
+                if (char0 === '{' || char0 === '[') value = JSON.parse(value);
+                if (value === 'true' || value === 'false') value = value === 'true';
+            }
+            return value;
+        };
+    }
+}
+
+)(); // Singleton pattern
+
+/**
+ * Web audio engine.
+ *
+ * @author Patrick Schroen / https://github.com/pschroen
+ */
+
+if (!window.AudioContext) window.AudioContext = window.webkitAudioContext || window.mozAudioContext || window.oAudioContext;
+
+let WebAudio = new ( // Singleton pattern
+
+class WebAudio$1 {
+
+    constructor() {
+        let context,
+            sounds = [];
+
+        this.init = () => {
+            context = new window.AudioContext();
+            this.globalGain = context.createGain();
+            this.globalGain.connect(context.destination);
+        };
+
+        this.createSound = (id, audioData, callback) => {
+            let sound = {id};
+            context.decodeAudioData(audioData, buffer => {
+                sound.buffer = buffer;
+                sound.audioGain = context.createGain();
+                sound.audioGain.connect(this.globalGain);
+                sound.complete = true;
+                if (callback) callback();
+            });
+            sounds.push(sound);
+        };
+
+        this.getSound = id => {
+            for (let i = 0; i < sounds.length; i++) if (sounds[i].id === id) return sounds[i];
+            return null;
+        };
+
+        this.trigger = id => {
+            if (!context) return;
+            let sound = this.getSound(id),
+                source = context.createBufferSource();
+            source.buffer = sound.buffer;
+            source.connect(sound.audioGain);
+            source.start(0);
+        };
+
+        this.mute = () => {
+            if (!context) return;
+            TweenManager.tween(this.globalGain.gain, {value:0}, 300, 'easeOutSine');
+        };
+
+        this.unmute = () => {
+            if (!context) return;
+            TweenManager.tween(this.globalGain.gain, {value:1}, 500, 'easeOutSine');
+        };
+    }
+}
+
+)(); // Singleton pattern
 
 /**
  * Alien abduction point.

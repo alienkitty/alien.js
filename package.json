@@ -28,7 +28,7 @@
     "build-uglify": "rollup -c --environment uglify",
     "build-babel": "rollup -c --environment babel",
     "build-babel-uglify": "rollup -c --environment babel,uglify",
-    "build-examples": "for x in `find examples -name 'rollup.config.js' -maxdepth 2 ! -path './alien.js*' -exec dirname {} \\;`; do echo \"$x\" && cd \"$x\" && ln -sfn ../.. alien.js && rollup -c && rm -rf alien.js && cd ../..; done",
+    "build-examples": "for x in `find examples -name 'rollup.config.js' -maxdepth 2 ! -path './alien.js*' -exec dirname {} \\;`; do cd \"$x\" && ln -sfn ../.. alien.js && rollup -c && rm -rf alien.js && cd ../..; done",
     "build-world": "npm run build && npm run build-examples",
     "dev": "rollup -c -w -m inline",
     "lint": "eslint src || exit 0"

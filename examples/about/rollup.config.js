@@ -1,5 +1,5 @@
-import singletons from '../alien.js/src/singletons.js';
-import { timestamp, babel } from '../alien.js/src/utils.js';
+import singletons from './alien.js/src/singletons.js';
+import { timestamp, babel } from './alien.js/src/utils.js';
 
 import eslint from 'rollup-plugin-eslint';
 import uglify from 'rollup-plugin-uglify';

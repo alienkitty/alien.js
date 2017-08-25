@@ -1,5 +1,5 @@
-import singletons from '../alien.js/src/singletons.js';
-import { timestamp, babel } from '../alien.js/src/utils.js';
+import singletons from './alien.js/src/singletons.js';
+import { timestamp, babel } from './alien.js/src/utils.js';
 
 import eslint from 'rollup-plugin-eslint';
 import uglify from 'rollup-plugin-uglify';
@@ -7,7 +7,7 @@ import uglify from 'rollup-plugin-uglify';
 import path from 'path';
 import replace from 'replace';
 
-let pkg = require('../alien.js/package.json'),
+let pkg = require('./alien.js/package.json'),
     project = path.basename(__dirname);
 
 replace({

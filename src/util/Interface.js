@@ -392,53 +392,6 @@ class Interface {
         return this;
     }
 
-    touchSwipe(callback, distance = 75) {
-        let startX, startY,
-            moving = false,
-            move = {};
-        let touchStart = e => {
-            let touch = Utils.touchEvent(e);
-            if (e.touches.length === 1) {
-                startX = touch.x;
-                startY = touch.y;
-                moving = true;
-                this.element.addEventListener('touchmove', touchMove, {passive:true});
-            }
-        };
-        let touchMove = e => {
-            if (moving) {
-                let touch = Utils.touchEvent(e),
-                    dx = startX - touch.x,
-                    dy = startY - touch.y;
-                move.direction = null;
-                move.moving = null;
-                move.x = null;
-                move.y = null;
-                move.evt = e;
-                if (Math.abs(dx) >= distance) {
-                    touchEnd();
-                    move.direction = dx > 0 ? 'left' : 'right';
-                } else if (Math.abs(dy) >= distance) {
-                    touchEnd();
-                    move.direction = dy > 0 ? 'up' : 'down';
-                } else {
-                    move.moving = true;
-                    move.x = dx;
-                    move.y = dy;
-                }
-                if (callback) callback(move, e);
-            }
-        };
-        let touchEnd = () => {
-            startX = startY = moving = false;
-            this.element.removeEventListener('touchmove', touchMove);
-        };
-        this.element.addEventListener('touchstart', touchStart, {passive:true});
-        this.element.addEventListener('touchend', touchEnd, {passive:true});
-        this.element.addEventListener('touchcancel', touchEnd, {passive:true});
-        return this;
-    }
-
     touchClick(hover, click) {
         let time, move,
             start = {},

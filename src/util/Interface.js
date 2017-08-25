@@ -61,10 +61,8 @@ class Interface {
         if (child.element) {
             this.element.appendChild(child.element);
             child.parent = this;
-            child.element.parentNode = this.element;
         } else if (child.nodeName) {
             this.element.appendChild(child);
-            child.parentNode = this.element;
         }
         return this;
     }

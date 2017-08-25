@@ -1,14 +1,21 @@
 import singletons from './src/singletons.js';
-import { unexport, timestamp } from './src/utils.js';
+import { timestamp, unexport, babel } from './src/utils.js';
 
-import babel from 'rollup-plugin-babel';
 import uglify from 'rollup-plugin-uglify';
 import { minify } from 'uglify-es';
 
 let pkg = require('./package.json');
 
 export default {
-    entry: 'src/Alien.js',
+    input: 'src/Alien.js',
+    output: [{
+        name: 'Alien',
+        file: process.env.babel ? process.env.uglify ? 'build/es5-alien.module.min.js' : 'build/es5-alien.module.js' : process.env.uglify ? 'build/alien.module.min.js' : 'build/alien.module.js',
+        format: 'umd'
+    }, {
+        file: process.env.babel ? process.env.uglify ? 'build/es5-alien.min.js' : 'build/es5-alien.js' : process.env.uglify ? 'build/alien.min.js' : 'build/alien.js',
+        format: 'es'
+    }],
     plugins: [
         singletons(),
         unexport(),
@@ -18,13 +25,5 @@ export default {
                 preamble: `//   _  /._  _  r${pkg.version.split('.')[1]} ${timestamp()}\n//  /_|///_'/ /`
             }
         }, minify) : {}
-    ],
-    targets: [{
-        format: 'umd',
-        moduleName: 'Alien',
-        dest: process.env.babel ? process.env.uglify ? 'build/es5-alien.module.min.js' : 'build/es5-alien.module.js' : process.env.uglify ? 'build/alien.module.min.js' : 'build/alien.module.js'
-    }, {
-        format: 'es',
-        dest: process.env.babel ? process.env.uglify ? 'build/es5-alien.min.js' : 'build/es5-alien.js' : process.env.uglify ? 'build/alien.min.js' : 'build/alien.js'
-    }]
+    ]
 };

@@ -34,14 +34,14 @@
     "lint": "eslint src || exit 0"
   },
   "devDependencies": {
-    "babel-preset-es2015-rollup": "^3.0.0",
-    "eslint": "^4.2.0",
+    "babel-core": "^6.26.0",
+    "babel-preset-env": "^1.6.0",
+    "eslint": "^4.5.0",
     "replace": "^0.3.0",
-    "rollup": "^0.45.2",
-    "rollup-plugin-babel": "^2.7.1",
+    "rollup": "^0.48.2",
     "rollup-plugin-eslint": "^4.0.0",
     "rollup-plugin-uglify": "^2.0.1",
     "rollup-watch": "^4.3.1",
-    "uglify-es": "^3.0.25"
+    "uglify-es": "^3.0.28"
   }
 }

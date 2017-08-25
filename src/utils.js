@@ -2,6 +2,8 @@
  * @author Patrick Schroen / https://github.com/pschroen
  */
 
+import { transform } from 'babel-core';
+
 function timestamp() {
 
     function pad(number) {
@@ -28,4 +30,16 @@ function unexport() {
     };
 }
 
-export { timestamp, unexport };
+function babel() {
+    return {
+        transformBundle: code => {
+            let result = transform(code, { presets: ['env'] });
+            return {
+                code: result.code,
+                map: result.map
+            };
+        }
+    };
+}
+
+export { timestamp, unexport, babel };

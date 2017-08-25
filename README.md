@@ -72,7 +72,7 @@ cd about
 git init
 git submodule add https://github.com/pschroen/alien.js
 cp -r alien.js/examples/about/* .
-cp alien.js/.babelrc alien.js/.eslintrc.json alien.js/.gitignore .
+cp alien.js/.eslintrc.json alien.js/.gitignore .
 npm install
 npm run build
 open dist/index.html
@@ -83,7 +83,7 @@ open dist/index.html
 ```
 git submodule update --remote --merge
 cp alien.js/examples/about/package.json alien.js/examples/about/rollup.config.js .
-cp alien.js/.babelrc alien.js/.eslintrc.json alien.js/.gitignore .
+cp alien.js/.eslintrc.json alien.js/.gitignore .
 rm -rf node_modules
 npm install
 ```

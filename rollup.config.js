@@ -1,4 +1,3 @@
-import singletons from './src/singletons.js';
 import { timestamp, unexport, babel } from './src/utils.js';
 
 import uglify from 'rollup-plugin-uglify';
@@ -17,7 +16,6 @@ export default {
         format: 'es'
     }],
     plugins: [
-        singletons(),
         unexport(),
         process.env.babel ? babel() : {},
         process.env.uglify ? uglify({

@@ -1,6 +1,6 @@
 {
   "name": "alien-project",
-  "version": "1.0.4",
+  "version": "1.0.5",
   "author": "Patrick Schroen",
   "private": true,
   "scripts": {
@@ -15,7 +15,7 @@
     "replace": "^0.3.0",
     "rollup": "^0.48.2",
     "rollup-plugin-eslint": "^4.0.0",
-    "rollup-plugin-uglify": "^2.0.1",
-    "rollup-watch": "^4.3.1"
+    "rollup-watch": "^4.3.1",
+    "uglify-es": "^3.0.28"
   }
 }

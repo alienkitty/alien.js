@@ -1,8 +1,6 @@
-import singletons from './alien.js/src/singletons.js';
-import { timestamp, babel } from './alien.js/src/utils.js';
+import { timestamp, uglify } from './alien.js/src/utils.js';
 
 import eslint from 'rollup-plugin-eslint';
-import uglify from 'rollup-plugin-uglify';
 
 import path from 'path';
 import replace from 'replace';
@@ -33,9 +31,7 @@ export default {
         format: 'es'
     },
     plugins: [
-        singletons(),
         eslint(),
-        babel(),
         uglify({
             output: {
                 preamble: `//   _  /._  _  r${pkg.version.split('.')[1]}.${project} ${timestamp()}\n//  /_|///_'/ /`

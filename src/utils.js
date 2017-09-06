@@ -3,6 +3,7 @@
  */
 
 import { transform } from 'babel-core';
+import { minify } from 'uglify-es';
 
 function timestamp() {
 
@@ -19,11 +20,16 @@ function timestamp() {
     return `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())} ${hours}:${pad(minutes)}${ampm}`;
 }
 
+// Add singletons after tree shaking
+function singletons(code) {
+    return code.replace(/class (Render|CanvasFont|Utils|Device|Mouse|Accelerometer|Storage|Images|SVGSymbol|TweenManager|Interpolation|WebAudio|XHR|Stage)([\s\S]*?\n})/g, 'let $1 = new ( // Singleton pattern\n\nclass $1$2\n\n)(); // Singleton pattern');
+}
+
 function unexport() {
     return {
         transformBundle: code => {
             return {
-                code: code.replace(/\n{2,}export.*$/g, ''),
+                code: singletons(code).replace(/\n{2,}export.*$/g, ''),
                 map: { mappings: '' }
             };
         }
@@ -33,13 +39,18 @@ function unexport() {
 function babel() {
     return {
         transformBundle: code => {
-            let result = transform(code, { presets: ['env'] });
-            return {
-                code: result.code,
-                map: result.map
-            };
+            return transform(code, { presets: ['env'] });
         }
     };
 }
 
-export { timestamp, unexport, babel };
+function uglify(options = {}) {
+    return {
+        transformBundle: code => {
+            options.sourceMap = true;
+            return minify(transform(singletons(code), { presets: ['env'] }).code, options);
+        }
+    };
+}
+
+export { timestamp, unexport, babel, uglify };

@@ -1,7 +1,4 @@
-import { timestamp, unexport, babel } from './src/utils.js';
-
-import uglify from 'rollup-plugin-uglify';
-import { minify } from 'uglify-es';
+import { timestamp, singletons, unexport, babel, uglify } from './src/utils.js';
 
 let pkg = require('./package.json');
 
@@ -16,12 +13,13 @@ export default {
         format: 'es'
     }],
     plugins: [
+        singletons(),
         unexport(),
         process.env.babel ? babel() : {},
         process.env.uglify ? uglify({
             output: {
                 preamble: `//   _  /._  _  r${pkg.version.split('.')[1]} ${timestamp()}\n//  /_|///_'/ /`
             }
-        }, minify) : {}
+        }) : {}
     ]
 };

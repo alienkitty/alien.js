@@ -27,9 +27,9 @@ class Interface {
                 this.element.setAttributeNS('http://www.w3.org/2000/xmlns/', 'xmlns:xlink', 'http://www.w3.org/1999/xlink');
             } else {
                 this.element = document.createElement(this.type);
+                if (name[0] !== '.') this.element.id = name;
+                else this.element.className = name.substr(1);
             }
-            if (name[0] !== '.') this.element.id = name;
-            else this.element.className = name.substr(1);
         }
         this.element.style.position = 'absolute';
         this.element.object = this;

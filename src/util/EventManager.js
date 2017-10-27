@@ -4,6 +4,8 @@
  * @author Patrick Schroen / https://github.com/pschroen
  */
 
+import { Utils } from './Utils';
+
 if (!window.Events) window.Events = {
     BROWSER_FOCUS:  'browser_focus',
     KEYBOARD_DOWN:  'keyboard_down',
@@ -57,7 +59,8 @@ class EventManager {
         };
 
         this.fire = (eventString, object = {}) => {
-            for (let i = 0; i < events.length; i++) if (events[i].event === eventString) events[i].callback(object);
+            let clone = Utils.cloneArray(events);
+            for (let i = 0; i < clone.length; i++) if (clone[i].event === event) clone[i].callback(object);
         };
 
         this.subscribe = (event, callback) => {

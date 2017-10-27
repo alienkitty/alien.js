@@ -42,14 +42,14 @@ class TweenManager {
         let tweens = [],
             rendering = false;
 
-        function updateTweens(t) {
+        let updateTweens = t => {
             if (tweens.length) {
                 for (let i = 0; i < tweens.length; i++) tweens[i].update(t);
             } else {
                 rendering = false;
                 Render.stop(updateTweens);
             }
-        }
+        };
 
         this.addMathTween = tween => {
             tweens.push(tween);
@@ -93,8 +93,7 @@ class TweenManager {
     }
 
     getEase(name) {
-        let eases = this.CSS_EASES;
-        return eases[name] || eases.easeOutCubic;
+        return this.CSS_EASES[name] || this.CSS_EASES.easeOutCubic;
     }
 
     getAllTransforms(object) {

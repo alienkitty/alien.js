@@ -76,13 +76,13 @@ class AssetLoader {
             }
         }
     }
-}
 
-AssetLoader.loadAssets = (assets, callback) => {
-    let promise = Promise.create();
-    if (!callback) callback = promise.resolve;
-    new AssetLoader(assets, callback);
-    return promise;
-};
+    static loadAssets(assets, callback) {
+        let promise = Promise.create();
+        if (!callback) callback = promise.resolve;
+        new AssetLoader(assets, callback);
+        return promise;
+    }
+}
 
 export { AssetLoader };

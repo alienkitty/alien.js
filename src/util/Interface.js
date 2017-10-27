@@ -30,10 +30,10 @@ class Interface {
                 if (name[0] !== '.') this.element.id = name;
                 else this.element.className = name.substr(1);
             }
+            this.element.style.position = 'absolute';
+            if (!detached) (window.Alien && window.Alien.Stage ? window.Alien.Stage : document.body).appendChild(this.element);
         }
-        this.element.style.position = 'absolute';
         this.element.object = this;
-        if (!detached) (window.Alien && window.Alien.Stage ? window.Alien.Stage : document.body).appendChild(this.element);
     }
 
     initClass(object, ...params) {

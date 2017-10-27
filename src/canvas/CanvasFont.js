@@ -12,7 +12,7 @@ class CanvasFont {
 
         function createText(canvas, width, height, str, font, fillStyle, letterSpacing, textAlign) {
             let context = canvas.context,
-                graphics = canvas.initClass(CanvasGraphics, width, height);
+                graphics = new CanvasGraphics(width, height);
             graphics.font = font;
             graphics.fillStyle = fillStyle;
             graphics.totalWidth = 0;
@@ -49,7 +49,7 @@ class CanvasFont {
             if (height === lineHeight) {
                 return createText(canvas, width, height, str, font, fillStyle, letterSpacing, textAlign);
             } else {
-                let text = canvas.initClass(CanvasGraphics, width, height),
+                let text = new CanvasGraphics(width, height),
                     words = str.split(' '),
                     line = '',
                     lines = [];

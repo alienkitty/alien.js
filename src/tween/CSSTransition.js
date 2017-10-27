@@ -4,6 +4,7 @@
  * @author Patrick Schroen / https://github.com/pschroen
  */
 
+import { Utils } from '../util/Utils';
 import { Device } from '../util/Device';
 import { TweenManager } from './TweenManager';
 
@@ -59,6 +60,7 @@ class CSSTransition {
             self.kill = true;
             object.element.style[Device.vendor('Transition')] = '';
             object.cssTween = null;
+            Utils.nullObject(self);
         }
 
         this.stop = () => clear();

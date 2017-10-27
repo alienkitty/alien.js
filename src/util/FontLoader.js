@@ -32,13 +32,13 @@ class FontLoader {
             }, 500);
         }
     }
-}
 
-FontLoader.loadFonts = (fonts, callback) => {
-    let promise = Promise.create();
-    if (!callback) callback = promise.resolve;
-    new FontLoader(fonts, callback);
-    return promise;
-};
+    static loadFonts(fonts, callback) {
+        let promise = Promise.create();
+        if (!callback) callback = promise.resolve;
+        new FontLoader(fonts, callback);
+        return promise;
+    }
+}
 
 export { FontLoader };

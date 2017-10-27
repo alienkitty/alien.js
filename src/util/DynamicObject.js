@@ -9,8 +9,8 @@ class DynamicObject {
     constructor(props) {
         for (let key in props) this[key] = props[key];
 
-        this.lerp = (v, ratio) => {
-            for (let key in props) this[key] += (v[key] - this[key]) * ratio;
+        this.lerp = (v, alpha) => {
+            for (let key in props) this[key] += (v[key] - this[key]) * alpha;
             return this;
         };
     }

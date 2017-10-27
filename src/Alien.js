@@ -8,7 +8,6 @@ export { EventManager } from './util/EventManager';
 export { Interface } from './util/Interface';
 export { Canvas } from './canvas/Canvas';
 export { CanvasGraphics } from './canvas/CanvasGraphics';
-export { CanvasImage } from './canvas/CanvasImage';
 export { CanvasFont } from './canvas/CanvasFont';
 export { Render } from './util/Render';
 export { DynamicObject } from './util/DynamicObject';

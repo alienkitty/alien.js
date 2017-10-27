@@ -52,6 +52,13 @@ class AssetLoader {
                     }
                     /* eslint-enable no-undef */
                     break;
+                case 'js':
+                    XHR.get(asset, script => {
+                        script = script.replace('use strict', '');
+                        eval.call(window, script);
+                        assetLoaded(asset);
+                    }, 'text');
+                    break;
                 default:
                     Images.createImg(asset, assetLoaded);
                     break;

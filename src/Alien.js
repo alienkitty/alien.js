@@ -30,20 +30,8 @@ export { Storage } from './util/Storage';
 export { WebAudio } from './util/WebAudio';
 export { Stage } from './view/Stage';
 
-// Polyfills
-if (typeof Promise !== 'undefined') Promise.create = () => {
-    let resolve,
-        reject,
-        promise = new Promise((res, rej) => {
-            resolve = res;
-            reject = rej;
-        });
-    promise.resolve = resolve;
-    promise.reject = reject;
-    return promise;
-};
+import './polyfills.js';
 
-// Globals
 window.getURL = (url, target = '_blank') => window.open(url, target);
 window.Delayed = (callback, time = 0, params) => window.setTimeout(() => {
     if (callback) callback(params);

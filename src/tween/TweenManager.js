@@ -60,8 +60,7 @@ class TweenManager {
         };
 
         this.removeMathTween = tween => {
-            let i = tweens.indexOf(tween);
-            if (i > -1) tweens.splice(i, 1);
+            tweens.findAndRemove(tween);
         };
     }
 

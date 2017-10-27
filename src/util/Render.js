@@ -58,8 +58,7 @@ class Render {
         };
 
         this.stop = callback => {
-            let i = render.indexOf(callback);
-            if (i > -1) render.splice(i, 1);
+            render.findAndRemove(callback);
         };
     }
 }

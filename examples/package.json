@@ -1,6 +1,6 @@
 {
   "name": "alien-build-projects",
-  "version": "1.0.10",
+  "version": "1.0.11",
   "author": "Patrick Schroen",
   "private": true,
   "scripts": {
@@ -9,15 +9,11 @@
     "pngquant-flat": "for x in `find . -name 'rollup.config.js' -maxdepth 2 ! -path './alien.js*' -exec dirname {} \\;`; do echo \"$x\" && cd \"$x\" && rm -f dist/assets/*.png && cp src/images/*.png dist/assets/ && find dist/assets -name '*.png' -exec pngquant --strip --ext=.png --force {} \\; && cd ..; done"
   },
   "devDependencies": {
-    "babel-core": "^6.26.0",
-    "babel-preset-env": "^1.6.0",
-    "eslint": "^4.6.1",
-    "magic-string": "^0.22.4",
+    "eslint": "^4.9.0",
     "replace": "^0.3.0",
-    "rollup": "^0.49.3",
-    "rollup-plugin-bundleutils": "^1.0.0",
+    "rollup": "^0.50.0",
+    "rollup-plugin-bundleutils": "^1.0.1",
     "rollup-plugin-eslint": "^4.0.0",
-    "rollup-watch": "^4.3.1",
-    "uglify-es": "^3.1.0"
+    "rollup-watch": "^4.3.1"
   }
 }

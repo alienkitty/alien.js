@@ -13,16 +13,18 @@ class MathTween {
         let self = this;
         let startTime, startValues, endValues, paused, elapsed;
 
-        initMathTween();
+        start();
 
         function killed() {
             return !self || self.kill || !object;
         }
 
-        function initMathTween() {
+        function start() {
             if (killed()) return;
-            if (object.mathTween) object.mathTween.kill = true;
-            TweenManager.clearTween(object);
+            if (!object.multiTween && object.mathTween) {
+                object.mathTween.kill = true;
+                TweenManager.clearTween(object);
+            }
             TweenManager.addMathTween(self);
             object.mathTween = self;
             ease = Interpolation.convertEase(ease);

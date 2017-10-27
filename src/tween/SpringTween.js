@@ -12,16 +12,18 @@ class SpringTween {
         let self = this;
         let startTime, velocityValues, endValues, startValues, damping, count, paused;
 
-        initSpringTween();
+        start();
 
         function killed() {
             return !self || self.kill || !object;
         }
 
-        function initSpringTween() {
+        function start() {
             if (killed()) return;
-            if (object.mathTween) object.mathTween.kill = true;
-            TweenManager.clearTween(object);
+            if (!object.multiTween && object.mathTween) {
+                object.mathTween.kill = true;
+                TweenManager.clearTween(object);
+            }
             TweenManager.addMathTween(self);
             object.mathTween = self;
             startTime = Date.now();

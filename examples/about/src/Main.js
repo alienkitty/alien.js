@@ -197,7 +197,7 @@ class UIAbout extends Interface {
         }
 
         function addListeners() {
-            self.events.subscribe(Events.RESIZE, resizeHandler);
+            Stage.events.add(Events.RESIZE, resizeHandler);
         }
 
         function resizeHandler() {

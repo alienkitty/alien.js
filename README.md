@@ -144,7 +144,7 @@ open dist/index.html
 git submodule update --remote --merge
 cp alien.js/examples/about/package.json alien.js/examples/about/rollup.config.js .
 cp alien.js/.eslintrc.json alien.js/.gitignore .
-rm -rf node_modules
+rm -rf node_modules package-lock.json
 npm install
 ```
 

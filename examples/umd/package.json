@@ -1,0 +1,21 @@
+{
+  "name": "alien-umd-project",
+  "version": "1.0.0",
+  "author": "Patrick Schroen",
+  "private": true,
+  "main": "build/project.js",
+  "scripts": {
+    "build": "rollup -c || exit 0",
+    "dev": "rollup -c -w -m inline || exit 0",
+    "lint": "eslint src || exit 0",
+    "pngquant": "rm -rf dist/assets/images && cp -r src/images dist/assets/ && find dist/assets/images -name '**.png' -exec pngquant --strip --ext=.png --force {} \\;"
+  },
+  "devDependencies": {
+    "eslint": "^4.9.0",
+    "replace": "^0.3.0",
+    "rollup": "^0.50.0",
+    "rollup-plugin-bundleutils": "^1.0.1",
+    "rollup-plugin-eslint": "^4.0.0",
+    "rollup-watch": "^4.3.1"
+  }
+}

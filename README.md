@@ -20,7 +20,7 @@ A lightweight web framework abducted from Active Theory's [Hydra](https://medium
 
 ### Example `Interface` design pattern
 
-```javascript
+```js
 import { Stage, Interface, Device } from '../alien.js/src/Alien';
 
 Config.UI_OFFSET = Device.phone ? 20 : 35;
@@ -33,7 +33,6 @@ class UILogo extends Interface {
         let size = Device.phone ? 40 : 64;
 
         initHTML();
-        addListeners();
 
         function initHTML() {
             self.size(size).css({
@@ -43,11 +42,7 @@ class UILogo extends Interface {
             });
             self.bg('assets/images/logo.svg', 'cover');
             self.tween({opacity:1}, 1000, 'easeOutQuart');
-        }
-
-        function addListeners() {
             self.interact(hover, click);
-            self.hit.mouseEnabled(true);
         }
 
         function hover(e) {
@@ -60,6 +55,71 @@ class UILogo extends Interface {
         }
     }
 }
+
+class Main {
+
+    constructor() {
+        Stage.initClass(UILogo);
+    }
+}
+
+new Main();
+```
+
+### Example Singleton design pattern
+
+```js
+import { Stage, Interface, Canvas } from '../alien.js/src/Alien';
+
+class CanvasLayer extends Interface {
+
+    static instance() {
+        if (!this.singleton) this.singleton = new CanvasLayer();
+        return this.singleton;
+    }
+
+    constructor() {
+        super('CanvasLayer');
+        let self = this;
+
+        initHTML();
+        initCanvas();
+        addListeners();
+
+        function initHTML() {
+            self.size('100%').mouseEnabled(false);
+            Stage.add(self);
+        }
+
+        function initCanvas() {
+            self.canvas = self.initClass(Canvas, Stage.width, Stage.height, true);
+        }
+
+        function addListeners() {
+            Stage.events.add(Events.RESIZE, resizeHandler);
+        }
+
+        function resizeHandler() {
+            self.canvas.size(Stage.width, Stage.height, true);
+        }
+    }
+}
+
+class Main {
+
+    constructor() {
+        let canvas;
+
+        initCanvas();
+
+        function initCanvas() {
+            canvas = CanvasLayer.instance().canvas;
+            // ...
+        }
+    }
+}
+
+new Main();
 ```
 
 ### Quickstart

@@ -18,22 +18,22 @@ class Stage extends Interface {
         resizeHandler();
 
         function initHTML() {
-            self.css({overflow:'hidden'});
+            self.css({ overflow: 'hidden' });
         }
 
         function addListeners() {
             window.addEventListener('focus', () => {
                 if (last !== 'focus') {
                     last = 'focus';
-                    window.events.fire(Events.BROWSER_FOCUS, {type:'focus'});
-                    self.events.fire(Events.BROWSER_FOCUS, {type:'focus'});
+                    window.events.fire(Events.BROWSER_FOCUS, { type: 'focus' });
+                    self.events.fire(Events.BROWSER_FOCUS, { type: 'focus' });
                 }
             });
             window.addEventListener('blur', () => {
                 if (last !== 'blur') {
                     last = 'blur';
-                    window.events.fire(Events.BROWSER_FOCUS, {type:'blur'});
-                    self.events.fire(Events.BROWSER_FOCUS, {type:'blur'});
+                    window.events.fire(Events.BROWSER_FOCUS, { type: 'blur' });
+                    self.events.fire(Events.BROWSER_FOCUS, { type: 'blur' });
                 }
             });
             window.addEventListener('keydown', () => self.events.fire(Events.KEYBOARD_DOWN));

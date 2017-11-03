@@ -29,7 +29,7 @@ class UIAboutIcons extends Interface {
         initTwitter();
 
         function initHTML() {
-            self.size('100%', size).transform({z:-200}).enable3D();
+            self.size('100%', size).transform({ z: -200 }).enable3D();
             self.fontStyle('icomoon', size, Config.UI_COLOR);
             self.css({
                 position: 'relative',
@@ -49,14 +49,14 @@ class UIAboutIcons extends Interface {
         }
 
         function initTwitter() {
-            twitter = self.create('.icon-twitter').css({left:size + 20});
+            twitter = self.create('.icon-twitter').css({ left: size + 20 });
             twitter.url = Config.ABOUT_TWITTER_URL;
             twitter.interact(hover, click);
         }
 
         function hover(e) {
-            if (e.action === 'over') e.object.tween({opacity:0.5}, 100, 'easeOutSine');
-            else e.object.tween({opacity:1}, 300, 'easeOutSine');
+            if (e.action === 'over') e.object.tween({ opacity: 0.5 }, 100, 'easeOutSine');
+            else e.object.tween({ opacity: 1 }, 300, 'easeOutSine');
         }
 
         function click(e) {
@@ -64,11 +64,11 @@ class UIAboutIcons extends Interface {
         }
 
         this.animateIn = () => {
-            this.tween({z:-50, x:-10, opacity:1}, 2000, 'easeOutCubic');
+            this.tween({ z: -50, x: -10, opacity: 1 }, 2000, 'easeOutCubic');
         };
 
         this.animateOut = () => {
-            this.tween({z:-100, scale:0.9, opacity:0}, 300, 'easeOutCubic');
+            this.tween({ z: -100, scale: 0.9, opacity: 0 }, 300, 'easeOutCubic');
         };
     }
 }
@@ -115,11 +115,11 @@ class UIAboutCopy extends Interface {
 
         this.animateIn = () => {
             this.visible();
-            for (let i = 0; i < texts.length; i++) texts[i].css({opacity:0}).transform({z:-150}).tween({z:-50, x:-10, opacity:1}, 2000, 'easeOutCubic', i * 200);
+            for (let i = 0; i < texts.length; i++) texts[i].css({ opacity: 0 }).transform({ z: -150 }).tween({ z: -50, x: -10, opacity: 1 }, 2000, 'easeOutCubic', i * 200);
         };
 
         this.animateOut = () => {
-            for (let i = 0; i < texts.length; i++) texts[i].tween({z:-100, opacity:0}, 300, 'easeOutCubic', i * 100);
+            for (let i = 0; i < texts.length; i++) texts[i].tween({ z: -100, opacity: 0 }, 300, 'easeOutCubic', i * 100);
         };
     }
 }
@@ -153,11 +153,11 @@ class UIAboutTitle extends Interface {
 
         this.animateIn = () => {
             this.visible();
-            for (let i = 0; i < letters.length; i++) letters[i].transform({z:-100}).css({opacity:0}).tween({z:100 - i * 50, opacity:1}, 4000, 'easeOutBack', i * 200);
+            for (let i = 0; i < letters.length; i++) letters[i].transform({ z: -100 }).css({ opacity: 0 }).tween({ z: 100 - i * 50, opacity: 1 }, 4000, 'easeOutBack', i * 200);
         };
 
         this.animateOut = () => {
-            for (let i = 0; i < letters.length; i++) letters[i].tween({z:-50 - i * 50, opacity:0}, 700, 'easeOutCubic', i * 100);
+            for (let i = 0; i < letters.length; i++) letters[i].tween({ z: -50 - i * 50, opacity: 0 }, 700, 'easeOutCubic', i * 100);
         };
     }
 }
@@ -231,8 +231,8 @@ class UIAbout extends Interface {
             Delayed(icons.animateIn, 1300);
             // Use math tween with UI rotation
             wrapper.z = -300;
-            TweenManager.tween(wrapper, {z:0}, 7000, 'easeOutCubic');
-            //TweenManager.tween(wrapper, {z:0, damping:0.1}, 0.9, 'spring', 2000);
+            TweenManager.tween(wrapper, { z: 0 }, 7000, 'easeOutCubic');
+            //TweenManager.tween(wrapper, { z: 0, damping: 0.1 }, 0.9, 'spring', 2000);
         };
 
         this.animateOut = callback => {

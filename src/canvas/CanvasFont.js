@@ -44,7 +44,7 @@ class CanvasFont {
             return graphics;
         }
 
-        this.createText = (canvas, width, height, str, font, fillStyle, {letterSpacing = 0, lineHeight = height, textAlign = 'start'}) => {
+        this.createText = (canvas, width, height, str, font, fillStyle, { letterSpacing = 0, lineHeight = height, textAlign = 'start' }) => {
             let context = canvas.context;
             if (height === lineHeight) {
                 return createText(canvas, width, height, str, font, fillStyle, letterSpacing, textAlign);

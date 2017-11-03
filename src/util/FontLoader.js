@@ -20,7 +20,7 @@ class FontLoader {
         function initFonts() {
             if (!Array.isArray(fonts)) fonts = [fonts];
             element = Stage.create('FontLoader');
-            for (let i = 0; i < fonts.length; i++) element.create('font').fontStyle(fonts[i], 12, '#000').text('LOAD').css({top:-999});
+            for (let i = 0; i < fonts.length; i++) element.create('font').fontStyle(fonts[i], 12, '#000').text('LOAD').css({ top: -999 });
         }
 
         function finish() {

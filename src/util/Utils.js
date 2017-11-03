@@ -10,7 +10,7 @@ import { Device } from './Device';
 class Utils {
 
     rand(min, max) {
-        return (new DynamicObject({v:min})).lerp({v:max}, Math.random()).v;
+        return (new DynamicObject({ v: min })).lerp({ v: max }, Math.random()).v;
     }
 
     doRandom(min, max, precision) {

@@ -41,13 +41,13 @@ class UILogo extends Interface {
                 opacity: 0
             });
             self.bg('assets/images/logo.svg', 'cover');
-            self.tween({opacity:1}, 1000, 'easeOutQuart');
+            self.tween({ opacity: 1 }, 1000, 'easeOutQuart');
             self.interact(hover, click);
         }
 
         function hover(e) {
-            if (e.action === 'over') self.tween({opacity:0.7}, 100, 'easeOutSine');
-            else self.tween({opacity:1}, 300, 'easeOutSine');
+            if (e.action === 'over') self.tween({ opacity: 0.7 }, 100, 'easeOutSine');
+            else self.tween({ opacity: 1 }, 300, 'easeOutSine');
         }
 
         function click() {

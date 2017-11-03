@@ -148,7 +148,7 @@ class Interface {
     }
 
     fontStyle(fontFamily, fontSize, color, fontStyle) {
-        this.css({fontFamily, fontSize, color, fontStyle});
+        this.css({ fontFamily, fontSize, color, fontStyle });
         return this;
     }
 
@@ -430,9 +430,9 @@ class Interface {
             }
             move = false;
         };
-        this.element.addEventListener('touchmove', touchMove, {passive:true});
-        this.element.addEventListener('touchstart', touchStart, {passive:true});
-        this.element.addEventListener('touchend', touchEnd, {passive:true});
+        this.element.addEventListener('touchmove', touchMove, { passive: true });
+        this.element.addEventListener('touchstart', touchStart, { passive: true });
+        this.element.addEventListener('touchend', touchEnd, { passive: true });
         return this;
     }
 

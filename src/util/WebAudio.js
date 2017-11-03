@@ -21,7 +21,7 @@ class WebAudio {
         };
 
         this.createSound = (id, audioData, callback) => {
-            let sound = {id};
+            let sound = { id };
             context.decodeAudioData(audioData, buffer => {
                 sound.buffer = buffer;
                 sound.audioGain = context.createGain();
@@ -48,12 +48,12 @@ class WebAudio {
 
         this.mute = () => {
             if (!context) return;
-            TweenManager.tween(this.globalGain.gain, {value:0}, 300, 'easeOutSine');
+            TweenManager.tween(this.globalGain.gain, { value: 0 }, 300, 'easeOutSine');
         };
 
         this.unmute = () => {
             if (!context) return;
-            TweenManager.tween(this.globalGain.gain, {value:1}, 500, 'easeOutSine');
+            TweenManager.tween(this.globalGain.gain, { value: 1 }, 500, 'easeOutSine');
         };
     }
 }

@@ -25,7 +25,7 @@ class AlienKittyCanvas extends Interface {
         initImages();
 
         function initHTML() {
-            self.size(90, 86).center().css({opacity:0});
+            self.size(90, 86).center().css({ opacity: 0 });
         }
 
         function initCanvas() {
@@ -47,10 +47,10 @@ class AlienKittyCanvas extends Interface {
             alienkitty = new CanvasGraphics(90, 86);
             alienkitty.drawImage(alienkittyimg);
             eyelid1 = new CanvasGraphics(24, 14);
-            eyelid1.transformPoint('50%', 0).transform({x:35, y:25, scaleX:1.5, scaleY:0.01});
+            eyelid1.transformPoint('50%', 0).transform({ x: 35, y: 25, scaleX: 1.5, scaleY: 0.01 });
             eyelid1.drawImage(eyelidimg);
             eyelid2 = new CanvasGraphics(24, 14);
-            eyelid2.transformPoint(0, 0).transform({x:53, y:26, scaleX:1, scaleY:0.01});
+            eyelid2.transformPoint(0, 0).transform({ x: 53, y: 26, scaleX: 1, scaleY: 0.01 });
             eyelid2.drawImage(eyelidimg);
             canvas.add(alienkitty);
             canvas.add(eyelid1);
@@ -66,22 +66,22 @@ class AlienKittyCanvas extends Interface {
         }
 
         function blink1() {
-            TweenManager.tween(eyelid1, {scaleY:1.5}, 120, 'easeOutCubic', () => {
-                TweenManager.tween(eyelid1, {scaleY:0.01}, 180, 'easeOutCubic');
+            TweenManager.tween(eyelid1, { scaleY: 1.5 }, 120, 'easeOutCubic', () => {
+                TweenManager.tween(eyelid1, { scaleY: 0.01 }, 180, 'easeOutCubic');
             });
-            TweenManager.tween(eyelid2, {scaleX:1.3, scaleY:1.3}, 120, 'easeOutCubic', () => {
-                TweenManager.tween(eyelid2, {scaleX:1, scaleY:0.01}, 180, 'easeOutCubic', () => {
+            TweenManager.tween(eyelid2, { scaleX: 1.3, scaleY: 1.3 }, 120, 'easeOutCubic', () => {
+                TweenManager.tween(eyelid2, { scaleX: 1, scaleY: 0.01 }, 180, 'easeOutCubic', () => {
                     blink();
                 });
             });
         }
 
         function blink2() {
-            TweenManager.tween(eyelid1, {scaleY:1.5}, 120, 'easeOutCubic', () => {
-                TweenManager.tween(eyelid1, {scaleY:0.01}, 180, 'easeOutCubic');
+            TweenManager.tween(eyelid1, { scaleY: 1.5 }, 120, 'easeOutCubic', () => {
+                TweenManager.tween(eyelid1, { scaleY: 0.01 }, 180, 'easeOutCubic');
             });
-            TweenManager.tween(eyelid2, {scaleX:1.3, scaleY:1.3}, 180, 'easeOutCubic', () => {
-                TweenManager.tween(eyelid2, {scaleX:1, scaleY:0.01}, 240, 'easeOutCubic', () => {
+            TweenManager.tween(eyelid2, { scaleX: 1.3, scaleY: 1.3 }, 180, 'easeOutCubic', () => {
+                TweenManager.tween(eyelid2, { scaleX: 1, scaleY: 0.01 }, 240, 'easeOutCubic', () => {
                     blink();
                 });
             });
@@ -89,12 +89,12 @@ class AlienKittyCanvas extends Interface {
 
         this.animateIn = () => {
             blink();
-            this.tween({opacity:1}, 500, 'easeOutQuart');
+            this.tween({ opacity: 1 }, 500, 'easeOutQuart');
             this.startRender(loop);
         };
 
         this.animateOut = callback => {
-            this.tween({opacity:0}, 500, 'easeInOutQuad', () => {
+            this.tween({ opacity: 0 }, 500, 'easeInOutQuad', () => {
                 self.stopRender(loop);
                 if (callback) callback();
             });
@@ -148,11 +148,11 @@ class Progress extends Interface {
 
         this.update = e => {
             if (this.complete) return;
-            TweenManager.tween(this, {progress:e.percent}, 500, 'easeOutCubic');
+            TweenManager.tween(this, { progress: e.percent }, 500, 'easeOutCubic');
         };
 
         this.animateOut = callback => {
-            this.tween({scale:0.9, opacity:0}, 400, 'easeInCubic', callback);
+            this.tween({ scale: 0.9, opacity: 0 }, 400, 'easeInCubic', callback);
         };
     }
 }
@@ -201,7 +201,7 @@ class Loader extends Interface {
 
 class Main {
 
-    constructor({container}) {
+    constructor({ container }) {
 
         container.appendChild(Stage.element);
 
@@ -215,7 +215,7 @@ class Main {
         function initStage() {
             Stage.size('100%').enable3D(2000);
             wrapper = Stage.create('.wrapper');
-            wrapper.size('100%').transform({z:-300}).enable3D();
+            wrapper.size('100%').transform({ z: -300 }).enable3D();
             alienkitty = wrapper.initClass(AlienKittyCanvas);
         }
 
@@ -237,7 +237,7 @@ class Main {
         }
 
         function complete() {
-            wrapper.tween({z:0}, 7000, 'easeOutCubic');
+            wrapper.tween({ z: 0 }, 7000, 'easeOutCubic');
             alienkitty.animateIn();
         }
     }

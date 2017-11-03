@@ -25,10 +25,10 @@ class AlienKitty extends Interface {
         addListeners();
 
         function initHTML() {
-            self.size(size).center().css({opacity:0});
-            alienkitty = self.create('.alienkitty').size(90, 86).center().transform({scale:size / 90});
-            eyelid1 = alienkitty.create('.eyelid1').size(24, 14).css({left:35, top:25}).transformPoint('50%', 0).transform({scaleX:1.5, scaleY:0.01});
-            eyelid2 = alienkitty.create('.eyelid2').size(24, 14).css({left:53, top:26}).transformPoint(0, 0).transform({scaleX:1, scaleY:0.01});
+            self.size(size).center().css({ opacity: 0 });
+            alienkitty = self.create('.alienkitty').size(90, 86).center().transform({ scale: size / 90 });
+            eyelid1 = alienkitty.create('.eyelid1').size(24, 14).css({ left: 35, top: 25 }).transformPoint('50%', 0).transform({ scaleX: 1.5, scaleY: 0.01 });
+            eyelid2 = alienkitty.create('.eyelid2').size(24, 14).css({ left: 53, top: 26 }).transformPoint(0, 0).transform({ scaleX: 1, scaleY: 0.01 });
         }
 
         function addListeners() {
@@ -48,29 +48,29 @@ class AlienKitty extends Interface {
         }
 
         function blink1() {
-            eyelid1.tween({scaleY:1.5}, 120, 'easeOutCubic', () => {
-                eyelid1.tween({scaleY:0.01}, 180, 'easeOutCubic');
+            eyelid1.tween({ scaleY: 1.5 }, 120, 'easeOutCubic', () => {
+                eyelid1.tween({ scaleY: 0.01 }, 180, 'easeOutCubic');
             });
-            eyelid2.tween({scaleX:1.3, scaleY:1.3}, 120, 'easeOutCubic', () => {
-                eyelid2.tween({scaleX:1, scaleY:0.01}, 180, 'easeOutCubic', () => {
+            eyelid2.tween({ scaleX: 1.3, scaleY: 1.3 }, 120, 'easeOutCubic', () => {
+                eyelid2.tween({ scaleX: 1, scaleY: 0.01 }, 180, 'easeOutCubic', () => {
                     blink();
                 });
             });
         }
 
         function blink2() {
-            eyelid1.tween({scaleY:1.5}, 120, 'easeOutCubic', () => {
-                eyelid1.tween({scaleY:0.01}, 180, 'easeOutCubic');
+            eyelid1.tween({ scaleY: 1.5 }, 120, 'easeOutCubic', () => {
+                eyelid1.tween({ scaleY: 0.01 }, 180, 'easeOutCubic');
             });
-            eyelid2.tween({scaleX:1.3, scaleY:1.3}, 180, 'easeOutCubic', () => {
-                eyelid2.tween({scaleX:1, scaleY:0.01}, 240, 'easeOutCubic', () => {
+            eyelid2.tween({ scaleX: 1.3, scaleY: 1.3 }, 180, 'easeOutCubic', () => {
+                eyelid2.tween({ scaleX: 1, scaleY: 0.01 }, 240, 'easeOutCubic', () => {
                     blink();
                 });
             });
         }
 
         this.animateIn = () => {
-            this.tween({opacity:1}, 500, 'easeOutQuart');
+            this.tween({ opacity: 1 }, 500, 'easeOutQuart');
         };
 
         this.animateOut = () => {
@@ -124,11 +124,11 @@ class Progress extends Interface {
 
         this.update = e => {
             if (this.complete) return;
-            TweenManager.tween(this, {progress:e.percent}, 500, 'easeOutCubic');
+            TweenManager.tween(this, { progress: e.percent }, 500, 'easeOutCubic');
         };
 
         this.animateOut = callback => {
-            this.tween({scale:0.9, opacity:0}, 400, 'easeInCubic', callback);
+            this.tween({ scale: 0.9, opacity: 0 }, 400, 'easeInCubic', callback);
         };
     }
 }
@@ -188,7 +188,7 @@ class Main {
         function initStage() {
             Stage.size('100%').enable3D(2000);
             wrapper = Stage.create('.wrapper');
-            wrapper.size('100%').transform({z:-300}).enable3D();
+            wrapper.size('100%').transform({ z: -300 }).enable3D();
             alienkitty = wrapper.initClass(AlienKitty);
         }
 
@@ -210,7 +210,7 @@ class Main {
         }
 
         function complete() {
-            wrapper.tween({z:0}, 7000, 'easeOutCubic');
+            wrapper.tween({ z: 0 }, 7000, 'easeOutCubic');
             alienkitty.animateIn();
         }
     }

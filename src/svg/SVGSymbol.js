@@ -20,7 +20,7 @@ class SVGSymbol {
             svg.setAttributeNS('http://www.w3.org/2000/xmlns/', 'xmlns:xlink', 'http://www.w3.org/1999/xlink');
             svg.innerHTML = `<symbol id="${id}">${innerHTML}</symbol>`;
             document.body.insertBefore(svg, document.body.firstChild);
-            symbols.push({id, width, height});
+            symbols.push({ id, width, height });
         };
 
         this.getConfig = id => {

@@ -21,7 +21,7 @@ class Utils3D {
 
         this.createDebug = (size = 40, color) => {
             let geom = new THREE.IcosahedronGeometry(size, 1),
-                mat = color ? new THREE.MeshBasicMaterial({color}) : new THREE.MeshNormalMaterial();
+                mat = color ? new THREE.MeshBasicMaterial({ color }) : new THREE.MeshNormalMaterial();
             return new THREE.Mesh(geom, mat);
         };
 

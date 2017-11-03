@@ -28,7 +28,7 @@ class EventManager {
         let events = [];
 
         this.add = (event, callback) => {
-            events.push({event, callback});
+            events.push({ event, callback });
         };
 
         this.remove = (event, callback) => {

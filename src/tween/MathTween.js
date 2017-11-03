@@ -13,13 +13,13 @@ class MathTween {
         let self = this;
         let startTime, startValues, endValues, paused, elapsed;
 
-        start();
+        initMathTween();
 
         function killed() {
             return !self || self.kill || !object;
         }
 
-        function start() {
+        function initMathTween() {
             if (killed()) return;
             if (!object.multiTween && object.mathTween) {
                 object.mathTween.kill = true;

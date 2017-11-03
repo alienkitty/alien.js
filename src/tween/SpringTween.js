@@ -12,13 +12,13 @@ class SpringTween {
         let self = this;
         let startTime, velocityValues, endValues, startValues, damping, count, paused;
 
-        start();
+        initMathTween();
 
         function killed() {
             return !self || self.kill || !object;
         }
 
-        function start() {
+        function initMathTween() {
             if (killed()) return;
             if (!object.multiTween && object.mathTween) {
                 object.mathTween.kill = true;

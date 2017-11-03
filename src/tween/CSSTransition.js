@@ -38,10 +38,7 @@ class CSSTransition {
 
         function initCSSTween() {
             if (killed()) return;
-            if (object.cssTween) {
-                object.cssTween.kill = true;
-                TweenManager.clearCSSTween(object);
-            }
+            if (object.cssTween) object.cssTween.kill = true;
             object.cssTween = self;
             let transition = '';
             for (let i = 0; i < properties.length; i++) transition += (transition.length ? ', ' : '') + properties[i] + ' ' + time + 'ms ' + TweenManager.getEase(ease) + ' ' + delay + 'ms';

@@ -80,14 +80,6 @@ class TweenManager {
         return promise || tween;
     }
 
-    clearTween(object) {
-        if (object.mathTween) object.mathTween.stop();
-    }
-
-    clearCSSTween(object) {
-        if (object.cssTween) object.cssTween.stop();
-    }
-
     checkTransform(key) {
         return this.TRANSFORMS.indexOf(key) > -1;
     }

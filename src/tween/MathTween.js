@@ -21,10 +21,7 @@ class MathTween {
 
         function initMathTween() {
             if (killed()) return;
-            if (!object.multiTween && object.mathTween) {
-                object.mathTween.kill = true;
-                TweenManager.clearTween(object);
-            }
+            if (!object.multiTween && object.mathTween) object.mathTween.kill = true;
             TweenManager.addMathTween(self);
             object.mathTween = self;
             ease = Interpolation.convertEase(ease);

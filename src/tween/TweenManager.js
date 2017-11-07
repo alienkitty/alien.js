@@ -60,7 +60,7 @@ class TweenManager {
         };
 
         this.removeMathTween = tween => {
-            tweens.findAndRemove(tween);
+            tweens.remove(tween);
         };
     }
 
@@ -81,7 +81,7 @@ class TweenManager {
     }
 
     checkTransform(key) {
-        return this.TRANSFORMS.indexOf(key) > -1;
+        return ~this.TRANSFORMS.indexOf(key);
     }
 
     getEase(name) {

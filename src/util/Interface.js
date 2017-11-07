@@ -153,7 +153,7 @@ class Interface {
     }
 
     bg(src, x, y, repeat) {
-        if (src.indexOf('.') > -1 || src.indexOf('data:') > -1) this.element.style.backgroundImage = 'url(' + src + ')';
+        if (src.includes(['data:', '.'])) this.element.style.backgroundImage = 'url(' + src + ')';
         else this.element.style.backgroundColor = src;
         if (typeof x !== 'undefined') {
             x = typeof x === 'number' ? x + 'px' : x;
@@ -198,7 +198,7 @@ class Interface {
     }
 
     mask(src) {
-        this.element.style[Device.vendor('Mask')] = (src.indexOf('.') > -1 ? 'url(' + src + ')' : src) + ' no-repeat';
+        this.element.style[Device.vendor('Mask')] = (~src.indexOf('.') ? 'url(' + src + ')' : src) + ' no-repeat';
         this.element.style[Device.vendor('MaskSize')] = 'contain';
         return this;
     }
@@ -213,7 +213,7 @@ class Interface {
             if (!value) {
                 let style = this.element.style[props];
                 if (typeof style !== 'number') {
-                    if (style.indexOf('px') > -1) style = Number(style.slice(0, -2));
+                    if (~style.indexOf('px')) style = Number(style.slice(0, -2));
                     if (props === 'opacity') style = !isNaN(Number(this.element.style.opacity)) ? Number(this.element.style.opacity) : 1;
                 }
                 if (!style) style = 0;

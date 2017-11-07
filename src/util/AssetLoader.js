@@ -9,7 +9,6 @@
 import { EventManager } from './EventManager';
 import { Utils } from './Utils';
 import { Images } from './Images';
-import { XHR } from './XHR';
 
 class AssetLoader {
 
@@ -44,20 +43,22 @@ class AssetLoader {
                     /* eslint-disable no-undef */
                     if (typeof WebAudio !== 'undefined') {
                         if (!window.AudioContext) return assetLoaded();
-                        XHR.get(asset, contents => {
-                            WebAudio.createSound(key, contents, assetLoaded);
-                        }, 'arraybuffer');
+                        window.fetch(asset).then(e => {
+                            if (!e.ok) return;
+                            e.arrayBuffer().then(contents => {
+                                WebAudio.createSound(key, contents, assetLoaded);
+                            });
+                        });
                     } else {
                         return assetLoaded();
                     }
                     /* eslint-enable no-undef */
                     break;
                 case 'js':
-                    XHR.get(asset, script => {
-                        script = script.replace('use strict', '');
-                        eval.call(window, script);
-                        assetLoaded(asset);
-                    }, 'text');
+                    window.get(asset).then(script => {
+                        eval.call(window, script.replace('use strict', ''));
+                        assetLoaded();
+                    });
                     break;
                 default:
                     Images.createImg(asset, assetLoaded);

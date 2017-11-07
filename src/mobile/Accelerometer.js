@@ -69,7 +69,7 @@ class Accelerometer {
         }
 
         function updateOrientation(e) {
-            for (var key in e) if (key.toLowerCase().indexOf('heading') !== -1) self.heading = e[key];
+            for (var key in e) if (~key.toLowerCase().indexOf('heading')) self.heading = e[key];
             switch (window.orientation) {
                 case 0:
                     self.alpha = e.beta * self.toRadians;

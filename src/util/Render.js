@@ -4,7 +4,12 @@
  * @author Patrick Schroen / https://github.com/pschroen
  */
 
-if (!window.requestAnimationFrame) window.requestAnimationFrame = window.webkitRequestAnimationFrame || window.mozRequestAnimationFrame || window.oRequestAnimationFrame || window.msRequestAnimationFrame || (callback => Delayed(callback, 1000 / 60));
+if (!window.requestAnimationFrame) window.requestAnimationFrame = window.webkitRequestAnimationFrame || window.mozRequestAnimationFrame || window.oRequestAnimationFrame || window.msRequestAnimationFrame || (() => {
+    const start = Date.now();
+    return callback => Delayed(() => callback(Date.now() - start), 1000 / 60);
+})();
+
+window.Defer = window.requestAnimationFrame;
 
 class Render {
 
@@ -51,7 +56,7 @@ class Render {
 
         this.start = callback => {
             callback.frameCount = 0;
-            if (render.indexOf(callback) === -1) render.push(callback);
+            if (!~render.indexOf(callback)) render.push(callback);
             if (render.length && !rendering) {
                 rendering = true;
                 window.requestAnimationFrame(step);
@@ -60,7 +65,7 @@ class Render {
         };
 
         this.stop = callback => {
-            render.findAndRemove(callback);
+            render.remove(callback);
         };
     }
 }

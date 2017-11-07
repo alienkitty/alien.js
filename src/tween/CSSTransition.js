@@ -29,7 +29,7 @@ class CSSTransition {
                     transform[key] = props[key];
                     delete props[key];
                 } else {
-                    if (typeof props[key] === 'number' || key.indexOf('-') > -1) properties.push(key);
+                    if (typeof props[key] === 'number' || ~key.indexOf('-')) properties.push(key);
                 }
             }
             if (transform.use) properties.push(Device.transformProperty);
@@ -42,7 +42,7 @@ class CSSTransition {
             object.cssTween = self;
             let transition = '';
             for (let i = 0; i < properties.length; i++) transition += (transition.length ? ', ' : '') + properties[i] + ' ' + time + 'ms ' + TweenManager.getEase(ease) + ' ' + delay + 'ms';
-            Delayed(() => {
+            Defer(() => {
                 if (killed()) return;
                 object.element.style[Device.vendor('Transition')] = transition;
                 object.css(props);
@@ -52,7 +52,7 @@ class CSSTransition {
                     clear();
                     if (callback) callback();
                 }, time + delay);
-            }, 50);
+            });
         }
 
         function clear() {

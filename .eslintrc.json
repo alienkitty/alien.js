@@ -6,6 +6,7 @@
   "globals": {
     "getURL": true,
     "Delayed": true,
+    "Defer": true,
     "Global": true,
     "Config": true,
     "Events": true

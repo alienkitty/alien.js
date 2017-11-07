@@ -8,6 +8,8 @@
 
 /* global THREE */
 
+import { Images } from '../util/Images';
+
 class Utils3D {
 
     constructor() {
@@ -35,11 +37,10 @@ class Utils3D {
             return new THREE.WebGLRenderTarget(width, height, params);
         };
 
-        this.getTexture = path => {
-            if (!textures[path]) {
-                let img = new Image();
-                img.src = this.PATH + path;
-                let texture = new THREE.Texture(img);
+        this.getTexture = src => {
+            if (!textures[src]) {
+                let img = Images.createImg(this.PATH + src),
+                    texture = new THREE.Texture(img);
                 img.onload = () => {
                     texture.needsUpdate = true;
                     if (texture.onload) {
@@ -48,9 +49,9 @@ class Utils3D {
                     }
                     if (!THREE.Math.isPowerOfTwo(img.width * img.height)) texture.minFilter = THREE.LinearFilter;
                 };
-                textures[path] = texture;
+                textures[src] = texture;
             }
-            return textures[path];
+            return textures[src];
         };
 
         this.setInfinity = v => {
@@ -69,8 +70,7 @@ class Utils3D {
             if (!textures[path]) {
                 let images = [];
                 for (let i = 0; i < 6; i++) {
-                    let img = new Image();
-                    img.src = this.PATH + (Array.isArray(src) ? src[i] : src);
+                    let img = Images.createImg(this.PATH + (Array.isArray(src) ? src[i] : src));
                     images.push(img);
                     img.onload = () => {
                         textures[path].needsUpdate = true;

@@ -55,7 +55,7 @@ class Device {
 
     detect(array) {
         if (typeof array === 'string') array = [array];
-        for (let i = 0; i < array.length; i++) if (this.agent.indexOf(array[i]) > -1) return true;
+        for (let i = 0; i < array.length; i++) if (~this.agent.indexOf(array[i])) return true;
         return false;
     }
 

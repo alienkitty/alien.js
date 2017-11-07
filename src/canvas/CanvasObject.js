@@ -80,7 +80,7 @@ class CanvasObject {
     remove(display) {
         display.canvas = null;
         display.parent = null;
-        this.children.findAndRemove(display);
+        this.children.remove(display);
     }
 
     isMask() {

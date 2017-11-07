@@ -10,7 +10,7 @@ class Images {
 
     createImg(src, callback) {
         let img = new Image();
-        img.src = (Config.CDN || '') + src;
+        img.src = src;
         img.onload = () => {
             if (callback) callback();
         };

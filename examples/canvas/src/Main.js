@@ -33,14 +33,9 @@ class AlienKittyCanvas extends Interface {
         }
 
         function initImages() {
-            let promise = img => {
-                let p = Promise.create();
-                img.onload = p.resolve;
-                return p;
-            };
             alienkittyimg = Images.createImg('assets/images/alienkitty.svg');
             eyelidimg = Images.createImg('assets/images/alienkitty_eyelid.svg');
-            Promise.all([promise(alienkittyimg), promise(eyelidimg)]).then(finishSetup);
+            Promise.all([Images.promise(alienkittyimg), Images.promise(eyelidimg)]).then(finishSetup);
         }
 
         function finishSetup() {

@@ -115,7 +115,7 @@ class UIAboutCopy extends Interface {
 
         this.animateIn = () => {
             this.visible();
-            for (let i = 0; i < texts.length; i++) texts[i].css({ opacity: 0 }).transform({ z: -150 }).tween({ z: -50, x: -10, opacity: 1 }, 2000, 'easeOutCubic', i * 200);
+            for (let i = 0; i < texts.length; i++) texts[i].transform({ z: -150 }).css({ opacity: 0 }).tween({ z: -50, x: -10, opacity: 1 }, 2000, 'easeOutCubic', i * 200);
         };
 
         this.animateOut = () => {
@@ -182,7 +182,6 @@ class UIAbout extends Interface {
 
         function initHTML() {
             self.size('100%').enable3D(2000);
-            self.click(click);
             wrapper = self.create('.wrapper');
             wrapper.size(800, 650).center().enable3D();
             wrapper.rotationX = 0;
@@ -190,6 +189,7 @@ class UIAbout extends Interface {
             title = wrapper.initClass(UIAboutTitle);
             copy = wrapper.initClass(UIAboutCopy);
             icons = wrapper.initClass(UIAboutIcons);
+            self.interact(null, click);
         }
 
         function click() {
@@ -251,19 +251,17 @@ class Main {
 
         initStage();
         addListeners();
-        FontLoader.loadFonts(['Titillium Web', 'Lato', 'icomoon']).then(openAbout);
 
         function initStage() {
             Stage.size('100%');
-            Stage.interact(hover, click);
+            Stage.interact(null, click);
 
             Mouse.capture();
             Accelerometer.capture();
             Mouse.x = Stage.width / 2;
             Mouse.y = Stage.height / 2;
-        }
 
-        function hover() {
+            FontLoader.loadFonts(['Titillium Web', 'Lato', 'icomoon']).then(openAbout);
         }
 
         function click() {

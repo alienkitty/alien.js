@@ -9,6 +9,7 @@
 import { EventManager } from './EventManager';
 import { Utils } from './Utils';
 import { Images } from './Images';
+import { WebAudio } from './WebAudio';
 
 class AssetLoader {
 
@@ -40,19 +41,13 @@ class AssetLoader {
                 ext = split[split.length - 1].split('?')[0];
             switch (ext) {
                 case 'mp3':
-                    /* eslint-disable no-undef */
-                    if (typeof WebAudio !== 'undefined') {
-                        if (!window.AudioContext) return assetLoaded();
-                        window.fetch(asset).then(e => {
-                            if (!e.ok) return;
-                            e.arrayBuffer().then(contents => {
-                                WebAudio.createSound(key, contents, assetLoaded);
-                            });
+                    if (!window.AudioContext) return assetLoaded();
+                    window.fetch(asset).then(e => {
+                        if (!e.ok) return;
+                        e.arrayBuffer().then(contents => {
+                            WebAudio.createSound(key, contents, assetLoaded);
                         });
-                    } else {
-                        return assetLoaded();
-                    }
-                    /* eslint-enable no-undef */
+                    });
                     break;
                 case 'js':
                     window.get(asset).then(script => {

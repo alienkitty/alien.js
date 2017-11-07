@@ -10,6 +10,7 @@ import { Utils } from './Utils';
 import { Device } from './Device';
 import { TweenManager } from '../tween/TweenManager';
 import { CSSTransition } from '../tween/CSSTransition';
+import { SVGSymbol } from '../svg/SVGSymbol';
 
 class Interface {
 
@@ -311,12 +312,8 @@ class Interface {
     }
 
     svgSymbol(id, width, height) {
-        /* eslint-disable no-undef */
-        if (typeof SVGSymbol !== 'undefined') {
-            let config = SVGSymbol.getConfig(id);
-            this.html(`<svg viewBox="0 0 ${config.width} ${config.height}" width="${width}" height="${height}"><use xlink:href="#${config.id}" x="0" y="0"/></svg>`);
-        }
-        /* eslint-enable no-undef */
+        let config = SVGSymbol.getConfig(id);
+        this.html(`<svg viewBox="0 0 ${config.width} ${config.height}" width="${width}" height="${height}"><use xlink:href="#${config.id}" x="0" y="0"/></svg>`);
     }
 
     startRender(callback) {

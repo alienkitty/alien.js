@@ -10,7 +10,6 @@ import { Utils } from './Utils';
 import { Device } from './Device';
 import { TweenManager } from '../tween/TweenManager';
 import { CSSTransition } from '../tween/CSSTransition';
-import { SVGSymbol } from '../svg/SVGSymbol';
 
 class Interface {
 
@@ -309,11 +308,6 @@ class Interface {
         else if (value === '') this.element.removeAttribute(attr);
         else this.element.setAttribute(attr, value);
         return this;
-    }
-
-    svgSymbol(id, width, height) {
-        let config = SVGSymbol.getConfig(id);
-        this.html(`<svg viewBox="0 0 ${config.width} ${config.height}" width="${width}" height="${height}"><use xlink:href="#${config.id}" x="0" y="0"/></svg>`);
     }
 
     startRender(callback) {

@@ -4,83 +4,25 @@
  * @author Patrick Schroen / https://github.com/pschroen
  */
 
-import { DynamicObject } from './DynamicObject';
-import { Device } from './Device';
-
 class Utils {
 
-    rand(min, max) {
-        return (new DynamicObject({ v: min })).lerp({ v: max }, Math.random()).v;
-    }
-
-    doRandom(min, max, precision) {
-        if (typeof precision === 'number') {
-            let p = Math.pow(10, precision);
-            return Math.round(this.rand(min, max) * p) / p;
-        } else {
-            return Math.round(this.rand(min - 0.5, max + 0.5));
-        }
+    random(min, max, precision = 0) {
+        if (typeof min === 'undefined') return Math.random();
+        if (min === max) return min;
+        min = min || 0;
+        max = max || 1;
+        let p = Math.pow(10, precision);
+        return Math.round((min + Math.random() * (max - min)) * p) / p;
     }
 
     headsTails(heads, tails) {
-        return !this.doRandom(0, 1) ? heads : tails;
+        return this.random(0, 1) ? tails : heads;
     }
 
-    toDegrees(rad) {
-        return rad * (180 / Math.PI);
-    }
-
-    toRadians(deg) {
-        return deg * (Math.PI / 180);
-    }
-
-    findDistance(p1, p2) {
-        let dx = p2.x - p1.x,
-            dy = p2.y - p1.y;
-        return Math.sqrt(dx * dx + dy * dy);
-    }
-
-    timestamp() {
-        return (Date.now() + this.doRandom(0, 99999)).toString();
-    }
-
-    pad(number) {
-        return number < 10 ? '0' + number : number;
-    }
-
-    touchEvent(e) {
-        let touchEvent = {};
-        touchEvent.x = 0;
-        touchEvent.y = 0;
-        if (!e) return touchEvent;
-        if (Device.mobile && (e.touches || e.changedTouches)) {
-            if (e.touches.length) {
-                touchEvent.x = e.touches[0].pageX;
-                touchEvent.y = e.touches[0].pageY;
-            } else {
-                touchEvent.x = e.changedTouches[0].pageX;
-                touchEvent.y = e.changedTouches[0].pageY;
-            }
-        } else {
-            touchEvent.x = e.pageX;
-            touchEvent.y = e.pageY;
-        }
-        return touchEvent;
-    }
-
-    clamp(num, min, max) {
-        return Math.min(Math.max(num, min), max);
-    }
-
-    constrain(num, min, max) {
-        return Math.min(Math.max(num, Math.min(min, max)), Math.max(min, max));
-    }
-
-    convertRange(oldValue, oldMin, oldMax, newMin, newMax, constrain) {
-        let oldRange = oldMax - oldMin,
-            newRange = newMax - newMin,
-            newValue = (oldValue - oldMin) * newRange / oldRange + newMin;
-        return constrain ? this.constrain(newValue, newMin, newMax) : newValue;
+    queryString(key) {
+        let str = decodeURI(window.location.search.replace(new RegExp('^(?:.*[&\\?]' + encodeURI(key).replace(/[.+*]/g, '\\$&') + '(?:\\=([^&]*))?)?.*$', 'i'), '$1'));
+        if (!str.length || str === '0' || str === 'false') return false;
+        return str;
     }
 
     nullObject(object) {
@@ -98,18 +40,14 @@ class Utils {
         return object;
     }
 
-    cloneArray(array) {
-        return array.slice(0);
-    }
-
     toArray(object) {
         return Object.keys(object).map(key => {
             return object[key];
         });
     }
 
-    queryString(key) {
-        return decodeURI(window.location.search.replace(new RegExp('^(?:.*[&\\?]' + encodeURI(key).replace(/[.+*]/g, '\\$&') + '(?:\\=([^&]*))?)?.*$', 'i'), '$1'));
+    cloneArray(array) {
+        return array.slice(0);
     }
 
     basename(path) {
@@ -120,6 +58,14 @@ class Utils {
         return window.btoa(encodeURIComponent(str).replace(/%([0-9A-F]{2})/g, (match, p1) => {
             return String.fromCharCode('0x' + p1);
         }));
+    }
+
+    timestamp() {
+        return (Date.now() + this.random(0, 99999)).toString();
+    }
+
+    pad(number) {
+        return number < 10 ? '0' + number : number;
     }
 }
 

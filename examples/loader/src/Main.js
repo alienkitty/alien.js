@@ -44,7 +44,7 @@ class AlienKitty extends Interface {
         }
 
         function blink() {
-            Delayed(Utils.headsTails(blink1, blink2), Utils.doRandom(0, 10000));
+            Delayed(Utils.headsTails(blink1, blink2), Utils.random(0, 10000));
         }
 
         function blink1() {
@@ -108,8 +108,8 @@ class Progress extends Interface {
                 x = size / 2,
                 y = size / 2,
                 radius = size * 0.4,
-                startAngle = Utils.toRadians(-90),
-                endAngle = Utils.toRadians(-90) + Utils.toRadians(progress * 360);
+                startAngle = Math.radians(-90),
+                endAngle = Math.radians(-90) + Math.radians(progress * 360);
             context.beginPath();
             context.arc(x, y, radius, startAngle, endAngle, false);
             context.strokeStyle = Config.UI_COLOR;

@@ -62,7 +62,7 @@ class CanvasGraphics extends CanvasObject {
             endAngle -= 90;
             startAngle -= 90;
             draw.push(['beginPath']);
-            draw.push(['arc', x, y, radius, Utils.toRadians(startAngle), Utils.toRadians(endAngle), counterclockwise]);
+            draw.push(['arc', x, y, radius, Math.radians(startAngle), Math.radians(endAngle), counterclockwise]);
         };
 
         this.quadraticCurveTo = (cpx, cpy, x, y) => {

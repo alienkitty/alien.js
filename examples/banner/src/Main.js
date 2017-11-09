@@ -68,7 +68,7 @@ class Main {
         }
 
         function blink() {
-            Delayed(Utils.headsTails(blink1, blink2), Utils.doRandom(0, 10000));
+            Delayed(Utils.headsTails(blink1, blink2), Utils.random(0, 10000));
         }
 
         function blink1() {

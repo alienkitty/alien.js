@@ -4,7 +4,7 @@
  * @author Patrick Schroen / https://github.com/pschroen
  */
 
-import { Stage, Interface, Device, Mouse, Accelerometer, Utils, FontLoader, TweenManager } from '../alien.js/src/Alien';
+import { Stage, Interface, Device, Mouse, Accelerometer, FontLoader, TweenManager } from '../alien.js/src/Alien';
 
 Config.UI_COLOR = 'white';
 Config.UI_OFFSET = Device.phone ? 20 : 35;
@@ -201,8 +201,8 @@ class UIAbout extends Interface {
         }
 
         function resizeHandler() {
-            let scaleX = Utils.convertRange(Stage.width, 0, 1700, 0, 1.1, true),
-                scaleY = Utils.convertRange(Stage.height, 0, 1500, 0, 1.1, true),
+            let scaleX = Math.range(Stage.width, 0, 1700, 0, 1.1, true),
+                scaleY = Math.range(Stage.height, 0, 1500, 0, 1.1, true),
                 scale = Math.min(scaleX, scaleY);
             if (Device.mobile) scale = Math.min(1, scale * (Stage.width > Stage.height ? 1.5 : 1.8));
             wrapper.scale = scale;
@@ -216,11 +216,11 @@ class UIAbout extends Interface {
         function loop() {
             // UI rotation
             if (Device.mobile) {
-                wrapper.rotationX += (Utils.convertRange(Accelerometer.y, -10, 10, -tilt.x, tilt.x) - wrapper.rotationX) * tilt.ease;
-                wrapper.rotationY += (Utils.convertRange(Accelerometer.x, -5, 5, tilt.y, -tilt.y) - wrapper.rotationY) * tilt.ease;
+                wrapper.rotationX += (Math.range(Accelerometer.y, -10, 10, -tilt.x, tilt.x) - wrapper.rotationX) * tilt.ease;
+                wrapper.rotationY += (Math.range(Accelerometer.x, -5, 5, tilt.y, -tilt.y) - wrapper.rotationY) * tilt.ease;
             } else {
-                wrapper.rotationX += (Utils.convertRange(Mouse.y, 0, Stage.height, -tilt.x, tilt.x) - wrapper.rotationX) * tilt.ease;
-                wrapper.rotationY += (Utils.convertRange(Mouse.x, 0, Stage.width, tilt.y, -tilt.y) - wrapper.rotationY) * tilt.ease;
+                wrapper.rotationX += (Math.range(Mouse.y, 0, Stage.height, -tilt.x, tilt.x) - wrapper.rotationX) * tilt.ease;
+                wrapper.rotationY += (Math.range(Mouse.x, 0, Stage.width, tilt.y, -tilt.y) - wrapper.rotationY) * tilt.ease;
             }
             wrapper.transform();
         }

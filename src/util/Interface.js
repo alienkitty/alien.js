@@ -384,30 +384,61 @@ class Interface {
     }
 
     touchClick(hover, click) {
+        let self = this;
         let time, move,
             start = {},
             touch = {};
-        let touchMove = e => {
-            touch = Utils.touchEvent(e);
-            move = Utils.findDistance(start, touch) > 5;
-        };
-        let setTouch = e => {
-            let touch = Utils.touchEvent(e);
+
+        function touchEvent(e) {
+            let touchEvent = {};
+            touchEvent.x = 0;
+            touchEvent.y = 0;
+            if (!e) return touchEvent;
+            if (Device.mobile && (e.touches || e.changedTouches)) {
+                if (e.touches.length) {
+                    touchEvent.x = e.touches[0].pageX;
+                    touchEvent.y = e.touches[0].pageY;
+                } else {
+                    touchEvent.x = e.changedTouches[0].pageX;
+                    touchEvent.y = e.changedTouches[0].pageY;
+                }
+            } else {
+                touchEvent.x = e.pageX;
+                touchEvent.y = e.pageY;
+            }
+            return touchEvent;
+        }
+
+        function findDistance(p1, p2) {
+            let dx = p2.x - p1.x,
+                dy = p2.y - p1.y;
+            return Math.sqrt(dx * dx + dy * dy);
+        }
+
+        function touchMove(e) {
+            touch = touchEvent(e);
+            move = findDistance(start, touch) > 5;
+        }
+
+        function setTouch(e) {
+            let touch = touchEvent(e);
             e.touchX = touch.x;
             e.touchY = touch.y;
             start.x = e.touchX;
             start.y = e.touchY;
-        };
-        let touchStart = e => {
+        }
+
+        function touchStart(e) {
             time = Date.now();
             e.action = 'over';
-            e.object = this.element.className === 'hit' ? this.parent : this;
+            e.object = self.element.className === 'hit' ? self.parent : self;
             setTouch(e);
             if (hover && !move) hover(e);
-        };
-        let touchEnd = e => {
+        }
+
+        function touchEnd(e) {
             let t = Date.now();
-            e.object = this.element.className === 'hit' ? this.parent : this;
+            e.object = self.element.className === 'hit' ? self.parent : self;
             setTouch(e);
             if (time && t - time < 750) {
                 if (click && !move) {
@@ -420,7 +451,8 @@ class Interface {
                 hover(e);
             }
             move = false;
-        };
+        }
+
         this.element.addEventListener('touchmove', touchMove, { passive: true });
         this.element.addEventListener('touchstart', touchStart, { passive: true });
         this.element.addEventListener('touchend', touchEnd, { passive: true });

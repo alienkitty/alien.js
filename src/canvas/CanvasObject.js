@@ -31,7 +31,7 @@ class CanvasObject {
     }
 
     updateValues() {
-        this.values.setTRSA(this.x, this.y, Utils.toRadians(this.rotation), this.scaleX || this.scale, this.scaleY || this.scale, this.opacity);
+        this.values.setTRSA(this.x, this.y, Math.radians(this.rotation), this.scaleX || this.scale, this.scaleY || this.scale, this.opacity);
         if (this.parent.values) this.values.calculate(this.parent.values);
         if (this.parent.styles) this.styles.calculateStyle(this.parent.styles);
     }

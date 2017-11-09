@@ -5,7 +5,6 @@
  */
 
 import { Interpolation } from '../tween/Interpolation';
-import { Utils } from './Utils';
 
 class Vector2 {
 
@@ -124,7 +123,7 @@ class Vector2 {
         if (!this.calc) this.calc = new Vector2();
         this.calc.subVectors(this, v);
         let f = Interpolation.convertEase(ease),
-            a = f(Utils.clamp(Utils.convertRange(this.calc.lengthSq(), 0, dist * dist, 1, 0), 0, 1) * (alpha / 10));
+            a = f(Math.clamp(Math.range(this.calc.lengthSq(), 0, dist * dist, 1, 0), 0, 1) * (alpha / 10));
         return this.lerp(v, a);
     }
 

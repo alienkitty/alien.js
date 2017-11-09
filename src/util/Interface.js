@@ -297,7 +297,7 @@ class Interface {
         return this;
     }
 
-    stopTween() {
+    clearTween() {
         if (this.cssTween) this.cssTween.stop();
         if (this.mathTween) this.mathTween.stop();
         return this;

@@ -182,6 +182,7 @@ class UIAbout extends Interface {
 
         function initHTML() {
             self.size('100%').enable3D(2000);
+            self.click(click);
             wrapper = self.create('.wrapper');
             wrapper.size(800, 650).center().enable3D();
             wrapper.rotationX = 0;
@@ -189,7 +190,6 @@ class UIAbout extends Interface {
             title = wrapper.initClass(UIAboutTitle);
             copy = wrapper.initClass(UIAboutCopy);
             icons = wrapper.initClass(UIAboutIcons);
-            self.interact(null, click);
         }
 
         function click() {

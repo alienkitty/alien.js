@@ -9,8 +9,6 @@ if (!window.requestAnimationFrame) window.requestAnimationFrame = window.webkitR
     return callback => Delayed(() => callback(Date.now() - start), 1000 / 60);
 })();
 
-window.Defer = window.requestAnimationFrame;
-
 class Render {
 
     constructor() {

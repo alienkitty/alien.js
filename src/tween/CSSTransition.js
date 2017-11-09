@@ -42,7 +42,7 @@ class CSSTransition {
             object.cssTween = self;
             let transition = '';
             for (let i = 0; i < properties.length; i++) transition += (transition.length ? ', ' : '') + properties[i] + ' ' + time + 'ms ' + TweenManager.getEase(ease) + ' ' + delay + 'ms';
-            Defer(() => {
+            Delayed(() => {
                 if (killed()) return;
                 object.element.style[Device.vendor('Transition')] = transition;
                 object.css(props);
@@ -52,7 +52,7 @@ class CSSTransition {
                     clear();
                     if (callback) callback();
                 }, time + delay);
-            });
+            }, 50);
         }
 
         function clear() {

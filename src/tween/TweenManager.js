@@ -80,24 +80,6 @@ class TweenManager {
         return promise || tween;
     }
 
-    checkTransform(key) {
-        return ~this.TRANSFORMS.indexOf(key);
-    }
-
-    getEase(name) {
-        return this.CSS_EASES[name] || this.CSS_EASES.easeOutCubic;
-    }
-
-    getAllTransforms(object) {
-        let obj = {};
-        for (let i = this.TRANSFORMS.length - 1; i > -1; i--) {
-            let key = this.TRANSFORMS[i],
-                val = object[key];
-            if (val !== 0 && typeof val === 'number') obj[key] = val;
-        }
-        return obj;
-    }
-
     parseTransform(props) {
         let transforms = '';
         if (typeof props.x !== 'undefined' || typeof props.y !== 'undefined' || typeof props.z !== 'undefined') {
@@ -124,6 +106,24 @@ class TweenManager {
         if (typeof props.skewY !== 'undefined') transforms += 'skewY(' + props.skewY + 'deg)';
         if (typeof props.perspective !== 'undefined') transforms += 'perspective(' + props.perspective + 'px)';
         return transforms;
+    }
+
+    isTransform(key) {
+        return ~this.TRANSFORMS.indexOf(key);
+    }
+
+    getAllTransforms(object) {
+        let obj = {};
+        for (let i = this.TRANSFORMS.length - 1; i > -1; i--) {
+            let key = this.TRANSFORMS[i],
+                val = object[key];
+            if (val !== 0 && typeof val === 'number') obj[key] = val;
+        }
+        return obj;
+    }
+
+    getEase(name) {
+        return this.CSS_EASES[name] || this.CSS_EASES.easeOutCubic;
     }
 }
 

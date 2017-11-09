@@ -239,6 +239,19 @@ class Interface {
         return this;
     }
 
+    willChange(props) {
+        if (typeof props === 'boolean') this.willChangeLock = props;
+        else if (this.willChangeLock) return;
+        let string = typeof props === 'string';
+        if (props) this.element.style['will-change'] = string ? props : Device.transformProperty + ', opacity';
+        else this.element.style['will-change'] = '';
+    }
+
+    backfaceVisibility(visible) {
+        if (visible) this.element.style[Device.vendor('BackfaceVisibility')] = 'visible';
+        else this.element.style[Device.vendor('BackfaceVisibility')] = 'hidden';
+    }
+
     enable3D(perspective, x, y) {
         this.element.style[Device.vendor('TransformStyle')] = 'preserve-3d';
         if (perspective) this.element.style[Device.vendor('Perspective')] = perspective + 'px';

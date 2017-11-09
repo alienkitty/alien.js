@@ -12,8 +12,7 @@ class CSSTransition {
 
     constructor(object, props, time, ease, delay, callback) {
         let self = this;
-        let transform = TweenManager.getAllTransforms(object),
-            properties = [];
+        let transformProps, transitionProps;
 
         initProperties();
         initCSSTween();
@@ -23,47 +22,69 @@ class CSSTransition {
         }
 
         function initProperties() {
+            let transform = TweenManager.getAllTransforms(object),
+                properties = [];
             for (let key in props) {
-                if (TweenManager.checkTransform(key)) {
+                if (TweenManager.isTransform(key)) {
                     transform.use = true;
                     transform[key] = props[key];
                     delete props[key];
-                } else {
-                    if (typeof props[key] === 'number' || ~key.indexOf('-')) properties.push(key);
+                } else if (typeof props[key] === 'number' || ~key.indexOf('-')) {
+                    properties.push(key);
                 }
             }
-            if (transform.use) properties.push(Device.transformProperty);
-            delete transform.use;
+            if (transform.use) {
+                properties.push(Device.transformProperty);
+                delete transform.use;
+            }
+            transformProps = transform;
+            transitionProps = properties;
         }
 
         function initCSSTween() {
             if (killed()) return;
             if (object.cssTween) object.cssTween.kill = true;
             object.cssTween = self;
-            let transition = '';
-            for (let i = 0; i < properties.length; i++) transition += (transition.length ? ', ' : '') + properties[i] + ' ' + time + 'ms ' + TweenManager.getEase(ease) + ' ' + delay + 'ms';
+            let strings = buildStrings(time, ease, delay);
+            object.willChange(strings.props);
             Delayed(() => {
                 if (killed()) return;
-                object.element.style[Device.vendor('Transition')] = transition;
+                object.element.style[Device.vendor('Transition')] = strings.transition;
                 object.css(props);
-                object.transform(transform);
+                object.transform(transformProps);
                 Delayed(() => {
                     if (killed()) return;
-                    clear();
+                    clearCSSTween();
                     if (callback) callback();
                 }, time + delay);
             }, 50);
         }
 
-        function clear() {
+        function buildStrings(time, ease, delay) {
+            let props = '',
+                transition = '';
+            for (let i = 0; i < transitionProps.length; i++) {
+                let transitionProp = transitionProps[i];
+                props += (props.length ? ', ' : '') + transitionProp;
+                transition += (transition.length ? ', ' : '') + transitionProp + ' ' + time + 'ms ' + TweenManager.getEase(ease) + ' ' + delay + 'ms';
+            }
+            return {
+                props,
+                transition
+            };
+        }
+
+        function clearCSSTween() {
             if (killed()) return;
             self.kill = true;
             object.element.style[Device.vendor('Transition')] = '';
             object.cssTween = null;
+            object.willChange(null);
+            object = props = null;
             Utils.nullObject(self);
         }
 
-        this.stop = () => clear();
+        this.stop = clearCSSTween;
     }
 }
 

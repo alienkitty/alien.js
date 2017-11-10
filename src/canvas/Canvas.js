@@ -5,6 +5,7 @@
  */
 
 import { Interface } from '../util/Interface';
+import { Render } from '../util/Render';
 
 class Canvas {
 
@@ -59,6 +60,14 @@ class Canvas {
     destroy() {
         for (let i = 0; i < this.children.length; i++) this.children[i].destroy();
         return this.object = this.object.destroy();
+    }
+
+    startRender() {
+        Render.start(this.render);
+    }
+
+    stopRender() {
+        Render.stop(this.render);
     }
 
     getImageData(x = 0, y = 0, w = this.element.width, h = this.element.height) {

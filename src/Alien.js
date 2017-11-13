@@ -19,6 +19,7 @@ export { Vector3 } from './util/Vector3';
 export { Utils } from './util/Utils';
 export { Device } from './util/Device';
 export { Mouse } from './util/Mouse';
+export { Interaction } from './util/Interaction';
 export { Accelerometer } from './mobile/Accelerometer';
 export { TweenManager } from './tween/TweenManager';
 export { Interpolation } from './tween/Interpolation';

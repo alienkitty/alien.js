@@ -83,7 +83,6 @@ class Progress extends Interface {
     constructor() {
         super('Progress');
         let self = this;
-        this.progress = 0;
         let canvas, context,
             size = 90;
 
@@ -93,6 +92,7 @@ class Progress extends Interface {
 
         function initHTML() {
             self.size(size, size).center();
+            self.progress = 0;
         }
 
         function initCanvas() {

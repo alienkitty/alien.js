@@ -14,6 +14,7 @@ if (!window.requestAnimationFrame) window.requestAnimationFrame = window.webkitR
 class Render {
 
     constructor() {
+        let self = this;
         this.TIME = Date.now();
         let last,
             render = [],
@@ -21,11 +22,11 @@ class Render {
             timeSinceRender = 0,
             rendering = false;
 
-        let focus = e => {
+        function focus(e) {
             if (e.type === 'focus') last = Date.now();
-        };
+        }
 
-        let step = () => {
+        function step() {
             let t = Date.now(),
                 timeSinceLoad = t - time,
                 diff = 0,
@@ -35,7 +36,7 @@ class Render {
                 fps = 1000 / diff;
             }
             last = t;
-            this.TIME = t;
+            self.TIME = t;
             for (let i = render.length - 1; i > -1; i--) {
                 let callback = render[i];
                 if (!callback) continue;
@@ -52,7 +53,7 @@ class Render {
                 rendering = false;
                 window.events.remove(Events.BROWSER_FOCUS, focus);
             }
-        };
+        }
 
         this.start = callback => {
             callback.frameCount = 0;

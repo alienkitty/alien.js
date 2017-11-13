@@ -69,7 +69,7 @@ class Accelerometer {
         }
 
         function updateOrientation(e) {
-            for (var key in e) if (~key.toLowerCase().indexOf('heading')) self.heading = e[key];
+            for (let key in e) if (~key.toLowerCase().indexOf('heading')) self.heading = e[key];
             switch (window.orientation) {
                 case 0:
                     self.alpha = e.beta * self.toRadians;
@@ -126,9 +126,9 @@ class Accelerometer {
 
         this.stop = () => {
             this.active = false;
-            this.x = this.y = this.z = 0;
             window.removeEventListener('devicemotion', updateAccel);
             window.removeEventListener('deviceorientation', updateOrientation);
+            this.x = this.y = this.z = 0;
         };
     }
 }

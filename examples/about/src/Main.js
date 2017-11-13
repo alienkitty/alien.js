@@ -258,8 +258,6 @@ class Main {
 
             Mouse.capture();
             Accelerometer.capture();
-            Mouse.x = Stage.width / 2;
-            Mouse.y = Stage.height / 2;
 
             FontLoader.loadFonts(['Titillium Web', 'Lato', 'icomoon']).then(openAbout);
         }

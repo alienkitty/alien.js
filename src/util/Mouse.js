@@ -1,46 +1,41 @@
 /**
- * Mouse helper class.
+ * Mouse interaction.
  *
  * @author Patrick Schroen / https://github.com/pschroen
  */
 
-import { Device } from './Device';
+import { Interaction } from './Interaction';
+import { Stage } from '../view/Stage';
 
 class Mouse {
 
     constructor() {
+        let self = this;
         this.x = 0;
         this.y = 0;
 
-        let moved = e => {
-            this.x = e.x;
-            this.y = e.y;
-        };
+        function update(e) {
+            self.x = e.x;
+            self.y = e.y;
+        }
 
         this.capture = () => {
             if (!this.active) {
                 this.active = true;
-                this.x = 0;
-                this.y = 0;
-                if (Device.mobile) {
-                    window.addEventListener('touchmove', moved);
-                    window.addEventListener('touchstart', moved);
-                } else {
-                    window.addEventListener('mousemove', moved);
-                }
+                this.input = new Interaction();
+                this.input.events.add(Interaction.START, update);
+                this.input.events.add(Interaction.MOVE, update);
+                this.x = Stage.width / 2;
+                this.y = Stage.height / 2;
             }
         };
 
         this.stop = () => {
             this.active = false;
-            this.x = 0;
-            this.y = 0;
-            if (Device.mobile) {
-                window.removeEventListener('touchmove', moved);
-                window.removeEventListener('touchstart', moved);
-            } else {
-                window.removeEventListener('mousemove', moved);
-            }
+            this.input.events.remove(Interaction.START, update);
+            this.input.events.remove(Interaction.MOVE, update);
+            this.input = null;
+            this.x = this.y = 0;
         };
     }
 }

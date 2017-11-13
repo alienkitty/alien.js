@@ -42,14 +42,14 @@ class TweenManager {
         let tweens = [],
             rendering = false;
 
-        let updateTweens = t => {
+        function updateTweens(t) {
             if (tweens.length) {
                 for (let i = 0; i < tweens.length; i++) tweens[i].update(t);
             } else {
                 rendering = false;
                 Render.stop(updateTweens);
             }
-        };
+        }
 
         this.addMathTween = tween => {
             tweens.push(tween);

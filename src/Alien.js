@@ -13,7 +13,6 @@ export { Render } from './util/Render';
 export { Utils3D } from './three/Utils3D';
 export { ScreenProjection } from './three/ScreenProjection';
 export { ObjectPool } from './util/ObjectPool';
-export { DynamicObject } from './util/DynamicObject';
 export { Vector2 } from './util/Vector2';
 export { Vector3 } from './util/Vector3';
 export { Utils } from './util/Utils';

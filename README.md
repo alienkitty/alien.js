@@ -69,7 +69,7 @@ new Main();
 ### Example Singleton design pattern
 
 ```js
-import { Stage, Interface, Canvas } from '../alien.js/src/Alien';
+import { Events, Stage, Interface, Canvas } from '../alien.js/src/Alien';
 
 class CanvasLayer extends Interface {
 

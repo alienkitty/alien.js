@@ -7,8 +7,7 @@
     "getURL": true,
     "Delayed": true,
     "Global": true,
-    "Config": true,
-    "Events": true
+    "Config": true
   },
   "extends": "eslint:recommended",
   "parserOptions": {

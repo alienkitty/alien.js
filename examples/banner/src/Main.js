@@ -4,7 +4,7 @@
  * @author Patrick Schroen / https://github.com/pschroen
  */
 
-import { Stage, Utils, AssetLoader } from '../alien.js/src/Alien';
+import { Events, Stage, Utils, AssetLoader } from '../alien.js/src/Alien';
 
 Config.ASSETS = [
     'assets/alienkitty.svg',

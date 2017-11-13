@@ -6,7 +6,7 @@
  * @author Patrick Schroen / https://github.com/pschroen
  */
 
-import { EventManager } from './EventManager';
+import { Events } from './Events';
 import { Utils } from './Utils';
 import { Images } from './Images';
 import { WebAudio } from './WebAudio';
@@ -26,7 +26,7 @@ class AssetLoader {
             })();
         }
         let self = this;
-        this.events = new EventManager();
+        this.events = new Events();
         this.CDN = Config.CDN || '';
         let total = Object.keys(assets).length,
             loaded = 0,

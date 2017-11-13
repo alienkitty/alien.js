@@ -4,7 +4,7 @@
  * @author Patrick Schroen / https://github.com/pschroen
  */
 
-import { Stage, Interface, Device, Mouse, Accelerometer, FontLoader, TweenManager } from '../alien.js/src/Alien';
+import { Events, Stage, Interface, Device, Mouse, Accelerometer, FontLoader, TweenManager } from '../alien.js/src/Alien';
 
 Config.UI_COLOR = 'white';
 Config.UI_OFFSET = Device.phone ? 20 : 35;

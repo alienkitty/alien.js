@@ -4,14 +4,14 @@
  * @author Patrick Schroen / https://github.com/pschroen
  */
 
-import { EventManager } from './EventManager';
+import { Events } from './Events';
 import { Stage } from '../view/Stage';
 
 class FontLoader {
 
     constructor(fonts, callback) {
         let self = this;
-        this.events = new EventManager();
+        this.events = new Events();
         let element;
 
         initFonts();

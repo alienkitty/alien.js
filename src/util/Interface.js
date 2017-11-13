@@ -4,7 +4,7 @@
  * @author Patrick Schroen / https://github.com/pschroen
  */
 
-import { EventManager } from './EventManager';
+import { Events } from './Events';
 import { Render } from './Render';
 import { Utils } from './Utils';
 import { Device } from './Device';
@@ -14,7 +14,7 @@ import { CSSTransition } from '../tween/CSSTransition';
 class Interface {
 
     constructor(name, type = 'div', detached) {
-        this.events = new EventManager();
+        this.events = new Events();
         if (typeof name !== 'string') {
             this.element = name;
         } else {

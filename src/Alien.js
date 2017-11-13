@@ -4,7 +4,7 @@
  * @author Patrick Schroen / https://github.com/pschroen
  */
 
-export { EventManager } from './util/EventManager';
+export { Events } from './util/Events';
 export { Interface } from './util/Interface';
 export { Canvas } from './canvas/Canvas';
 export { CanvasGraphics } from './canvas/CanvasGraphics';

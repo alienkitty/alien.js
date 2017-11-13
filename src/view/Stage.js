@@ -4,6 +4,7 @@
  * @author Patrick Schroen / https://github.com/pschroen
  */
 
+import { Events } from '../util/Events';
 import { Interface } from '../util/Interface';
 
 class Stage extends Interface {

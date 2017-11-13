@@ -6,23 +6,7 @@
 
 import { Utils } from './Utils';
 
-window.Events = {
-    BROWSER_FOCUS:  'browser_focus',
-    KEYBOARD_PRESS: 'keyboard_press',
-    KEYBOARD_DOWN:  'keyboard_down',
-    KEYBOARD_UP:    'keyboard_up',
-    RESIZE:         'resize',
-    COMPLETE:       'complete',
-    PROGRESS:       'progress',
-    UPDATE:         'update',
-    LOADED:         'loaded',
-    ERROR:          'error',
-    READY:          'ready',
-    HOVER:          'hover',
-    CLICK:          'click'
-};
-
-class EventManager {
+class Events {
 
     constructor() {
         let events = [];
@@ -56,6 +40,22 @@ class EventManager {
     }
 }
 
-window.events = new EventManager();
+(() => {
+    Events.BROWSER_FOCUS  = 'browser_focus';
+    Events.KEYBOARD_PRESS = 'keyboard_press';
+    Events.KEYBOARD_DOWN  = 'keyboard_down';
+    Events.KEYBOARD_UP    = 'keyboard_up';
+    Events.RESIZE         = 'resize';
+    Events.COMPLETE       = 'complete';
+    Events.PROGRESS       = 'progress';
+    Events.UPDATE         = 'update';
+    Events.LOADED         = 'loaded';
+    Events.ERROR          = 'error';
+    Events.READY          = 'ready';
+    Events.HOVER          = 'hover';
+    Events.CLICK          = 'click';
+})();
 
-export { EventManager };
+window.events = new Events();
+
+export { Events };

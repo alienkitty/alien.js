@@ -175,32 +175,36 @@ class UIAbout extends Interface {
             };
 
         initHTML();
+        initViews();
         addListeners();
-        resizeHandler();
         this.startRender(loop);
-        Delayed(() => this.animateIn(), 300);
+        this.delayedCall(() => this.animateIn(), 300);
 
         function initHTML() {
             self.size('100%').enable3D(2000);
-            self.click(click);
             wrapper = self.create('.wrapper');
             wrapper.size(800, 650).center().enable3D();
             wrapper.rotationX = 0;
             wrapper.rotationY = 0;
+        }
+
+        function initViews() {
             title = wrapper.initClass(UIAboutTitle);
             copy = wrapper.initClass(UIAboutCopy);
             icons = wrapper.initClass(UIAboutIcons);
+        }
+
+        function addListeners() {
+            self.click(click);
+            Stage.events.add(Events.RESIZE, resize);
+            resize();
         }
 
         function click() {
             Stage.events.fire(Events.CLOSE_ABOUT);
         }
 
-        function addListeners() {
-            Stage.events.add(Events.RESIZE, resizeHandler);
-        }
-
-        function resizeHandler() {
+        function resize() {
             let scaleX = Math.range(Stage.width, 0, 1700, 0, 1.1, true),
                 scaleY = Math.range(Stage.height, 0, 1500, 0, 1.1, true),
                 scale = Math.min(scaleX, scaleY);
@@ -226,9 +230,9 @@ class UIAbout extends Interface {
         }
 
         this.animateIn = () => {
-            Delayed(title.animateIn, 200);
-            Delayed(copy.animateIn, 600);
-            Delayed(icons.animateIn, 1300);
+            this.delayedCall(title.animateIn, 200);
+            this.delayedCall(copy.animateIn, 600);
+            this.delayedCall(icons.animateIn, 1300);
             // Use math tween with UI rotation
             wrapper.z = -300;
             TweenManager.tween(wrapper, { z: 0 }, 7000, 'easeOutCubic');
@@ -239,7 +243,7 @@ class UIAbout extends Interface {
             title.animateOut();
             copy.animateOut();
             icons.animateOut();
-            Delayed(callback, 1000);
+            this.delayedCall(callback, 1000);
         };
     }
 }

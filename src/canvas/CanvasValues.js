@@ -12,6 +12,34 @@ class CanvasValues {
         else this.styled = false;
     }
 
+    setTRSA(x, y, r, sx, sy, a) {
+        let m = this.data;
+        m[0] = x;
+        m[1] = y;
+        m[2] = r;
+        m[3] = sx;
+        m[4] = sy;
+        m[5] = a;
+    }
+
+    calculate(values) {
+        let v = values.data,
+            m = this.data;
+        m[0] = m[0] + v[0];
+        m[1] = m[1] + v[1];
+        m[2] = m[2] + v[2];
+        m[3] = m[3] * v[3];
+        m[4] = m[4] * v[4];
+        m[5] = m[5] * v[5];
+    }
+
+    calculateStyle(parent) {
+        if (!parent.styled) return false;
+        this.styled = true;
+        let values = parent.values;
+        for (let key in values) if (!this.styles[key]) this.styles[key] = values[key];
+    }
+
     set shadowOffsetX(val) {
         this.styled = true;
         this.styles.shadowOffsetX = val;
@@ -50,34 +78,6 @@ class CanvasValues {
 
     get values() {
         return this.styles;
-    }
-
-    setTRSA(x, y, r, sx, sy, a) {
-        let m = this.data;
-        m[0] = x;
-        m[1] = y;
-        m[2] = r;
-        m[3] = sx;
-        m[4] = sy;
-        m[5] = a;
-    }
-
-    calculate(values) {
-        let v = values.data,
-            m = this.data;
-        m[0] = m[0] + v[0];
-        m[1] = m[1] + v[1];
-        m[2] = m[2] + v[2];
-        m[3] = m[3] * v[3];
-        m[4] = m[4] * v[4];
-        m[5] = m[5] * v[5];
-    }
-
-    calculateStyle(parent) {
-        if (!parent.styled) return false;
-        this.styled = true;
-        let values = parent.values;
-        for (let key in values) if (!this.styles[key]) this.styles[key] = values[key];
     }
 }
 

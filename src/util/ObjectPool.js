@@ -4,6 +4,8 @@
  * @author Patrick Schroen / https://github.com/pschroen
  */
 
+import { Utils } from './Utils';
+
 class ObjectPool {
 
     constructor(type, number) {
@@ -39,6 +41,7 @@ class ObjectPool {
         this.destroy = () => {
             for (let i = 0; i < pool.length; i++) if (pool[i].destroy) pool[i].destroy();
             pool = null;
+            return Utils.nullObject(this);
         };
     }
 }

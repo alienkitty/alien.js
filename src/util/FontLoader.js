@@ -24,7 +24,7 @@ class FontLoader {
         }
 
         function finish() {
-            Delayed(() => {
+            setTimeout(() => {
                 element.destroy();
                 self.complete = true;
                 self.events.fire(Events.COMPLETE);

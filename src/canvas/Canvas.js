@@ -4,8 +4,9 @@
  * @author Patrick Schroen / https://github.com/pschroen
  */
 
-import { Interface } from '../util/Interface';
 import { Render } from '../util/Render';
+import { Utils } from '../util/Utils';
+import { Interface } from '../util/Interface';
 
 class Canvas {
 
@@ -44,22 +45,23 @@ class Canvas {
         this.context.clearRect(0, 0, this.element.width, this.element.height);
     }
 
-    add(display) {
-        display.setCanvas(this);
-        display.parent = this;
-        this.children.push(display);
-        display.z = this.children.length;
+    add(child) {
+        child.setCanvas(this);
+        child.parent = this;
+        this.children.push(child);
+        child.z = this.children.length;
     }
 
-    remove(display) {
-        display.canvas = null;
-        display.parent = null;
-        this.children.remove(display);
+    remove(child) {
+        child.canvas = null;
+        child.parent = null;
+        this.children.remove(child);
     }
 
     destroy() {
         for (let i = 0; i < this.children.length; i++) this.children[i].destroy();
-        return this.object = this.object.destroy();
+        this.object.destroy();
+        return Utils.nullObject(this);
     }
 
     startRender() {

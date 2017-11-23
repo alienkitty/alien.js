@@ -4,9 +4,9 @@
  * @author Patrick Schroen / https://github.com/pschroen
  */
 
-import { CanvasObject } from './CanvasObject';
 import { Utils } from '../util/Utils';
 import { Images } from '../util/Images';
+import { CanvasObject } from './CanvasObject';
 
 class CanvasGraphics extends CanvasObject {
 

@@ -4,6 +4,7 @@
  * @author Patrick Schroen / https://github.com/pschroen
  */
 
+import { Utils } from '../util/Utils';
 import { Interface } from '../util/Interface';
 
 class SVG {
@@ -85,6 +86,12 @@ class SVG {
             else if (element.element) element = element.element;
             else if (element.object) element = element.object.element;
             element.appendChild(svg.element);
+        };
+
+        this.destroy = () => {
+            this.object.destroy();
+            svg = null;
+            return Utils.nullObject(this);
         };
     }
 }

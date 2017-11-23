@@ -47,12 +47,12 @@ class CSSTransition {
             object.cssTween = self;
             let strings = buildStrings(time, ease, delay);
             object.willChange(strings.props);
-            Delayed(() => {
+            setTimeout(() => {
                 if (killed()) return;
                 object.element.style[Device.vendor('Transition')] = strings.transition;
                 object.css(props);
                 object.transform(transformProps);
-                Delayed(() => {
+                setTimeout(() => {
                     if (killed()) return;
                     clearCSSTween();
                     if (callback) callback();

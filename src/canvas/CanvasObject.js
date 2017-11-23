@@ -4,8 +4,8 @@
  * @author Patrick Schroen / https://github.com/pschroen
  */
 
-import { CanvasValues } from './CanvasValues';
 import { Utils } from '../util/Utils';
+import { CanvasValues } from './CanvasValues';
 
 class CanvasObject {
 
@@ -64,11 +64,11 @@ class CanvasObject {
         this.canvas.context.restore();
     }
 
-    add(display) {
-        display.canvas = this.canvas;
-        display.parent = this;
-        this.children.push(display);
-        display.z = this.children.length;
+    add(child) {
+        child.canvas = this.canvas;
+        child.parent = this;
+        this.children.push(child);
+        child.z = this.children.length;
         for (let i = this.children.length - 1; i > -1; i--) this.children[i].setCanvas(this.canvas);
     }
 
@@ -77,10 +77,10 @@ class CanvasObject {
         for (let i = this.children.length - 1; i > -1; i--) this.children[i].setCanvas(canvas);
     }
 
-    remove(display) {
-        display.canvas = null;
-        display.parent = null;
-        this.children.remove(display);
+    remove(child) {
+        child.canvas = null;
+        child.parent = null;
+        this.children.remove(child);
     }
 
     isMask() {

@@ -52,12 +52,8 @@ class AlienKittyCanvas extends Interface {
             canvas.add(eyelid2);
         }
 
-        function loop() {
-            canvas.render();
-        }
-
         function blink() {
-            Delayed(Utils.headsTails(blink1, blink2), Utils.random(0, 10000));
+            self.delayedCall(Utils.headsTails(blink1, blink2), Utils.random(0, 10000));
         }
 
         function blink1() {
@@ -80,6 +76,10 @@ class AlienKittyCanvas extends Interface {
                     blink();
                 });
             });
+        }
+
+        function loop() {
+            canvas.render();
         }
 
         this.animateIn = () => {

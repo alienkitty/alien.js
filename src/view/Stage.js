@@ -16,7 +16,6 @@ class Stage extends Interface {
 
         initHTML();
         addListeners();
-        resizeHandler();
 
         function initHTML() {
             self.css({ overflow: 'hidden' });
@@ -26,25 +25,24 @@ class Stage extends Interface {
             window.addEventListener('focus', () => {
                 if (last !== 'focus') {
                     last = 'focus';
-                    window.events.fire(Events.BROWSER_FOCUS, { type: 'focus' });
-                    self.events.fire(Events.BROWSER_FOCUS, { type: 'focus' });
+                    self.events.fire(Events.VISIBILITY, { type: 'focus' });
                 }
             });
             window.addEventListener('blur', () => {
                 if (last !== 'blur') {
                     last = 'blur';
-                    window.events.fire(Events.BROWSER_FOCUS, { type: 'blur' });
-                    self.events.fire(Events.BROWSER_FOCUS, { type: 'blur' });
+                    self.events.fire(Events.VISIBILITY, { type: 'blur' });
                 }
             });
             window.addEventListener('keydown', () => self.events.fire(Events.KEYBOARD_DOWN));
             window.addEventListener('keyup', () => self.events.fire(Events.KEYBOARD_UP));
             window.addEventListener('keypress', () => self.events.fire(Events.KEYBOARD_PRESS));
             window.addEventListener('resize', () => self.events.fire(Events.RESIZE));
-            self.events.add(Events.RESIZE, resizeHandler);
+            self.events.add(Events.RESIZE, resize);
+            resize();
         }
 
-        function resizeHandler() {
+        function resize() {
             self.size();
             self.orientation = window.innerWidth > window.innerHeight ? 'landscape' : 'portrait';
         }

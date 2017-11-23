@@ -15,6 +15,9 @@ class Interface {
 
     constructor(name, type = 'div', detached) {
         this.events = new Events();
+        this.classes = [];
+        this.timers = [];
+        this.loops = [];
         if (typeof name !== 'string') {
             this.element = name;
         } else {
@@ -42,8 +45,60 @@ class Interface {
         return child;
     }
 
-    clone() {
-        return new Interface(this.element.cloneNode(true));
+    add(child) {
+        child.parent = this;
+        if (child.destroy) this.classes.push(child);
+        if (child.element) this.element.appendChild(child.element);
+        else if (child.nodeName) this.element.appendChild(child);
+    }
+
+    delayedCall(callback, time = 0, ...params) {
+        let timer = setTimeout(() => {
+            if (callback) callback(...params);
+        }, time);
+        this.timers.push(timer);
+        if (this.timers.length > 50) this.timers.shift();
+        return timer;
+    }
+
+    clearTimers() {
+        for (let i = this.timers.length - 1; i >= 0; i--) clearTimeout(this.timers[i]);
+        this.timers.length = 0;
+    }
+
+    startRender(callback, fps) {
+        this.loops.push(callback);
+        Render.start(callback, fps);
+    }
+
+    stopRender(callback) {
+        this.loops.remove(callback);
+        Render.stop(callback);
+    }
+
+    clearRenders() {
+        for (let i = this.loops.length - 1; i >= 0; i--) this.stopRender(this.loops[i]);
+        this.loops.length = 0;
+    }
+
+    destroy() {
+        for (let i = this.classes.length - 1; i >= 0; i--) {
+            let child = this.classes[i];
+            if (child && child.destroy) child.destroy();
+        }
+        this.classes.length = 0;
+        this.clearRenders();
+        this.clearTimers();
+        this.events.destroy();
+        this.removed = true;
+        if (this.parent && this.parent.remove) this.parent.remove(this);
+        return Utils.nullObject(this);
+    }
+
+    remove(child) {
+        if (child.element && child.element.parentNode) child.element.parentNode.removeChild(child.element);
+        else if (child.nodeName && child.parentNode) child.parentNode.removeChild(child);
+        if (this.classes.remove(child) && !child.removed) child.destroy();
     }
 
     create(name, type) {
@@ -52,34 +107,13 @@ class Interface {
         return child;
     }
 
+    clone() {
+        return new Interface(this.element.cloneNode(true));
+    }
+
     empty() {
         this.element.innerHTML = '';
         return this;
-    }
-
-    add(child) {
-        if (child.element) {
-            this.element.appendChild(child.element);
-            child.parent = this;
-        } else if (child.nodeName) {
-            this.element.appendChild(child);
-        }
-        return this;
-    }
-
-    remove(child) {
-        if (child.element) child.destroy();
-        else if (child.nodeName) child.parentNode.removeChild(child);
-        return this;
-    }
-
-    destroy() {
-        if (this.loop) Render.stop(this.loop);
-        this.events = this.events.destroy();
-        this.removed = true;
-        let parent = this.parent;
-        if (parent && !parent.removed && parent.remove) parent.remove(this.element);
-        return Utils.nullObject(this);
     }
 
     text(text) {
@@ -318,19 +352,9 @@ class Interface {
 
     attr(attr, value) {
         if (typeof value === 'undefined') return this.element.getAttribute(attr);
-        else if (value === '') this.element.removeAttribute(attr);
+        if (value === '') this.element.removeAttribute(attr);
         else this.element.setAttribute(attr, value);
         return this;
-    }
-
-    startRender(callback) {
-        this.loop = callback;
-        Render.start(callback);
-    }
-
-    stopRender(callback) {
-        this.loop = null;
-        Render.stop(callback);
     }
 
     click(callback) {

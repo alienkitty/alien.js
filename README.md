@@ -10,7 +10,7 @@ A lightweight web framework abducted from Active Theory's [Hydra](https://medium
 ### Features
 
 * [Rollup](https://rollupjs.org/) module bundler with [Tree Shaking](https://github.com/rollup/rollup#tree-shaking), only the classes you use are compiled into your project.
-* Simple design pattern with inheritance, `Stage`, `Interface`, `Canvas`, `Device`, `Mouse`, `Render`, etc.
+* Simple design pattern with inheritance, `Stage`, `Interface`, `Component`, `Canvas`, `Device`, `Mouse`, etc.
 * Event based or use promises.
 * CSS3 animations.
 * Math and Spring animations.
@@ -96,10 +96,11 @@ class CanvasLayer extends Interface {
         }
 
         function addListeners() {
-            Stage.events.add(Events.RESIZE, resizeHandler);
+            Stage.events.add(Events.RESIZE, resize);
+            resize();
         }
 
-        function resizeHandler() {
+        function resize() {
             self.canvas.size(Stage.width, Stage.height, true);
         }
     }
@@ -163,8 +164,8 @@ npm run build
 * Docs
 * Tests
 * Particle emitter
-* FX
-* Mixin examples, ThreeJS, PixiJS
+* FX and lighting
+* Mixin examples, three.js
 * Error handling
 
 ### Changelog

@@ -8,30 +8,55 @@ import { Events } from './Events';
 import { Render } from './Render';
 import { Utils } from './Utils';
 import { Stage } from '../view/Stage';
+import { Vector2 } from './Vector2';
 
 class Interaction {
 
     constructor(object = Stage) {
+
+        if (!Interaction.instance) {
+            Interaction.CLICK = 'interaction_click';
+            Interaction.START = 'interaction_start';
+            Interaction.MOVE  = 'interaction_move';
+            Interaction.DRAG  = 'interaction_drag';
+            Interaction.END   = 'interaction_end';
+
+            let events = {
+                touchstart: [],
+                touchmove: [],
+                touchend: []
+            };
+
+            Interaction.bind = (event, callback) => events[event].push(callback);
+            Interaction.unbind = (event, callback) => events[event].remove(callback);
+
+            let touchStart = e => events.touchstart.forEach(callback => callback(e));
+            let touchMove = e => events.touchmove.forEach(callback => callback(e));
+            let touchEnd = e => events.touchend.forEach(callback => callback(e));
+
+            Stage.bind('touchstart', touchStart);
+            Stage.bind('touchmove', touchMove);
+            Stage.bind('touchend', touchEnd);
+            Stage.bind('touchcancel', touchEnd);
+            Stage.bind('contextmenu', touchEnd);
+
+            Interaction.instance = this;
+        }
+
         let self = this;
         this.events = new Events();
         this.x = 0;
         this.y = 0;
-        this.hold = new Vec2();
-        this.last = new Vec2();
-        this.delta = new Vec2();
-        this.move = new Vec2();
-        this.velocity = new Vec2();
+        this.hold = new Vector2();
+        this.last = new Vector2();
+        this.delta = new Vector2();
+        this.move = new Vector2();
+        this.velocity = new Vector2();
         let distance, timeDown, timeMove;
 
-        function Vec2() {
-            this.x = 0;
-            this.y = 0;
-            this.length = () => Math.sqrt(this.x * this.x + this.y * this.y);
-        }
+        addListeners();
 
-        addHandlers();
-
-        function addHandlers() {
+        function addListeners() {
             if (object === Stage) Interaction.bind('touchstart', down);
             else object.bind('touchstart', down);
             Interaction.bind('touchmove', move);
@@ -95,45 +120,5 @@ class Interaction {
         };
     }
 }
-
-(() => {
-    Interaction.CLICK = 'interaction_click';
-    Interaction.START = 'interaction_start';
-    Interaction.MOVE  = 'interaction_move';
-    Interaction.DRAG  = 'interaction_drag';
-    Interaction.END   = 'interaction_end';
-
-    let events = {
-        touchstart: [],
-        touchmove: [],
-        touchend: []
-    };
-
-    function touchStart(e) {
-        events.touchstart.forEach(callback => callback(e));
-    }
-
-    function touchMove(e) {
-        events.touchmove.forEach(callback => callback(e));
-    }
-
-    function touchEnd(e) {
-        events.touchend.forEach(callback => callback(e));
-    }
-
-    Interaction.bind = (event, callback) => {
-        events[event].push(callback);
-    };
-
-    Interaction.unbind = (event, callback) => {
-        events[event].remove(callback);
-    };
-
-    Stage.bind('touchstart', touchStart);
-    Stage.bind('touchmove', touchMove);
-    Stage.bind('touchend', touchEnd);
-    Stage.bind('touchcancel', touchEnd);
-    Stage.bind('contextmenu', touchEnd);
-})();
 
 export { Interaction };

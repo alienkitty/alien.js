@@ -40,11 +40,10 @@ class AlienKitty extends Interface {
             alienkitty.bg('assets/images/alienkitty.svg');
             eyelid1.bg('assets/images/alienkitty_eyelid.svg');
             eyelid2.bg('assets/images/alienkitty_eyelid.svg');
-            blink();
         }
 
         function blink() {
-            Delayed(Utils.headsTails(blink1, blink2), Utils.random(0, 10000));
+            self.delayedCall(Utils.headsTails(blink1, blink2), Utils.random(0, 10000));
         }
 
         function blink1() {
@@ -70,10 +69,14 @@ class AlienKitty extends Interface {
         }
 
         this.animateIn = () => {
+            blink();
             this.tween({ opacity: 1 }, 500, 'easeOutQuart');
         };
 
-        this.animateOut = () => {
+        this.animateOut = callback => {
+            this.tween({ opacity: 0 }, 500, 'easeInOutQuad', () => {
+                if (callback) callback();
+            });
         };
     }
 }

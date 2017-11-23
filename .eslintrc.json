@@ -5,7 +5,6 @@
   },
   "globals": {
     "getURL": true,
-    "Delayed": true,
     "Global": true,
     "Config": true
   },

@@ -4,16 +4,17 @@
  * @author Patrick Schroen / https://github.com/pschroen
  */
 
-import { Events, Stage, Utils, AssetLoader } from '../alien.js/src/Alien';
+import { Events, Stage, Component, Utils, AssetLoader } from '../alien.js/src/Alien';
 
 Config.ASSETS = [
     'assets/alienkitty.svg',
     'assets/alienkitty_eyelid.svg'
 ];
 
-class Main {
+class Main extends Component {
 
     constructor() {
+        super();
         let self = this;
         this.playing = false;
         let loader, wrapper, alienkitty, eyelid1, eyelid2;
@@ -68,7 +69,7 @@ class Main {
         }
 
         function blink() {
-            Delayed(Utils.headsTails(blink1, blink2), Utils.random(0, 10000));
+            self.delayedCall(Utils.headsTails(blink1, blink2), Utils.random(0, 10000));
         }
 
         function blink1() {

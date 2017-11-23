@@ -25,7 +25,7 @@ class MathTween {
             TweenManager.addMathTween(self);
             object.mathTween = self;
             ease = Interpolation.convertEase(ease);
-            startTime = Date.now();
+            startTime = performance.now();
             startTime += delay;
             endValues = props;
             startValues = {};
@@ -70,7 +70,7 @@ class MathTween {
 
         this.resume = () => {
             paused = false;
-            startTime = Date.now() - elapsed * time;
+            startTime = performance.now() - elapsed * time;
         };
 
         this.stop = () => clear(true);

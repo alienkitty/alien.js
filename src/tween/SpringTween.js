@@ -23,7 +23,7 @@ class SpringTween {
             if (!object.multiTween && object.mathTween) object.mathTween.kill = true;
             TweenManager.addMathTween(self);
             object.mathTween = self;
-            startTime = Date.now();
+            startTime = performance.now();
             startTime += delay;
             endValues = {};
             startValues = {};

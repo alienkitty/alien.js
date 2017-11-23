@@ -442,7 +442,7 @@ class Interface {
         }
 
         function touchStart(e) {
-            time = Date.now();
+            time = performance.now();
             e.action = 'over';
             e.object = self.element.className === 'hit' ? self.parent : self;
             setTouch(e);
@@ -450,7 +450,7 @@ class Interface {
         }
 
         function touchEnd(e) {
-            let t = Date.now();
+            let t = performance.now();
             e.object = self.element.className === 'hit' ? self.parent : self;
             setTouch(e);
             if (time && t - time < 750) {

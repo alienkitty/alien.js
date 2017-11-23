@@ -256,8 +256,8 @@ class Main {
             Stage.size('100%');
             Stage.interact(null, click);
 
-            Mouse.capture();
-            Accelerometer.capture();
+            Mouse.init();
+            Accelerometer.init();
 
             FontLoader.loadFonts(['Titillium Web', 'Lato', 'icomoon']).then(openAbout);
         }

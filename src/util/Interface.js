@@ -15,28 +15,30 @@ class Interface {
 
     constructor(name, type = 'div', detached) {
         this.events = new Events();
-        this.children = [];
+        this.classes = [];
         this.timers = [];
         this.loops = [];
-        if (typeof name !== 'string') {
-            this.element = name;
-        } else {
-            this.name = name;
-            this.type = type;
-            if (this.type === 'svg') {
-                let qualifiedName = detached || 'svg';
-                detached = true;
-                this.element = document.createElementNS('http://www.w3.org/2000/svg', qualifiedName);
-                this.element.setAttributeNS('http://www.w3.org/2000/xmlns/', 'xmlns:xlink', 'http://www.w3.org/1999/xlink');
+        if (typeof name !== 'undefined') {
+            if (typeof name === 'string') {
+                this.name = name;
+                this.type = type;
+                if (this.type === 'svg') {
+                    let qualifiedName = detached || 'svg';
+                    detached = true;
+                    this.element = document.createElementNS('http://www.w3.org/2000/svg', qualifiedName);
+                    this.element.setAttributeNS('http://www.w3.org/2000/xmlns/', 'xmlns:xlink', 'http://www.w3.org/1999/xlink');
+                } else {
+                    this.element = document.createElement(this.type);
+                    if (name[0] !== '.') this.element.id = name;
+                    else this.element.className = name.substr(1);
+                }
+                this.element.style.position = 'absolute';
+                if (!detached) (window.Alien && window.Alien.Stage ? window.Alien.Stage : document.body).appendChild(this.element);
             } else {
-                this.element = document.createElement(this.type);
-                if (name[0] !== '.') this.element.id = name;
-                else this.element.className = name.substr(1);
+                this.element = name;
             }
-            this.element.style.position = 'absolute';
-            if (!detached) (window.Alien && window.Alien.Stage ? window.Alien.Stage : document.body).appendChild(this.element);
+            this.element.object = this;
         }
-        this.element.object = this;
     }
 
     initClass(object, ...params) {
@@ -49,7 +51,7 @@ class Interface {
         let element = this.element;
         if (child.element) {
             element.appendChild(child.element);
-            this.children.push(child);
+            this.classes.push(child);
             child.parent = this;
         } else if (child.nodeName) {
             element.appendChild(child);
@@ -90,11 +92,11 @@ class Interface {
         this.removed = true;
         let parent = this.parent;
         if (parent && !parent.removed && parent.remove) parent.remove(this);
-        for (let i = this.children.length - 1; i >= 0; i--) {
-            let child = this.children[i];
+        for (let i = this.classes.length - 1; i >= 0; i--) {
+            let child = this.classes[i];
             if (child && child.destroy) child.destroy();
         }
-        this.children.length = 0;
+        this.classes.length = 0;
         this.element.object = null;
         this.clearRenders();
         this.clearTimers();
@@ -104,7 +106,7 @@ class Interface {
 
     remove(child) {
         child.element.parentNode.removeChild(child.element);
-        this.children.remove(child);
+        this.classes.remove(child);
     }
 
     create(name, type) {

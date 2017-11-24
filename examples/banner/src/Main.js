@@ -4,14 +4,14 @@
  * @author Patrick Schroen / https://github.com/pschroen
  */
 
-import { Events, Stage, Component, Utils, AssetLoader } from '../alien.js/src/Alien';
+import { Events, Stage, Interface, Utils, AssetLoader } from '../alien.js/src/Alien';
 
 Config.ASSETS = [
     'assets/alienkitty.svg',
     'assets/alienkitty_eyelid.svg'
 ];
 
-class Main extends Component {
+class Main extends Interface {
 
     constructor() {
         super();

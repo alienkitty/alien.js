@@ -12,7 +12,7 @@ class Component {
 
     constructor() {
         this.events = new Events();
-        this.children = [];
+        this.classes = [];
         this.timers = [];
         this.loops = [];
     }
@@ -25,7 +25,7 @@ class Component {
 
     add(child) {
         if (child.destroy) {
-            this.children.push(child);
+            this.classes.push(child);
             child.parent = this;
         }
         return this;
@@ -64,11 +64,11 @@ class Component {
         this.removed = true;
         let parent = this.parent;
         if (parent && !parent.removed && parent.remove) parent.remove(this);
-        for (let i = this.children.length - 1; i >= 0; i--) {
-            let child = this.children[i];
+        for (let i = this.classes.length - 1; i >= 0; i--) {
+            let child = this.classes[i];
             if (child && child.destroy) child.destroy();
         }
-        this.children.length = 0;
+        this.classes.length = 0;
         this.clearRenders();
         this.clearTimers();
         this.events.destroy();
@@ -76,7 +76,7 @@ class Component {
     }
 
     remove(child) {
-        this.children.remove(child);
+        this.classes.remove(child);
     }
 }
 

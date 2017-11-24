@@ -12,7 +12,7 @@ class Component {
 
     constructor() {
         this.events = new Events();
-        this.classes = [];
+        this.children = [];
         this.timers = [];
         this.loops = [];
     }
@@ -24,8 +24,11 @@ class Component {
     }
 
     add(child) {
-        child.parent = this;
-        if (child.destroy) this.classes.push(child);
+        if (child.destroy) {
+            this.children.push(child);
+            child.parent = this;
+        }
+        return this;
     }
 
     delayedCall(callback, time = 0, ...params) {
@@ -58,21 +61,22 @@ class Component {
     }
 
     destroy() {
-        for (let i = this.classes.length - 1; i >= 0; i--) {
-            let child = this.classes[i];
+        this.removed = true;
+        let parent = this.parent;
+        if (parent && !parent.removed && parent.remove) parent.remove(this);
+        for (let i = this.children.length - 1; i >= 0; i--) {
+            let child = this.children[i];
             if (child && child.destroy) child.destroy();
         }
-        this.classes.length = 0;
+        this.children.length = 0;
         this.clearRenders();
         this.clearTimers();
         this.events.destroy();
-        this.removed = true;
-        if (this.parent && this.parent.remove) this.parent.remove(this);
         return Utils.nullObject(this);
     }
 
     remove(child) {
-        if (this.classes.remove(child) && !child.removed) child.destroy();
+        this.children.remove(child);
     }
 }
 

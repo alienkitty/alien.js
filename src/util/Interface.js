@@ -15,7 +15,7 @@ class Interface {
 
     constructor(name, type = 'div', detached) {
         this.events = new Events();
-        this.classes = [];
+        this.children = [];
         this.timers = [];
         this.loops = [];
         if (typeof name !== 'string') {
@@ -46,10 +46,15 @@ class Interface {
     }
 
     add(child) {
-        child.parent = this;
-        if (child.destroy) this.classes.push(child);
-        if (child.element) this.element.appendChild(child.element);
-        else if (child.nodeName) this.element.appendChild(child);
+        let element = this.element;
+        if (child.element) {
+            element.appendChild(child.element);
+            this.children.push(child);
+            child.parent = this;
+        } else if (child.nodeName) {
+            element.appendChild(child);
+        }
+        return this;
     }
 
     delayedCall(callback, time = 0, ...params) {
@@ -82,23 +87,24 @@ class Interface {
     }
 
     destroy() {
-        for (let i = this.classes.length - 1; i >= 0; i--) {
-            let child = this.classes[i];
+        this.removed = true;
+        let parent = this.parent;
+        if (parent && !parent.removed && parent.remove) parent.remove(this);
+        for (let i = this.children.length - 1; i >= 0; i--) {
+            let child = this.children[i];
             if (child && child.destroy) child.destroy();
         }
-        this.classes.length = 0;
+        this.children.length = 0;
+        this.element.object = null;
         this.clearRenders();
         this.clearTimers();
         this.events.destroy();
-        this.removed = true;
-        if (this.parent && this.parent.remove) this.parent.remove(this);
         return Utils.nullObject(this);
     }
 
     remove(child) {
-        if (child.element && child.element.parentNode) child.element.parentNode.removeChild(child.element);
-        else if (child.nodeName && child.parentNode) child.parentNode.removeChild(child);
-        if (this.classes.remove(child) && !child.removed) child.destroy();
+        child.element.parentNode.removeChild(child.element);
+        this.children.remove(child);
     }
 
     create(name, type) {

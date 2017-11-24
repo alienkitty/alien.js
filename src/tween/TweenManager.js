@@ -80,6 +80,10 @@ class TweenManager {
         return promise || tween;
     }
 
+    clearTween(object) {
+        if (object.mathTween) object.mathTween.stop();
+    }
+
     parseTransform(props) {
         let transforms = '';
         if (typeof props.x !== 'undefined' || typeof props.y !== 'undefined' || typeof props.z !== 'undefined') {

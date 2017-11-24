@@ -4,7 +4,6 @@
  * @author Patrick Schroen / https://github.com/pschroen
  */
 
-import { Render } from '../util/Render';
 import { Utils } from '../util/Utils';
 import { Interface } from '../util/Interface';
 
@@ -62,14 +61,6 @@ class Canvas {
         for (let i = 0; i < this.children.length; i++) this.children[i].destroy();
         this.object.destroy();
         return Utils.nullObject(this);
-    }
-
-    startRender() {
-        Render.start(this.render);
-    }
-
-    stopRender() {
-        Render.stop(this.render);
     }
 
     getImageData(x = 0, y = 0, w = this.element.width, h = this.element.height) {

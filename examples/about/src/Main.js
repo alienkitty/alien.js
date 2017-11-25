@@ -236,7 +236,7 @@ class UIAbout extends Interface {
             // Use math tween with UI rotation
             wrapper.z = -300;
             TweenManager.tween(wrapper, { z: 0 }, 7000, 'easeOutCubic');
-            //TweenManager.tween(wrapper, { z: 0, damping: 0.1 }, 0.9, 'spring', 2000);
+            //TweenManager.tween(wrapper, { z: 0, spring: 0.9, damping: 0.1 }, 7000, 'easeOutElastic');
         };
 
         this.animateOut = callback => {

@@ -7,6 +7,7 @@
 class Interpolation {
 
     constructor() {
+
         this.convertEase = ease => {
             return (() => {
                 let fn;
@@ -146,7 +147,7 @@ class Interpolation {
                 return k * k * k * k;
             },
             Out(k) {
-                return 1 - (--k * k * k * k);
+                return 1 - --k * k * k * k;
             },
             InOut(k) {
                 if ((k *= 2) < 1) return 0.5 * k * k * k * k;
@@ -199,7 +200,7 @@ class Interpolation {
                 return 1 - Math.sqrt(1 - k * k);
             },
             Out(k) {
-                return Math.sqrt(1 - (--k * k));
+                return Math.sqrt(1 - --k * k);
             },
             InOut(k) {
                 if ((k *= 2) < 1) return -0.5 * (Math.sqrt(1 - k * k) - 1);
@@ -208,40 +209,34 @@ class Interpolation {
         };
 
         this.Elastic = {
-            In(k) {
-                let s, a = 0.1, p = 0.4;
+            In(k, a = 1, p = 0.4) {
+                let s;
                 if (k === 0) return 0;
                 if (k === 1) return 1;
                 if (!a || a < 1) {
                     a = 1;
                     s = p / 4;
-                } else {
-                    s = p * Math.asin(1 / a) / (2 * Math.PI);
-                }
+                } else s = p * Math.asin(1 / a) / (2 * Math.PI);
                 return -(a * Math.pow(2, 10 * (k -= 1)) * Math.sin((k - s) * (2 * Math.PI) / p));
             },
-            Out(k) {
-                let s, a = 0.1, p = 0.4;
+            Out(k, a = 1, p = 0.4) {
+                let s;
                 if (k === 0) return 0;
                 if (k === 1) return 1;
                 if (!a || a < 1) {
                     a = 1;
                     s = p / 4;
-                } else {
-                    s = p * Math.asin(1 / a) / (2 * Math.PI);
-                }
+                } else s = p * Math.asin(1 / a) / (2 * Math.PI);
                 return a * Math.pow(2, -10 * k) * Math.sin((k - s) * (2 * Math.PI) / p) + 1;
             },
-            InOut(k) {
-                let s, a = 0.1, p = 0.4;
+            InOut(k, a = 1, p = 0.4) {
+                let s;
                 if (k === 0) return 0;
                 if (k === 1) return 1;
                 if (!a || a < 1) {
                     a = 1;
                     s = p / 4;
-                } else {
-                    s = p * Math.asin(1 / a) / (2 * Math.PI);
-                }
+                } else s = p * Math.asin(1 / a) / (2 * Math.PI);
                 if ((k *= 2) < 1) return -0.5 * (a * Math.pow(2, 10 * (k -= 1)) * Math.sin((k - s) * (2 * Math.PI) / p));
                 return a * Math.pow(2, -10 * (k -= 1)) * Math.sin((k - s) * (2 * Math.PI) / p) * 0.5 + 1;
             }
@@ -269,9 +264,9 @@ class Interpolation {
             },
             Out(k) {
                 if (k < 1 / 2.75) return 7.5625 * k * k;
-                else if (k < 2 / 2.75) return 7.5625 * (k -= 1.5 / 2.75) * k + 0.75;
-                else if (k < 2.5 / 2.75) return 7.5625 * (k -= 2.25 / 2.75) * k + 0.9375;
-                else return 7.5625 * (k -= 2.625 / 2.75) * k + 0.984375;
+                if (k < 2 / 2.75) return 7.5625 * (k -= 1.5 / 2.75) * k + 0.75;
+                if (k < 2.5 / 2.75) return 7.5625 * (k -= 2.25 / 2.75) * k + 0.9375;
+                return 7.5625 * (k -= 2.625 / 2.75) * k + 0.984375;
             },
             InOut(k) {
                 if (k < 0.5) return this.Bounce.In(k * 2) * 0.5;

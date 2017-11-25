@@ -6,11 +6,11 @@
 
 import { Render } from '../util/Render';
 import { MathTween } from './MathTween';
-import { SpringTween } from './SpringTween';
 
 class TweenManager {
 
     constructor() {
+        let self = this;
         this.TRANSFORMS = ['x', 'y', 'z', 'scale', 'scaleX', 'scaleY', 'rotation', 'rotationX', 'rotationY', 'rotationZ', 'skewX', 'skewY', 'perspective'];
         this.CSS_EASES = {
             easeOutCubic:   'cubic-bezier(0.215, 0.610, 0.355, 1.000)',
@@ -39,24 +39,20 @@ class TweenManager {
             easeInOut:      'cubic-bezier(0.420, 0.000, 0.580, 1.000)',
             linear:         'linear'
         };
-        let tweens = [],
-            rendering = false;
+        let tweens = [];
+
+        Render.start(updateTweens);
 
         function updateTweens(t) {
-            if (tweens.length) {
-                for (let i = 0; i < tweens.length; i++) tweens[i].update(t);
-            } else {
-                rendering = false;
-                Render.stop(updateTweens);
+            for (let i = tweens.length - 1; i >= 0; i--) {
+                let tween = tweens[i];
+                if (tween.update) tween.update(t);
+                else self.removeMathTween(tween);
             }
         }
 
         this.addMathTween = tween => {
             tweens.push(tween);
-            if (!rendering) {
-                rendering = true;
-                Render.start(updateTweens);
-            }
         };
 
         this.removeMathTween = tween => {
@@ -76,12 +72,20 @@ class TweenManager {
             if (callback) promise.then(callback);
             callback = promise.resolve;
         }
-        let tween = ease === 'spring' ? new SpringTween(object, props, time, ease, delay, update, callback) : new MathTween(object, props, time, ease, delay, update, callback);
+        let tween = new MathTween(object, props, time, ease, delay, update, callback);
         return promise || tween;
     }
 
     clearTween(object) {
         if (object.mathTween) object.mathTween.stop();
+        if (object.mathTweens) {
+            let tweens = object.mathTweens;
+            for (let i = 0; i < tweens.length; i++) {
+                let tween = tweens[i];
+                if (tween) tween.stop();
+            }
+            object.mathTweens = null;
+        }
     }
 
     parseTransform(props) {

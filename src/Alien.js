@@ -26,7 +26,6 @@ export { WebAudio } from './util/WebAudio';
 export { TweenManager } from './tween/TweenManager';
 export { Interpolation } from './tween/Interpolation';
 export { MathTween } from './tween/MathTween';
-export { SpringTween } from './tween/SpringTween';
 export { LinkedList } from './util/LinkedList';
 export { ObjectPool } from './util/ObjectPool';
 export { Vector2 } from './util/Vector2';

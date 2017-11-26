@@ -1,8 +1,6 @@
 /**
  * 3D utilities.
  *
- * Currently no CORS support.
- *
  * @author Patrick Schroen / https://github.com/pschroen
  */
 

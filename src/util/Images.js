@@ -1,26 +1,29 @@
 /**
  * Image helper class with promise method.
  *
- * Currently no CORS support.
- *
  * @author Patrick Schroen / https://github.com/pschroen
  */
 
 class Images {
 
+    constructor() {
+        this.CORS = null;
+    }
+
     createImg(src, callback) {
         let img = new Image();
+        img.crossOrigin = this.CORS;
         img.src = src;
-        img.onload = () => {
-            if (callback) callback();
-        };
+        img.onload = callback;
+        img.onerror = callback;
         return img;
     }
 
     promise(img) {
-        let p = Promise.create();
-        img.onload = p.resolve;
-        return p;
+        let promise = Promise.create();
+        img.onload = promise.resolve;
+        img.onerror = promise.resolve;
+        return promise;
     }
 }
 

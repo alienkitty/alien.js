@@ -25,6 +25,10 @@ class Utils {
         return str;
     }
 
+    getConstructorName(object) {
+        return object.constructor.name || object.constructor.toString().match(/function ([^(]+)/)[1];
+    }
+
     nullObject(object) {
         for (let key in object) if (typeof object[key] !== 'undefined') object[key] = null;
         return null;
@@ -50,8 +54,13 @@ class Utils {
         return array.slice(0);
     }
 
-    basename(path) {
-        return path.replace(/.*\//, '').replace(/(.*)\..*$/, '$1');
+    basename(path, ext) {
+        let name = path.split('/').last();
+        return !ext ? name.split('.')[0] : name;
+    }
+
+    extension(path) {
+        return path.split('.').last().split('?')[0].toLowerCase();
     }
 
     base64(str) {

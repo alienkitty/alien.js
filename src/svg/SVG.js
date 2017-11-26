@@ -90,7 +90,6 @@ class SVG {
 
         this.destroy = () => {
             this.object.destroy();
-            svg = null;
             return Utils.nullObject(this);
         };
     }

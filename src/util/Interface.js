@@ -429,61 +429,60 @@ class Interface {
     }
 
     touchClick(hover, click) {
-        let self = this;
         let time, move,
             start = {},
             touch = {};
 
-        function touchEvent(e) {
-            let touchEvent = {};
-            touchEvent.x = 0;
-            touchEvent.y = 0;
-            if (!e) return touchEvent;
+        let touchEvent = e => {
+            let event = {};
+            event.x = 0;
+            event.y = 0;
+            if (!e) return event;
             if (Device.mobile && (e.touches || e.changedTouches)) {
                 if (e.touches.length) {
-                    touchEvent.x = e.touches[0].pageX;
-                    touchEvent.y = e.touches[0].pageY;
+                    event.x = e.touches[0].pageX;
+                    event.y = e.touches[0].pageY;
                 } else {
-                    touchEvent.x = e.changedTouches[0].pageX;
-                    touchEvent.y = e.changedTouches[0].pageY;
+                    event.x = e.changedTouches[0].pageX;
+                    event.y = e.changedTouches[0].pageY;
                 }
             } else {
-                touchEvent.x = e.pageX;
-                touchEvent.y = e.pageY;
+                event.x = e.pageX;
+                event.y = e.pageY;
             }
-            return touchEvent;
-        }
+            return event;
+        };
 
-        function findDistance(p1, p2) {
+        let findDistance = (p1, p2) => {
             let dx = p2.x - p1.x,
                 dy = p2.y - p1.y;
             return Math.sqrt(dx * dx + dy * dy);
-        }
+        };
 
-        function touchMove(e) {
+        let touchMove = e => {
             touch = touchEvent(e);
             move = findDistance(start, touch) > 5;
-        }
+        };
 
-        function setTouch(e) {
-            let touch = touchEvent(e);
-            e.touchX = touch.x;
-            e.touchY = touch.y;
+        let setTouch = e => {
+            let event = touchEvent(e);
+            e.touchX = event.x;
+            e.touchY = event.y;
             start.x = e.touchX;
             start.y = e.touchY;
-        }
+        };
 
-        function touchStart(e) {
+        let touchStart = e => {
             time = performance.now();
             e.action = 'over';
-            e.object = self.element.className === 'hit' ? self.parent : self;
+            e.object = this.element.className === 'hit' ? this.parent : this;
             setTouch(e);
             if (hover && !move) hover(e);
-        }
+        };
 
-        function touchEnd(e) {
+        let touchEnd = e => {
             let t = performance.now();
-            e.object = self.element.className === 'hit' ? self.parent : self;
+            e.object = this.element.className === 'hit' ? this.parent : this;
             setTouch(e);
             if (time && t - time < 750) {
                 if (click && !move) {
@@ -496,7 +495,7 @@ class Interface {
                 hover(e);
             }
             move = false;
-        }
+        };
 
         this.element.addEventListener('touchmove', touchMove, { passive: true });
         this.element.addEventListener('touchstart', touchStart, { passive: true });

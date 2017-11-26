@@ -18,15 +18,14 @@ class AlienKitty extends Interface {
     constructor() {
         super('AlienKitty');
         let self = this;
-        let alienkitty, eyelid1, eyelid2,
-            size = 90;
+        let alienkitty, eyelid1, eyelid2;
 
         initHTML();
         addListeners();
 
         function initHTML() {
-            self.size(size).center().css({ opacity: 0 });
-            alienkitty = self.create('.alienkitty').size(90, 86).center().transform({ scale: size / 90 });
+            self.size(90, 86).center().css({ opacity: 0 });
+            alienkitty = self.create('.alienkitty').size(90, 86);
             eyelid1 = alienkitty.create('.eyelid1').size(24, 14).css({ left: 35, top: 25 }).transformPoint('50%', 0).transform({ scaleX: 1.5, scaleY: 0.01 });
             eyelid2 = alienkitty.create('.eyelid2').size(24, 14).css({ left: 53, top: 26 }).transformPoint(0, 0).transform({ scaleX: 1, scaleY: 0.01 });
         }

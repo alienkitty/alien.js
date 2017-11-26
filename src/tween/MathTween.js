@@ -12,8 +12,7 @@ class MathTween {
 
     constructor(object, props, time, ease, delay, update, callback) {
         let self = this;
-        let startTime, startValues, endValues, paused, spring, damping,
-            elapsed = 0;
+        let startTime, startValues, endValues, paused, spring, damping, elapsed;
 
         initMathTween();
 

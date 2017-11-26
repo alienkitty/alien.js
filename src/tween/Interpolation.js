@@ -7,7 +7,6 @@
 class Interpolation {
 
     constructor() {
-
         this.convertEase = ease => {
             return (() => {
                 let fn;

@@ -1,15 +1,12 @@
 /**
  * Asset loader with promise method.
  *
- * Currently no CORS support.
- *
  * @author Patrick Schroen / https://github.com/pschroen
  */
 
 import { Events } from './Events';
 import { Utils } from './Utils';
 import { Images } from './Images';
-import { WebAudio } from './WebAudio';
 
 class AssetLoader {
 
@@ -29,54 +26,46 @@ class AssetLoader {
         this.events = new Events();
         this.CDN = Config.CDN || '';
         let total = Object.keys(assets).length,
-            loaded = 0,
-            percent = 0;
+            loaded = 0;
 
         for (let key in assets) loadAsset(key, this.CDN + assets[key]);
 
         function loadAsset(key, asset) {
-            let name = asset.split('/');
-            name = name[name.length - 1];
-            let split = name.split('.'),
-                ext = split[split.length - 1].split('?')[0];
-            switch (ext) {
-                case 'mp3':
-                    if (!window.AudioContext) return assetLoaded();
-                    window.fetch(asset).then(e => {
-                        if (!e.ok) return;
-                        e.arrayBuffer().then(contents => {
-                            WebAudio.createSound(key, contents, assetLoaded);
-                        });
-                    });
-                    break;
-                case 'js':
-                    window.get(asset).then(script => {
-                        eval.call(window, script.replace('use strict', ''));
-                        assetLoaded();
-                    });
-                    break;
-                default:
-                    Images.createImg(asset, assetLoaded);
-                    break;
+            let ext = Utils.extension(asset);
+            if (ext.includes(['jpg', 'jpeg', 'png', 'gif', 'svg'])) {
+                Images.createImg(asset, assetLoaded);
+                return;
             }
+            if (ext.includes(['mp3', 'm4a', 'ogg', 'wav', 'aif'])) {
+                if (!window.AudioContext || !window.WebAudio) return assetLoaded();
+                window.fetch(asset).then(response => {
+                    if (!response.ok) return assetLoaded();
+                    response.arrayBuffer().then(data => window.WebAudio.createSound(key, data, assetLoaded));
+                });
+                return;
+            }
+            window.get(asset).then(data => {
+                if (ext === 'js') window.eval(data.replace('use strict', ''));
+                else if (ext.includes(['fs', 'vs', 'glsl']) && window.Shaders) window.Shaders.parse(data, asset);
+                assetLoaded();
+            });
         }
 
         function assetLoaded() {
-            loaded++;
-            percent = loaded / total;
-            self.events.fire(Events.PROGRESS, { percent });
-            if (loaded === total) {
-                self.complete = true;
-                self.events.fire(Events.COMPLETE);
-                if (callback) callback();
-            }
+            self.events.fire(Events.PROGRESS, { percent: ++loaded / total });
+            if (loaded === total) complete();
+        }
+
+        function complete() {
+            self.events.fire(Events.COMPLETE);
+            if (callback) callback();
         }
     }
 
     static loadAssets(assets, callback) {
         let promise = Promise.create();
         if (!callback) callback = promise.resolve;
-        new AssetLoader(assets, callback);
+        promise.loader = new AssetLoader(assets, callback);
         return promise;
     }
 }

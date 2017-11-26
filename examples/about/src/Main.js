@@ -129,8 +129,8 @@ class UIAboutTitle extends Interface {
     constructor() {
         super('UIAboutTitle');
         let self = this;
-        let size = 160,
-            letters;
+        let letters,
+            size = 160;
 
         initHTML();
 

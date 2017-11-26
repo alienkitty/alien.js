@@ -5,7 +5,6 @@
  */
 
 import { Utils } from '../util/Utils';
-import { Images } from '../util/Images';
 import { CanvasObject } from './CanvasObject';
 
 class CanvasGraphics extends CanvasObject {
@@ -16,8 +15,7 @@ class CanvasGraphics extends CanvasObject {
         this.width = w;
         this.height = h;
         this.props = {};
-        let images = {},
-            draw = [],
+        let draw = [],
             mask;
 
         function setProperties(context) {
@@ -121,17 +119,7 @@ class CanvasGraphics extends CanvasObject {
             draw.push(['setLineDash', value]);
         };
 
-        this.createImage = (src, force) => {
-            if (!images[src] || force) {
-                let img = Images.createImg(src);
-                if (force) return img;
-                images[src] = img;
-            }
-            return images[src];
-        };
-
         this.drawImage = (img, sx = 0, sy = 0, sWidth = img.width, sHeight = img.height, dx = 0, dy = 0, dWidth = img.width, dHeight = img.height) => {
-            if (typeof img === 'string') img = this.createImage(img);
             draw.push(['drawImage', img, sx, sy, sWidth, sHeight, dx + -this.px, dy + -this.py, dWidth, dHeight]);
         };
 

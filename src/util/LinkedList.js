@@ -34,7 +34,7 @@ class LinkedList {
                 nodes[i] = null;
                 nodes.splice(i, 1);
             }
-            return null;
+            return Utils.nullObject(this);
         }
 
         function find(object) {
@@ -97,10 +97,7 @@ class LinkedList {
             return this.current;
         };
 
-        this.destroy = () => {
-            nodes = destroy();
-            return Utils.nullObject(this);
-        };
+        this.destroy = destroy;
     }
 }
 

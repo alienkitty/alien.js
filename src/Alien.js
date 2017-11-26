@@ -33,5 +33,7 @@ export { Vector2 } from './util/Vector2';
 export { Vector3 } from './util/Vector3';
 export { Utils3D } from './three/Utils3D';
 export { ScreenProjection } from './three/ScreenProjection';
+export { Shaders } from './three/Shaders';
+export { Shader } from './three/Shader';
 
 import './polyfills.js';

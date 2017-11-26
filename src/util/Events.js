@@ -30,7 +30,7 @@ class Events {
                 events[i] = null;
                 events.splice(i, 1);
             }
-            return null;
+            return Utils.nullObject(this);
         };
 
         this.fire = (event, object = {}) => {

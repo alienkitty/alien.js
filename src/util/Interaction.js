@@ -22,17 +22,16 @@ class Interaction {
             Interaction.END   = 'interaction_end';
 
             let events = {
-                touchstart: [],
-                touchmove: [],
-                touchend: []
-            };
+                    touchstart: [],
+                    touchmove: [],
+                    touchend: []
+                },
+                touchStart = e => events.touchstart.forEach(callback => callback(e)),
+                touchMove = e => events.touchmove.forEach(callback => callback(e)),
+                touchEnd = e => events.touchend.forEach(callback => callback(e));
 
             Interaction.bind = (event, callback) => events[event].push(callback);
             Interaction.unbind = (event, callback) => events[event].remove(callback);
-
-            let touchStart = e => events.touchstart.forEach(callback => callback(e));
-            let touchMove = e => events.touchmove.forEach(callback => callback(e));
-            let touchEnd = e => events.touchend.forEach(callback => callback(e));
 
             Stage.bind('touchstart', touchStart);
             Stage.bind('touchmove', touchMove);
@@ -115,7 +114,7 @@ class Interaction {
             Interaction.unbind('touchmove', move);
             Interaction.unbind('touchend', up);
             if (object !== Stage && object.unbind) object.unbind('touchstart', down);
-            this.events = this.events.destroy();
+            this.events.destroy();
             return Utils.nullObject(this);
         };
     }

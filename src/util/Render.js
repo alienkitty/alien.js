@@ -19,11 +19,10 @@ class Render {
 
         requestAnimationFrame(step);
 
-        function step(tsl) {
-            let delta = tsl - last;
-            delta = Math.min(skipLimit, delta);
-            last = tsl;
-            self.TIME = tsl;
+        function step(t) {
+            let delta = Math.min(skipLimit, t - last);
+            last = t;
+            self.TIME = t;
             self.DELTA = delta;
             for (let i = render.length - 1; i >= 0; i--) {
                 let callback = render[i];
@@ -32,12 +31,12 @@ class Render {
                     continue;
                 }
                 if (callback.fps) {
-                    if (tsl - callback.last < 1000 / callback.fps) continue;
+                    if (t - callback.last < 1000 / callback.fps) continue;
                     callback(++callback.frame);
-                    callback.last = tsl;
+                    callback.last = t;
                     continue;
                 }
-                callback(tsl, delta);
+                callback(t, delta);
             }
             if (!self.paused) requestAnimationFrame(step);
         }

@@ -122,8 +122,8 @@ class Vector2 {
     interp(v, alpha, ease, dist = 5000) {
         if (!this.calc) this.calc = new Vector2();
         this.calc.subVectors(this, v);
-        let f = Interpolation.convertEase(ease),
-            a = f(Math.clamp(Math.range(this.calc.lengthSq(), 0, dist * dist, 1, 0), 0, 1) * (alpha / 10));
+        let fn = Interpolation.convertEase(ease),
+            a = fn(Math.clamp(Math.range(this.calc.lengthSq(), 0, dist * dist, 1, 0), 0, 1) * (alpha / 10));
         return this.lerp(v, a);
     }
 

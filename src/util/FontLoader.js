@@ -36,7 +36,7 @@ class FontLoader {
     static loadFonts(fonts, callback) {
         let promise = Promise.create();
         if (!callback) callback = promise.resolve;
-        new FontLoader(fonts, callback);
+        promise.loader = new FontLoader(fonts, callback);
         return promise;
     }
 }

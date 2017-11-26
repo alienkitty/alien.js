@@ -12,16 +12,16 @@ class WebAudio {
 
     constructor() {
         let context,
-            sounds = [];
+            sounds = {};
 
         this.init = () => {
-            context = new window.AudioContext();
+            context = new AudioContext();
             this.globalGain = context.createGain();
             this.globalGain.connect(context.destination);
         };
 
         this.createSound = (id, audioData, callback) => {
-            let sound = { id };
+            let sound = {};
             context.decodeAudioData(audioData, buffer => {
                 sound.buffer = buffer;
                 sound.audioGain = context.createGain();
@@ -29,16 +29,14 @@ class WebAudio {
                 sound.complete = true;
                 if (callback) callback();
             });
-            sounds.push(sound);
+            sounds[id] = sound;
         };
 
         this.getSound = id => {
-            for (let i = 0; i < sounds.length; i++) if (sounds[i].id === id) return sounds[i];
-            return null;
+            return sounds[id];
         };
 
         this.trigger = id => {
-            if (!context) return;
             let sound = this.getSound(id),
                 source = context.createBufferSource();
             source.buffer = sound.buffer;
@@ -46,15 +44,11 @@ class WebAudio {
             source.start(0);
         };
 
-        this.mute = () => {
-            if (!context) return;
-            TweenManager.tween(this.globalGain.gain, { value: 0 }, 300, 'easeOutSine');
-        };
+        this.mute = () => TweenManager.tween(this.globalGain.gain, { value: 0 }, 300, 'easeOutSine');
 
-        this.unmute = () => {
-            if (!context) return;
-            TweenManager.tween(this.globalGain.gain, { value: 1 }, 500, 'easeOutSine');
-        };
+        this.unmute = () => TweenManager.tween(this.globalGain.gain, { value: 1 }, 500, 'easeOutSine');
+
+        window.WebAudio = this;
     }
 }
 

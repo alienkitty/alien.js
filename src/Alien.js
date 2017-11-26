@@ -19,6 +19,7 @@ export { Accelerometer } from './mobile/Accelerometer';
 export { Utils } from './util/Utils';
 export { AssetLoader } from './util/AssetLoader';
 export { FontLoader } from './util/FontLoader';
+export { Video } from './util/Video';
 export { Images } from './util/Images';
 export { SVG } from './svg/SVG';
 export { Storage } from './util/Storage';

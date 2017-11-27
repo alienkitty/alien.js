@@ -32,6 +32,8 @@ export { ObjectPool } from './util/ObjectPool';
 export { Vector2 } from './util/Vector2';
 export { Vector3 } from './util/Vector3';
 export { Utils3D } from './three/Utils3D';
+export { Interaction3D } from './three/Interaction3D';
+export { Raycaster } from './three/Raycaster';
 export { ScreenProjection } from './three/ScreenProjection';
 export { Shaders } from './three/Shaders';
 export { Shader } from './three/Shader';

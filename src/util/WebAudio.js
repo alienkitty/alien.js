@@ -11,8 +11,8 @@ if (!window.AudioContext) window.AudioContext = window.webkitAudioContext || win
 class WebAudio {
 
     constructor() {
-        let context,
-            sounds = {};
+        const sounds = {};
+        let context;
 
         this.init = () => {
             context = new AudioContext();
@@ -21,7 +21,7 @@ class WebAudio {
         };
 
         this.createSound = (id, audioData, callback) => {
-            let sound = {};
+            const sound = {};
             context.decodeAudioData(audioData, buffer => {
                 sound.buffer = buffer;
                 sound.audioGain = context.createGain();
@@ -37,7 +37,7 @@ class WebAudio {
         };
 
         this.trigger = id => {
-            let sound = this.getSound(id),
+            const sound = this.getSound(id),
                 source = context.createBufferSource();
             source.buffer = sound.buffer;
             source.connect(sound.audioGain);

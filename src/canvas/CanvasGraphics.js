@@ -11,7 +11,7 @@ class CanvasGraphics extends CanvasObject {
 
     constructor(w = 0, h = w) {
         super();
-        let self = this;
+        const self = this;
         this.width = w;
         this.height = h;
         this.props = {};
@@ -24,7 +24,7 @@ class CanvasGraphics extends CanvasObject {
 
         this.draw = override => {
             if (this.isMask() && !override) return false;
-            let context = this.canvas.context;
+            const context = this.canvas.context;
             this.startDraw(this.px, this.py, override);
             setProperties(context);
             if (this.clipWidth && this.clipHeight) {
@@ -33,9 +33,9 @@ class CanvasGraphics extends CanvasObject {
                 context.clip();
             }
             for (let i = 0; i < draw.length; i++) {
-                let cmd = draw[i];
+                const cmd = draw[i];
                 if (!cmd) continue;
-                let fn = cmd.shift();
+                const fn = cmd.shift();
                 context[fn].apply(context, cmd);
                 cmd.unshift(fn);
             }
@@ -136,7 +136,7 @@ class CanvasGraphics extends CanvasObject {
         };
 
         this.clone = () => {
-            let object = new CanvasGraphics(this.width, this.height);
+            const object = new CanvasGraphics(this.width, this.height);
             object.visible = this.visible;
             object.blendMode = this.blendMode;
             object.opacity = this.opacity;

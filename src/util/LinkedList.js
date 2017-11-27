@@ -13,7 +13,7 @@ class LinkedList {
         this.last = null;
         this.current = null;
         this.prev = null;
-        let nodes = [];
+        const nodes = [];
 
         function add(object) {
             return nodes[nodes.push({ object, prev: null, next: null }) - 1];
@@ -43,7 +43,7 @@ class LinkedList {
         }
 
         this.push = object => {
-            let obj = add(object);
+            const obj = add(object);
             if (!this.first) {
                 obj.next = obj.prev = this.last = this.first = obj;
             } else {
@@ -55,7 +55,7 @@ class LinkedList {
         };
 
         this.remove = object => {
-            let obj = find(object);
+            const obj = find(object);
             if (!obj || !obj.next) return;
             if (nodes.length <= 1) {
                 this.empty();

@@ -23,7 +23,7 @@ class Interface {
                 this.name = name;
                 this.type = type;
                 if (this.type === 'svg') {
-                    let qualifiedName = detached || 'svg';
+                    const qualifiedName = detached || 'svg';
                     detached = true;
                     this.element = document.createElementNS('http://www.w3.org/2000/svg', qualifiedName);
                     this.element.setAttributeNS('http://www.w3.org/2000/xmlns/', 'xmlns:xlink', 'http://www.w3.org/1999/xlink');
@@ -42,13 +42,13 @@ class Interface {
     }
 
     initClass(object, ...params) {
-        let child = new object(...params);
+        const child = new object(...params);
         this.add(child);
         return child;
     }
 
     add(child) {
-        let element = this.element;
+        const element = this.element;
         if (child.element) {
             element.appendChild(child.element);
             this.classes.push(child);
@@ -60,7 +60,7 @@ class Interface {
     }
 
     delayedCall(callback, time = 0, ...params) {
-        let timer = setTimeout(() => {
+        const timer = setTimeout(() => {
             if (callback) callback(...params);
         }, time);
         this.timers.push(timer);
@@ -90,10 +90,10 @@ class Interface {
 
     destroy() {
         this.removed = true;
-        let parent = this.parent;
+        const parent = this.parent;
         if (parent && !parent.removed && parent.remove) parent.remove(this);
         for (let i = this.classes.length - 1; i >= 0; i--) {
-            let child = this.classes[i];
+            const child = this.classes[i];
             if (child && child.destroy) child.destroy();
         }
         this.classes.length = 0;
@@ -110,7 +110,7 @@ class Interface {
     }
 
     create(name, type) {
-        let child = new Interface(name, type);
+        const child = new Interface(name, type);
         this.add(child);
         return child;
     }
@@ -215,7 +215,7 @@ class Interface {
     }
 
     center(x, y, noPos) {
-        let css = {};
+        const css = {};
         if (typeof x === 'undefined') {
             css.left = '50%';
             css.top = '50%';
@@ -284,7 +284,7 @@ class Interface {
     willChange(props) {
         if (typeof props === 'boolean') this.willChangeLock = props;
         else if (this.willChangeLock) return;
-        let string = typeof props === 'string';
+        const string = typeof props === 'string';
         if (props) this.element.style['will-change'] = string ? props : Device.transformProperty + ', opacity';
         else this.element.style['will-change'] = '';
     }
@@ -331,7 +331,7 @@ class Interface {
             if (callback) promise.then(callback);
             callback = promise.resolve;
         }
-        let tween = new CSSTransition(this, props, time, ease, delay, callback);
+        const tween = new CSSTransition(this, props, time, ease, delay, callback);
         return promise || tween;
     }
 
@@ -366,7 +366,7 @@ class Interface {
     }
 
     click(callback) {
-        let clicked = e => {
+        const clicked = e => {
             e.object = this.element.className === 'hit' ? this.parent : this;
             e.action = 'click';
             if (callback) callback(e);
@@ -377,7 +377,7 @@ class Interface {
     }
 
     hover(callback) {
-        let hovered = e => {
+        const hovered = e => {
             e.object = this.element.className === 'hit' ? this.parent : this;
             e.action = e.type === 'mouseout' ? 'out' : 'over';
             if (callback) callback(e);
@@ -388,7 +388,7 @@ class Interface {
     }
 
     press(callback) {
-        let pressed = e => {
+        const pressed = e => {
             e.object = this.element.className === 'hit' ? this.parent : this;
             e.action = e.type === 'mousedown' ? 'down' : 'up';
             if (callback) callback(e);
@@ -429,12 +429,12 @@ class Interface {
     }
 
     touchClick(hover, click) {
-        let time, move,
-            start = {},
-            touch = {};
+        const start = {};
+        let touch = {},
+            time, move;
 
-        let touchEvent = e => {
-            let event = {};
+        const touchEvent = e => {
+            const event = {};
             event.x = 0;
             event.y = 0;
             if (!e) return event;
@@ -453,26 +453,26 @@ class Interface {
             return event;
         };
 
-        let findDistance = (p1, p2) => {
-            let dx = p2.x - p1.x,
+        const findDistance = (p1, p2) => {
+            const dx = p2.x - p1.x,
                 dy = p2.y - p1.y;
             return Math.sqrt(dx * dx + dy * dy);
         };
 
-        let touchMove = e => {
+        const touchMove = e => {
             touch = touchEvent(e);
             move = findDistance(start, touch) > 5;
         };
 
-        let setTouch = e => {
-            let event = touchEvent(e);
+        const setTouch = e => {
+            const event = touchEvent(e);
             e.touchX = event.x;
             e.touchY = event.y;
             start.x = e.touchX;
             start.y = e.touchY;
         };
 
-        let touchStart = e => {
+        const touchStart = e => {
             time = performance.now();
             e.action = 'over';
             e.object = this.element.className === 'hit' ? this.parent : this;
@@ -480,8 +480,8 @@ class Interface {
             if (hover && !move) hover(e);
         };
 
-        let touchEnd = e => {
-            let t = performance.now();
+        const touchEnd = e => {
+            const t = performance.now();
             e.object = this.element.className === 'hit' ? this.parent : this;
             setTouch(e);
             if (time && t - time < 750) {
@@ -504,7 +504,7 @@ class Interface {
     }
 
     split(by = '') {
-        let style = {
+        const style = {
                 position: 'relative',
                 display: 'block',
                 width: 'auto',

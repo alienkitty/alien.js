@@ -9,7 +9,7 @@ import { Device } from '../util/Device';
 class Accelerometer {
 
     constructor() {
-        let self = this;
+        const self = this;
         this.x = 0;
         this.y = 0;
         this.z = 0;
@@ -99,7 +99,7 @@ class Accelerometer {
         }
 
         function compassHeading(alpha, beta, gamma) {
-            let degtorad = Math.PI / 180,
+            const degtorad = Math.PI / 180,
                 x = beta ? beta * degtorad : 0,
                 y = gamma ? gamma * degtorad : 0,
                 z = alpha ? alpha * degtorad : 0,
@@ -109,8 +109,8 @@ class Accelerometer {
                 sY = Math.sin(y),
                 sZ = Math.sin(z),
                 Vx = -cZ * sY - sZ * sX * cY,
-                Vy = -sZ * sY + cZ * sX * cY,
-                compassHeading = Math.atan(Vx / Vy);
+                Vy = -sZ * sY + cZ * sX * cY;
+            let compassHeading = Math.atan(Vx / Vy);
             if (Vy < 0) compassHeading += Math.PI;
             else if (Vx < 0) compassHeading += 2 * Math.PI;
             return compassHeading * (180 / Math.PI);

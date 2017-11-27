@@ -10,7 +10,7 @@ import { MathTween } from './MathTween';
 class TweenManager {
 
     constructor() {
-        let self = this;
+        const self = this;
         this.TRANSFORMS = ['x', 'y', 'z', 'scale', 'scaleX', 'scaleY', 'rotation', 'rotationX', 'rotationY', 'rotationZ', 'skewX', 'skewY', 'perspective'];
         this.CSS_EASES = {
             easeOutCubic:   'cubic-bezier(0.215, 0.610, 0.355, 1.000)',
@@ -39,13 +39,13 @@ class TweenManager {
             easeInOut:      'cubic-bezier(0.420, 0.000, 0.580, 1.000)',
             linear:         'linear'
         };
-        let tweens = [];
+        const tweens = [];
 
         Render.start(updateTweens);
 
         function updateTweens(t) {
             for (let i = tweens.length - 1; i >= 0; i--) {
-                let tween = tweens[i];
+                const tween = tweens[i];
                 if (tween.update) tween.update(t);
                 else self.removeMathTween(tween);
             }
@@ -72,16 +72,16 @@ class TweenManager {
             if (callback) promise.then(callback);
             callback = promise.resolve;
         }
-        let tween = new MathTween(object, props, time, ease, delay, update, callback);
+        const tween = new MathTween(object, props, time, ease, delay, update, callback);
         return promise || tween;
     }
 
     clearTween(object) {
         if (object.mathTween) object.mathTween.stop();
         if (object.mathTweens) {
-            let tweens = object.mathTweens;
+            const tweens = object.mathTweens;
             for (let i = 0; i < tweens.length; i++) {
-                let tween = tweens[i];
+                const tween = tweens[i];
                 if (tween) tween.stop();
             }
             object.mathTweens = null;
@@ -91,10 +91,10 @@ class TweenManager {
     parseTransform(props) {
         let transforms = '';
         if (typeof props.x !== 'undefined' || typeof props.y !== 'undefined' || typeof props.z !== 'undefined') {
-            let x = props.x || 0,
+            const x = props.x || 0,
                 y = props.y || 0,
-                z = props.z || 0,
-                translate = '';
+                z = props.z || 0;
+            let translate = '';
             translate += x + 'px, ';
             translate += y + 'px, ';
             translate += z + 'px';
@@ -121,9 +121,9 @@ class TweenManager {
     }
 
     getAllTransforms(object) {
-        let obj = {};
+        const obj = {};
         for (let i = this.TRANSFORMS.length - 1; i > -1; i--) {
-            let key = this.TRANSFORMS[i],
+            const key = this.TRANSFORMS[i],
                 val = object[key];
             if (val !== 0 && typeof val === 'number') obj[key] = val;
         }

@@ -13,19 +13,19 @@ class Render {
 
     constructor() {
         let self = this;
-        let render = [],
-            last = performance.now(),
+        const render = [],
             skipLimit = 200;
+        let last = performance.now();
 
         requestAnimationFrame(step);
 
         function step(t) {
-            let delta = Math.min(skipLimit, t - last);
+            const delta = Math.min(skipLimit, t - last);
             last = t;
             self.TIME = t;
             self.DELTA = delta;
             for (let i = render.length - 1; i >= 0; i--) {
-                let callback = render[i];
+                const callback = render[i];
                 if (!callback) {
                     render.remove(callback);
                     continue;

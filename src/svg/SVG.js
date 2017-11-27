@@ -10,7 +10,7 @@ import { Interface } from '../util/Interface';
 class SVG {
 
     constructor(name, type, params) {
-        let self = this;
+        const self = this;
         let svg;
 
         createSVG();
@@ -67,7 +67,7 @@ class SVG {
         }
 
         function createColorStop(obj) {
-            let stop = document.createElementNS('http://www.w3.org/2000/svg', 'stop');
+            const stop = document.createElementNS('http://www.w3.org/2000/svg', 'stop');
             ['offset', 'style'].forEach(attr => {
                 stop.setAttributeNS(null, attr, attr === 'style' ? 'stop-color:' + obj[attr] : obj[attr]);
             });

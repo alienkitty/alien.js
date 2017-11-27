@@ -12,21 +12,21 @@ class Utils3D {
 
     constructor() {
         this.PATH = '';
-        let objectLoader, geomLoader, bufferGeomLoader,
-            textures = {};
+        const textures = {};
+        let objectLoader, geomLoader, bufferGeomLoader;
 
         this.decompose = (local, world) => {
             local.matrixWorld.decompose(world.position, world.quaternion, world.scale);
         };
 
         this.createDebug = (size = 40, color) => {
-            let geom = new THREE.IcosahedronGeometry(size, 1),
+            const geom = new THREE.IcosahedronGeometry(size, 1),
                 mat = color ? new THREE.MeshBasicMaterial({ color }) : new THREE.MeshNormalMaterial();
             return new THREE.Mesh(geom, mat);
         };
 
         this.createRT = (width, height) => {
-            let params = {
+            const params = {
                 minFilter: THREE.LinearFilter,
                 magFilter: THREE.LinearFilter,
                 format: THREE.RGBAFormat,
@@ -37,7 +37,7 @@ class Utils3D {
 
         this.getTexture = src => {
             if (!textures[src]) {
-                let img = Images.createImg(this.PATH + src),
+                const img = Images.createImg(this.PATH + src),
                     texture = new THREE.Texture(img);
                 img.onload = () => {
                     texture.needsUpdate = true;
@@ -53,7 +53,7 @@ class Utils3D {
         };
 
         this.setInfinity = v => {
-            let inf = Number.POSITIVE_INFINITY;
+            const inf = Number.POSITIVE_INFINITY;
             v.set(inf, inf, inf);
             return v;
         };
@@ -64,11 +64,11 @@ class Utils3D {
         };
 
         this.getCubemap = src => {
-            let path = 'cube_' + (Array.isArray(src) ? src[0] : src);
+            const path = 'cube_' + (Array.isArray(src) ? src[0] : src);
             if (!textures[path]) {
-                let images = [];
+                const images = [];
                 for (let i = 0; i < 6; i++) {
-                    let img = Images.createImg(this.PATH + (Array.isArray(src) ? src[i] : src));
+                    const img = Images.createImg(this.PATH + (Array.isArray(src) ? src[i] : src));
                     images.push(img);
                     img.onload = () => {
                         textures[path].needsUpdate = true;
@@ -98,7 +98,7 @@ class Utils3D {
         };
 
         this.loadBufferGeometry = data => {
-            let geometry = new THREE.BufferGeometry();
+            const geometry = new THREE.BufferGeometry();
             if (data.data) data = data.data;
             geometry.addAttribute('position', new THREE.BufferAttribute(new Float32Array(data.position), 3));
             geometry.addAttribute('normal', new THREE.BufferAttribute(new Float32Array(data.normal || data.position.length), 3));
@@ -107,7 +107,7 @@ class Utils3D {
         };
 
         this.loadSkinnedGeometry = data => {
-            let geometry = new THREE.BufferGeometry();
+            const geometry = new THREE.BufferGeometry();
             geometry.addAttribute('position', new THREE.BufferAttribute(new Float32Array(data.position), 3));
             geometry.addAttribute('normal', new THREE.BufferAttribute(new Float32Array(data.normal), 3));
             geometry.addAttribute('uv', new THREE.BufferAttribute(new Float32Array(data.uv), 2));
@@ -118,7 +118,7 @@ class Utils3D {
         };
 
         this.loadCurve = data => {
-            let points = [];
+            const points = [];
             for (let i = 0; i < data.length; i += 3) points.push(new THREE.Vector3(data[i + 0], data[i + 1], data[i + 2]));
             return new THREE.CatmullRomCurve3(points);
         };
@@ -136,7 +136,7 @@ class Utils3D {
         };
 
         this.getRepeatTexture = src => {
-            let texture = this.getTexture(src);
+            const texture = this.getTexture(src);
             texture.onload = () => {
                 texture.wrapS = texture.wrapT = THREE.RepeatWrapping;
             };

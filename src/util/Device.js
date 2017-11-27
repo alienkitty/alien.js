@@ -10,7 +10,7 @@ class Device {
         this.agent = navigator.userAgent.toLowerCase();
         this.pixelRatio = window.devicePixelRatio;
         this.prefix = (() => {
-            let styles = window.getComputedStyle(document.documentElement, ''),
+            const styles = window.getComputedStyle(document.documentElement, ''),
                 pre = (Array.prototype.slice.call(styles).join('').match(/-(webkit|moz|ms)-/) || styles.OLink === '' && ['', 'o'])[1];
             return {
                 lowercase: pre,

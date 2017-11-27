@@ -11,7 +11,7 @@ class Utils {
         if (min === max) return min;
         min = min || 0;
         max = max || 1;
-        let p = Math.pow(10, precision);
+        const p = Math.pow(10, precision);
         return Math.round((min + Math.random() * (max - min)) * p) / p;
     }
 
@@ -20,7 +20,7 @@ class Utils {
     }
 
     queryString(key) {
-        let str = decodeURI(window.location.search.replace(new RegExp('^(?:.*[&\\?]' + encodeURI(key).replace(/[.+*]/g, '\\$&') + '(?:\\=([^&]*))?)?.*$', 'i'), '$1'));
+        const str = decodeURI(window.location.search.replace(new RegExp('^(?:.*[&\\?]' + encodeURI(key).replace(/[.+*]/g, '\\$&') + '(?:\\=([^&]*))?)?.*$', 'i'), '$1'));
         if (!str.length || str === '0' || str === 'false') return false;
         return str;
     }
@@ -39,7 +39,7 @@ class Utils {
     }
 
     mergeObject(...objects) {
-        let object = {};
+        const object = {};
         for (let obj of objects) for (let key in obj) object[key] = obj[key];
         return object;
     }
@@ -55,7 +55,7 @@ class Utils {
     }
 
     basename(path, ext) {
-        let name = path.split('/').last();
+        const name = path.split('/').last();
         return !ext ? name.split('.')[0] : name;
     }
 

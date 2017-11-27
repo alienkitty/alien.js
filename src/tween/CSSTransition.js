@@ -11,7 +11,7 @@ import { TweenManager } from './TweenManager';
 class CSSTransition {
 
     constructor(object, props, time, ease, delay, callback) {
-        let self = this;
+        const self = this;
         let transformProps, transitionProps;
 
         initProperties();
@@ -22,7 +22,7 @@ class CSSTransition {
         }
 
         function initProperties() {
-            let transform = TweenManager.getAllTransforms(object),
+            const transform = TweenManager.getAllTransforms(object),
                 properties = [];
             for (let key in props) {
                 if (TweenManager.isTransform(key)) {
@@ -45,7 +45,7 @@ class CSSTransition {
             if (killed()) return;
             if (object.cssTween) object.cssTween.kill = true;
             object.cssTween = self;
-            let strings = buildStrings(time, ease, delay);
+            const strings = buildStrings(time, ease, delay);
             object.willChange(strings.props);
             setTimeout(() => {
                 if (killed()) return;
@@ -64,7 +64,7 @@ class CSSTransition {
             let props = '',
                 transition = '';
             for (let i = 0; i < transitionProps.length; i++) {
-                let transitionProp = transitionProps[i];
+                const transitionProp = transitionProps[i];
                 props += (props.length ? ', ' : '') + transitionProp;
                 transition += (transition.length ? ', ' : '') + transitionProp + ' ' + time + 'ms ' + TweenManager.getEase(ease) + ' ' + delay + 'ms';
             }

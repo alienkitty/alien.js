@@ -21,7 +21,7 @@ class Interaction {
             Interaction.DRAG  = 'interaction_drag';
             Interaction.END   = 'interaction_end';
 
-            let events = {
+            const events = {
                     touchstart: [],
                     touchmove: [],
                     touchend: []
@@ -42,7 +42,7 @@ class Interaction {
             Interaction.instance = this;
         }
 
-        let self = this;
+        const self = this;
         this.events = new Events();
         this.x = 0;
         this.y = 0;
@@ -87,7 +87,7 @@ class Interaction {
             self.last.x = e.x;
             self.last.y = e.y;
             distance += self.delta.length();
-            let delta = Math.max(0.001, Render.TIME - (timeMove || Render.TIME));
+            const delta = Math.max(0.001, Render.TIME - (timeMove || Render.TIME));
             timeMove = Render.TIME;
             self.velocity.x = Math.abs(self.delta.x) / delta;
             self.velocity.y = Math.abs(self.delta.y) / delta;
@@ -100,7 +100,7 @@ class Interaction {
             self.isTouching = false;
             self.move.x = 0;
             self.move.y = 0;
-            let delta = Math.max(0.001, Render.TIME - (timeMove || Render.TIME));
+            const delta = Math.max(0.001, Render.TIME - (timeMove || Render.TIME));
             if (delta > 100) {
                 self.delta.x = 0;
                 self.delta.y = 0;

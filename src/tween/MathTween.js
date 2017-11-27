@@ -11,7 +11,7 @@ import { Interpolation } from './Interpolation';
 class MathTween {
 
     constructor(object, props, time, ease, delay, update, callback) {
-        let self = this;
+        const self = this;
         let startTime, startValues, endValues, paused, spring, damping, elapsed;
 
         initMathTween();
@@ -46,7 +46,7 @@ class MathTween {
             if (paused || t < startTime) return;
             elapsed = (t - startTime) / time;
             elapsed = elapsed > 1 ? 1 : elapsed;
-            let delta = this.interpolate(elapsed);
+            const delta = this.interpolate(elapsed);
             if (update) update(delta);
             if (elapsed === 1) {
                 if (callback) callback();
@@ -68,10 +68,10 @@ class MathTween {
         };
 
         this.interpolate = elapsed => {
-            let delta = ease(elapsed, spring, damping);
+            const delta = ease(elapsed, spring, damping);
             for (let prop in startValues) {
                 if (typeof startValues[prop] === 'number' && typeof endValues[prop] === 'number') {
-                    let start = startValues[prop],
+                    const start = startValues[prop],
                         end = endValues[prop];
                     object[prop] = start + (end - start) * delta;
                 }

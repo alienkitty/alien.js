@@ -20,9 +20,9 @@ class UIAboutIcons extends Interface {
 
     constructor() {
         super('UIAboutIcons');
-        let self = this;
-        let github, twitter,
-            size = 48;
+        const self = this;
+        const size = 48;
+        let github, twitter;
 
         initHTML();
         initGitHub();
@@ -77,8 +77,8 @@ class UIAboutCopy extends Interface {
 
     constructor() {
         super('UIAboutCopy');
-        let self = this;
-        let copy = Config.ABOUT_COPY,
+        const self = this;
+        const copy = Config.ABOUT_COPY,
             texts = [];
 
         initHTML();
@@ -96,7 +96,7 @@ class UIAboutCopy extends Interface {
 
         function initText() {
             for (let i = 0; i < copy.length; i++) {
-                let text = self.create('.text');
+                const text = self.create('.text');
                 text.fontStyle('Lato', 27, Config.UI_COLOR);
                 text.css({
                     position: 'relative',
@@ -128,9 +128,9 @@ class UIAboutTitle extends Interface {
 
     constructor() {
         super('UIAboutTitle');
-        let self = this;
-        let letters,
-            size = 160;
+        const self = this;
+        const size = 160;
+        let letters;
 
         initHTML();
 
@@ -166,13 +166,13 @@ class UIAbout extends Interface {
 
     constructor() {
         super('UIAbout');
-        let self = this;
-        let wrapper, title, copy, icons,
-            tilt = {
-                x: 4,
-                y: 8,
-                ease: 0.05
-            };
+        const self = this;
+        const tilt = {
+            x: 4,
+            y: 8,
+            ease: 0.05
+        };
+        let wrapper, title, copy, icons;
 
         initHTML();
         initViews();
@@ -205,9 +205,9 @@ class UIAbout extends Interface {
         }
 
         function resize() {
-            let scaleX = Math.range(Stage.width, 0, 1700, 0, 1.1, true),
-                scaleY = Math.range(Stage.height, 0, 1500, 0, 1.1, true),
-                scale = Math.min(scaleX, scaleY);
+            const scaleX = Math.range(Stage.width, 0, 1700, 0, 1.1, true),
+                scaleY = Math.range(Stage.height, 0, 1500, 0, 1.1, true);
+            let scale = Math.min(scaleX, scaleY);
             if (Device.mobile) scale = Math.min(1, scale * (Stage.width > Stage.height ? 1.5 : 1.8));
             wrapper.scale = scale;
             wrapper.transform();

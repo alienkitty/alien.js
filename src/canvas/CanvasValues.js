@@ -13,7 +13,7 @@ class CanvasValues {
     }
 
     setTRSA(x, y, r, sx, sy, a) {
-        let m = this.data;
+        const m = this.data;
         m[0] = x;
         m[1] = y;
         m[2] = r;
@@ -23,7 +23,7 @@ class CanvasValues {
     }
 
     calculate(values) {
-        let v = values.data,
+        const v = values.data,
             m = this.data;
         m[0] = m[0] + v[0];
         m[1] = m[1] + v[1];
@@ -36,7 +36,7 @@ class CanvasValues {
     calculateStyle(parent) {
         if (!parent.styled) return false;
         this.styled = true;
-        let values = parent.values;
+        const values = parent.values;
         for (let key in values) if (!this.styles[key]) this.styles[key] = values[key];
     }
 

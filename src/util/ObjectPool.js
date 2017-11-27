@@ -9,7 +9,7 @@ import { Utils } from './Utils';
 class ObjectPool {
 
     constructor(type, number) {
-        let pool = [];
+        const pool = [];
         this.array = pool;
 
         if (type) {

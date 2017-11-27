@@ -17,7 +17,7 @@ class Shader {
             props = fragmentShader;
             fragmentShader = vertexShader;
         }
-        let self = this;
+        const self = this;
         this.uniforms = {};
         this.properties = {};
 
@@ -32,7 +32,7 @@ class Shader {
         }
 
         function initShaders() {
-            let params = {};
+            const params = {};
             params.vertexShader = process(Shaders.getShader(vertexShader + '.vs') || vertexShader, 'vs');
             params.fragmentShader = process(Shaders.getShader(fragmentShader + '.fs') || fragmentShader, 'fs');
             params.uniforms = self.uniforms;
@@ -72,7 +72,7 @@ class Shader {
                 ].join('\n');
             }
             code = header + code;
-            let threeChunk = (a, b) => {
+            const threeChunk = (a, b) => {
                 return THREE.ShaderChunk[b] + '\n';
             };
             return code.replace(/#s?chunk\(\s?(\w+)\s?\);/g, threeChunk);
@@ -89,7 +89,7 @@ class Shader {
     }
 
     getValues() {
-        let out = {};
+        const out = {};
         for (let key in this.uniforms) out[key] = this.uniforms[key].value;
         return out;
     }

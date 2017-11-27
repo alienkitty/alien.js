@@ -10,7 +10,7 @@ import { Stage } from '../view/Stage';
 class FontLoader {
 
     constructor(fonts, callback) {
-        let self = this;
+        const self = this;
         this.events = new Events();
         let element;
 
@@ -34,7 +34,7 @@ class FontLoader {
     }
 
     static loadFonts(fonts, callback) {
-        let promise = Promise.create();
+        const promise = Promise.create();
         if (!callback) callback = promise.resolve;
         promise.loader = new FontLoader(fonts, callback);
         return promise;

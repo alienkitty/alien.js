@@ -17,7 +17,7 @@ class AlienKitty extends Interface {
 
     constructor() {
         super('AlienKitty');
-        let self = this;
+        const self = this;
         let alienkitty, eyelid1, eyelid2;
 
         initHTML();
@@ -84,9 +84,9 @@ class Progress extends Interface {
 
     constructor() {
         super('Progress');
-        let self = this;
-        let canvas, context,
-            size = 90;
+        const self = this;
+        const size = 90;
+        let canvas, context;
 
         initHTML();
         initCanvas();
@@ -106,7 +106,7 @@ class Progress extends Interface {
         function loop() {
             if (self.progress >= 1 && !self.complete) complete();
             context.clearRect(0, 0, size, size);
-            let progress = self.progress || 0,
+            const progress = self.progress || 0,
                 x = size / 2,
                 y = size / 2,
                 radius = size * 0.4,
@@ -139,7 +139,7 @@ class Loader extends Interface {
 
     constructor() {
         super('Loader');
-        let self = this;
+        const self = this;
         let loader, progress;
 
         initHTML();
@@ -180,7 +180,7 @@ class Loader extends Interface {
 class Main {
 
     constructor() {
-        let self = this;
+        const self = this;
         let loader, wrapper, alienkitty;
 
         initStage();

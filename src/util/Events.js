@@ -9,7 +9,7 @@ import { Utils } from './Utils';
 class Events {
 
     constructor() {
-        let events = [];
+        const events = [];
 
         this.add = (event, callback) => {
             events.push({ event, callback });
@@ -34,7 +34,7 @@ class Events {
         };
 
         this.fire = (event, object = {}) => {
-            let clone = Utils.cloneArray(events);
+            const clone = Utils.cloneArray(events);
             for (let i = 0; i < clone.length; i++) if (clone[i].event === event) clone[i].callback(object);
         };
     }

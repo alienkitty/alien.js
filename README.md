@@ -29,8 +29,8 @@ class UILogo extends Interface {
 
     constructor() {
         super('UILogo');
-        let self = this;
-        let size = Device.phone ? 40 : 64;
+        const self = this;
+        const size = Device.phone ? 40 : 64;
 
         initHTML();
 
@@ -80,7 +80,7 @@ class CanvasLayer extends Interface {
 
     constructor() {
         super('CanvasLayer');
-        let self = this;
+        const self = this;
 
         initHTML();
         initCanvas();

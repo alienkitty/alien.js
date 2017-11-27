@@ -13,16 +13,16 @@ class Video extends Component {
 
     constructor(params) {
         super();
-        let self = this;
+        const self = this;
         this.CDN = Config.CDN || '';
         this.loaded = {
             start: 0,
             end: 0,
             percent: 0
         };
+        const event = {};
         let lastTime, buffering, seekTo, forceRender,
-            tick = 0,
-            event = {};
+            tick = 0;
 
         createElement();
         if (params.preload !== false) preload();
@@ -87,8 +87,8 @@ class Video extends Component {
             if (!seekTo) {
                 self.buffered = self.element.readyState === self.element.HAVE_ENOUGH_DATA;
             } else {
-                let max = -1,
-                    seekable = self.element.seekable;
+                const seekable = self.element.seekable;
+                let max = -1;
                 if (seekable) {
                     for (let i = 0; i < seekable.length; i++) if (seekable.start(i) < seekTo) max = seekable.end(i) - 0.5;
                     if (max >= seekTo) self.buffered = true;
@@ -104,9 +104,9 @@ class Video extends Component {
 
         function handleProgress() {
             if (!self.ready()) return;
-            let range = 0,
-                bf = self.element.buffered,
+            const bf = self.element.buffered,
                 time = self.element.currentTime;
+            let range = 0;
             while (!(bf.start(range) <= time && time <= bf.end(range))) range += 1;
             self.loaded.start = bf.start(range) / self.element.duration;
             self.loaded.end = bf.end(range) / self.element.duration;

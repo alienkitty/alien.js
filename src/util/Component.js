@@ -18,7 +18,7 @@ class Component {
     }
 
     initClass(object, ...params) {
-        let child = new object(...params);
+        const child = new object(...params);
         this.add(child);
         return child;
     }
@@ -32,7 +32,7 @@ class Component {
     }
 
     delayedCall(callback, time = 0, ...params) {
-        let timer = setTimeout(() => {
+        const timer = setTimeout(() => {
             if (callback) callback(...params);
         }, time);
         this.timers.push(timer);
@@ -62,10 +62,10 @@ class Component {
 
     destroy() {
         this.removed = true;
-        let parent = this.parent;
+        const parent = this.parent;
         if (parent && !parent.removed && parent.remove) parent.remove(this);
         for (let i = this.classes.length - 1; i >= 0; i--) {
-            let child = this.classes[i];
+            const child = this.classes[i];
             if (child && child.destroy) child.destroy();
         }
         this.classes.length = 0;

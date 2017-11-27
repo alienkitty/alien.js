@@ -11,14 +11,14 @@ class CanvasFont {
     constructor() {
 
         function createText(canvas, width, height, str, font, fillStyle, letterSpacing, textAlign) {
-            let context = canvas.context,
+            const context = canvas.context,
                 graphics = new CanvasGraphics(width, height);
             graphics.font = font;
             graphics.fillStyle = fillStyle;
             graphics.totalWidth = 0;
             graphics.totalHeight = height;
+            const characters = str.split('');
             let chr,
-                characters = str.split(''),
                 index = 0,
                 currentPosition = 0;
             context.font = font;
@@ -45,21 +45,21 @@ class CanvasFont {
         }
 
         this.createText = (canvas, width, height, str, font, fillStyle, { letterSpacing = 0, lineHeight = height, textAlign = 'start' }) => {
-            let context = canvas.context;
+            const context = canvas.context;
             if (height === lineHeight) {
                 return createText(canvas, width, height, str, font, fillStyle, letterSpacing, textAlign);
             } else {
-                let text = new CanvasGraphics(width, height),
+                const text = new CanvasGraphics(width, height),
                     words = str.split(' '),
-                    line = '',
                     lines = [];
+                let line = '';
                 text.totalWidth = 0;
                 text.totalHeight = 0;
                 context.font = font;
                 for (let n = 0; n < words.length; n++) {
-                    let testLine = line + words[n] + ' ',
-                        characters = testLine.split(''),
-                        testWidth = 0;
+                    const testLine = line + words[n] + ' ',
+                        characters = testLine.split('');
+                    let testWidth = 0;
                     for (let i = 0; i < characters.length; i++) testWidth += context.measureText(characters[i]).width + letterSpacing;
                     if (testWidth > width && n > 0) {
                         lines.push(line);
@@ -70,7 +70,7 @@ class CanvasFont {
                 }
                 lines.push(line);
                 lines.every((e, i) => {
-                    let graphics = createText(canvas, width, lineHeight, e, font, fillStyle, letterSpacing, textAlign);
+                    const graphics = createText(canvas, width, lineHeight, e, font, fillStyle, letterSpacing, textAlign);
                     graphics.y = i * lineHeight;
                     text.add(graphics);
                     text.totalWidth = Math.max(graphics.totalWidth, text.totalWidth);

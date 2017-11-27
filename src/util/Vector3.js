@@ -58,7 +58,7 @@ class Vector3 {
     }
 
     normalize() {
-        let m = 1 / this.length();
+        const m = 1 / this.length();
         this.set(this.x * m, this.y * m, this.z * m);
         return this;
     }
@@ -143,7 +143,7 @@ class Vector3 {
     interp(v, alpha, ease, dist = 5000) {
         if (!this.calc) this.calc = new Vector3();
         this.calc.subVectors(this, v);
-        let fn = Interpolation.convertEase(ease),
+        const fn = Interpolation.convertEase(ease),
             a = fn(Math.clamp(Math.range(this.calc.lengthSq(), 0, dist * dist, 1, 0), 0, 1) * (alpha / 10));
         return this.lerp(v, a);
     }
@@ -163,7 +163,7 @@ class Vector3 {
     }
 
     applyQuaternion(q) {
-        let x = this.x,
+        const x = this.x,
             y = this.y,
             z = this.z,
             qx = q.x,
@@ -189,7 +189,7 @@ class Vector3 {
     }
 
     cross(a, b = this) {
-        let x = a.y * b.z - a.z * b.y,
+        const x = a.y * b.z - a.z * b.y,
             y = a.z * b.x - a.x * b.z,
             z = a.x * b.y - a.y * b.x;
         this.set(x, y, z, this.w);
@@ -197,7 +197,7 @@ class Vector3 {
     }
 
     distanceTo(v, noSq) {
-        let dx = this.x - v.x,
+        const dx = this.x - v.x,
             dy = this.y - v.y,
             dz = this.z - v.z;
         if (!noSq) return Math.sqrt(dx * dx + dy * dy + dz * dz);
@@ -209,7 +209,7 @@ class Vector3 {
     }
 
     solveAngle2D(a, b = this) {
-        let calc = new Vector2(),
+        const calc = new Vector2(),
             calc2 = new Vector2();
         calc.copyFrom(a);
         calc2.copyFrom(b);

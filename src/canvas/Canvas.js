@@ -19,7 +19,7 @@ class Canvas {
     }
 
     size(w, h, retina) {
-        let ratio = retina ? 2 : 1;
+        const ratio = retina ? 2 : 1;
         this.element.width = w * ratio;
         this.element.height = h * ratio;
         this.width = w;
@@ -70,7 +70,7 @@ class Canvas {
 
     getPixel(x, y, dirty) {
         if (!this.imageData || dirty) this.getImageData();
-        let imgData = {},
+        const imgData = {},
             index = (x + y * this.element.width) * 4,
             pixels = this.imageData.data;
         imgData.r = pixels[index];

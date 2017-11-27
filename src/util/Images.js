@@ -11,7 +11,7 @@ class Images {
     }
 
     createImg(src, callback) {
-        let img = new Image();
+        const img = new Image();
         img.crossOrigin = this.CORS;
         img.src = src;
         img.onload = callback;
@@ -20,7 +20,7 @@ class Images {
     }
 
     promise(img) {
-        let promise = Promise.create();
+        const promise = Promise.create();
         img.onload = promise.resolve;
         img.onerror = promise.resolve;
         return promise;

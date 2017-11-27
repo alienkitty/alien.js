@@ -10,7 +10,7 @@ import { Stage } from '../view/Stage';
 class Mouse {
 
     constructor() {
-        let self = this;
+        const self = this;
         this.x = 0;
         this.y = 0;
         this.normal = {

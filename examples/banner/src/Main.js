@@ -15,7 +15,7 @@ class Main extends Interface {
 
     constructor() {
         super();
-        let self = this;
+        const self = this;
         this.playing = false;
         let loader, wrapper, alienkitty, eyelid1, eyelid2;
 

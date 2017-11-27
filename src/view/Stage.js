@@ -11,7 +11,7 @@ class Stage extends Interface {
 
     constructor() {
         super('Stage');
-        let self = this;
+        const self = this;
         let last;
 
         initHTML();

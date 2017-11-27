@@ -13,7 +13,7 @@ class AssetLoader {
     constructor(assets, callback) {
         if (Array.isArray(assets)) {
             assets = (() => {
-                let keys = assets.map(path => {
+                const keys = assets.map(path => {
                     return Utils.basename(path);
                 });
                 return keys.reduce((o, k, i) => {
@@ -22,16 +22,16 @@ class AssetLoader {
                 }, {});
             })();
         }
-        let self = this;
+        const self = this;
         this.events = new Events();
         this.CDN = Config.CDN || '';
-        let total = Object.keys(assets).length,
-            loaded = 0;
+        const total = Object.keys(assets).length;
+        let loaded = 0;
 
         for (let key in assets) loadAsset(key, this.CDN + assets[key]);
 
         function loadAsset(key, asset) {
-            let ext = Utils.extension(asset);
+            const ext = Utils.extension(asset);
             if (ext.includes(['jpg', 'jpeg', 'png', 'gif', 'svg'])) {
                 Images.createImg(asset, assetLoaded);
                 return;
@@ -63,7 +63,7 @@ class AssetLoader {
     }
 
     static loadAssets(assets, callback) {
-        let promise = Promise.create();
+        const promise = Promise.create();
         if (!callback) callback = promise.resolve;
         promise.loader = new AssetLoader(assets, callback);
         return promise;

@@ -44,7 +44,7 @@ class CanvasObject {
     }
 
     startDraw(ox, oy, override) {
-        let context = this.canvas.context,
+        const context = this.canvas.context,
             v = this.values.data,
             x = v[0] + (ox || 0),
             y = v[1] + (oy || 0);
@@ -55,7 +55,7 @@ class CanvasObject {
         context.scale(v[3], v[4]);
         context.globalAlpha = v[5];
         if (this.styles.styled) {
-            let values = this.styles.values;
+            const values = this.styles.values;
             for (let key in values) context[key] = values[key];
         }
     }

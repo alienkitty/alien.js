@@ -1,21 +1,24 @@
 {
   "name": "alien-umd-project",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "author": "Patrick Schroen",
   "private": true,
   "main": "build/project.js",
   "scripts": {
     "build": "rollup -c || exit 0",
-    "dev": "rollup -c -w -m inline || exit 0",
+    "dev": "concurrently --names \"ROLLUP,HTTP\" -c \"bgBlue.bold,bgGreen.bold\" \"rollup -c -w -m inline\" \"serve --port 8080 dist\" || exit 0",
+    "start": "npm run dev",
     "lint": "eslint src || exit 0",
     "pngquant": "rm -rf dist/assets/images && cp -r src/images dist/assets/ && find dist/assets/images -name '**.png' -exec pngquant --strip --ext=.png --force {} \\;"
   },
   "devDependencies": {
-    "eslint": "^4.9.0",
+    "concurrently": "^3.5.1",
+    "eslint": "^4.12.0",
     "replace": "^0.3.0",
-    "rollup": "^0.50.0",
-    "rollup-plugin-bundleutils": "^1.0.1",
+    "rollup": "^0.52.0",
+    "rollup-plugin-bundleutils": "^1.0.2",
     "rollup-plugin-eslint": "^4.0.0",
-    "rollup-watch": "^4.3.1"
+    "rollup-watch": "^4.3.1",
+    "serve": "^6.4.1"
   }
 }

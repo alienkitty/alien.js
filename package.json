@@ -30,18 +30,21 @@
     "build-babel-uglify": "rollup -c --environment babel,uglify",
     "build-examples": "for x in `find examples -name 'rollup.config.js' -maxdepth 2 ! -path './alien.js*' -exec dirname {} \\;`; do cd \"$x\" && ln -sfn ../.. alien.js && rollup -c && rm -rf alien.js && cd ../..; done",
     "build-world": "npm run build && npm run build-examples",
-    "dev": "rollup -c -w -m inline",
+    "dev": "concurrently --names \"ROLLUP,HTTP\" -c \"bgBlue.bold,bgGreen.bold\" \"rollup -c -w -m inline\" \"serve --port 8080\" || exit 0",
+    "start": "npm run dev",
     "lint": "eslint src || exit 0"
   },
   "engines": {
     "node": ">=4"
   },
   "devDependencies": {
+    "concurrently": "^3.5.1",
     "eslint": "^4.12.0",
     "replace": "^0.3.0",
     "rollup": "^0.52.0",
     "rollup-plugin-bundleutils": "^1.0.2",
     "rollup-plugin-eslint": "^4.0.0",
-    "rollup-watch": "^4.3.1"
+    "rollup-watch": "^4.3.1",
+    "serve": "^6.4.1"
   }
 }

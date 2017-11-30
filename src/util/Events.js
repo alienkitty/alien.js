@@ -9,33 +9,31 @@ import { Utils } from './Utils';
 class Events {
 
     constructor() {
-        const events = [];
+        const events = {};
 
         this.add = (event, callback) => {
-            events.push({ event, callback });
+            if (!events[event]) events[event] = [];
+            events[event].push(callback);
         };
 
         this.remove = (event, callback) => {
-            for (let i = events.length - 1; i > -1; i--) {
-                if (events[i].event === event && events[i].callback === callback) {
-                    events[i] = null;
-                    events.splice(i, 1);
-                    break;
-                }
-            }
+            if (!events[event]) return;
+            events[event].remove(callback);
         };
 
         this.destroy = () => {
-            for (let i = events.length - 1; i > -1; i--) {
-                events[i] = null;
-                events.splice(i, 1);
+            for (let event in events) {
+                for (let i = events[event].length - 1; i > -1; i--) {
+                    events[event][i] = null;
+                    events[event].splice(i, 1);
+                }
             }
             return Utils.nullObject(this);
         };
 
         this.fire = (event, object = {}) => {
-            const clone = Utils.cloneArray(events);
-            for (let i = 0; i < clone.length; i++) if (clone[i].event === event) clone[i].callback(object);
+            if (!events[event]) return;
+            events[event].forEach(callback => callback(object));
         };
     }
 }

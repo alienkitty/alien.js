@@ -117,8 +117,8 @@ class Accelerometer {
         }
 
         this.init = () => {
-            window.addEventListener('devicemotion', updateAccel);
-            window.addEventListener('deviceorientation', updateOrientation);
+            window.addEventListener('devicemotion', updateAccel, true);
+            window.addEventListener('deviceorientation', updateOrientation, true);
         };
     }
 }

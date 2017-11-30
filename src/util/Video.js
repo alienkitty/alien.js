@@ -180,7 +180,7 @@ class Video extends Component {
         };
 
         this.trackProgress = () => {
-            this.element.addEventListener('progress', handleProgress);
+            this.element.addEventListener('progress', handleProgress, true);
         };
 
         this.destroy = () => {

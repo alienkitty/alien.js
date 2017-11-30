@@ -365,36 +365,59 @@ class Interface {
         return this;
     }
 
+    convertTouchEvent(e) {
+        const touchEvent = {};
+        touchEvent.x = 0;
+        touchEvent.y = 0;
+        if (!e) return touchEvent;
+        if (e.touches || e.changedTouches) {
+            if (e.touches.length) {
+                touchEvent.x = e.touches[0].pageX;
+                touchEvent.y = e.touches[0].pageY;
+            } else {
+                touchEvent.x = e.changedTouches[0].pageX;
+                touchEvent.y = e.changedTouches[0].pageY;
+            }
+        } else {
+            touchEvent.x = e.pageX;
+            touchEvent.y = e.pageY;
+        }
+        return touchEvent;
+    }
+
     click(callback) {
-        const clicked = e => {
+        const click = e => {
+            if (!this.element) return false;
             e.object = this.element.className === 'hit' ? this.parent : this;
             e.action = 'click';
             if (callback) callback(e);
         };
-        this.element.addEventListener('click', clicked);
+        this.element.addEventListener('click', click, true);
         this.element.style.cursor = 'pointer';
         return this;
     }
 
     hover(callback) {
-        const hovered = e => {
+        const hover = e => {
+            if (!this.element) return false;
             e.object = this.element.className === 'hit' ? this.parent : this;
             e.action = e.type === 'mouseout' ? 'out' : 'over';
             if (callback) callback(e);
         };
-        this.element.addEventListener('mouseover', hovered);
-        this.element.addEventListener('mouseout', hovered);
+        this.element.addEventListener('mouseover', hover, true);
+        this.element.addEventListener('mouseout', hover, true);
         return this;
     }
 
     press(callback) {
-        const pressed = e => {
+        const press = e => {
+            if (!this.element) return false;
             e.object = this.element.className === 'hit' ? this.parent : this;
             e.action = e.type === 'mousedown' ? 'down' : 'up';
             if (callback) callback(e);
         };
-        this.element.addEventListener('mousedown', pressed);
-        this.element.addEventListener('mouseup', pressed);
+        this.element.addEventListener('mousedown', press, true);
+        this.element.addEventListener('mouseup', press, true);
         return this;
     }
 
@@ -402,7 +425,23 @@ class Interface {
         if (event === 'touchstart' && !Device.mobile) event = 'mousedown';
         else if (event === 'touchmove' && !Device.mobile) event = 'mousemove';
         else if (event === 'touchend' && !Device.mobile) event = 'mouseup';
-        this.element.addEventListener(event, callback);
+        if (!this.events['bind_' + event]) this.events['bind_' + event] = [];
+        const events = this.events['bind_' + event];
+        events.push({ target: this.element, callback });
+
+        const touchEvent = e => {
+            const touch = this.convertTouchEvent(e);
+            e.x = touch.x;
+            e.y = touch.y;
+            events.forEach(event => {
+                if (event.target === e.currentTarget) event.callback(e);
+            });
+        };
+
+        if (!this.events['fn_' + event]) {
+            this.events['fn_' + event] = touchEvent;
+            this.element.addEventListener(event, touchEvent, true);
+        }
         return this;
     }
 
@@ -410,12 +449,21 @@ class Interface {
         if (event === 'touchstart' && !Device.mobile) event = 'mousedown';
         else if (event === 'touchmove' && !Device.mobile) event = 'mousemove';
         else if (event === 'touchend' && !Device.mobile) event = 'mouseup';
-        this.element.removeEventListener(event, callback);
+        const events = this.events['bind_' + event];
+        if (!events) return this;
+        events.forEach((event, i) => {
+            if (event.callback === callback) events.splice(i, 1);
+        });
+        if (this.events['fn_' + event] && !events.length) {
+            this.element.removeEventListener(event, this.events['fn_' + event], true);
+            this.events['fn_' + event] = null;
+        }
         return this;
     }
 
     interact(overCallback, clickCallback) {
-        this.hit = this.create('.hit').css({
+        this.hit = this.create('.hit');
+        this.hit.css({
             position: 'absolute',
             left: 0,
             top: 0,
@@ -430,28 +478,7 @@ class Interface {
 
     touchClick(hover, click) {
         const start = {};
-        let touch = {},
-            time, move;
-
-        const touchEvent = e => {
-            const event = {};
-            event.x = 0;
-            event.y = 0;
-            if (!e) return event;
-            if (Device.mobile && (e.touches || e.changedTouches)) {
-                if (e.touches.length) {
-                    event.x = e.touches[0].pageX;
-                    event.y = e.touches[0].pageY;
-                } else {
-                    event.x = e.changedTouches[0].pageX;
-                    event.y = e.changedTouches[0].pageY;
-                }
-            } else {
-                event.x = e.pageX;
-                event.y = e.pageY;
-            }
-            return event;
-        };
+        let time, move, touch;
 
         const findDistance = (p1, p2) => {
             const dx = p2.x - p1.x,
@@ -460,35 +487,36 @@ class Interface {
         };
 
         const touchMove = e => {
-            touch = touchEvent(e);
+            if (!this.element) return false;
+            touch = this.convertTouchEvent(e);
             move = findDistance(start, touch) > 5;
         };
 
         const setTouch = e => {
-            const event = touchEvent(e);
-            e.touchX = event.x;
-            e.touchY = event.y;
+            const touchEvent = this.convertTouchEvent(e);
+            e.touchX = touchEvent.x;
+            e.touchY = touchEvent.y;
             start.x = e.touchX;
             start.y = e.touchY;
         };
 
         const touchStart = e => {
+            if (!this.element) return false;
             time = performance.now();
-            e.action = 'over';
             e.object = this.element.className === 'hit' ? this.parent : this;
+            e.action = 'over';
             setTouch(e);
             if (hover && !move) hover(e);
         };
 
         const touchEnd = e => {
+            if (!this.element) return false;
             const t = performance.now();
             e.object = this.element.className === 'hit' ? this.parent : this;
             setTouch(e);
-            if (time && t - time < 750) {
-                if (click && !move) {
-                    e.action = 'click';
-                    if (click && !move) click(e);
-                }
+            if (time && t - time < 750 && click && !move) {
+                e.action = 'click';
+                click(e);
             }
             if (hover) {
                 e.action = 'out';

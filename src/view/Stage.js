@@ -27,17 +27,17 @@ class Stage extends Interface {
                     last = 'focus';
                     self.events.fire(Events.VISIBILITY, { type: 'focus' });
                 }
-            });
+            }, true);
             window.addEventListener('blur', () => {
                 if (last !== 'blur') {
                     last = 'blur';
                     self.events.fire(Events.VISIBILITY, { type: 'blur' });
                 }
-            });
-            window.addEventListener('keydown', () => self.events.fire(Events.KEYBOARD_DOWN));
-            window.addEventListener('keyup', () => self.events.fire(Events.KEYBOARD_UP));
-            window.addEventListener('keypress', () => self.events.fire(Events.KEYBOARD_PRESS));
-            window.addEventListener('resize', () => self.events.fire(Events.RESIZE));
+            }, true);
+            window.addEventListener('keydown', () => self.events.fire(Events.KEYBOARD_DOWN), true);
+            window.addEventListener('keyup', () => self.events.fire(Events.KEYBOARD_UP), true);
+            window.addEventListener('keypress', () => self.events.fire(Events.KEYBOARD_PRESS), true);
+            window.addEventListener('resize', () => self.events.fire(Events.RESIZE), true);
             self.events.add(Events.RESIZE, resize);
             resize();
         }

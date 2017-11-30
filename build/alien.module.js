@@ -5,324 +5,36 @@
 }(this, (function (exports) { 'use strict';
 
 /**
- * Event helper class.
- *
- * @author Patrick Schroen / https://github.com/pschroen
- */
-
-if (!window.Events) window.Events = {
-    BROWSER_FOCUS:  'browser_focus',
-    KEYBOARD_DOWN:  'keyboard_down',
-    KEYBOARD_UP:    'keyboard_up',
-    KEYBOARD_PRESS: 'keyboard_press',
-    RESIZE:         'resize',
-    COMPLETE:       'complete',
-    PROGRESS:       'progress',
-    UPDATE:         'update',
-    LOADED:         'loaded',
-    ERROR:          'error',
-    READY:          'ready',
-    HOVER:          'hover',
-    CLICK:          'click'
-};
-
-class EventManager {
-
-    constructor() {
-        let events = [];
-
-        this.add = (event, callback, object) => {
-            events.push({event, callback, object});
-        };
-
-        this.remove = (eventString, callback) => {
-            for (let i = events.length - 1; i > -1; i--) {
-                if (events[i].event === eventString && events[i].callback === callback) {
-                    events[i] = null;
-                    events.splice(i, 1);
-                }
-            }
-        };
-
-        this.destroy = object => {
-            if (object) {
-                for (let i = events.length - 1; i > -1; i--) {
-                    if (events[i].object === object) {
-                        events[i] = null;
-                        events.splice(i, 1);
-                    }
-                }
-            } else {
-                window.events.destroy(this);
-                for (let i = events.length - 1; i > -1; i--) {
-                    events[i] = null;
-                    events.splice(i, 1);
-                }
-                return null;
-            }
-        };
-
-        this.fire = (eventString, object = {}) => {
-            for (let i = 0; i < events.length; i++) if (events[i].event === eventString) events[i].callback(object);
-        };
-
-        this.subscribe = (event, callback) => {
-            window.events.add(event, callback, this);
-            return callback;
-        };
-
-        this.unsubscribe = (event, callback) => {
-            window.events.remove(event, callback, this);
-        };
-    }
-}
-
-if (!window.events) window.events = new EventManager();
-
-/**
- * Render loop.
- *
- * @author Patrick Schroen / https://github.com/pschroen
- */
-
-if (!window.requestAnimationFrame) window.requestAnimationFrame = window.webkitRequestAnimationFrame || window.mozRequestAnimationFrame || window.oRequestAnimationFrame || window.msRequestAnimationFrame || (callback => Delayed(callback, 1000 / 60));
-
-let Render = new ( // Singleton pattern
-
-class Render {
-
-    constructor() {
-        let last,
-            render = [],
-            time = Date.now(),
-            timeSinceRender = 0,
-            rendering = false;
-
-        function focus(e) {
-            if (e.type === 'focus') last = Date.now();
-        }
-
-        function step() {
-            let t = Date.now(),
-                timeSinceLoad = t - time,
-                diff = 0,
-                fps = 60;
-            if (last) {
-                diff = t - last;
-                fps = 1000 / diff;
-            }
-            last = t;
-            for (let i = render.length - 1; i > -1; i--) {
-                let callback = render[i];
-                if (!callback) continue;
-                if (callback.fps) {
-                    timeSinceRender += diff > 200 ? 0 : diff;
-                    if (timeSinceRender < 1000 / callback.fps) continue;
-                    timeSinceRender -= 1000 / callback.fps;
-                }
-                callback(t, timeSinceLoad, diff, fps, callback.frameCount++);
-            }
-            if (render.length) {
-                window.requestAnimationFrame(step);
-            } else {
-                rendering = false;
-                window.events.remove(Events.BROWSER_FOCUS, focus);
-            }
-        }
-
-        this.start = callback => {
-            callback.frameCount = 0;
-            if (render.indexOf(callback) === -1) render.push(callback);
-            if (render.length && !rendering) {
-                rendering = true;
-                window.requestAnimationFrame(step);
-                window.events.add(Events.BROWSER_FOCUS, focus);
-            }
-        };
-
-        this.stop = callback => {
-            let i = render.indexOf(callback);
-            if (i > -1) render.splice(i, 1);
-        };
-    }
-}
-
-)(); // Singleton pattern
-
-/**
- * Dynamic object with linear interpolation.
- *
- * @author Patrick Schroen / https://github.com/pschroen
- */
-
-class DynamicObject {
-
-    constructor(props) {
-        for (let key in props) this[key] = props[key];
-
-        this.lerp = (v, ratio) => {
-            for (let key in props) this[key] += (v[key] - this[key]) * ratio;
-            return this;
-        };
-    }
-}
-
-/**
- * Browser detection and vendor prefixes.
- *
- * @author Patrick Schroen / https://github.com/pschroen
- */
-
-let Device = new ( // Singleton pattern
-
-class Device {
-
-    constructor() {
-        this.agent = navigator.userAgent.toLowerCase();
-        this.prefix = (() => {
-            let pre = '',
-                dom = '',
-                styles = window.getComputedStyle(document.documentElement, '');
-            pre = (Array.prototype.slice.call(styles).join('').match(/-(moz|webkit|ms)-/) || styles.OLink === '' && ['', 'o'])[1];
-            dom = 'WebKit|Moz|MS|O'.match(new RegExp('(' + pre + ')', 'i'))[1];
-            var IE = this.detect('trident');
-            return {
-                unprefixed: IE && !this.detect('msie 9'),
-                dom: dom,
-                lowercase: pre,
-                css: '-' + pre + '-',
-                js: (IE ? pre[0] : pre[0].toUpperCase()) + pre.substr(1)
-            };
-        })();
-        this.transformProperty = (() => {
-            let pre;
-            switch (this.prefix.lowercase) {
-                case 'webkit':
-                    pre = '-webkit-transform';
-                    break;
-                case 'moz':
-                    pre = '-moz-transform';
-                    break;
-                case 'o':
-                    pre = '-o-transform';
-                    break;
-                case 'ms':
-                    pre = '-ms-transform';
-                    break;
-                default:
-                    pre = 'transform';
-                    break;
-            }
-            return pre;
-        })();
-        this.mobile = !!('ontouchstart' in window || 'onpointerdown' in window) && this.detect(['ios', 'iphone', 'ipad', 'android', 'blackberry']) ? {} : false;
-        this.tablet = (() => {
-            if (window.innerWidth > window.innerHeight) return document.body.clientWidth > 800;
-            else return document.body.clientHeight > 800;
-        })();
-        this.phone = !this.tablet;
-        this.type = this.phone ? 'phone' : 'tablet';
-    }
-
-    detect(array) {
-        if (typeof array === 'string') array = [array];
-        for (let i = 0; i < array.length; i++) if (this.agent.indexOf(array[i]) > -1) return true;
-        return false;
-    }
-
-    vendor(style) {
-        return this.prefix.js + style;
-    }
-
-    vibrate(time) {
-        navigator.vibrate && navigator.vibrate(time);
-    }
-}
-
-)(); // Singleton pattern
-
-/**
  * Alien utilities.
  *
  * @author Patrick Schroen / https://github.com/pschroen
  */
 
-let Utils = new ( // Singleton pattern
+const Utils = new ( // Singleton reassignment pattern
 
 class Utils {
 
-    rand(min, max) {
-        return (new DynamicObject({v:min})).lerp({v:max}, Math.random()).v;
-    }
-
-    doRandom(min, max, precision) {
-        if (typeof precision === 'number') {
-            let p = Math.pow(10, precision);
-            return Math.round(this.rand(min, max) * p) / p;
-        } else {
-            return Math.round(this.rand(min - 0.5, max + 0.5));
-        }
+    random(min, max, precision = 0) {
+        if (typeof min === 'undefined') return Math.random();
+        if (min === max) return min;
+        min = min || 0;
+        max = max || 1;
+        const p = Math.pow(10, precision);
+        return Math.round((min + Math.random() * (max - min)) * p) / p;
     }
 
     headsTails(heads, tails) {
-        return !this.doRandom(0, 1) ? heads : tails;
+        return this.random(0, 1) ? tails : heads;
     }
 
-    toDegrees(rad) {
-        return rad * (180 / Math.PI);
+    queryString(key) {
+        const str = decodeURI(window.location.search.replace(new RegExp('^(?:.*[&\\?]' + encodeURI(key).replace(/[.+*]/g, '\\$&') + '(?:\\=([^&]*))?)?.*$', 'i'), '$1'));
+        if (!str.length || str === '0' || str === 'false') return false;
+        return str;
     }
 
-    toRadians(deg) {
-        return deg * (Math.PI / 180);
-    }
-
-    findDistance(p1, p2) {
-        let dx = p2.x - p1.x,
-            dy = p2.y - p1.y;
-        return Math.sqrt(dx * dx + dy * dy);
-    }
-
-    timestamp() {
-        return (Date.now() + this.doRandom(0, 99999)).toString();
-    }
-
-    pad(number) {
-        return number < 10 ? '0' + number : number;
-    }
-
-    touchEvent(e) {
-        let touchEvent = {};
-        touchEvent.x = 0;
-        touchEvent.y = 0;
-        if (!e) return touchEvent;
-        if (Device.mobile && (e.touches || e.changedTouches)) {
-            if (e.touches.length) {
-                touchEvent.x = e.touches[0].pageX;
-                touchEvent.y = e.touches[0].pageY;
-            } else {
-                touchEvent.x = e.changedTouches[0].pageX;
-                touchEvent.y = e.changedTouches[0].pageY;
-            }
-        } else {
-            touchEvent.x = e.pageX;
-            touchEvent.y = e.pageY;
-        }
-        return touchEvent;
-    }
-
-    clamp(num, min, max) {
-        return Math.min(Math.max(num, min), max);
-    }
-
-    constrain(num, min, max) {
-        return Math.min(Math.max(num, Math.min(min, max)), Math.max(min, max));
-    }
-
-    convertRange(oldValue, oldMin, oldMax, newMin, newMax, constrain) {
-        let oldRange = oldMax - oldMin,
-            newRange = newMax - newMin,
-            newValue = (oldValue - oldMin) * newRange / oldRange + newMin;
-        return constrain ? this.constrain(newValue, newMin, newMax) : newValue;
+    getConstructorName(object) {
+        return object.constructor.name || object.constructor.toString().match(/function ([^(]+)/)[1];
     }
 
     nullObject(object) {
@@ -335,13 +47,9 @@ class Utils {
     }
 
     mergeObject(...objects) {
-        let object = {};
+        const object = {};
         for (let obj of objects) for (let key in obj) object[key] = obj[key];
         return object;
-    }
-
-    cloneArray(array) {
-        return array.slice(0);
     }
 
     toArray(object) {
@@ -350,13 +58,17 @@ class Utils {
         });
     }
 
-    queryString(key) {
-        // eslint-disable-next-line no-useless-escape
-        return decodeURI(window.location.search.replace(new RegExp('^(?:.*[&\\?]' + encodeURI(key).replace(/[\.\+\*]/g, '\\$&') + '(?:\\=([^&]*))?)?.*$', 'i'), '$1'));
+    cloneArray(array) {
+        return array.slice(0);
     }
 
-    basename(path) {
-        return path.replace(/.*\//, '').replace(/(.*)\..*$/, '$1');
+    basename(path, ext) {
+        const name = path.split('/').last();
+        return !ext ? name.split('.')[0] : name;
+    }
+
+    extension(path) {
+        return path.split('.').last().split('?')[0].toLowerCase();
     }
 
     base64(str) {
@@ -364,9 +76,205 @@ class Utils {
             return String.fromCharCode('0x' + p1);
         }));
     }
+
+    timestamp() {
+        return (Date.now() + this.random(0, 99999)).toString();
+    }
+
+    pad(number) {
+        return number < 10 ? '0' + number : number;
+    }
 }
 
-)(); // Singleton pattern
+)(); // Singleton reassignment pattern
+
+/**
+ * Event helper class.
+ *
+ * @author Patrick Schroen / https://github.com/pschroen
+ */
+
+class Events {
+
+    constructor() {
+        const events = {};
+
+        this.add = (event, callback) => {
+            if (!events[event]) events[event] = [];
+            events[event].push(callback);
+        };
+
+        this.remove = (event, callback) => {
+            if (!events[event]) return;
+            events[event].remove(callback);
+        };
+
+        this.destroy = () => {
+            for (let event in events) {
+                for (let i = events[event].length - 1; i > -1; i--) {
+                    events[event][i] = null;
+                    events[event].splice(i, 1);
+                }
+            }
+            return Utils.nullObject(this);
+        };
+
+        this.fire = (event, object = {}) => {
+            if (!events[event]) return;
+            events[event].forEach(callback => callback(object));
+        };
+    }
+}
+
+Events.VISIBILITY     = 'visibility';
+Events.KEYBOARD_PRESS = 'keyboard_press';
+Events.KEYBOARD_DOWN  = 'keyboard_down';
+Events.KEYBOARD_UP    = 'keyboard_up';
+Events.RESIZE         = 'resize';
+Events.COMPLETE       = 'complete';
+Events.PROGRESS       = 'progress';
+Events.UPDATE         = 'update';
+Events.LOADED         = 'loaded';
+Events.ERROR          = 'error';
+Events.READY          = 'ready';
+Events.HOVER          = 'hover';
+Events.CLICK          = 'click';
+
+/**
+ * Render loop.
+ *
+ * @author Patrick Schroen / https://github.com/pschroen
+ */
+
+if (!window.requestAnimationFrame) window.requestAnimationFrame = window.webkitRequestAnimationFrame || window.mozRequestAnimationFrame || window.oRequestAnimationFrame || window.msRequestAnimationFrame || (() => {
+    const start = Date.now();
+    return callback => setTimeout(() => callback(Date.now() - start), 1000 / 60);
+})();
+
+const Render = new ( // Singleton reassignment pattern
+
+class Render {
+
+    constructor() {
+        let self = this;
+        const render = [],
+            skipLimit = 200;
+        let last = performance.now();
+
+        requestAnimationFrame(step);
+
+        function step(t) {
+            const delta = Math.min(skipLimit, t - last);
+            last = t;
+            self.TIME = t;
+            self.DELTA = delta;
+            for (let i = render.length - 1; i >= 0; i--) {
+                const callback = render[i];
+                if (!callback) {
+                    render.remove(callback);
+                    continue;
+                }
+                if (callback.fps) {
+                    if (t - callback.last < 1000 / callback.fps) continue;
+                    callback(++callback.frame);
+                    callback.last = t;
+                    continue;
+                }
+                callback(t, delta);
+            }
+            if (!self.paused) requestAnimationFrame(step);
+        }
+
+        this.start = (callback, fps) => {
+            if (fps) {
+                callback.fps = fps;
+                callback.last = -Infinity;
+                callback.frame = -1;
+            }
+            if (!~render.indexOf(callback)) render.unshift(callback);
+        };
+
+        this.stop = callback => {
+            render.remove(callback);
+        };
+
+        this.pause = () => {
+            this.paused = true;
+        };
+
+        this.resume = () => {
+            if (!this.paused) return;
+            this.paused = false;
+            requestAnimationFrame(step);
+        };
+    }
+}
+
+)(); // Singleton reassignment pattern
+
+/**
+ * Browser detection and vendor prefixes.
+ *
+ * @author Patrick Schroen / https://github.com/pschroen
+ */
+
+const Device = new ( // Singleton reassignment pattern
+
+class Device {
+
+    constructor() {
+        this.agent = navigator.userAgent.toLowerCase();
+        this.pixelRatio = window.devicePixelRatio;
+        this.prefix = (() => {
+            const styles = window.getComputedStyle(document.documentElement, ''),
+                pre = (Array.prototype.slice.call(styles).join('').match(/-(webkit|moz|ms)-/) || styles.OLink === '' && ['', 'o'])[1];
+            return {
+                lowercase: pre,
+                js: pre[0].toUpperCase() + pre.substr(1)
+            };
+        })();
+        this.transformProperty = (() => {
+            let pre;
+            switch (this.prefix.lowercase) {
+                case 'webkit':
+                    pre = '-webkit-transform';
+                    break;
+                case 'moz':
+                    pre = '-moz-transform';
+                    break;
+                case 'ms':
+                    pre = '-ms-transform';
+                    break;
+                case 'o':
+                    pre = '-o-transform';
+                    break;
+                default:
+                    pre = 'transform';
+                    break;
+            }
+            return pre;
+        })();
+        this.mobile = ('ontouchstart' in window || 'onpointerdown' in window) && this.detect(['ios', 'iphone', 'ipad', 'android', 'blackberry']) ? {} : false;
+        this.tablet = window.innerWidth > window.innerHeight ? document.body.clientWidth > 800 : document.body.clientHeight > 800;
+        this.phone = !this.tablet;
+    }
+
+    detect(array) {
+        if (typeof array === 'string') array = [array];
+        for (let i = 0; i < array.length; i++) if (~this.agent.indexOf(array[i])) return true;
+        return false;
+    }
+
+    vendor(style) {
+        return this.prefix.js + style;
+    }
+
+    vibrate(time) {
+        navigator.vibrate && navigator.vibrate(time);
+    }
+}
+
+)(); // Singleton reassignment pattern
 
 /**
  * Interpolation helper class.
@@ -374,7 +282,7 @@ class Utils {
  * @author Patrick Schroen / https://github.com/pschroen
  */
 
-let Interpolation = new ( // Singleton pattern
+const Interpolation = new ( // Singleton reassignment pattern
 
 class Interpolation {
 
@@ -482,83 +390,83 @@ class Interpolation {
         };
 
         this.Linear = {
-            None: k => {
+            None(k) {
                 return k;
             }
         };
 
         this.Quad = {
-            In: k => {
+            In(k) {
                 return k * k;
             },
-            Out: k => {
+            Out(k) {
                 return k * (2 - k);
             },
-            InOut: k => {
+            InOut(k) {
                 if ((k *= 2) < 1) return 0.5 * k * k;
                 return -0.5 * (--k * (k - 2) - 1);
             }
         };
 
         this.Cubic = {
-            In: k => {
+            In(k) {
                 return k * k * k;
             },
-            Out: k => {
+            Out(k) {
                 return --k * k * k + 1;
             },
-            InOut: k => {
+            InOut(k) {
                 if ((k *= 2) < 1) return 0.5 * k * k * k;
                 return 0.5 * ((k -= 2) * k * k + 2);
             }
         };
 
         this.Quart = {
-            In: k => {
+            In(k) {
                 return k * k * k * k;
             },
-            Out: k => {
-                return 1 - (--k * k * k * k);
+            Out(k) {
+                return 1 - --k * k * k * k;
             },
-            InOut: k => {
+            InOut(k) {
                 if ((k *= 2) < 1) return 0.5 * k * k * k * k;
                 return -0.5 * ((k -= 2) * k * k * k - 2);
             }
         };
 
         this.Quint = {
-            In: k => {
+            In(k) {
                 return k * k * k * k * k;
             },
-            Out: k => {
+            Out(k) {
                 return --k * k * k * k * k + 1;
             },
-            InOut: k => {
+            InOut(k) {
                 if ((k *= 2) < 1) return 0.5 * k * k * k * k * k;
                 return 0.5 * ((k -= 2) * k * k * k * k + 2);
             }
         };
 
         this.Sine = {
-            In: k => {
+            In(k) {
                 return 1 - Math.cos(k * Math.PI / 2);
             },
-            Out: k => {
+            Out(k) {
                 return Math.sin(k * Math.PI / 2);
             },
-            InOut: k => {
+            InOut(k) {
                 return 0.5 * (1 - Math.cos(Math.PI * k));
             }
         };
 
         this.Expo = {
-            In: k => {
+            In(k) {
                 return k === 0 ? 0 : Math.pow(1024, k - 1);
             },
-            Out: k => {
+            Out(k) {
                 return k === 1 ? 1 : 1 - Math.pow(2, -10 * k);
             },
-            InOut: k => {
+            InOut(k) {
                 if (k === 0) return 0;
                 if (k === 1) return 1;
                 if ((k *= 2) < 1) return 0.5 * Math.pow(1024, k - 1);
@@ -567,85 +475,79 @@ class Interpolation {
         };
 
         this.Circ = {
-            In: k => {
+            In(k) {
                 return 1 - Math.sqrt(1 - k * k);
             },
-            Out: k => {
-                return Math.sqrt(1 - (--k * k));
+            Out(k) {
+                return Math.sqrt(1 - --k * k);
             },
-            InOut: k => {
+            InOut(k) {
                 if ((k *= 2) < 1) return -0.5 * (Math.sqrt(1 - k * k) - 1);
                 return 0.5 * (Math.sqrt(1 - (k -= 2) * k) + 1);
             }
         };
 
         this.Elastic = {
-            In: k => {
-                let s, a = 0.1, p = 0.4;
+            In(k, a = 1, p = 0.4) {
+                let s;
                 if (k === 0) return 0;
                 if (k === 1) return 1;
                 if (!a || a < 1) {
                     a = 1;
                     s = p / 4;
-                } else {
-                    s = p * Math.asin(1 / a) / (2 * Math.PI);
-                }
+                } else s = p * Math.asin(1 / a) / (2 * Math.PI);
                 return -(a * Math.pow(2, 10 * (k -= 1)) * Math.sin((k - s) * (2 * Math.PI) / p));
             },
-            Out: k => {
-                let s, a = 0.1, p = 0.4;
+            Out(k, a = 1, p = 0.4) {
+                let s;
                 if (k === 0) return 0;
                 if (k === 1) return 1;
                 if (!a || a < 1) {
                     a = 1;
                     s = p / 4;
-                } else {
-                    s = p * Math.asin(1 / a) / (2 * Math.PI);
-                }
+                } else s = p * Math.asin(1 / a) / (2 * Math.PI);
                 return a * Math.pow(2, -10 * k) * Math.sin((k - s) * (2 * Math.PI) / p) + 1;
             },
-            InOut: k => {
-                let s, a = 0.1, p = 0.4;
+            InOut(k, a = 1, p = 0.4) {
+                let s;
                 if (k === 0) return 0;
                 if (k === 1) return 1;
                 if (!a || a < 1) {
                     a = 1;
                     s = p / 4;
-                } else {
-                    s = p * Math.asin(1 / a) / (2 * Math.PI);
-                }
+                } else s = p * Math.asin(1 / a) / (2 * Math.PI);
                 if ((k *= 2) < 1) return -0.5 * (a * Math.pow(2, 10 * (k -= 1)) * Math.sin((k - s) * (2 * Math.PI) / p));
                 return a * Math.pow(2, -10 * (k -= 1)) * Math.sin((k - s) * (2 * Math.PI) / p) * 0.5 + 1;
             }
         };
 
         this.Back = {
-            In: k => {
-                let s = 1.70158;
+            In(k) {
+                const s = 1.70158;
                 return k * k * ((s + 1) * k - s);
             },
-            Out: k => {
-                let s = 1.70158;
+            Out(k) {
+                const s = 1.70158;
                 return --k * k * ((s + 1) * k + s) + 1;
             },
-            InOut: k => {
-                let s = 1.70158 * 1.525;
+            InOut(k) {
+                const s = 1.70158 * 1.525;
                 if ((k *= 2) < 1) return 0.5 * (k * k * ((s + 1) * k - s));
                 return 0.5 * ((k -= 2) * k * ((s + 1) * k + s) + 2);
             }
         };
 
         this.Bounce = {
-            In: k => {
+            In(k) {
                 return 1 - this.Bounce.Out(1 - k);
             },
-            Out: k => {
+            Out(k) {
                 if (k < 1 / 2.75) return 7.5625 * k * k;
-                else if (k < 2 / 2.75) return 7.5625 * (k -= 1.5 / 2.75) * k + 0.75;
-                else if (k < 2.5 / 2.75) return 7.5625 * (k -= 2.25 / 2.75) * k + 0.9375;
-                else return 7.5625 * (k -= 2.625 / 2.75) * k + 0.984375;
+                if (k < 2 / 2.75) return 7.5625 * (k -= 1.5 / 2.75) * k + 0.75;
+                if (k < 2.5 / 2.75) return 7.5625 * (k -= 2.25 / 2.75) * k + 0.9375;
+                return 7.5625 * (k -= 2.625 / 2.75) * k + 0.984375;
             },
-            InOut: k => {
+            InOut(k) {
                 if (k < 0.5) return this.Bounce.In(k * 2) * 0.5;
                 return this.Bounce.Out(k * 2 - 1) * 0.5 + 0.5;
             }
@@ -653,7 +555,7 @@ class Interpolation {
     }
 }
 
-)(); // Singleton pattern
+)(); // Singleton reassignment pattern
 
 /**
  * Mathematical.
@@ -664,59 +566,51 @@ class Interpolation {
 class MathTween {
 
     constructor(object, props, time, ease, delay, update, callback) {
-        let self = this;
-        let startTime, startValues, endValues, paused, elapsed;
+        const self = this;
+        let startTime, startValues, endValues, paused, spring, damping, elapsed;
 
         initMathTween();
 
-        function killed() {
-            return !self || self.kill || !object;
-        }
-
         function initMathTween() {
-            if (killed()) return;
-            if (object.mathTween) object.mathTween.kill = true;
-            TweenManager.clearTween(object);
+            if (!object.multiTween && object.mathTween) TweenManager.clearTween(object);
             TweenManager.addMathTween(self);
             object.mathTween = self;
+            if (object.multiTween) {
+                if (!object.mathTweens) object.mathTweens = [];
+                object.mathTweens.push(self);
+            }
             ease = Interpolation.convertEase(ease);
-            startTime = Date.now();
+            startTime = performance.now();
             startTime += delay;
             endValues = props;
             startValues = {};
+            if (props.spring) spring = props.spring;
+            if (props.damping) damping = props.damping;
             for (let prop in endValues) if (typeof object[prop] === 'number') startValues[prop] = object[prop];
         }
 
-        function clear(stop) {
-            if (killed()) return;
-            self.kill = true;
-            if (!stop) {
-                for (let prop in endValues) if (typeof endValues[prop] === 'number') object[prop] = endValues[prop];
-                if (object.transform) object.transform();
-            }
-            TweenManager.removeMathTween(self);
+        function clear() {
+            if (!object && !props) return false;
             object.mathTween = null;
+            TweenManager.removeMathTween(self);
+            Utils.nullObject(self);
+            if (object.mathTweens) object.mathTweens.remove(self);
         }
 
         this.update = t => {
-            if (killed()) return;
             if (paused || t < startTime) return;
             elapsed = (t - startTime) / time;
             elapsed = elapsed > 1 ? 1 : elapsed;
-            let delta = ease(elapsed);
-            for (let prop in startValues) {
-                if (typeof startValues[prop] === 'number') {
-                    let start = startValues[prop],
-                        end = endValues[prop];
-                    object[prop] = start + (end - start) * delta;
-                }
-            }
+            const delta = this.interpolate(elapsed);
             if (update) update(delta);
             if (elapsed === 1) {
-                clear();
                 if (callback) callback();
+                clear();
             }
-            if (object.transform) object.transform();
+        };
+
+        this.stop = () => {
+            clear();
         };
 
         this.pause = () => {
@@ -725,108 +619,20 @@ class MathTween {
 
         this.resume = () => {
             paused = false;
-            startTime = Date.now() - elapsed * time;
+            startTime = performance.now() - elapsed * time;
         };
 
-        this.stop = () => clear(true);
-    }
-}
-
-/**
- * Spring math.
- *
- * @author Patrick Schroen / https://github.com/pschroen
- */
-
-class SpringTween {
-
-    constructor(object, props, friction, ease, delay, update, callback) {
-        let self = this;
-        let startTime, velocityValues, endValues, startValues, damping, count, paused;
-
-        initSpringTween();
-
-        function killed() {
-            return !self || self.kill || !object;
-        }
-
-        function initSpringTween() {
-            if (killed()) return;
-            if (object.mathTween) object.mathTween.kill = true;
-            TweenManager.clearTween(object);
-            TweenManager.addMathTween(self);
-            object.mathTween = self;
-            startTime = Date.now();
-            startTime += delay;
-            endValues = {};
-            startValues = {};
-            velocityValues = {};
-            if (props.x || props.y || props.z) {
-                if (typeof props.x === 'undefined') props.x = object.x;
-                if (typeof props.y === 'undefined') props.y = object.y;
-                if (typeof props.z === 'undefined') props.z = object.z;
-            }
-            count = 0;
-            damping = props.damping || 0.1;
-            delete props.damping;
-            for (let prop in props) {
-                if (typeof props[prop] === 'number') {
-                    velocityValues[prop] = 0;
-                    endValues[prop] = props[prop];
-                }
-            }
-            for (let prop in props) {
-                if (typeof object[prop] === 'number') {
-                    startValues[prop] = object[prop] || 0;
-                    props[prop] = startValues[prop];
-                }
-            }
-        }
-
-        function clear(stop) {
-            if (killed()) return;
-            self.kill = true;
-            if (!stop) {
-                for (let prop in endValues) if (typeof endValues[prop] === 'number') object[prop] = endValues[prop];
-                if (object.transform) object.transform();
-            }
-            TweenManager.removeMathTween(self);
-            object.mathTween = null;
-        }
-
-        this.update = t => {
-            if (killed()) return;
-            if (paused || t < startTime) return;
-            let vel;
+        this.interpolate = elapsed => {
+            const delta = ease(elapsed, spring, damping);
             for (let prop in startValues) {
-                if (typeof startValues[prop] === 'number') {
-                    let end = endValues[prop],
-                        val = props[prop],
-                        d = end - val,
-                        a = d * damping;
-                    velocityValues[prop] += a;
-                    velocityValues[prop] *= friction;
-                    props[prop] += velocityValues[prop];
-                    object[prop] = props[prop];
-                    vel = velocityValues[prop];
+                if (typeof startValues[prop] === 'number' && typeof endValues[prop] === 'number') {
+                    const start = startValues[prop],
+                        end = endValues[prop];
+                    object[prop] = start + (end - start) * delta;
                 }
             }
-            if (update) update(t);
-            if (Math.abs(vel) < 0.001) {
-                count++;
-                if (count > 30) {
-                    clear();
-                    if (callback) callback();
-                }
-            }
-            if (object.transform) object.transform();
+            return delta;
         };
-
-        this.pause = () => {
-            paused = true;
-        };
-
-        this.stop = () => clear(true);
     }
 }
 
@@ -836,11 +642,12 @@ class SpringTween {
  * @author Patrick Schroen / https://github.com/pschroen
  */
 
-let TweenManager = new ( // Singleton pattern
+const TweenManager = new ( // Singleton reassignment pattern
 
 class TweenManager {
 
     constructor() {
+        const self = this;
         this.TRANSFORMS = ['x', 'y', 'z', 'scale', 'scaleX', 'scaleY', 'rotation', 'rotationX', 'rotationY', 'rotationZ', 'skewX', 'skewY', 'perspective'];
         this.CSS_EASES = {
             easeOutCubic:   'cubic-bezier(0.215, 0.610, 0.355, 1.000)',
@@ -869,29 +676,24 @@ class TweenManager {
             easeInOut:      'cubic-bezier(0.420, 0.000, 0.580, 1.000)',
             linear:         'linear'
         };
-        let tweens = [],
-            rendering = false;
+        const tweens = [];
+
+        Render.start(updateTweens);
 
         function updateTweens(t) {
-            if (tweens.length) {
-                for (let i = 0; i < tweens.length; i++) tweens[i].update(t);
-            } else {
-                rendering = false;
-                Render.stop(updateTweens);
+            for (let i = tweens.length - 1; i >= 0; i--) {
+                const tween = tweens[i];
+                if (tween.update) tween.update(t);
+                else self.removeMathTween(tween);
             }
         }
 
         this.addMathTween = tween => {
             tweens.push(tween);
-            if (!rendering) {
-                rendering = true;
-                Render.start(updateTweens);
-            }
         };
 
         this.removeMathTween = tween => {
-            let i = tweens.indexOf(tween);
-            if (i > -1) tweens.splice(i, 1);
+            tweens.remove(tween);
         };
     }
 
@@ -907,44 +709,29 @@ class TweenManager {
             if (callback) promise.then(callback);
             callback = promise.resolve;
         }
-        let tween = ease === 'spring' ? new SpringTween(object, props, time, ease, delay, update, callback) : new MathTween(object, props, time, ease, delay, update, callback);
+        const tween = new MathTween(object, props, time, ease, delay, update, callback);
         return promise || tween;
     }
 
     clearTween(object) {
         if (object.mathTween) object.mathTween.stop();
-    }
-
-    clearCSSTween(object) {
-        if (object.cssTween) object.cssTween.stop();
-    }
-
-    checkTransform(key) {
-        return this.TRANSFORMS.indexOf(key) > -1;
-    }
-
-    getEase(name) {
-        let eases = this.CSS_EASES;
-        return eases[name] || eases.easeOutCubic;
-    }
-
-    getAllTransforms(object) {
-        let obj = {};
-        for (let i = this.TRANSFORMS.length - 1; i > -1; i--) {
-            let key = this.TRANSFORMS[i],
-                val = object[key];
-            if (val !== 0 && typeof val === 'number') obj[key] = val;
+        if (object.mathTweens) {
+            const tweens = object.mathTweens;
+            for (let i = 0; i < tweens.length; i++) {
+                const tween = tweens[i];
+                if (tween) tween.stop();
+            }
+            object.mathTweens = null;
         }
-        return obj;
     }
 
     parseTransform(props) {
         let transforms = '';
         if (typeof props.x !== 'undefined' || typeof props.y !== 'undefined' || typeof props.z !== 'undefined') {
-            let x = props.x || 0,
+            const x = props.x || 0,
                 y = props.y || 0,
-                z = props.z || 0,
-                translate = '';
+                z = props.z || 0;
+            let translate = '';
             translate += x + 'px, ';
             translate += y + 'px, ';
             translate += z + 'px';
@@ -965,9 +752,27 @@ class TweenManager {
         if (typeof props.perspective !== 'undefined') transforms += 'perspective(' + props.perspective + 'px)';
         return transforms;
     }
+
+    isTransform(key) {
+        return ~this.TRANSFORMS.indexOf(key);
+    }
+
+    getAllTransforms(object) {
+        const obj = {};
+        for (let i = this.TRANSFORMS.length - 1; i > -1; i--) {
+            const key = this.TRANSFORMS[i],
+                val = object[key];
+            if (val !== 0 && typeof val === 'number') obj[key] = val;
+        }
+        return obj;
+    }
+
+    getEase(name) {
+        return this.CSS_EASES[name] || this.CSS_EASES.easeOutCubic;
+    }
 }
 
-)(); // Singleton pattern
+)(); // Singleton reassignment pattern
 
 /**
  * CSS3 transition animation.
@@ -978,9 +783,8 @@ class TweenManager {
 class CSSTransition {
 
     constructor(object, props, time, ease, delay, callback) {
-        let self = this;
-        let transform = TweenManager.getAllTransforms(object),
-            properties = [];
+        const self = this;
+        let transformProps, transitionProps;
 
         initProperties();
         initCSSTween();
@@ -990,46 +794,69 @@ class CSSTransition {
         }
 
         function initProperties() {
+            const transform = TweenManager.getAllTransforms(object),
+                properties = [];
             for (let key in props) {
-                if (TweenManager.checkTransform(key)) {
+                if (TweenManager.isTransform(key)) {
                     transform.use = true;
                     transform[key] = props[key];
                     delete props[key];
-                } else {
-                    if (typeof props[key] === 'number' || key.indexOf('-') > -1) properties.push(key);
+                } else if (typeof props[key] === 'number' || ~key.indexOf('-')) {
+                    properties.push(key);
                 }
             }
-            if (transform.use) properties.push(Device.transformProperty);
-            delete transform.use;
+            if (transform.use) {
+                properties.push(Device.transformProperty);
+                delete transform.use;
+            }
+            transformProps = transform;
+            transitionProps = properties;
         }
 
         function initCSSTween() {
             if (killed()) return;
             if (object.cssTween) object.cssTween.kill = true;
             object.cssTween = self;
-            let transition = '';
-            for (let i = 0; i < properties.length; i++) transition += (transition.length ? ', ' : '') + properties[i] + ' ' + time + 'ms ' + TweenManager.getEase(ease) + ' ' + delay + 'ms';
-            Delayed(() => {
+            const strings = buildStrings(time, ease, delay);
+            object.willChange(strings.props);
+            setTimeout(() => {
                 if (killed()) return;
-                object.element.style[Device.vendor('Transition')] = transition;
+                object.element.style[Device.vendor('Transition')] = strings.transition;
                 object.css(props);
-                object.transform(transform);
-                Delayed(() => {
+                object.transform(transformProps);
+                setTimeout(() => {
                     if (killed()) return;
-                    clear();
+                    clearCSSTween();
                     if (callback) callback();
                 }, time + delay);
             }, 50);
         }
 
-        function clear() {
+        function buildStrings(time, ease, delay) {
+            let props = '',
+                transition = '';
+            for (let i = 0; i < transitionProps.length; i++) {
+                const transitionProp = transitionProps[i];
+                props += (props.length ? ', ' : '') + transitionProp;
+                transition += (transition.length ? ', ' : '') + transitionProp + ' ' + time + 'ms ' + TweenManager.getEase(ease) + ' ' + delay + 'ms';
+            }
+            return {
+                props,
+                transition
+            };
+        }
+
+        function clearCSSTween() {
             if (killed()) return;
             self.kill = true;
             object.element.style[Device.vendor('Transition')] = '';
             object.cssTween = null;
+            object.willChange(null);
+            object = props = null;
+            Utils.nullObject(self);
         }
 
-        this.stop = () => clear();
+        this.stop = clearCSSTween;
     }
 }
 
@@ -1042,30 +869,103 @@ class CSSTransition {
 class Interface {
 
     constructor(name, type = 'div', detached) {
-        this.events = new EventManager();
-        if (typeof name !== 'string') {
-            this.element = name;
-        } else {
-            this.name = name;
-            this.type = type;
-            if (this.type === 'svg') {
-                let qualifiedName = detached || 'svg';
-                detached = true;
-                this.element = document.createElementNS('http://www.w3.org/2000/svg', qualifiedName);
-                this.element.setAttributeNS('http://www.w3.org/2000/xmlns/', 'xmlns:xlink', 'http://www.w3.org/1999/xlink');
+        this.events = new Events();
+        this.classes = [];
+        this.timers = [];
+        this.loops = [];
+        if (typeof name !== 'undefined') {
+            if (typeof name === 'string') {
+                this.name = name;
+                this.type = type;
+                if (this.type === 'svg') {
+                    const qualifiedName = detached || 'svg';
+                    detached = true;
+                    this.element = document.createElementNS('http://www.w3.org/2000/svg', qualifiedName);
+                    this.element.setAttributeNS('http://www.w3.org/2000/xmlns/', 'xmlns:xlink', 'http://www.w3.org/1999/xlink');
+                } else {
+                    this.element = document.createElement(this.type);
+                    if (name[0] !== '.') this.element.id = name;
+                    else this.element.className = name.substr(1);
+                }
+                this.element.style.position = 'absolute';
+                if (!detached) (window.Alien && window.Alien.Stage ? window.Alien.Stage : document.body).appendChild(this.element);
             } else {
-                this.element = document.createElement(this.type);
+                this.element = name;
             }
-            if (name[0] !== '.') this.element.id = name;
-            else this.element.className = name.substr(1);
+            this.element.object = this;
         }
-        this.element.style.position = 'absolute';
-        this.element.object = this;
-        if (!detached) (window.Alien && window.Alien.Stage ? window.Alien.Stage : document.body).appendChild(this.element);
     }
 
     initClass(object, ...params) {
-        let child = new object(...params);
+        const child = new object(...params);
+        this.add(child);
+        return child;
+    }
+
+    add(child) {
+        const element = this.element;
+        if (child.element) {
+            element.appendChild(child.element);
+            this.classes.push(child);
+            child.parent = this;
+        } else if (child.nodeName) {
+            element.appendChild(child);
+        }
+        return this;
+    }
+
+    delayedCall(callback, time = 0, ...params) {
+        const timer = setTimeout(() => {
+            if (callback) callback(...params);
+        }, time);
+        this.timers.push(timer);
+        if (this.timers.length > 50) this.timers.shift();
+        return timer;
+    }
+
+    clearTimers() {
+        for (let i = this.timers.length - 1; i >= 0; i--) clearTimeout(this.timers[i]);
+        this.timers.length = 0;
+    }
+
+    startRender(callback, fps) {
+        this.loops.push(callback);
+        Render.start(callback, fps);
+    }
+
+    stopRender(callback) {
+        this.loops.remove(callback);
+        Render.stop(callback);
+    }
+
+    clearRenders() {
+        for (let i = this.loops.length - 1; i >= 0; i--) this.stopRender(this.loops[i]);
+        this.loops.length = 0;
+    }
+
+    destroy() {
+        this.removed = true;
+        const parent = this.parent;
+        if (parent && !parent.removed && parent.remove) parent.remove(this);
+        for (let i = this.classes.length - 1; i >= 0; i--) {
+            const child = this.classes[i];
+            if (child && child.destroy) child.destroy();
+        }
+        this.classes.length = 0;
+        this.element.object = null;
+        this.clearRenders();
+        this.clearTimers();
+        this.events.destroy();
+        return Utils.nullObject(this);
+    }
+
+    remove(child) {
+        child.element.parentNode.removeChild(child.element);
+        this.classes.remove(child);
+    }
+
+    create(name, type) {
+        const child = new Interface(name, type);
         this.add(child);
         return child;
     }
@@ -1074,40 +974,9 @@ class Interface {
         return new Interface(this.element.cloneNode(true));
     }
 
-    create(name, type) {
-        let child = new Interface(name, type);
-        this.add(child);
-        return child;
-    }
-
     empty() {
         this.element.innerHTML = '';
         return this;
-    }
-
-    add(child) {
-        if (child.element) {
-            this.element.appendChild(child.element);
-            child.parent = this;
-        } else if (child.nodeName) {
-            this.element.appendChild(child);
-        }
-        return this;
-    }
-
-    remove(child) {
-        if (child.element) child.destroy();
-        else if (child.nodeName) child.parentNode.removeChild(child);
-        return this;
-    }
-
-    destroy() {
-        if (this.loop) Render.stop(this.loop);
-        this.events = this.events.destroy();
-        this.removed = true;
-        let parent = this.parent;
-        if (parent && !parent.removed && parent.remove) parent.remove(this.element);
-        return Utils.nullObject(this);
     }
 
     text(text) {
@@ -1176,12 +1045,12 @@ class Interface {
     }
 
     fontStyle(fontFamily, fontSize, color, fontStyle) {
-        this.css({fontFamily, fontSize, color, fontStyle});
+        this.css({ fontFamily, fontSize, color, fontStyle });
         return this;
     }
 
     bg(src, x, y, repeat) {
-        if (src.indexOf('.') > -1 || src.indexOf('data:') > -1) this.element.style.backgroundImage = 'url(' + src + ')';
+        if (src.includes(['data:', '.'])) this.element.style.backgroundImage = 'url(' + src + ')';
         else this.element.style.backgroundColor = src;
         if (typeof x !== 'undefined') {
             x = typeof x === 'number' ? x + 'px' : x;
@@ -1201,7 +1070,7 @@ class Interface {
     }
 
     center(x, y, noPos) {
-        let css = {};
+        const css = {};
         if (typeof x === 'undefined') {
             css.left = '50%';
             css.top = '50%';
@@ -1226,7 +1095,7 @@ class Interface {
     }
 
     mask(src) {
-        this.element.style[Device.vendor('Mask')] = (src.indexOf('.') > -1 ? 'url(' + src + ')' : src) + ' no-repeat';
+        this.element.style[Device.vendor('Mask')] = (~src.indexOf('.') ? 'url(' + src + ')' : src) + ' no-repeat';
         this.element.style[Device.vendor('MaskSize')] = 'contain';
         return this;
     }
@@ -1241,7 +1110,7 @@ class Interface {
             if (!value) {
                 let style = this.element.style[props];
                 if (typeof style !== 'number') {
-                    if (style.indexOf('px') > -1) style = Number(style.slice(0, -2));
+                    if (~style.indexOf('px')) style = Number(style.slice(0, -2));
                     if (props === 'opacity') style = !isNaN(Number(this.element.style.opacity)) ? Number(this.element.style.opacity) : 1;
                 }
                 if (!style) style = 0;
@@ -1265,6 +1134,19 @@ class Interface {
         else for (let key in props) if (typeof props[key] === 'number') this[key] = props[key];
         this.element.style[Device.vendor('Transform')] = TweenManager.parseTransform(props);
         return this;
+    }
+
+    willChange(props) {
+        if (typeof props === 'boolean') this.willChangeLock = props;
+        else if (this.willChangeLock) return;
+        const string = typeof props === 'string';
+        if (props) this.element.style['will-change'] = string ? props : Device.transformProperty + ', opacity';
+        else this.element.style['will-change'] = '';
+    }
+
+    backfaceVisibility(visible) {
+        if (visible) this.element.style[Device.vendor('BackfaceVisibility')] = 'visible';
+        else this.element.style[Device.vendor('BackfaceVisibility')] = 'hidden';
     }
 
     enable3D(perspective, x, y) {
@@ -1304,7 +1186,7 @@ class Interface {
             if (callback) promise.then(callback);
             callback = promise.resolve;
         }
-        let tween = new CSSTransition(this, props, time, ease, delay, callback);
+        const tween = new CSSTransition(this, props, time, ease, delay, callback);
         return promise || tween;
     }
 
@@ -1325,7 +1207,7 @@ class Interface {
         return this;
     }
 
-    stopTween() {
+    clearTween() {
         if (this.cssTween) this.cssTween.stop();
         if (this.mathTween) this.mathTween.stop();
         return this;
@@ -1333,60 +1215,64 @@ class Interface {
 
     attr(attr, value) {
         if (typeof value === 'undefined') return this.element.getAttribute(attr);
-        else if (value === '') this.element.removeAttribute(attr);
+        if (value === '') this.element.removeAttribute(attr);
         else this.element.setAttribute(attr, value);
         return this;
     }
 
-    svgSymbol(id, width, height) {
-        /* eslint-disable no-undef */
-        if (typeof SVGSymbol !== 'undefined') {
-            let config = SVGSymbol.getConfig(id);
-            this.html(`<svg viewBox="0 0 ${config.width} ${config.height}" width="${width}" height="${height}"><use xlink:href="#${config.id}" x="0" y="0"/></svg>`);
+    convertTouchEvent(e) {
+        const touchEvent = {};
+        touchEvent.x = 0;
+        touchEvent.y = 0;
+        if (!e) return touchEvent;
+        if (e.touches || e.changedTouches) {
+            if (e.touches.length) {
+                touchEvent.x = e.touches[0].pageX;
+                touchEvent.y = e.touches[0].pageY;
+            } else {
+                touchEvent.x = e.changedTouches[0].pageX;
+                touchEvent.y = e.changedTouches[0].pageY;
+            }
+        } else {
+            touchEvent.x = e.pageX;
+            touchEvent.y = e.pageY;
         }
-        /* eslint-enable no-undef */
-    }
-
-    startRender(callback) {
-        this.loop = callback;
-        Render.start(callback);
-    }
-
-    stopRender(callback) {
-        this.loop = null;
-        Render.stop(callback);
+        return touchEvent;
     }
 
     click(callback) {
-        let clicked = e => {
+        const click = e => {
+            if (!this.element) return false;
             e.object = this.element.className === 'hit' ? this.parent : this;
             e.action = 'click';
             if (callback) callback(e);
         };
-        this.element.addEventListener('click', clicked);
+        this.element.addEventListener('click', click, true);
         this.element.style.cursor = 'pointer';
         return this;
     }
 
     hover(callback) {
-        let hovered = e => {
+        const hover = e => {
+            if (!this.element) return false;
             e.object = this.element.className === 'hit' ? this.parent : this;
             e.action = e.type === 'mouseout' ? 'out' : 'over';
             if (callback) callback(e);
         };
-        this.element.addEventListener('mouseover', hovered);
-        this.element.addEventListener('mouseout', hovered);
+        this.element.addEventListener('mouseover', hover, true);
+        this.element.addEventListener('mouseout', hover, true);
         return this;
     }
 
     press(callback) {
-        let pressed = e => {
+        const press = e => {
+            if (!this.element) return false;
             e.object = this.element.className === 'hit' ? this.parent : this;
             e.action = e.type === 'mousedown' ? 'down' : 'up';
             if (callback) callback(e);
         };
-        this.element.addEventListener('mousedown', pressed);
-        this.element.addEventListener('mouseup', pressed);
+        this.element.addEventListener('mousedown', press, true);
+        this.element.addEventListener('mouseup', press, true);
         return this;
     }
 
@@ -1394,7 +1280,23 @@ class Interface {
         if (event === 'touchstart' && !Device.mobile) event = 'mousedown';
         else if (event === 'touchmove' && !Device.mobile) event = 'mousemove';
         else if (event === 'touchend' && !Device.mobile) event = 'mouseup';
-        this.element.addEventListener(event, callback);
+        if (!this.events['bind_' + event]) this.events['bind_' + event] = [];
+        const events = this.events['bind_' + event];
+        events.push({ target: this.element, callback });
+
+        const touchEvent = e => {
+            const touch = this.convertTouchEvent(e);
+            e.x = touch.x;
+            e.y = touch.y;
+            events.forEach(event => {
+                if (event.target === e.currentTarget) event.callback(e);
+            });
+        };
+
+        if (!this.events['fn_' + event]) {
+            this.events['fn_' + event] = touchEvent;
+            this.element.addEventListener(event, touchEvent, true);
+        }
         return this;
     }
 
@@ -1402,12 +1304,21 @@ class Interface {
         if (event === 'touchstart' && !Device.mobile) event = 'mousedown';
         else if (event === 'touchmove' && !Device.mobile) event = 'mousemove';
         else if (event === 'touchend' && !Device.mobile) event = 'mouseup';
-        this.element.removeEventListener(event, callback);
+        const events = this.events['bind_' + event];
+        if (!events) return this;
+        events.forEach((event, i) => {
+            if (event.callback === callback) events.splice(i, 1);
+        });
+        if (this.events['fn_' + event] && !events.length) {
+            this.element.removeEventListener(event, this.events['fn_' + event], true);
+            this.events['fn_' + event] = null;
+        }
         return this;
     }
 
     interact(overCallback, clickCallback) {
-        this.hit = this.create('.hit').css({
+        this.hit = this.create('.hit');
+        this.hit.css({
             position: 'absolute',
             left: 0,
             top: 0,
@@ -1421,36 +1332,46 @@ class Interface {
     }
 
     touchClick(hover, click) {
-        let time, move,
-            start = {},
-            touch = {};
-        let touchMove = e => {
-            touch = Utils.touchEvent(e);
-            move = Utils.findDistance(start, touch) > 5;
+        const start = {};
+        let time, move, touch;
+
+        const findDistance = (p1, p2) => {
+            const dx = p2.x - p1.x,
+                dy = p2.y - p1.y;
+            return Math.sqrt(dx * dx + dy * dy);
         };
-        let setTouch = e => {
-            let touch = Utils.touchEvent(e);
-            e.touchX = touch.x;
-            e.touchY = touch.y;
+
+        const touchMove = e => {
+            if (!this.element) return false;
+            touch = this.convertTouchEvent(e);
+            move = findDistance(start, touch) > 5;
+        };
+
+        const setTouch = e => {
+            const touchEvent = this.convertTouchEvent(e);
+            e.touchX = touchEvent.x;
+            e.touchY = touchEvent.y;
             start.x = e.touchX;
             start.y = e.touchY;
         };
-        let touchStart = e => {
-            time = Date.now();
-            e.action = 'over';
+
+        const touchStart = e => {
+            if (!this.element) return false;
+            time = performance.now();
             e.object = this.element.className === 'hit' ? this.parent : this;
+            e.action = 'over';
             setTouch(e);
             if (hover && !move) hover(e);
         };
-        let touchEnd = e => {
-            let t = Date.now();
+
+        const touchEnd = e => {
+            if (!this.element) return false;
+            const t = performance.now();
             e.object = this.element.className === 'hit' ? this.parent : this;
             setTouch(e);
-            if (time && t - time < 750) {
-                if (click && !move) {
-                    e.action = 'click';
-                    if (click && !move) click(e);
-                }
+            if (time && t - time < 750 && click && !move) {
+                e.action = 'click';
+                click(e);
             }
             if (hover) {
                 e.action = 'out';
@@ -1458,14 +1379,15 @@ class Interface {
             }
             move = false;
         };
-        this.element.addEventListener('touchmove', touchMove, {passive:true});
-        this.element.addEventListener('touchstart', touchStart, {passive:true});
-        this.element.addEventListener('touchend', touchEnd, {passive:true});
+
+        this.element.addEventListener('touchmove', touchMove, { passive: true });
+        this.element.addEventListener('touchstart', touchStart, { passive: true });
+        this.element.addEventListener('touchend', touchEnd, { passive: true });
         return this;
     }
 
     split(by = '') {
-        let style = {
+        const style = {
                 position: 'relative',
                 display: 'block',
                 width: 'auto',
@@ -1487,6 +1409,136 @@ class Interface {
 }
 
 /**
+ * Stage reference class.
+ *
+ * @author Patrick Schroen / https://github.com/pschroen
+ */
+
+const Stage = new ( // Singleton reassignment pattern
+
+class Stage extends Interface {
+
+    constructor() {
+        super('Stage');
+        const self = this;
+        let last;
+
+        initHTML();
+        addListeners();
+
+        function initHTML() {
+            self.css({ overflow: 'hidden' });
+        }
+
+        function addListeners() {
+            window.addEventListener('focus', () => {
+                if (last !== 'focus') {
+                    last = 'focus';
+                    self.events.fire(Events.VISIBILITY, { type: 'focus' });
+                }
+            }, true);
+            window.addEventListener('blur', () => {
+                if (last !== 'blur') {
+                    last = 'blur';
+                    self.events.fire(Events.VISIBILITY, { type: 'blur' });
+                }
+            }, true);
+            window.addEventListener('keydown', () => self.events.fire(Events.KEYBOARD_DOWN), true);
+            window.addEventListener('keyup', () => self.events.fire(Events.KEYBOARD_UP), true);
+            window.addEventListener('keypress', () => self.events.fire(Events.KEYBOARD_PRESS), true);
+            window.addEventListener('resize', () => self.events.fire(Events.RESIZE), true);
+            self.events.add(Events.RESIZE, resize);
+            resize();
+        }
+
+        function resize() {
+            self.size();
+            self.orientation = window.innerWidth > window.innerHeight ? 'landscape' : 'portrait';
+        }
+    }
+}
+
+)(); // Singleton reassignment pattern
+
+/**
+ * Alien component.
+ *
+ * @author Patrick Schroen / https://github.com/pschroen
+ */
+
+class Component {
+
+    constructor() {
+        this.events = new Events();
+        this.classes = [];
+        this.timers = [];
+        this.loops = [];
+    }
+
+    initClass(object, ...params) {
+        const child = new object(...params);
+        this.add(child);
+        return child;
+    }
+
+    add(child) {
+        if (child.destroy) {
+            this.classes.push(child);
+            child.parent = this;
+        }
+        return this;
+    }
+
+    delayedCall(callback, time = 0, ...params) {
+        const timer = setTimeout(() => {
+            if (callback) callback(...params);
+        }, time);
+        this.timers.push(timer);
+        if (this.timers.length > 50) this.timers.shift();
+        return timer;
+    }
+
+    clearTimers() {
+        for (let i = this.timers.length - 1; i >= 0; i--) clearTimeout(this.timers[i]);
+        this.timers.length = 0;
+    }
+
+    startRender(callback, fps) {
+        this.loops.push(callback);
+        Render.start(callback, fps);
+    }
+
+    stopRender(callback) {
+        this.loops.remove(callback);
+        Render.stop(callback);
+    }
+
+    clearRenders() {
+        for (let i = this.loops.length - 1; i >= 0; i--) this.stopRender(this.loops[i]);
+        this.loops.length = 0;
+    }
+
+    destroy() {
+        this.removed = true;
+        const parent = this.parent;
+        if (parent && !parent.removed && parent.remove) parent.remove(this);
+        for (let i = this.classes.length - 1; i >= 0; i--) {
+            const child = this.classes[i];
+            if (child && child.destroy) child.destroy();
+        }
+        this.classes.length = 0;
+        this.clearRenders();
+        this.clearTimers();
+        this.events.destroy();
+        return Utils.nullObject(this);
+    }
+
+    remove(child) {
+        this.classes.remove(child);
+    }
+}
+
+/**
  * Canvas interface.
  *
  * @author Patrick Schroen / https://github.com/pschroen
@@ -1494,70 +1546,79 @@ class Interface {
 
 class Canvas {
 
-    constructor(name, w, h = w, retina) {
-        let canvas = new Interface(name, 'canvas', true);
-        this.element = canvas.element;
+    constructor(w, h = w, retina) {
+        this.element = document.createElement('canvas');
         this.context = this.element.getContext('2d');
+        this.object = new Interface(this.element);
         this.children = [];
         this.retina = retina;
-        let ratio = retina ? 2 : 1;
+        this.size(w, h, retina);
+    }
+
+    size(w, h, retina) {
+        const ratio = retina ? 2 : 1;
         this.element.width = w * ratio;
         this.element.height = h * ratio;
+        this.width = w;
+        this.height = h;
+        this.scale = ratio;
+        this.object.size(this.width, this.height);
         this.context.scale(ratio, ratio);
-        canvas.size(w, h);
+        this.element.style.width = w + 'px';
+        this.element.style.height = h + 'px';
+    }
 
-        this.toDataURL = (type, quality) => {
-            return this.element.toDataURL(type, quality);
-        };
+    toDataURL(type, quality) {
+        return this.element.toDataURL(type, quality);
+    }
 
-        this.render = noClear => {
-            if (!(typeof noClear === 'boolean' && noClear)) this.clear();
-            for (let i = 0; i < this.children.length; i++) this.children[i].render();
-        };
+    render(noClear) {
+        if (!(typeof noClear === 'boolean' && noClear)) this.clear();
+        for (let i = 0; i < this.children.length; i++) this.children[i].render();
+    }
 
-        this.clear = () => {
-            this.context.clearRect(0, 0, this.element.width, this.element.height);
-        };
+    clear() {
+        this.context.clearRect(0, 0, this.element.width, this.element.height);
+    }
 
-        this.add = display => {
-            display.setCanvas(this);
-            display.parent = this;
-            this.children.push(display);
-            display.z = this.children.length;
-        };
+    add(child) {
+        child.setCanvas(this);
+        child.parent = this;
+        this.children.push(child);
+        child.z = this.children.length;
+    }
 
-        this.remove = display => {
-            display.canvas = null;
-            display.parent = null;
-            let i = this.children.indexOf(display);
-            if (i > -1) this.children.splice(i, 1);
-        };
+    remove(child) {
+        child.canvas = null;
+        child.parent = null;
+        this.children.remove(child);
+    }
 
-        this.destroy = () => {
-            for (let i = 0; i < this.children.length; i++) this.children[i].destroy();
-            return canvas = canvas.destroy();
-        };
+    destroy() {
+        for (let i = 0; i < this.children.length; i++) this.children[i].destroy();
+        this.object.destroy();
+        return Utils.nullObject(this);
+    }
 
-        this.getImageData = (x = 0, y = 0, w = this.element.width, h = this.element.height) => {
-            this.imageData = this.context.getImageData(x, y, w, h);
-            return this.imageData;
-        };
+    getImageData(x = 0, y = 0, w = this.element.width, h = this.element.height) {
+        this.imageData = this.context.getImageData(x, y, w, h);
+        return this.imageData;
+    }
 
-        this.getPixel = (x, y, dirty) => {
-            if (!this.imageData || dirty) this.getImageData();
-            let imgData = {},
-                index = (x + y * this.element.width) * 4,
-                pixels = this.imageData.data;
-            imgData.r = pixels[index];
-            imgData.g = pixels[index + 1];
-            imgData.b = pixels[index + 2];
-            imgData.a = pixels[index + 3];
-            return imgData;
-        };
+    getPixel(x, y, dirty) {
+        if (!this.imageData || dirty) this.getImageData();
+        const imgData = {},
+            index = (x + y * this.element.width) * 4,
+            pixels = this.imageData.data;
+        imgData.r = pixels[index];
+        imgData.g = pixels[index + 1];
+        imgData.b = pixels[index + 2];
+        imgData.a = pixels[index + 3];
+        return imgData;
+    }
 
-        this.putImageData = imageData => {
-            this.context.putImageData(imageData, 0, 0);
-        };
+    putImageData(imageData) {
+        this.context.putImageData(imageData, 0, 0);
     }
 }
 
@@ -1573,6 +1634,34 @@ class CanvasValues {
         this.styles = {};
         if (!style) this.data = new Float32Array(6);
         else this.styled = false;
+    }
+
+    setTRSA(x, y, r, sx, sy, a) {
+        const m = this.data;
+        m[0] = x;
+        m[1] = y;
+        m[2] = r;
+        m[3] = sx;
+        m[4] = sy;
+        m[5] = a;
+    }
+
+    calculate(values) {
+        const v = values.data,
+            m = this.data;
+        m[0] = m[0] + v[0];
+        m[1] = m[1] + v[1];
+        m[2] = m[2] + v[2];
+        m[3] = m[3] * v[3];
+        m[4] = m[4] * v[4];
+        m[5] = m[5] * v[5];
+    }
+
+    calculateStyle(parent) {
+        if (!parent.styled) return false;
+        this.styled = true;
+        const values = parent.values;
+        for (let key in values) if (!this.styles[key]) this.styles[key] = values[key];
     }
 
     set shadowOffsetX(val) {
@@ -1614,34 +1703,6 @@ class CanvasValues {
     get values() {
         return this.styles;
     }
-
-    setTRSA(x, y, r, sx, sy, a) {
-        let m = this.data;
-        m[0] = x;
-        m[1] = y;
-        m[2] = r;
-        m[3] = sx;
-        m[4] = sy;
-        m[5] = a;
-    }
-
-    calculate(values) {
-        let v = values.data,
-            m = this.data;
-        m[0] = m[0] + v[0];
-        m[1] = m[1] + v[1];
-        m[2] = m[2] + v[2];
-        m[3] = m[3] * v[3];
-        m[4] = m[4] * v[4];
-        m[5] = m[5] * v[5];
-    }
-
-    calculateStyle(parent) {
-        if (!parent.styled) return false;
-        this.styled = true;
-        let values = parent.values;
-        for (let key in values) if (!this.styles[key]) this.styles[key] = values[key];
-    }
 }
 
 /**
@@ -1674,7 +1735,7 @@ class CanvasObject {
     }
 
     updateValues() {
-        this.values.setTRSA(this.x, this.y, Utils.toRadians(this.rotation), this.scaleX || this.scale, this.scaleY || this.scale, this.opacity);
+        this.values.setTRSA(this.x, this.y, Math.radians(this.rotation), this.scaleX || this.scale, this.scaleY || this.scale, this.opacity);
         if (this.parent.values) this.values.calculate(this.parent.values);
         if (this.parent.styles) this.styles.calculateStyle(this.parent.styles);
     }
@@ -1687,7 +1748,7 @@ class CanvasObject {
     }
 
     startDraw(ox, oy, override) {
-        let context = this.canvas.context,
+        const context = this.canvas.context,
             v = this.values.data,
             x = v[0] + (ox || 0),
             y = v[1] + (oy || 0);
@@ -1698,7 +1759,7 @@ class CanvasObject {
         context.scale(v[3], v[4]);
         context.globalAlpha = v[5];
         if (this.styles.styled) {
-            let values = this.styles.values;
+            const values = this.styles.values;
             for (let key in values) context[key] = values[key];
         }
     }
@@ -1707,11 +1768,11 @@ class CanvasObject {
         this.canvas.context.restore();
     }
 
-    add(display) {
-        display.canvas = this.canvas;
-        display.parent = this;
-        this.children.push(display);
-        display.z = this.children.length;
+    add(child) {
+        child.canvas = this.canvas;
+        child.parent = this;
+        this.children.push(child);
+        child.z = this.children.length;
         for (let i = this.children.length - 1; i > -1; i--) this.children[i].setCanvas(this.canvas);
     }
 
@@ -1720,11 +1781,10 @@ class CanvasObject {
         for (let i = this.children.length - 1; i > -1; i--) this.children[i].setCanvas(canvas);
     }
 
-    remove(display) {
-        display.canvas = null;
-        display.parent = null;
-        let i = this.children.indexOf(display);
-        if (i > -1) this.children.splice(i, 1);
+    remove(child) {
+        child.canvas = null;
+        child.parent = null;
+        this.children.remove(child);
     }
 
     isMask() {
@@ -1802,36 +1862,6 @@ class CanvasObject {
 }
 
 /**
- * Image helper class with promise method.
- *
- * Currently no CORS support.
- *
- * @author Patrick Schroen / https://github.com/pschroen
- */
-
-let Images = new ( // Singleton pattern
-
-class Images {
-
-    createImg(src, callback) {
-        let img = new Image();
-        img.src = (Config.CDN || '') + src;
-        img.onload = () => {
-            if (callback) callback();
-        };
-        return img;
-    }
-
-    promise(img) {
-        let p = Promise.create();
-        img.onload = p.resolve;
-        return p;
-    }
-}
-
-)(); // Singleton pattern
-
-/**
  * Canvas graphics.
  *
  * @author Patrick Schroen / https://github.com/pschroen
@@ -1841,12 +1871,11 @@ class CanvasGraphics extends CanvasObject {
 
     constructor(w = 0, h = w) {
         super();
-        let self = this;
+        const self = this;
         this.width = w;
         this.height = h;
         this.props = {};
-        let images = {},
-            draw = [],
+        let draw = [],
             mask;
 
         function setProperties(context) {
@@ -1855,7 +1884,7 @@ class CanvasGraphics extends CanvasObject {
 
         this.draw = override => {
             if (this.isMask() && !override) return false;
-            let context = this.canvas.context;
+            const context = this.canvas.context;
             this.startDraw(this.px, this.py, override);
             setProperties(context);
             if (this.clipWidth && this.clipHeight) {
@@ -1864,9 +1893,9 @@ class CanvasGraphics extends CanvasObject {
                 context.clip();
             }
             for (let i = 0; i < draw.length; i++) {
-                let cmd = draw[i];
+                const cmd = draw[i];
                 if (!cmd) continue;
-                let fn = cmd.shift();
+                const fn = cmd.shift();
                 context[fn].apply(context, cmd);
                 cmd.unshift(fn);
             }
@@ -1891,7 +1920,7 @@ class CanvasGraphics extends CanvasObject {
             endAngle -= 90;
             startAngle -= 90;
             draw.push(['beginPath']);
-            draw.push(['arc', x, y, radius, Utils.toRadians(startAngle), Utils.toRadians(endAngle), counterclockwise]);
+            draw.push(['arc', x, y, radius, Math.radians(startAngle), Math.radians(endAngle), counterclockwise]);
         };
 
         this.quadraticCurveTo = (cpx, cpy, x, y) => {
@@ -1950,17 +1979,7 @@ class CanvasGraphics extends CanvasObject {
             draw.push(['setLineDash', value]);
         };
 
-        this.createImage = (src, force) => {
-            if (!images[src] || force) {
-                let img = Images.createImg(src);
-                if (force) return img;
-                images[src] = img;
-            }
-            return images[src];
-        };
-
         this.drawImage = (img, sx = 0, sy = 0, sWidth = img.width, sHeight = img.height, dx = 0, dy = 0, dWidth = img.width, dHeight = img.height) => {
-            if (typeof img === 'string') img = this.createImage(img);
             draw.push(['drawImage', img, sx, sy, sWidth, sHeight, dx + -this.px, dy + -this.py, dWidth, dHeight]);
         };
 
@@ -1977,7 +1996,7 @@ class CanvasGraphics extends CanvasObject {
         };
 
         this.clone = () => {
-            let object = new CanvasGraphics(this.width, this.height);
+            const object = new CanvasGraphics(this.width, this.height);
             object.visible = this.visible;
             object.blendMode = this.blendMode;
             object.opacity = this.opacity;
@@ -2074,46 +2093,26 @@ class CanvasGraphics extends CanvasObject {
 }
 
 /**
- * Canvas with a single image.
- *
- * @author Patrick Schroen / https://github.com/pschroen
- */
-
-class CanvasImage extends CanvasGraphics {
-
-    constructor(parent, name, w, h = w) {
-        super(w, h);
-        let canvas = parent.initClass(Canvas, name, w, h);
-
-        this.img = src => {
-            this.drawImage(src, 0, 0, w, h);
-            canvas.add(this);
-            return this;
-        };
-    }
-}
-
-/**
  * Canvas font utilities.
  *
  * @author Patrick Schroen / https://github.com/pschroen
  */
 
-let CanvasFont = new ( // Singleton pattern
+const CanvasFont = new ( // Singleton reassignment pattern
 
 class CanvasFont {
 
     constructor() {
 
         function createText(canvas, width, height, str, font, fillStyle, letterSpacing, textAlign) {
-            let context = canvas.context,
-                graphics = canvas.initClass(CanvasGraphics, width, height);
+            const context = canvas.context,
+                graphics = new CanvasGraphics(width, height);
             graphics.font = font;
             graphics.fillStyle = fillStyle;
             graphics.totalWidth = 0;
             graphics.totalHeight = height;
+            const characters = str.split('');
             let chr,
-                characters = str.split(''),
                 index = 0,
                 currentPosition = 0;
             context.font = font;
@@ -2139,22 +2138,22 @@ class CanvasFont {
             return graphics;
         }
 
-        this.createText = (canvas, width, height, str, font, fillStyle, {letterSpacing = 0, lineHeight = height, textAlign = 'start'}) => {
-            let context = canvas.context;
+        this.createText = (canvas, width, height, str, font, fillStyle, { letterSpacing = 0, lineHeight = height, textAlign = 'start' }) => {
+            const context = canvas.context;
             if (height === lineHeight) {
                 return createText(canvas, width, height, str, font, fillStyle, letterSpacing, textAlign);
             } else {
-                let text = canvas.initClass(CanvasGraphics, width, height),
+                const text = new CanvasGraphics(width, height),
                     words = str.split(' '),
-                    line = '',
                     lines = [];
+                let line = '';
                 text.totalWidth = 0;
                 text.totalHeight = 0;
                 context.font = font;
                 for (let n = 0; n < words.length; n++) {
-                    let testLine = line + words[n] + ' ',
-                        characters = testLine.split(''),
-                        testWidth = 0;
+                    const testLine = line + words[n] + ' ',
+                        characters = testLine.split('');
+                    let testWidth = 0;
                     for (let i = 0; i < characters.length; i++) testWidth += context.measureText(characters[i]).width + letterSpacing;
                     if (testWidth > width && n > 0) {
                         lines.push(line);
@@ -2165,7 +2164,7 @@ class CanvasFont {
                 }
                 lines.push(line);
                 lines.every((e, i) => {
-                    let graphics = createText(canvas, width, lineHeight, e, font, fillStyle, letterSpacing, textAlign);
+                    const graphics = createText(canvas, width, lineHeight, e, font, fillStyle, letterSpacing, textAlign);
                     graphics.y = i * lineHeight;
                     text.add(graphics);
                     text.totalWidth = Math.max(graphics.totalWidth, text.totalWidth);
@@ -2178,56 +2177,342 @@ class CanvasFont {
     }
 }
 
-)(); // Singleton pattern
+)(); // Singleton reassignment pattern
 
 /**
- * Mouse helper class.
+ * 2D vector.
  *
  * @author Patrick Schroen / https://github.com/pschroen
  */
 
-let Mouse = new ( // Singleton pattern
+class Vector2 {
 
-class Mouse {
+    constructor(x, y) {
+        this.x = typeof x === 'number' ? x : 0;
+        this.y = typeof y === 'number' ? y : 0;
+        this.type = 'vector2';
+    }
 
-    constructor() {
+    set(x, y) {
+        this.x = x || 0;
+        this.y = y || 0;
+        return this;
+    }
+
+    clear() {
         this.x = 0;
         this.y = 0;
+        return this;
+    }
 
-        let moved = e => {
-            this.x = e.x;
-            this.y = e.y;
-        };
+    copyTo(v) {
+        v.x = this.x;
+        v.y = this.y;
+        return this;
+    }
 
-        this.capture = () => {
-            if (!this.active) {
-                this.active = true;
-                this.x = 0;
-                this.y = 0;
-                if (Device.mobile) {
-                    window.addEventListener('touchmove', moved);
-                    window.addEventListener('touchstart', moved);
-                } else {
-                    window.addEventListener('mousemove', moved);
-                }
+    copyFrom(v) {
+        this.x = v.x || 0;
+        this.y = v.y || 0;
+        return this;
+    }
+
+    lengthSq() {
+        return this.x * this.x + this.y * this.y || 0.00001;
+    }
+
+    length() {
+        return Math.sqrt(this.lengthSq());
+    }
+
+    normalize() {
+        const length = this.length();
+        this.x /= length;
+        this.y /= length;
+        return this;
+    }
+
+    setLength(length) {
+        this.normalize().multiply(length);
+        return this;
+    }
+
+    addVectors(a, b) {
+        this.x = a.x + b.x;
+        this.y = a.y + b.y;
+        return this;
+    }
+
+    subVectors(a, b) {
+        this.x = a.x - b.x;
+        this.y = a.y - b.y;
+        return this;
+    }
+
+    multiplyVectors(a, b) {
+        this.x = a.x * b.x;
+        this.y = a.y * b.y;
+        return this;
+    }
+
+    add(v) {
+        this.x += v.x;
+        this.y += v.y;
+        return this;
+    }
+
+    sub(v) {
+        this.x -= v.x;
+        this.y -= v.y;
+        return this;
+    }
+
+    multiply(v) {
+        this.x *= v;
+        this.y *= v;
+        return this;
+    }
+
+    divide(v) {
+        this.x /= v;
+        this.y /= v;
+        return this;
+    }
+
+    perpendicular() {
+        const tx = this.x,
+            ty = this.y;
+        this.x = -ty;
+        this.y = tx;
+        return this;
+    }
+
+    lerp(v, alpha) {
+        this.x += (v.x - this.x) * alpha;
+        this.y += (v.y - this.y) * alpha;
+        return this;
+    }
+
+    deltaLerp(v, alpha, delta = 1) {
+        for (let i = 0; i < delta; i++) this.lerp(v, alpha);
+        return this;
+    }
+
+    interp(v, alpha, ease, dist = 5000) {
+        if (!this.calc) this.calc = new Vector2();
+        this.calc.subVectors(this, v);
+        const fn = Interpolation.convertEase(ease),
+            a = fn(Math.clamp(Math.range(this.calc.lengthSq(), 0, dist * dist, 1, 0), 0, 1) * (alpha / 10));
+        return this.lerp(v, a);
+    }
+
+    setAngleRadius(a, r) {
+        this.x = Math.cos(a) * r;
+        this.y = Math.sin(a) * r;
+        return this;
+    }
+
+    addAngleRadius(a, r) {
+        this.x += Math.cos(a) * r;
+        this.y += Math.sin(a) * r;
+        return this;
+    }
+
+    dot(a, b = this) {
+        return a.x * b.x + a.y * b.y;
+    }
+
+    clone() {
+        return new Vector2(this.x, this.y);
+    }
+
+    distanceTo(v, noSq) {
+        const dx = this.x - v.x,
+            dy = this.y - v.y;
+        if (!noSq) return Math.sqrt(dx * dx + dy * dy);
+        return dx * dx + dy * dy;
+    }
+
+    solveAngle(a, b = this) {
+        return Math.atan2(a.y - b.y, a.x - b.x);
+    }
+
+    equals(v) {
+        return this.x === v.x && this.y === v.y;
+    }
+
+    toString(split = ' ') {
+        return this.x + split + this.y;
+    }
+}
+
+/**
+ * Interaction helper class.
+ *
+ * @author Patrick Schroen / https://github.com/pschroen
+ */
+
+class Interaction {
+
+    constructor(object = Stage) {
+
+        if (!Interaction.instance) {
+            Interaction.CLICK = 'interaction_click';
+            Interaction.START = 'interaction_start';
+            Interaction.MOVE  = 'interaction_move';
+            Interaction.DRAG  = 'interaction_drag';
+            Interaction.END   = 'interaction_end';
+
+            const events = {
+                    touchstart: [],
+                    touchmove: [],
+                    touchend: []
+                },
+                touchStart = e => events.touchstart.forEach(callback => callback(e)),
+                touchMove = e => events.touchmove.forEach(callback => callback(e)),
+                touchEnd = e => events.touchend.forEach(callback => callback(e));
+
+            Interaction.bind = (event, callback) => events[event].push(callback);
+            Interaction.unbind = (event, callback) => events[event].remove(callback);
+
+            Stage.bind('touchstart', touchStart);
+            Stage.bind('touchmove', touchMove);
+            Stage.bind('touchend', touchEnd);
+            Stage.bind('touchcancel', touchEnd);
+            Stage.bind('contextmenu', touchEnd);
+
+            Interaction.instance = this;
+        }
+
+        const self = this;
+        this.events = new Events();
+        this.x = 0;
+        this.y = 0;
+        this.hold = new Vector2();
+        this.last = new Vector2();
+        this.delta = new Vector2();
+        this.move = new Vector2();
+        this.velocity = new Vector2();
+        let distance, timeDown, timeMove;
+
+        addListeners();
+
+        function addListeners() {
+            if (object === Stage) Interaction.bind('touchstart', down);
+            else object.bind('touchstart', down);
+            Interaction.bind('touchmove', move);
+            Interaction.bind('touchend', up);
+        }
+
+        function down(e) {
+            self.isTouching = true;
+            self.x = e.x;
+            self.y = e.y;
+            self.hold.x = self.last.x = e.x;
+            self.hold.y = self.last.y = e.y;
+            self.delta.x = self.move.x = self.velocity.x = 0;
+            self.delta.y = self.move.y = self.velocity.y = 0;
+            distance = 0;
+            self.events.fire(Interaction.START, e);
+            timeDown = timeMove = Render.TIME;
+        }
+
+        function move(e) {
+            if (self.isTouching) {
+                self.move.x = e.x - self.hold.x;
+                self.move.y = e.y - self.hold.y;
             }
-        };
+            self.x = e.x;
+            self.y = e.y;
+            self.delta.x = e.x - self.last.x;
+            self.delta.y = e.y - self.last.y;
+            self.last.x = e.x;
+            self.last.y = e.y;
+            distance += self.delta.length();
+            const delta = Math.max(0.001, Render.TIME - (timeMove || Render.TIME));
+            timeMove = Render.TIME;
+            self.velocity.x = Math.abs(self.delta.x) / delta;
+            self.velocity.y = Math.abs(self.delta.y) / delta;
+            self.events.fire(Interaction.MOVE, e);
+            if (self.isTouching) self.events.fire(Interaction.DRAG, e);
+        }
 
-        this.stop = () => {
-            this.active = false;
-            this.x = 0;
-            this.y = 0;
-            if (Device.mobile) {
-                window.removeEventListener('touchmove', moved);
-                window.removeEventListener('touchstart', moved);
-            } else {
-                window.removeEventListener('mousemove', moved);
+        function up(e) {
+            if (!self.isTouching) return;
+            self.isTouching = false;
+            self.move.x = 0;
+            self.move.y = 0;
+            const delta = Math.max(0.001, Render.TIME - (timeMove || Render.TIME));
+            if (delta > 100) {
+                self.delta.x = 0;
+                self.delta.y = 0;
             }
+            self.events.fire(Interaction.END, e);
+            if (distance < 20 && Render.TIME - timeDown < 2000) self.events.fire(Interaction.CLICK, e);
+        }
+
+        this.destroy = () => {
+            Interaction.unbind('touchstart', down);
+            Interaction.unbind('touchmove', move);
+            Interaction.unbind('touchend', up);
+            if (object !== Stage && object.unbind) object.unbind('touchstart', down);
+            this.events.destroy();
+            return Utils.nullObject(this);
         };
     }
 }
 
-)(); // Singleton pattern
+/**
+ * Mouse interaction.
+ *
+ * @author Patrick Schroen / https://github.com/pschroen
+ */
+
+const Mouse = new ( // Singleton reassignment pattern
+
+class Mouse {
+
+    constructor() {
+        const self = this;
+        this.x = 0;
+        this.y = 0;
+        this.normal = {
+            x: 0,
+            y: 0
+        };
+        this.tilt = {
+            x: 0,
+            y: 0
+        };
+        this.inverseNormal = {
+            x: 0,
+            y: 0
+        };
+
+        function update(e) {
+            self.x = e.x;
+            self.y = e.y;
+            self.normal.x = e.x / Stage.width;
+            self.normal.y = e.y / Stage.height;
+            self.tilt.x = self.normal.x * 2 - 1;
+            self.tilt.y = 1 - self.normal.y * 2;
+            self.inverseNormal.x = self.normal.x;
+            self.inverseNormal.y = 1 - self.normal.y;
+        }
+
+        this.init = () => {
+            this.input = new Interaction();
+            this.input.events.add(Interaction.START, update);
+            this.input.events.add(Interaction.MOVE, update);
+            update({
+                x: Stage.width / 2,
+                y: Stage.height / 2
+            });
+        };
+    }
+}
+
+)(); // Singleton reassignment pattern
 
 /**
  * Accelerometer helper class.
@@ -2235,12 +2520,12 @@ class Mouse {
  * @author Patrick Schroen / https://github.com/pschroen
  */
 
-let Accelerometer = new ( // Singleton pattern
+const Accelerometer = new ( // Singleton reassignment pattern
 
 class Accelerometer {
 
     constructor() {
-        let self = this;
+        const self = this;
         this.x = 0;
         this.y = 0;
         this.z = 0;
@@ -2300,7 +2585,7 @@ class Accelerometer {
         }
 
         function updateOrientation(e) {
-            for (var key in e) if (key.toLowerCase().indexOf('heading') !== -1) self.heading = e[key];
+            for (let key in e) if (~key.toLowerCase().indexOf('heading')) self.heading = e[key];
             switch (window.orientation) {
                 case 0:
                     self.alpha = e.beta * self.toRadians;
@@ -2330,7 +2615,7 @@ class Accelerometer {
         }
 
         function compassHeading(alpha, beta, gamma) {
-            let degtorad = Math.PI / 180,
+            const degtorad = Math.PI / 180,
                 x = beta ? beta * degtorad : 0,
                 y = gamma ? gamma * degtorad : 0,
                 z = alpha ? alpha * degtorad : 0,
@@ -2340,157 +2625,58 @@ class Accelerometer {
                 sY = Math.sin(y),
                 sZ = Math.sin(z),
                 Vx = -cZ * sY - sZ * sX * cY,
-                Vy = -sZ * sY + cZ * sX * cY,
-                compassHeading = Math.atan(Vx / Vy);
+                Vy = -sZ * sY + cZ * sX * cY;
+            let compassHeading = Math.atan(Vx / Vy);
             if (Vy < 0) compassHeading += Math.PI;
             else if (Vx < 0) compassHeading += 2 * Math.PI;
             return compassHeading * (180 / Math.PI);
         }
 
-        this.capture = () => {
-            if (!this.active) {
-                this.active = true;
-                window.addEventListener('devicemotion', updateAccel);
-                window.addEventListener('deviceorientation', updateOrientation);
-            }
-        };
-
-        this.stop = () => {
-            this.active = false;
-            this.x = this.y = this.z = 0;
-            window.removeEventListener('devicemotion', updateAccel);
-            window.removeEventListener('deviceorientation', updateOrientation);
+        this.init = () => {
+            window.addEventListener('devicemotion', updateAccel, true);
+            window.addEventListener('deviceorientation', updateOrientation, true);
         };
     }
 }
 
-)(); // Singleton pattern
+)(); // Singleton reassignment pattern
 
 /**
- * XMLHttpRequest helper class with promise support.
+ * Image helper class with promise method.
  *
  * @author Patrick Schroen / https://github.com/pschroen
  */
 
-let XHR = new ( // Singleton pattern
+const Images = new ( // Singleton reassignment pattern
 
-class XHR {
+class Images {
 
     constructor() {
-        this.headers = {};
-        this.options = {};
-        let serial = [];
+        this.CORS = null;
+    }
 
-        function serialize(key, data) {
-            if (typeof data === 'object') {
-                for (let i in data) {
-                    let newKey = key + '[' + i + ']';
-                    if (typeof data[i] === 'object') serialize(newKey, data[i]);
-                    else serial.push(newKey + '=' + data[i]);
-                }
-            } else {
-                serial.push(key + '=' + data);
-            }
-        }
+    createImg(src, callback) {
+        const img = new Image();
+        img.crossOrigin = this.CORS;
+        img.src = src;
+        img.onload = callback;
+        img.onerror = callback;
+        return img;
+    }
 
-        this.get = (url, data, callback, type) => {
-            if (typeof data === 'function') {
-                type = callback;
-                callback = data;
-                data = null;
-            } else if (typeof data === 'object') {
-                for (let key in data) serialize(key, data[key]);
-                data = serial.join('&');
-                data = data.replace(/\[/g, '%5B');
-                data = data.replace(/\]/g, '%5D');
-                serial = null;
-                url += '?' + data;
-            }
-            let xhr = new XMLHttpRequest();
-            xhr.open('GET', url, true);
-            if (type === 'arraybuffer') xhr.responseType = 'arraybuffer';
-            if (type === 'blob') xhr.responseType = 'blob';
-            if (type === 'text') xhr.overrideMimeType('text/plain');
-            if (type === 'json') xhr.setRequestHeader('Accept', 'application/json');
-            for (let key in this.headers) xhr.setRequestHeader(key, this.headers[key]);
-            for (let key in this.options) xhr[key] = this.options[key];
-            let promise = null;
-            if (typeof Promise !== 'undefined') {
-                promise = Promise.create();
-                if (callback) promise.then(callback);
-                callback = promise.resolve;
-            }
-            xhr.send();
-            xhr.onreadystatechange = () => {
-                if (callback) {
-                    if (xhr.readyState === 4 && xhr.status === 200) {
-                        if (type === 'arraybuffer' || type === 'blob') callback(xhr.response);
-                        else if (type === 'text') callback(xhr.responseText);
-                        else callback(JSON.parse(xhr.responseText));
-                    } else if (xhr.status == 0 || xhr.status == 400 || xhr.status == 401 || xhr.status == 404 || xhr.status == 500) {
-                        if (promise) promise.reject(xhr);
-                        else callback(xhr);
-                    }
-                }
-            };
-            return promise || xhr;
-        };
-
-        this.post = (url, data, callback, type) => {
-            if (typeof data === 'function') {
-                type = callback;
-                callback = data;
-                data = null;
-            } else if (typeof data === 'object') {
-                if (type === 'json') {
-                    data = JSON.stringify(data);
-                } else {
-                    for (let key in data) serialize(key, data[key]);
-                    data = serial.join('&');
-                    data = data.replace(/\[/g, '%5B');
-                    data = data.replace(/\]/g, '%5D');
-                    serial = null;
-                }
-            }
-            let xhr = new XMLHttpRequest();
-            xhr.open('POST', url, true);
-            if (type === 'arraybuffer') xhr.responseType = 'arraybuffer';
-            if (type === 'blob') xhr.responseType = 'blob';
-            if (type === 'text') xhr.overrideMimeType('text/plain');
-            if (type === 'json') xhr.setRequestHeader('Accept', 'application/json');
-            xhr.setRequestHeader('Content-Type', type === 'json' ? 'application/json' : 'application/x-www-form-urlencoded');
-            for (let key in this.headers) xhr.setRequestHeader(key, this.headers[key]);
-            for (let key in this.options) xhr[key] = this.options[key];
-            let promise = null;
-            if (typeof Promise !== 'undefined') {
-                promise = Promise.create();
-                if (callback) promise.then(callback);
-                callback = promise.resolve;
-            }
-            xhr.send();
-            xhr.onreadystatechange = () => {
-                if (callback) {
-                    if (xhr.readyState === 4 && xhr.status === 200) {
-                        if (type === 'arraybuffer' || type === 'blob') callback(xhr.response);
-                        else if (type === 'text') callback(xhr.responseText);
-                        else callback(JSON.parse(xhr.responseText));
-                    } else if (xhr.status == 0 || xhr.status == 400 || xhr.status == 401 || xhr.status == 404 || xhr.status == 500) {
-                        if (promise) promise.reject(xhr);
-                        else callback(xhr);
-                    }
-                }
-            };
-            return promise || xhr;
-        };
+    promise(img) {
+        if (typeof img === 'string') img = this.createImg(img);
+        const promise = Promise.create();
+        img.onload = promise.resolve;
+        img.onerror = promise.resolve;
+        return promise;
     }
 }
 
-)(); // Singleton pattern
+)(); // Singleton reassignment pattern
 
 /**
  * Asset loader with promise method.
- *
- * Currently no CORS support.
  *
  * @author Patrick Schroen / https://github.com/pschroen
  */
@@ -2500,7 +2686,7 @@ class AssetLoader {
     constructor(assets, callback) {
         if (Array.isArray(assets)) {
             assets = (() => {
-                let keys = assets.map(path => {
+                const keys = assets.map(path => {
                     return Utils.basename(path);
                 });
                 return keys.reduce((o, k, i) => {
@@ -2509,110 +2695,57 @@ class AssetLoader {
                 }, {});
             })();
         }
-        let self = this;
-        this.events = new EventManager();
+        const self = this;
+        this.events = new Events();
         this.CDN = Config.CDN || '';
-        let total = Object.keys(assets).length,
-            loaded = 0,
-            percent = 0;
+        const total = Object.keys(assets).length;
+        let loaded = 0;
 
         for (let key in assets) loadAsset(key, this.CDN + assets[key]);
 
         function loadAsset(key, asset) {
-            let name = asset.split('/');
-            name = name[name.length - 1];
-            let split = name.split('.'),
-                ext = split[split.length - 1].split('?')[0];
-            switch (ext) {
-                case 'mp3':
-                    /* eslint-disable no-undef */
-                    if (typeof WebAudio !== 'undefined') {
-                        if (!window.AudioContext) return assetLoaded();
-                        XHR.get(asset, contents => {
-                            WebAudio.createSound(key, contents, assetLoaded);
-                        }, 'arraybuffer');
-                    } else {
-                        return assetLoaded();
-                    }
-                    /* eslint-enable no-undef */
-                    break;
-                default:
-                    Images.createImg(asset, assetLoaded);
-                    break;
+            const ext = Utils.extension(asset);
+            if (ext.includes(['jpg', 'jpeg', 'png', 'gif', 'svg'])) {
+                Images.createImg(asset, assetLoaded);
+                return;
             }
+            if (ext.includes(['mp3', 'm4a', 'ogg', 'wav', 'aif'])) {
+                if (!window.AudioContext || !window.WebAudio) return assetLoaded();
+                window.fetch(asset).then(response => {
+                    if (!response.ok) return assetLoaded();
+                    response.arrayBuffer().then(data => window.WebAudio.createSound(key, data, assetLoaded));
+                }).catch(() => {
+                    assetLoaded();
+                });
+                return;
+            }
+            window.get(asset).then(data => {
+                if (ext === 'js') window.eval(data.replace('use strict', ''));
+                else if (ext.includes(['fs', 'vs', 'glsl']) && window.Shaders) window.Shaders.parse(data, asset);
+                assetLoaded();
+            }).catch(() => {
+                assetLoaded();
+            });
         }
 
         function assetLoaded() {
-            loaded++;
-            percent = loaded / total;
-            self.events.fire(Events.PROGRESS, {percent});
-            if (loaded === total) {
-                self.complete = true;
-                self.events.fire(Events.COMPLETE);
-                if (callback) callback();
-            }
+            self.events.fire(Events.PROGRESS, { percent: ++loaded / total });
+            if (loaded === total) complete();
+        }
+
+        function complete() {
+            self.events.fire(Events.COMPLETE);
+            if (callback) callback();
         }
     }
-}
 
-AssetLoader.loadAssets = (assets, callback) => {
-    let promise = Promise.create();
-    if (!callback) callback = promise.resolve;
-    new AssetLoader(assets, callback);
-    return promise;
-};
-
-/**
- * Stage reference class.
- *
- * @author Patrick Schroen / https://github.com/pschroen
- */
-
-let Stage = new ( // Singleton pattern
-
-class Stage extends Interface {
-
-    constructor() {
-        super('Stage');
-        let self = this;
-        let last;
-
-        initHTML();
-        addListeners();
-        resizeHandler();
-
-        function initHTML() {
-            self.css({overflow:'hidden'});
-        }
-
-        function addListeners() {
-            window.addEventListener('focus', () => {
-                if (last !== 'focus') {
-                    last = 'focus';
-                    window.events.fire(Events.BROWSER_FOCUS, {type:'focus'});
-                }
-            });
-            window.addEventListener('blur', () => {
-                if (last !== 'blur') {
-                    last = 'blur';
-                    window.events.fire(Events.BROWSER_FOCUS, {type:'blur'});
-                }
-            });
-            window.addEventListener('keydown', () => window.events.fire(Events.KEYBOARD_DOWN));
-            window.addEventListener('keyup', () => window.events.fire(Events.KEYBOARD_UP));
-            window.addEventListener('keypress', () => window.events.fire(Events.KEYBOARD_PRESS));
-            window.addEventListener('resize', () => window.events.fire(Events.RESIZE));
-            self.events.subscribe(Events.RESIZE, resizeHandler);
-        }
-
-        function resizeHandler() {
-            self.size();
-            if (Device.mobile) self.orientation = window.innerWidth > window.innerHeight ? 'landscape' : 'portrait';
-        }
+    static loadAssets(assets, callback) {
+        const promise = Promise.create();
+        if (!callback) callback = promise.resolve;
+        promise.loader = new AssetLoader(assets, callback);
+        return promise;
     }
 }
-
-)(); // Singleton pattern
 
 /**
  * Font loader with promise method.
@@ -2623,8 +2756,8 @@ class Stage extends Interface {
 class FontLoader {
 
     constructor(fonts, callback) {
-        let self = this;
-        this.events = new EventManager();
+        const self = this;
+        this.events = new Events();
         let element;
 
         initFonts();
@@ -2633,11 +2766,11 @@ class FontLoader {
         function initFonts() {
             if (!Array.isArray(fonts)) fonts = [fonts];
             element = Stage.create('FontLoader');
-            for (let i = 0; i < fonts.length; i++) element.create('font').fontStyle(fonts[i], 12, '#000').text('LOAD').css({top:-999});
+            for (let i = 0; i < fonts.length; i++) element.create('font').fontStyle(fonts[i], 12, '#000').text('LOAD').css({ top: -999 });
         }
 
         function finish() {
-            Delayed(() => {
+            setTimeout(() => {
                 element.destroy();
                 self.complete = true;
                 self.events.fire(Events.COMPLETE);
@@ -2645,14 +2778,219 @@ class FontLoader {
             }, 500);
         }
     }
+
+    static loadFonts(fonts, callback) {
+        const promise = Promise.create();
+        if (!callback) callback = promise.resolve;
+        promise.loader = new FontLoader(fonts, callback);
+        return promise;
+    }
 }
 
-FontLoader.loadFonts = (fonts, callback) => {
-    let promise = Promise.create();
-    if (!callback) callback = promise.resolve;
-    new FontLoader(fonts, callback);
-    return promise;
-};
+/**
+ * Video interface.
+ *
+ * @author Patrick Schroen / https://github.com/pschroen
+ */
+
+class Video extends Component {
+
+    constructor(params) {
+        super();
+        const self = this;
+        this.CDN = Config.CDN || '';
+        this.loaded = {
+            start: 0,
+            end: 0,
+            percent: 0
+        };
+        const event = {};
+        let lastTime, buffering, seekTo, forceRender,
+            tick = 0;
+
+        createElement();
+        if (params.preload !== false) preload();
+
+        function createElement() {
+            let src = params.src;
+            if (src) src = self.CDN + params.src;
+            self.element = document.createElement('video');
+            if (src) self.element.src = src;
+            self.element.controls = params.controls;
+            self.element.id = params.id || '';
+            self.element.width = params.width;
+            self.element.height = params.height;
+            self.element.loop = params.loop;
+            self.object = new Interface(self.element);
+            self.width = params.width;
+            self.height = params.height;
+            self.object.size(self.width, self.height);
+            if (Device.mobile) {
+                self.object.attr('webkit-playsinline', true);
+                self.object.attr('playsinline', true);
+            }
+        }
+
+        function preload() {
+            self.element.preload = 'auto';
+            self.element.load();
+        }
+
+        function step() {
+            if (!self.element) return self.stopRender(step);
+            self.duration = self.element.duration;
+            self.time = self.element.currentTime;
+            if (self.element.currentTime === lastTime) {
+                tick++;
+                if (tick > 30 && !buffering) {
+                    buffering = true;
+                    self.events.fire(Events.ERROR);
+                }
+            } else {
+                tick = 0;
+                if (buffering) {
+                    self.events.fire(Events.READY);
+                    buffering = false;
+                }
+            }
+            lastTime = self.element.currentTime;
+            if (self.element.currentTime >= (self.duration || self.element.duration) - 0.001) {
+                if (!self.loop) {
+                    if (!forceRender) self.stopRender(step);
+                    self.events.fire(Events.COMPLETE);
+                }
+            }
+            event.time = self.element.currentTime;
+            event.duration = self.element.duration;
+            event.loaded = self.loaded;
+            self.events.fire(Events.UPDATE, event);
+        }
+
+        function checkReady() {
+            if (!self.element) return false;
+            if (!seekTo) {
+                self.buffered = self.element.readyState === self.element.HAVE_ENOUGH_DATA;
+            } else {
+                const seekable = self.element.seekable;
+                let max = -1;
+                if (seekable) {
+                    for (let i = 0; i < seekable.length; i++) if (seekable.start(i) < seekTo) max = seekable.end(i) - 0.5;
+                    if (max >= seekTo) self.buffered = true;
+                } else {
+                    self.buffered = true;
+                }
+            }
+            if (self.buffered) {
+                self.stopRender(checkReady);
+                self.events.fire(Events.READY);
+            }
+        }
+
+        function handleProgress() {
+            if (!self.ready()) return;
+            const bf = self.element.buffered,
+                time = self.element.currentTime;
+            let range = 0;
+            while (!(bf.start(range) <= time && time <= bf.end(range))) range += 1;
+            self.loaded.start = bf.start(range) / self.element.duration;
+            self.loaded.end = bf.end(range) / self.element.duration;
+            self.loaded.percent = self.loaded.end - self.loaded.start;
+            self.events.fire(Events.PROGRESS, self.loaded);
+        }
+
+        this.play = () => {
+            this.playing = true;
+            this.element.play();
+            this.startRender(step);
+        };
+
+        this.pause = () => {
+            this.playing = false;
+            this.element.pause();
+            this.stopRender(step);
+        };
+
+        this.stop = () => {
+            this.playing = false;
+            this.element.pause();
+            this.stopRender(step);
+            if (this.ready()) this.element.currentTime = 0;
+        };
+
+        this.volume = v => {
+            this.element.volume = v;
+            if (this.muted) {
+                this.muted = false;
+                this.object.attr('muted', '');
+            }
+        };
+
+        this.mute = () => {
+            this.volume(0);
+            this.muted = true;
+            this.object.attr('muted', true);
+        };
+
+        this.seek = t => {
+            if (this.element.readyState <= 1) {
+                this.delayedCall(() => {
+                    if (this.seek) this.seek(t);
+                }, 32);
+                return;
+            }
+            this.element.currentTime = t;
+        };
+
+        this.canPlayTo = t => {
+            seekTo = null;
+            if (t) seekTo = t;
+            if (!this.buffered) this.startRender(checkReady);
+            return this.buffered;
+        };
+
+        this.ready = () => {
+            return this.element.readyState >= 2;
+        };
+
+        this.size = (w, h) => {
+            this.element.width = this.width = w;
+            this.element.height = this.height = h;
+            this.object.size(this.width, this.height);
+        };
+
+        this.forceRender = () => {
+            forceRender = true;
+            this.startRender(step);
+        };
+
+        this.trackProgress = () => {
+            this.element.addEventListener('progress', handleProgress, true);
+        };
+
+        this.destroy = () => {
+            this.stop();
+            this.element.src = '';
+            this.object.destroy();
+            return super.destroy();
+        };
+    }
+
+    set loop(bool) {
+        this.element.loop = bool;
+    }
+
+    get loop() {
+        return this.element.loop;
+    }
+
+    set src(src) {
+        this.element.src = this.CDN + src;
+    }
+
+    get src() {
+        return this.element.src;
+    }
+}
 
 /**
  * SVG interface.
@@ -2663,7 +3001,7 @@ FontLoader.loadFonts = (fonts, callback) => {
 class SVG {
 
     constructor(name, type, params) {
-        let self = this;
+        const self = this;
         let svg;
 
         createSVG();
@@ -2720,7 +3058,7 @@ class SVG {
         }
 
         function createColorStop(obj) {
-            let stop = document.createElementNS('http://www.w3.org/2000/svg', 'stop');
+            const stop = document.createElementNS('http://www.w3.org/2000/svg', 'stop');
             ['offset', 'style'].forEach(attr => {
                 stop.setAttributeNS(null, attr, attr === 'style' ? 'stop-color:' + obj[attr] : obj[attr]);
             });
@@ -2740,44 +3078,13 @@ class SVG {
             else if (element.object) element = element.object.element;
             element.appendChild(svg.element);
         };
-    }
-}
 
-/**
- * SVG symbol helper class.
- *
- * @author Patrick Schroen / https://github.com/pschroen
- */
-
-let SVGSymbol = new ( // Singleton pattern
-
-class SVGSymbol$1 {
-
-    constructor() {
-        let symbols = [];
-
-        this.define = (id, width, height, innerHTML) => {
-            let svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-            svg.setAttribute('preserveAspectRatio', 'xMinYMid meet');
-            svg.setAttribute('version', '1.1');
-            svg.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
-            svg.setAttribute('style', 'display: none;');
-            svg.setAttribute('width', width);
-            svg.setAttribute('height', height);
-            svg.setAttributeNS('http://www.w3.org/2000/xmlns/', 'xmlns:xlink', 'http://www.w3.org/1999/xlink');
-            svg.innerHTML = `<symbol id="${id}">${innerHTML}</symbol>`;
-            document.body.insertBefore(svg, document.body.firstChild);
-            symbols.push({id, width, height});
-        };
-
-        this.getConfig = id => {
-            for (let i = 0; i < symbols.length; i++) if (symbols[i].id === id) return symbols[i];
-            return null;
+        this.destroy = () => {
+            this.object.destroy();
+            return Utils.nullObject(this);
         };
     }
 }
-
-)(); // Singleton pattern
 
 /**
  * Storage helper class.
@@ -2785,85 +3092,29 @@ class SVGSymbol$1 {
  * @author Patrick Schroen / https://github.com/pschroen
  */
 
-let Storage = new ( // Singleton pattern
+const Storage = new ( // Singleton reassignment pattern
 
 class Storage {
 
-    constructor() {
-        let storage;
+    set(key, value) {
+        if (value !== null && typeof value === 'object') value = JSON.stringify(value);
+        if (value === null) window.localStorage.removeItem(key);
+        else window.localStorage[key] = value;
+    }
 
-        testStorage();
-
-        function testStorage() {
-            if (window.localStorage) {
-                try {
-                    window.localStorage['test'] = 1;
-                    window.localStorage.removeItem('test');
-                    storage = true;
-                } catch (e) {
-                    storage = false;
-                }
-            } else {
-                storage = false;
-            }
+    get(key) {
+        let value = window.localStorage[key];
+        if (value) {
+            let char0;
+            if (value.charAt) char0 = value.charAt(0);
+            if (char0 === '{' || char0 === '[') value = JSON.parse(value);
+            if (value === 'true' || value === 'false') value = value === 'true';
         }
-
-        function cookie(key, value, expires) {
-            let options;
-            if (arguments.length > 1 && (value === null || typeof value !== 'object')) {
-                options = {};
-                options.path = '/';
-                options.expires = expires || 1;
-                if (value === null) options.expires = -1;
-                if (typeof options.expires === 'number') {
-                    let days = options.expires,
-                        t = options.expires = new Date();
-                    t.setDate(t.getDate() + days);
-                }
-                return document.cookie = [encodeURIComponent(key), '=', encodeURIComponent(String(value)), options.expires ? '; expires=' + options.expires.toUTCString() : '', '; path=' + options.path].join('');
-            }
-            options = value || {};
-            let result,
-                decode = options.raw ? s => {
-                    return s;
-                } : decodeURIComponent;
-            return result = new RegExp('(?:^|; )' + encodeURIComponent(key) + '=([^;]*)').exec(document.cookie) ? decode(result[1]) : null;
-        }
-
-        this.setCookie = (key, value, expires) => {
-            cookie(key, value, expires);
-        };
-
-        this.getCookie = key => {
-            return cookie(key);
-        };
-
-        this.set = (key, value) => {
-            if (value !== null && typeof value === 'object') value = JSON.stringify(value);
-            if (storage) {
-                if (value === null) window.localStorage.removeItem(key);
-                else window.localStorage[key] = value;
-            } else {
-                cookie(key, value, 365);
-            }
-        };
-
-        this.get = key => {
-            let value;
-            if (storage) value = window.localStorage[key];
-            else value = cookie(key);
-            if (value) {
-                let char0;
-                if (value.charAt) char0 = value.charAt(0);
-                if (char0 === '{' || char0 === '[') value = JSON.parse(value);
-                if (value === 'true' || value === 'false') value = value === 'true';
-            }
-            return value;
-        };
+        return value;
     }
 }
 
-)(); // Singleton pattern
+)(); // Singleton reassignment pattern
 
 /**
  * Web audio engine.
@@ -2873,22 +3124,23 @@ class Storage {
 
 if (!window.AudioContext) window.AudioContext = window.webkitAudioContext || window.mozAudioContext || window.oAudioContext;
 
-let WebAudio = new ( // Singleton pattern
+const WebAudio = new ( // Singleton reassignment pattern
 
-class WebAudio$1 {
+class WebAudio {
 
     constructor() {
-        let context,
-            sounds = [];
+        const sounds = {};
+        let context;
 
         this.init = () => {
-            context = new window.AudioContext();
+            if (window.AudioContext) context = new AudioContext();
+            if (!context) return;
             this.globalGain = context.createGain();
             this.globalGain.connect(context.destination);
         };
 
         this.createSound = (id, audioData, callback) => {
-            let sound = {id};
+            const sound = {};
             context.decodeAudioData(audioData, buffer => {
                 sound.buffer = buffer;
                 sound.audioGain = context.createGain();
@@ -2896,48 +3148,1020 @@ class WebAudio$1 {
                 sound.complete = true;
                 if (callback) callback();
             });
-            sounds.push(sound);
+            sounds[id] = sound;
         };
 
         this.getSound = id => {
-            for (let i = 0; i < sounds.length; i++) if (sounds[i].id === id) return sounds[i];
-            return null;
+            return sounds[id];
         };
 
         this.trigger = id => {
             if (!context) return;
-            let sound = this.getSound(id),
+            const sound = this.getSound(id),
                 source = context.createBufferSource();
             source.buffer = sound.buffer;
             source.connect(sound.audioGain);
+            source.loop = !!sound.loop;
             source.start(0);
         };
 
         this.mute = () => {
             if (!context) return;
-            TweenManager.tween(this.globalGain.gain, {value:0}, 300, 'easeOutSine');
+            TweenManager.tween(this.globalGain.gain, { value: 0 }, 300, 'easeOutSine');
         };
 
         this.unmute = () => {
             if (!context) return;
-            TweenManager.tween(this.globalGain.gain, {value:1}, 500, 'easeOutSine');
+            TweenManager.tween(this.globalGain.gain, { value: 1 }, 500, 'easeOutSine');
         };
+
+        window.WebAudio = this;
     }
 }
 
-)(); // Singleton pattern
+)(); // Singleton reassignment pattern
 
 /**
- * Alien abduction point.
+ * Linked list.
  *
  * @author Patrick Schroen / https://github.com/pschroen
  */
 
-// Polyfills
-if (typeof Promise !== 'undefined') Promise.create = () => {
+class LinkedList {
+
+    constructor() {
+        this.first = null;
+        this.last = null;
+        this.current = null;
+        this.prev = null;
+        const nodes = [];
+
+        function add(object) {
+            return nodes[nodes.push({ object, prev: null, next: null }) - 1];
+        }
+
+        function remove(object) {
+            for (let i = nodes.length - 1; i > -1; i--) {
+                if (nodes[i].object === object) {
+                    nodes[i] = null;
+                    nodes.splice(i, 1);
+                    break;
+                }
+            }
+        }
+
+        function destroy() {
+            for (let i = nodes.length - 1; i > -1; i--) {
+                nodes[i] = null;
+                nodes.splice(i, 1);
+            }
+            return Utils.nullObject(this);
+        }
+
+        function find(object) {
+            for (let i = 0; i < nodes.length; i++) if (nodes[i].object === object) return nodes[i];
+            return null;
+        }
+
+        this.push = object => {
+            const obj = add(object);
+            if (!this.first) {
+                obj.next = obj.prev = this.last = this.first = obj;
+            } else {
+                obj.next = this.first;
+                obj.prev = this.last;
+                this.last.next = obj;
+                this.last = obj;
+            }
+        };
+
+        this.remove = object => {
+            const obj = find(object);
+            if (!obj || !obj.next) return;
+            if (nodes.length <= 1) {
+                this.empty();
+            } else {
+                if (obj === this.first) {
+                    this.first = obj.next;
+                    this.last.next = this.first;
+                    this.first.prev = this.last;
+                } else if (obj == this.last) {
+                    this.last = obj.prev;
+                    this.last.next = this.first;
+                    this.first.prev = this.last;
+                } else {
+                    obj.prev.next = obj.next;
+                    obj.next.prev = obj.prev;
+                }
+            }
+            remove(object);
+        };
+
+        this.empty = () => {
+            this.first = null;
+            this.last = null;
+            this.current = null;
+            this.prev = null;
+        };
+
+        this.start = () => {
+            this.current = this.first;
+            this.prev = this.current;
+            return this.current;
+        };
+
+        this.next = () => {
+            if (!this.current) return;
+            if (nodes.length === 1 || this.prev.next === this.first) return;
+            this.current = this.current.next;
+            this.prev = this.current;
+            return this.current;
+        };
+
+        this.destroy = destroy;
+    }
+}
+
+/**
+ * Object pool.
+ *
+ * @author Patrick Schroen / https://github.com/pschroen
+ */
+
+class ObjectPool {
+
+    constructor(type, number) {
+        const pool = [];
+        this.array = pool;
+
+        if (type) {
+            number = number || 10;
+            for (let i = 0; i < number; i++) pool.push(new type());
+        }
+
+        this.get = () => {
+            return pool.shift() || (type ? new type() : null);
+        };
+
+        this.empty = () => {
+            pool.length = 0;
+        };
+
+        this.put = object => {
+            if (object) pool.push(object);
+        };
+
+        this.insert = array => {
+            if (typeof array.push === 'undefined') array = [array];
+            for (let i = 0; i < array.length; i++) pool.push(array[i]);
+        };
+
+        this.length = () => {
+            return pool.length;
+        };
+
+        this.destroy = () => {
+            for (let i = 0; i < pool.length; i++) if (pool[i].destroy) pool[i].destroy();
+            return Utils.nullObject(this);
+        };
+    }
+}
+
+/**
+ * 3D vector.
+ *
+ * @author Patrick Schroen / https://github.com/pschroen
+ */
+
+class Vector3 {
+
+    constructor(x, y, z, w) {
+        this.x = typeof x === 'number' ? x : 0;
+        this.y = typeof y === 'number' ? y : 0;
+        this.z = typeof z === 'number' ? z : 0;
+        this.w = typeof w === 'number' ? w : 1;
+        this.type = 'vector3';
+    }
+
+    set(x, y, z, w) {
+        this.x = x || 0;
+        this.y = y || 0;
+        this.z = z || 0;
+        this.w = w || 1;
+        return this;
+    }
+
+    clear() {
+        this.x = 0;
+        this.y = 0;
+        this.z = 0;
+        this.w = 1;
+        return this;
+    }
+
+    copyTo(p) {
+        p.x = this.x;
+        p.y = this.y;
+        p.z = this.z;
+        p.w = this.w;
+        return p;
+    }
+
+    copyFrom(p) {
+        this.x = p.x || 0;
+        this.y = p.y || 0;
+        this.z = p.z || 0;
+        this.w = p.w || 1;
+        return this;
+    }
+
+    lengthSq() {
+        return this.x * this.x + this.y * this.y + this.z * this.z;
+    }
+
+    length() {
+        return Math.sqrt(this.lengthSq());
+    }
+
+    normalize() {
+        const m = 1 / this.length();
+        this.set(this.x * m, this.y * m, this.z * m);
+        return this;
+    }
+
+    setLength(length) {
+        this.normalize().multiply(length);
+        return this;
+    }
+
+    addVectors(a, b) {
+        this.x = a.x + b.x;
+        this.y = a.y + b.y;
+        this.z = a.z + b.z;
+        return this;
+    }
+
+    subVectors(a, b) {
+        this.x = a.x - b.x;
+        this.y = a.y - b.y;
+        this.z = a.z - b.z;
+        return this;
+    }
+
+    multiplyVectors(a, b) {
+        this.x = a.x * b.x;
+        this.y = a.y * b.y;
+        this.z = a.z * b.z;
+        return this;
+    }
+
+    add(v) {
+        this.x += v.x;
+        this.y += v.y;
+        this.z += v.z;
+        return this;
+    }
+
+    sub(v) {
+        this.x -= v.x;
+        this.y -= v.y;
+        this.z -= v.z;
+        return this;
+    }
+
+    multiply(v) {
+        this.x *= v;
+        this.y *= v;
+        this.z *= v;
+        return this;
+    }
+
+    divide(v) {
+        this.x /= v;
+        this.y /= v;
+        this.z /= v;
+        return this;
+    }
+
+    limit(max) {
+        if (this.length() > max) {
+            this.normalize();
+            this.multiply(max);
+        }
+    }
+
+    heading2D() {
+        return -Math.atan2(-this.y, this.x);
+    }
+
+    lerp(v, alpha) {
+        this.x += (v.x - this.x) * alpha;
+        this.y += (v.y - this.y) * alpha;
+        this.z += (v.z - this.z) * alpha;
+        return this;
+    }
+
+    deltaLerp(v, alpha, delta = 1) {
+        for (let i = 0; i < delta; i++) this.lerp(v, alpha);
+        return this;
+    }
+
+    interp(v, alpha, ease, dist = 5000) {
+        if (!this.calc) this.calc = new Vector3();
+        this.calc.subVectors(this, v);
+        const fn = Interpolation.convertEase(ease),
+            a = fn(Math.clamp(Math.range(this.calc.lengthSq(), 0, dist * dist, 1, 0), 0, 1) * (alpha / 10));
+        return this.lerp(v, a);
+    }
+
+    setAngleRadius(a, r) {
+        this.x = Math.cos(a) * r;
+        this.y = Math.sin(a) * r;
+        this.z = Math.sin(a) * r;
+        return this;
+    }
+
+    addAngleRadius(a, r) {
+        this.x += Math.cos(a) * r;
+        this.y += Math.sin(a) * r;
+        this.z += Math.sin(a) * r;
+        return this;
+    }
+
+    applyQuaternion(q) {
+        const x = this.x,
+            y = this.y,
+            z = this.z,
+            qx = q.x,
+            qy = q.y,
+            qz = q.z,
+            qw = q.w,
+            ix = qw * x + qy * z - qz * y,
+            iy = qw * y + qz * x - qx * z,
+            iz = qw * z + qx * y - qy * x,
+            iw = -qx * x - qy * y - qz * z;
+        this.x = ix * qw + iw * -qx + iy * -qz - iz * -qy;
+        this.y = iy * qw + iw * -qy + iz * -qx - ix * -qz;
+        this.z = iz * qw + iw * -qz + ix * -qy - iy * -qx;
+        return this;
+    }
+
+    dot(a, b = this) {
+        return a.x * b.x + a.y * b.y + a.z * b.z;
+    }
+
+    clone() {
+        return new Vector3(this.x, this.y, this.z);
+    }
+
+    cross(a, b = this) {
+        const x = a.y * b.z - a.z * b.y,
+            y = a.z * b.x - a.x * b.z,
+            z = a.x * b.y - a.y * b.x;
+        this.set(x, y, z, this.w);
+        return this;
+    }
+
+    distanceTo(v, noSq) {
+        const dx = this.x - v.x,
+            dy = this.y - v.y,
+            dz = this.z - v.z;
+        if (!noSq) return Math.sqrt(dx * dx + dy * dy + dz * dz);
+        return dx * dx + dy * dy + dz * dz;
+    }
+
+    solveAngle(a, b = this) {
+        return Math.acos(a.dot(b) / (a.length() * b.length() || 0.00001));
+    }
+
+    solveAngle2D(a, b = this) {
+        const calc = new Vector2(),
+            calc2 = new Vector2();
+        calc.copyFrom(a);
+        calc2.copyFrom(b);
+        return calc.solveAngle(calc2);
+    }
+
+    equals(v) {
+        return this.x === v.x && this.y === v.y && this.z === v.z;
+    }
+
+    toString(split = ' ') {
+        return this.x + split + this.y + split + this.z;
+    }
+}
+
+/**
+ * 3D utilities.
+ *
+ * @author Patrick Schroen / https://github.com/pschroen
+ */
+
+/* global THREE */
+
+const Utils3D = new ( // Singleton reassignment pattern
+
+class Utils3D {
+
+    constructor() {
+        this.PATH = '';
+        const textures = {};
+        let objectLoader, geomLoader, bufferGeomLoader;
+
+        this.decompose = (local, world) => {
+            local.matrixWorld.decompose(world.position, world.quaternion, world.scale);
+        };
+
+        this.createDebug = (size = 40, color) => {
+            const geom = new THREE.IcosahedronGeometry(size, 1),
+                mat = color ? new THREE.MeshBasicMaterial({ color }) : new THREE.MeshNormalMaterial();
+            return new THREE.Mesh(geom, mat);
+        };
+
+        this.createRT = (width, height) => {
+            const params = {
+                minFilter: THREE.LinearFilter,
+                magFilter: THREE.LinearFilter,
+                format: THREE.RGBAFormat,
+                stencilBuffer: false
+            };
+            return new THREE.WebGLRenderTarget(width, height, params);
+        };
+
+        this.getTexture = src => {
+            if (!textures[src]) {
+                const img = Images.createImg(this.PATH + src),
+                    texture = new THREE.Texture(img);
+                img.onload = () => {
+                    texture.needsUpdate = true;
+                    if (texture.onload) {
+                        texture.onload();
+                        texture.onload = null;
+                    }
+                    if (!THREE.Math.isPowerOfTwo(img.width * img.height)) texture.minFilter = THREE.LinearFilter;
+                };
+                textures[src] = texture;
+            }
+            return textures[src];
+        };
+
+        this.setInfinity = v => {
+            const inf = Number.POSITIVE_INFINITY;
+            v.set(inf, inf, inf);
+            return v;
+        };
+
+        this.freezeMatrix = mesh => {
+            mesh.matrixAutoUpdate = false;
+            mesh.updateMatrix();
+        };
+
+        this.getCubemap = src => {
+            const path = 'cube_' + (Array.isArray(src) ? src[0] : src);
+            if (!textures[path]) {
+                const images = [];
+                for (let i = 0; i < 6; i++) {
+                    const img = Images.createImg(this.PATH + (Array.isArray(src) ? src[i] : src));
+                    images.push(img);
+                    img.onload = () => {
+                        textures[path].needsUpdate = true;
+                    };
+                }
+                textures[path] = new THREE.Texture();
+                textures[path].image = images;
+                textures[path].minFilter = THREE.LinearFilter;
+            }
+            return textures[path];
+        };
+
+        this.loadObject = data => {
+            if (!objectLoader) objectLoader = new THREE.ObjectLoader();
+            return objectLoader.parse(data);
+        };
+
+        this.loadGeometry = data => {
+            if (!geomLoader) geomLoader = new THREE.JSONLoader();
+            if (!bufferGeomLoader) bufferGeomLoader = new THREE.BufferGeometryLoader();
+            if (data.type === 'BufferGeometry') return bufferGeomLoader.parse(data);
+            else return geomLoader.parse(data.data).geometry;
+        };
+
+        this.disposeAllTextures = () => {
+            for (let key in textures) textures[key].dispose();
+        };
+
+        this.loadBufferGeometry = data => {
+            const geometry = new THREE.BufferGeometry();
+            if (data.data) data = data.data;
+            geometry.addAttribute('position', new THREE.BufferAttribute(new Float32Array(data.position), 3));
+            geometry.addAttribute('normal', new THREE.BufferAttribute(new Float32Array(data.normal || data.position.length), 3));
+            geometry.addAttribute('uv', new THREE.BufferAttribute(new Float32Array(data.uv || data.position.length / 3 * 2), 2));
+            return geometry;
+        };
+
+        this.loadSkinnedGeometry = data => {
+            const geometry = new THREE.BufferGeometry();
+            geometry.addAttribute('position', new THREE.BufferAttribute(new Float32Array(data.position), 3));
+            geometry.addAttribute('normal', new THREE.BufferAttribute(new Float32Array(data.normal), 3));
+            geometry.addAttribute('uv', new THREE.BufferAttribute(new Float32Array(data.uv), 2));
+            geometry.addAttribute('skinIndex', new THREE.BufferAttribute(new Float32Array(data.skinIndices), 4));
+            geometry.addAttribute('skinWeight', new THREE.BufferAttribute(new Float32Array(data.skinWeights), 4));
+            geometry.bones = data.bones;
+            return geometry;
+        };
+
+        this.loadCurve = data => {
+            const points = [];
+            for (let i = 0; i < data.length; i += 3) points.push(new THREE.Vector3(data[i + 0], data[i + 1], data[i + 2]));
+            return new THREE.CatmullRomCurve3(points);
+        };
+
+        this.setLightCamera = (light, size, near, far, texture) => {
+            light.shadow.camera.left = -size;
+            light.shadow.camera.right = size;
+            light.shadow.camera.top = size;
+            light.shadow.camera.bottom = -size;
+            light.castShadow = true;
+            if (near) light.shadow.camera.near = near;
+            if (far) light.shadow.camera.far = far;
+            if (texture) light.shadow.mapSize.width = light.shadow.mapSize.height = texture;
+            light.shadow.camera.updateProjectionMatrix();
+        };
+
+        this.getRepeatTexture = src => {
+            const texture = this.getTexture(src);
+            texture.onload = () => {
+                texture.wrapS = texture.wrapT = THREE.RepeatWrapping;
+            };
+            return texture;
+        };
+    }
+}
+
+)(); // Singleton reassignment pattern
+
+/**
+ * Raycaster.
+ *
+ * @author Patrick Schroen / https://github.com/pschroen
+ */
+
+/* global THREE */
+
+class Raycaster {
+
+    constructor(camera) {
+        this.camera = camera;
+        const calc = new THREE.Vector2(),
+            raycaster = new THREE.Raycaster();
+        let debug;
+
+        function ascSort(a, b) {
+            return a.distance - b.distance;
+        }
+
+        function intersectObject(object, raycaster, intersects, recursive) {
+            if (object.visible === false) return;
+            let parent = object.parent;
+            while (parent) {
+                if (parent.visible === false) return;
+                parent = parent.parent;
+            }
+            object.raycast(raycaster, intersects);
+            if (recursive === true) {
+                const children = object.children;
+                for (let i = 0, l = children.length; i < l; i++) intersectObject(children[i], raycaster, intersects, true);
+            }
+        }
+
+        function intersect(objects) {
+            if (!Array.isArray(objects)) objects = [objects];
+            const intersects = [];
+            objects.forEach(object => intersectObject(object, raycaster, intersects, false));
+            intersects.sort(ascSort);
+            if (debug) updateDebug();
+            return intersects;
+        }
+
+        function updateDebug() {
+            const vertices = debug.geometry.vertices;
+            vertices[0].copy(raycaster.ray.origin.clone());
+            vertices[1].copy(raycaster.ray.origin.clone().add(raycaster.ray.direction.clone().multiplyScalar(10000)));
+            debug.geometry.verticesNeedUpdate = true;
+        }
+
+        this.pointsThreshold = value => {
+            raycaster.params.Points.threshold = value;
+        };
+
+        this.debug = scene => {
+            const geom = new THREE.Geometry();
+            geom.vertices.push(new THREE.Vector3(-100, 0, 0));
+            geom.vertices.push(new THREE.Vector3(100, 0, 0));
+            const mat = new THREE.LineBasicMaterial({ color: 0x0000ff });
+            debug = new THREE.Line(geom, mat);
+            scene.add(debug);
+        };
+
+        this.checkHit = (objects, mouse = Mouse) => {
+            const rect = this.rect || Stage;
+            if (mouse === Mouse && rect === Stage) {
+                calc.copy(Mouse.tilt);
+            } else {
+                calc.x = mouse.x / rect.width * 2 - 1;
+                calc.y = -(mouse.y / rect.height) * 2 + 1;
+            }
+            raycaster.setFromCamera(calc, camera);
+            return intersect(objects);
+        };
+
+        this.checkFromValues = (objects, origin, direction) => {
+            raycaster.set(origin, direction, 0, Number.POSITIVE_INFINITY);
+            return intersect(objects);
+        };
+
+        this.destroy = () => {
+            return Utils.nullObject(this);
+        };
+    }
+}
+
+/**
+ * 3D interaction.
+ *
+ * @author Patrick Schroen / https://github.com/pschroen
+ */
+
+class Interaction3D {
+
+    constructor(camera) {
+
+        if (!Interaction3D.instance) {
+            Interaction3D.HOVER = 'interaction3d_hover';
+            Interaction3D.CLICK = 'interaction3d_click';
+
+            Interaction3D.instance = this;
+        }
+
+        const self = this;
+        this.events = new Events();
+        this.ray = new Raycaster(camera);
+        this.meshes = [];
+        this.meshCallbacks = [];
+        this.cursor = 'auto';
+        this.enabled = true;
+        const event = {};
+        let hoverTarget, clickTarget;
+
+        addListeners();
+
+        function addListeners() {
+            Mouse.input.events.add(Interaction.START, start);
+            Mouse.input.events.add(Interaction.MOVE, move);
+            Mouse.input.events.add(Interaction.CLICK, click);
+        }
+
+        function start() {
+            if (!self.enabled) return;
+            const hit = move();
+            if (hit) {
+                clickTarget = hit.object;
+                clickTarget.time = Render.TIME;
+            } else {
+                clickTarget = null;
+            }
+        }
+
+        function move() {
+            if (!self.enabled) return;
+            const hit = self.ray.checkHit(self.meshes)[0];
+            if (hit) {
+                const mesh = hit.object;
+                if (mesh !== hoverTarget) {
+                    if (hoverTarget) triggerHover('out', hoverTarget);
+                    hoverTarget = mesh;
+                    triggerHover('over', hoverTarget);
+                    Stage.css('cursor', 'pointer');
+                }
+                return hit;
+            } else {
+                if (hoverTarget) {
+                    triggerHover('out', hoverTarget);
+                    hoverTarget = null;
+                    Stage.css('cursor', self.cursor);
+                }
+                return false;
+            }
+        }
+
+        function click() {
+            if (!self.enabled) return;
+            if (!clickTarget) return;
+            const hit = self.ray.checkHit(self.meshes)[0];
+            if (hit && hit.object === clickTarget) triggerClick(clickTarget);
+            clickTarget = null;
+        }
+
+        function triggerHover(action, mesh) {
+            event.action = action;
+            event.mesh = mesh;
+            self.events.fire(Interaction3D.HOVER, event);
+            const i = self.meshes.indexOf(hoverTarget);
+            if (self.meshCallbacks[i].hoverCallback) self.meshCallbacks[i].hoverCallback(event);
+        }
+
+        function triggerClick(mesh) {
+            event.action = 'click';
+            event.mesh = mesh;
+            self.events.fire(Interaction3D.CLICK, event);
+            const i = self.meshes.indexOf(clickTarget);
+            if (self.meshCallbacks[i].clickCallback) self.meshCallbacks[i].clickCallback(event);
+        }
+
+        function parseMeshes(meshes) {
+            if (!Array.isArray(meshes)) meshes = [meshes];
+            const output = [];
+            meshes.forEach(checkMesh);
+
+            function checkMesh(mesh) {
+                if (mesh.type === 'Mesh' && mesh.mouseEnabled) output.push(mesh);
+                if (mesh.children.length) mesh.children.forEach(checkMesh);
+            }
+
+            return output;
+        }
+
+        this.add = (meshes, hoverCallback, clickCallback, parse) => {
+            if (!Array.isArray(meshes) || parse) meshes = parseMeshes(meshes);
+            meshes.forEach(mesh => {
+                this.meshes.push(mesh);
+                this.meshCallbacks.push({ hoverCallback, clickCallback });
+            });
+        };
+
+        this.remove = (meshes, parse) => {
+            if (!Array.isArray(meshes) || parse) meshes = parseMeshes(meshes);
+            meshes.forEach(mesh => {
+                if (mesh === hoverTarget) {
+                    triggerHover('out', hoverTarget);
+                    hoverTarget = null;
+                    Stage.css('cursor', this.cursor);
+                }
+                for (let i = this.meshes.length - 1; i >= 0; i--) {
+                    if (this.meshes[i] === mesh) {
+                        this.meshes.splice(i, 1);
+                        this.meshCallbacks.splice(i, 1);
+                    }
+                }
+            });
+        };
+
+        this.destroy = () => {
+            return Utils.nullObject(this);
+        };
+    }
+
+    set camera(c) {
+        this.ray.camera = c;
+    }
+}
+
+/**
+ * Screen projection.
+ *
+ * @author Patrick Schroen / https://github.com/pschroen
+ */
+
+/* global THREE */
+
+class ScreenProjection {
+
+    constructor(camera) {
+        const v3 = new THREE.Vector3(),
+            v32 = new THREE.Vector3(),
+            value = new THREE.Vector3;
+
+        this.set = v => {
+            camera = v;
+        };
+
+        this.unproject = (mouse, distance) => {
+            const rect = this.rect || Stage;
+            v3.set(mouse.x / rect.width * 2 - 1, -(mouse.y / rect.height) * 2 + 1, 0.5);
+            v3.unproject(camera);
+            const pos = camera.position;
+            v3.sub(pos).normalize();
+            const dist = distance || -pos.z / v3.z;
+            value.copy(pos).add(v3.multiplyScalar(dist));
+            return value;
+        };
+
+        this.project = pos => {
+            const rect = this.rect || Stage;
+            if (pos instanceof THREE.Object3D) {
+                pos.updateMatrixWorld();
+                v32.set(0, 0, 0).setFromMatrixPosition(pos.matrixWorld);
+            } else {
+                v32.copy(pos);
+            }
+            v32.project(camera);
+            v32.x = (v32.x + 1) / 2 * rect.width;
+            v32.y = -(v32.y - 1) / 2 * rect.height;
+            return v32;
+        };
+    }
+}
+
+/**
+ * Shader parser.
+ *
+ * @author Patrick Schroen / https://github.com/pschroen
+ */
+
+const Shaders = new ( // Singleton reassignment pattern
+
+class Shaders {
+
+    constructor() {
+        const shaders = {};
+
+        function parseSingleShader(code) {
+            const attributes = code.split('#!ATTRIBUTES')[1].split('#!')[0],
+                uniforms = code.split('#!UNIFORMS')[1].split('#!')[0],
+                varyings = code.split('#!VARYINGS')[1].split('#!')[0];
+            while (~code.indexOf('#!SHADER')) {
+                code = code.slice(code.indexOf('#!SHADER'));
+                const split = code.split('#!SHADER')[1],
+                    br = split.indexOf('\n'),
+                    name = split.slice(0, br).split(': ')[1];
+                let glsl = split.slice(br);
+                if (~name.indexOf('.vs')) glsl = attributes + uniforms + varyings + glsl;
+                else glsl = uniforms + varyings + glsl;
+                shaders[name] = glsl;
+                code = code.replace('#!SHADER', '$');
+            }
+        }
+
+        function parseCompiled(code) {
+            const split = code.split('{@}');
+            split.shift();
+            for (let i = 0; i < split.length; i += 2) {
+                const name = split[i],
+                    text = split[i + 1];
+                if (~text.indexOf('#!UNIFORMS')) parseSingleShader(text);
+                else shaders[name] = text;
+            }
+        }
+
+        function parseRequirements() {
+            for (let key in shaders) {
+                const object = shaders[key];
+                if (typeof object === 'string' && ~object.indexOf('require')) shaders[key] = require(object);
+            }
+        }
+
+        function require(shader) {
+            while (~shader.indexOf('#require')) {
+                const split = shader.split('#require('),
+                    name = split[1].split(')')[0];
+                shader = shader.replace(`#require(${name})`, shaders[name]);
+            }
+            return shader;
+        }
+
+        this.parse = (code, path) => {
+            if (!~code.indexOf('{@}')) {
+                shaders[path.split('/').last()] = code;
+            } else {
+                parseCompiled(code);
+                parseRequirements();
+            }
+        };
+
+        this.getShader = file => {
+            return shaders[file];
+        };
+
+        window.Shaders = this;
+    }
+}
+
+)(); // Singleton reassignment pattern
+
+/**
+ * Shader helper class.
+ *
+ * @author Patrick Schroen / https://github.com/pschroen
+ */
+
+/* global THREE */
+
+class Shader {
+
+    constructor(vertexShader, fragmentShader, props) {
+        if (typeof fragmentShader !== 'string') {
+            props = fragmentShader;
+            fragmentShader = vertexShader;
+        }
+        const self = this;
+        this.uniforms = {};
+        this.properties = {};
+
+        initProperties();
+        initShaders();
+
+        function initProperties() {
+            for (let key in props) {
+                if (typeof props[key].value !== 'undefined') self.uniforms[key] = props[key];
+                else self.properties[key] = props[key];
+            }
+        }
+
+        function initShaders() {
+            const params = {};
+            params.vertexShader = process(Shaders.getShader(vertexShader + '.vs') || vertexShader, 'vs');
+            params.fragmentShader = process(Shaders.getShader(fragmentShader + '.fs') || fragmentShader, 'fs');
+            params.uniforms = self.uniforms;
+            for (let key in self.properties) params[key] = self.properties[key];
+            self.material = new THREE.RawShaderMaterial(params);
+            self.material.shader = self;
+            self.uniforms = self.material.uniforms;
+        }
+
+        function process(code, type) {
+            let header;
+            if (type === 'vs') {
+                header = [
+                    'precision highp float;',
+                    'precision highp int;',
+                    'attribute vec2 uv;',
+                    'attribute vec3 position;',
+                    'attribute vec3 normal;',
+                    'uniform mat4 modelViewMatrix;',
+                    'uniform mat4 projectionMatrix;',
+                    'uniform mat4 modelMatrix;',
+                    'uniform mat4 viewMatrix;',
+                    'uniform mat3 normalMatrix;',
+                    'uniform vec3 cameraPosition;'
+                ].join('\n');
+            } else {
+                header = [
+                    ~code.indexOf('dFdx') ? '#extension GL_OES_standard_derivatives : enable' : '',
+                    'precision highp float;',
+                    'precision highp int;',
+                    'uniform mat4 modelViewMatrix;',
+                    'uniform mat4 projectionMatrix;',
+                    'uniform mat4 modelMatrix;',
+                    'uniform mat4 viewMatrix;',
+                    'uniform mat3 normalMatrix;',
+                    'uniform vec3 cameraPosition;'
+                ].join('\n');
+            }
+            code = header + code;
+            const threeChunk = (a, b) => {
+                return THREE.ShaderChunk[b] + '\n';
+            };
+            return code.replace(/#s?chunk\(\s?(\w+)\s?\);/g, threeChunk);
+        }
+    }
+
+    set(key, value) {
+        TweenManager.clearTween(this.uniforms[key]);
+        this.uniforms[key].value = value;
+    }
+
+    tween(key, value, time, ease, delay, callback, update) {
+        return TweenManager.tween(this.uniforms[key], { value }, time, ease, delay, callback, update);
+    }
+
+    getValues() {
+        const out = {};
+        for (let key in this.uniforms) out[key] = this.uniforms[key].value;
+        return out;
+    }
+
+    copyUniformsTo(object) {
+        for (let key in this.uniforms) object.uniforms[key] = this.uniforms[key];
+    }
+
+    cloneUniformsTo(object) {
+        for (let key in this.uniforms) object.uniforms[key] = { type: this.uniforms[key].type, value: this.uniforms[key].value };
+    }
+
+    destroy() {
+        this.material.dispose();
+        return Utils.nullObject(this);
+    }
+}
+
+/**
+ * @author Patrick Schroen / https://github.com/pschroen
+ */
+
+if (typeof Promise !== 'undefined') Promise.create = function () {
     let resolve,
         reject,
-        promise = new Promise((res, rej) => {
+        promise = new Promise(function (res, rej) {
             resolve = res;
             reject = rej;
         });
@@ -2946,40 +4170,211 @@ if (typeof Promise !== 'undefined') Promise.create = () => {
     return promise;
 };
 
-// Globals
-window.getURL = (url, target = '_blank') => window.open(url, target);
-window.Delayed = (callback, time = 0, params) => window.setTimeout(() => {
-    if (callback) callback(params);
-}, time);
+Math.sign = function (x) {
+    x = +x;
+    if (x === 0 || isNaN(x)) return Number(x);
+    return x > 0 ? 1 : -1;
+};
+
+Math.degrees = function (radians) {
+    return radians * (180 / Math.PI);
+};
+
+Math.radians = function (degrees) {
+    return degrees * (Math.PI / 180);
+};
+
+Math.clamp = function (value, min = 0, max = 1) {
+    return Math.min(Math.max(value, Math.min(min, max)), Math.max(min, max));
+};
+
+Math.range = function (value, oldMin = -1, oldMax = 1, newMin = 0, newMax = 1, isClamp) {
+    const newValue = (value - oldMin) * (newMax - newMin) / (oldMax - oldMin) + newMin;
+    if (isClamp) return Math.clamp(newValue, Math.min(newMin, newMax), Math.max(newMin, newMax));
+    return newValue;
+};
+
+Math.mix = function (a, b, alpha) {
+    return a * (1 - alpha) + b * alpha;
+};
+
+Math.step = function (edge, value) {
+    return value < edge ? 0 : 1;
+};
+
+Math.smoothStep = function (min, max, value) {
+    const x = Math.max(0, Math.min(1, (value - min) / (max - min)));
+    return x * x * (3 - 2 * x);
+};
+
+Math.fract = function (value) {
+    return value - Math.floor(value);
+};
+
+Math.mod = function (value, n) {
+    return (value % n + n) % n;
+};
+
+Array.prototype.remove = function (element) {
+    let index = this.indexOf(element);
+    if (~index) return this.splice(index, 1);
+};
+
+Array.prototype.last = function () {
+    return this[this.length - 1];
+};
+
+String.prototype.includes = function (str) {
+    if (!Array.isArray(str)) return ~this.indexOf(str);
+    for (let i = str.length - 1; i >= 0; i--) if (~this.indexOf(str[i])) return true;
+    return false;
+};
+
+String.prototype.clip = function (num, end) {
+    return this.length > num ? this.slice(0, num) + end : this;
+};
+
+String.prototype.capitalize = function () {
+    return this.charAt(0).toUpperCase() + this.slice(1);
+};
+
+String.prototype.replaceAll = function (find, replace) {
+    return this.split(find).join(replace);
+};
+
+if (!window.fetch) window.fetch = function (url, options = {}) {
+    let promise = Promise.create(),
+        request = new XMLHttpRequest();
+    request.open(options.method || 'GET', url);
+    for (let i in options.headers) request.setRequestHeader(i, options.headers[i]);
+    request.onload = () => promise.resolve(response());
+    request.onerror = promise.reject;
+    request.send(options.body);
+
+    function response() {
+        let keys = [],
+            all = [],
+            headers = {},
+            header;
+        request.getAllResponseHeaders().replace(/^(.*?):\s*([\s\S]*?)$/gm, function (m, key, value) {
+            keys.push(key = key.toLowerCase());
+            all.push([key, value]);
+            header = headers[key];
+            headers[key] = header ? `${header},${value}` : value;
+        });
+        return {
+            ok: (request.status / 200 | 0) == 1,
+            status: request.status,
+            statusText: request.statusText,
+            url: request.responseURL,
+            clone: response,
+            text() { return Promise.resolve(request.responseText); },
+            json() { return Promise.resolve(request.responseText).then(JSON.parse); },
+            xml() { return Promise.resolve(request.responseXML); },
+            blob() { return Promise.resolve(new Blob([request.response])); },
+            arrayBuffer() { return Promise.resolve(new ArrayBuffer([request.response])); },
+            headers: {
+                keys() { return keys; },
+                entries() { return all; },
+                get(n) { return headers[n.toLowerCase()]; },
+                has(n) { return n.toLowerCase() in headers; }
+            }
+        };
+    }
+    return promise;
+};
+
+window.get = function (url, options = {}) {
+    let promise = Promise.create();
+    options.method = 'GET';
+    window.fetch(url, options).then(handleResponse).catch(promise.reject);
+
+    function handleResponse(e) {
+        if (!e.ok) return promise.reject(e);
+        e.text().then(function (text) {
+            if (text.charAt(0).includes(['[', '{'])) {
+                try {
+                    promise.resolve(JSON.parse(text));
+                } catch (err) {
+                    promise.resolve(text);
+                }
+            } else {
+                promise.resolve(text);
+            }
+        });
+    }
+    return promise;
+};
+
+window.post = function (url, body, options = {}) {
+    let promise = Promise.create();
+    options.method = 'POST';
+    options.body = JSON.stringify(body);
+    window.fetch(url, options).then(handleResponse).catch(promise.reject);
+
+    function handleResponse(e) {
+        if (!e.ok) return promise.reject(e);
+        e.text().then(function (text) {
+            if (text.charAt(0).includes(['[', '{'])) {
+                try {
+                    promise.resolve(JSON.parse(text));
+                } catch (err) {
+                    promise.resolve(text);
+                }
+            } else {
+                promise.resolve(text);
+            }
+        });
+    }
+    return promise;
+};
+
+window.getURL = function (url, target = '_blank') {
+    window.open(url, target);
+};
 
 if (!window.Global) window.Global = {};
 if (!window.Config) window.Config = {};
 
-exports.EventManager = EventManager;
+/**
+ * Alien abduction point.
+ *
+ * @author Patrick Schroen / https://github.com/pschroen
+ */
+
+exports.Events = Events;
+exports.Render = Render;
+exports.Stage = Stage;
 exports.Interface = Interface;
+exports.Component = Component;
 exports.Canvas = Canvas;
 exports.CanvasGraphics = CanvasGraphics;
-exports.CanvasImage = CanvasImage;
 exports.CanvasFont = CanvasFont;
-exports.Render = Render;
-exports.DynamicObject = DynamicObject;
-exports.Utils = Utils;
 exports.Device = Device;
 exports.Mouse = Mouse;
+exports.Interaction = Interaction;
 exports.Accelerometer = Accelerometer;
+exports.Utils = Utils;
+exports.AssetLoader = AssetLoader;
+exports.FontLoader = FontLoader;
+exports.Video = Video;
+exports.Images = Images;
+exports.SVG = SVG;
+exports.Storage = Storage;
+exports.WebAudio = WebAudio;
 exports.TweenManager = TweenManager;
 exports.Interpolation = Interpolation;
 exports.MathTween = MathTween;
-exports.SpringTween = SpringTween;
-exports.AssetLoader = AssetLoader;
-exports.FontLoader = FontLoader;
-exports.Images = Images;
-exports.SVG = SVG;
-exports.SVGSymbol = SVGSymbol$1;
-exports.XHR = XHR;
-exports.Storage = Storage;
-exports.WebAudio = WebAudio$1;
-exports.Stage = Stage;
+exports.LinkedList = LinkedList;
+exports.ObjectPool = ObjectPool;
+exports.Vector2 = Vector2;
+exports.Vector3 = Vector3;
+exports.Utils3D = Utils3D;
+exports.Interaction3D = Interaction3D;
+exports.Raycaster = Raycaster;
+exports.ScreenProjection = ScreenProjection;
+exports.Shaders = Shaders;
+exports.Shader = Shader;
 
 Object.defineProperty(exports, '__esModule', { value: true });
 

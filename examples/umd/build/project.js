@@ -14,114 +14,12 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
     'use strict';
 
     /**
-     * Dynamic object with linear interpolation.
-     *
-     * @author Patrick Schroen / https://github.com/pschroen
-     */
-
-    var DynamicObject = function DynamicObject(props) {
-        var _this = this;
-
-        _classCallCheck(this, DynamicObject);
-
-        for (var key in props) {
-            this[key] = props[key];
-        }this.lerp = function (v, alpha) {
-            for (var _key in props) {
-                _this[_key] += (v[_key] - _this[_key]) * alpha;
-            }return _this;
-        };
-    };
-
-    /**
-     * Browser detection and vendor prefixes.
-     *
-     * @author Patrick Schroen / https://github.com/pschroen
-     */
-
-    var Device = new ( // Singleton static pattern
-
-    function () {
-        function Device() {
-            var _this2 = this;
-
-            _classCallCheck(this, Device);
-
-            this.agent = navigator.userAgent.toLowerCase();
-            this.prefix = function () {
-                var pre = '',
-                    dom = '',
-                    styles = window.getComputedStyle(document.documentElement, '');
-                pre = (Array.prototype.slice.call(styles).join('').match(/-(moz|webkit|ms)-/) || styles.OLink === '' && ['', 'o'])[1];
-                dom = 'WebKit|Moz|MS|O'.match(new RegExp('(' + pre + ')', 'i'))[1];
-                var IE = _this2.detect('trident');
-                return {
-                    unprefixed: IE && !_this2.detect('msie 9'),
-                    dom: dom,
-                    lowercase: pre,
-                    css: '-' + pre + '-',
-                    js: (IE ? pre[0] : pre[0].toUpperCase()) + pre.substr(1)
-                };
-            }();
-            this.transformProperty = function () {
-                var pre = void 0;
-                switch (_this2.prefix.lowercase) {
-                    case 'webkit':
-                        pre = '-webkit-transform';
-                        break;
-                    case 'moz':
-                        pre = '-moz-transform';
-                        break;
-                    case 'o':
-                        pre = '-o-transform';
-                        break;
-                    case 'ms':
-                        pre = '-ms-transform';
-                        break;
-                    default:
-                        pre = 'transform';
-                        break;
-                }
-                return pre;
-            }();
-            this.mobile = !!('ontouchstart' in window || 'onpointerdown' in window) && this.detect(['ios', 'iphone', 'ipad', 'android', 'blackberry']) ? {} : false;
-            this.tablet = function () {
-                if (window.innerWidth > window.innerHeight) return document.body.clientWidth > 800;else return document.body.clientHeight > 800;
-            }();
-            this.phone = !this.tablet;
-            this.type = this.phone ? 'phone' : 'tablet';
-        }
-
-        _createClass(Device, [{
-            key: 'detect',
-            value: function detect(array) {
-                if (typeof array === 'string') array = [array];
-                for (var i = 0; i < array.length; i++) {
-                    if (this.agent.indexOf(array[i]) > -1) return true;
-                }return false;
-            }
-        }, {
-            key: 'vendor',
-            value: function vendor(style) {
-                return this.prefix.js + style;
-            }
-        }, {
-            key: 'vibrate',
-            value: function vibrate(time) {
-                navigator.vibrate && navigator.vibrate(time);
-            }
-        }]);
-
-        return Device;
-    }())(); // Singleton static pattern
-
-    /**
      * Alien utilities.
      *
      * @author Patrick Schroen / https://github.com/pschroen
      */
 
-    var Utils = new ( // Singleton static pattern
+    var Utils = new ( // Singleton reassignment pattern
 
     function () {
         function Utils() {
@@ -129,90 +27,33 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
         }
 
         _createClass(Utils, [{
-            key: 'rand',
-            value: function rand(min, max) {
-                return new DynamicObject({ v: min }).lerp({ v: max }, Math.random()).v;
-            }
-        }, {
-            key: 'doRandom',
-            value: function doRandom(min, max, precision) {
-                if (typeof precision === 'number') {
-                    var p = Math.pow(10, precision);
-                    return Math.round(this.rand(min, max) * p) / p;
-                } else {
-                    return Math.round(this.rand(min - 0.5, max + 0.5));
-                }
+            key: 'random',
+            value: function random(min, max) {
+                var precision = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : 0;
+
+                if (typeof min === 'undefined') return Math.random();
+                if (min === max) return min;
+                min = min || 0;
+                max = max || 1;
+                var p = Math.pow(10, precision);
+                return Math.round((min + Math.random() * (max - min)) * p) / p;
             }
         }, {
             key: 'headsTails',
             value: function headsTails(heads, tails) {
-                return !this.doRandom(0, 1) ? heads : tails;
+                return this.random(0, 1) ? tails : heads;
             }
         }, {
-            key: 'toDegrees',
-            value: function toDegrees(rad) {
-                return rad * (180 / Math.PI);
+            key: 'queryString',
+            value: function queryString(key) {
+                var str = decodeURI(window.location.search.replace(new RegExp('^(?:.*[&\\?]' + encodeURI(key).replace(/[.+*]/g, '\\$&') + '(?:\\=([^&]*))?)?.*$', 'i'), '$1'));
+                if (!str.length || str === '0' || str === 'false') return false;
+                return str;
             }
         }, {
-            key: 'toRadians',
-            value: function toRadians(deg) {
-                return deg * (Math.PI / 180);
-            }
-        }, {
-            key: 'findDistance',
-            value: function findDistance(p1, p2) {
-                var dx = p2.x - p1.x,
-                    dy = p2.y - p1.y;
-                return Math.sqrt(dx * dx + dy * dy);
-            }
-        }, {
-            key: 'timestamp',
-            value: function timestamp() {
-                return (Date.now() + this.doRandom(0, 99999)).toString();
-            }
-        }, {
-            key: 'pad',
-            value: function pad(number) {
-                return number < 10 ? '0' + number : number;
-            }
-        }, {
-            key: 'touchEvent',
-            value: function touchEvent(e) {
-                var touchEvent = {};
-                touchEvent.x = 0;
-                touchEvent.y = 0;
-                if (!e) return touchEvent;
-                if (Device.mobile && (e.touches || e.changedTouches)) {
-                    if (e.touches.length) {
-                        touchEvent.x = e.touches[0].pageX;
-                        touchEvent.y = e.touches[0].pageY;
-                    } else {
-                        touchEvent.x = e.changedTouches[0].pageX;
-                        touchEvent.y = e.changedTouches[0].pageY;
-                    }
-                } else {
-                    touchEvent.x = e.pageX;
-                    touchEvent.y = e.pageY;
-                }
-                return touchEvent;
-            }
-        }, {
-            key: 'clamp',
-            value: function clamp(num, min, max) {
-                return Math.min(Math.max(num, min), max);
-            }
-        }, {
-            key: 'constrain',
-            value: function constrain(num, min, max) {
-                return Math.min(Math.max(num, Math.min(min, max)), Math.max(min, max));
-            }
-        }, {
-            key: 'convertRange',
-            value: function convertRange(oldValue, oldMin, oldMax, newMin, newMax, constrain) {
-                var oldRange = oldMax - oldMin,
-                    newRange = newMax - newMin,
-                    newValue = (oldValue - oldMin) * newRange / oldRange + newMin;
-                return constrain ? this.constrain(newValue, newMin, newMax) : newValue;
+            key: 'getConstructorName',
+            value: function getConstructorName(object) {
+                return object.constructor.name || object.constructor.toString().match(/function ([^(]+)/)[1];
             }
         }, {
             key: 'nullObject',
@@ -231,8 +72,8 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
             value: function mergeObject() {
                 var object = {};
 
-                for (var _len = arguments.length, objects = Array(_len), _key2 = 0; _key2 < _len; _key2++) {
-                    objects[_key2] = arguments[_key2];
+                for (var _len = arguments.length, objects = Array(_len), _key = 0; _key < _len; _key++) {
+                    objects[_key] = arguments[_key];
                 }
 
                 var _iteratorNormalCompletion = true;
@@ -264,11 +105,6 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
                 return object;
             }
         }, {
-            key: 'cloneArray',
-            value: function cloneArray(array) {
-                return array.slice(0);
-            }
-        }, {
             key: 'toArray',
             value: function toArray(object) {
                 return Object.keys(object).map(function (key) {
@@ -276,14 +112,20 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
                 });
             }
         }, {
-            key: 'queryString',
-            value: function queryString(key) {
-                return decodeURI(window.location.search.replace(new RegExp('^(?:.*[&\\?]' + encodeURI(key).replace(/[.+*]/g, '\\$&') + '(?:\\=([^&]*))?)?.*$', 'i'), '$1'));
+            key: 'cloneArray',
+            value: function cloneArray(array) {
+                return array.slice(0);
             }
         }, {
             key: 'basename',
-            value: function basename(path) {
-                return path.replace(/.*\//, '').replace(/(.*)\..*$/, '$1');
+            value: function basename(path, ext) {
+                var name = path.split('/').last();
+                return !ext ? name.split('.')[0] : name;
+            }
+        }, {
+            key: 'extension',
+            value: function extension(path) {
+                return path.split('.').last().split('?')[0].toLowerCase();
             }
         }, {
             key: 'base64',
@@ -292,10 +134,20 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
                     return String.fromCharCode('0x' + p1);
                 }));
             }
+        }, {
+            key: 'timestamp',
+            value: function timestamp() {
+                return (Date.now() + this.random(0, 99999)).toString();
+            }
+        }, {
+            key: 'pad',
+            value: function pad(number) {
+                return number < 10 ? '0' + number : number;
+            }
         }]);
 
         return Utils;
-    }())(); // Singleton static pattern
+    }())(); // Singleton reassignment pattern
 
     /**
      * Event helper class.
@@ -303,60 +155,56 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
      * @author Patrick Schroen / https://github.com/pschroen
      */
 
-    window.Events = {
-        BROWSER_FOCUS: 'browser_focus',
-        KEYBOARD_PRESS: 'keyboard_press',
-        KEYBOARD_DOWN: 'keyboard_down',
-        KEYBOARD_UP: 'keyboard_up',
-        RESIZE: 'resize',
-        COMPLETE: 'complete',
-        PROGRESS: 'progress',
-        UPDATE: 'update',
-        LOADED: 'loaded',
-        ERROR: 'error',
-        READY: 'ready',
-        HOVER: 'hover',
-        CLICK: 'click'
-    };
+    var Events = function Events() {
+        var _this = this;
 
-    var EventManager = function EventManager() {
-        _classCallCheck(this, EventManager);
+        _classCallCheck(this, Events);
 
-        var events = [];
+        var events = {};
 
         this.add = function (event, callback) {
-            events.push({ event: event, callback: callback });
+            if (!events[event]) events[event] = [];
+            events[event].push(callback);
         };
 
         this.remove = function (event, callback) {
-            for (var i = events.length - 1; i > -1; i--) {
-                if (events[i].event === event && events[i].callback === callback) {
-                    events[i] = null;
-                    events.splice(i, 1);
-                    break;
-                }
-            }
+            if (!events[event]) return;
+            events[event].remove(callback);
         };
 
         this.destroy = function () {
-            for (var i = events.length - 1; i > -1; i--) {
-                events[i] = null;
-                events.splice(i, 1);
+            for (var event in events) {
+                for (var i = events[event].length - 1; i > -1; i--) {
+                    events[event][i] = null;
+                    events[event].splice(i, 1);
+                }
             }
-            return null;
+            return Utils.nullObject(_this);
         };
 
         this.fire = function (event) {
             var object = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
 
-            var clone = Utils.cloneArray(events);
-            for (var i = 0; i < clone.length; i++) {
-                if (clone[i].event === event) clone[i].callback(object);
-            }
+            if (!events[event]) return;
+            events[event].forEach(function (callback) {
+                return callback(object);
+            });
         };
     };
 
-    window.events = new EventManager();
+    Events.VISIBILITY = 'visibility';
+    Events.KEYBOARD_PRESS = 'keyboard_press';
+    Events.KEYBOARD_DOWN = 'keyboard_down';
+    Events.KEYBOARD_UP = 'keyboard_up';
+    Events.RESIZE = 'resize';
+    Events.COMPLETE = 'complete';
+    Events.PROGRESS = 'progress';
+    Events.UPDATE = 'update';
+    Events.LOADED = 'loaded';
+    Events.ERROR = 'error';
+    Events.READY = 'ready';
+    Events.HOVER = 'hover';
+    Events.CLICK = 'click';
 
     /**
      * Render loop.
@@ -364,71 +212,147 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
      * @author Patrick Schroen / https://github.com/pschroen
      */
 
-    if (!window.requestAnimationFrame) window.requestAnimationFrame = window.webkitRequestAnimationFrame || window.mozRequestAnimationFrame || window.oRequestAnimationFrame || window.msRequestAnimationFrame || function (callback) {
-        return Delayed(callback, 1000 / 60);
-    };
+    if (!window.requestAnimationFrame) window.requestAnimationFrame = window.webkitRequestAnimationFrame || window.mozRequestAnimationFrame || window.oRequestAnimationFrame || window.msRequestAnimationFrame || function () {
+        var start = Date.now();
+        return function (callback) {
+            return setTimeout(function () {
+                return callback(Date.now() - start);
+            }, 1000 / 60);
+        };
+    }();
 
-    var Render = new // Singleton static pattern
+    var Render = new // Singleton reassignment pattern
 
     function Render() {
-        var _this3 = this;
+        var _this2 = this;
 
         _classCallCheck(this, Render);
 
-        this.TIME = Date.now();
-        var last = void 0,
-            render = [],
-            time = Date.now(),
-            timeSinceRender = 0,
-            rendering = false;
+        var self = this;
+        var render = [],
+            skipLimit = 200;
+        var last = performance.now();
 
-        var focus = function focus(e) {
-            if (e.type === 'focus') last = Date.now();
-        };
+        requestAnimationFrame(step);
 
-        var step = function step() {
-            var t = Date.now(),
-                timeSinceLoad = t - time,
-                diff = 0,
-                fps = 60;
-            if (last) {
-                diff = t - last;
-                fps = 1000 / diff;
-            }
+        function step(t) {
+            var delta = Math.min(skipLimit, t - last);
             last = t;
-            _this3.TIME = t;
-            for (var i = render.length - 1; i > -1; i--) {
+            self.TIME = t;
+            self.DELTA = delta;
+            for (var i = render.length - 1; i >= 0; i--) {
                 var callback = render[i];
-                if (!callback) continue;
-                if (callback.fps) {
-                    timeSinceRender += diff > 200 ? 0 : diff;
-                    if (timeSinceRender < 1000 / callback.fps) continue;
-                    timeSinceRender -= 1000 / callback.fps;
+                if (!callback) {
+                    render.remove(callback);
+                    continue;
                 }
-                callback(t, timeSinceLoad, diff, fps, callback.frameCount++);
+                if (callback.fps) {
+                    if (t - callback.last < 1000 / callback.fps) continue;
+                    callback(++callback.frame);
+                    callback.last = t;
+                    continue;
+                }
+                callback(t, delta);
             }
-            if (render.length) {
-                window.requestAnimationFrame(step);
-            } else {
-                rendering = false;
-                window.events.remove(Events.BROWSER_FOCUS, focus);
-            }
-        };
+            if (!self.paused) requestAnimationFrame(step);
+        }
 
-        this.start = function (callback) {
-            callback.frameCount = 0;
-            if (render.indexOf(callback) === -1) render.push(callback);
-            if (render.length && !rendering) {
-                rendering = true;
-                window.requestAnimationFrame(step);
-                window.events.add(Events.BROWSER_FOCUS, focus);
+        this.start = function (callback, fps) {
+            if (fps) {
+                callback.fps = fps;
+                callback.last = -Infinity;
+                callback.frame = -1;
             }
+            if (!~render.indexOf(callback)) render.unshift(callback);
         };
 
         this.stop = function (callback) {
-            render.findAndRemove(callback);
+            render.remove(callback);
         };
-    }(); // Singleton static pattern
+
+        this.pause = function () {
+            _this2.paused = true;
+        };
+
+        this.resume = function () {
+            if (!_this2.paused) return;
+            _this2.paused = false;
+            requestAnimationFrame(step);
+        };
+    }(); // Singleton reassignment pattern
+
+    /**
+     * Browser detection and vendor prefixes.
+     *
+     * @author Patrick Schroen / https://github.com/pschroen
+     */
+
+    var Device = new ( // Singleton reassignment pattern
+
+    function () {
+        function Device() {
+            var _this3 = this;
+
+            _classCallCheck(this, Device);
+
+            this.agent = navigator.userAgent.toLowerCase();
+            this.pixelRatio = window.devicePixelRatio;
+            this.prefix = function () {
+                var styles = window.getComputedStyle(document.documentElement, ''),
+                    pre = (Array.prototype.slice.call(styles).join('').match(/-(webkit|moz|ms)-/) || styles.OLink === '' && ['', 'o'])[1];
+                return {
+                    lowercase: pre,
+                    js: pre[0].toUpperCase() + pre.substr(1)
+                };
+            }();
+            this.transformProperty = function () {
+                var pre = void 0;
+                switch (_this3.prefix.lowercase) {
+                    case 'webkit':
+                        pre = '-webkit-transform';
+                        break;
+                    case 'moz':
+                        pre = '-moz-transform';
+                        break;
+                    case 'ms':
+                        pre = '-ms-transform';
+                        break;
+                    case 'o':
+                        pre = '-o-transform';
+                        break;
+                    default:
+                        pre = 'transform';
+                        break;
+                }
+                return pre;
+            }();
+            this.mobile = ('ontouchstart' in window || 'onpointerdown' in window) && this.detect(['ios', 'iphone', 'ipad', 'android', 'blackberry']) ? {} : false;
+            this.tablet = window.innerWidth > window.innerHeight ? document.body.clientWidth > 800 : document.body.clientHeight > 800;
+            this.phone = !this.tablet;
+        }
+
+        _createClass(Device, [{
+            key: 'detect',
+            value: function detect(array) {
+                if (typeof array === 'string') array = [array];
+                for (var i = 0; i < array.length; i++) {
+                    if (~this.agent.indexOf(array[i])) return true;
+                }return false;
+            }
+        }, {
+            key: 'vendor',
+            value: function vendor(style) {
+                return this.prefix.js + style;
+            }
+        }, {
+            key: 'vibrate',
+            value: function vibrate(time) {
+                navigator.vibrate && navigator.vibrate(time);
+            }
+        }]);
+
+        return Device;
+    }())(); // Singleton reassignment pattern
 
     /**
      * Interpolation helper class.
@@ -436,7 +360,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
      * @author Patrick Schroen / https://github.com/pschroen
      */
 
-    var Interpolation = new // Singleton static pattern
+    var Interpolation = new // Singleton reassignment pattern
 
     function Interpolation() {
         var _this4 = this;
@@ -645,45 +569,42 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
         this.Elastic = {
             In: function In(k) {
-                var s = void 0,
-                    a = 0.1,
-                    p = 0.4;
+                var a = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 1;
+                var p = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : 0.4;
+
+                var s = void 0;
                 if (k === 0) return 0;
                 if (k === 1) return 1;
                 if (!a || a < 1) {
                     a = 1;
                     s = p / 4;
-                } else {
-                    s = p * Math.asin(1 / a) / (2 * Math.PI);
-                }
+                } else s = p * Math.asin(1 / a) / (2 * Math.PI);
                 return -(a * Math.pow(2, 10 * (k -= 1)) * Math.sin((k - s) * (2 * Math.PI) / p));
             },
             Out: function Out(k) {
-                var s = void 0,
-                    a = 0.1,
-                    p = 0.4;
+                var a = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 1;
+                var p = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : 0.4;
+
+                var s = void 0;
                 if (k === 0) return 0;
                 if (k === 1) return 1;
                 if (!a || a < 1) {
                     a = 1;
                     s = p / 4;
-                } else {
-                    s = p * Math.asin(1 / a) / (2 * Math.PI);
-                }
+                } else s = p * Math.asin(1 / a) / (2 * Math.PI);
                 return a * Math.pow(2, -10 * k) * Math.sin((k - s) * (2 * Math.PI) / p) + 1;
             },
             InOut: function InOut(k) {
-                var s = void 0,
-                    a = 0.1,
-                    p = 0.4;
+                var a = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 1;
+                var p = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : 0.4;
+
+                var s = void 0;
                 if (k === 0) return 0;
                 if (k === 1) return 1;
                 if (!a || a < 1) {
                     a = 1;
                     s = p / 4;
-                } else {
-                    s = p * Math.asin(1 / a) / (2 * Math.PI);
-                }
+                } else s = p * Math.asin(1 / a) / (2 * Math.PI);
                 if ((k *= 2) < 1) return -0.5 * (a * Math.pow(2, 10 * (k -= 1)) * Math.sin((k - s) * (2 * Math.PI) / p));
                 return a * Math.pow(2, -10 * (k -= 1)) * Math.sin((k - s) * (2 * Math.PI) / p) * 0.5 + 1;
             }
@@ -710,14 +631,17 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
                 return 1 - this.Bounce.Out(1 - k);
             },
             Out: function Out(k) {
-                if (k < 1 / 2.75) return 7.5625 * k * k;else if (k < 2 / 2.75) return 7.5625 * (k -= 1.5 / 2.75) * k + 0.75;else if (k < 2.5 / 2.75) return 7.5625 * (k -= 2.25 / 2.75) * k + 0.9375;else return 7.5625 * (k -= 2.625 / 2.75) * k + 0.984375;
+                if (k < 1 / 2.75) return 7.5625 * k * k;
+                if (k < 2 / 2.75) return 7.5625 * (k -= 1.5 / 2.75) * k + 0.75;
+                if (k < 2.5 / 2.75) return 7.5625 * (k -= 2.25 / 2.75) * k + 0.9375;
+                return 7.5625 * (k -= 2.625 / 2.75) * k + 0.984375;
             },
             InOut: function InOut(k) {
                 if (k < 0.5) return this.Bounce.In(k * 2) * 0.5;
                 return this.Bounce.Out(k * 2 - 1) * 0.5 + 0.5;
             }
         };
-    }(); // Singleton static pattern
+    }(); // Singleton reassignment pattern
 
     /**
      * Mathematical.
@@ -726,6 +650,8 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
      */
 
     var MathTween = function MathTween(object, props, time, ease, delay, update, callback) {
+        var _this5 = this;
+
         _classCallCheck(this, MathTween);
 
         var self = this;
@@ -733,63 +659,54 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
             startValues = void 0,
             endValues = void 0,
             paused = void 0,
+            spring = void 0,
+            damping = void 0,
             elapsed = void 0;
 
-        start();
+        initMathTween();
 
-        function killed() {
-            return !self || self.kill || !object;
-        }
-
-        function start() {
-            if (killed()) return;
-            if (!object.multiTween && object.mathTween) {
-                object.mathTween.kill = true;
-                TweenManager.clearTween(object);
-            }
+        function initMathTween() {
+            if (!object.multiTween && object.mathTween) TweenManager.clearTween(object);
             TweenManager.addMathTween(self);
             object.mathTween = self;
+            if (object.multiTween) {
+                if (!object.mathTweens) object.mathTweens = [];
+                object.mathTweens.push(self);
+            }
             ease = Interpolation.convertEase(ease);
-            startTime = Date.now();
+            startTime = performance.now();
             startTime += delay;
             endValues = props;
             startValues = {};
+            if (props.spring) spring = props.spring;
+            if (props.damping) damping = props.damping;
             for (var prop in endValues) {
                 if (typeof object[prop] === 'number') startValues[prop] = object[prop];
             }
         }
 
-        function clear(stop) {
-            if (killed()) return;
-            self.kill = true;
-            if (!stop) {
-                for (var prop in endValues) {
-                    if (typeof endValues[prop] === 'number') object[prop] = endValues[prop];
-                }if (object.transform) object.transform();
-            }
-            TweenManager.removeMathTween(self);
+        function clear() {
+            if (!object && !props) return false;
             object.mathTween = null;
+            TweenManager.removeMathTween(self);
+            Utils.nullObject(self);
+            if (object.mathTweens) object.mathTweens.remove(self);
         }
 
         this.update = function (t) {
-            if (killed()) return;
             if (paused || t < startTime) return;
             elapsed = (t - startTime) / time;
             elapsed = elapsed > 1 ? 1 : elapsed;
-            var delta = ease(elapsed);
-            for (var prop in startValues) {
-                if (typeof startValues[prop] === 'number') {
-                    var _start = startValues[prop],
-                        end = endValues[prop];
-                    object[prop] = _start + (end - _start) * delta;
-                }
-            }
+            var delta = _this5.interpolate(elapsed);
             if (update) update(delta);
             if (elapsed === 1) {
-                clear();
                 if (callback) callback();
+                clear();
             }
-            if (object.transform) object.transform();
+        };
+
+        this.stop = function () {
+            clear();
         };
 
         this.pause = function () {
@@ -798,119 +715,19 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
         this.resume = function () {
             paused = false;
-            startTime = Date.now() - elapsed * time;
+            startTime = performance.now() - elapsed * time;
         };
 
-        this.stop = function () {
-            return clear(true);
-        };
-    };
-
-    /**
-     * Spring math.
-     *
-     * @author Patrick Schroen / https://github.com/pschroen
-     */
-
-    var SpringTween = function SpringTween(object, props, friction, ease, delay, update, callback) {
-        _classCallCheck(this, SpringTween);
-
-        var self = this;
-        var startTime = void 0,
-            velocityValues = void 0,
-            endValues = void 0,
-            startValues = void 0,
-            damping = void 0,
-            count = void 0,
-            paused = void 0;
-
-        start();
-
-        function killed() {
-            return !self || self.kill || !object;
-        }
-
-        function start() {
-            if (killed()) return;
-            if (!object.multiTween && object.mathTween) {
-                object.mathTween.kill = true;
-                TweenManager.clearTween(object);
-            }
-            TweenManager.addMathTween(self);
-            object.mathTween = self;
-            startTime = Date.now();
-            startTime += delay;
-            endValues = {};
-            startValues = {};
-            velocityValues = {};
-            if (props.x || props.y || props.z) {
-                if (typeof props.x === 'undefined') props.x = object.x;
-                if (typeof props.y === 'undefined') props.y = object.y;
-                if (typeof props.z === 'undefined') props.z = object.z;
-            }
-            count = 0;
-            damping = props.damping || 0.1;
-            delete props.damping;
-            for (var prop in props) {
-                if (typeof props[prop] === 'number') {
-                    velocityValues[prop] = 0;
-                    endValues[prop] = props[prop];
-                }
-            }
-            for (var _prop in props) {
-                if (typeof object[_prop] === 'number') {
-                    startValues[_prop] = object[_prop] || 0;
-                    props[_prop] = startValues[_prop];
-                }
-            }
-        }
-
-        function clear(stop) {
-            if (killed()) return;
-            self.kill = true;
-            if (!stop) {
-                for (var prop in endValues) {
-                    if (typeof endValues[prop] === 'number') object[prop] = endValues[prop];
-                }if (object.transform) object.transform();
-            }
-            TweenManager.removeMathTween(self);
-            object.mathTween = null;
-        }
-
-        this.update = function (t) {
-            if (killed()) return;
-            if (paused || t < startTime) return;
-            var vel = void 0;
+        this.interpolate = function (elapsed) {
+            var delta = ease(elapsed, spring, damping);
             for (var prop in startValues) {
-                if (typeof startValues[prop] === 'number') {
-                    var end = endValues[prop],
-                        val = props[prop],
-                        d = end - val,
-                        a = d * damping;
-                    velocityValues[prop] += a;
-                    velocityValues[prop] *= friction;
-                    props[prop] += velocityValues[prop];
-                    object[prop] = props[prop];
-                    vel = velocityValues[prop];
+                if (typeof startValues[prop] === 'number' && typeof endValues[prop] === 'number') {
+                    var start = startValues[prop],
+                        end = endValues[prop];
+                    object[prop] = start + (end - start) * delta;
                 }
             }
-            if (update) update(t);
-            if (Math.abs(vel) < 0.001) {
-                count++;
-                if (count > 30) {
-                    clear();
-                    if (callback) callback();
-                }
-            }
-            if (object.transform) object.transform();
-        };
-
-        this.pause = function () {
-            paused = true;
-        };
-
-        this.stop = function () {
-            return clear(true);
+            return delta;
         };
     };
 
@@ -920,12 +737,13 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
      * @author Patrick Schroen / https://github.com/pschroen
      */
 
-    var TweenManager = new ( // Singleton static pattern
+    var TweenManager = new ( // Singleton reassignment pattern
 
     function () {
         function TweenManager() {
             _classCallCheck(this, TweenManager);
 
+            var self = this;
             this.TRANSFORMS = ['x', 'y', 'z', 'scale', 'scaleX', 'scaleY', 'rotation', 'rotationX', 'rotationY', 'rotationZ', 'skewX', 'skewY', 'perspective'];
             this.CSS_EASES = {
                 easeOutCubic: 'cubic-bezier(0.215, 0.610, 0.355, 1.000)',
@@ -954,30 +772,23 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
                 easeInOut: 'cubic-bezier(0.420, 0.000, 0.580, 1.000)',
                 linear: 'linear'
             };
-            var tweens = [],
-                rendering = false;
+            var tweens = [];
 
-            var updateTweens = function updateTweens(t) {
-                if (tweens.length) {
-                    for (var i = 0; i < tweens.length; i++) {
-                        tweens[i].update(t);
-                    }
-                } else {
-                    rendering = false;
-                    Render.stop(updateTweens);
+            Render.start(updateTweens);
+
+            function updateTweens(t) {
+                for (var i = tweens.length - 1; i >= 0; i--) {
+                    var tween = tweens[i];
+                    if (tween.update) tween.update(t);else self.removeMathTween(tween);
                 }
-            };
+            }
 
             this.addMathTween = function (tween) {
                 tweens.push(tween);
-                if (!rendering) {
-                    rendering = true;
-                    Render.start(updateTweens);
-                }
             };
 
             this.removeMathTween = function (tween) {
-                tweens.findAndRemove(tween);
+                tweens.remove(tween);
             };
         }
 
@@ -995,39 +806,21 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
                     if (callback) promise.then(callback);
                     callback = promise.resolve;
                 }
-                var tween = ease === 'spring' ? new SpringTween(object, props, time, ease, delay, update, callback) : new MathTween(object, props, time, ease, delay, update, callback);
+                var tween = new MathTween(object, props, time, ease, delay, update, callback);
                 return promise || tween;
             }
         }, {
             key: 'clearTween',
             value: function clearTween(object) {
                 if (object.mathTween) object.mathTween.stop();
-            }
-        }, {
-            key: 'clearCSSTween',
-            value: function clearCSSTween(object) {
-                if (object.cssTween) object.cssTween.stop();
-            }
-        }, {
-            key: 'checkTransform',
-            value: function checkTransform(key) {
-                return this.TRANSFORMS.indexOf(key) > -1;
-            }
-        }, {
-            key: 'getEase',
-            value: function getEase(name) {
-                return this.CSS_EASES[name] || this.CSS_EASES.easeOutCubic;
-            }
-        }, {
-            key: 'getAllTransforms',
-            value: function getAllTransforms(object) {
-                var obj = {};
-                for (var i = this.TRANSFORMS.length - 1; i > -1; i--) {
-                    var key = this.TRANSFORMS[i],
-                        val = object[key];
-                    if (val !== 0 && typeof val === 'number') obj[key] = val;
+                if (object.mathTweens) {
+                    var _tweens = object.mathTweens;
+                    for (var i = 0; i < _tweens.length; i++) {
+                        var tween = _tweens[i];
+                        if (tween) tween.stop();
+                    }
+                    object.mathTweens = null;
                 }
-                return obj;
             }
         }, {
             key: 'parseTransform',
@@ -1036,8 +829,8 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
                 if (typeof props.x !== 'undefined' || typeof props.y !== 'undefined' || typeof props.z !== 'undefined') {
                     var x = props.x || 0,
                         y = props.y || 0,
-                        z = props.z || 0,
-                        translate = '';
+                        z = props.z || 0;
+                    var translate = '';
                     translate += x + 'px, ';
                     translate += y + 'px, ';
                     translate += z + 'px';
@@ -1058,10 +851,31 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
                 if (typeof props.perspective !== 'undefined') transforms += 'perspective(' + props.perspective + 'px)';
                 return transforms;
             }
+        }, {
+            key: 'isTransform',
+            value: function isTransform(key) {
+                return ~this.TRANSFORMS.indexOf(key);
+            }
+        }, {
+            key: 'getAllTransforms',
+            value: function getAllTransforms(object) {
+                var obj = {};
+                for (var i = this.TRANSFORMS.length - 1; i > -1; i--) {
+                    var key = this.TRANSFORMS[i],
+                        val = object[key];
+                    if (val !== 0 && typeof val === 'number') obj[key] = val;
+                }
+                return obj;
+            }
+        }, {
+            key: 'getEase',
+            value: function getEase(name) {
+                return this.CSS_EASES[name] || this.CSS_EASES.easeOutCubic;
+            }
         }]);
 
         return TweenManager;
-    }())(); // Singleton static pattern
+    }())(); // Singleton reassignment pattern
 
     /**
      * CSS3 transition animation.
@@ -1073,8 +887,8 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
         _classCallCheck(this, CSSTransition);
 
         var self = this;
-        var transform = TweenManager.getAllTransforms(object),
-            properties = [];
+        var transformProps = void 0,
+            transitionProps = void 0;
 
         initProperties();
         initCSSTween();
@@ -1084,50 +898,69 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
         }
 
         function initProperties() {
+            var transform = TweenManager.getAllTransforms(object),
+                properties = [];
             for (var key in props) {
-                if (TweenManager.checkTransform(key)) {
+                if (TweenManager.isTransform(key)) {
                     transform.use = true;
                     transform[key] = props[key];
                     delete props[key];
-                } else {
-                    if (typeof props[key] === 'number' || key.indexOf('-') > -1) properties.push(key);
+                } else if (typeof props[key] === 'number' || ~key.indexOf('-')) {
+                    properties.push(key);
                 }
             }
-            if (transform.use) properties.push(Device.transformProperty);
-            delete transform.use;
+            if (transform.use) {
+                properties.push(Device.transformProperty);
+                delete transform.use;
+            }
+            transformProps = transform;
+            transitionProps = properties;
         }
 
         function initCSSTween() {
             if (killed()) return;
             if (object.cssTween) object.cssTween.kill = true;
             object.cssTween = self;
-            var transition = '';
-            for (var i = 0; i < properties.length; i++) {
-                transition += (transition.length ? ', ' : '') + properties[i] + ' ' + time + 'ms ' + TweenManager.getEase(ease) + ' ' + delay + 'ms';
-            }Delayed(function () {
+            var strings = buildStrings(time, ease, delay);
+            object.willChange(strings.props);
+            setTimeout(function () {
                 if (killed()) return;
-                object.element.style[Device.vendor('Transition')] = transition;
+                object.element.style[Device.vendor('Transition')] = strings.transition;
                 object.css(props);
-                object.transform(transform);
-                Delayed(function () {
+                object.transform(transformProps);
+                setTimeout(function () {
                     if (killed()) return;
-                    clear();
+                    clearCSSTween();
                     if (callback) callback();
                 }, time + delay);
             }, 50);
         }
 
-        function clear() {
+        function buildStrings(time, ease, delay) {
+            var props = '',
+                transition = '';
+            for (var i = 0; i < transitionProps.length; i++) {
+                var transitionProp = transitionProps[i];
+                props += (props.length ? ', ' : '') + transitionProp;
+                transition += (transition.length ? ', ' : '') + transitionProp + ' ' + time + 'ms ' + TweenManager.getEase(ease) + ' ' + delay + 'ms';
+            }
+            return {
+                props: props,
+                transition: transition
+            };
+        }
+
+        function clearCSSTween() {
             if (killed()) return;
             self.kill = true;
             object.element.style[Device.vendor('Transition')] = '';
             object.cssTween = null;
+            object.willChange(null);
+            object = props = null;
             Utils.nullObject(self);
         }
 
-        this.stop = function () {
-            return clear();
-        };
+        this.stop = clearCSSTween;
     };
 
     /**
@@ -1143,32 +976,37 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
             _classCallCheck(this, Interface);
 
-            this.events = new EventManager();
-            if (typeof name !== 'string') {
-                this.element = name;
-            } else {
-                this.name = name;
-                this.type = type;
-                if (this.type === 'svg') {
-                    var qualifiedName = detached || 'svg';
-                    detached = true;
-                    this.element = document.createElementNS('http://www.w3.org/2000/svg', qualifiedName);
-                    this.element.setAttributeNS('http://www.w3.org/2000/xmlns/', 'xmlns:xlink', 'http://www.w3.org/1999/xlink');
+            this.events = new Events();
+            this.classes = [];
+            this.timers = [];
+            this.loops = [];
+            if (typeof name !== 'undefined') {
+                if (typeof name === 'string') {
+                    this.name = name;
+                    this.type = type;
+                    if (this.type === 'svg') {
+                        var qualifiedName = detached || 'svg';
+                        detached = true;
+                        this.element = document.createElementNS('http://www.w3.org/2000/svg', qualifiedName);
+                        this.element.setAttributeNS('http://www.w3.org/2000/xmlns/', 'xmlns:xlink', 'http://www.w3.org/1999/xlink');
+                    } else {
+                        this.element = document.createElement(this.type);
+                        if (name[0] !== '.') this.element.id = name;else this.element.className = name.substr(1);
+                    }
+                    this.element.style.position = 'absolute';
+                    if (!detached) (window.Alien && window.Alien.Stage ? window.Alien.Stage : document.body).appendChild(this.element);
                 } else {
-                    this.element = document.createElement(this.type);
-                    if (name[0] !== '.') this.element.id = name;else this.element.className = name.substr(1);
+                    this.element = name;
                 }
-                this.element.style.position = 'absolute';
-                if (!detached) (window.Alien && window.Alien.Stage ? window.Alien.Stage : document.body).appendChild(this.element);
+                this.element.object = this;
             }
-            this.element.object = this;
         }
 
         _createClass(Interface, [{
             key: 'initClass',
             value: function initClass(object) {
-                for (var _len2 = arguments.length, params = Array(_len2 > 1 ? _len2 - 1 : 0), _key3 = 1; _key3 < _len2; _key3++) {
-                    params[_key3 - 1] = arguments[_key3];
+                for (var _len2 = arguments.length, params = Array(_len2 > 1 ? _len2 - 1 : 0), _key2 = 1; _key2 < _len2; _key2++) {
+                    params[_key2 - 1] = arguments[_key2];
                 }
 
                 var child = new (Function.prototype.bind.apply(object, [null].concat(params)))();
@@ -1176,9 +1014,82 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
                 return child;
             }
         }, {
-            key: 'clone',
-            value: function clone() {
-                return new Interface(this.element.cloneNode(true));
+            key: 'add',
+            value: function add(child) {
+                var element = this.element;
+                if (child.element) {
+                    element.appendChild(child.element);
+                    this.classes.push(child);
+                    child.parent = this;
+                } else if (child.nodeName) {
+                    element.appendChild(child);
+                }
+                return this;
+            }
+        }, {
+            key: 'delayedCall',
+            value: function delayedCall(callback) {
+                for (var _len3 = arguments.length, params = Array(_len3 > 2 ? _len3 - 2 : 0), _key3 = 2; _key3 < _len3; _key3++) {
+                    params[_key3 - 2] = arguments[_key3];
+                }
+
+                var time = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 0;
+
+                var timer = setTimeout(function () {
+                    if (callback) callback.apply(undefined, params);
+                }, time);
+                this.timers.push(timer);
+                if (this.timers.length > 50) this.timers.shift();
+                return timer;
+            }
+        }, {
+            key: 'clearTimers',
+            value: function clearTimers() {
+                for (var i = this.timers.length - 1; i >= 0; i--) {
+                    clearTimeout(this.timers[i]);
+                }this.timers.length = 0;
+            }
+        }, {
+            key: 'startRender',
+            value: function startRender(callback, fps) {
+                this.loops.push(callback);
+                Render.start(callback, fps);
+            }
+        }, {
+            key: 'stopRender',
+            value: function stopRender(callback) {
+                this.loops.remove(callback);
+                Render.stop(callback);
+            }
+        }, {
+            key: 'clearRenders',
+            value: function clearRenders() {
+                for (var i = this.loops.length - 1; i >= 0; i--) {
+                    this.stopRender(this.loops[i]);
+                }this.loops.length = 0;
+            }
+        }, {
+            key: 'destroy',
+            value: function destroy() {
+                this.removed = true;
+                var parent = this.parent;
+                if (parent && !parent.removed && parent.remove) parent.remove(this);
+                for (var i = this.classes.length - 1; i >= 0; i--) {
+                    var child = this.classes[i];
+                    if (child && child.destroy) child.destroy();
+                }
+                this.classes.length = 0;
+                this.element.object = null;
+                this.clearRenders();
+                this.clearTimers();
+                this.events.destroy();
+                return Utils.nullObject(this);
+            }
+        }, {
+            key: 'remove',
+            value: function remove(child) {
+                child.element.parentNode.removeChild(child.element);
+                this.classes.remove(child);
             }
         }, {
             key: 'create',
@@ -1188,37 +1099,15 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
                 return child;
             }
         }, {
+            key: 'clone',
+            value: function clone() {
+                return new Interface(this.element.cloneNode(true));
+            }
+        }, {
             key: 'empty',
             value: function empty() {
                 this.element.innerHTML = '';
                 return this;
-            }
-        }, {
-            key: 'add',
-            value: function add(child) {
-                if (child.element) {
-                    this.element.appendChild(child.element);
-                    child.parent = this;
-                } else if (child.nodeName) {
-                    this.element.appendChild(child);
-                }
-                return this;
-            }
-        }, {
-            key: 'remove',
-            value: function remove(child) {
-                if (child.element) child.destroy();else if (child.nodeName) child.parentNode.removeChild(child);
-                return this;
-            }
-        }, {
-            key: 'destroy',
-            value: function destroy() {
-                if (this.loop) Render.stop(this.loop);
-                this.events = this.events.destroy();
-                this.removed = true;
-                var parent = this.parent;
-                if (parent && !parent.removed && parent.remove) parent.remove(this.element);
-                return Utils.nullObject(this);
             }
         }, {
             key: 'text',
@@ -1302,7 +1191,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
         }, {
             key: 'bg',
             value: function bg(src, x, y, repeat) {
-                if (src.indexOf('.') > -1 || src.indexOf('data:') > -1) this.element.style.backgroundImage = 'url(' + src + ')';else this.element.style.backgroundColor = src;
+                if (src.includes(['data:', '.'])) this.element.style.backgroundImage = 'url(' + src + ')';else this.element.style.backgroundColor = src;
                 if (typeof x !== 'undefined') {
                     x = typeof x === 'number' ? x + 'px' : x;
                     y = typeof y === 'number' ? y + 'px' : y;
@@ -1348,7 +1237,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
         }, {
             key: 'mask',
             value: function mask(src) {
-                this.element.style[Device.vendor('Mask')] = (src.indexOf('.') > -1 ? 'url(' + src + ')' : src) + ' no-repeat';
+                this.element.style[Device.vendor('Mask')] = (~src.indexOf('.') ? 'url(' + src + ')' : src) + ' no-repeat';
                 this.element.style[Device.vendor('MaskSize')] = 'contain';
                 return this;
             }
@@ -1365,7 +1254,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
                     if (!value) {
                         var style = this.element.style[props];
                         if (typeof style !== 'number') {
-                            if (style.indexOf('px') > -1) style = Number(style.slice(0, -2));
+                            if (~style.indexOf('px')) style = Number(style.slice(0, -2));
                             if (props === 'opacity') style = !isNaN(Number(this.element.style.opacity)) ? Number(this.element.style.opacity) : 1;
                         }
                         if (!style) style = 0;
@@ -1390,6 +1279,18 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
                     if (typeof props[key] === 'number') this[key] = props[key];
                 }this.element.style[Device.vendor('Transform')] = TweenManager.parseTransform(props);
                 return this;
+            }
+        }, {
+            key: 'willChange',
+            value: function willChange(props) {
+                if (typeof props === 'boolean') this.willChangeLock = props;else if (this.willChangeLock) return;
+                var string = typeof props === 'string';
+                if (props) this.element.style['will-change'] = string ? props : Device.transformProperty + ', opacity';else this.element.style['will-change'] = '';
+            }
+        }, {
+            key: 'backfaceVisibility',
+            value: function backfaceVisibility(visible) {
+                if (visible) this.element.style[Device.vendor('BackfaceVisibility')] = 'visible';else this.element.style[Device.vendor('BackfaceVisibility')] = 'hidden';
             }
         }, {
             key: 'enable3D',
@@ -1455,8 +1356,8 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
                 return this;
             }
         }, {
-            key: 'stopTween',
-            value: function stopTween() {
+            key: 'clearTween',
+            value: function clearTween() {
                 if (this.cssTween) this.cssTween.stop();
                 if (this.mathTween) this.mathTween.stop();
                 return this;
@@ -1464,91 +1365,121 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
         }, {
             key: 'attr',
             value: function attr(_attr, value) {
-                if (typeof value === 'undefined') return this.element.getAttribute(_attr);else if (value === '') this.element.removeAttribute(_attr);else this.element.setAttribute(_attr, value);
+                if (typeof value === 'undefined') return this.element.getAttribute(_attr);
+                if (value === '') this.element.removeAttribute(_attr);else this.element.setAttribute(_attr, value);
                 return this;
             }
         }, {
-            key: 'svgSymbol',
-            value: function svgSymbol(id, width, height) {
-                /* eslint-disable no-undef */
-                if (typeof SVGSymbol !== 'undefined') {
-                    var config = SVGSymbol.getConfig(id);
-                    this.html('<svg viewBox="0 0 ' + config.width + ' ' + config.height + '" width="' + width + '" height="' + height + '"><use xlink:href="#' + config.id + '" x="0" y="0"/></svg>');
+            key: 'convertTouchEvent',
+            value: function convertTouchEvent(e) {
+                var touchEvent = {};
+                touchEvent.x = 0;
+                touchEvent.y = 0;
+                if (!e) return touchEvent;
+                if (e.touches || e.changedTouches) {
+                    if (e.touches.length) {
+                        touchEvent.x = e.touches[0].pageX;
+                        touchEvent.y = e.touches[0].pageY;
+                    } else {
+                        touchEvent.x = e.changedTouches[0].pageX;
+                        touchEvent.y = e.changedTouches[0].pageY;
+                    }
+                } else {
+                    touchEvent.x = e.pageX;
+                    touchEvent.y = e.pageY;
                 }
-                /* eslint-enable no-undef */
-            }
-        }, {
-            key: 'startRender',
-            value: function startRender(callback) {
-                this.loop = callback;
-                Render.start(callback);
-            }
-        }, {
-            key: 'stopRender',
-            value: function stopRender(callback) {
-                this.loop = null;
-                Render.stop(callback);
+                return touchEvent;
             }
         }, {
             key: 'click',
             value: function click(callback) {
-                var _this5 = this;
+                var _this6 = this;
 
-                var clicked = function clicked(e) {
-                    e.object = _this5.element.className === 'hit' ? _this5.parent : _this5;
+                var click = function click(e) {
+                    if (!_this6.element) return false;
+                    e.object = _this6.element.className === 'hit' ? _this6.parent : _this6;
                     e.action = 'click';
                     if (callback) callback(e);
                 };
-                this.element.addEventListener('click', clicked);
+                this.element.addEventListener('click', click, true);
                 this.element.style.cursor = 'pointer';
                 return this;
             }
         }, {
             key: 'hover',
             value: function hover(callback) {
-                var _this6 = this;
+                var _this7 = this;
 
-                var hovered = function hovered(e) {
-                    e.object = _this6.element.className === 'hit' ? _this6.parent : _this6;
+                var hover = function hover(e) {
+                    if (!_this7.element) return false;
+                    e.object = _this7.element.className === 'hit' ? _this7.parent : _this7;
                     e.action = e.type === 'mouseout' ? 'out' : 'over';
                     if (callback) callback(e);
                 };
-                this.element.addEventListener('mouseover', hovered);
-                this.element.addEventListener('mouseout', hovered);
+                this.element.addEventListener('mouseover', hover, true);
+                this.element.addEventListener('mouseout', hover, true);
                 return this;
             }
         }, {
             key: 'press',
             value: function press(callback) {
-                var _this7 = this;
+                var _this8 = this;
 
-                var pressed = function pressed(e) {
-                    e.object = _this7.element.className === 'hit' ? _this7.parent : _this7;
+                var press = function press(e) {
+                    if (!_this8.element) return false;
+                    e.object = _this8.element.className === 'hit' ? _this8.parent : _this8;
                     e.action = e.type === 'mousedown' ? 'down' : 'up';
                     if (callback) callback(e);
                 };
-                this.element.addEventListener('mousedown', pressed);
-                this.element.addEventListener('mouseup', pressed);
+                this.element.addEventListener('mousedown', press, true);
+                this.element.addEventListener('mouseup', press, true);
                 return this;
             }
         }, {
             key: 'bind',
             value: function bind(event, callback) {
+                var _this9 = this;
+
                 if (event === 'touchstart' && !Device.mobile) event = 'mousedown';else if (event === 'touchmove' && !Device.mobile) event = 'mousemove';else if (event === 'touchend' && !Device.mobile) event = 'mouseup';
-                this.element.addEventListener(event, callback);
+                if (!this.events['bind_' + event]) this.events['bind_' + event] = [];
+                var events = this.events['bind_' + event];
+                events.push({ target: this.element, callback: callback });
+
+                var touchEvent = function touchEvent(e) {
+                    var touch = _this9.convertTouchEvent(e);
+                    e.x = touch.x;
+                    e.y = touch.y;
+                    events.forEach(function (event) {
+                        if (event.target === e.currentTarget) event.callback(e);
+                    });
+                };
+
+                if (!this.events['fn_' + event]) {
+                    this.events['fn_' + event] = touchEvent;
+                    this.element.addEventListener(event, touchEvent, true);
+                }
                 return this;
             }
         }, {
             key: 'unbind',
             value: function unbind(event, callback) {
                 if (event === 'touchstart' && !Device.mobile) event = 'mousedown';else if (event === 'touchmove' && !Device.mobile) event = 'mousemove';else if (event === 'touchend' && !Device.mobile) event = 'mouseup';
-                this.element.removeEventListener(event, callback);
+                var events = this.events['bind_' + event];
+                if (!events) return this;
+                events.forEach(function (event, i) {
+                    if (event.callback === callback) events.splice(i, 1);
+                });
+                if (this.events['fn_' + event] && !events.length) {
+                    this.element.removeEventListener(event, this.events['fn_' + event], true);
+                    this.events['fn_' + event] = null;
+                }
                 return this;
             }
         }, {
             key: 'interact',
             value: function interact(overCallback, clickCallback) {
-                this.hit = this.create('.hit').css({
+                this.hit = this.create('.hit');
+                this.hit.css({
                     position: 'absolute',
                     left: 0,
                     top: 0,
@@ -1562,39 +1493,50 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
         }, {
             key: 'touchClick',
             value: function touchClick(hover, click) {
-                var _this8 = this;
+                var _this10 = this;
 
+                var start = {};
                 var time = void 0,
                     move = void 0,
-                    start = {},
-                    touch = {};
-                var touchMove = function touchMove(e) {
-                    touch = Utils.touchEvent(e);
-                    move = Utils.findDistance(start, touch) > 5;
+                    touch = void 0;
+
+                var findDistance = function findDistance(p1, p2) {
+                    var dx = p2.x - p1.x,
+                        dy = p2.y - p1.y;
+                    return Math.sqrt(dx * dx + dy * dy);
                 };
+
+                var touchMove = function touchMove(e) {
+                    if (!_this10.element) return false;
+                    touch = _this10.convertTouchEvent(e);
+                    move = findDistance(start, touch) > 5;
+                };
+
                 var setTouch = function setTouch(e) {
-                    var touch = Utils.touchEvent(e);
-                    e.touchX = touch.x;
-                    e.touchY = touch.y;
+                    var touchEvent = _this10.convertTouchEvent(e);
+                    e.touchX = touchEvent.x;
+                    e.touchY = touchEvent.y;
                     start.x = e.touchX;
                     start.y = e.touchY;
                 };
+
                 var touchStart = function touchStart(e) {
-                    time = Date.now();
+                    if (!_this10.element) return false;
+                    time = performance.now();
+                    e.object = _this10.element.className === 'hit' ? _this10.parent : _this10;
                     e.action = 'over';
-                    e.object = _this8.element.className === 'hit' ? _this8.parent : _this8;
                     setTouch(e);
                     if (hover && !move) hover(e);
                 };
+
                 var touchEnd = function touchEnd(e) {
-                    var t = Date.now();
-                    e.object = _this8.element.className === 'hit' ? _this8.parent : _this8;
+                    if (!_this10.element) return false;
+                    var t = performance.now();
+                    e.object = _this10.element.className === 'hit' ? _this10.parent : _this10;
                     setTouch(e);
-                    if (time && t - time < 750) {
-                        if (click && !move) {
-                            e.action = 'click';
-                            if (click && !move) click(e);
-                        }
+                    if (time && t - time < 750 && click && !move) {
+                        e.action = 'click';
+                        click(e);
                     }
                     if (hover) {
                         e.action = 'out';
@@ -1602,6 +1544,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
                     }
                     move = false;
                 };
+
                 this.element.addEventListener('touchmove', touchMove, { passive: true });
                 this.element.addEventListener('touchstart', touchStart, { passive: true });
                 this.element.addEventListener('touchend', touchEnd, { passive: true });
@@ -1635,6 +1578,77 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
         return Interface;
     }();
+
+    /**
+     * Stage reference class.
+     *
+     * @author Patrick Schroen / https://github.com/pschroen
+     */
+
+    var Stage = new ( // Singleton reassignment pattern
+
+    function (_Interface) {
+        _inherits(Stage, _Interface);
+
+        function Stage() {
+            _classCallCheck(this, Stage);
+
+            var _this11 = _possibleConstructorReturn(this, (Stage.__proto__ || Object.getPrototypeOf(Stage)).call(this, 'Stage'));
+
+            var self = _this11;
+            var last = void 0;
+
+            initHTML();
+            addListeners();
+
+            function initHTML() {
+                self.css({ overflow: 'hidden' });
+            }
+
+            function addListeners() {
+                window.addEventListener('focus', function () {
+                    if (last !== 'focus') {
+                        last = 'focus';
+                        self.events.fire(Events.VISIBILITY, { type: 'focus' });
+                    }
+                }, true);
+                window.addEventListener('blur', function () {
+                    if (last !== 'blur') {
+                        last = 'blur';
+                        self.events.fire(Events.VISIBILITY, { type: 'blur' });
+                    }
+                }, true);
+                window.addEventListener('keydown', function () {
+                    return self.events.fire(Events.KEYBOARD_DOWN);
+                }, true);
+                window.addEventListener('keyup', function () {
+                    return self.events.fire(Events.KEYBOARD_UP);
+                }, true);
+                window.addEventListener('keypress', function () {
+                    return self.events.fire(Events.KEYBOARD_PRESS);
+                }, true);
+                window.addEventListener('resize', function () {
+                    return self.events.fire(Events.RESIZE);
+                }, true);
+                self.events.add(Events.RESIZE, resize);
+                resize();
+            }
+
+            function resize() {
+                self.size();
+                self.orientation = window.innerWidth > window.innerHeight ? 'landscape' : 'portrait';
+            }
+            return _this11;
+        }
+
+        return Stage;
+    }(Interface))(); // Singleton reassignment pattern
+
+    /**
+     * Alien component.
+     *
+     * @author Patrick Schroen / https://github.com/pschroen
+     */
 
     /**
      * Canvas interface.
@@ -1691,25 +1705,26 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
             }
         }, {
             key: 'add',
-            value: function add(display) {
-                display.setCanvas(this);
-                display.parent = this;
-                this.children.push(display);
-                display.z = this.children.length;
+            value: function add(child) {
+                child.setCanvas(this);
+                child.parent = this;
+                this.children.push(child);
+                child.z = this.children.length;
             }
         }, {
             key: 'remove',
-            value: function remove(display) {
-                display.canvas = null;
-                display.parent = null;
-                this.children.findAndRemove(display);
+            value: function remove(child) {
+                child.canvas = null;
+                child.parent = null;
+                this.children.remove(child);
             }
         }, {
             key: 'destroy',
             value: function destroy() {
                 for (var i = 0; i < this.children.length; i++) {
                     this.children[i].destroy();
-                }return this.object = this.object.destroy();
+                }this.object.destroy();
+                return Utils.nullObject(this);
             }
         }, {
             key: 'getImageData',
@@ -1871,7 +1886,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
         _createClass(CanvasObject, [{
             key: 'updateValues',
             value: function updateValues() {
-                this.values.setTRSA(this.x, this.y, Utils.toRadians(this.rotation), this.scaleX || this.scale, this.scaleY || this.scale, this.opacity);
+                this.values.setTRSA(this.x, this.y, Math.radians(this.rotation), this.scaleX || this.scale, this.scaleY || this.scale, this.opacity);
                 if (this.parent.values) this.values.calculate(this.parent.values);
                 if (this.parent.styles) this.styles.calculateStyle(this.parent.styles);
             }
@@ -1912,11 +1927,11 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
             }
         }, {
             key: 'add',
-            value: function add(display) {
-                display.canvas = this.canvas;
-                display.parent = this;
-                this.children.push(display);
-                display.z = this.children.length;
+            value: function add(child) {
+                child.canvas = this.canvas;
+                child.parent = this;
+                this.children.push(child);
+                child.z = this.children.length;
                 for (var i = this.children.length - 1; i > -1; i--) {
                     this.children[i].setCanvas(this.canvas);
                 }
@@ -1931,10 +1946,10 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
             }
         }, {
             key: 'remove',
-            value: function remove(display) {
-                display.canvas = null;
-                display.parent = null;
-                this.children.findAndRemove(display);
+            value: function remove(child) {
+                child.canvas = null;
+                child.parent = null;
+                this.children.remove(child);
             }
         }, {
             key: 'isMask',
@@ -2027,43 +2042,6 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
     }();
 
     /**
-     * Image helper class with promise method.
-     *
-     * Currently no CORS support.
-     *
-     * @author Patrick Schroen / https://github.com/pschroen
-     */
-
-    var Images = new ( // Singleton static pattern
-
-    function () {
-        function Images() {
-            _classCallCheck(this, Images);
-        }
-
-        _createClass(Images, [{
-            key: 'createImg',
-            value: function createImg(src, callback) {
-                var img = new Image();
-                img.src = (Config.CDN || '') + src;
-                img.onload = function () {
-                    if (callback) callback();
-                };
-                return img;
-            }
-        }, {
-            key: 'promise',
-            value: function promise(img) {
-                var p = Promise.create();
-                img.onload = p.resolve;
-                return p;
-            }
-        }]);
-
-        return Images;
-    }())(); // Singleton static pattern
-
-    /**
      * Canvas graphics.
      *
      * @author Patrick Schroen / https://github.com/pschroen
@@ -2078,14 +2056,13 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
             _classCallCheck(this, CanvasGraphics);
 
-            var _this9 = _possibleConstructorReturn(this, (CanvasGraphics.__proto__ || Object.getPrototypeOf(CanvasGraphics)).call(this));
+            var _this12 = _possibleConstructorReturn(this, (CanvasGraphics.__proto__ || Object.getPrototypeOf(CanvasGraphics)).call(this));
 
-            var self = _this9;
-            _this9.width = w;
-            _this9.height = h;
-            _this9.props = {};
-            var images = {},
-                draw = [],
+            var self = _this12;
+            _this12.width = w;
+            _this12.height = h;
+            _this12.props = {};
+            var draw = [],
                 mask = void 0;
 
             function setProperties(context) {
@@ -2094,14 +2071,14 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
                 }
             }
 
-            _this9.draw = function (override) {
-                if (_this9.isMask() && !override) return false;
-                var context = _this9.canvas.context;
-                _this9.startDraw(_this9.px, _this9.py, override);
+            _this12.draw = function (override) {
+                if (_this12.isMask() && !override) return false;
+                var context = _this12.canvas.context;
+                _this12.startDraw(_this12.px, _this12.py, override);
                 setProperties(context);
-                if (_this9.clipWidth && _this9.clipHeight) {
+                if (_this12.clipWidth && _this12.clipHeight) {
                     context.beginPath();
-                    context.rect(_this9.clipX, _this9.clipY, _this9.clipWidth, _this9.clipHeight);
+                    context.rect(_this12.clipX, _this12.clipY, _this12.clipWidth, _this12.clipHeight);
                     context.clip();
                 }
                 for (var i = 0; i < draw.length; i++) {
@@ -2111,24 +2088,24 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
                     context[fn].apply(context, cmd);
                     cmd.unshift(fn);
                 }
-                _this9.endDraw();
+                _this12.endDraw();
                 if (mask) {
                     context.globalCompositeOperation = mask.blendMode;
                     mask.render(true);
                 }
             };
 
-            _this9.clear = function () {
+            _this12.clear = function () {
                 for (var i = 0; i < draw.length; i++) {
                     draw[i].length = 0;
                 }draw.length = 0;
             };
 
-            _this9.arc = function () {
+            _this12.arc = function () {
                 var x = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : 0;
                 var y = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 0;
                 var endAngle = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : 0;
-                var radius = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : _this9.radius || _this9.width / 2;
+                var radius = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : _this12.radius || _this12.width / 2;
                 var startAngle = arguments.length > 4 && arguments[4] !== undefined ? arguments[4] : 0;
                 var counterclockwise = arguments.length > 5 && arguments[5] !== undefined ? arguments[5] : false;
 
@@ -2140,75 +2117,66 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
                 endAngle -= 90;
                 startAngle -= 90;
                 draw.push(['beginPath']);
-                draw.push(['arc', x, y, radius, Utils.toRadians(startAngle), Utils.toRadians(endAngle), counterclockwise]);
+                draw.push(['arc', x, y, radius, Math.radians(startAngle), Math.radians(endAngle), counterclockwise]);
             };
 
-            _this9.quadraticCurveTo = function (cpx, cpy, x, y) {
+            _this12.quadraticCurveTo = function (cpx, cpy, x, y) {
                 draw.push(['quadraticCurveTo', cpx, cpy, x, y]);
             };
 
-            _this9.bezierCurveTo = function (cp1x, cp1y, cp2x, cp2y, x, y) {
+            _this12.bezierCurveTo = function (cp1x, cp1y, cp2x, cp2y, x, y) {
                 draw.push(['bezierCurveTo', cp1x, cp1y, cp2x, cp2y, x, y]);
             };
 
-            _this9.fillRect = function (x, y, w, h) {
+            _this12.fillRect = function (x, y, w, h) {
                 draw.push(['fillRect', x, y, w, h]);
             };
 
-            _this9.clearRect = function (x, y, w, h) {
+            _this12.clearRect = function (x, y, w, h) {
                 draw.push(['clearRect', x, y, w, h]);
             };
 
-            _this9.strokeRect = function (x, y, w, h) {
+            _this12.strokeRect = function (x, y, w, h) {
                 draw.push(['strokeRect', x, y, w, h]);
             };
 
-            _this9.moveTo = function (x, y) {
+            _this12.moveTo = function (x, y) {
                 draw.push(['moveTo', x, y]);
             };
 
-            _this9.lineTo = function (x, y) {
+            _this12.lineTo = function (x, y) {
                 draw.push(['lineTo', x, y]);
             };
 
-            _this9.stroke = function () {
+            _this12.stroke = function () {
                 draw.push(['stroke']);
             };
 
-            _this9.fill = function () {
+            _this12.fill = function () {
                 if (!mask) draw.push(['fill']);
             };
 
-            _this9.beginPath = function () {
+            _this12.beginPath = function () {
                 draw.push(['beginPath']);
             };
 
-            _this9.closePath = function () {
+            _this12.closePath = function () {
                 draw.push(['closePath']);
             };
 
-            _this9.fillText = function (text, x, y) {
+            _this12.fillText = function (text, x, y) {
                 draw.push(['fillText', text, x, y]);
             };
 
-            _this9.strokeText = function (text, x, y) {
+            _this12.strokeText = function (text, x, y) {
                 draw.push(['strokeText', text, x, y]);
             };
 
-            _this9.setLineDash = function (value) {
+            _this12.setLineDash = function (value) {
                 draw.push(['setLineDash', value]);
             };
 
-            _this9.createImage = function (src, force) {
-                if (!images[src] || force) {
-                    var img = Images.createImg(src);
-                    if (force) return img;
-                    images[src] = img;
-                }
-                return images[src];
-            };
-
-            _this9.drawImage = function (img) {
+            _this12.drawImage = function (img) {
                 var sx = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 0;
                 var sy = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : 0;
                 var sWidth = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : img.width;
@@ -2218,14 +2186,13 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
                 var dWidth = arguments.length > 7 && arguments[7] !== undefined ? arguments[7] : img.width;
                 var dHeight = arguments.length > 8 && arguments[8] !== undefined ? arguments[8] : img.height;
 
-                if (typeof img === 'string') img = _this9.createImage(img);
-                draw.push(['drawImage', img, sx, sy, sWidth, sHeight, dx + -_this9.px, dy + -_this9.py, dWidth, dHeight]);
+                draw.push(['drawImage', img, sx, sy, sWidth, sHeight, dx + -_this12.px, dy + -_this12.py, dWidth, dHeight]);
             };
 
-            _this9.mask = function (object) {
+            _this12.mask = function (object) {
                 if (!object) return mask = null;
                 mask = object;
-                object.masked = _this9;
+                object.masked = _this12;
                 for (var i = 0; i < draw.length; i++) {
                     if (draw[i][0] === 'fill' || draw[i][0] === 'stroke') {
                         draw[i].length = 0;
@@ -2234,21 +2201,21 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
                 }
             };
 
-            _this9.clone = function () {
-                var object = new CanvasGraphics(_this9.width, _this9.height);
-                object.visible = _this9.visible;
-                object.blendMode = _this9.blendMode;
-                object.opacity = _this9.opacity;
-                object.follow(_this9);
-                object.props = Utils.cloneObject(_this9.props);
+            _this12.clone = function () {
+                var object = new CanvasGraphics(_this12.width, _this12.height);
+                object.visible = _this12.visible;
+                object.blendMode = _this12.blendMode;
+                object.opacity = _this12.opacity;
+                object.follow(_this12);
+                object.props = Utils.cloneObject(_this12.props);
                 object.setDraw(Utils.cloneArray(draw));
                 return object;
             };
 
-            _this9.setDraw = function (array) {
+            _this12.setDraw = function (array) {
                 draw = array;
             };
-            return _this9;
+            return _this12;
         }
 
         _createClass(CanvasGraphics, [{
@@ -2343,110 +2310,19 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
      */
 
     /**
-     * 3D utilities.
-     *
-     * Currently no CORS support.
-     *
-     * @author Patrick Schroen / https://github.com/pschroen
-     */
-
-    /* global THREE */
-
-    /**
-     * Stage reference class.
-     *
-     * @author Patrick Schroen / https://github.com/pschroen
-     */
-
-    var Stage = new ( // Singleton static pattern
-
-    function (_Interface) {
-        _inherits(Stage, _Interface);
-
-        function Stage() {
-            _classCallCheck(this, Stage);
-
-            var _this10 = _possibleConstructorReturn(this, (Stage.__proto__ || Object.getPrototypeOf(Stage)).call(this, 'Stage'));
-
-            var self = _this10;
-            var last = void 0;
-
-            initHTML();
-            addListeners();
-            resizeHandler();
-
-            function initHTML() {
-                self.css({ overflow: 'hidden' });
-            }
-
-            function addListeners() {
-                window.addEventListener('focus', function () {
-                    if (last !== 'focus') {
-                        last = 'focus';
-                        window.events.fire(Events.BROWSER_FOCUS, { type: 'focus' });
-                        self.events.fire(Events.BROWSER_FOCUS, { type: 'focus' });
-                    }
-                });
-                window.addEventListener('blur', function () {
-                    if (last !== 'blur') {
-                        last = 'blur';
-                        window.events.fire(Events.BROWSER_FOCUS, { type: 'blur' });
-                        self.events.fire(Events.BROWSER_FOCUS, { type: 'blur' });
-                    }
-                });
-                window.addEventListener('keydown', function () {
-                    return self.events.fire(Events.KEYBOARD_DOWN);
-                });
-                window.addEventListener('keyup', function () {
-                    return self.events.fire(Events.KEYBOARD_UP);
-                });
-                window.addEventListener('keypress', function () {
-                    return self.events.fire(Events.KEYBOARD_PRESS);
-                });
-                window.addEventListener('resize', function () {
-                    return self.events.fire(Events.RESIZE);
-                });
-                self.events.add(Events.RESIZE, resizeHandler);
-            }
-
-            function resizeHandler() {
-                self.size();
-                self.orientation = window.innerWidth > window.innerHeight ? 'landscape' : 'portrait';
-            }
-            return _this10;
-        }
-
-        return Stage;
-    }(Interface))(); // Singleton static pattern
-
-    /**
-     * Screen projection.
-     *
-     * @author Patrick Schroen / https://github.com/pschroen
-     */
-
-    /* global THREE */
-
-    /**
-     * Object pool.
-     *
-     * @author Patrick Schroen / https://github.com/pschroen
-     */
-
-    /**
      * 2D vector.
      *
      * @author Patrick Schroen / https://github.com/pschroen
      */
 
     /**
-     * 3D vector.
+     * Interaction helper class.
      *
      * @author Patrick Schroen / https://github.com/pschroen
      */
 
     /**
-     * Mouse helper class.
+     * Mouse interaction.
      *
      * @author Patrick Schroen / https://github.com/pschroen
      */
@@ -2458,128 +2334,46 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
      */
 
     /**
-     * XMLHttpRequest helper class with promise support.
+     * Image helper class with promise method.
      *
      * @author Patrick Schroen / https://github.com/pschroen
      */
 
-    var XHR = new // Singleton static pattern
+    var Images = new ( // Singleton reassignment pattern
 
-    function XHR() {
-        var _this11 = this;
+    function () {
+        function Images() {
+            _classCallCheck(this, Images);
 
-        _classCallCheck(this, XHR);
+            this.CORS = null;
+        }
 
-        this.headers = {};
-        this.options = {};
-        var serial = [];
-
-        var serialize = function serialize(key, data) {
-            if ((typeof data === 'undefined' ? 'undefined' : _typeof(data)) === 'object') {
-                for (var i in data) {
-                    var newKey = key + '[' + i + ']';
-                    if (_typeof(data[i]) === 'object') serialize(newKey, data[i]);else serial.push(newKey + '=' + data[i]);
-                }
-            } else {
-                serial.push(key + '=' + data);
+        _createClass(Images, [{
+            key: 'createImg',
+            value: function createImg(src, callback) {
+                var img = new Image();
+                img.crossOrigin = this.CORS;
+                img.src = src;
+                img.onload = callback;
+                img.onerror = callback;
+                return img;
             }
-        };
+        }, {
+            key: 'promise',
+            value: function promise(img) {
+                if (typeof img === 'string') img = this.createImg(img);
+                var promise = Promise.create();
+                img.onload = promise.resolve;
+                img.onerror = promise.resolve;
+                return promise;
+            }
+        }]);
 
-        this.get = function (url, data, callback, type) {
-            if (typeof data === 'function') {
-                type = callback;
-                callback = data;
-                data = null;
-            } else if ((typeof data === 'undefined' ? 'undefined' : _typeof(data)) === 'object') {
-                for (var key in data) {
-                    serialize(key, data[key]);
-                }data = serial.join('&');
-                data = data.replace(/\[/g, '%5B');
-                data = data.replace(/\]/g, '%5D');
-                serial = null;
-                url += '?' + data;
-            }
-            var xhr = new XMLHttpRequest();
-            xhr.open('GET', url, true);
-            if (type === 'arraybuffer') xhr.responseType = 'arraybuffer';
-            if (type === 'blob') xhr.responseType = 'blob';
-            if (type === 'text') xhr.overrideMimeType('text/plain');
-            if (type === 'json') xhr.setRequestHeader('Accept', 'application/json');
-            for (var _key4 in _this11.headers) {
-                xhr.setRequestHeader(_key4, _this11.headers[_key4]);
-            }for (var _key5 in _this11.options) {
-                xhr[_key5] = _this11.options[_key5];
-            }var promise = null;
-            if (typeof Promise !== 'undefined') {
-                promise = Promise.create();
-                if (callback) promise.then(callback);
-                callback = promise.resolve;
-            }
-            xhr.send();
-            xhr.onreadystatechange = function () {
-                if (callback) {
-                    if (xhr.readyState === 4 && xhr.status === 200) {
-                        if (type === 'arraybuffer' || type === 'blob') callback(xhr.response);else if (type === 'text') callback(xhr.responseText);else callback(JSON.parse(xhr.responseText));
-                    } else if (xhr.status == 0 || xhr.status == 400 || xhr.status == 401 || xhr.status == 404 || xhr.status == 500) {
-                        if (promise) promise.reject(xhr);else callback(xhr);
-                    }
-                }
-            };
-            return promise || xhr;
-        };
-
-        this.post = function (url, data, callback, type) {
-            if (typeof data === 'function') {
-                type = callback;
-                callback = data;
-                data = null;
-            } else if ((typeof data === 'undefined' ? 'undefined' : _typeof(data)) === 'object') {
-                if (type === 'json') {
-                    data = JSON.stringify(data);
-                } else {
-                    for (var key in data) {
-                        serialize(key, data[key]);
-                    }data = serial.join('&');
-                    data = data.replace(/\[/g, '%5B');
-                    data = data.replace(/\]/g, '%5D');
-                    serial = null;
-                }
-            }
-            var xhr = new XMLHttpRequest();
-            xhr.open('POST', url, true);
-            if (type === 'arraybuffer') xhr.responseType = 'arraybuffer';
-            if (type === 'blob') xhr.responseType = 'blob';
-            if (type === 'text') xhr.overrideMimeType('text/plain');
-            if (type === 'json') xhr.setRequestHeader('Accept', 'application/json');
-            xhr.setRequestHeader('Content-Type', type === 'json' ? 'application/json' : 'application/x-www-form-urlencoded');
-            for (var _key6 in _this11.headers) {
-                xhr.setRequestHeader(_key6, _this11.headers[_key6]);
-            }for (var _key7 in _this11.options) {
-                xhr[_key7] = _this11.options[_key7];
-            }var promise = null;
-            if (typeof Promise !== 'undefined') {
-                promise = Promise.create();
-                if (callback) promise.then(callback);
-                callback = promise.resolve;
-            }
-            xhr.send();
-            xhr.onreadystatechange = function () {
-                if (callback) {
-                    if (xhr.readyState === 4 && xhr.status === 200) {
-                        if (type === 'arraybuffer' || type === 'blob') callback(xhr.response);else if (type === 'text') callback(xhr.responseText);else callback(JSON.parse(xhr.responseText));
-                    } else if (xhr.status == 0 || xhr.status == 400 || xhr.status == 401 || xhr.status == 404 || xhr.status == 500) {
-                        if (promise) promise.reject(xhr);else callback(xhr);
-                    }
-                }
-            };
-            return promise || xhr;
-        };
-    }(); // Singleton static pattern
+        return Images;
+    }())(); // Singleton reassignment pattern
 
     /**
      * Asset loader with promise method.
-     *
-     * Currently no CORS support.
      *
      * @author Patrick Schroen / https://github.com/pschroen
      */
@@ -2600,54 +2394,47 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
                 }();
             }
             var self = this;
-            this.events = new EventManager();
+            this.events = new Events();
             this.CDN = Config.CDN || '';
-            var total = Object.keys(assets).length,
-                loaded = 0,
-                percent = 0;
+            var total = Object.keys(assets).length;
+            var loaded = 0;
 
             for (var key in assets) {
                 loadAsset(key, this.CDN + assets[key]);
             }function loadAsset(key, asset) {
-                var name = asset.split('/');
-                name = name[name.length - 1];
-                var split = name.split('.'),
-                    ext = split[split.length - 1].split('?')[0];
-                switch (ext) {
-                    case 'mp3':
-                        /* eslint-disable no-undef */
-                        if (typeof WebAudio !== 'undefined') {
-                            if (!window.AudioContext) return assetLoaded();
-                            XHR.get(asset, function (contents) {
-                                WebAudio.createSound(key, contents, assetLoaded);
-                            }, 'arraybuffer');
-                        } else {
-                            return assetLoaded();
-                        }
-                        /* eslint-enable no-undef */
-                        break;
-                    case 'js':
-                        XHR.get(asset, function (script) {
-                            script = script.replace('use strict', '');
-                            eval.call(window, script);
-                            assetLoaded(asset);
-                        }, 'text');
-                        break;
-                    default:
-                        Images.createImg(asset, assetLoaded);
-                        break;
+                var ext = Utils.extension(asset);
+                if (ext.includes(['jpg', 'jpeg', 'png', 'gif', 'svg'])) {
+                    Images.createImg(asset, assetLoaded);
+                    return;
                 }
+                if (ext.includes(['mp3', 'm4a', 'ogg', 'wav', 'aif'])) {
+                    if (!window.AudioContext || !window.WebAudio) return assetLoaded();
+                    window.fetch(asset).then(function (response) {
+                        if (!response.ok) return assetLoaded();
+                        response.arrayBuffer().then(function (data) {
+                            return window.WebAudio.createSound(key, data, assetLoaded);
+                        });
+                    }).catch(function () {
+                        assetLoaded();
+                    });
+                    return;
+                }
+                window.get(asset).then(function (data) {
+                    if (ext === 'js') window.eval(data.replace('use strict', ''));else if (ext.includes(['fs', 'vs', 'glsl']) && window.Shaders) window.Shaders.parse(data, asset);
+                    assetLoaded();
+                }).catch(function () {
+                    assetLoaded();
+                });
             }
 
             function assetLoaded() {
-                loaded++;
-                percent = loaded / total;
-                self.events.fire(Events.PROGRESS, { percent: percent });
-                if (loaded === total) {
-                    self.complete = true;
-                    self.events.fire(Events.COMPLETE);
-                    if (callback) callback();
-                }
+                self.events.fire(Events.PROGRESS, { percent: ++loaded / total });
+                if (loaded === total) complete();
+            }
+
+            function complete() {
+                self.events.fire(Events.COMPLETE);
+                if (callback) callback();
             }
         }
 
@@ -2656,7 +2443,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
             value: function loadAssets(assets, callback) {
                 var promise = Promise.create();
                 if (!callback) callback = promise.resolve;
-                new AssetLoader(assets, callback);
+                promise.loader = new AssetLoader(assets, callback);
                 return promise;
             }
         }]);
@@ -2675,7 +2462,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
             _classCallCheck(this, FontLoader);
 
             var self = this;
-            this.events = new EventManager();
+            this.events = new Events();
             var element = void 0;
 
             initFonts();
@@ -2690,7 +2477,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
             }
 
             function finish() {
-                Delayed(function () {
+                setTimeout(function () {
                     element.destroy();
                     self.complete = true;
                     self.events.fire(Events.COMPLETE);
@@ -2704,7 +2491,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
             value: function loadFonts(fonts, callback) {
                 var promise = Promise.create();
                 if (!callback) callback = promise.resolve;
-                new FontLoader(fonts, callback);
+                promise.loader = new FontLoader(fonts, callback);
                 return promise;
             }
         }]);
@@ -2713,13 +2500,13 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
     }();
 
     /**
-     * SVG interface.
+     * Video interface.
      *
      * @author Patrick Schroen / https://github.com/pschroen
      */
 
     /**
-     * SVG symbol helper class.
+     * SVG interface.
      *
      * @author Patrick Schroen / https://github.com/pschroen
      */
@@ -2739,6 +2526,68 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
     if (!window.AudioContext) window.AudioContext = window.webkitAudioContext || window.mozAudioContext || window.oAudioContext;
 
     /**
+     * Linked list.
+     *
+     * @author Patrick Schroen / https://github.com/pschroen
+     */
+
+    /**
+     * Object pool.
+     *
+     * @author Patrick Schroen / https://github.com/pschroen
+     */
+
+    /**
+     * 3D vector.
+     *
+     * @author Patrick Schroen / https://github.com/pschroen
+     */
+
+    /**
+     * 3D utilities.
+     *
+     * @author Patrick Schroen / https://github.com/pschroen
+     */
+
+    /* global THREE */
+
+    /**
+     * Raycaster.
+     *
+     * @author Patrick Schroen / https://github.com/pschroen
+     */
+
+    /* global THREE */
+
+    /**
+     * 3D interaction.
+     *
+     * @author Patrick Schroen / https://github.com/pschroen
+     */
+
+    /**
+     * Screen projection.
+     *
+     * @author Patrick Schroen / https://github.com/pschroen
+     */
+
+    /* global THREE */
+
+    /**
+     * Shader parser.
+     *
+     * @author Patrick Schroen / https://github.com/pschroen
+     */
+
+    /**
+     * Shader helper class.
+     *
+     * @author Patrick Schroen / https://github.com/pschroen
+     */
+
+    /* global THREE */
+
+    /**
      * @author Patrick Schroen / https://github.com/pschroen
      */
 
@@ -2754,31 +2603,217 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
         return promise;
     };
 
-    Array.prototype.findAndRemove = function (reference) {
-        var index = this.indexOf(reference);
-        if (index > -1) return this.splice(index, 1);
+    Math.sign = function (x) {
+        x = +x;
+        if (x === 0 || isNaN(x)) return Number(x);
+        return x > 0 ? 1 : -1;
     };
+
+    Math.degrees = function (radians) {
+        return radians * (180 / Math.PI);
+    };
+
+    Math.radians = function (degrees) {
+        return degrees * (Math.PI / 180);
+    };
+
+    Math.clamp = function (value) {
+        var min = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 0;
+        var max = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : 1;
+
+        return Math.min(Math.max(value, Math.min(min, max)), Math.max(min, max));
+    };
+
+    Math.range = function (value) {
+        var oldMin = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : -1;
+        var oldMax = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : 1;
+        var newMin = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : 0;
+        var newMax = arguments.length > 4 && arguments[4] !== undefined ? arguments[4] : 1;
+        var isClamp = arguments[5];
+
+        var newValue = (value - oldMin) * (newMax - newMin) / (oldMax - oldMin) + newMin;
+        if (isClamp) return Math.clamp(newValue, Math.min(newMin, newMax), Math.max(newMin, newMax));
+        return newValue;
+    };
+
+    Math.mix = function (a, b, alpha) {
+        return a * (1 - alpha) + b * alpha;
+    };
+
+    Math.step = function (edge, value) {
+        return value < edge ? 0 : 1;
+    };
+
+    Math.smoothStep = function (min, max, value) {
+        var x = Math.max(0, Math.min(1, (value - min) / (max - min)));
+        return x * x * (3 - 2 * x);
+    };
+
+    Math.fract = function (value) {
+        return value - Math.floor(value);
+    };
+
+    Math.mod = function (value, n) {
+        return (value % n + n) % n;
+    };
+
+    Array.prototype.remove = function (element) {
+        var index = this.indexOf(element);
+        if (~index) return this.splice(index, 1);
+    };
+
+    Array.prototype.last = function () {
+        return this[this.length - 1];
+    };
+
+    String.prototype.includes = function (str) {
+        if (!Array.isArray(str)) return ~this.indexOf(str);
+        for (var i = str.length - 1; i >= 0; i--) {
+            if (~this.indexOf(str[i])) return true;
+        }return false;
+    };
+
+    String.prototype.clip = function (num, end) {
+        return this.length > num ? this.slice(0, num) + end : this;
+    };
+
+    String.prototype.capitalize = function () {
+        return this.charAt(0).toUpperCase() + this.slice(1);
+    };
+
+    String.prototype.replaceAll = function (find, replace) {
+        return this.split(find).join(replace);
+    };
+
+    if (!window.fetch) window.fetch = function (url) {
+        var options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
+
+        var promise = Promise.create(),
+            request = new XMLHttpRequest();
+        request.open(options.method || 'GET', url);
+        for (var i in options.headers) {
+            request.setRequestHeader(i, options.headers[i]);
+        }request.onload = function () {
+            return promise.resolve(response());
+        };
+        request.onerror = promise.reject;
+        request.send(options.body);
+
+        function response() {
+            var _keys = [],
+                all = [],
+                headers = {},
+                header = void 0;
+            request.getAllResponseHeaders().replace(/^(.*?):\s*([\s\S]*?)$/gm, function (m, key, value) {
+                _keys.push(key = key.toLowerCase());
+                all.push([key, value]);
+                header = headers[key];
+                headers[key] = header ? header + ',' + value : value;
+            });
+            return {
+                ok: (request.status / 200 | 0) == 1,
+                status: request.status,
+                statusText: request.statusText,
+                url: request.responseURL,
+                clone: response,
+                text: function text() {
+                    return Promise.resolve(request.responseText);
+                },
+                json: function json() {
+                    return Promise.resolve(request.responseText).then(JSON.parse);
+                },
+                xml: function xml() {
+                    return Promise.resolve(request.responseXML);
+                },
+                blob: function blob() {
+                    return Promise.resolve(new Blob([request.response]));
+                },
+                arrayBuffer: function arrayBuffer() {
+                    return Promise.resolve(new ArrayBuffer([request.response]));
+                },
+
+                headers: {
+                    keys: function keys() {
+                        return _keys;
+                    },
+                    entries: function entries() {
+                        return all;
+                    },
+                    get: function get(n) {
+                        return headers[n.toLowerCase()];
+                    },
+                    has: function has(n) {
+                        return n.toLowerCase() in headers;
+                    }
+                }
+            };
+        }
+        return promise;
+    };
+
+    window.get = function (url) {
+        var options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
+
+        var promise = Promise.create();
+        options.method = 'GET';
+        window.fetch(url, options).then(handleResponse).catch(promise.reject);
+
+        function handleResponse(e) {
+            if (!e.ok) return promise.reject(e);
+            e.text().then(function (text) {
+                if (text.charAt(0).includes(['[', '{'])) {
+                    try {
+                        promise.resolve(JSON.parse(text));
+                    } catch (err) {
+                        promise.resolve(text);
+                    }
+                } else {
+                    promise.resolve(text);
+                }
+            });
+        }
+        return promise;
+    };
+
+    window.post = function (url, body) {
+        var options = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : {};
+
+        var promise = Promise.create();
+        options.method = 'POST';
+        options.body = JSON.stringify(body);
+        window.fetch(url, options).then(handleResponse).catch(promise.reject);
+
+        function handleResponse(e) {
+            if (!e.ok) return promise.reject(e);
+            e.text().then(function (text) {
+                if (text.charAt(0).includes(['[', '{'])) {
+                    try {
+                        promise.resolve(JSON.parse(text));
+                    } catch (err) {
+                        promise.resolve(text);
+                    }
+                } else {
+                    promise.resolve(text);
+                }
+            });
+        }
+        return promise;
+    };
+
+    window.getURL = function (url) {
+        var target = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : '_blank';
+
+        window.open(url, target);
+    };
+
+    if (!window.Global) window.Global = {};
+    if (!window.Config) window.Config = {};
 
     /**
      * Alien abduction point.
      *
      * @author Patrick Schroen / https://github.com/pschroen
      */
-
-    window.getURL = function (url) {
-        var target = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : '_blank';
-        return window.open(url, target);
-    };
-    window.Delayed = function (callback) {
-        var time = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 0;
-        var params = arguments[2];
-        return window.setTimeout(function () {
-            if (callback) callback(params);
-        }, time);
-    };
-
-    if (!window.Global) window.Global = {};
-    if (!window.Config) window.Config = {};
 
     /**
      * Alien.js Example Project.
@@ -2796,9 +2831,9 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
         function AlienKittyCanvas() {
             _classCallCheck(this, AlienKittyCanvas);
 
-            var _this12 = _possibleConstructorReturn(this, (AlienKittyCanvas.__proto__ || Object.getPrototypeOf(AlienKittyCanvas)).call(this, 'AlienKittyCanvas'));
+            var _this13 = _possibleConstructorReturn(this, (AlienKittyCanvas.__proto__ || Object.getPrototypeOf(AlienKittyCanvas)).call(this, 'AlienKittyCanvas'));
 
-            var self = _this12;
+            var self = _this13;
             var canvas = void 0,
                 alienkittyimg = void 0,
                 eyelidimg = void 0,
@@ -2819,14 +2854,9 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
             }
 
             function initImages() {
-                var promise = function promise(img) {
-                    var p = Promise.create();
-                    img.onload = p.resolve;
-                    return p;
-                };
                 alienkittyimg = Images.createImg('assets/images/alienkitty.svg');
                 eyelidimg = Images.createImg('assets/images/alienkitty_eyelid.svg');
-                Promise.all([promise(alienkittyimg), promise(eyelidimg)]).then(finishSetup);
+                Promise.all([Images.promise(alienkittyimg), Images.promise(eyelidimg)]).then(finishSetup);
             }
 
             function finishSetup() {
@@ -2843,12 +2873,8 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
                 canvas.add(eyelid2);
             }
 
-            function loop() {
-                canvas.render();
-            }
-
             function blink() {
-                Delayed(Utils.headsTails(blink1, blink2), Utils.doRandom(0, 10000));
+                self.delayedCall(Utils.headsTails(blink1, blink2), Utils.random(0, 10000));
             }
 
             function blink1() {
@@ -2873,19 +2899,23 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
                 });
             }
 
-            _this12.animateIn = function () {
+            function loop() {
+                canvas.render();
+            }
+
+            _this13.animateIn = function () {
                 blink();
-                _this12.tween({ opacity: 1 }, 500, 'easeOutQuart');
-                _this12.startRender(loop);
+                _this13.tween({ opacity: 1 }, 500, 'easeOutQuart');
+                _this13.startRender(loop);
             };
 
-            _this12.animateOut = function (callback) {
-                _this12.tween({ opacity: 0 }, 500, 'easeInOutQuad', function () {
+            _this13.animateOut = function (callback) {
+                _this13.tween({ opacity: 0 }, 500, 'easeInOutQuad', function () {
                     self.stopRender(loop);
                     if (callback) callback();
                 });
             };
-            return _this12;
+            return _this13;
         }
 
         return AlienKittyCanvas;
@@ -2897,20 +2927,20 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
         function Progress() {
             _classCallCheck(this, Progress);
 
-            var _this13 = _possibleConstructorReturn(this, (Progress.__proto__ || Object.getPrototypeOf(Progress)).call(this, 'Progress'));
+            var _this14 = _possibleConstructorReturn(this, (Progress.__proto__ || Object.getPrototypeOf(Progress)).call(this, 'Progress'));
 
-            var self = _this13;
-            _this13.progress = 0;
+            var self = _this14;
+            var size = 90;
             var canvas = void 0,
-                context = void 0,
-                size = 90;
+                context = void 0;
 
             initHTML();
             initCanvas();
-            _this13.startRender(loop);
+            _this14.startRender(loop);
 
             function initHTML() {
                 self.size(size).center();
+                self.progress = 0;
             }
 
             function initCanvas() {
@@ -2926,8 +2956,8 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
                     x = size / 2,
                     y = size / 2,
                     radius = size * 0.4,
-                    startAngle = Utils.toRadians(-90),
-                    endAngle = Utils.toRadians(-90) + Utils.toRadians(progress * 360);
+                    startAngle = Math.radians(-90),
+                    endAngle = Math.radians(-90) + Math.radians(progress * 360);
                 context.beginPath();
                 context.arc(x, y, radius, startAngle, endAngle, false);
                 context.strokeStyle = Config.UI_COLOR;
@@ -2940,15 +2970,15 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
                 self.stopRender(loop);
             }
 
-            _this13.update = function (e) {
-                if (_this13.complete) return;
-                TweenManager.tween(_this13, { progress: e.percent }, 500, 'easeOutCubic');
+            _this14.update = function (e) {
+                if (_this14.complete) return;
+                TweenManager.tween(_this14, { progress: e.percent }, 500, 'easeOutCubic');
             };
 
-            _this13.animateOut = function (callback) {
-                _this13.tween({ scale: 0.9, opacity: 0 }, 400, 'easeInCubic', callback);
+            _this14.animateOut = function (callback) {
+                _this14.tween({ scale: 0.9, opacity: 0 }, 400, 'easeInCubic', callback);
             };
-            return _this13;
+            return _this14;
         }
 
         return Progress;
@@ -2960,9 +2990,9 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
         function Loader() {
             _classCallCheck(this, Loader);
 
-            var _this14 = _possibleConstructorReturn(this, (Loader.__proto__ || Object.getPrototypeOf(Loader)).call(this, 'Loader'));
+            var _this15 = _possibleConstructorReturn(this, (Loader.__proto__ || Object.getPrototypeOf(Loader)).call(this, 'Loader'));
 
-            var self = _this14;
+            var self = _this15;
             var loader = void 0,
                 progress = void 0;
 
@@ -2989,16 +3019,14 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
             }
 
             function loadComplete() {
-                FontLoader.loadFonts(['Titillium Web', 'Lato', 'icomoon']).then(function () {
-                    self.loaded = true;
-                    self.events.fire(Events.COMPLETE);
-                });
+                self.loaded = true;
+                self.events.fire(Events.COMPLETE);
             }
 
-            _this14.animateOut = function (callback) {
+            _this15.animateOut = function (callback) {
                 progress.animateOut(callback);
             };
-            return _this14;
+            return _this15;
         }
 
         return Loader;
@@ -3028,8 +3056,10 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
         }
 
         function initLoader() {
-            loader = Stage.initClass(Loader);
-            loader.events.add(Events.COMPLETE, loadComplete);
+            FontLoader.loadFonts(['Titillium Web', 'Lato', 'icomoon']).then(function () {
+                loader = Stage.initClass(Loader);
+                loader.events.add(Events.COMPLETE, loadComplete);
+            });
         }
 
         function loadComplete() {

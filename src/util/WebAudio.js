@@ -43,6 +43,7 @@ class WebAudio {
                 source = context.createBufferSource();
             source.buffer = sound.buffer;
             source.connect(sound.audioGain);
+            source.loop = !!sound.loop;
             source.start(0);
         };
 

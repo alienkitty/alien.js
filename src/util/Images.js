@@ -20,6 +20,7 @@ class Images {
     }
 
     promise(img) {
+        if (typeof img === 'string') img = this.createImg(img);
         const promise = Promise.create();
         img.onload = promise.resolve;
         img.onerror = promise.resolve;

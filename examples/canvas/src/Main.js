@@ -39,6 +39,7 @@ class AlienKittyCanvas extends Interface {
         }
 
         function finishSetup() {
+            self.loaded = true;
             alienkitty = new CanvasGraphics(90, 86);
             alienkitty.drawImage(alienkittyimg);
             eyelid1 = new CanvasGraphics(24, 14);
@@ -182,10 +183,8 @@ class Loader extends Interface {
         }
 
         function loadComplete() {
-            FontLoader.loadFonts(['Titillium Web', 'Lato', 'icomoon']).then(() => {
-                self.loaded = true;
-                self.events.fire(Events.COMPLETE);
-            });
+            self.loaded = true;
+            self.events.fire(Events.COMPLETE);
         }
 
         this.animateOut = callback => {
@@ -212,8 +211,10 @@ class Main {
         }
 
         function initLoader() {
-            loader = Stage.initClass(Loader);
-            loader.events.add(Events.COMPLETE, loadComplete);
+            FontLoader.loadFonts(['Titillium Web', 'Lato', 'icomoon']).then(() => {
+                loader = Stage.initClass(Loader);
+                loader.events.add(Events.COMPLETE, loadComplete);
+            });
         }
 
         function loadComplete() {

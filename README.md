@@ -125,7 +125,7 @@ new Main();
 
 ### Quickstart
 
-To build a project, make sure you have [Node.js](https://nodejs.org/) installed (at least version 6).
+To build a project, make sure you have [Node.js](https://nodejs.org/) installed (at least version 4).
 
 ```
 mkdir about
@@ -135,9 +135,10 @@ git submodule add https://github.com/pschroen/alien.js
 cp -r alien.js/examples/about/* .
 cp alien.js/.eslintrc.json alien.js/.gitignore .
 npm install
-npm run build
-open dist/index.html
+npm start
 ```
+
+Then open [http://localhost:8080/](http://localhost:8080/) to see the alien.js.org home page. The `npm start` script runs `npm run dev`, so you can start experimenting with the code right away! :)
 
 ### Updating
 
@@ -165,7 +166,6 @@ npm run build
 * Tests
 * Particle emitter
 * FX and lighting
-* Mixin examples, three.js
 * Error handling
 
 ### Changelog

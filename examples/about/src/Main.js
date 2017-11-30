@@ -4,270 +4,267 @@
  * @author Patrick Schroen / https://github.com/pschroen
  */
 
-import { Events, Stage, Interface, Device, Mouse, Accelerometer, FontLoader, TweenManager } from '../alien.js/src/Alien';
+/* global THREE */
+
+import { Events, Stage, Interface, Component, Device, Mouse, Interaction, Accelerometer, Utils,
+    AssetLoader, FontLoader, Images, TweenManager, WebAudio, Shader } from '../alien.js/src/Alien';
 
 Config.UI_COLOR = 'white';
 Config.UI_OFFSET = Device.phone ? 20 : 35;
-Config.ABOUT_COPY = ['A lightweight web framework abducted from Active Theory’s <a href="https://medium.com/@activetheory/mira-exploring-the-potential-of-the-future-web-e1f7f326d58e" target="_blank">Hydra</a> and ported to an ES6 module bundler.'];
-Config.ABOUT_DOWNLOAD_URL = 'https://raw.github.com/pschroen/alien.js/master/build/alien.min.js';
+Config.ABOUT_COPY = 'A lightweight web framework abducted from Active Theory’s JavaScript codebase and ported to an ES6 module bundler.';
+Config.ABOUT_HYDRA_URL = 'https://medium.com/@activetheory/mira-exploring-the-potential-of-the-future-web-e1f7f326d58e';
 Config.ABOUT_GITHUB_URL = 'https://github.com/pschroen/alien.js';
-Config.ABOUT_TWITTER_URL = 'https://twitter.com/pschroen';
 
+/*Config.ASSETS = [
+    'assets/js/lib/three.min.js',
+    'assets/shaders/compiled.vs'
+];*/
+
+Config.ASSETS = {
+    'three': 'assets/js/lib/three.min.js',
+    'ColourBeam.vs': 'assets/shaders/ColourBeam.vs',
+    'ColourBeam.fs': 'assets/shaders/ColourBeam.fs',
+    'BassDrum': 'assets/sounds/BassDrum.mp3',
+    'DeepSpacy': 'assets/sounds/DeepSpacy.mp3',
+    'MagicGleam': 'assets/sounds/MagicGleam.mp3'
+};
+
+Events.START = 'start';
 Events.OPEN_ABOUT = 'open_about';
 Events.CLOSE_ABOUT = 'close_about';
 
-class UIAboutIcons extends Interface {
-
-    constructor() {
-        super('UIAboutIcons');
-        const self = this;
-        const size = 48;
-        let github, twitter;
-
-        initHTML();
-        initGitHub();
-        initTwitter();
-
-        function initHTML() {
-            self.size('100%', size).transform({ z: -200 }).enable3D();
-            self.fontStyle('icomoon', size, Config.UI_COLOR);
-            self.css({
-                position: 'relative',
-                display: 'block',
-                marginTop: 20,
-                fontWeight: 'normal',
-                lineHeight: size,
-                textShadow: '0 1px 1px rgba(0, 0, 0, 0.8)',
-                opacity: 0
-            });
-        }
-
-        function initGitHub() {
-            github = self.create('.icon-github');
-            github.url = Config.ABOUT_GITHUB_URL;
-            github.interact(hover, click);
-        }
-
-        function initTwitter() {
-            twitter = self.create('.icon-twitter').css({ left: size + 20 });
-            twitter.url = Config.ABOUT_TWITTER_URL;
-            twitter.interact(hover, click);
-        }
-
-        function hover(e) {
-            if (e.action === 'over') e.object.tween({ opacity: 0.5 }, 100, 'easeOutSine');
-            else e.object.tween({ opacity: 1 }, 300, 'easeOutSine');
-        }
-
-        function click(e) {
-            getURL(e.object.url);
-        }
-
-        this.animateIn = () => {
-            this.tween({ z: -50, x: -10, opacity: 1 }, 2000, 'easeOutCubic');
-        };
-
-        this.animateOut = () => {
-            this.tween({ z: -100, scale: 0.9, opacity: 0 }, 300, 'easeOutCubic');
-        };
-    }
-}
-
-class UIAboutCopy extends Interface {
-
-    constructor() {
-        super('UIAboutCopy');
-        const self = this;
-        const copy = Config.ABOUT_COPY,
-            texts = [];
-
-        initHTML();
-        initText();
-
-        function initHTML() {
-            self.invisible().enable3D();
-            self.css({
-                position: 'relative',
-                display: 'block',
-                width: '100%',
-                marginTop: 20
-            });
-        }
-
-        function initText() {
-            for (let i = 0; i < copy.length; i++) {
-                const text = self.create('.text');
-                text.fontStyle('Lato', 27, Config.UI_COLOR);
-                text.css({
-                    position: 'relative',
-                    display: 'block',
-                    width: '100%',
-                    marginBottom: 20,
-                    fontWeight: '400',
-                    textAlign: 'left',
-                    lineHeight: '1.45',
-                    textShadow: '0 1px 1px rgba(0, 0, 0, 0.8)'
-                });
-                text.html(copy[i]);
-                texts.push(text);
-            }
-        }
-
-        this.animateIn = () => {
-            this.visible();
-            for (let i = 0; i < texts.length; i++) texts[i].transform({ z: -150 }).css({ opacity: 0 }).tween({ z: -50, x: -10, opacity: 1 }, 2000, 'easeOutCubic', i * 200);
-        };
-
-        this.animateOut = () => {
-            for (let i = 0; i < texts.length; i++) texts[i].tween({ z: -100, opacity: 0 }, 300, 'easeOutCubic', i * 100);
-        };
-    }
-}
-
-class UIAboutTitle extends Interface {
-
-    constructor() {
-        super('UIAboutTitle');
-        const self = this;
-        const size = 160;
-        let letters;
-
-        initHTML();
-
-        function initHTML() {
-            self.invisible().enable3D();
-            self.fontStyle('Titillium Web', size, Config.UI_COLOR);
-            self.css({
-                position: 'relative',
-                display: 'block',
-                height: size,
-                fontWeight: '700',
-                textAlign: 'left',
-                letterSpacing: -4,
-                lineHeight: size,
-                textShadow: '0 1px 1px rgba(0, 0, 0, 0.8)'
-            });
-            self.text('Alien.js');
-            letters = self.split('.');
-        }
-
-        this.animateIn = () => {
-            this.visible();
-            for (let i = 0; i < letters.length; i++) letters[i].transform({ z: -100 }).css({ opacity: 0 }).tween({ z: 100 - i * 50, opacity: 1 }, 4000, 'easeOutBack', i * 200);
-        };
-
-        this.animateOut = () => {
-            for (let i = 0; i < letters.length; i++) letters[i].tween({ z: -50 - i * 50, opacity: 0 }, 700, 'easeOutCubic', i * 100);
-        };
-    }
-}
 
 class UIAbout extends Interface {
 
     constructor() {
         super('UIAbout');
         const self = this;
-        const tilt = {
-            x: 4,
-            y: 8,
-            ease: 0.05
-        };
-        let wrapper, title, copy, icons;
+        const texts = [];
+        let wrapper, alienkitty, description;
 
         initHTML();
-        initViews();
+        initText();
         addListeners();
-        this.startRender(loop);
-        this.delayedCall(() => this.animateIn(), 300);
 
         function initHTML() {
-            self.size('100%').enable3D(2000);
+            self.size('100%').size(800, 430).center();
             wrapper = self.create('.wrapper');
-            wrapper.size(800, 650).center().enable3D();
-            wrapper.rotationX = 0;
+            wrapper.size(600, 350).enable3D(2000);
             wrapper.rotationY = 0;
+            wrapper.rotationX = 0;
+            alienkitty = wrapper.initClass(AlienKitty);
+            alienkitty.transform({ y: -45, z: -20 });
         }
 
-        function initViews() {
-            title = wrapper.initClass(UIAboutTitle);
-            copy = wrapper.initClass(UIAboutCopy);
-            icons = wrapper.initClass(UIAboutIcons);
+        function initText() {
+            description = self.create('.description');
+            description.size(260, 100);
+            description.fontStyle('Lato', 12, Config.UI_COLOR);
+            description.css({
+                left: 350,
+                top: 200,
+                fontWeight: '700',
+                lineHeight: 25,
+                letterSpacing: 12 * 0.03,
+                opacity: 0.75
+            });
+            description.top = 200;
+            description.text(Config.ABOUT_COPY);
+            texts.push(description);
+            ['Source code', 'Active Theory’s Mira'].forEach((text, i) => {
+                const link = self.create('.link');
+                link.size('auto', 20);
+                link.fontStyle('Lato', 12, Config.UI_COLOR);
+                link.css({
+                    left: 350,
+                    top: 300 + i * 27,
+                    fontWeight: '700',
+                    letterSpacing: 12 * 0.03
+                });
+                link.text(text);
+                link.letters = link.split();
+                link.interact(hover, click);
+                link.hit.mouseEnabled(true);
+                link.top = 300 + i * 27;
+                link.title = text;
+                texts.push(link);
+            });
         }
 
         function addListeners() {
-            self.click(click);
             Stage.events.add(Events.RESIZE, resize);
             resize();
         }
 
-        function click() {
-            Stage.events.fire(Events.CLOSE_ABOUT);
-        }
-
         function resize() {
-            const scaleX = Math.range(Stage.width, 0, 1700, 0, 1.1, true),
-                scaleY = Math.range(Stage.height, 0, 1500, 0, 1.1, true);
-            let scale = Math.min(scaleX, scaleY);
-            if (Device.mobile) scale = Math.min(1, scale * (Stage.width > Stage.height ? 1.5 : 1.8));
-            wrapper.scale = scale;
-            wrapper.transform();
-            if (Device.mobile) {
-                if (Stage.width > Stage.height) wrapper.size(1100, 500).center();
-                else wrapper.size(700, 700).center();
-            }
-        }
-
-        function loop() {
-            // UI rotation
-            if (Device.mobile) {
-                wrapper.rotationX += (Math.range(Accelerometer.y, -10, 10, -tilt.x, tilt.x) - wrapper.rotationX) * tilt.ease;
-                wrapper.rotationY += (Math.range(Accelerometer.x, -5, 5, tilt.y, -tilt.y) - wrapper.rotationY) * tilt.ease;
+            if (Stage.width < 800) {
+                wrapper.transform({ x: 100 });
+                texts.forEach(text => text.css({ left: 270 }));
             } else {
-                wrapper.rotationX += (Math.range(Mouse.y, 0, Stage.height, -tilt.x, tilt.x) - wrapper.rotationX) * tilt.ease;
-                wrapper.rotationY += (Math.range(Mouse.x, 0, Stage.width, tilt.y, -tilt.y) - wrapper.rotationY) * tilt.ease;
+                wrapper.transform({ x: 0 });
+                texts.forEach(text => text.css({ left: 350 }));
             }
-            wrapper.transform();
         }
 
-        this.animateIn = () => {
-            this.delayedCall(title.animateIn, 200);
-            this.delayedCall(copy.animateIn, 600);
-            this.delayedCall(icons.animateIn, 1300);
-            // Use math tween with UI rotation
-            wrapper.z = -300;
-            TweenManager.tween(wrapper, { z: 0 }, 7000, 'easeOutCubic');
-            //TweenManager.tween(wrapper, { z: 0, spring: 0.9, damping: 0.1 }, 7000, 'easeOutElastic');
+        function hover(e) {
+            if (e.action === 'over') e.object.letters.forEach((letter, i) => letter.tween({ y: -5, opacity: 0 }, 125, 'easeOutCubic', 15 * i, () => letter.transform({ y: 5 }).tween({ y: 0, opacity: 1 }, 300, 'easeOutCubic')));
+        }
+
+        function click(e) {
+            WebAudio.mute();
+            self.delayedCall(() => {
+                const title = e.object.title.toLowerCase();
+                getURL(~title.indexOf('source') ? Config.ABOUT_GITHUB_URL : Config.ABOUT_HYDRA_URL);
+            }, 300);
+        }
+
+        this.update = () => {
+            if (Device.mobile) {
+                wrapper.rotationY += (Accelerometer.x - wrapper.rotationY) * 0.07;
+                wrapper.rotationX += (-Accelerometer.y - wrapper.rotationX) * 0.07;
+            } else {
+                wrapper.rotationY += (Math.range(Mouse.x, 0, Stage.width, -5, 5) - wrapper.rotationY) * 0.07;
+                wrapper.rotationX += (-Math.range(Mouse.y, 0, Stage.height, -10, 10) - wrapper.rotationX) * 0.07;
+            }
+            wrapper.transform();
         };
 
-        this.animateOut = callback => {
-            title.animateOut();
-            copy.animateOut();
-            icons.animateOut();
-            this.delayedCall(callback, 1000);
+        this.animateIn = () => {
+            alienkitty.ready().then(alienkitty.animateIn);
+            texts.forEach((text, i) => text.transform({ y: 50 }).css({ opacity: 0 }).tween({ y: 0, opacity: text.hit ? 1 : 0.75 }, 1000, 'easeOutCubic', 500 + i * 80));
+        };
+
+        this.animateOut = () => {
+            alienkitty.animateOut();
+            texts.forEach((text, i) => text.tween({ y: 20, opacity: 0 }, 500, 'easeInCubic', 40 + (texts.length - i) * 40));
         };
     }
 }
 
-class Main {
+class UIFooterItem extends Interface {
 
-    constructor() {
-        let about;
+    constructor(copy, width) {
+        super('UIFooterItem');
+        const self = this;
+        let text, letters;
 
-        initStage();
+        initHTML();
+        initText();
         addListeners();
 
-        function initStage() {
-            Stage.size('100%');
-            Stage.interact(null, click);
+        function initHTML() {
+            self.size(width, 25);
+            self.css({
+                top: 0,
+                right: 0
+            });
+        }
 
-            Mouse.init();
-            Accelerometer.init();
+        function initText() {
+            text = self.create('.text');
+            text.fontStyle('Lato', 12, Config.UI_COLOR);
+            text.css({
+                width: '100%',
+                fontWeight: '700',
+                lineHeight: 25,
+                letterSpacing: 12 * 0.03,
+                textAlign: 'center',
+                whiteSpace: 'nowrap'
+            });
+            text.text(copy);
+            letters = text.split();
+        }
 
-            FontLoader.loadFonts(['Titillium Web', 'Lato', 'icomoon']).then(openAbout);
+        function addListeners() {
+            self.interact(hover, click);
+            self.hit.mouseEnabled(true);
+        }
+
+        function hover(e) {
+            if (e.action === 'over') letters.forEach((letter, i) => letter.tween({ y: -5, opacity: 0 }, 125, 'easeOutCubic', 15 * i, () => letter.transform({ y: 5 }).tween({ y: 0, opacity: 1 }, 300, 'easeOutCubic')));
         }
 
         function click() {
+            self.events.fire(Events.CLICK);
+        }
+    }
+}
+
+class UIFooter extends Interface {
+
+    constructor() {
+        super('UIFooter');
+        const self = this;
+        let source, about;
+
+        initHTML();
+        initSource();
+        initAbout();
+        addListeners();
+
+        function initHTML() {
+            self.size(240, 30).css({
+                bottom: Config.UI_OFFSET,
+                right: Config.UI_OFFSET
+            });
+        }
+
+        function initSource() {
+            source = self.initClass(UIFooterItem, 'Source code', 80);
+            source.transform({ x: -10 }).css({ opacity: 0 }).tween({ x: 0, opacity: 1 }, 1000, 'easeOutQuart', 2100);
+        }
+
+        function initAbout() {
+            about = self.initClass(UIFooterItem, 'About', 42);
+            about.transform({ x: -10 }).css({ opacity: 0, right: 95 }).tween({ x: 0, opacity: 1 }, 1000, 'easeOutQuart', 2300);
+        }
+
+        function addListeners() {
+            source.events.add(Events.CLICK, sourceClick);
+            about.events.add(Events.CLICK, aboutClick);
+        }
+
+        function sourceClick() {
+            WebAudio.mute();
+            self.delayedCall(() => getURL(Config.ABOUT_GITHUB_URL), 300);
+        }
+
+        function aboutClick() {
             Stage.events.fire(Events.OPEN_ABOUT);
+        }
+    }
+}
+
+class UI extends Interface {
+
+    static instance() {
+        if (!this.singleton) this.singleton = new UI();
+        return this.singleton;
+    }
+
+    constructor() {
+        super('UI');
+        const self = this;
+        let bg, about;
+
+        initHTML();
+        initViews();
+        addListeners();
+        Stage.add(this);
+
+        function initHTML() {
+            self.hide();
+            self.size('100%').css({ left: 0, top: 0 }).mouseEnabled(false);
+            bg = self.create('.bg');
+            bg.size('100%').bg('#000').css({ opacity: 0 });
+            bg.interact(null, closeAbout);
+            bg.hit.css({ cursor: 'auto' });
+            bg.hit.mouseEnabled(true);
+        }
+
+        function initViews() {
+            about = self.initClass(UIAbout);
+            Stage.initClass(UIFooter);
         }
 
         function addListeners() {
@@ -276,15 +273,404 @@ class Main {
         }
 
         function openAbout() {
-            Stage.hit.mouseEnabled(false);
-            about = Stage.initClass(UIAbout);
+            self.startRender(loop);
+            self.show();
+            bg.tween({ opacity: 0.85 }, 2000, 'easeOutSine');
+            about.animateIn();
+            bg.hit.show();
         }
 
         function closeAbout() {
-            Stage.hit.mouseEnabled(true);
-            if (about) about.animateOut(() => {
-                if (about) about = about.destroy();
+            bg.hit.hide();
+            about.animateOut();
+            bg.tween({ opacity: 0 }, 1000, 'easeOutSine', () => {
+                self.hide();
+                self.stopRender(loop);
             });
+        }
+
+        function loop() {
+            about.update();
+        }
+    }
+}
+
+class ColourBeamScene extends Component {
+
+    constructor() {
+        super();
+        const self = this;
+        this.object3D = new THREE.Object3D();
+        let shader, mesh, gleam,
+            beamWidth = 40,
+            audioMoveVolume = 0;
+
+        World.scene.add(this.object3D);
+
+        initMesh();
+        addListeners();
+        this.startRender(loop);
+
+        function initMesh() {
+            self.object3D.visible = false;
+            shader = self.initClass(Shader, 'ColourBeam', {
+                uTime: World.time,
+                uResolution: World.resolution,
+                uMouse: { type: 'v2', value: Mouse.inverseNormal },
+                uRadius: { type: 'f', value: 0 },
+                uBeam: { type: 'f', value: 0 },
+                uBeamWidth: { type: 'f', value: beamWidth }
+            });
+            mesh = new THREE.Mesh(new THREE.PlaneBufferGeometry(1, 1), shader.material);
+            mesh.scale.set(Stage.width, Stage.height, 1);
+            self.object3D.add(mesh);
+        }
+
+        function addListeners() {
+            Stage.events.add(Events.RESIZE, resize);
+            Mouse.input.events.add(Interaction.START, down);
+            Mouse.input.events.add(Interaction.END, up);
+            up();
+        }
+
+        function down() {
+            beamWidth = 1.2;
+            audioMoveVolume = 1;
+        }
+
+        function up() {
+            beamWidth = 40;
+            audioMoveVolume = 0;
+        }
+
+        function resize() {
+            mesh.scale.set(Stage.width, Stage.height, 1);
+        }
+
+        function loop() {
+            if (!self.object3D.visible) return;
+            shader.uniforms.uBeamWidth.value += (beamWidth - shader.uniforms.uBeamWidth.value) * 0.3;
+            if (gleam) gleam.audioGain.gain.value += (audioMoveVolume - gleam.audioGain.gain.value) * 0.3;
+        }
+
+        this.animateIn = () => {
+            this.object3D.visible = true;
+            shader.uniforms.uBeam.value = 0;
+            TweenManager.tween(shader.uniforms.uBeam, { value: 1 }, 1000, 'easeOutSine');
+        };
+
+        this.initAudio = () => {
+            gleam = WebAudio.getSound('MagicGleam');
+            if (gleam) {
+                gleam.audioGain.gain.value = 0;
+                gleam.loop = true;
+                WebAudio.trigger('MagicGleam');
+                //TweenManager.tween(gleam.audioGain.gain, { value: 1 }, 500, 'easeOutCubic');
+            }
+        };
+    }
+}
+
+class World extends Component {
+
+    static instance() {
+        if (!this.singleton) this.singleton = new World();
+        return this.singleton;
+    }
+
+    constructor() {
+        super();
+        const audioMinVolume = 0.5,
+            audioMoveDecay = 0.95;
+        let renderer, scene, camera, spacy,
+            audioMoveVolume = audioMinVolume;
+
+        World.dpr = Math.max(1, Math.min(1.5, Device.pixelRatio));
+
+        initWorld();
+        addListeners();
+        this.startRender(loop);
+        Stage.add(World.element);
+
+        function initWorld() {
+            renderer = new THREE.WebGLRenderer({ powerPreference: 'high-performance' });
+            renderer.setPixelRatio(World.dpr);
+            renderer.setSize(Stage.width, Stage.height);
+            renderer.setClearColor('#000000');
+            scene = new THREE.Scene();
+            camera = new THREE.PerspectiveCamera(45, Stage.width / Stage.height, 0.01, 200);
+            camera.position.set(0, 0, 6);
+            camera.target = new THREE.Vector3(0, 0, 0);
+            camera.lookAt(camera.target);
+            scene.add(camera);
+
+            World.scene = scene;
+            World.renderer = renderer;
+            World.element = renderer.domElement;
+            World.camera = camera;
+            World.time = { type: 'f', value: 0 };
+            World.resolution = { type: 'v2', value: new THREE.Vector2(Stage.width * World.dpr, Stage.height * World.dpr) };
+        }
+
+        function addListeners() {
+            Mouse.input.events.add(Interaction.MOVE, move);
+            Stage.events.add(Events.RESIZE, resize);
+            resize();
+        }
+
+        function move() {
+            audioMoveVolume = Math.range(Mouse.input.velocity.length(), 0, 8, 0.5, 1, true);
+        }
+
+        function resize() {
+            renderer.setSize(Stage.width, Stage.height);
+            camera.aspect = Stage.width / Stage.height;
+            camera.updateProjectionMatrix();
+            World.resolution.value.set(Stage.width * World.dpr, Stage.height * World.dpr);
+        }
+
+        function loop(t, delta) {
+            World.time.value += delta * 0.001;
+            renderer.render(scene, camera);
+            if (spacy) {
+                audioMoveVolume *= audioMoveDecay;
+                if (audioMoveVolume < audioMinVolume) audioMoveVolume = audioMinVolume;
+                spacy.audioGain.gain.value += (audioMoveVolume - spacy.audioGain.gain.value) * 0.3;
+            }
+        }
+
+        this.initAudio = () => {
+            spacy = WebAudio.getSound('DeepSpacy');
+            if (spacy) {
+                spacy.audioGain.gain.value = audioMinVolume;
+                spacy.loop = true;
+                WebAudio.trigger('DeepSpacy');
+            }
+        };
+    }
+}
+
+class AlienKitty extends Interface {
+
+    constructor() {
+        super('AlienKitty');
+        const self = this;
+        let alienkitty, eyelid1, eyelid2;
+
+        initHTML();
+
+        function initHTML() {
+            self.size(90, 86).center().css({ opacity: 0 });
+            alienkitty = self.create('.alienkitty').size(90, 86);
+            eyelid1 = alienkitty.create('.eyelid1').size(24, 14).css({ left: 35, top: 25 }).transformPoint('50%', 0).transform({ scaleX: 1.5, scaleY: 0.01 });
+            eyelid2 = alienkitty.create('.eyelid2').size(24, 14).css({ left: 53, top: 26 }).transformPoint(0, 0).transform({ scaleX: 1, scaleY: 0.01 });
+        }
+
+        function initImages() {
+            return Promise.all([
+                Images.promise('assets/images/alienkitty.svg'),
+                Images.promise('assets/images/alienkitty_eyelid.svg')]
+            ).then(finishSetup);
+        }
+
+        function finishSetup() {
+            self.loaded = true;
+            alienkitty.bg('assets/images/alienkitty.svg');
+            eyelid1.bg('assets/images/alienkitty_eyelid.svg');
+            eyelid2.bg('assets/images/alienkitty_eyelid.svg');
+        }
+
+        function blink() {
+            self.delayedCall(Utils.headsTails(blink1, blink2), Utils.random(0, 10000));
+        }
+
+        function blink1() {
+            eyelid1.tween({ scaleY: 1.5 }, 120, 'easeOutCubic', () => {
+                eyelid1.tween({ scaleY: 0.01 }, 180, 'easeOutCubic');
+            });
+            eyelid2.tween({ scaleX: 1.3, scaleY: 1.3 }, 120, 'easeOutCubic', () => {
+                eyelid2.tween({ scaleX: 1, scaleY: 0.01 }, 180, 'easeOutCubic', () => {
+                    blink();
+                });
+            });
+        }
+
+        function blink2() {
+            eyelid1.tween({ scaleY: 1.5 }, 120, 'easeOutCubic', () => {
+                eyelid1.tween({ scaleY: 0.01 }, 180, 'easeOutCubic');
+            });
+            eyelid2.tween({ scaleX: 1.3, scaleY: 1.3 }, 180, 'easeOutCubic', () => {
+                eyelid2.tween({ scaleX: 1, scaleY: 0.01 }, 240, 'easeOutCubic', () => {
+                    blink();
+                });
+            });
+        }
+
+        this.animateIn = () => {
+            blink();
+            this.tween({ opacity: 1 }, 1000, 'easeOutSine');
+        };
+
+        this.animateOut = callback => {
+            this.tween({ opacity: 0 }, 500, 'easeInOutQuad', callback);
+        };
+
+        this.ready = () => initImages().then(finishSetup);
+    }
+}
+
+class Loader extends Interface {
+
+    constructor() {
+        super('Loader');
+        const self = this;
+        let alienkitty, loader, number, title;
+
+        initHTML();
+        initViews();
+        initNumber();
+        initTitle();
+        initLoader();
+
+        function initHTML() {
+            self.size('100%');
+            self.progress = 0;
+        }
+
+        function initViews() {
+            alienkitty = self.initClass(AlienKitty);
+            alienkitty.transform({ y: -65 });
+            alienkitty.ready().then(alienkitty.animateIn);
+        }
+
+        function initNumber() {
+            number = self.create('.number');
+            number.size(150, 25).center();
+            number.inner = number.create('.inner');
+            number.inner.fontStyle('Lato', 12, Config.UI_COLOR);
+            number.inner.css({
+                width: '100%',
+                fontWeight: '700',
+                lineHeight: 25,
+                letterSpacing: 12 * 0.03,
+                textAlign: 'center',
+                whiteSpace: 'nowrap'
+            });
+            number.inner.text('');
+        }
+
+        function initTitle() {
+            title = self.create('.title');
+            title.size(600, 25).center().css({ opacity: 0 });
+            title.inner = title.create('.inner');
+            title.inner.fontStyle('Lato', 12, Config.UI_COLOR);
+            title.inner.css({
+                width: '100%',
+                fontWeight: '700',
+                lineHeight: 25,
+                letterSpacing: 12 * 0.03,
+                textAlign: 'center',
+                whiteSpace: 'nowrap'
+            });
+            title.inner.text(Device.mobile ? 'Put on your headphones' : 'Turn up your speakers');
+        }
+
+        function initLoader() {
+            loader = new AssetLoader(Config.ASSETS);
+            loader.events.add(Events.PROGRESS, loadUpdate);
+        }
+
+        function loadUpdate(e) {
+            TweenManager.tween(self, { progress: e.percent }, 2000, 'easeInOutSine', null, () => {
+                number.inner.text(Math.round(self.progress * 100));
+                if (self.progress === 1) {
+                    self.loaded = true;
+                    self.events.fire(Events.COMPLETE);
+                    addStartButton();
+                }
+            });
+        }
+
+        function addStartButton() {
+            number.tween({ opacity: 0 }, 200, 'easeOutSine', () => {
+                number.hide();
+                title.transform({ y: 10 }).css({ opacity: 0 }).tween({ y: 0, opacity: 1 }, 1000, 'easeOutQuart', 100);
+                Mouse.input.events.add(Interaction.CLICK, click);
+                self.delayedCall(() => swapTitle((Device.mobile ? 'Tap' : 'Click') + ' anywhere'), 7000);
+                self.delayedCall(() => swapTitle(Device.mobile ? 'Tap tap!' : 'Click!'), 14000);
+            });
+        }
+
+        function click() {
+            Mouse.input.events.remove(Interaction.CLICK, click);
+            Stage.events.fire(Events.START);
+            WebAudio.trigger('BassDrum');
+        }
+
+        function swapTitle(text) {
+            title.tween({ y: -10, opacity: 0 }, 300, 'easeInSine', () => {
+                title.inner.text(text);
+                title.transform({ y: 10 }).tween({ y: 0, opacity: 1 }, 1000, 'easeOutCubic');
+            });
+        }
+
+        this.animateOut = callback => {
+            title.tween({ opacity: 0 }, 200, 'easeOutSine');
+            alienkitty.animateOut(callback);
+        };
+    }
+}
+
+class Main {
+
+    constructor() {
+        let loader, scene;
+
+        WebAudio.init();
+
+        initStage();
+        initLoader();
+        addListeners();
+
+        function initStage() {
+            Stage.size('100%');
+
+            Mouse.init();
+        }
+
+        function initLoader() {
+            FontLoader.loadFonts(['Lato']).then(() => {
+                loader = Stage.initClass(Loader);
+                loader.events.add(Events.COMPLETE, initWorld);
+            });
+        }
+
+        function initWorld() {
+            World.instance();
+
+            scene = Stage.initClass(ColourBeamScene);
+        }
+
+        function addListeners() {
+            Stage.events.add(Events.START, start);
+            Stage.events.add(Events.VISIBILITY, visibility);
+        }
+
+        function start() {
+            loader.animateOut(() => {
+                loader = loader.destroy();
+                scene.animateIn();
+
+                UI.instance();
+
+                World.instance().initAudio();
+                scene.initAudio();
+            });
+        }
+
+        function visibility(e) {
+            if (e.type === 'blur') WebAudio.mute();
+            else WebAudio.unmute();
         }
     }
 }

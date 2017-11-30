@@ -41,12 +41,16 @@ class AssetLoader {
                 window.fetch(asset).then(response => {
                     if (!response.ok) return assetLoaded();
                     response.arrayBuffer().then(data => window.WebAudio.createSound(key, data, assetLoaded));
+                }).catch(() => {
+                    assetLoaded();
                 });
                 return;
             }
             window.get(asset).then(data => {
                 if (ext === 'js') window.eval(data.replace('use strict', ''));
                 else if (ext.includes(['fs', 'vs', 'glsl']) && window.Shaders) window.Shaders.parse(data, asset);
+                assetLoaded();
+            }).catch(() => {
                 assetLoaded();
             });
         }

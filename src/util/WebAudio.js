@@ -15,7 +15,8 @@ class WebAudio {
         let context;
 
         this.init = () => {
-            context = new AudioContext();
+            if (window.AudioContext) context = new AudioContext();
+            if (!context) return;
             this.globalGain = context.createGain();
             this.globalGain.connect(context.destination);
         };
@@ -37,6 +38,7 @@ class WebAudio {
         };
 
         this.trigger = id => {
+            if (!context) return;
             const sound = this.getSound(id),
                 source = context.createBufferSource();
             source.buffer = sound.buffer;
@@ -44,9 +46,15 @@ class WebAudio {
             source.start(0);
         };
 
-        this.mute = () => TweenManager.tween(this.globalGain.gain, { value: 0 }, 300, 'easeOutSine');
+        this.mute = () => {
+            if (!context) return;
+            TweenManager.tween(this.globalGain.gain, { value: 0 }, 300, 'easeOutSine');
+        };
 
-        this.unmute = () => TweenManager.tween(this.globalGain.gain, { value: 1 }, 500, 'easeOutSine');
+        this.unmute = () => {
+            if (!context) return;
+            TweenManager.tween(this.globalGain.gain, { value: 1 }, 500, 'easeOutSine');
+        };
 
         window.WebAudio = this;
     }

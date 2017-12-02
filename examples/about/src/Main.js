@@ -17,7 +17,10 @@ Config.ABOUT_GITHUB_URL = 'https://github.com/pschroen/alien.js';
 
 /*Config.ASSETS = [
     'assets/js/lib/three.min.js',
-    'assets/shaders/compiled.vs'
+    'assets/shaders/compiled.vs',
+    'assets/sounds/BassDrum.mp3',
+    'assets/sounds/DeepSpacy.mp3',
+    'assets/sounds/MagicGleam.mp3'
 ];*/
 
 Config.ASSETS = {
@@ -53,7 +56,7 @@ class UIAbout extends Interface {
             wrapper.rotationY = 0;
             wrapper.rotationX = 0;
             alienkitty = wrapper.initClass(AlienKitty);
-            alienkitty.transform({ y: -45, z: -20 });
+            alienkitty.transform({ z: -20 }).css({ marginTop: -88 });
         }
 
         function initText() {
@@ -515,7 +518,7 @@ class AlienKitty extends Interface {
             this.tween({ opacity: 0 }, 500, 'easeInOutQuad', callback);
         };
 
-        this.ready = () => initImages().then(finishSetup);
+        this.ready = initImages;
     }
 }
 
@@ -524,7 +527,7 @@ class Loader extends Interface {
     constructor() {
         super('Loader');
         const self = this;
-        let alienkitty, loader, number, title;
+        let alienkitty, number, title, loader;
 
         initHTML();
         initViews();
@@ -539,7 +542,7 @@ class Loader extends Interface {
 
         function initViews() {
             alienkitty = self.initClass(AlienKitty);
-            alienkitty.transform({ y: -65 });
+            alienkitty.css({ marginTop: -108 });
             alienkitty.ready().then(alienkitty.animateIn);
         }
 
@@ -636,6 +639,7 @@ class Main {
             Stage.size('100%');
 
             Mouse.init();
+            Accelerometer.init();
         }
 
         function initLoader() {

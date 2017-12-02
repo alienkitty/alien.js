@@ -10,8 +10,9 @@
     "html5",
     "css3",
     "animation",
-    "es6",
-    "ecmascript6"
+    "webgl",
+    "threejs",
+    "webaudio"
   ],
   "author": "Patrick Schroen",
   "repository": {

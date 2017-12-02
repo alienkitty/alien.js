@@ -4,7 +4,7 @@
  * @author Patrick Schroen / https://github.com/pschroen
  */
 
-import { Events, Stage, Interface, Canvas, Utils, AssetLoader, FontLoader, TweenManager } from '../alien.js/src/Alien';
+import { Events, Stage, Interface, Canvas, Utils, AssetLoader, TweenManager } from '../alien.js/src/Alien';
 
 Config.UI_COLOR = 'white';
 
@@ -191,10 +191,8 @@ class Main {
         }
 
         function initLoader() {
-            FontLoader.loadFonts(['Titillium Web', 'Lato', 'icomoon']).then(() => {
-                loader = Stage.initClass(Loader);
-                loader.events.add(Events.COMPLETE, loadComplete);
-            });
+            loader = Stage.initClass(Loader);
+            loader.events.add(Events.COMPLETE, loadComplete);
         }
 
         function loadComplete() {

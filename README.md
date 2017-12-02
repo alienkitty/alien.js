@@ -155,8 +155,7 @@ npm install
 ```
 npm run lint
 npm run build
-open dist/index.html
-npm run dev
+npm start
 npm run build
 ```
 

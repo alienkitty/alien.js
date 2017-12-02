@@ -9,28 +9,21 @@
 import { Events, Stage, Interface, Component, Device, Mouse, Interaction, Accelerometer, Utils,
     AssetLoader, FontLoader, Images, TweenManager, WebAudio, Shader } from '../alien.js/src/Alien';
 
+import vertColourBeam from './shaders/ColourBeam.vs';
+import fragColourBeam from './shaders/ColourBeam.fs';
+
 Config.UI_COLOR = 'white';
 Config.UI_OFFSET = Device.phone ? 20 : 35;
 Config.ABOUT_COPY = 'A lightweight web framework abducted from Active Theory’s JavaScript codebase and ported to an ES6 module bundler.';
 Config.ABOUT_HYDRA_URL = 'https://medium.com/@activetheory/mira-exploring-the-potential-of-the-future-web-e1f7f326d58e';
 Config.ABOUT_GITHUB_URL = 'https://github.com/pschroen/alien.js';
 
-/*Config.ASSETS = [
+Config.ASSETS = [
     'assets/js/lib/three.min.js',
-    'assets/shaders/compiled.vs',
     'assets/sounds/BassDrum.mp3',
     'assets/sounds/DeepSpacy.mp3',
     'assets/sounds/MagicGleam.mp3'
-];*/
-
-Config.ASSETS = {
-    'three': 'assets/js/lib/three.min.js',
-    'ColourBeam.vs': 'assets/shaders/ColourBeam.vs',
-    'ColourBeam.fs': 'assets/shaders/ColourBeam.fs',
-    'BassDrum': 'assets/sounds/BassDrum.mp3',
-    'DeepSpacy': 'assets/sounds/DeepSpacy.mp3',
-    'MagicGleam': 'assets/sounds/MagicGleam.mp3'
-};
+];
 
 Events.START = 'start';
 Events.OPEN_ABOUT = 'open_about';
@@ -316,13 +309,13 @@ class ColourBeamScene extends Component {
 
         function initMesh() {
             self.object3D.visible = false;
-            shader = self.initClass(Shader, 'ColourBeam', {
-                uTime: World.time,
-                uResolution: World.resolution,
-                uMouse: { type: 'v2', value: Mouse.inverseNormal },
-                uRadius: { type: 'f', value: 0 },
-                uBeam: { type: 'f', value: 0 },
-                uBeamWidth: { type: 'f', value: beamWidth }
+            shader = self.initClass(Shader, vertColourBeam, fragColourBeam, {
+                iGlobalTime: World.time,
+                iResolution: World.resolution,
+                iMouse: { type: 'v2', value: Mouse.inverseNormal },
+                iRadius: { type: 'f', value: 0 },
+                iBeam: { type: 'f', value: 0 },
+                iBeamWidth: { type: 'f', value: beamWidth }
             });
             mesh = new THREE.Mesh(new THREE.PlaneBufferGeometry(1, 1), shader.material);
             mesh.scale.set(Stage.width, Stage.height, 1);
@@ -352,14 +345,14 @@ class ColourBeamScene extends Component {
 
         function loop() {
             if (!self.object3D.visible) return;
-            shader.uniforms.uBeamWidth.value += (beamWidth - shader.uniforms.uBeamWidth.value) * 0.3;
+            shader.uniforms.iBeamWidth.value += (beamWidth - shader.uniforms.iBeamWidth.value) * 0.3;
             if (gleam) gleam.audioGain.gain.value += (audioMoveVolume - gleam.audioGain.gain.value) * 0.3;
         }
 
         this.animateIn = () => {
             this.object3D.visible = true;
-            shader.uniforms.uBeam.value = 0;
-            TweenManager.tween(shader.uniforms.uBeam, { value: 1 }, 1000, 'easeOutSine');
+            shader.uniforms.iBeam.value = 0;
+            TweenManager.tween(shader.uniforms.iBeam, { value: 1 }, 1000, 'easeOutSine');
         };
 
         this.initAudio = () => {
@@ -399,7 +392,7 @@ class World extends Component {
             renderer = new THREE.WebGLRenderer({ powerPreference: 'high-performance' });
             renderer.setPixelRatio(World.dpr);
             renderer.setSize(Stage.width, Stage.height);
-            renderer.setClearColor('#000000');
+            renderer.setClearColor(0x000000);
             scene = new THREE.Scene();
             camera = new THREE.PerspectiveCamera(45, Stage.width / Stage.height, 0.01, 200);
             camera.position.set(0, 0, 6);

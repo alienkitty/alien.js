@@ -1,6 +1,6 @@
 {
   "name": "alien-build-projects",
-  "version": "1.0.12",
+  "version": "1.0.0",
   "author": "Patrick Schroen",
   "private": true,
   "scripts": {
@@ -15,6 +15,7 @@
     "rollup": "^0.52.0",
     "rollup-plugin-bundleutils": "^1.0.2",
     "rollup-plugin-eslint": "^4.0.0",
+    "rollup-plugin-glslify": "^1.0.0",
     "rollup-watch": "^4.3.1",
     "serve": "^6.4.1"
   }

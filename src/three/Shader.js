@@ -7,16 +7,11 @@
 /* global THREE */
 
 import { Utils } from '../util/Utils';
-import { Shaders } from './Shaders';
 import { TweenManager } from '../tween/TweenManager';
 
 class Shader {
 
     constructor(vertexShader, fragmentShader, props) {
-        if (typeof fragmentShader !== 'string') {
-            props = fragmentShader;
-            fragmentShader = vertexShader;
-        }
         const self = this;
         this.uniforms = {};
         this.properties = {};
@@ -33,8 +28,8 @@ class Shader {
 
         function initShaders() {
             const params = {};
-            params.vertexShader = process(Shaders.getShader(vertexShader + '.vs') || vertexShader, 'vs');
-            params.fragmentShader = process(Shaders.getShader(fragmentShader + '.fs') || fragmentShader, 'fs');
+            params.vertexShader = process(vertexShader, 'vs');
+            params.fragmentShader = process(fragmentShader, 'fs');
             params.uniforms = self.uniforms;
             for (let key in self.properties) params[key] = self.properties[key];
             self.material = new THREE.RawShaderMaterial(params);
@@ -71,7 +66,7 @@ class Shader {
                     'uniform vec3 cameraPosition;'
                 ].join('\n');
             }
-            code = header + code;
+            code = header + '\n\n' + code;
             const threeChunk = (a, b) => {
                 return THREE.ShaderChunk[b] + '\n';
             };

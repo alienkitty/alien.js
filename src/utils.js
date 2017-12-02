@@ -19,8 +19,7 @@ const singletons = (values = []) => bundleutils.singletons([
     'WebAudio',
     'TweenManager',
     'Interpolation',
-    'Utils3D',
-    'Shaders'
+    'Utils3D'
 ].concat(values));
 const unexport = bundleutils.unexport;
 const babel = bundleutils.babel;

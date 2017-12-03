@@ -5,7 +5,7 @@
 [![Dependencies](https://img.shields.io/david/pschroen/alien.js.svg)]()
 [![Dev Dependencies](https://img.shields.io/david/dev/pschroen/alien.js.svg)]()
 
-A lightweight web framework abducted from Active Theory's [Hydra](https://medium.com/@activetheory/mira-exploring-the-potential-of-the-future-web-e1f7f326d58e) and ported to an ES6 module bundler.
+A lightweight web framework for the future.
 
 ### Features
 
@@ -17,6 +17,8 @@ A lightweight web framework abducted from Active Theory's [Hydra](https://medium
 * Canvas graphics engine.
 * Web audio engine.
 * SVG support.
+* WebGL with [three.js](https://threejs.org/).
+* GLSL shaders with [glslify](https://github.com/glslify/glslify) (a node.js-style module system for GLSL).
 
 ### Example `Interface` design pattern
 
@@ -171,7 +173,7 @@ npm run build
 
 * [Releases](https://github.com/pschroen/alien.js/releases)
 
-### References
+### Inspiration
 
 * [Active Theory](https://activetheory.net/)
 * Active Theory's [Mira](https://medium.com/@activetheory/mira-exploring-the-potential-of-the-future-web-e1f7f326d58e)

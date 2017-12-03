@@ -1,7 +1,7 @@
 {
   "name": "alien.js",
   "version": "0.6.0",
-  "description": "Future web library",
+  "description": "A lightweight web framework for the future",
   "homepage": "https://alien.js.org/",
   "keywords": [
     "alien",

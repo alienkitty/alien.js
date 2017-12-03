@@ -14,7 +14,7 @@ import fragColourBeam from './shaders/ColourBeam.fs';
 
 Config.UI_COLOR = 'white';
 Config.UI_OFFSET = Device.phone ? 20 : 35;
-Config.ABOUT_COPY = 'A lightweight web framework abducted from Active Theory’s JavaScript codebase and ported to an ES6 module bundler.';
+Config.ABOUT_COPY = 'A lightweight web framework for the future.';
 Config.ABOUT_HYDRA_URL = 'https://medium.com/@activetheory/mira-exploring-the-potential-of-the-future-web-e1f7f326d58e';
 Config.ABOUT_GITHUB_URL = 'https://github.com/pschroen/alien.js';
 
@@ -54,7 +54,7 @@ class UIAbout extends Interface {
 
         function initText() {
             description = self.create('.description');
-            description.size(260, 100);
+            description.size(260, 50);
             description.fontStyle('Lato', 12, Config.UI_COLOR);
             description.css({
                 left: 350,
@@ -67,13 +67,13 @@ class UIAbout extends Interface {
             description.top = 200;
             description.text(Config.ABOUT_COPY);
             texts.push(description);
-            ['Source code', 'Active Theory’s Mira'].forEach((text, i) => {
+            ['Source code', 'Inspiration'].forEach((text, i) => {
                 const link = self.create('.link');
                 link.size('auto', 20);
                 link.fontStyle('Lato', 12, Config.UI_COLOR);
                 link.css({
                     left: 350,
-                    top: 300 + i * 27,
+                    top: 250 + i * 27,
                     fontWeight: '700',
                     letterSpacing: 12 * 0.03
                 });
@@ -81,7 +81,7 @@ class UIAbout extends Interface {
                 link.letters = link.split();
                 link.interact(hover, click);
                 link.hit.mouseEnabled(true);
-                link.top = 300 + i * 27;
+                link.top = 250 + i * 27;
                 link.title = text;
                 texts.push(link);
             });

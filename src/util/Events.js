@@ -33,7 +33,8 @@ class Events {
 
         this.fire = (event, object = {}) => {
             if (!events[event]) return;
-            events[event].forEach(callback => callback(object));
+            const clone = Utils.cloneArray(events[event]);
+            clone.forEach(callback => callback(object));
         };
     }
 }

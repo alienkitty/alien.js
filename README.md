@@ -20,6 +20,11 @@ A lightweight web framework for the future.
 * WebGL with [three.js](https://threejs.org/).
 * GLSL shaders with [glslify](https://github.com/glslify/glslify) (a node.js-style module system for GLSL).
 
+### Examples
+
+* [about](https://rawgit.com/pschroen/alien.js/master/examples/about/dist/)
+* glslify [shader](https://rawgit.com/pschroen/alien.js/master/examples/shader/dist/)
+
 ### Example `Interface` design pattern
 
 ```js

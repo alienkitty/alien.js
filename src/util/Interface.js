@@ -544,6 +544,7 @@ class Interface {
             array = [],
             split = this.text().split(by);
         this.empty();
+        if (by === ' ') by = '&nbsp;';
         for (let i = 0; i < split.length; i++) {
             if (split[i] === ' ') split[i] = '&nbsp;';
             array.push(this.create('.t', 'span').html(split[i]).css(style));

@@ -6,7 +6,7 @@
 
 /* global THREE */
 
-import { Events, Stage, Component, Device, Mouse, Interaction, AssetLoader, Shader } from '../alien.js/src/Alien';
+import { Events, Stage, Component, Device, Mouse, Interaction, AssetLoader, TweenManager, Shader } from '../alien.js/src/Alien';
 
 import vertColourBeam from './shaders/ColourBeam.vs';
 import fragColourBeam from './shaders/ColourBeam.fs';
@@ -22,8 +22,6 @@ class ColourBeamScene extends Component {
         const self = this;
         this.object3D = new THREE.Object3D();
         let shader, mesh,
-            radius = 0,
-            beam = 1,
             beamWidth = 40;
 
         World.scene.add(this.object3D);
@@ -33,13 +31,14 @@ class ColourBeamScene extends Component {
         this.startRender(loop);
 
         function initMesh() {
+            self.object3D.visible = false;
             shader = self.initClass(Shader, vertColourBeam, fragColourBeam, {
-                uTime: World.time,
-                uResolution: World.resolution,
-                uMouse: { type: 'v2', value: Mouse.inverseNormal },
-                uRadius: { type: 'f', value: radius },
-                uBeam: { type: 'f', value: beam },
-                uBeamWidth: { type: 'f', value: beamWidth }
+                iGlobalTime: World.time,
+                iResolution: World.resolution,
+                iMouse: { type: 'v2', value: Mouse.inverseNormal },
+                iRadius: { type: 'f', value: 0 },
+                iBeam: { type: 'f', value: 0 },
+                iBeamWidth: { type: 'f', value: beamWidth }
             });
             mesh = new THREE.Mesh(new THREE.PlaneBufferGeometry(1, 1), shader.material);
             mesh.scale.set(Stage.width, Stage.height, 1);
@@ -66,10 +65,15 @@ class ColourBeamScene extends Component {
         }
 
         function loop() {
-            shader.uniforms.uRadius.value += (radius - shader.uniforms.uRadius.value) * 0.3;
-            shader.uniforms.uBeam.value += (beam - shader.uniforms.uBeam.value) * 0.3;
-            shader.uniforms.uBeamWidth.value += (beamWidth - shader.uniforms.uBeamWidth.value) * 0.3;
+            if (!self.object3D.visible) return;
+            shader.uniforms.iBeamWidth.value += (beamWidth - shader.uniforms.iBeamWidth.value) * 0.3;
         }
+
+        this.animateIn = () => {
+            this.object3D.visible = true;
+            shader.uniforms.iBeam.value = 0;
+            TweenManager.tween(shader.uniforms.iBeam, { value: 1 }, 1000, 'easeOutSine');
+        };
     }
 }
 
@@ -133,6 +137,7 @@ class World extends Component {
 class Main {
 
     constructor() {
+        let scene;
 
         initStage();
 
@@ -147,7 +152,8 @@ class Main {
         function initWorld() {
             World.instance();
 
-            Stage.initClass(ColourBeamScene);
+            scene = Stage.initClass(ColourBeamScene);
+            scene.animateIn();
         }
     }
 }

@@ -1,19 +1,19 @@
 // Based on https://www.shadertoy.com/view/XdlSDs by dynamite
 
-uniform float uTime;
-uniform vec2 uResolution;
-uniform vec2 uMouse;
-uniform float uRadius;
-uniform float uBeam;
-uniform float uBeamWidth;
+uniform float iGlobalTime;
+uniform vec2 iResolution;
+uniform vec2 iMouse;
+uniform float iRadius;
+uniform float iBeam;
+uniform float iBeamWidth;
 
 void main() {
-    vec2 p = (gl_FragCoord.xy - uMouse.xy * uResolution.xy) / uResolution.y;
+    vec2 p = (gl_FragCoord.xy - iMouse.xy * iResolution.xy) / iResolution.y;
     float a = atan(p.x, p.y);
-    float r = length(p) - uRadius;
+    float r = length(p) - iRadius;
     vec2 uv = vec2(a, r);
 
-    vec3 horColour = vec3(gl_FragCoord.xy / uResolution.xy, 0.5);
-    vec3 horBeam = vec3(abs(uBeam / (uBeamWidth * uv.y)));
+    vec3 horColour = vec3(gl_FragCoord.xy / iResolution.xy, 0.5);
+    vec3 horBeam = vec3(abs(iBeam / (iBeamWidth * uv.y)));
     gl_FragColor = vec4(horBeam * horColour, 1.0);
 }

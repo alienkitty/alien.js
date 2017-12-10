@@ -98,11 +98,13 @@ class Scene extends Component {
 
         initCanvasTexture();
         initMesh();
-        this.startRender(loop);
 
         function initCanvasTexture() {
             alienkitty = self.initClass(AlienKittyTexture);
-            alienkitty.ready().then(() => self.object3D.visible = true);
+            alienkitty.ready().then(() => {
+                self.startRender(loop);
+                self.object3D.visible = true;
+            });
         }
 
         function initMesh() {
@@ -110,7 +112,7 @@ class Scene extends Component {
             shader = self.initClass(Shader, vert, frag, {
                 iGlobalTime: World.time,
                 iResolution: World.resolution,
-                iChannel0: { type: 't', value: alienkitty.texture }
+                iChannel0: { value: alienkitty.texture }
             });
             mesh = new THREE.Mesh(new THREE.BoxGeometry(1, 1, 1), shader.material);
             mesh.rotation.y = -Math.PI;
@@ -137,7 +139,7 @@ class World extends Component {
         super();
         let renderer, scene, camera;
 
-        World.dpr = Math.max(1, Math.min(1.5, Device.pixelRatio));
+        World.dpr = Math.min(1.5, Device.pixelRatio);
 
         initWorld();
         addListeners();
@@ -147,21 +149,17 @@ class World extends Component {
         function initWorld() {
             renderer = new THREE.WebGLRenderer({ antialias: true });
             renderer.setPixelRatio(World.dpr);
-            renderer.setSize(Stage.width, Stage.height);
-            renderer.setClearColor(0x000000);
             scene = new THREE.Scene();
             camera = new THREE.PerspectiveCamera(65, Stage.width / Stage.height, 0.01, 200);
             camera.position.set(0.85, 1, -1.5);
             camera.target = new THREE.Vector3(0, 0, 0);
             camera.lookAt(camera.target);
-            scene.add(camera);
-
             World.scene = scene;
             World.renderer = renderer;
             World.element = renderer.domElement;
             World.camera = camera;
-            World.time = { type: 'f', value: 0 };
-            World.resolution = { type: 'v2', value: new THREE.Vector2(Stage.width * World.dpr, Stage.height * World.dpr) };
+            World.time = { value: 0 };
+            World.resolution = { value: new THREE.Vector2(Stage.width * World.dpr, Stage.height * World.dpr) };
         }
 
         function addListeners() {

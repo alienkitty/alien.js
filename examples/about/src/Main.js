@@ -305,17 +305,18 @@ class ColourBeamScene extends Component {
 
         initMesh();
         addListeners();
-        this.startRender(loop);
 
         function initMesh() {
             self.object3D.visible = false;
             shader = self.initClass(Shader, vertColourBeam, fragColourBeam, {
                 iGlobalTime: World.time,
                 iResolution: World.resolution,
-                iMouse: { type: 'v2', value: Mouse.inverseNormal },
-                iRadius: { type: 'f', value: 0 },
-                iBeam: { type: 'f', value: 0 },
-                iBeamWidth: { type: 'f', value: beamWidth }
+                iMouse: { value: Mouse.inverseNormal },
+                iRadius: { value: 0 },
+                iBeam: { value: 0 },
+                iBeamWidth: { value: beamWidth },
+                depthWrite: false,
+                depthTest: false
             });
             mesh = new THREE.Mesh(new THREE.PlaneBufferGeometry(1, 1), shader.material);
             mesh.scale.set(Stage.width, Stage.height, 1);
@@ -350,6 +351,7 @@ class ColourBeamScene extends Component {
         }
 
         this.animateIn = () => {
+            this.startRender(loop);
             this.object3D.visible = true;
             shader.uniforms.iBeam.value = 0;
             TweenManager.tween(shader.uniforms.iBeam, { value: 1 }, 1000, 'easeOutSine');
@@ -381,7 +383,7 @@ class World extends Component {
         let renderer, scene, camera, spacy,
             audioMoveVolume = audioMinVolume;
 
-        World.dpr = Math.max(1, Math.min(1.5, Device.pixelRatio));
+        World.dpr = Math.min(1.5, Device.pixelRatio);
 
         initWorld();
         addListeners();
@@ -391,21 +393,14 @@ class World extends Component {
         function initWorld() {
             renderer = new THREE.WebGLRenderer({ powerPreference: 'high-performance' });
             renderer.setPixelRatio(World.dpr);
-            renderer.setSize(Stage.width, Stage.height);
-            renderer.setClearColor(0x000000);
             scene = new THREE.Scene();
-            camera = new THREE.PerspectiveCamera(45, Stage.width / Stage.height, 0.01, 200);
-            camera.position.set(0, 0, 6);
-            camera.target = new THREE.Vector3(0, 0, 0);
-            camera.lookAt(camera.target);
-            scene.add(camera);
-
+            camera = new THREE.PerspectiveCamera(60, Stage.width / Stage.height, 1, 10000);
             World.scene = scene;
             World.renderer = renderer;
             World.element = renderer.domElement;
             World.camera = camera;
-            World.time = { type: 'f', value: 0 };
-            World.resolution = { type: 'v2', value: new THREE.Vector2(Stage.width * World.dpr, Stage.height * World.dpr) };
+            World.time = { value: 0 };
+            World.resolution = { value: new THREE.Vector2(Stage.width * World.dpr, Stage.height * World.dpr) };
         }
 
         function addListeners() {
@@ -421,6 +416,7 @@ class World extends Component {
         function resize() {
             renderer.setSize(Stage.width, Stage.height);
             camera.aspect = Stage.width / Stage.height;
+            camera.position.z = 1 / Math.tan(Math.radians(30)) * 0.5 * Stage.height;
             camera.updateProjectionMatrix();
             World.resolution.value.set(Stage.width * World.dpr, Stage.height * World.dpr);
         }

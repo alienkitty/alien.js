@@ -6,43 +6,63 @@
 
 /* global THREE */
 
-import { Events, Stage, Component, Device, Mouse, Interaction, AssetLoader, TweenManager, Shader } from '../alien.js/src/Alien';
+import { Events, Stage, Component, Device, Mouse, Interaction, AssetLoader, Images, TweenManager, Shader } from '../alien.js/src/Alien';
 
-import vertColourBeam from './shaders/ColourBeam.vs';
-import fragColourBeam from './shaders/ColourBeam.fs';
+import vertDissolve from './shaders/Dissolve.vs';
+import fragDissolve from './shaders/Dissolve.fs';
 
 Config.ASSETS = [
-    'assets/js/lib/three.min.js'
+    'assets/js/lib/three.min.js',
+    'assets/images/NGC_1672_1920px.jpg',
+    'assets/images/Orion_Nebula_1920px.jpg'
 ];
 
-class ColourBeamScene extends Component {
+class DissolveScene extends Component {
 
     constructor() {
         super();
         const self = this;
+        const ratio = 1920 / 1080;
         this.object3D = new THREE.Object3D();
-        let shader, mesh,
-            beamWidth = 40;
+        let texture1, texture2, texture1img, texture2img, shader, mesh,
+            alpha = 0;
 
         World.scene.add(this.object3D);
 
+        initTextures();
         initMesh();
         addListeners();
 
+        function initTextures() {
+            texture1img = Images.createImg('assets/images/NGC_1672_1920px.jpg');
+            texture2img = Images.createImg('assets/images/Orion_Nebula_1920px.jpg');
+            texture1 = new THREE.Texture(null, null, THREE.ClampToEdgeWrapping, THREE.ClampToEdgeWrapping, THREE.LinearFilter, THREE.LinearFilter);
+            texture2 = new THREE.Texture(null, null, THREE.ClampToEdgeWrapping, THREE.ClampToEdgeWrapping, THREE.LinearFilter, THREE.LinearFilter);
+            Promise.all([Images.promise(texture1img), Images.promise(texture2img)]).then(finishSetup);
+        }
+
+        function finishSetup() {
+            texture1.image = texture1img;
+            texture1.needsUpdate = true;
+            texture2.image = texture2img;
+            texture2.needsUpdate = true;
+            self.object3D.visible = true;
+            shader.uniforms.iAlpha.value = 0;
+            TweenManager.tween(shader.uniforms.iAlpha, { value: 1 }, 7000, 'easeOutSine', () => self.startRender(loop));
+        }
+
         function initMesh() {
             self.object3D.visible = false;
-            shader = self.initClass(Shader, vertColourBeam, fragColourBeam, {
+            shader = self.initClass(Shader, vertDissolve, fragDissolve, {
                 iGlobalTime: World.time,
                 iResolution: World.resolution,
-                iMouse: { value: Mouse.inverseNormal },
-                iRadius: { value: 0 },
-                iBeam: { value: 0 },
-                iBeamWidth: { value: beamWidth },
+                iChannel0: { value: texture1 },
+                iChannel1: { value: texture2 },
+                iAlpha: { value: alpha },
                 depthWrite: false,
                 depthTest: false
             });
             mesh = new THREE.Mesh(new THREE.PlaneBufferGeometry(1, 1), shader.material);
-            mesh.scale.set(Stage.width, Stage.height, 1);
             self.object3D.add(mesh);
         }
 
@@ -51,31 +71,26 @@ class ColourBeamScene extends Component {
             Mouse.input.events.add(Interaction.START, down);
             Mouse.input.events.add(Interaction.END, up);
             up();
+            resize();
         }
 
         function down() {
-            beamWidth = 1.2;
+            alpha = 0;
         }
 
         function up() {
-            beamWidth = 40;
+            alpha = 1;
         }
 
         function resize() {
-            mesh.scale.set(Stage.width, Stage.height, 1);
+            if (Stage.width / Stage.height > ratio) mesh.scale.set(Stage.width, Stage.width / ratio, 1);
+            else mesh.scale.set(Stage.height * ratio, Stage.height, 1);
         }
 
         function loop() {
             if (!self.object3D.visible) return;
-            shader.uniforms.iBeamWidth.value += (beamWidth - shader.uniforms.iBeamWidth.value) * 0.3;
+            shader.uniforms.iAlpha.value += (alpha - shader.uniforms.iAlpha.value) * 0.3;
         }
-
-        this.animateIn = () => {
-            this.startRender(loop);
-            this.object3D.visible = true;
-            shader.uniforms.iBeam.value = 0;
-            TweenManager.tween(shader.uniforms.iBeam, { value: 1 }, 1000, 'easeOutSine');
-        };
     }
 }
 
@@ -90,7 +105,7 @@ class World extends Component {
         super();
         let renderer, scene, camera;
 
-        World.dpr = Math.min(1.5, Device.pixelRatio);
+        World.dpr = Math.min(2, Device.pixelRatio);
 
         initWorld();
         addListeners();
@@ -133,7 +148,6 @@ class World extends Component {
 class Main {
 
     constructor() {
-        let scene;
 
         initStage();
 
@@ -148,8 +162,7 @@ class Main {
         function initWorld() {
             World.instance();
 
-            scene = Stage.initClass(ColourBeamScene);
-            scene.animateIn();
+            Stage.initClass(DissolveScene);
         }
     }
 }

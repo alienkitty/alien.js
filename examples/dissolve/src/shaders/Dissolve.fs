@@ -1,12 +1,12 @@
 // Based on https://www.shadertoy.com/view/4s3GWj by NemoKradXNA
 
-varying vec2 vUv;
-
 uniform float iGlobalTime;
 uniform vec2 iResolution;
 uniform sampler2D iChannel0;
 uniform sampler2D iChannel1;
 uniform float iAlpha;
+
+varying vec2 vUv;
 
 void main() {
     vec2 uv = vUv;

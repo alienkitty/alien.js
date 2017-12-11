@@ -6,24 +6,144 @@
 
 /* global THREE */
 
-import { Events, Stage, Component, Device, Mouse, Interaction, AssetLoader, Images, TweenManager, Shader } from '../alien.js/src/Alien';
+import { Events, Stage, Component, Canvas, CanvasGraphics, Device, Mouse, Interaction, Utils, AssetLoader, Images, TweenManager, Shader } from '../alien.js/src/Alien';
 
+import vertAlienKitty from './shaders/AlienKitty.vs';
+import fragAlienKitty from './shaders/AlienKitty.fs';
 import vertDissolve from './shaders/Dissolve.vs';
 import fragDissolve from './shaders/Dissolve.fs';
 
 Config.ASSETS = [
     'assets/js/lib/three.min.js',
     'assets/images/NGC_1672_1920px.jpg',
-    'assets/images/Orion_Nebula_1920px.jpg'
+    'assets/images/Orion_Nebula_1920px.jpg',
+    'assets/images/alienkitty.svg',
+    'assets/images/alienkitty_eyelid.svg'
 ];
+
+class AlienKittyTexture extends Component {
+
+    constructor() {
+        super();
+        const self = this;
+        let canvas, texture, alienkittyimg, eyelidimg, alienkitty, eyelid1, eyelid2;
+
+        initCanvas();
+
+        function initCanvas() {
+            canvas = self.initClass(Canvas, 90, 86, true);
+            self.canvas = canvas;
+            texture = new THREE.Texture(canvas.element);
+            texture.minFilter = THREE.LinearFilter;
+            self.texture = texture;
+        }
+
+        function initImages() {
+            alienkittyimg = Images.createImg('assets/images/alienkitty.svg');
+            eyelidimg = Images.createImg('assets/images/alienkitty_eyelid.svg');
+            return Promise.all([Images.promise(alienkittyimg), Images.promise(eyelidimg)]).then(finishSetup);
+        }
+
+        function finishSetup() {
+            self.loaded = true;
+            alienkitty = new CanvasGraphics(90, 86);
+            alienkitty.drawImage(alienkittyimg);
+            eyelid1 = new CanvasGraphics(24, 14);
+            eyelid1.transformPoint('50%', 0).transform({ x: 35, y: 25, scaleX: 1.5, scaleY: 0.01 });
+            eyelid1.drawImage(eyelidimg);
+            eyelid2 = new CanvasGraphics(24, 14);
+            eyelid2.transformPoint(0, 0).transform({ x: 53, y: 26, scaleX: 1, scaleY: 0.01 });
+            eyelid2.drawImage(eyelidimg);
+            canvas.add(alienkitty);
+            canvas.add(eyelid1);
+            canvas.add(eyelid2);
+            blink();
+        }
+
+        function blink() {
+            self.delayedCall(Utils.headsTails(blink1, blink2), Utils.random(0, 10000));
+        }
+
+        function blink1() {
+            TweenManager.tween(eyelid1, { scaleY: 1.5 }, 120, 'easeOutCubic', () => {
+                TweenManager.tween(eyelid1, { scaleY: 0.01 }, 180, 'easeOutCubic');
+            });
+            TweenManager.tween(eyelid2, { scaleX: 1.3, scaleY: 1.3 }, 120, 'easeOutCubic', () => {
+                TweenManager.tween(eyelid2, { scaleX: 1, scaleY: 0.01 }, 180, 'easeOutCubic', () => {
+                    blink();
+                });
+            });
+        }
+
+        function blink2() {
+            TweenManager.tween(eyelid1, { scaleY: 1.5 }, 120, 'easeOutCubic', () => {
+                TweenManager.tween(eyelid1, { scaleY: 0.01 }, 180, 'easeOutCubic');
+            });
+            TweenManager.tween(eyelid2, { scaleX: 1.3, scaleY: 1.3 }, 180, 'easeOutCubic', () => {
+                TweenManager.tween(eyelid2, { scaleX: 1, scaleY: 0.01 }, 240, 'easeOutCubic', () => {
+                    blink();
+                });
+            });
+        }
+
+        this.ready = initImages;
+    }
+}
+
+class AlienKittyScene extends Component {
+
+    constructor() {
+        super();
+        const self = this;
+        this.object3D = new THREE.Object3D();
+        let alienkitty, shader, mesh;
+
+        World.scene.add(this.object3D);
+
+        initCanvasTexture();
+        initMesh();
+
+        function initCanvasTexture() {
+            alienkitty = self.initClass(AlienKittyTexture);
+            alienkitty.ready().then(() => {
+                self.startRender(loop);
+                self.object3D.visible = true;
+                shader.uniforms.iAlpha.value = 0;
+                TweenManager.tween(shader.uniforms.iAlpha, { value: 1 }, 1000, 'easeOutSine');
+            });
+        }
+
+        function initMesh() {
+            self.object3D.visible = false;
+            shader = self.initClass(Shader, vertAlienKitty, fragAlienKitty, {
+                iGlobalTime: World.time,
+                iResolution: World.resolution,
+                iChannel0: { value: alienkitty.texture },
+                iAlpha: { value: 0 },
+                transparent: true,
+                depthWrite: false,
+                depthTest: false
+            });
+            mesh = new THREE.Mesh(new THREE.PlaneBufferGeometry(1, 1), shader.material);
+            mesh.scale.set(90.5, 86.5, 1);
+            self.object3D.add(mesh);
+        }
+
+        function loop() {
+            if (!self.object3D.visible) return;
+            alienkitty.canvas.render();
+            alienkitty.texture.needsUpdate = true;
+        }
+    }
+}
 
 class DissolveScene extends Component {
 
     constructor() {
         super();
         const self = this;
-        const ratio = 1920 / 1080;
         this.object3D = new THREE.Object3D();
+        const ratio = 1920 / 1080;
         let texture1, texture2, texture1img, texture2img, shader, mesh,
             alpha = 0;
 
@@ -163,6 +283,7 @@ class Main {
             World.instance();
 
             Stage.initClass(DissolveScene);
+            Stage.initClass(AlienKittyScene);
         }
     }
 }

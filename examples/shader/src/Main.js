@@ -20,7 +20,7 @@ Config.ASSETS = [
 class AlienKittyTexture extends Component {
 
     constructor() {
-        super('AlienKittyTexture');
+        super();
         const self = this;
         let canvas, texture, alienkittyimg, eyelidimg, alienkitty, eyelid1, eyelid2;
 

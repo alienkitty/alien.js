@@ -21,6 +21,8 @@ Config.ASSETS = [
     'assets/images/alienkitty_eyelid.svg'
 ];
 
+Images.CORS = 'Anonymous';
+
 class AlienKittyTexture extends Component {
 
     constructor() {
@@ -125,7 +127,8 @@ class AlienKittyScene extends Component {
                 depthTest: false
             });
             mesh = new THREE.Mesh(new THREE.PlaneBufferGeometry(1, 1), shader.material);
-            mesh.scale.set(90.5, 86.5, 1);
+            mesh.scale.set(90, 86, 1);
+            if (World.dpr === 1) mesh.scale.set(90.5, 86.5, 1);
             self.object3D.add(mesh);
         }
 

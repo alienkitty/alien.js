@@ -36,5 +36,6 @@ export { Interaction3D } from './three/Interaction3D';
 export { Raycaster } from './three/Raycaster';
 export { ScreenProjection } from './three/ScreenProjection';
 export { Shader } from './three/Shader';
+export { Effects } from './three/Effects';
 
 import './polyfills.js';

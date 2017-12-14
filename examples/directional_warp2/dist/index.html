@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<!--
+     _  /._  _ 
+    /_|///_'/ /
+-->
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge, chrome=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+    <title>Alien.js Example Project</title>
+
+    <link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+<script>
+    (function() {
+        // IE11 support of Promises/A+ implementation with exceptionally good performance
+        if (typeof Promise === 'undefined') {
+            var p = document.createElement('script');
+            p.src = 'https://cdnjs.cloudflare.com/ajax/libs/bluebird/3.5.1/bluebird.min.js';
+            p.async = false;
+            document.body.appendChild(p);
+        }
+
+        window.Alien = {
+            Project: 'directional_warp2',
+            Build: '1513291147278',
+            Stage: document.body
+        };
+        var s = document.createElement('script');
+        s.src = 'assets/js/' + window.Alien.Project + '.js?v=' + window.Alien.Build;
+        s.async = false;
+        document.body.appendChild(s);
+    })();
+</script>
+</body>

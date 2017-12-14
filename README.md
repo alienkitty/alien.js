@@ -36,6 +36,7 @@ glslify [shader](https://rawgit.com/pschroen/alien.js/master/examples/shader/dis
 [noise warp](https://rawgit.com/pschroen/alien.js/master/examples/noise_warp/dist/)  
 [directional warp](https://rawgit.com/pschroen/alien.js/master/examples/directional_warp/dist/)  
 [directional warp 2](https://rawgit.com/pschroen/alien.js/master/examples/directional_warp2/dist/) (alienkitty ripple)  
+[ripple](https://rawgit.com/pschroen/alien.js/master/examples/ripple/dist/)  
 [glitch displace](https://rawgit.com/pschroen/alien.js/master/examples/glitch_displace/dist/)
 
 ### Example `Interface` design pattern

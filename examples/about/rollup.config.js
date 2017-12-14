@@ -33,7 +33,7 @@ export default {
     },
     plugins: [
         singletons(),
-        glslify(),
+        glslify({ basedir: 'src/shaders' }),
         eslint(),
         babel(),
         uglify({

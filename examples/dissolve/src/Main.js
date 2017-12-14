@@ -8,10 +8,10 @@
 
 import { Events, Stage, Component, Canvas, CanvasGraphics, Device, Mouse, Interaction, Utils, AssetLoader, Images, TweenManager, Shader } from '../alien.js/src/Alien';
 
-import vertAlienKitty from './shaders/AlienKitty.vs';
-import fragAlienKitty from './shaders/AlienKitty.fs';
-import vertDissolve from './shaders/Dissolve.vs';
-import fragDissolve from './shaders/Dissolve.fs';
+import vertAlienKitty from './shaders/alienkitty.vert';
+import fragAlienKitty from './shaders/alienkitty.frag';
+import vertDissolve from './shaders/dissolve.vert';
+import fragDissolve from './shaders/dissolve.frag';
 
 Config.ASSETS = [
     'assets/js/lib/three.min.js',
@@ -107,21 +107,23 @@ class AlienKittyScene extends Component {
 
         function initCanvasTexture() {
             alienkitty = self.initClass(AlienKittyTexture);
-            alienkitty.ready().then(() => {
-                self.startRender(loop);
-                self.object3D.visible = true;
-                shader.uniforms.iAlpha.value = 0;
-                TweenManager.tween(shader.uniforms.iAlpha, { value: 1 }, 1000, 'easeOutSine');
-            });
+            alienkitty.ready().then(finishSetup);
+        }
+
+        function finishSetup() {
+            self.startRender(loop);
+            self.object3D.visible = true;
+            shader.uniforms.opacity.value = 0;
+            TweenManager.tween(shader.uniforms.opacity, { value: 1 }, 1000, 'easeOutSine');
         }
 
         function initMesh() {
             self.object3D.visible = false;
             shader = self.initClass(Shader, vertAlienKitty, fragAlienKitty, {
-                iGlobalTime: World.time,
-                iResolution: World.resolution,
-                iChannel0: { value: alienkitty.texture },
-                iAlpha: { value: 0 },
+                time: World.time,
+                resolution: World.resolution,
+                texture: { value: alienkitty.texture },
+                opacity: { value: 0 },
                 transparent: true,
                 depthWrite: false,
                 depthTest: false
@@ -148,7 +150,7 @@ class DissolveScene extends Component {
         this.object3D = new THREE.Object3D();
         const ratio = 1920 / 1080;
         let texture1, texture2, texture1img, texture2img, shader, mesh,
-            alpha = 0;
+            opacity = 0;
 
         World.scene.add(this.object3D);
 
@@ -165,23 +167,24 @@ class DissolveScene extends Component {
         }
 
         function finishSetup() {
+            self.startRender(loop);
             texture1.image = texture1img;
             texture1.needsUpdate = true;
             texture2.image = texture2img;
             texture2.needsUpdate = true;
             self.object3D.visible = true;
-            shader.uniforms.iAlpha.value = 0;
-            TweenManager.tween(shader.uniforms.iAlpha, { value: 1 }, 7000, 'easeOutSine', () => self.startRender(loop));
+            shader.uniforms.opacity.value = 0;
+            TweenManager.tween(shader.uniforms.opacity, { value: 1 }, 7000, 'easeOutSine');
         }
 
         function initMesh() {
             self.object3D.visible = false;
             shader = self.initClass(Shader, vertDissolve, fragDissolve, {
-                iGlobalTime: World.time,
-                iResolution: World.resolution,
-                iChannel0: { value: texture1 },
-                iChannel1: { value: texture2 },
-                iAlpha: { value: alpha },
+                time: World.time,
+                resolution: World.resolution,
+                texture1: { value: texture1 },
+                texture2: { value: texture2 },
+                opacity: { value: opacity },
                 depthWrite: false,
                 depthTest: false
             });
@@ -198,11 +201,11 @@ class DissolveScene extends Component {
         }
 
         function down() {
-            alpha = 0;
+            opacity = 0;
         }
 
         function up() {
-            alpha = 1;
+            opacity = 1;
         }
 
         function resize() {
@@ -212,7 +215,7 @@ class DissolveScene extends Component {
 
         function loop() {
             if (!self.object3D.visible) return;
-            shader.uniforms.iAlpha.value += (alpha - shader.uniforms.iAlpha.value) * 0.3;
+            shader.uniforms.opacity.value += (opacity - shader.uniforms.opacity.value) * 0.3;
         }
     }
 }

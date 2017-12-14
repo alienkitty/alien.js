@@ -2,9 +2,9 @@
 
 #extension GL_OES_standard_derivatives : enable
 
-uniform float iGlobalTime;
-uniform vec2 iResolution;
-uniform sampler2D iChannel0;
+uniform float time;
+uniform vec2 resolution;
+uniform sampler2D texture;
 
 varying vec2 vUv;
 varying vec3 vNorm;
@@ -17,7 +17,7 @@ vec3 sample(vec2 uv);
 #pragma glslify: checker = require('glsl-checker')
 
 vec3 sample(vec2 uv) {
-    return texture2D(iChannel0, uv).rgb;
+    return texture2D(texture, uv).rgb;
 }
 
 void main() {

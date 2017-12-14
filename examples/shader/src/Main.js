@@ -101,18 +101,20 @@ class Scene extends Component {
 
         function initCanvasTexture() {
             alienkitty = self.initClass(AlienKittyTexture);
-            alienkitty.ready().then(() => {
-                self.startRender(loop);
-                self.object3D.visible = true;
-            });
+            alienkitty.ready().then(finishSetup);
+        }
+
+        function finishSetup() {
+            self.startRender(loop);
+            self.object3D.visible = true;
         }
 
         function initMesh() {
             self.object3D.visible = false;
             shader = self.initClass(Shader, vert, frag, {
-                iGlobalTime: World.time,
-                iResolution: World.resolution,
-                iChannel0: { value: alienkitty.texture }
+                time: World.time,
+                resolution: World.resolution,
+                texture: { value: alienkitty.texture }
             });
             mesh = new THREE.Mesh(new THREE.BoxGeometry(1, 1, 1), shader.material);
             mesh.rotation.y = -Math.PI;

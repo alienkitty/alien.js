@@ -8,8 +8,8 @@
 
 import { Events, Stage, Component, Device, Mouse, Interaction, AssetLoader, TweenManager, Shader } from '../alien.js/src/Alien';
 
-import vertColourBeam from './shaders/ColourBeam.vs';
-import fragColourBeam from './shaders/ColourBeam.fs';
+import vertColourBeam from './shaders/colour_beam.vert';
+import fragColourBeam from './shaders/colour_beam.frag';
 
 Config.ASSETS = [
     'assets/js/lib/three.min.js'
@@ -32,12 +32,12 @@ class ColourBeamScene extends Component {
         function initMesh() {
             self.object3D.visible = false;
             shader = self.initClass(Shader, vertColourBeam, fragColourBeam, {
-                iGlobalTime: World.time,
-                iResolution: World.resolution,
-                iMouse: { value: Mouse.inverseNormal },
-                iRadius: { value: 0 },
-                iBeam: { value: 0 },
-                iBeamWidth: { value: beamWidth },
+                time: World.time,
+                resolution: World.resolution,
+                mouse: { value: Mouse.inverseNormal },
+                radius: { value: 0 },
+                beam: { value: 0 },
+                beamWidth: { value: beamWidth },
                 depthWrite: false,
                 depthTest: false
             });
@@ -67,14 +67,14 @@ class ColourBeamScene extends Component {
 
         function loop() {
             if (!self.object3D.visible) return;
-            shader.uniforms.iBeamWidth.value += (beamWidth - shader.uniforms.iBeamWidth.value) * 0.3;
+            shader.uniforms.beamWidth.value += (beamWidth - shader.uniforms.beamWidth.value) * 0.3;
         }
 
         this.animateIn = () => {
             this.startRender(loop);
             this.object3D.visible = true;
-            shader.uniforms.iBeam.value = 0;
-            TweenManager.tween(shader.uniforms.iBeam, { value: 1 }, 1000, 'easeOutSine');
+            shader.uniforms.beam.value = 0;
+            TweenManager.tween(shader.uniforms.beam, { value: 1 }, 1000, 'easeOutSine');
         };
     }
 }

@@ -34,6 +34,7 @@ glslify [shader](https://rawgit.com/pschroen/alien.js/master/examples/shader/dis
 [chromatic aberration](https://rawgit.com/pschroen/alien.js/master/examples/chromatic_aberration/dist/) (simple)  
 [chromatic aberration 2](https://rawgit.com/pschroen/alien.js/master/examples/chromatic_aberration2/dist/) (barrel distortion)  
 [noise warp](https://rawgit.com/pschroen/alien.js/master/examples/noise_warp/dist/)  
+[directional warp](https://rawgit.com/pschroen/alien.js/master/examples/directional_warp/dist/)  
 [glitch displace](https://rawgit.com/pschroen/alien.js/master/examples/glitch_displace/dist/)
 
 ### Example `Interface` design pattern

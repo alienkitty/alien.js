@@ -31,7 +31,8 @@ A lightweight web framework for the future.
 glslify [shader](https://rawgit.com/pschroen/alien.js/master/examples/shader/dist/)  
 [colour beam](https://rawgit.com/pschroen/alien.js/master/examples/colour_beam/dist/)  
 [dissolve](https://rawgit.com/pschroen/alien.js/master/examples/dissolve/dist/) transition  
-[chromatic aberration](https://rawgit.com/pschroen/alien.js/master/examples/chromatic_aberration/dist/) transition
+[chromatic aberration](https://rawgit.com/pschroen/alien.js/master/examples/chromatic_aberration/dist/) (simple)  
+[chromatic aberration 2](https://rawgit.com/pschroen/alien.js/master/examples/chromatic_aberration2/dist/) (barrel distortion)
 
 ### Example `Interface` design pattern
 

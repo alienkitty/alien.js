@@ -37,7 +37,6 @@ class Interaction {
             Stage.bind('touchmove', touchMove);
             Stage.bind('touchend', touchEnd);
             Stage.bind('touchcancel', touchEnd);
-            Stage.bind('contextmenu', touchEnd);
 
             Interaction.instance = this;
         }

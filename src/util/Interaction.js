@@ -62,6 +62,7 @@ class Interaction {
         }
 
         function down(e) {
+            e.preventDefault();
             self.isTouching = true;
             self.x = e.x;
             self.y = e.y;

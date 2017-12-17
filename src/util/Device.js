@@ -8,7 +8,6 @@ class Device {
 
     constructor() {
         this.agent = navigator.userAgent.toLowerCase();
-        this.pixelRatio = window.devicePixelRatio;
         this.prefix = (() => {
             const styles = window.getComputedStyle(document.documentElement, ''),
                 pre = (Array.prototype.slice.call(styles).join('').match(/-(webkit|moz|ms)-/) || styles.OLink === '' && ['', 'o'])[1];
@@ -38,8 +37,18 @@ class Device {
             }
             return pre;
         })();
-        this.mobile = ('ontouchstart' in window || 'onpointerdown' in window) && this.detect(['ios', 'iphone', 'ipad', 'android', 'blackberry']) ? {} : false;
-        this.tablet = window.innerWidth > window.innerHeight ? document.body.clientWidth > 800 : document.body.clientHeight > 800;
+        this.pixelRatio = window.devicePixelRatio;
+        this.os = (() => {
+            if (this.detect(['iphone', 'ipad'])) return 'ios';
+            if (this.detect(['android'])) return 'android';
+            if (this.detect(['blackberry'])) return 'blackberry';
+            if (this.detect(['mac os'])) return 'mac';
+            if (this.detect(['windows'])) return 'windows';
+            if (this.detect(['linux'])) return 'linux';
+            return 'unknown';
+        })();
+        this.mobile = ('ontouchstart' in window) && this.detect(['iphone', 'ipad', 'android', 'blackberry']);
+        this.tablet = Math.max(screen.width, screen.height) > 800;
         this.phone = !this.tablet;
     }
 

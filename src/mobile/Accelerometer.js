@@ -21,7 +21,7 @@ class Accelerometer {
         this.rotationRate.alpha = 0;
         this.rotationRate.beta = 0;
         this.rotationRate.gamma = 0;
-        this.toRadians = Device.os === 'iOS' ? Math.PI / 180 : 1;
+        this.toRadians = Device.os === 'ios' ? Math.PI / 180 : 1;
 
         function updateAccel(e) {
             switch (window.orientation) {

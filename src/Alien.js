@@ -4,6 +4,8 @@
  * @author Patrick Schroen / https://github.com/pschroen
  */
 
+import './polyfills.js';
+
 export { Events } from './util/Events';
 export { Render } from './util/Render';
 export { Stage } from './view/Stage';
@@ -37,5 +39,3 @@ export { Raycaster } from './three/Raycaster';
 export { ScreenProjection } from './three/ScreenProjection';
 export { Shader } from './three/Shader';
 export { Effects } from './three/Effects';
-
-import './polyfills.js';

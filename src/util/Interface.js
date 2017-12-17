@@ -431,8 +431,10 @@ class Interface {
 
         const touchEvent = e => {
             const touch = this.convertTouchEvent(e);
-            e.x = touch.x;
-            e.y = touch.y;
+            if (!(e instanceof MouseEvent)) {
+                e.x = touch.x;
+                e.y = touch.y;
+            }
             events.forEach(event => {
                 if (event.target === e.currentTarget) event.callback(e);
             });

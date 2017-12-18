@@ -16,12 +16,234 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
     'use strict';
 
     /**
+     * @author Patrick Schroen / https://github.com/pschroen
+     */
+
+    if (typeof Promise !== 'undefined') Promise.create = function () {
+        var resolve = void 0,
+            reject = void 0,
+            promise = new Promise(function (res, rej) {
+            resolve = res;
+            reject = rej;
+        });
+        promise.resolve = resolve;
+        promise.reject = reject;
+        return promise;
+    };
+
+    Math.sign = function (x) {
+        x = +x;
+        if (x === 0 || isNaN(x)) return Number(x);
+        return x > 0 ? 1 : -1;
+    };
+
+    Math.degrees = function (radians) {
+        return radians * (180 / Math.PI);
+    };
+
+    Math.radians = function (degrees) {
+        return degrees * (Math.PI / 180);
+    };
+
+    Math.clamp = function (value) {
+        var min = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 0;
+        var max = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : 1;
+
+        return Math.min(Math.max(value, Math.min(min, max)), Math.max(min, max));
+    };
+
+    Math.range = function (value) {
+        var oldMin = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : -1;
+        var oldMax = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : 1;
+        var newMin = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : 0;
+        var newMax = arguments.length > 4 && arguments[4] !== undefined ? arguments[4] : 1;
+        var isClamp = arguments[5];
+
+        var newValue = (value - oldMin) * (newMax - newMin) / (oldMax - oldMin) + newMin;
+        if (isClamp) return Math.clamp(newValue, Math.min(newMin, newMax), Math.max(newMin, newMax));
+        return newValue;
+    };
+
+    Math.mix = function (a, b, alpha) {
+        return a * (1 - alpha) + b * alpha;
+    };
+
+    Math.step = function (edge, value) {
+        return value < edge ? 0 : 1;
+    };
+
+    Math.smoothStep = function (min, max, value) {
+        var x = Math.max(0, Math.min(1, (value - min) / (max - min)));
+        return x * x * (3 - 2 * x);
+    };
+
+    Math.fract = function (value) {
+        return value - Math.floor(value);
+    };
+
+    Math.mod = function (value, n) {
+        return (value % n + n) % n;
+    };
+
+    Array.prototype.remove = function (element) {
+        var index = this.indexOf(element);
+        if (~index) return this.splice(index, 1);
+    };
+
+    Array.prototype.last = function () {
+        return this[this.length - 1];
+    };
+
+    String.prototype.includes = function (str) {
+        if (!Array.isArray(str)) return ~this.indexOf(str);
+        for (var i = str.length - 1; i >= 0; i--) {
+            if (~this.indexOf(str[i])) return true;
+        }return false;
+    };
+
+    String.prototype.clip = function (num, end) {
+        return this.length > num ? this.slice(0, num) + end : this;
+    };
+
+    String.prototype.capitalize = function () {
+        return this.charAt(0).toUpperCase() + this.slice(1);
+    };
+
+    String.prototype.replaceAll = function (find, replace) {
+        return this.split(find).join(replace);
+    };
+
+    if (!window.fetch) window.fetch = function (url) {
+        var options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
+
+        var promise = Promise.create(),
+            request = new XMLHttpRequest();
+        request.open(options.method || 'GET', url);
+        for (var i in options.headers) {
+            request.setRequestHeader(i, options.headers[i]);
+        }request.onload = function () {
+            return promise.resolve(response());
+        };
+        request.onerror = promise.reject;
+        request.send(options.body);
+
+        function response() {
+            var _keys = [],
+                all = [],
+                headers = {},
+                header = void 0;
+            request.getAllResponseHeaders().replace(/^(.*?):\s*([\s\S]*?)$/gm, function (m, key, value) {
+                _keys.push(key = key.toLowerCase());
+                all.push([key, value]);
+                header = headers[key];
+                headers[key] = header ? header + ',' + value : value;
+            });
+            return {
+                ok: (request.status / 200 | 0) == 1,
+                status: request.status,
+                statusText: request.statusText,
+                url: request.responseURL,
+                clone: response,
+                text: function text() {
+                    return Promise.resolve(request.responseText);
+                },
+                json: function json() {
+                    return Promise.resolve(request.responseText).then(JSON.parse);
+                },
+                xml: function xml() {
+                    return Promise.resolve(request.responseXML);
+                },
+                blob: function blob() {
+                    return Promise.resolve(new Blob([request.response]));
+                },
+                arrayBuffer: function arrayBuffer() {
+                    return Promise.resolve(new ArrayBuffer([request.response]));
+                },
+
+                headers: {
+                    keys: function keys() {
+                        return _keys;
+                    },
+                    entries: function entries() {
+                        return all;
+                    },
+                    get: function get(n) {
+                        return headers[n.toLowerCase()];
+                    },
+                    has: function has(n) {
+                        return n.toLowerCase() in headers;
+                    }
+                }
+            };
+        }
+        return promise;
+    };
+
+    window.get = function (url) {
+        var options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
+
+        var promise = Promise.create();
+        options.method = 'GET';
+        window.fetch(url, options).then(handleResponse).catch(promise.reject);
+
+        function handleResponse(e) {
+            if (!e.ok) return promise.reject(e);
+            e.text().then(function (text) {
+                if (text.charAt(0).includes(['[', '{'])) {
+                    try {
+                        promise.resolve(JSON.parse(text));
+                    } catch (err) {
+                        promise.resolve(text);
+                    }
+                } else {
+                    promise.resolve(text);
+                }
+            });
+        }
+        return promise;
+    };
+
+    window.post = function (url, body) {
+        var options = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : {};
+
+        var promise = Promise.create();
+        options.method = 'POST';
+        options.body = JSON.stringify(body);
+        window.fetch(url, options).then(handleResponse).catch(promise.reject);
+
+        function handleResponse(e) {
+            if (!e.ok) return promise.reject(e);
+            e.text().then(function (text) {
+                if (text.charAt(0).includes(['[', '{'])) {
+                    try {
+                        promise.resolve(JSON.parse(text));
+                    } catch (err) {
+                        promise.resolve(text);
+                    }
+                } else {
+                    promise.resolve(text);
+                }
+            });
+        }
+        return promise;
+    };
+
+    window.getURL = function (url) {
+        var target = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : '_blank';
+
+        window.open(url, target);
+    };
+
+    if (!window.Global) window.Global = {};
+    if (!window.Config) window.Config = {};
+
+    /**
      * Alien utilities.
      *
      * @author Patrick Schroen / https://github.com/pschroen
      */
 
-    var Utils = new ( // Singleton reassignment pattern
+    var Utils = new ( // Singleton pattern (IICE)
 
     function () {
         function Utils() {
@@ -149,7 +371,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
         }]);
 
         return Utils;
-    }())(); // Singleton reassignment pattern
+    }())(); // Singleton pattern (IICE)
 
     /**
      * Event helper class.
@@ -188,7 +410,8 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
             var object = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
 
             if (!events[event]) return;
-            events[event].forEach(function (callback) {
+            var clone = Utils.cloneArray(events[event]);
+            clone.forEach(function (callback) {
                 return callback(object);
             });
         };
@@ -223,7 +446,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
         };
     }();
 
-    var Render = new // Singleton reassignment pattern
+    var Render = new // Singleton pattern (IICE)
 
     function Render() {
         var _this2 = this;
@@ -281,7 +504,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
             _this2.paused = false;
             requestAnimationFrame(step);
         };
-    }(); // Singleton reassignment pattern
+    }(); // Singleton pattern (IICE)
 
     /**
      * Browser detection and vendor prefixes.
@@ -289,7 +512,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
      * @author Patrick Schroen / https://github.com/pschroen
      */
 
-    var Device = new ( // Singleton reassignment pattern
+    var Device = new ( // Singleton pattern (IICE)
 
     function () {
         function Device() {
@@ -298,7 +521,6 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
             _classCallCheck(this, Device);
 
             this.agent = navigator.userAgent.toLowerCase();
-            this.pixelRatio = window.devicePixelRatio;
             this.prefix = function () {
                 var styles = window.getComputedStyle(document.documentElement, ''),
                     pre = (Array.prototype.slice.call(styles).join('').match(/-(webkit|moz|ms)-/) || styles.OLink === '' && ['', 'o'])[1];
@@ -328,8 +550,18 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
                 }
                 return pre;
             }();
-            this.mobile = ('ontouchstart' in window || 'onpointerdown' in window) && this.detect(['ios', 'iphone', 'ipad', 'android', 'blackberry']) ? {} : false;
-            this.tablet = window.innerWidth > window.innerHeight ? document.body.clientWidth > 800 : document.body.clientHeight > 800;
+            this.pixelRatio = window.devicePixelRatio;
+            this.os = function () {
+                if (_this3.detect(['iphone', 'ipad'])) return 'ios';
+                if (_this3.detect(['android'])) return 'android';
+                if (_this3.detect(['blackberry'])) return 'blackberry';
+                if (_this3.detect(['mac os'])) return 'mac';
+                if (_this3.detect(['windows'])) return 'windows';
+                if (_this3.detect(['linux'])) return 'linux';
+                return 'unknown';
+            }();
+            this.mobile = 'ontouchstart' in window && this.detect(['iphone', 'ipad', 'android', 'blackberry']);
+            this.tablet = Math.max(screen.width, screen.height) > 800;
             this.phone = !this.tablet;
         }
 
@@ -354,7 +586,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
         }]);
 
         return Device;
-    }())(); // Singleton reassignment pattern
+    }())(); // Singleton pattern (IICE)
 
     /**
      * Interpolation helper class.
@@ -362,7 +594,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
      * @author Patrick Schroen / https://github.com/pschroen
      */
 
-    var Interpolation = new // Singleton reassignment pattern
+    var Interpolation = new // Singleton pattern (IICE)
 
     function Interpolation() {
         var _this4 = this;
@@ -643,7 +875,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
                 return this.Bounce.Out(k * 2 - 1) * 0.5 + 0.5;
             }
         };
-    }(); // Singleton reassignment pattern
+    }(); // Singleton pattern (IICE)
 
     /**
      * Mathematical.
@@ -739,7 +971,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
      * @author Patrick Schroen / https://github.com/pschroen
      */
 
-    var TweenManager = new ( // Singleton reassignment pattern
+    var TweenManager = new ( // Singleton pattern (IICE)
 
     function () {
         function TweenManager() {
@@ -877,7 +1109,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
         }]);
 
         return TweenManager;
-    }())(); // Singleton reassignment pattern
+    }())(); // Singleton pattern (IICE)
 
     /**
      * CSS3 transition animation.
@@ -1449,8 +1681,10 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
                 var touchEvent = function touchEvent(e) {
                     var touch = _this9.convertTouchEvent(e);
-                    e.x = touch.x;
-                    e.y = touch.y;
+                    if (!(e instanceof MouseEvent)) {
+                        e.x = touch.x;
+                        e.y = touch.y;
+                    }
                     events.forEach(function (event) {
                         if (event.target === e.currentTarget) event.callback(e);
                     });
@@ -1569,6 +1803,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
                     array = [],
                     split = this.text().split(by);
                 this.empty();
+                if (by === ' ') by = '&nbsp;';
                 for (var i = 0; i < split.length; i++) {
                     if (split[i] === ' ') split[i] = '&nbsp;';
                     array.push(this.create('.t', 'span').html(split[i]).css(style));
@@ -1587,7 +1822,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
      * @author Patrick Schroen / https://github.com/pschroen
      */
 
-    var Stage = new ( // Singleton reassignment pattern
+    var Stage = new ( // Singleton pattern (IICE)
 
     function (_Interface) {
         _inherits(Stage, _Interface);
@@ -1644,7 +1879,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
         }
 
         return Stage;
-    }(Interface))(); // Singleton reassignment pattern
+    }(Interface))(); // Singleton pattern (IICE)
 
     /**
      * Alien component.
@@ -2409,7 +2644,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
      * @author Patrick Schroen / https://github.com/pschroen
      */
 
-    var CanvasFont = new // Singleton reassignment pattern
+    var CanvasFont = new // Singleton pattern (IICE)
 
     function CanvasFont() {
         _classCallCheck(this, CanvasFont);
@@ -2493,7 +2728,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
                 return text;
             }
         };
-    }(); // Singleton reassignment pattern
+    }(); // Singleton pattern (IICE)
 
     /**
      * 2D vector.
@@ -2757,7 +2992,6 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
             Stage.bind('touchmove', touchMove);
             Stage.bind('touchend', touchEnd);
             Stage.bind('touchcancel', touchEnd);
-            Stage.bind('contextmenu', touchEnd);
 
             Interaction.instance = this;
         }
@@ -2784,6 +3018,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
         }
 
         function down(e) {
+            e.preventDefault();
             self.isTouching = true;
             self.x = e.x;
             self.y = e.y;
@@ -2846,7 +3081,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
      * @author Patrick Schroen / https://github.com/pschroen
      */
 
-    var Mouse = new // Singleton reassignment pattern
+    var Mouse = new // Singleton pattern (IICE)
 
     function Mouse() {
         var _this14 = this;
@@ -2889,7 +3124,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
                 y: Stage.height / 2
             });
         };
-    }(); // Singleton reassignment pattern
+    }(); // Singleton pattern (IICE)
 
     /**
      * Accelerometer helper class.
@@ -2897,7 +3132,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
      * @author Patrick Schroen / https://github.com/pschroen
      */
 
-    var Accelerometer = new // Singleton reassignment pattern
+    var Accelerometer = new // Singleton pattern (IICE)
 
     function Accelerometer() {
         _classCallCheck(this, Accelerometer);
@@ -2914,7 +3149,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
         this.rotationRate.alpha = 0;
         this.rotationRate.beta = 0;
         this.rotationRate.gamma = 0;
-        this.toRadians = Device.os === 'iOS' ? Math.PI / 180 : 1;
+        this.toRadians = Device.os === 'ios' ? Math.PI / 180 : 1;
 
         function updateAccel(e) {
             switch (window.orientation) {
@@ -3013,7 +3248,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
             window.addEventListener('devicemotion', updateAccel, true);
             window.addEventListener('deviceorientation', updateOrientation, true);
         };
-    }(); // Singleton reassignment pattern
+    }(); // Singleton pattern (IICE)
 
     /**
      * Image helper class with promise method.
@@ -3021,7 +3256,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
      * @author Patrick Schroen / https://github.com/pschroen
      */
 
-    var Images = new ( // Singleton reassignment pattern
+    var Images = new ( // Singleton pattern (IICE)
 
     function () {
         function Images() {
@@ -3052,7 +3287,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
         }]);
 
         return Images;
-    }())(); // Singleton reassignment pattern
+    }())(); // Singleton pattern (IICE)
 
     /**
      * Asset loader with promise method.
@@ -3091,14 +3326,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
                 }
                 if (ext.includes(['mp3', 'm4a', 'ogg', 'wav', 'aif'])) {
                     if (!window.AudioContext || !window.WebAudio) return assetLoaded();
-                    window.fetch(asset).then(function (response) {
-                        if (!response.ok) return assetLoaded();
-                        response.arrayBuffer().then(function (data) {
-                            return window.WebAudio.createSound(key, data, assetLoaded);
-                        });
-                    }).catch(function () {
-                        assetLoaded();
-                    });
+                    window.WebAudio.createSound(key, asset, assetLoaded);
                     return;
                 }
                 window.get(asset).then(function (data) {
@@ -3497,7 +3725,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
      * @author Patrick Schroen / https://github.com/pschroen
      */
 
-    var Storage = new ( // Singleton reassignment pattern
+    var Storage = new ( // Singleton pattern (IICE)
 
     function () {
         function Storage() {
@@ -3525,7 +3753,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
         }]);
 
         return Storage;
-    }())(); // Singleton reassignment pattern
+    }())(); // Singleton pattern (IICE)
 
     /**
      * Web audio engine.
@@ -3535,13 +3763,14 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
     if (!window.AudioContext) window.AudioContext = window.webkitAudioContext || window.mozAudioContext || window.oAudioContext;
 
-    var WebAudio = new // Singleton reassignment pattern
+    var WebAudio = new // Singleton pattern (IICE)
 
     function WebAudio() {
         var _this17 = this;
 
         _classCallCheck(this, WebAudio);
 
+        var self = this;
         var sounds = {};
         var context = void 0;
 
@@ -3550,18 +3779,53 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
             if (!context) return;
             _this17.globalGain = context.createGain();
             _this17.globalGain.connect(context.destination);
+            _this17.gain = {
+                set value(value) {
+                    self.globalGain.gain.setTargetAtTime(value, context.currentTime, 0.01);
+                },
+                get value() {
+                    return self.globalGain.gain.value;
+                }
+            };
         };
 
-        this.createSound = function (id, audioData, callback) {
-            var sound = {};
-            context.decodeAudioData(audioData, function (buffer) {
-                sound.buffer = buffer;
-                sound.audioGain = context.createGain();
-                sound.audioGain.connect(_this17.globalGain);
-                sound.complete = true;
-                if (callback) callback();
+        this.loadSound = function (id, callback) {
+            var promise = Promise.create();
+            if (callback) promise.then(callback);
+            callback = promise.resolve;
+            var sound = _this17.getSound(id);
+            window.fetch(sound.asset).then(function (response) {
+                if (!response.ok) return callback();
+                response.arrayBuffer().then(function (data) {
+                    context.decodeAudioData(data, function (buffer) {
+                        sound.buffer = buffer;
+                        sound.complete = true;
+                        callback();
+                    });
+                });
+            }).catch(function () {
+                callback();
             });
+            sound.ready = function () {
+                return promise;
+            };
+        };
+
+        this.createSound = function (id, asset, callback) {
+            var sound = {};
+            sound.asset = asset;
+            sound.audioGain = context.createGain();
+            sound.audioGain.connect(_this17.globalGain);
+            sound.gain = {
+                set value(value) {
+                    sound.audioGain.gain.setTargetAtTime(value, context.currentTime, 0.01);
+                },
+                get value() {
+                    return sound.audioGain.gain.value;
+                }
+            };
             sounds[id] = sound;
+            if (Device.os === 'ios') callback();else _this17.loadSound(id, callback);
         };
 
         this.getSound = function (id) {
@@ -3570,26 +3834,32 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
         this.trigger = function (id) {
             if (!context) return;
-            var sound = _this17.getSound(id),
-                source = context.createBufferSource();
-            source.buffer = sound.buffer;
-            source.connect(sound.audioGain);
-            source.loop = !!sound.loop;
-            source.start(0);
+            if (context.state === 'suspended') context.resume();
+            var sound = _this17.getSound(id);
+            if (!sound.ready) _this17.loadSound(id);
+            sound.ready().then(function () {
+                if (sound.complete) {
+                    var source = context.createBufferSource();
+                    source.buffer = sound.buffer;
+                    source.connect(sound.audioGain);
+                    source.loop = !!sound.loop;
+                    source.start(0);
+                }
+            });
         };
 
         this.mute = function () {
             if (!context) return;
-            TweenManager.tween(_this17.globalGain.gain, { value: 0 }, 300, 'easeOutSine');
+            TweenManager.tween(_this17.gain, { value: 0 }, 300, 'easeOutSine');
         };
 
         this.unmute = function () {
             if (!context) return;
-            TweenManager.tween(_this17.globalGain.gain, { value: 1 }, 500, 'easeOutSine');
+            TweenManager.tween(_this17.gain, { value: 1 }, 500, 'easeOutSine');
         };
 
         window.WebAudio = this;
-    }(); // Singleton reassignment pattern
+    }(); // Singleton pattern (IICE)
 
     /**
      * Linked list.
@@ -4028,7 +4298,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
     /* global THREE */
 
-    var Utils3D = new // Singleton reassignment pattern
+    var Utils3D = new // Singleton pattern (IICE)
 
     function Utils3D() {
         var _this20 = this;
@@ -4173,7 +4443,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
             };
             return texture;
         };
-    }(); // Singleton reassignment pattern
+    }(); // Singleton pattern (IICE)
 
     /**
      * Raycaster.
@@ -4464,77 +4734,6 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
     };
 
     /**
-     * Shader parser.
-     *
-     * @author Patrick Schroen / https://github.com/pschroen
-     */
-
-    var Shaders = new // Singleton reassignment pattern
-
-    function Shaders() {
-        _classCallCheck(this, Shaders);
-
-        var shaders = {};
-
-        function parseSingleShader(code) {
-            var attributes = code.split('#!ATTRIBUTES')[1].split('#!')[0],
-                uniforms = code.split('#!UNIFORMS')[1].split('#!')[0],
-                varyings = code.split('#!VARYINGS')[1].split('#!')[0];
-            while (~code.indexOf('#!SHADER')) {
-                code = code.slice(code.indexOf('#!SHADER'));
-                var split = code.split('#!SHADER')[1],
-                    br = split.indexOf('\n'),
-                    name = split.slice(0, br).split(': ')[1];
-                var glsl = split.slice(br);
-                if (~name.indexOf('.vs')) glsl = attributes + uniforms + varyings + glsl;else glsl = uniforms + varyings + glsl;
-                shaders[name] = glsl;
-                code = code.replace('#!SHADER', '$');
-            }
-        }
-
-        function parseCompiled(code) {
-            var split = code.split('{@}');
-            split.shift();
-            for (var i = 0; i < split.length; i += 2) {
-                var name = split[i],
-                    text = split[i + 1];
-                if (~text.indexOf('#!UNIFORMS')) parseSingleShader(text);else shaders[name] = text;
-            }
-        }
-
-        function parseRequirements() {
-            for (var key in shaders) {
-                var object = shaders[key];
-                if (typeof object === 'string' && ~object.indexOf('require')) shaders[key] = require(object);
-            }
-        }
-
-        function require(shader) {
-            while (~shader.indexOf('#require')) {
-                var split = shader.split('#require('),
-                    name = split[1].split(')')[0];
-                shader = shader.replace('#require(' + name + ')', shaders[name]);
-            }
-            return shader;
-        }
-
-        this.parse = function (code, path) {
-            if (!~code.indexOf('{@}')) {
-                shaders[path.split('/').last()] = code;
-            } else {
-                parseCompiled(code);
-                parseRequirements();
-            }
-        };
-
-        this.getShader = function (file) {
-            return shaders[file];
-        };
-
-        window.Shaders = this;
-    }(); // Singleton reassignment pattern
-
-    /**
      * Shader helper class.
      *
      * @author Patrick Schroen / https://github.com/pschroen
@@ -4546,10 +4745,6 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
         function Shader(vertexShader, fragmentShader, props) {
             _classCallCheck(this, Shader);
 
-            if (typeof fragmentShader !== 'string') {
-                props = fragmentShader;
-                fragmentShader = vertexShader;
-            }
             var self = this;
             this.uniforms = {};
             this.properties = {};
@@ -4565,8 +4760,8 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
             function initShaders() {
                 var params = {};
-                params.vertexShader = process(Shaders.getShader(vertexShader + '.vs') || vertexShader, 'vs');
-                params.fragmentShader = process(Shaders.getShader(fragmentShader + '.fs') || fragmentShader, 'fs');
+                params.vertexShader = process(vertexShader, 'vs');
+                params.fragmentShader = process(fragmentShader, 'fs');
                 params.uniforms = self.uniforms;
                 for (var key in self.properties) {
                     params[key] = self.properties[key];
@@ -4582,7 +4777,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
                 } else {
                     header = [~code.indexOf('dFdx') ? '#extension GL_OES_standard_derivatives : enable' : '', 'precision highp float;', 'precision highp int;', 'uniform mat4 modelViewMatrix;', 'uniform mat4 projectionMatrix;', 'uniform mat4 modelMatrix;', 'uniform mat4 viewMatrix;', 'uniform mat3 normalMatrix;', 'uniform vec3 cameraPosition;'].join('\n');
                 }
-                code = header + code;
+                code = header + '\n\n' + code;
                 var threeChunk = function threeChunk(a, b) {
                     return THREE.ShaderChunk[b] + '\n';
                 };
@@ -4635,226 +4830,63 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
     }();
 
     /**
+     * Post processing effects.
+     *
      * @author Patrick Schroen / https://github.com/pschroen
      */
 
-    if (typeof Promise !== 'undefined') Promise.create = function () {
-        var resolve = void 0,
-            reject = void 0,
-            promise = new Promise(function (res, rej) {
-            resolve = res;
-            reject = rej;
-        });
-        promise.resolve = resolve;
-        promise.reject = reject;
-        return promise;
-    };
+    /* global THREE */
 
-    Math.sign = function (x) {
-        x = +x;
-        if (x === 0 || isNaN(x)) return Number(x);
-        return x > 0 ? 1 : -1;
-    };
+    var Effects = function Effects(stage, params) {
+        var _this24 = this;
 
-    Math.degrees = function (radians) {
-        return radians * (180 / Math.PI);
-    };
+        _classCallCheck(this, Effects);
 
-    Math.radians = function (degrees) {
-        return degrees * (Math.PI / 180);
-    };
+        var self = this;
+        this.stage = stage;
+        this.renderer = params.renderer;
+        this.scene = params.scene;
+        this.camera = params.camera;
+        this.shader = params.shader;
+        this.dpr = params.dpr || 1;
+        var renderTarget = void 0,
+            camera = void 0,
+            scene = void 0,
+            mesh = void 0;
 
-    Math.clamp = function (value) {
-        var min = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 0;
-        var max = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : 1;
+        initEffects();
+        addListeners();
 
-        return Math.min(Math.max(value, Math.min(min, max)), Math.max(min, max));
-    };
+        function initEffects() {
+            renderTarget = Utils3D.createRT(self.stage.width * self.dpr, self.stage.height * self.dpr);
+            self.texture = renderTarget.texture;
+            self.texture.minFilter = THREE.LinearFilter;
+            camera = new THREE.OrthographicCamera(self.stage.width / -2, self.stage.width / 2, self.stage.height / 2, self.stage.height / -2, 1, 1000);
+            scene = new THREE.Scene();
+            mesh = new THREE.Mesh(new THREE.PlaneBufferGeometry(2, 2), self.shader.material);
+            scene.add(mesh);
+        }
 
-    Math.range = function (value) {
-        var oldMin = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : -1;
-        var oldMax = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : 1;
-        var newMin = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : 0;
-        var newMax = arguments.length > 4 && arguments[4] !== undefined ? arguments[4] : 1;
-        var isClamp = arguments[5];
+        function addListeners() {
+            Stage.events.add(Events.RESIZE, resize);
+        }
 
-        var newValue = (value - oldMin) * (newMax - newMin) / (oldMax - oldMin) + newMin;
-        if (isClamp) return Math.clamp(newValue, Math.min(newMin, newMax), Math.max(newMin, newMax));
-        return newValue;
-    };
+        function resize() {
+            renderTarget.dispose();
+            renderTarget = Utils3D.createRT(self.stage.width * self.dpr, self.stage.height * self.dpr);
+            camera.left = self.stage.width / -2;
+            camera.right = self.stage.width / 2;
+            camera.top = self.stage.height / 2;
+            camera.bottom = self.stage.height / -2;
+            camera.updateProjectionMatrix();
+        }
 
-    Math.mix = function (a, b, alpha) {
-        return a * (1 - alpha) + b * alpha;
-    };
-
-    Math.step = function (edge, value) {
-        return value < edge ? 0 : 1;
-    };
-
-    Math.smoothStep = function (min, max, value) {
-        var x = Math.max(0, Math.min(1, (value - min) / (max - min)));
-        return x * x * (3 - 2 * x);
-    };
-
-    Math.fract = function (value) {
-        return value - Math.floor(value);
-    };
-
-    Math.mod = function (value, n) {
-        return (value % n + n) % n;
-    };
-
-    Array.prototype.remove = function (element) {
-        var index = this.indexOf(element);
-        if (~index) return this.splice(index, 1);
-    };
-
-    Array.prototype.last = function () {
-        return this[this.length - 1];
-    };
-
-    String.prototype.includes = function (str) {
-        if (!Array.isArray(str)) return ~this.indexOf(str);
-        for (var i = str.length - 1; i >= 0; i--) {
-            if (~this.indexOf(str[i])) return true;
-        }return false;
-    };
-
-    String.prototype.clip = function (num, end) {
-        return this.length > num ? this.slice(0, num) + end : this;
-    };
-
-    String.prototype.capitalize = function () {
-        return this.charAt(0).toUpperCase() + this.slice(1);
-    };
-
-    String.prototype.replaceAll = function (find, replace) {
-        return this.split(find).join(replace);
-    };
-
-    if (!window.fetch) window.fetch = function (url) {
-        var options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
-
-        var promise = Promise.create(),
-            request = new XMLHttpRequest();
-        request.open(options.method || 'GET', url);
-        for (var i in options.headers) {
-            request.setRequestHeader(i, options.headers[i]);
-        }request.onload = function () {
-            return promise.resolve(response());
+        this.render = function () {
+            _this24.renderer.render(_this24.scene, _this24.camera, renderTarget, true);
+            mesh.material.uniforms.texture.value = renderTarget.texture;
+            _this24.renderer.render(scene, camera);
         };
-        request.onerror = promise.reject;
-        request.send(options.body);
-
-        function response() {
-            var _keys = [],
-                all = [],
-                headers = {},
-                header = void 0;
-            request.getAllResponseHeaders().replace(/^(.*?):\s*([\s\S]*?)$/gm, function (m, key, value) {
-                _keys.push(key = key.toLowerCase());
-                all.push([key, value]);
-                header = headers[key];
-                headers[key] = header ? header + ',' + value : value;
-            });
-            return {
-                ok: (request.status / 200 | 0) == 1,
-                status: request.status,
-                statusText: request.statusText,
-                url: request.responseURL,
-                clone: response,
-                text: function text() {
-                    return Promise.resolve(request.responseText);
-                },
-                json: function json() {
-                    return Promise.resolve(request.responseText).then(JSON.parse);
-                },
-                xml: function xml() {
-                    return Promise.resolve(request.responseXML);
-                },
-                blob: function blob() {
-                    return Promise.resolve(new Blob([request.response]));
-                },
-                arrayBuffer: function arrayBuffer() {
-                    return Promise.resolve(new ArrayBuffer([request.response]));
-                },
-
-                headers: {
-                    keys: function keys() {
-                        return _keys;
-                    },
-                    entries: function entries() {
-                        return all;
-                    },
-                    get: function get(n) {
-                        return headers[n.toLowerCase()];
-                    },
-                    has: function has(n) {
-                        return n.toLowerCase() in headers;
-                    }
-                }
-            };
-        }
-        return promise;
     };
-
-    window.get = function (url) {
-        var options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
-
-        var promise = Promise.create();
-        options.method = 'GET';
-        window.fetch(url, options).then(handleResponse).catch(promise.reject);
-
-        function handleResponse(e) {
-            if (!e.ok) return promise.reject(e);
-            e.text().then(function (text) {
-                if (text.charAt(0).includes(['[', '{'])) {
-                    try {
-                        promise.resolve(JSON.parse(text));
-                    } catch (err) {
-                        promise.resolve(text);
-                    }
-                } else {
-                    promise.resolve(text);
-                }
-            });
-        }
-        return promise;
-    };
-
-    window.post = function (url, body) {
-        var options = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : {};
-
-        var promise = Promise.create();
-        options.method = 'POST';
-        options.body = JSON.stringify(body);
-        window.fetch(url, options).then(handleResponse).catch(promise.reject);
-
-        function handleResponse(e) {
-            if (!e.ok) return promise.reject(e);
-            e.text().then(function (text) {
-                if (text.charAt(0).includes(['[', '{'])) {
-                    try {
-                        promise.resolve(JSON.parse(text));
-                    } catch (err) {
-                        promise.resolve(text);
-                    }
-                } else {
-                    promise.resolve(text);
-                }
-            });
-        }
-        return promise;
-    };
-
-    window.getURL = function (url) {
-        var target = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : '_blank';
-
-        window.open(url, target);
-    };
-
-    if (!window.Global) window.Global = {};
-    if (!window.Config) window.Config = {};
 
     /**
      * Alien abduction point.
@@ -4893,8 +4925,8 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
     exports.Interaction3D = Interaction3D;
     exports.Raycaster = Raycaster;
     exports.ScreenProjection = ScreenProjection;
-    exports.Shaders = Shaders;
     exports.Shader = Shader;
+    exports.Effects = Effects;
 
     Object.defineProperty(exports, '__esModule', { value: true });
 });

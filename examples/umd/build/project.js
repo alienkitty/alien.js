@@ -14,12 +14,234 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
     'use strict';
 
     /**
+     * @author Patrick Schroen / https://github.com/pschroen
+     */
+
+    if (typeof Promise !== 'undefined') Promise.create = function () {
+        var resolve = void 0,
+            reject = void 0,
+            promise = new Promise(function (res, rej) {
+            resolve = res;
+            reject = rej;
+        });
+        promise.resolve = resolve;
+        promise.reject = reject;
+        return promise;
+    };
+
+    Math.sign = function (x) {
+        x = +x;
+        if (x === 0 || isNaN(x)) return Number(x);
+        return x > 0 ? 1 : -1;
+    };
+
+    Math.degrees = function (radians) {
+        return radians * (180 / Math.PI);
+    };
+
+    Math.radians = function (degrees) {
+        return degrees * (Math.PI / 180);
+    };
+
+    Math.clamp = function (value) {
+        var min = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 0;
+        var max = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : 1;
+
+        return Math.min(Math.max(value, Math.min(min, max)), Math.max(min, max));
+    };
+
+    Math.range = function (value) {
+        var oldMin = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : -1;
+        var oldMax = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : 1;
+        var newMin = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : 0;
+        var newMax = arguments.length > 4 && arguments[4] !== undefined ? arguments[4] : 1;
+        var isClamp = arguments[5];
+
+        var newValue = (value - oldMin) * (newMax - newMin) / (oldMax - oldMin) + newMin;
+        if (isClamp) return Math.clamp(newValue, Math.min(newMin, newMax), Math.max(newMin, newMax));
+        return newValue;
+    };
+
+    Math.mix = function (a, b, alpha) {
+        return a * (1 - alpha) + b * alpha;
+    };
+
+    Math.step = function (edge, value) {
+        return value < edge ? 0 : 1;
+    };
+
+    Math.smoothStep = function (min, max, value) {
+        var x = Math.max(0, Math.min(1, (value - min) / (max - min)));
+        return x * x * (3 - 2 * x);
+    };
+
+    Math.fract = function (value) {
+        return value - Math.floor(value);
+    };
+
+    Math.mod = function (value, n) {
+        return (value % n + n) % n;
+    };
+
+    Array.prototype.remove = function (element) {
+        var index = this.indexOf(element);
+        if (~index) return this.splice(index, 1);
+    };
+
+    Array.prototype.last = function () {
+        return this[this.length - 1];
+    };
+
+    String.prototype.includes = function (str) {
+        if (!Array.isArray(str)) return ~this.indexOf(str);
+        for (var i = str.length - 1; i >= 0; i--) {
+            if (~this.indexOf(str[i])) return true;
+        }return false;
+    };
+
+    String.prototype.clip = function (num, end) {
+        return this.length > num ? this.slice(0, num) + end : this;
+    };
+
+    String.prototype.capitalize = function () {
+        return this.charAt(0).toUpperCase() + this.slice(1);
+    };
+
+    String.prototype.replaceAll = function (find, replace) {
+        return this.split(find).join(replace);
+    };
+
+    if (!window.fetch) window.fetch = function (url) {
+        var options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
+
+        var promise = Promise.create(),
+            request = new XMLHttpRequest();
+        request.open(options.method || 'GET', url);
+        for (var i in options.headers) {
+            request.setRequestHeader(i, options.headers[i]);
+        }request.onload = function () {
+            return promise.resolve(response());
+        };
+        request.onerror = promise.reject;
+        request.send(options.body);
+
+        function response() {
+            var _keys = [],
+                all = [],
+                headers = {},
+                header = void 0;
+            request.getAllResponseHeaders().replace(/^(.*?):\s*([\s\S]*?)$/gm, function (m, key, value) {
+                _keys.push(key = key.toLowerCase());
+                all.push([key, value]);
+                header = headers[key];
+                headers[key] = header ? header + ',' + value : value;
+            });
+            return {
+                ok: (request.status / 200 | 0) == 1,
+                status: request.status,
+                statusText: request.statusText,
+                url: request.responseURL,
+                clone: response,
+                text: function text() {
+                    return Promise.resolve(request.responseText);
+                },
+                json: function json() {
+                    return Promise.resolve(request.responseText).then(JSON.parse);
+                },
+                xml: function xml() {
+                    return Promise.resolve(request.responseXML);
+                },
+                blob: function blob() {
+                    return Promise.resolve(new Blob([request.response]));
+                },
+                arrayBuffer: function arrayBuffer() {
+                    return Promise.resolve(new ArrayBuffer([request.response]));
+                },
+
+                headers: {
+                    keys: function keys() {
+                        return _keys;
+                    },
+                    entries: function entries() {
+                        return all;
+                    },
+                    get: function get(n) {
+                        return headers[n.toLowerCase()];
+                    },
+                    has: function has(n) {
+                        return n.toLowerCase() in headers;
+                    }
+                }
+            };
+        }
+        return promise;
+    };
+
+    window.get = function (url) {
+        var options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
+
+        var promise = Promise.create();
+        options.method = 'GET';
+        window.fetch(url, options).then(handleResponse).catch(promise.reject);
+
+        function handleResponse(e) {
+            if (!e.ok) return promise.reject(e);
+            e.text().then(function (text) {
+                if (text.charAt(0).includes(['[', '{'])) {
+                    try {
+                        promise.resolve(JSON.parse(text));
+                    } catch (err) {
+                        promise.resolve(text);
+                    }
+                } else {
+                    promise.resolve(text);
+                }
+            });
+        }
+        return promise;
+    };
+
+    window.post = function (url, body) {
+        var options = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : {};
+
+        var promise = Promise.create();
+        options.method = 'POST';
+        options.body = JSON.stringify(body);
+        window.fetch(url, options).then(handleResponse).catch(promise.reject);
+
+        function handleResponse(e) {
+            if (!e.ok) return promise.reject(e);
+            e.text().then(function (text) {
+                if (text.charAt(0).includes(['[', '{'])) {
+                    try {
+                        promise.resolve(JSON.parse(text));
+                    } catch (err) {
+                        promise.resolve(text);
+                    }
+                } else {
+                    promise.resolve(text);
+                }
+            });
+        }
+        return promise;
+    };
+
+    window.getURL = function (url) {
+        var target = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : '_blank';
+
+        window.open(url, target);
+    };
+
+    if (!window.Global) window.Global = {};
+    if (!window.Config) window.Config = {};
+
+    /**
      * Alien utilities.
      *
      * @author Patrick Schroen / https://github.com/pschroen
      */
 
-    var Utils = new ( // Singleton reassignment pattern
+    var Utils = new ( // Singleton pattern (IICE)
 
     function () {
         function Utils() {
@@ -147,7 +369,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
         }]);
 
         return Utils;
-    }())(); // Singleton reassignment pattern
+    }())(); // Singleton pattern (IICE)
 
     /**
      * Event helper class.
@@ -186,7 +408,8 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
             var object = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
 
             if (!events[event]) return;
-            events[event].forEach(function (callback) {
+            var clone = Utils.cloneArray(events[event]);
+            clone.forEach(function (callback) {
                 return callback(object);
             });
         };
@@ -221,7 +444,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
         };
     }();
 
-    var Render = new // Singleton reassignment pattern
+    var Render = new // Singleton pattern (IICE)
 
     function Render() {
         var _this2 = this;
@@ -279,7 +502,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
             _this2.paused = false;
             requestAnimationFrame(step);
         };
-    }(); // Singleton reassignment pattern
+    }(); // Singleton pattern (IICE)
 
     /**
      * Browser detection and vendor prefixes.
@@ -287,7 +510,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
      * @author Patrick Schroen / https://github.com/pschroen
      */
 
-    var Device = new ( // Singleton reassignment pattern
+    var Device = new ( // Singleton pattern (IICE)
 
     function () {
         function Device() {
@@ -296,7 +519,6 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
             _classCallCheck(this, Device);
 
             this.agent = navigator.userAgent.toLowerCase();
-            this.pixelRatio = window.devicePixelRatio;
             this.prefix = function () {
                 var styles = window.getComputedStyle(document.documentElement, ''),
                     pre = (Array.prototype.slice.call(styles).join('').match(/-(webkit|moz|ms)-/) || styles.OLink === '' && ['', 'o'])[1];
@@ -326,8 +548,18 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
                 }
                 return pre;
             }();
-            this.mobile = ('ontouchstart' in window || 'onpointerdown' in window) && this.detect(['ios', 'iphone', 'ipad', 'android', 'blackberry']) ? {} : false;
-            this.tablet = window.innerWidth > window.innerHeight ? document.body.clientWidth > 800 : document.body.clientHeight > 800;
+            this.pixelRatio = window.devicePixelRatio;
+            this.os = function () {
+                if (_this3.detect(['iphone', 'ipad'])) return 'ios';
+                if (_this3.detect(['android'])) return 'android';
+                if (_this3.detect(['blackberry'])) return 'blackberry';
+                if (_this3.detect(['mac os'])) return 'mac';
+                if (_this3.detect(['windows'])) return 'windows';
+                if (_this3.detect(['linux'])) return 'linux';
+                return 'unknown';
+            }();
+            this.mobile = 'ontouchstart' in window && this.detect(['iphone', 'ipad', 'android', 'blackberry']);
+            this.tablet = Math.max(screen.width, screen.height) > 800;
             this.phone = !this.tablet;
         }
 
@@ -352,7 +584,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
         }]);
 
         return Device;
-    }())(); // Singleton reassignment pattern
+    }())(); // Singleton pattern (IICE)
 
     /**
      * Interpolation helper class.
@@ -360,7 +592,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
      * @author Patrick Schroen / https://github.com/pschroen
      */
 
-    var Interpolation = new // Singleton reassignment pattern
+    var Interpolation = new // Singleton pattern (IICE)
 
     function Interpolation() {
         var _this4 = this;
@@ -641,7 +873,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
                 return this.Bounce.Out(k * 2 - 1) * 0.5 + 0.5;
             }
         };
-    }(); // Singleton reassignment pattern
+    }(); // Singleton pattern (IICE)
 
     /**
      * Mathematical.
@@ -737,7 +969,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
      * @author Patrick Schroen / https://github.com/pschroen
      */
 
-    var TweenManager = new ( // Singleton reassignment pattern
+    var TweenManager = new ( // Singleton pattern (IICE)
 
     function () {
         function TweenManager() {
@@ -875,7 +1107,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
         }]);
 
         return TweenManager;
-    }())(); // Singleton reassignment pattern
+    }())(); // Singleton pattern (IICE)
 
     /**
      * CSS3 transition animation.
@@ -1447,8 +1679,10 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
                 var touchEvent = function touchEvent(e) {
                     var touch = _this9.convertTouchEvent(e);
-                    e.x = touch.x;
-                    e.y = touch.y;
+                    if (!(e instanceof MouseEvent)) {
+                        e.x = touch.x;
+                        e.y = touch.y;
+                    }
                     events.forEach(function (event) {
                         if (event.target === e.currentTarget) event.callback(e);
                     });
@@ -1567,6 +1801,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
                     array = [],
                     split = this.text().split(by);
                 this.empty();
+                if (by === ' ') by = '&nbsp;';
                 for (var i = 0; i < split.length; i++) {
                     if (split[i] === ' ') split[i] = '&nbsp;';
                     array.push(this.create('.t', 'span').html(split[i]).css(style));
@@ -1585,7 +1820,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
      * @author Patrick Schroen / https://github.com/pschroen
      */
 
-    var Stage = new ( // Singleton reassignment pattern
+    var Stage = new ( // Singleton pattern (IICE)
 
     function (_Interface) {
         _inherits(Stage, _Interface);
@@ -1642,7 +1877,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
         }
 
         return Stage;
-    }(Interface))(); // Singleton reassignment pattern
+    }(Interface))(); // Singleton pattern (IICE)
 
     /**
      * Alien component.
@@ -2339,7 +2574,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
      * @author Patrick Schroen / https://github.com/pschroen
      */
 
-    var Images = new ( // Singleton reassignment pattern
+    var Images = new ( // Singleton pattern (IICE)
 
     function () {
         function Images() {
@@ -2370,7 +2605,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
         }]);
 
         return Images;
-    }())(); // Singleton reassignment pattern
+    }())(); // Singleton pattern (IICE)
 
     /**
      * Asset loader with promise method.
@@ -2409,14 +2644,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
                 }
                 if (ext.includes(['mp3', 'm4a', 'ogg', 'wav', 'aif'])) {
                     if (!window.AudioContext || !window.WebAudio) return assetLoaded();
-                    window.fetch(asset).then(function (response) {
-                        if (!response.ok) return assetLoaded();
-                        response.arrayBuffer().then(function (data) {
-                            return window.WebAudio.createSound(key, data, assetLoaded);
-                        });
-                    }).catch(function () {
-                        assetLoaded();
-                    });
+                    window.WebAudio.createSound(key, asset, assetLoaded);
                     return;
                 }
                 window.get(asset).then(function (data) {
@@ -2456,48 +2684,6 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
      *
      * @author Patrick Schroen / https://github.com/pschroen
      */
-
-    var FontLoader = function () {
-        function FontLoader(fonts, callback) {
-            _classCallCheck(this, FontLoader);
-
-            var self = this;
-            this.events = new Events();
-            var element = void 0;
-
-            initFonts();
-            finish();
-
-            function initFonts() {
-                if (!Array.isArray(fonts)) fonts = [fonts];
-                element = Stage.create('FontLoader');
-                for (var i = 0; i < fonts.length; i++) {
-                    element.create('font').fontStyle(fonts[i], 12, '#000').text('LOAD').css({ top: -999 });
-                }
-            }
-
-            function finish() {
-                setTimeout(function () {
-                    element.destroy();
-                    self.complete = true;
-                    self.events.fire(Events.COMPLETE);
-                    if (callback) callback();
-                }, 500);
-            }
-        }
-
-        _createClass(FontLoader, null, [{
-            key: 'loadFonts',
-            value: function loadFonts(fonts, callback) {
-                var promise = Promise.create();
-                if (!callback) callback = promise.resolve;
-                promise.loader = new FontLoader(fonts, callback);
-                return promise;
-            }
-        }]);
-
-        return FontLoader;
-    }();
 
     /**
      * Video interface.
@@ -2574,12 +2760,6 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
     /* global THREE */
 
     /**
-     * Shader parser.
-     *
-     * @author Patrick Schroen / https://github.com/pschroen
-     */
-
-    /**
      * Shader helper class.
      *
      * @author Patrick Schroen / https://github.com/pschroen
@@ -2588,226 +2768,12 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
     /* global THREE */
 
     /**
+     * Post processing effects.
+     *
      * @author Patrick Schroen / https://github.com/pschroen
      */
 
-    if (typeof Promise !== 'undefined') Promise.create = function () {
-        var resolve = void 0,
-            reject = void 0,
-            promise = new Promise(function (res, rej) {
-            resolve = res;
-            reject = rej;
-        });
-        promise.resolve = resolve;
-        promise.reject = reject;
-        return promise;
-    };
-
-    Math.sign = function (x) {
-        x = +x;
-        if (x === 0 || isNaN(x)) return Number(x);
-        return x > 0 ? 1 : -1;
-    };
-
-    Math.degrees = function (radians) {
-        return radians * (180 / Math.PI);
-    };
-
-    Math.radians = function (degrees) {
-        return degrees * (Math.PI / 180);
-    };
-
-    Math.clamp = function (value) {
-        var min = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 0;
-        var max = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : 1;
-
-        return Math.min(Math.max(value, Math.min(min, max)), Math.max(min, max));
-    };
-
-    Math.range = function (value) {
-        var oldMin = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : -1;
-        var oldMax = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : 1;
-        var newMin = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : 0;
-        var newMax = arguments.length > 4 && arguments[4] !== undefined ? arguments[4] : 1;
-        var isClamp = arguments[5];
-
-        var newValue = (value - oldMin) * (newMax - newMin) / (oldMax - oldMin) + newMin;
-        if (isClamp) return Math.clamp(newValue, Math.min(newMin, newMax), Math.max(newMin, newMax));
-        return newValue;
-    };
-
-    Math.mix = function (a, b, alpha) {
-        return a * (1 - alpha) + b * alpha;
-    };
-
-    Math.step = function (edge, value) {
-        return value < edge ? 0 : 1;
-    };
-
-    Math.smoothStep = function (min, max, value) {
-        var x = Math.max(0, Math.min(1, (value - min) / (max - min)));
-        return x * x * (3 - 2 * x);
-    };
-
-    Math.fract = function (value) {
-        return value - Math.floor(value);
-    };
-
-    Math.mod = function (value, n) {
-        return (value % n + n) % n;
-    };
-
-    Array.prototype.remove = function (element) {
-        var index = this.indexOf(element);
-        if (~index) return this.splice(index, 1);
-    };
-
-    Array.prototype.last = function () {
-        return this[this.length - 1];
-    };
-
-    String.prototype.includes = function (str) {
-        if (!Array.isArray(str)) return ~this.indexOf(str);
-        for (var i = str.length - 1; i >= 0; i--) {
-            if (~this.indexOf(str[i])) return true;
-        }return false;
-    };
-
-    String.prototype.clip = function (num, end) {
-        return this.length > num ? this.slice(0, num) + end : this;
-    };
-
-    String.prototype.capitalize = function () {
-        return this.charAt(0).toUpperCase() + this.slice(1);
-    };
-
-    String.prototype.replaceAll = function (find, replace) {
-        return this.split(find).join(replace);
-    };
-
-    if (!window.fetch) window.fetch = function (url) {
-        var options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
-
-        var promise = Promise.create(),
-            request = new XMLHttpRequest();
-        request.open(options.method || 'GET', url);
-        for (var i in options.headers) {
-            request.setRequestHeader(i, options.headers[i]);
-        }request.onload = function () {
-            return promise.resolve(response());
-        };
-        request.onerror = promise.reject;
-        request.send(options.body);
-
-        function response() {
-            var _keys = [],
-                all = [],
-                headers = {},
-                header = void 0;
-            request.getAllResponseHeaders().replace(/^(.*?):\s*([\s\S]*?)$/gm, function (m, key, value) {
-                _keys.push(key = key.toLowerCase());
-                all.push([key, value]);
-                header = headers[key];
-                headers[key] = header ? header + ',' + value : value;
-            });
-            return {
-                ok: (request.status / 200 | 0) == 1,
-                status: request.status,
-                statusText: request.statusText,
-                url: request.responseURL,
-                clone: response,
-                text: function text() {
-                    return Promise.resolve(request.responseText);
-                },
-                json: function json() {
-                    return Promise.resolve(request.responseText).then(JSON.parse);
-                },
-                xml: function xml() {
-                    return Promise.resolve(request.responseXML);
-                },
-                blob: function blob() {
-                    return Promise.resolve(new Blob([request.response]));
-                },
-                arrayBuffer: function arrayBuffer() {
-                    return Promise.resolve(new ArrayBuffer([request.response]));
-                },
-
-                headers: {
-                    keys: function keys() {
-                        return _keys;
-                    },
-                    entries: function entries() {
-                        return all;
-                    },
-                    get: function get(n) {
-                        return headers[n.toLowerCase()];
-                    },
-                    has: function has(n) {
-                        return n.toLowerCase() in headers;
-                    }
-                }
-            };
-        }
-        return promise;
-    };
-
-    window.get = function (url) {
-        var options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
-
-        var promise = Promise.create();
-        options.method = 'GET';
-        window.fetch(url, options).then(handleResponse).catch(promise.reject);
-
-        function handleResponse(e) {
-            if (!e.ok) return promise.reject(e);
-            e.text().then(function (text) {
-                if (text.charAt(0).includes(['[', '{'])) {
-                    try {
-                        promise.resolve(JSON.parse(text));
-                    } catch (err) {
-                        promise.resolve(text);
-                    }
-                } else {
-                    promise.resolve(text);
-                }
-            });
-        }
-        return promise;
-    };
-
-    window.post = function (url, body) {
-        var options = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : {};
-
-        var promise = Promise.create();
-        options.method = 'POST';
-        options.body = JSON.stringify(body);
-        window.fetch(url, options).then(handleResponse).catch(promise.reject);
-
-        function handleResponse(e) {
-            if (!e.ok) return promise.reject(e);
-            e.text().then(function (text) {
-                if (text.charAt(0).includes(['[', '{'])) {
-                    try {
-                        promise.resolve(JSON.parse(text));
-                    } catch (err) {
-                        promise.resolve(text);
-                    }
-                } else {
-                    promise.resolve(text);
-                }
-            });
-        }
-        return promise;
-    };
-
-    window.getURL = function (url) {
-        var target = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : '_blank';
-
-        window.open(url, target);
-    };
-
-    if (!window.Global) window.Global = {};
-    if (!window.Config) window.Config = {};
+    /* global THREE */
 
     /**
      * Alien abduction point.
@@ -3056,10 +3022,8 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
         }
 
         function initLoader() {
-            FontLoader.loadFonts(['Titillium Web', 'Lato', 'icomoon']).then(function () {
-                loader = Stage.initClass(Loader);
-                loader.events.add(Events.COMPLETE, loadComplete);
-            });
+            loader = Stage.initClass(Loader);
+            loader.events.add(Events.COMPLETE, loadComplete);
         }
 
         function loadComplete() {

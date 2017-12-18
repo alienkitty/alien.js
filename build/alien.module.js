@@ -5,12 +5,194 @@
 }(this, (function (exports) { 'use strict';
 
 /**
+ * @author Patrick Schroen / https://github.com/pschroen
+ */
+
+if (typeof Promise !== 'undefined') Promise.create = function () {
+    let resolve,
+        reject,
+        promise = new Promise(function (res, rej) {
+            resolve = res;
+            reject = rej;
+        });
+    promise.resolve = resolve;
+    promise.reject = reject;
+    return promise;
+};
+
+Math.sign = function (x) {
+    x = +x;
+    if (x === 0 || isNaN(x)) return Number(x);
+    return x > 0 ? 1 : -1;
+};
+
+Math.degrees = function (radians) {
+    return radians * (180 / Math.PI);
+};
+
+Math.radians = function (degrees) {
+    return degrees * (Math.PI / 180);
+};
+
+Math.clamp = function (value, min = 0, max = 1) {
+    return Math.min(Math.max(value, Math.min(min, max)), Math.max(min, max));
+};
+
+Math.range = function (value, oldMin = -1, oldMax = 1, newMin = 0, newMax = 1, isClamp) {
+    const newValue = (value - oldMin) * (newMax - newMin) / (oldMax - oldMin) + newMin;
+    if (isClamp) return Math.clamp(newValue, Math.min(newMin, newMax), Math.max(newMin, newMax));
+    return newValue;
+};
+
+Math.mix = function (a, b, alpha) {
+    return a * (1 - alpha) + b * alpha;
+};
+
+Math.step = function (edge, value) {
+    return value < edge ? 0 : 1;
+};
+
+Math.smoothStep = function (min, max, value) {
+    const x = Math.max(0, Math.min(1, (value - min) / (max - min)));
+    return x * x * (3 - 2 * x);
+};
+
+Math.fract = function (value) {
+    return value - Math.floor(value);
+};
+
+Math.mod = function (value, n) {
+    return (value % n + n) % n;
+};
+
+Array.prototype.remove = function (element) {
+    let index = this.indexOf(element);
+    if (~index) return this.splice(index, 1);
+};
+
+Array.prototype.last = function () {
+    return this[this.length - 1];
+};
+
+String.prototype.includes = function (str) {
+    if (!Array.isArray(str)) return ~this.indexOf(str);
+    for (let i = str.length - 1; i >= 0; i--) if (~this.indexOf(str[i])) return true;
+    return false;
+};
+
+String.prototype.clip = function (num, end) {
+    return this.length > num ? this.slice(0, num) + end : this;
+};
+
+String.prototype.capitalize = function () {
+    return this.charAt(0).toUpperCase() + this.slice(1);
+};
+
+String.prototype.replaceAll = function (find, replace) {
+    return this.split(find).join(replace);
+};
+
+if (!window.fetch) window.fetch = function (url, options = {}) {
+    let promise = Promise.create(),
+        request = new XMLHttpRequest();
+    request.open(options.method || 'GET', url);
+    for (let i in options.headers) request.setRequestHeader(i, options.headers[i]);
+    request.onload = () => promise.resolve(response());
+    request.onerror = promise.reject;
+    request.send(options.body);
+
+    function response() {
+        let keys = [],
+            all = [],
+            headers = {},
+            header;
+        request.getAllResponseHeaders().replace(/^(.*?):\s*([\s\S]*?)$/gm, function (m, key, value) {
+            keys.push(key = key.toLowerCase());
+            all.push([key, value]);
+            header = headers[key];
+            headers[key] = header ? `${header},${value}` : value;
+        });
+        return {
+            ok: (request.status / 200 | 0) == 1,
+            status: request.status,
+            statusText: request.statusText,
+            url: request.responseURL,
+            clone: response,
+            text() { return Promise.resolve(request.responseText); },
+            json() { return Promise.resolve(request.responseText).then(JSON.parse); },
+            xml() { return Promise.resolve(request.responseXML); },
+            blob() { return Promise.resolve(new Blob([request.response])); },
+            arrayBuffer() { return Promise.resolve(new ArrayBuffer([request.response])); },
+            headers: {
+                keys() { return keys; },
+                entries() { return all; },
+                get(n) { return headers[n.toLowerCase()]; },
+                has(n) { return n.toLowerCase() in headers; }
+            }
+        };
+    }
+    return promise;
+};
+
+window.get = function (url, options = {}) {
+    let promise = Promise.create();
+    options.method = 'GET';
+    window.fetch(url, options).then(handleResponse).catch(promise.reject);
+
+    function handleResponse(e) {
+        if (!e.ok) return promise.reject(e);
+        e.text().then(function (text) {
+            if (text.charAt(0).includes(['[', '{'])) {
+                try {
+                    promise.resolve(JSON.parse(text));
+                } catch (err) {
+                    promise.resolve(text);
+                }
+            } else {
+                promise.resolve(text);
+            }
+        });
+    }
+    return promise;
+};
+
+window.post = function (url, body, options = {}) {
+    let promise = Promise.create();
+    options.method = 'POST';
+    options.body = JSON.stringify(body);
+    window.fetch(url, options).then(handleResponse).catch(promise.reject);
+
+    function handleResponse(e) {
+        if (!e.ok) return promise.reject(e);
+        e.text().then(function (text) {
+            if (text.charAt(0).includes(['[', '{'])) {
+                try {
+                    promise.resolve(JSON.parse(text));
+                } catch (err) {
+                    promise.resolve(text);
+                }
+            } else {
+                promise.resolve(text);
+            }
+        });
+    }
+    return promise;
+};
+
+window.getURL = function (url, target = '_blank') {
+    window.open(url, target);
+};
+
+if (!window.Global) window.Global = {};
+if (!window.Config) window.Config = {};
+
+/**
  * Alien utilities.
  *
  * @author Patrick Schroen / https://github.com/pschroen
  */
 
-const Utils = new ( // Singleton reassignment pattern
+const Utils = new ( // Singleton pattern (IICE)
 
 class Utils {
 
@@ -86,7 +268,7 @@ class Utils {
     }
 }
 
-)(); // Singleton reassignment pattern
+)(); // Singleton pattern (IICE)
 
 /**
  * Event helper class.
@@ -121,7 +303,8 @@ class Events {
 
         this.fire = (event, object = {}) => {
             if (!events[event]) return;
-            events[event].forEach(callback => callback(object));
+            const clone = Utils.cloneArray(events[event]);
+            clone.forEach(callback => callback(object));
         };
     }
 }
@@ -151,7 +334,7 @@ if (!window.requestAnimationFrame) window.requestAnimationFrame = window.webkitR
     return callback => setTimeout(() => callback(Date.now() - start), 1000 / 60);
 })();
 
-const Render = new ( // Singleton reassignment pattern
+const Render = new ( // Singleton pattern (IICE)
 
 class Render {
 
@@ -210,7 +393,7 @@ class Render {
     }
 }
 
-)(); // Singleton reassignment pattern
+)(); // Singleton pattern (IICE)
 
 /**
  * Browser detection and vendor prefixes.
@@ -218,13 +401,12 @@ class Render {
  * @author Patrick Schroen / https://github.com/pschroen
  */
 
-const Device = new ( // Singleton reassignment pattern
+const Device = new ( // Singleton pattern (IICE)
 
 class Device {
 
     constructor() {
         this.agent = navigator.userAgent.toLowerCase();
-        this.pixelRatio = window.devicePixelRatio;
         this.prefix = (() => {
             const styles = window.getComputedStyle(document.documentElement, ''),
                 pre = (Array.prototype.slice.call(styles).join('').match(/-(webkit|moz|ms)-/) || styles.OLink === '' && ['', 'o'])[1];
@@ -254,8 +436,18 @@ class Device {
             }
             return pre;
         })();
-        this.mobile = ('ontouchstart' in window || 'onpointerdown' in window) && this.detect(['ios', 'iphone', 'ipad', 'android', 'blackberry']) ? {} : false;
-        this.tablet = window.innerWidth > window.innerHeight ? document.body.clientWidth > 800 : document.body.clientHeight > 800;
+        this.pixelRatio = window.devicePixelRatio;
+        this.os = (() => {
+            if (this.detect(['iphone', 'ipad'])) return 'ios';
+            if (this.detect(['android'])) return 'android';
+            if (this.detect(['blackberry'])) return 'blackberry';
+            if (this.detect(['mac os'])) return 'mac';
+            if (this.detect(['windows'])) return 'windows';
+            if (this.detect(['linux'])) return 'linux';
+            return 'unknown';
+        })();
+        this.mobile = ('ontouchstart' in window) && this.detect(['iphone', 'ipad', 'android', 'blackberry']);
+        this.tablet = Math.max(screen.width, screen.height) > 800;
         this.phone = !this.tablet;
     }
 
@@ -274,7 +466,7 @@ class Device {
     }
 }
 
-)(); // Singleton reassignment pattern
+)(); // Singleton pattern (IICE)
 
 /**
  * Interpolation helper class.
@@ -282,7 +474,7 @@ class Device {
  * @author Patrick Schroen / https://github.com/pschroen
  */
 
-const Interpolation = new ( // Singleton reassignment pattern
+const Interpolation = new ( // Singleton pattern (IICE)
 
 class Interpolation {
 
@@ -555,7 +747,7 @@ class Interpolation {
     }
 }
 
-)(); // Singleton reassignment pattern
+)(); // Singleton pattern (IICE)
 
 /**
  * Mathematical.
@@ -642,7 +834,7 @@ class MathTween {
  * @author Patrick Schroen / https://github.com/pschroen
  */
 
-const TweenManager = new ( // Singleton reassignment pattern
+const TweenManager = new ( // Singleton pattern (IICE)
 
 class TweenManager {
 
@@ -772,7 +964,7 @@ class TweenManager {
     }
 }
 
-)(); // Singleton reassignment pattern
+)(); // Singleton pattern (IICE)
 
 /**
  * CSS3 transition animation.
@@ -1286,8 +1478,10 @@ class Interface {
 
         const touchEvent = e => {
             const touch = this.convertTouchEvent(e);
-            e.x = touch.x;
-            e.y = touch.y;
+            if (!(e instanceof MouseEvent)) {
+                e.x = touch.x;
+                e.y = touch.y;
+            }
             events.forEach(event => {
                 if (event.target === e.currentTarget) event.callback(e);
             });
@@ -1399,6 +1593,7 @@ class Interface {
             array = [],
             split = this.text().split(by);
         this.empty();
+        if (by === ' ') by = '&nbsp;';
         for (let i = 0; i < split.length; i++) {
             if (split[i] === ' ') split[i] = '&nbsp;';
             array.push(this.create('.t', 'span').html(split[i]).css(style));
@@ -1414,7 +1609,7 @@ class Interface {
  * @author Patrick Schroen / https://github.com/pschroen
  */
 
-const Stage = new ( // Singleton reassignment pattern
+const Stage = new ( // Singleton pattern (IICE)
 
 class Stage extends Interface {
 
@@ -1458,7 +1653,7 @@ class Stage extends Interface {
     }
 }
 
-)(); // Singleton reassignment pattern
+)(); // Singleton pattern (IICE)
 
 /**
  * Alien component.
@@ -2098,7 +2293,7 @@ class CanvasGraphics extends CanvasObject {
  * @author Patrick Schroen / https://github.com/pschroen
  */
 
-const CanvasFont = new ( // Singleton reassignment pattern
+const CanvasFont = new ( // Singleton pattern (IICE)
 
 class CanvasFont {
 
@@ -2177,7 +2372,7 @@ class CanvasFont {
     }
 }
 
-)(); // Singleton reassignment pattern
+)(); // Singleton pattern (IICE)
 
 /**
  * 2D vector.
@@ -2379,7 +2574,6 @@ class Interaction {
             Stage.bind('touchmove', touchMove);
             Stage.bind('touchend', touchEnd);
             Stage.bind('touchcancel', touchEnd);
-            Stage.bind('contextmenu', touchEnd);
 
             Interaction.instance = this;
         }
@@ -2405,6 +2599,7 @@ class Interaction {
         }
 
         function down(e) {
+            e.preventDefault();
             self.isTouching = true;
             self.x = e.x;
             self.y = e.y;
@@ -2468,7 +2663,7 @@ class Interaction {
  * @author Patrick Schroen / https://github.com/pschroen
  */
 
-const Mouse = new ( // Singleton reassignment pattern
+const Mouse = new ( // Singleton pattern (IICE)
 
 class Mouse {
 
@@ -2512,7 +2707,7 @@ class Mouse {
     }
 }
 
-)(); // Singleton reassignment pattern
+)(); // Singleton pattern (IICE)
 
 /**
  * Accelerometer helper class.
@@ -2520,7 +2715,7 @@ class Mouse {
  * @author Patrick Schroen / https://github.com/pschroen
  */
 
-const Accelerometer = new ( // Singleton reassignment pattern
+const Accelerometer = new ( // Singleton pattern (IICE)
 
 class Accelerometer {
 
@@ -2537,7 +2732,7 @@ class Accelerometer {
         this.rotationRate.alpha = 0;
         this.rotationRate.beta = 0;
         this.rotationRate.gamma = 0;
-        this.toRadians = Device.os === 'iOS' ? Math.PI / 180 : 1;
+        this.toRadians = Device.os === 'ios' ? Math.PI / 180 : 1;
 
         function updateAccel(e) {
             switch (window.orientation) {
@@ -2639,7 +2834,7 @@ class Accelerometer {
     }
 }
 
-)(); // Singleton reassignment pattern
+)(); // Singleton pattern (IICE)
 
 /**
  * Image helper class with promise method.
@@ -2647,7 +2842,7 @@ class Accelerometer {
  * @author Patrick Schroen / https://github.com/pschroen
  */
 
-const Images = new ( // Singleton reassignment pattern
+const Images = new ( // Singleton pattern (IICE)
 
 class Images {
 
@@ -2673,7 +2868,7 @@ class Images {
     }
 }
 
-)(); // Singleton reassignment pattern
+)(); // Singleton pattern (IICE)
 
 /**
  * Asset loader with promise method.
@@ -2711,12 +2906,7 @@ class AssetLoader {
             }
             if (ext.includes(['mp3', 'm4a', 'ogg', 'wav', 'aif'])) {
                 if (!window.AudioContext || !window.WebAudio) return assetLoaded();
-                window.fetch(asset).then(response => {
-                    if (!response.ok) return assetLoaded();
-                    response.arrayBuffer().then(data => window.WebAudio.createSound(key, data, assetLoaded));
-                }).catch(() => {
-                    assetLoaded();
-                });
+                window.WebAudio.createSound(key, asset, assetLoaded);
                 return;
             }
             window.get(asset).then(data => {
@@ -3092,7 +3282,7 @@ class SVG {
  * @author Patrick Schroen / https://github.com/pschroen
  */
 
-const Storage = new ( // Singleton reassignment pattern
+const Storage = new ( // Singleton pattern (IICE)
 
 class Storage {
 
@@ -3114,7 +3304,7 @@ class Storage {
     }
 }
 
-)(); // Singleton reassignment pattern
+)(); // Singleton pattern (IICE)
 
 /**
  * Web audio engine.
@@ -3124,11 +3314,12 @@ class Storage {
 
 if (!window.AudioContext) window.AudioContext = window.webkitAudioContext || window.mozAudioContext || window.oAudioContext;
 
-const WebAudio = new ( // Singleton reassignment pattern
+const WebAudio = new ( // Singleton pattern (IICE)
 
 class WebAudio {
 
     constructor() {
+        const self = this;
         const sounds = {};
         let context;
 
@@ -3137,18 +3328,52 @@ class WebAudio {
             if (!context) return;
             this.globalGain = context.createGain();
             this.globalGain.connect(context.destination);
+            this.gain = {
+                set value(value) {
+                    self.globalGain.gain.setTargetAtTime(value, context.currentTime, 0.01);
+                },
+                get value() {
+                    return self.globalGain.gain.value;
+                }
+            };
         };
 
-        this.createSound = (id, audioData, callback) => {
-            const sound = {};
-            context.decodeAudioData(audioData, buffer => {
-                sound.buffer = buffer;
-                sound.audioGain = context.createGain();
-                sound.audioGain.connect(this.globalGain);
-                sound.complete = true;
-                if (callback) callback();
+        this.loadSound = (id, callback) => {
+            const promise = Promise.create();
+            if (callback) promise.then(callback);
+            callback = promise.resolve;
+            const sound = this.getSound(id);
+            window.fetch(sound.asset).then(response => {
+                if (!response.ok) return callback();
+                response.arrayBuffer().then(data => {
+                    context.decodeAudioData(data, buffer => {
+                        sound.buffer = buffer;
+                        sound.complete = true;
+                        callback();
+                    });
+                });
+            }).catch(() => {
+                callback();
             });
+            sound.ready = () => promise;
+        };
+
+        this.createSound = (id, asset, callback) => {
+            const sound = {};
+            sound.asset = asset;
+            sound.audioGain = context.createGain();
+            sound.audioGain.connect(this.globalGain);
+            sound.gain = {
+                set value(value) {
+                    sound.audioGain.gain.setTargetAtTime(value, context.currentTime, 0.01);
+                },
+                get value() {
+                    return sound.audioGain.gain.value;
+                }
+            };
             sounds[id] = sound;
+            if (Device.os === 'ios') callback();
+            else this.loadSound(id, callback);
         };
 
         this.getSound = id => {
@@ -3157,29 +3382,35 @@ class WebAudio {
 
         this.trigger = id => {
             if (!context) return;
-            const sound = this.getSound(id),
-                source = context.createBufferSource();
-            source.buffer = sound.buffer;
-            source.connect(sound.audioGain);
-            source.loop = !!sound.loop;
-            source.start(0);
+            if (context.state === 'suspended') context.resume();
+            const sound = this.getSound(id);
+            if (!sound.ready) this.loadSound(id);
+            sound.ready().then(() => {
+                if (sound.complete) {
+                    const source = context.createBufferSource();
+                    source.buffer = sound.buffer;
+                    source.connect(sound.audioGain);
+                    source.loop = !!sound.loop;
+                    source.start(0);
+                }
+            });
         };
 
         this.mute = () => {
             if (!context) return;
-            TweenManager.tween(this.globalGain.gain, { value: 0 }, 300, 'easeOutSine');
+            TweenManager.tween(this.gain, { value: 0 }, 300, 'easeOutSine');
         };
 
         this.unmute = () => {
             if (!context) return;
-            TweenManager.tween(this.globalGain.gain, { value: 1 }, 500, 'easeOutSine');
+            TweenManager.tween(this.gain, { value: 1 }, 500, 'easeOutSine');
         };
 
         window.WebAudio = this;
     }
 }
 
-)(); // Singleton reassignment pattern
+)(); // Singleton pattern (IICE)
 
 /**
  * Linked list.
@@ -3559,7 +3790,7 @@ class Vector3 {
 
 /* global THREE */
 
-const Utils3D = new ( // Singleton reassignment pattern
+const Utils3D = new ( // Singleton pattern (IICE)
 
 class Utils3D {
 
@@ -3698,7 +3929,7 @@ class Utils3D {
     }
 }
 
-)(); // Singleton reassignment pattern
+)(); // Singleton pattern (IICE)
 
 /**
  * Raycaster.
@@ -3973,82 +4204,6 @@ class ScreenProjection {
 }
 
 /**
- * Shader parser.
- *
- * @author Patrick Schroen / https://github.com/pschroen
- */
-
-const Shaders = new ( // Singleton reassignment pattern
-
-class Shaders {
-
-    constructor() {
-        const shaders = {};
-
-        function parseSingleShader(code) {
-            const attributes = code.split('#!ATTRIBUTES')[1].split('#!')[0],
-                uniforms = code.split('#!UNIFORMS')[1].split('#!')[0],
-                varyings = code.split('#!VARYINGS')[1].split('#!')[0];
-            while (~code.indexOf('#!SHADER')) {
-                code = code.slice(code.indexOf('#!SHADER'));
-                const split = code.split('#!SHADER')[1],
-                    br = split.indexOf('\n'),
-                    name = split.slice(0, br).split(': ')[1];
-                let glsl = split.slice(br);
-                if (~name.indexOf('.vs')) glsl = attributes + uniforms + varyings + glsl;
-                else glsl = uniforms + varyings + glsl;
-                shaders[name] = glsl;
-                code = code.replace('#!SHADER', '$');
-            }
-        }
-
-        function parseCompiled(code) {
-            const split = code.split('{@}');
-            split.shift();
-            for (let i = 0; i < split.length; i += 2) {
-                const name = split[i],
-                    text = split[i + 1];
-                if (~text.indexOf('#!UNIFORMS')) parseSingleShader(text);
-                else shaders[name] = text;
-            }
-        }
-
-        function parseRequirements() {
-            for (let key in shaders) {
-                const object = shaders[key];
-                if (typeof object === 'string' && ~object.indexOf('require')) shaders[key] = require(object);
-            }
-        }
-
-        function require(shader) {
-            while (~shader.indexOf('#require')) {
-                const split = shader.split('#require('),
-                    name = split[1].split(')')[0];
-                shader = shader.replace(`#require(${name})`, shaders[name]);
-            }
-            return shader;
-        }
-
-        this.parse = (code, path) => {
-            if (!~code.indexOf('{@}')) {
-                shaders[path.split('/').last()] = code;
-            } else {
-                parseCompiled(code);
-                parseRequirements();
-            }
-        };
-
-        this.getShader = file => {
-            return shaders[file];
-        };
-
-        window.Shaders = this;
-    }
-}
-
-)(); // Singleton reassignment pattern
-
-/**
  * Shader helper class.
  *
  * @author Patrick Schroen / https://github.com/pschroen
@@ -4059,10 +4214,6 @@ class Shaders {
 class Shader {
 
     constructor(vertexShader, fragmentShader, props) {
-        if (typeof fragmentShader !== 'string') {
-            props = fragmentShader;
-            fragmentShader = vertexShader;
-        }
         const self = this;
         this.uniforms = {};
         this.properties = {};
@@ -4079,8 +4230,8 @@ class Shader {
 
         function initShaders() {
             const params = {};
-            params.vertexShader = process(Shaders.getShader(vertexShader + '.vs') || vertexShader, 'vs');
-            params.fragmentShader = process(Shaders.getShader(fragmentShader + '.fs') || fragmentShader, 'fs');
+            params.vertexShader = process(vertexShader, 'vs');
+            params.fragmentShader = process(fragmentShader, 'fs');
             params.uniforms = self.uniforms;
             for (let key in self.properties) params[key] = self.properties[key];
             self.material = new THREE.RawShaderMaterial(params);
@@ -4117,7 +4268,7 @@ class Shader {
                     'uniform vec3 cameraPosition;'
                 ].join('\n');
             }
-            code = header + code;
+            code = header + '\n\n' + code;
             const threeChunk = (a, b) => {
                 return THREE.ShaderChunk[b] + '\n';
             };
@@ -4155,186 +4306,59 @@ class Shader {
 }
 
 /**
+ * Post processing effects.
+ *
  * @author Patrick Schroen / https://github.com/pschroen
  */
 
-if (typeof Promise !== 'undefined') Promise.create = function () {
-    let resolve,
-        reject,
-        promise = new Promise(function (res, rej) {
-            resolve = res;
-            reject = rej;
-        });
-    promise.resolve = resolve;
-    promise.reject = reject;
-    return promise;
-};
+/* global THREE */
 
-Math.sign = function (x) {
-    x = +x;
-    if (x === 0 || isNaN(x)) return Number(x);
-    return x > 0 ? 1 : -1;
-};
+class Effects {
 
-Math.degrees = function (radians) {
-    return radians * (180 / Math.PI);
-};
+    constructor(stage, params) {
+        const self = this;
+        this.stage = stage;
+        this.renderer = params.renderer;
+        this.scene = params.scene;
+        this.camera = params.camera;
+        this.shader = params.shader;
+        this.dpr = params.dpr || 1;
+        let renderTarget, camera, scene, mesh;
 
-Math.radians = function (degrees) {
-    return degrees * (Math.PI / 180);
-};
+        initEffects();
+        addListeners();
 
-Math.clamp = function (value, min = 0, max = 1) {
-    return Math.min(Math.max(value, Math.min(min, max)), Math.max(min, max));
-};
+        function initEffects() {
+            renderTarget = Utils3D.createRT(self.stage.width * self.dpr, self.stage.height * self.dpr);
+            self.texture = renderTarget.texture;
+            self.texture.minFilter = THREE.LinearFilter;
+            camera = new THREE.OrthographicCamera(self.stage.width / -2, self.stage.width / 2, self.stage.height / 2, self.stage.height / -2, 1, 1000);
+            scene = new THREE.Scene();
+            mesh = new THREE.Mesh(new THREE.PlaneBufferGeometry(2, 2), self.shader.material);
+            scene.add(mesh);
+        }
 
-Math.range = function (value, oldMin = -1, oldMax = 1, newMin = 0, newMax = 1, isClamp) {
-    const newValue = (value - oldMin) * (newMax - newMin) / (oldMax - oldMin) + newMin;
-    if (isClamp) return Math.clamp(newValue, Math.min(newMin, newMax), Math.max(newMin, newMax));
-    return newValue;
-};
+        function addListeners() {
+            Stage.events.add(Events.RESIZE, resize);
+        }
 
-Math.mix = function (a, b, alpha) {
-    return a * (1 - alpha) + b * alpha;
-};
+        function resize() {
+            renderTarget.dispose();
+            renderTarget = Utils3D.createRT(self.stage.width * self.dpr, self.stage.height * self.dpr);
+            camera.left = self.stage.width / -2;
+            camera.right = self.stage.width / 2;
+            camera.top = self.stage.height / 2;
+            camera.bottom = self.stage.height / -2;
+            camera.updateProjectionMatrix();
+        }
 
-Math.step = function (edge, value) {
-    return value < edge ? 0 : 1;
-};
-
-Math.smoothStep = function (min, max, value) {
-    const x = Math.max(0, Math.min(1, (value - min) / (max - min)));
-    return x * x * (3 - 2 * x);
-};
-
-Math.fract = function (value) {
-    return value - Math.floor(value);
-};
-
-Math.mod = function (value, n) {
-    return (value % n + n) % n;
-};
-
-Array.prototype.remove = function (element) {
-    let index = this.indexOf(element);
-    if (~index) return this.splice(index, 1);
-};
-
-Array.prototype.last = function () {
-    return this[this.length - 1];
-};
-
-String.prototype.includes = function (str) {
-    if (!Array.isArray(str)) return ~this.indexOf(str);
-    for (let i = str.length - 1; i >= 0; i--) if (~this.indexOf(str[i])) return true;
-    return false;
-};
-
-String.prototype.clip = function (num, end) {
-    return this.length > num ? this.slice(0, num) + end : this;
-};
-
-String.prototype.capitalize = function () {
-    return this.charAt(0).toUpperCase() + this.slice(1);
-};
-
-String.prototype.replaceAll = function (find, replace) {
-    return this.split(find).join(replace);
-};
-
-if (!window.fetch) window.fetch = function (url, options = {}) {
-    let promise = Promise.create(),
-        request = new XMLHttpRequest();
-    request.open(options.method || 'GET', url);
-    for (let i in options.headers) request.setRequestHeader(i, options.headers[i]);
-    request.onload = () => promise.resolve(response());
-    request.onerror = promise.reject;
-    request.send(options.body);
-
-    function response() {
-        let keys = [],
-            all = [],
-            headers = {},
-            header;
-        request.getAllResponseHeaders().replace(/^(.*?):\s*([\s\S]*?)$/gm, function (m, key, value) {
-            keys.push(key = key.toLowerCase());
-            all.push([key, value]);
-            header = headers[key];
-            headers[key] = header ? `${header},${value}` : value;
-        });
-        return {
-            ok: (request.status / 200 | 0) == 1,
-            status: request.status,
-            statusText: request.statusText,
-            url: request.responseURL,
-            clone: response,
-            text() { return Promise.resolve(request.responseText); },
-            json() { return Promise.resolve(request.responseText).then(JSON.parse); },
-            xml() { return Promise.resolve(request.responseXML); },
-            blob() { return Promise.resolve(new Blob([request.response])); },
-            arrayBuffer() { return Promise.resolve(new ArrayBuffer([request.response])); },
-            headers: {
-                keys() { return keys; },
-                entries() { return all; },
-                get(n) { return headers[n.toLowerCase()]; },
-                has(n) { return n.toLowerCase() in headers; }
-            }
+        this.render = () => {
+            this.renderer.render(this.scene, this.camera, renderTarget, true);
+            mesh.material.uniforms.texture.value = renderTarget.texture;
+            this.renderer.render(scene, camera);
         };
     }
-    return promise;
-};
-
-window.get = function (url, options = {}) {
-    let promise = Promise.create();
-    options.method = 'GET';
-    window.fetch(url, options).then(handleResponse).catch(promise.reject);
-
-    function handleResponse(e) {
-        if (!e.ok) return promise.reject(e);
-        e.text().then(function (text) {
-            if (text.charAt(0).includes(['[', '{'])) {
-                try {
-                    promise.resolve(JSON.parse(text));
-                } catch (err) {
-                    promise.resolve(text);
-                }
-            } else {
-                promise.resolve(text);
-            }
-        });
-    }
-    return promise;
-};
-
-window.post = function (url, body, options = {}) {
-    let promise = Promise.create();
-    options.method = 'POST';
-    options.body = JSON.stringify(body);
-    window.fetch(url, options).then(handleResponse).catch(promise.reject);
-
-    function handleResponse(e) {
-        if (!e.ok) return promise.reject(e);
-        e.text().then(function (text) {
-            if (text.charAt(0).includes(['[', '{'])) {
-                try {
-                    promise.resolve(JSON.parse(text));
-                } catch (err) {
-                    promise.resolve(text);
-                }
-            } else {
-                promise.resolve(text);
-            }
-        });
-    }
-    return promise;
-};
-
-window.getURL = function (url, target = '_blank') {
-    window.open(url, target);
-};
-
-if (!window.Global) window.Global = {};
-if (!window.Config) window.Config = {};
+}
 
 /**
  * Alien abduction point.
@@ -4373,8 +4397,8 @@ exports.Utils3D = Utils3D;
 exports.Interaction3D = Interaction3D;
 exports.Raycaster = Raycaster;
 exports.ScreenProjection = ScreenProjection;
-exports.Shaders = Shaders;
 exports.Shader = Shader;
+exports.Effects = Effects;
 
 Object.defineProperty(exports, '__esModule', { value: true });
 

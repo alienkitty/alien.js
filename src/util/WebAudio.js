@@ -4,6 +4,7 @@
  * @author Patrick Schroen / https://github.com/pschroen
  */
 
+import { Device } from './Device';
 import { TweenManager } from '../tween/TweenManager';
 
 if (!window.AudioContext) window.AudioContext = window.webkitAudioContext || window.mozAudioContext || window.oAudioContext;
@@ -21,16 +22,34 @@ class WebAudio {
             this.globalGain.connect(context.destination);
         };
 
-        this.createSound = (id, audioData, callback) => {
-            const sound = {};
-            context.decodeAudioData(audioData, buffer => {
-                sound.buffer = buffer;
-                sound.audioGain = context.createGain();
-                sound.audioGain.connect(this.globalGain);
-                sound.complete = true;
-                if (callback) callback();
+        this.loadSound = (id, callback) => {
+            const promise = Promise.create();
+            if (callback) promise.then(callback);
+            callback = promise.resolve;
+            const sound = this.getSound(id);
+            window.fetch(sound.asset).then(response => {
+                if (!response.ok) return callback();
+                response.arrayBuffer().then(data => {
+                    context.decodeAudioData(data, buffer => {
+                        sound.buffer = buffer;
+                        sound.complete = true;
+                        callback();
+                    });
+                });
+            }).catch(() => {
+                callback();
             });
+            sound.ready = () => promise;
+        };
+
+        this.createSound = (id, asset, callback) => {
+            const sound = {};
+            sound.asset = asset;
+            sound.audioGain = context.createGain();
+            sound.audioGain.connect(this.globalGain);
             sounds[id] = sound;
+            if (Device.os === 'ios') callback();
+            else this.loadSound(id, callback);
         };
 
         this.getSound = id => {
@@ -39,12 +58,18 @@ class WebAudio {
 
         this.trigger = id => {
             if (!context) return;
-            const sound = this.getSound(id),
-                source = context.createBufferSource();
-            source.buffer = sound.buffer;
-            source.connect(sound.audioGain);
-            source.loop = !!sound.loop;
-            source.start(0);
+            if (context.state === 'suspended') context.resume();
+            const sound = this.getSound(id);
+            if (!sound.ready) this.loadSound(id);
+            sound.ready().then(() => {
+                if (sound.complete) {
+                    const source = context.createBufferSource();
+                    source.buffer = sound.buffer;
+                    source.connect(sound.audioGain);
+                    source.loop = !!sound.loop;
+                    source.start(0);
+                }
+            });
         };
 
         this.mute = () => {

@@ -38,12 +38,7 @@ class AssetLoader {
             }
             if (ext.includes(['mp3', 'm4a', 'ogg', 'wav', 'aif'])) {
                 if (!window.AudioContext || !window.WebAudio) return assetLoaded();
-                window.fetch(asset).then(response => {
-                    if (!response.ok) return assetLoaded();
-                    response.arrayBuffer().then(data => window.WebAudio.createSound(key, data, assetLoaded));
-                }).catch(() => {
-                    assetLoaded();
-                });
+                window.WebAudio.createSound(key, asset, assetLoaded);
                 return;
             }
             window.get(asset).then(data => {

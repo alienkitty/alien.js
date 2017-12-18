@@ -347,7 +347,7 @@ class ColourBeamScene extends Component {
         function loop() {
             if (!self.object3D.visible) return;
             shader.uniforms.beamWidth.value += (beamWidth - shader.uniforms.beamWidth.value) * 0.3;
-            if (gleam) gleam.audioGain.gain.value += (audioMoveVolume - gleam.audioGain.gain.value) * 0.3;
+            if (gleam) gleam.gain.value += (audioMoveVolume - gleam.gain.value) * 0.3;
         }
 
         this.animateIn = () => {
@@ -360,10 +360,10 @@ class ColourBeamScene extends Component {
         this.initAudio = () => {
             gleam = WebAudio.getSound('MagicGleam');
             if (gleam) {
-                gleam.audioGain.gain.value = 0;
+                gleam.gain.value = 0;
                 gleam.loop = true;
                 WebAudio.trigger('MagicGleam');
-                //TweenManager.tween(gleam.audioGain.gain, { value: 1 }, 500, 'easeOutCubic');
+                //TweenManager.tween(gleam.gain, { value: 1 }, 500, 'easeOutCubic');
             }
         };
     }
@@ -427,14 +427,14 @@ class World extends Component {
             if (spacy) {
                 audioMoveVolume *= audioMoveDecay;
                 if (audioMoveVolume < audioMinVolume) audioMoveVolume = audioMinVolume;
-                spacy.audioGain.gain.value += (audioMoveVolume - spacy.audioGain.gain.value) * 0.3;
+                spacy.gain.value += (audioMoveVolume - spacy.gain.value) * 0.3;
             }
         }
 
         this.initAudio = () => {
             spacy = WebAudio.getSound('DeepSpacy');
             if (spacy) {
-                spacy.audioGain.gain.value = audioMinVolume;
+                spacy.gain.value = audioMinVolume;
                 spacy.loop = true;
                 WebAudio.trigger('DeepSpacy');
             }

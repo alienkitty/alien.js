@@ -12,6 +12,7 @@ if (!window.AudioContext) window.AudioContext = window.webkitAudioContext || win
 class WebAudio {
 
     constructor() {
+        const self = this;
         const sounds = {};
         let context;
 
@@ -20,6 +21,14 @@ class WebAudio {
             if (!context) return;
             this.globalGain = context.createGain();
             this.globalGain.connect(context.destination);
+            this.gain = {
+                set value(value) {
+                    self.globalGain.gain.setTargetAtTime(value, context.currentTime, 0.01);
+                },
+                get value() {
+                    return self.globalGain.gain.value;
+                }
+            };
         };
 
         this.loadSound = (id, callback) => {
@@ -47,6 +56,14 @@ class WebAudio {
             sound.asset = asset;
             sound.audioGain = context.createGain();
             sound.audioGain.connect(this.globalGain);
+            sound.gain = {
+                set value(value) {
+                    sound.audioGain.gain.setTargetAtTime(value, context.currentTime, 0.01);
+                },
+                get value() {
+                    return sound.audioGain.gain.value;
+                }
+            };
             sounds[id] = sound;
             if (Device.os === 'ios') callback();
             else this.loadSound(id, callback);
@@ -74,12 +91,12 @@ class WebAudio {
 
         this.mute = () => {
             if (!context) return;
-            TweenManager.tween(this.globalGain.gain, { value: 0 }, 300, 'easeOutSine');
+            TweenManager.tween(this.gain, { value: 0 }, 300, 'easeOutSine');
         };
 
         this.unmute = () => {
             if (!context) return;
-            TweenManager.tween(this.globalGain.gain, { value: 1 }, 500, 'easeOutSine');
+            TweenManager.tween(this.gain, { value: 1 }, 500, 'easeOutSine');
         };
 
         window.WebAudio = this;

@@ -21,12 +21,14 @@ class WebAudio {
             if (!context) return;
             this.globalGain = context.createGain();
             this.globalGain.connect(context.destination);
+            this.globalGain.value = this.globalGain.gain.defaultValue;
             this.gain = {
                 set value(value) {
+                    self.globalGain.value = value;
                     self.globalGain.gain.setTargetAtTime(value, context.currentTime, 0.01);
                 },
                 get value() {
-                    return self.globalGain.gain.value;
+                    return self.globalGain.value;
                 }
             };
         };
@@ -56,12 +58,14 @@ class WebAudio {
             sound.asset = asset;
             sound.audioGain = context.createGain();
             sound.audioGain.connect(this.globalGain);
+            sound.audioGain.value = sound.audioGain.gain.defaultValue;
             sound.gain = {
                 set value(value) {
+                    sound.audioGain.value = value;
                     sound.audioGain.gain.setTargetAtTime(value, context.currentTime, 0.01);
                 },
                 get value() {
-                    return sound.audioGain.gain.value;
+                    return sound.audioGain.value;
                 }
             };
             sounds[id] = sound;
@@ -83,6 +87,7 @@ class WebAudio {
                     const source = context.createBufferSource();
                     source.buffer = sound.buffer;
                     source.connect(sound.audioGain);
+                    sound.audioGain.gain.setValueAtTime(sound.audioGain.value, context.currentTime);
                     source.loop = !!sound.loop;
                     source.start(0);
                 }

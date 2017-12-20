@@ -34,9 +34,9 @@ class Stage extends Interface {
                     self.events.fire(Events.VISIBILITY, { type: 'blur' });
                 }
             }, true);
-            window.addEventListener('keydown', () => self.events.fire(Events.KEYBOARD_DOWN), true);
-            window.addEventListener('keyup', () => self.events.fire(Events.KEYBOARD_UP), true);
-            window.addEventListener('keypress', () => self.events.fire(Events.KEYBOARD_PRESS), true);
+            window.addEventListener('keydown', e => self.events.fire(Events.KEYBOARD_DOWN, e), true);
+            window.addEventListener('keyup', e => self.events.fire(Events.KEYBOARD_UP, e), true);
+            window.addEventListener('keypress', e => self.events.fire(Events.KEYBOARD_PRESS, e), true);
             window.addEventListener('resize', () => self.events.fire(Events.RESIZE), true);
             self.events.add(Events.RESIZE, resize);
             resize();

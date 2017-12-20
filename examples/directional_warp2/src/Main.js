@@ -6,7 +6,8 @@
 
 /* global THREE */
 
-import { Events, Stage, Component, Canvas, CanvasGraphics, Device, Mouse, Interaction, Utils, AssetLoader, Images, TweenManager, Shader } from '../alien.js/src/Alien';
+import { Events, Stage, Component, Canvas, CanvasGraphics, Device, Mouse, Scroll, Interaction, Utils,
+    AssetLoader, Images, TweenManager, Shader } from '../alien.js/src/Alien';
 
 import vertRipple from './shaders/ripple.vert';
 import fragRipple from './shaders/ripple.frag';
@@ -172,7 +173,7 @@ class SpaceScene extends Component {
         const self = this;
         this.object3D = new THREE.Object3D();
         const ratio = 1920 / 1080;
-        let texture1, texture2, texture1img, texture2img, shader, mesh,
+        let texture1, texture2, texture1img, texture2img, shader, mesh, scroll,
             progress = 0;
 
         World.scene.add(this.object3D);
@@ -221,6 +222,11 @@ class SpaceScene extends Component {
             Stage.events.add(Events.RESIZE, resize);
             Mouse.input.events.add(Interaction.START, down);
             Mouse.input.events.add(Interaction.END, up);
+            scroll = self.initClass(Scroll, { drag: true });
+            self.startRender(() => {
+                self.scrollY = scroll.y / Stage.height;
+                progress = self.scrollY;
+            });
             up();
             resize();
         }
@@ -236,11 +242,13 @@ class SpaceScene extends Component {
         function resize() {
             if (Stage.width / Stage.height > ratio) mesh.scale.set(Stage.width, Stage.width / ratio, 1);
             else mesh.scale.set(Stage.height * ratio, Stage.height, 1);
+            scroll.max.y = Stage.height;
         }
 
         function loop() {
             if (!self.object3D.visible) return;
-            shader.uniforms.progress.value += (progress - shader.uniforms.progress.value) * 0.03;
+            //shader.uniforms.progress.value += (progress - shader.uniforms.progress.value) * 0.03;
+            shader.uniforms.progress.value = progress;
         }
     }
 }

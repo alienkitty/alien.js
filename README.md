@@ -30,12 +30,12 @@ A lightweight web framework for the future.
 
 glslify [shader](https://rawgit.com/pschroen/alien.js/master/examples/shader/dist/)  
 [colour beam](https://rawgit.com/pschroen/alien.js/master/examples/colour_beam/dist/)  
-[dissolve](https://rawgit.com/pschroen/alien.js/master/examples/dissolve/dist/) transition  
+[dissolve](https://rawgit.com/pschroen/alien.js/master/examples/dissolve/dist/) (fade transition)  
 [chromatic aberration](https://rawgit.com/pschroen/alien.js/master/examples/chromatic_aberration/dist/) (simple)  
 [chromatic aberration 2](https://rawgit.com/pschroen/alien.js/master/examples/chromatic_aberration2/dist/) (barrel distortion)  
 [noise warp](https://rawgit.com/pschroen/alien.js/master/examples/noise_warp/dist/)  
 [directional warp](https://rawgit.com/pschroen/alien.js/master/examples/directional_warp/dist/)  
-[directional warp 2](https://rawgit.com/pschroen/alien.js/master/examples/directional_warp2/dist/) (alienkitty ripple)  
+[directional warp 2](https://rawgit.com/pschroen/alien.js/master/examples/directional_warp2/dist/) (scroll transition)  
 [ripple](https://rawgit.com/pschroen/alien.js/master/examples/ripple/dist/)  
 [glitch displace](https://rawgit.com/pschroen/alien.js/master/examples/glitch_displace/dist/)
 

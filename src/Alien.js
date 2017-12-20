@@ -16,6 +16,7 @@ export { CanvasGraphics } from './canvas/CanvasGraphics';
 export { CanvasFont } from './canvas/CanvasFont';
 export { Device } from './util/Device';
 export { Mouse } from './util/Mouse';
+export { Scroll } from './util/Scroll';
 export { Interaction } from './util/Interaction';
 export { Accelerometer } from './mobile/Accelerometer';
 export { Utils } from './util/Utils';

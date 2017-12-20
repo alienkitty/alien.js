@@ -47,6 +47,24 @@ class Device {
             if (this.detect(['linux'])) return 'linux';
             return 'unknown';
         })();
+        this.browser = (() => {
+            if (this.os === 'ios') {
+                if (this.detect(['safari'])) return 'safari';
+                return 'unknown';
+            }
+            if (this.os === 'android') {
+                if (this.detect(['chrome'])) return 'chrome';
+                if (this.detect(['firefox'])) return 'firefox';
+                return 'browser';
+            }
+            if (this.detect(['msie'])) return 'ie';
+            if (this.detect(['trident']) && this.detect(['rv:'])) return 'ie';
+            if (this.detect(['windows']) && this.detect(['edge'])) return 'ie';
+            if (this.detect(['chrome'])) return 'chrome';
+            if (this.detect(['safari'])) return 'safari';
+            if (this.detect(['firefox'])) return 'firefox';
+            return 'unknown';
+        })();
         this.mobile = ('ontouchstart' in window) && this.detect(['iphone', 'ipad', 'android', 'blackberry']);
         this.tablet = Math.max(screen.width, screen.height) > 800;
         this.phone = !this.tablet;

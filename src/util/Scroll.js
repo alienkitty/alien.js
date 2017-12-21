@@ -9,7 +9,6 @@ import { Component } from './Component';
 import { Device } from './Device';
 import { Mouse } from './Mouse';
 import { Interaction } from './Interaction';
-import { TweenManager } from '../tween/TweenManager';
 import { Stage } from '../view/Stage';
 
 class Scroll extends Component {
@@ -34,13 +33,9 @@ class Scroll extends Component {
         };
         this.enabled = true;
         const scrollTarget = {
-                x: 0,
-                y: 0
-            },
-            scrollInertia = {
-                x: 0,
-                y: 0
-            };
+            x: 0,
+            y: 0
+        };
         let axes = ['x', 'y'];
 
         initParameters();
@@ -65,61 +60,17 @@ class Scroll extends Component {
             if (self.drag) {
                 if (self.hitObject) self.hitObject.bind('touchstart', e => e.preventDefault());
                 const input = self.hitObject ? new Interaction(self.hitObject) : Mouse.input;
-                input.events.add(Interaction.START, down);
                 input.events.add(Interaction.DRAG, drag);
-                input.events.add(Interaction.END, up);
             }
             Stage.events.add(Events.RESIZE, resize);
             resize();
-        }
-
-        function stopInertia() {
-            self.isInertia = false;
-            TweenManager.clearTween(scrollTarget);
         }
 
         function scroll(e) {
             if (!self.enabled) return;
             if (e.preventDefault) e.preventDefault();
             if (!self.mouseWheel) return;
-            stopInertia();
-            axes.forEach(axis => {
-                const delta = 'delta' + axis.toUpperCase();
-                if (Device.os === 'mac') {
-                    if (Device.browser === 'firefox') {
-                        if (e.deltaMode === 1) {
-                            scrollTarget[axis] += e[delta] * 4;
-                            scrollInertia[axis] = e[delta] * 4;
-                            self.isInertia = true;
-                            return;
-                        }
-                        scrollTarget[axis] += e[delta];
-                        return;
-                    }
-                    if (Device.browser.includes(['chrome', 'safari'])) {
-                        scrollTarget[axis] += e[delta] * 0.33;
-                        scrollInertia[axis] = e[delta] * 0.33;
-                        self.isInertia = true;
-                        return;
-                    }
-                }
-                if (Device.os === 'windows') {
-                    if (Device.browser === 'firefox') {
-                        if (e.deltaMode === 1) {
-                            scrollTarget[axis] += e[delta] * 10;
-                            scrollInertia[axis] = e[delta] * 10;
-                            self.isInertia = true;
-                            return;
-                        }
-                    }
-                }
-                scrollTarget[axis] += e[delta];
-            });
-        }
-
-        function down() {
-            if (!self.enabled) return;
-            stopInertia();
+            axes.forEach(axis => scrollTarget[axis] += e['delta' + axis.toUpperCase()]);
         }
 
         function drag() {
@@ -127,20 +78,8 @@ class Scroll extends Component {
             axes.forEach(axis => scrollTarget[axis] -= Mouse.input.delta[axis]);
         }
 
-        function up() {
-            if (!self.enabled) return;
-            const m = (() => {
-                    if (Device.os === 'android') return 35;
-                    return 25;
-                })(),
-                obj = {};
-            axes.forEach(axis => obj[axis] = scrollTarget[axis] - Mouse.input.delta[axis] * m);
-            TweenManager.tween(scrollTarget, obj, 2500, 'easeOutQuint');
-        }
-
         function resize() {
             if (!self.enabled) return;
-            stopInertia();
             if (!self.object) return;
             const p = {};
             if (Device.mobile) axes.forEach(axis => p[axis] = self.max[axis] ? scrollTarget[axis] / self.max[axis] : 0);
@@ -151,15 +90,8 @@ class Scroll extends Component {
 
         function loop() {
             axes.forEach(axis => {
-                if (self.isInertia) {
-                    scrollInertia[axis] *= 0.9;
-                    scrollTarget[axis] += scrollInertia[axis];
-                }
-                if (self.limit) {
-                    scrollTarget[axis] = Math.max(scrollTarget[axis], 0);
-                    scrollTarget[axis] = Math.min(scrollTarget[axis], self.max[axis] / self.scale);
-                }
-                self.delta[axis] = (scrollTarget[axis] * self.scale - self[axis]) * 0.6;
+                if (self.limit) scrollTarget[axis] = Math.clamp(scrollTarget[axis], 0, self.max[axis] / self.scale);
+                self.delta[axis] = (scrollTarget[axis] * self.scale - self[axis]);
                 self[axis] += self.delta[axis];
                 if (self.object) {
                     if (axis === 'x') self.object.element.scrollLeft = self.x;

@@ -34,7 +34,7 @@ Math.clamp = function (value, min = 0, max = 1) {
 
 Math.range = function (value, oldMin = -1, oldMax = 1, newMin = 0, newMax = 1, isClamp) {
     const newValue = (value - oldMin) * (newMax - newMin) / (oldMax - oldMin) + newMin;
-    if (isClamp) return Math.clamp(newValue, Math.min(newMin, newMax), Math.max(newMin, newMax));
+    if (isClamp) return Math.clamp(newValue, newMin, newMax);
     return newValue;
 };
 

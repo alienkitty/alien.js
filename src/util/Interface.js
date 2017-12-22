@@ -166,10 +166,10 @@ class Interface {
         return this;
     }
 
-    size(w, h) {
+    size(w, h = w) {
         if (typeof w !== 'undefined') {
-            if (typeof h === 'undefined') h = w;
-            if (typeof w === 'string') {
+            if (typeof w === 'string' || typeof h === 'string') {
+                if (typeof w !== 'string') w = w + 'px';
                 if (typeof h !== 'string') h = h + 'px';
                 this.element.style.width = w;
                 this.element.style.height = h;

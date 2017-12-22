@@ -9,6 +9,7 @@ import { Component } from './Component';
 import { Device } from './Device';
 import { Mouse } from './Mouse';
 import { Interaction } from './Interaction';
+import { TweenManager } from '../tween/TweenManager';
 import { Stage } from '../view/Stage';
 
 class Scroll extends Component {
@@ -60,17 +61,29 @@ class Scroll extends Component {
             if (self.drag) {
                 if (self.hitObject) self.hitObject.bind('touchstart', e => e.preventDefault());
                 const input = self.hitObject ? new Interaction(self.hitObject) : Mouse.input;
+                input.events.add(Interaction.START, down);
                 input.events.add(Interaction.DRAG, drag);
+                input.events.add(Interaction.END, up);
             }
             Stage.events.add(Events.RESIZE, resize);
             resize();
+        }
+
+        function stopInertia() {
+            TweenManager.clearTween(scrollTarget);
         }
 
         function scroll(e) {
             if (!self.enabled) return;
             if (e.preventDefault) e.preventDefault();
             if (!self.mouseWheel) return;
+            stopInertia();
             axes.forEach(axis => scrollTarget[axis] += e['delta' + axis.toUpperCase()]);
+        }
+
+        function down() {
+            if (!self.enabled) return;
+            stopInertia();
         }
 
         function drag() {
@@ -78,8 +91,20 @@ class Scroll extends Component {
             axes.forEach(axis => scrollTarget[axis] -= Mouse.input.delta[axis]);
         }
 
+        function up() {
+            if (!self.enabled) return;
+            const m = (() => {
+                    if (Device.os === 'android') return 35;
+                    return 25;
+                })(),
+                obj = {};
+            axes.forEach(axis => obj[axis] = scrollTarget[axis] - Mouse.input.delta[axis] * m);
+            TweenManager.tween(scrollTarget, obj, 2500, 'easeOutQuint');
+        }
+
         function resize() {
             if (!self.enabled) return;
+            stopInertia();
             if (!self.object) return;
             const p = {};
             if (Device.mobile) axes.forEach(axis => p[axis] = self.max[axis] ? scrollTarget[axis] / self.max[axis] : 0);

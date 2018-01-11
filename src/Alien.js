@@ -28,6 +28,7 @@ export { Assets } from './util/Assets';
 export { MultiLoader } from './util/MultiLoader';
 export { AssetLoader } from './util/AssetLoader';
 export { FontLoader } from './util/FontLoader';
+export { StateDispatcher } from './util/StateDispatcher';
 export { Video } from './util/Video';
 export { SVG } from './svg/SVG';
 export { Storage } from './util/Storage';

@@ -4,7 +4,6 @@
  * @author Patrick Schroen / https://github.com/pschroen
  */
 
-import { Color } from '../util/Color';
 import { Utils } from '../util/Utils';
 import { CanvasValues } from './CanvasValues';
 
@@ -57,10 +56,7 @@ class CanvasObject {
         context.globalAlpha = v[5];
         if (this.styles.styled) {
             const values = this.styles.values;
-            for (let key in values) {
-                const val = values[key];
-                context[key] = val instanceof Color ? val.getHexString() : val;
-            }
+            for (let key in values) context[key] = values[key];
         }
     }
 

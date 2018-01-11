@@ -14,7 +14,6 @@ export { Component } from './util/Component';
 export { Canvas } from './canvas/Canvas';
 export { CanvasGraphics } from './canvas/CanvasGraphics';
 export { CanvasFont } from './canvas/CanvasFont';
-export { Color } from './util/Color';
 export { Device } from './util/Device';
 export { Mouse } from './util/Mouse';
 export { Scroll } from './util/Scroll';

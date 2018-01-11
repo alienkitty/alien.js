@@ -4,14 +4,13 @@
  * @author Patrick Schroen / https://github.com/pschroen
  */
 
-import { Color } from '../util/Color';
 import { Utils } from '../util/Utils';
 import { Interface } from '../util/Interface';
 import { CanvasGraphics } from './CanvasGraphics';
 
 class Canvas {
 
-    constructor(w, h = w, retina, alphaColor) {
+    constructor(w, h = w, retina, whiteAlpha) {
         const self = this;
         this.element = document.createElement('canvas');
         this.context = this.element.getContext('2d');
@@ -32,10 +31,9 @@ class Canvas {
             self.context.scale(ratio, ratio);
             self.element.style.width = w + 'px';
             self.element.style.height = h + 'px';
-            if (alphaColor) {
-                const color = new Color(alphaColor),
-                    alpha = new CanvasGraphics(self.width, self.height);
-                alpha.fillStyle = color.getStyle('0.002');
+            if (whiteAlpha) {
+                const alpha = new CanvasGraphics(self.width, self.height);
+                alpha.fillStyle = 'rgba(255, 255, 255, 0.002)';
                 alpha.fillRect(0, 0, self.width, self.height);
                 alpha.setCanvas(self);
                 alpha.parent = self;

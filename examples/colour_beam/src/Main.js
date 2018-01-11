@@ -30,7 +30,7 @@ class TitleTexture extends Component {
         initCanvas();
 
         function initCanvas() {
-            canvas = self.initClass(Canvas, Stage.width, Stage.height, true, '#FFFFFF');
+            canvas = self.initClass(Canvas, Stage.width, Stage.height, true, true);
             self.canvas = canvas;
             texture = new THREE.Texture(canvas.element);
             texture.minFilter = THREE.LinearFilter;
@@ -43,7 +43,7 @@ class TitleTexture extends Component {
                 canvas.remove(text);
                 text = text.destroy();
             }
-            text = CanvasFont.createText(canvas, Stage.width, Stage.height, 'Colour Beam'.toUpperCase(), '200 66px Oswald', '#FFFFFF', {
+            text = CanvasFont.createText(canvas, Stage.width, Stage.height, 'Colour Beam'.toUpperCase(), '200 66px Oswald', Config.UI_COLOR, {
                 lineHeight: 80,
                 letterSpacing: 0,
                 textAlign: 'center'

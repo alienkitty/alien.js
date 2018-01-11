@@ -10,11 +10,12 @@ class CanvasFont {
 
     constructor() {
 
-        function createText(canvas, width, height, str, font, fillStyle, letterSpacing, textAlign) {
+        function createText(canvas, width, height, str, font, fillStyle, textBaseline, letterSpacing, textAlign) {
             const context = canvas.context,
                 graphics = new CanvasGraphics(width, height);
             graphics.font = font;
             graphics.fillStyle = fillStyle;
+            graphics.textBaseline = textBaseline;
             graphics.totalWidth = 0;
             graphics.totalHeight = height;
             const characters = str.split('');
@@ -44,10 +45,10 @@ class CanvasFont {
             return graphics;
         }
 
-        this.createText = (canvas, width, height, str, font, fillStyle, { letterSpacing = 0, lineHeight = height, textAlign = 'start' }) => {
+        this.createText = (canvas, width, height, str, font, fillStyle, { textBaseline = 'alphabetic', lineHeight = height, letterSpacing = 0, textAlign = 'start' }) => {
             const context = canvas.context;
             if (height === lineHeight) {
-                return createText(canvas, width, height, str, font, fillStyle, letterSpacing, textAlign);
+                return createText(canvas, width, height, str, font, fillStyle, textBaseline, letterSpacing, textAlign);
             } else {
                 const text = new CanvasGraphics(width, height),
                     words = str.split(' '),
@@ -69,13 +70,12 @@ class CanvasFont {
                     }
                 }
                 lines.push(line);
-                lines.every((e, i) => {
-                    const graphics = createText(canvas, width, lineHeight, e, font, fillStyle, letterSpacing, textAlign);
+                lines.forEach((line, i) => {
+                    const graphics = createText(canvas, width, lineHeight, line.slice(0, -1), font, fillStyle, textBaseline, letterSpacing, textAlign);
                     graphics.y = i * lineHeight;
                     text.add(graphics);
                     text.totalWidth = Math.max(graphics.totalWidth, text.totalWidth);
                     text.totalHeight += lineHeight;
-                    return true;
                 });
                 return text;
             }

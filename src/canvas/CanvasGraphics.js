@@ -4,6 +4,7 @@
  * @author Patrick Schroen / https://github.com/pschroen
  */
 
+import { Color } from '../util/Color';
 import { Utils } from '../util/Utils';
 import { CanvasObject } from './CanvasObject';
 
@@ -19,7 +20,10 @@ class CanvasGraphics extends CanvasObject {
             mask;
 
         function setProperties(context) {
-            for (let key in self.props) context[key] = self.props[key];
+            for (let key in self.props) {
+                const val = self.props[key];
+                context[key] = val instanceof Color ? val.getHexString() : val;
+            }
         }
 
         this.draw = override => {

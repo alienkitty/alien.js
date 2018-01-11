@@ -33,7 +33,7 @@ class Interface {
                     else this.element.className = name.substr(1);
                 }
                 this.element.style.position = 'absolute';
-                if (!detached) (window.Alien && window.Alien.Stage ? window.Alien.Stage : document.body).appendChild(this.element);
+                if (!detached) document.body.appendChild(this.element);
             } else {
                 this.element = name;
             }
@@ -282,8 +282,6 @@ class Interface {
     }
 
     willChange(props) {
-        if (typeof props === 'boolean') this.willChangeLock = props;
-        else if (this.willChangeLock) return;
         const string = typeof props === 'string';
         if (props) this.element.style['will-change'] = string ? props : Device.transformProperty + ', opacity';
         else this.element.style['will-change'] = '';
@@ -366,23 +364,23 @@ class Interface {
     }
 
     convertTouchEvent(e) {
-        const touchEvent = {};
-        touchEvent.x = 0;
-        touchEvent.y = 0;
-        if (!e) return touchEvent;
+        const touch = {};
+        touch.x = 0;
+        touch.y = 0;
+        if (!e) return touch;
         if (e.touches || e.changedTouches) {
             if (e.touches.length) {
-                touchEvent.x = e.touches[0].pageX;
-                touchEvent.y = e.touches[0].pageY;
+                touch.x = e.touches[0].pageX;
+                touch.y = e.touches[0].pageY;
             } else {
-                touchEvent.x = e.changedTouches[0].pageX;
-                touchEvent.y = e.changedTouches[0].pageY;
+                touch.x = e.changedTouches[0].pageX;
+                touch.y = e.changedTouches[0].pageY;
             }
         } else {
-            touchEvent.x = e.pageX;
-            touchEvent.y = e.pageY;
+            touch.x = e.pageX;
+            touch.y = e.pageY;
         }
-        return touchEvent;
+        return touch;
     }
 
     click(callback) {

@@ -14,26 +14,7 @@
     <link rel="stylesheet" href="assets/css/style.css">
 </head>
 <body>
-<script>
-    (function() {
-        // IE11 support of Promises/A+ implementation with exceptionally good performance
-        if (typeof Promise === 'undefined') {
-            var p = document.createElement('script');
-            p.src = 'https://cdnjs.cloudflare.com/ajax/libs/bluebird/3.5.1/bluebird.min.js';
-            p.async = false;
-            document.body.appendChild(p);
-        }
-
-        window.Alien = {
-            Project: 'loader',
-            Build: '1515702054247',
-            Stage: document.body
-        };
-        var s = document.createElement('script');
-        s.src = 'assets/js/' + window.Alien.Project + '.js?v=' + window.Alien.Build;
-        s.async = false;
-        document.body.appendChild(s);
-    })();
-</script>
+<script src="https://cdn.polyfill.io/v2/polyfill.min.js?features=Promise"></script>
+<script src="assets/js/loader.js?v=1515704992576"></script>
 </body>
 </html>

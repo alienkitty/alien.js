@@ -10,16 +10,8 @@ let pkg = require('./alien.js/package.json'),
     project = path.basename(__dirname);
 
 replace({
-    regex: `Project: '.*'`,
-    replacement: `Project: '${project}'`,
-    paths: ['dist/index.html'],
-    recursive: false,
-    silent: true
-});
-
-replace({
-    regex: `Build: '.*'`,
-    replacement: `Build: '${Date.now()}'`,
+    regex: `"assets/js/.*\.js.*"`,
+    replacement: `"assets/js/${project}.js?v=${Date.now()}"`,
     paths: ['dist/index.html'],
     recursive: false,
     silent: true

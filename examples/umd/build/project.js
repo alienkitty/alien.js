@@ -1246,7 +1246,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
                         if (name[0] !== '.') this.element.id = name;else this.element.className = name.substr(1);
                     }
                     this.element.style.position = 'absolute';
-                    if (!detached) (window.Alien && window.Alien.Stage ? window.Alien.Stage : document.body).appendChild(this.element);
+                    if (!detached) document.body.appendChild(this.element);
                 } else {
                     this.element = name;
                 }
@@ -1537,7 +1537,6 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
         }, {
             key: 'willChange',
             value: function willChange(props) {
-                if (typeof props === 'boolean') this.willChangeLock = props;else if (this.willChangeLock) return;
                 var string = typeof props === 'string';
                 if (props) this.element.style['will-change'] = string ? props : Device.transformProperty + ', opacity';else this.element.style['will-change'] = '';
             }
@@ -1626,23 +1625,23 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
         }, {
             key: 'convertTouchEvent',
             value: function convertTouchEvent(e) {
-                var touchEvent = {};
-                touchEvent.x = 0;
-                touchEvent.y = 0;
-                if (!e) return touchEvent;
+                var touch = {};
+                touch.x = 0;
+                touch.y = 0;
+                if (!e) return touch;
                 if (e.touches || e.changedTouches) {
                     if (e.touches.length) {
-                        touchEvent.x = e.touches[0].pageX;
-                        touchEvent.y = e.touches[0].pageY;
+                        touch.x = e.touches[0].pageX;
+                        touch.y = e.touches[0].pageY;
                     } else {
-                        touchEvent.x = e.changedTouches[0].pageX;
-                        touchEvent.y = e.changedTouches[0].pageY;
+                        touch.x = e.changedTouches[0].pageX;
+                        touch.y = e.changedTouches[0].pageY;
                     }
                 } else {
-                    touchEvent.x = e.pageX;
-                    touchEvent.y = e.pageY;
+                    touch.x = e.pageX;
+                    touch.y = e.pageY;
                 }
-                return touchEvent;
+                return touch;
             }
         }, {
             key: 'click',
@@ -1863,18 +1862,8 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
             }
 
             function addListeners() {
-                window.addEventListener('focus', function () {
-                    if (last !== 'focus') {
-                        last = 'focus';
-                        self.events.fire(Events.VISIBILITY, { type: 'focus' });
-                    }
-                }, true);
-                window.addEventListener('blur', function () {
-                    if (last !== 'blur') {
-                        last = 'blur';
-                        self.events.fire(Events.VISIBILITY, { type: 'blur' });
-                    }
-                }, true);
+                window.addEventListener('focus', focus, true);
+                window.addEventListener('blur', blur, true);
                 window.addEventListener('keydown', function (e) {
                     return self.events.fire(Events.KEYBOARD_DOWN, e);
                 }, true);
@@ -1889,6 +1878,20 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
                 }, true);
                 self.events.add(Events.RESIZE, resize);
                 resize();
+            }
+
+            function focus() {
+                if (last !== 'focus') {
+                    last = 'focus';
+                    self.events.fire(Events.VISIBILITY, { type: 'focus' });
+                }
+            }
+
+            function blur() {
+                if (last !== 'blur') {
+                    last = 'blur';
+                    self.events.fire(Events.VISIBILITY, { type: 'blur' });
+                }
             }
 
             function resize() {

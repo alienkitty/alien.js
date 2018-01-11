@@ -1,5 +1,6 @@
 import { singletons, babel } from './alien.js/src/utils.js';
 
+import glslify from 'rollup-plugin-glslify';
 import eslint from 'rollup-plugin-eslint';
 
 export default {
@@ -11,6 +12,7 @@ export default {
     },
     plugins: [
         singletons(),
+        glslify({ basedir: 'src/shaders' }),
         eslint(),
         babel()
     ]

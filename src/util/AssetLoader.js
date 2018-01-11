@@ -6,7 +6,7 @@
 
 import { Events } from './Events';
 import { Utils } from './Utils';
-import { Images } from './Images';
+import { Assets } from './Assets';
 
 class AssetLoader {
 
@@ -24,16 +24,15 @@ class AssetLoader {
         }
         const self = this;
         this.events = new Events();
-        this.CDN = Config.CDN || '';
         const total = Object.keys(assets).length;
         let loaded = 0;
 
-        for (let key in assets) loadAsset(key, this.CDN + assets[key]);
+        for (let key in assets) loadAsset(key, Assets.CDN + assets[key]);
 
         function loadAsset(key, asset) {
             const ext = Utils.extension(asset);
             if (ext.includes(['jpg', 'jpeg', 'png', 'gif', 'svg'])) {
-                Images.createImg(asset, assetLoaded);
+                Assets.createImage(asset, assetLoaded);
                 return;
             }
             if (ext.includes(['mp3', 'm4a', 'ogg', 'wav', 'aif'])) {
@@ -43,7 +42,6 @@ class AssetLoader {
             }
             window.get(asset).then(data => {
                 if (ext === 'js') window.eval(data.replace('use strict', ''));
-                else if (ext.includes(['fs', 'vs', 'glsl']) && window.Shaders) window.Shaders.parse(data, asset);
                 assetLoaded();
             }).catch(() => {
                 assetLoaded();

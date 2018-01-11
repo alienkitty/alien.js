@@ -13,8 +13,7 @@ import { Vector2 } from './Vector2';
 class Interaction {
 
     constructor(object = Stage) {
-
-        if (!Interaction.instance) {
+        if (!Interaction.initialized) {
             Interaction.CLICK = 'interaction_click';
             Interaction.START = 'interaction_start';
             Interaction.MOVE  = 'interaction_move';
@@ -38,9 +37,8 @@ class Interaction {
             Stage.bind('touchend', touchEnd);
             Stage.bind('touchcancel', touchEnd);
 
-            Interaction.instance = this;
+            Interaction.initialized = true;
         }
-
         const self = this;
         this.events = new Events();
         this.x = 0;

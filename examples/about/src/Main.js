@@ -7,7 +7,7 @@
 /* global THREE */
 
 import { Events, Stage, Interface, Component, Device, Mouse, Interaction, Accelerometer, Utils,
-    AssetLoader, FontLoader, Images, TweenManager, WebAudio, Shader } from '../alien.js/src/Alien';
+    Assets, AssetLoader, FontLoader, TweenManager, WebAudio, Shader } from '../alien.js/src/Alien';
 
 import vertColourBeam from './shaders/colour_beam.vert';
 import fragColourBeam from './shaders/colour_beam.frag';
@@ -460,8 +460,8 @@ class AlienKitty extends Interface {
 
         function initImages() {
             return Promise.all([
-                Images.promise('assets/images/alienkitty.svg'),
-                Images.promise('assets/images/alienkitty_eyelid.svg')]
+                Assets.loadImage('assets/images/alienkitty.svg'),
+                Assets.loadImage('assets/images/alienkitty_eyelid.svg')]
             ).then(finishSetup);
         }
 

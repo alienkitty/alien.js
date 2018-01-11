@@ -14,7 +14,7 @@ const singletons = (values = []) => bundleutils.singletons([
     'Mouse',
     'Accelerometer',
     'Utils',
-    'Images',
+    'Assets',
     'Storage',
     'WebAudio',
     'TweenManager',

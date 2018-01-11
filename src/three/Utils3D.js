@@ -6,7 +6,7 @@
 
 /* global THREE */
 
-import { Images } from '../util/Images';
+import { Assets } from '../util/Assets';
 
 class Utils3D {
 
@@ -37,7 +37,7 @@ class Utils3D {
 
         this.getTexture = src => {
             if (!textures[src]) {
-                const img = Images.createImg(this.PATH + src),
+                const img = Assets.createImage(this.PATH + src),
                     texture = new THREE.Texture(img);
                 img.onload = () => {
                     texture.needsUpdate = true;
@@ -68,14 +68,11 @@ class Utils3D {
             if (!textures[path]) {
                 const images = [];
                 for (let i = 0; i < 6; i++) {
-                    const img = Images.createImg(this.PATH + (Array.isArray(src) ? src[i] : src));
+                    const img = Assets.createImage(this.PATH + (Array.isArray(src) ? src[i] : src));
                     images.push(img);
-                    img.onload = () => {
-                        textures[path].needsUpdate = true;
-                    };
+                    img.onload = () => textures[path].needsUpdate = true;
                 }
-                textures[path] = new THREE.Texture();
-                textures[path].image = images;
+                textures[path] = new THREE.Texture(images);
                 textures[path].minFilter = THREE.LinearFilter;
             }
             return textures[path];
@@ -137,9 +134,7 @@ class Utils3D {
 
         this.getRepeatTexture = src => {
             const texture = this.getTexture(src);
-            texture.onload = () => {
-                texture.wrapS = texture.wrapT = THREE.RepeatWrapping;
-            };
+            texture.onload = () => texture.wrapS = texture.wrapT = THREE.RepeatWrapping;
             return texture;
         };
     }

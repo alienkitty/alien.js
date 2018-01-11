@@ -4,7 +4,7 @@
  * @author Patrick Schroen / https://github.com/pschroen
  */
 
-import { Events, Stage, Interface, Canvas, CanvasGraphics, Utils, AssetLoader, Images, TweenManager } from '../alien.js/src/Alien';
+import { Events, Stage, Interface, Canvas, CanvasGraphics, Utils, Assets, AssetLoader, TweenManager } from '../alien.js/src/Alien';
 
 Config.UI_COLOR = 'white';
 
@@ -33,9 +33,9 @@ class AlienKittyCanvas extends Interface {
         }
 
         function initImages() {
-            alienkittyimg = Images.createImg('assets/images/alienkitty.svg');
-            eyelidimg = Images.createImg('assets/images/alienkitty_eyelid.svg');
-            Promise.all([Images.promise(alienkittyimg), Images.promise(eyelidimg)]).then(finishSetup);
+            alienkittyimg = Assets.createImage('assets/images/alienkitty.svg');
+            eyelidimg = Assets.createImage('assets/images/alienkitty_eyelid.svg');
+            Promise.all([Assets.loadImage(alienkittyimg), Assets.loadImage(eyelidimg)]).then(finishSetup);
         }
 
         function finishSetup() {

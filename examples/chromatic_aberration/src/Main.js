@@ -6,7 +6,7 @@
 
 /* global THREE */
 
-import { Events, Stage, Component, Canvas, CanvasGraphics, Device, Mouse, Interaction, Utils, AssetLoader, Images, TweenManager, Shader } from '../alien.js/src/Alien';
+import { Events, Stage, Component, Canvas, CanvasGraphics, Device, Mouse, Interaction, Utils, Assets, AssetLoader, TweenManager, Shader } from '../alien.js/src/Alien';
 
 import vertAlienKitty from './shaders/alienkitty.vert';
 import fragAlienKitty from './shaders/alienkitty.frag';
@@ -20,7 +20,7 @@ Config.ASSETS = [
     'assets/images/alienkitty_eyelid.svg'
 ];
 
-Images.CORS = 'Anonymous';
+Assets.CORS = 'Anonymous';
 
 class AlienKittyTexture extends Component {
 
@@ -40,9 +40,9 @@ class AlienKittyTexture extends Component {
         }
 
         function initImages() {
-            alienkittyimg = Images.createImg('assets/images/alienkitty.svg');
-            eyelidimg = Images.createImg('assets/images/alienkitty_eyelid.svg');
-            return Promise.all([Images.promise(alienkittyimg), Images.promise(eyelidimg)]).then(finishSetup);
+            alienkittyimg = Assets.createImage('assets/images/alienkitty.svg');
+            eyelidimg = Assets.createImage('assets/images/alienkitty_eyelid.svg');
+            return Promise.all([Assets.loadImage(alienkittyimg), Assets.loadImage(eyelidimg)]).then(finishSetup);
         }
 
         function finishSetup() {
@@ -178,9 +178,9 @@ class ChromaticAberrationScene extends Component {
         addListeners();
 
         function initTextures() {
-            textureimg = Images.createImg('assets/images/NGC_1672_1920px.jpg');
+            textureimg = Assets.createImage('assets/images/NGC_1672_1920px.jpg');
             texture = new THREE.Texture(null, null, THREE.ClampToEdgeWrapping, THREE.ClampToEdgeWrapping, THREE.LinearFilter, THREE.LinearFilter);
-            Promise.all([Images.promise(textureimg)]).then(finishSetup);
+            Promise.all([Assets.loadImage(textureimg)]).then(finishSetup);
         }
 
         function finishSetup() {

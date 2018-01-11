@@ -6,7 +6,7 @@
 
 /* global THREE */
 
-import { Events, Stage, Component, Canvas, CanvasGraphics, Device, Utils, AssetLoader, Images, TweenManager, Shader } from '../alien.js/src/Alien';
+import { Events, Stage, Component, Canvas, CanvasGraphics, Device, Utils, Assets, AssetLoader, TweenManager, Shader } from '../alien.js/src/Alien';
 
 import vert from './shaders/vert.glsl';
 import frag from './shaders/frag.glsl';
@@ -35,9 +35,9 @@ class AlienKittyTexture extends Component {
         }
 
         function initImages() {
-            alienkittyimg = Images.createImg('assets/images/alienkitty.svg');
-            eyelidimg = Images.createImg('assets/images/alienkitty_eyelid.svg');
-            return Promise.all([Images.promise(alienkittyimg), Images.promise(eyelidimg)]).then(finishSetup);
+            alienkittyimg = Assets.createImage('assets/images/alienkitty.svg');
+            eyelidimg = Assets.createImage('assets/images/alienkitty_eyelid.svg');
+            return Promise.all([Assets.loadImage(alienkittyimg), Assets.loadImage(eyelidimg)]).then(finishSetup);
         }
 
         function finishSetup() {

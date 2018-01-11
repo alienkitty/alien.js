@@ -7,7 +7,7 @@
 /* global THREE */
 
 import { Events, Stage, Component, Canvas, CanvasGraphics, Device, Mouse, Scroll, Interaction, Utils,
-    AssetLoader, Images, TweenManager, Shader } from '../alien.js/src/Alien';
+    Assets, AssetLoader, TweenManager, Shader } from '../alien.js/src/Alien';
 
 import vertRipple from './shaders/ripple.vert';
 import fragRipple from './shaders/ripple.frag';
@@ -22,7 +22,7 @@ Config.ASSETS = [
     'assets/images/alienkitty_eyelid.svg'
 ];
 
-Images.CORS = 'Anonymous';
+Assets.CORS = 'Anonymous';
 
 class AlienKittyTexture extends Component {
 
@@ -42,9 +42,9 @@ class AlienKittyTexture extends Component {
         }
 
         function initImages() {
-            alienkittyimg = Images.createImg('assets/images/alienkitty.svg');
-            eyelidimg = Images.createImg('assets/images/alienkitty_eyelid.svg');
-            return Promise.all([Images.promise(alienkittyimg), Images.promise(eyelidimg)]).then(finishSetup);
+            alienkittyimg = Assets.createImage('assets/images/alienkitty.svg');
+            eyelidimg = Assets.createImage('assets/images/alienkitty_eyelid.svg');
+            return Promise.all([Assets.loadImage(alienkittyimg), Assets.loadImage(eyelidimg)]).then(finishSetup);
         }
 
         function finishSetup() {
@@ -183,11 +183,11 @@ class SpaceScene extends Component {
         addListeners();
 
         function initTextures() {
-            texture1img = Images.createImg('assets/images/NGC_1672_1920px.jpg');
-            texture2img = Images.createImg('assets/images/Orion_Nebula_1920px.jpg');
+            texture1img = Assets.createImage('assets/images/NGC_1672_1920px.jpg');
+            texture2img = Assets.createImage('assets/images/Orion_Nebula_1920px.jpg');
             texture1 = new THREE.Texture(null, null, THREE.ClampToEdgeWrapping, THREE.ClampToEdgeWrapping, THREE.LinearFilter, THREE.LinearFilter);
             texture2 = new THREE.Texture(null, null, THREE.ClampToEdgeWrapping, THREE.ClampToEdgeWrapping, THREE.LinearFilter, THREE.LinearFilter);
-            Promise.all([Images.promise(texture1img), Images.promise(texture2img)]).then(finishSetup);
+            Promise.all([Assets.loadImage(texture1img), Assets.loadImage(texture2img)]).then(finishSetup);
         }
 
         function finishSetup() {

@@ -8,13 +8,13 @@ import { Events } from './Events';
 import { Component } from './Component';
 import { Interface } from './Interface';
 import { Device } from './Device';
+import { Assets } from './Assets';
 
 class Video extends Component {
 
     constructor(params) {
         super();
         const self = this;
-        this.CDN = Config.CDN || '';
         this.loaded = {
             start: 0,
             end: 0,
@@ -29,7 +29,7 @@ class Video extends Component {
 
         function createElement() {
             let src = params.src;
-            if (src) src = self.CDN + params.src;
+            if (src) src = Assets.CDN + src;
             self.element = document.createElement('video');
             if (src) self.element.src = src;
             self.element.controls = params.controls;
@@ -165,7 +165,7 @@ class Video extends Component {
         };
 
         this.ready = () => {
-            return this.element.readyState >= 2;
+            return this.element.readyState > this.element.HAVE_CURRENT_DATA;
         };
 
         this.size = (w, h) => {
@@ -200,7 +200,7 @@ class Video extends Component {
     }
 
     set src(src) {
-        this.element.src = this.CDN + src;
+        this.element.src = Assets.CDN + src;
     }
 
     get src() {

@@ -15,14 +15,12 @@ import { Raycaster } from './Raycaster';
 class Interaction3D {
 
     constructor(camera) {
-
-        if (!Interaction3D.instance) {
+        if (!Interaction3D.initialized) {
             Interaction3D.HOVER = 'interaction3d_hover';
             Interaction3D.CLICK = 'interaction3d_click';
 
-            Interaction3D.instance = this;
+            Interaction3D.initialized = true;
         }
-
         const self = this;
         this.events = new Events();
         this.ray = new Raycaster(camera);

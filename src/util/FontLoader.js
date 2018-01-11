@@ -24,12 +24,15 @@ class FontLoader {
         }
 
         function finish() {
-            setTimeout(() => {
+            const ready = () => {
                 element.destroy();
-                self.complete = true;
+                self.percent = 1;
+                self.events.fire(Events.PROGRESS, { percent: self.percent });
                 self.events.fire(Events.COMPLETE);
                 if (callback) callback();
-            }, 500);
+            };
+            if (document.fonts && document.fonts.ready) document.fonts.ready.then(ready);
+            else setTimeout(ready, 500);
         }
     }
 

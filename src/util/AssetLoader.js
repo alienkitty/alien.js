@@ -49,7 +49,8 @@ class AssetLoader {
         }
 
         function assetLoaded() {
-            self.events.fire(Events.PROGRESS, { percent: ++loaded / total });
+            self.percent = ++loaded / total;
+            self.events.fire(Events.PROGRESS, { percent: self.percent });
             if (loaded === total) complete();
         }
 

@@ -21,6 +21,7 @@ export { Interaction } from './util/Interaction';
 export { Accelerometer } from './mobile/Accelerometer';
 export { Utils } from './util/Utils';
 export { Assets } from './util/Assets';
+export { MultiLoader } from './util/MultiLoader';
 export { AssetLoader } from './util/AssetLoader';
 export { FontLoader } from './util/FontLoader';
 export { Video } from './util/Video';

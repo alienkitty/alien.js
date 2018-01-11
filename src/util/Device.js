@@ -65,15 +65,43 @@ class Device {
             if (this.detect(['firefox'])) return 'firefox';
             return 'unknown';
         })();
-        this.mobile = ('ontouchstart' in window) && this.detect(['iphone', 'ipad', 'android', 'blackberry']);
+        this.mobile = 'ontouchstart' in window && this.detect(['iphone', 'ipad', 'android', 'blackberry']);
         this.tablet = Math.max(screen.width, screen.height) > 800;
         this.phone = !this.tablet;
+        this.webgl = (() => {
+            try {
+                const names = ['webgl', 'experimental-webgl', 'webkit-3d', 'moz-webgl'],
+                    canvas = document.createElement('canvas');
+                let gl;
+                for (let i = 0; i < names.length; i++) {
+                    gl = canvas.getContext(names[i]);
+                    if (gl) break;
+                }
+                const info = gl.getExtension('WEBGL_debug_renderer_info'),
+                    output = {};
+                if (info) {
+                    const gpu = info.UNMASKED_RENDERER_WEBGL;
+                    output.gpu = gl.getParameter(gpu).toLowerCase();
+                }
+                output.renderer = gl.getParameter(gl.RENDERER).toLowerCase();
+                output.version = gl.getParameter(gl.VERSION).toLowerCase();
+                output.glsl = gl.getParameter(gl.SHADING_LANGUAGE_VERSION).toLowerCase();
+                output.extensions = gl.getSupportedExtensions();
+                output.detect = matches => {
+                    if (output.gpu && output.gpu.includes(matches)) return true;
+                    if (output.version && output.version.includes(matches)) return true;
+                    for (let i = 0; i < output.extensions.length; i++) if (output.extensions[i].toLowerCase().includes(matches)) return true;
+                    return false;
+                };
+                return output;
+            } catch (e) {
+                return false;
+            }
+        })();
     }
 
-    detect(array) {
-        if (typeof array === 'string') array = [array];
-        for (let i = 0; i < array.length; i++) if (~this.agent.indexOf(array[i])) return true;
-        return false;
+    detect(matches) {
+        return this.agent.includes(matches);
     }
 
     vendor(style) {
@@ -81,7 +109,7 @@ class Device {
     }
 
     vibrate(time) {
-        navigator.vibrate && navigator.vibrate(time);
+        if (navigator.vibrate) navigator.vibrate(time);
     }
 }
 

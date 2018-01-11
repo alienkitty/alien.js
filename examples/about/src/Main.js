@@ -291,7 +291,7 @@ class UI extends Interface {
     }
 }
 
-class ColourBeamScene extends Component {
+class ColourBeam extends Component {
 
     constructor() {
         super();
@@ -304,7 +304,6 @@ class ColourBeamScene extends Component {
         World.scene.add(this.object3D);
 
         initMesh();
-        addListeners();
 
         function initMesh() {
             self.object3D.visible = false;
@@ -328,6 +327,7 @@ class ColourBeamScene extends Component {
             Mouse.input.events.add(Interaction.START, down);
             Mouse.input.events.add(Interaction.END, up);
             up();
+            resize();
         }
 
         function down() {
@@ -351,6 +351,7 @@ class ColourBeamScene extends Component {
         }
 
         this.animateIn = () => {
+            addListeners();
             this.startRender(loop);
             this.object3D.visible = true;
             shader.uniforms.beam.value = 0;
@@ -466,7 +467,6 @@ class AlienKitty extends Interface {
         }
 
         function finishSetup() {
-            self.loaded = true;
             alienkitty.bg('assets/images/alienkitty.svg');
             eyelid1.bg('assets/images/alienkitty_eyelid.svg');
             eyelid2.bg('assets/images/alienkitty_eyelid.svg');
@@ -568,7 +568,7 @@ class Loader extends Interface {
         }
 
         function initLoader() {
-            loader = new AssetLoader(Config.ASSETS);
+            loader = self.initClass(AssetLoader, Config.ASSETS);
             loader.events.add(Events.PROGRESS, loadUpdate);
         }
 
@@ -576,7 +576,6 @@ class Loader extends Interface {
             TweenManager.tween(self, { progress: e.percent }, 2000, 'easeInOutSine', null, () => {
                 number.inner.text(Math.round(self.progress * 100));
                 if (self.progress === 1) {
-                    self.loaded = true;
                     self.events.fire(Events.COMPLETE);
                     addStartButton();
                 }
@@ -616,7 +615,7 @@ class Loader extends Interface {
 class Main {
 
     constructor() {
-        let loader, scene;
+        let loader, beam;
 
         WebAudio.init();
 
@@ -641,7 +640,7 @@ class Main {
         function initWorld() {
             World.instance();
 
-            scene = Stage.initClass(ColourBeamScene);
+            beam = Stage.initClass(ColourBeam);
         }
 
         function addListeners() {
@@ -652,12 +651,12 @@ class Main {
         function start() {
             loader.animateOut(() => {
                 loader = loader.destroy();
-                scene.animateIn();
+                beam.animateIn();
 
                 UI.instance();
 
                 World.instance().initAudio();
-                scene.initAudio();
+                beam.initAudio();
             });
         }
 

@@ -18,5 +18,8 @@ void main() {
     v /= abs(v.x) + abs(v.y);
     float d = v.x * center.x + v.y * center.y;
     float m = 1.0 - smoothstep(-smoothness, 0.0, v.x * vUv.x + v.y * vUv.y - (d - 0.5 + progress * (1.0 + smoothness)));
-    gl_FragColor = mix(texture2D(texture1, (vUv - 0.5) * (1.0 - m) + 0.5), texture2D(texture2, (vUv - 0.5) * m + 0.5), m);
+    vec4 rgba = mix(texture2D(texture1, (vUv - 0.5) * (1.0 - m) + 0.5), texture2D(texture2, (vUv - 0.5) * m + 0.5), m);
+    //rgba.rgb *= 0.65;
+    rgba.a *= opacity;
+    gl_FragColor = rgba;
 }

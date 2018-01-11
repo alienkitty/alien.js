@@ -47,9 +47,9 @@ class AlienKittyCanvas extends Interface {
             eyelid2 = new CanvasGraphics(24, 14);
             eyelid2.transformPoint(0, 0).transform({ x: 53, y: 26, scaleX: 1, scaleY: 0.01 });
             eyelid2.drawImage(eyelidimg);
+            alienkitty.add(eyelid1);
+            alienkitty.add(eyelid2);
             canvas.add(alienkitty);
-            canvas.add(eyelid1);
-            canvas.add(eyelid2);
         }
 
         function blink() {
@@ -168,7 +168,7 @@ class Loader extends Interface {
         }
 
         function initLoader() {
-            loader = new AssetLoader(Config.ASSETS);
+            loader = self.initClass(AssetLoader, Config.ASSETS);
             loader.events.add(Events.PROGRESS, loadUpdate);
         }
 
@@ -182,7 +182,6 @@ class Loader extends Interface {
         }
 
         function loadComplete() {
-            self.loaded = true;
             self.events.fire(Events.COMPLETE);
         }
 
@@ -198,7 +197,6 @@ class Main {
 
         container.appendChild(Stage.element);
 
-        const self = this;
         let loader, wrapper, alienkitty;
 
         initStage();
@@ -218,7 +216,6 @@ class Main {
         }
 
         function loadComplete() {
-            self.loaded = true;
             loader.animateOut(() => {
                 loader = loader.destroy();
                 Stage.events.fire(Events.COMPLETE);

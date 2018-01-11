@@ -75,5 +75,7 @@ void main() {
     dColor2 *= -2.0; // darken
     color1 = mix(color1, dColor2, smoothstep(0.0, 0.5, progress));
     color2 = mix(color2, dColor1, smoothstep(1.0, 0.5, progress));
-    gl_FragColor = mix(color1, color2, val);
+    vec4 rgba = mix(color1, color2, val);
+    rgba.a *= opacity;
+    gl_FragColor = rgba;
 }

@@ -58,7 +58,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
         var isClamp = arguments[5];
 
         var newValue = (value - oldMin) * (newMax - newMin) / (oldMax - oldMin) + newMin;
-        if (isClamp) return Math.clamp(newValue, Math.min(newMin, newMax), Math.max(newMin, newMax));
+        if (isClamp) return Math.clamp(newValue, newMin, newMax);
         return newValue;
     };
 
@@ -232,8 +232,10 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
         window.open(url, target);
     };
 
-    if (!window.Global) window.Global = {};
+    if (!window.URL) window.URL = window.webkitURL;
+
     if (!window.Config) window.Config = {};
+    if (!window.Global) window.Global = {};
 
     /**
      * Alien utilities.
@@ -556,6 +558,24 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
                 if (_this3.detect(['mac os'])) return 'mac';
                 if (_this3.detect(['windows'])) return 'windows';
                 if (_this3.detect(['linux'])) return 'linux';
+                return 'unknown';
+            }();
+            this.browser = function () {
+                if (_this3.os === 'ios') {
+                    if (_this3.detect(['safari'])) return 'safari';
+                    return 'unknown';
+                }
+                if (_this3.os === 'android') {
+                    if (_this3.detect(['chrome'])) return 'chrome';
+                    if (_this3.detect(['firefox'])) return 'firefox';
+                    return 'browser';
+                }
+                if (_this3.detect(['msie'])) return 'ie';
+                if (_this3.detect(['trident']) && _this3.detect(['rv:'])) return 'ie';
+                if (_this3.detect(['windows']) && _this3.detect(['edge'])) return 'ie';
+                if (_this3.detect(['chrome'])) return 'chrome';
+                if (_this3.detect(['safari'])) return 'safari';
+                if (_this3.detect(['firefox'])) return 'firefox';
                 return 'unknown';
             }();
             this.mobile = 'ontouchstart' in window && this.detect(['iphone', 'ipad', 'android', 'blackberry']);
@@ -1391,10 +1411,12 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
             }
         }, {
             key: 'size',
-            value: function size(w, h) {
+            value: function size(w) {
+                var h = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : w;
+
                 if (typeof w !== 'undefined') {
-                    if (typeof h === 'undefined') h = w;
-                    if (typeof w === 'string') {
+                    if (typeof w === 'string' || typeof h === 'string') {
+                        if (typeof w !== 'string') w = w + 'px';
                         if (typeof h !== 'string') h = h + 'px';
                         this.element.style.width = w;
                         this.element.style.height = h;
@@ -1853,14 +1875,14 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
                         self.events.fire(Events.VISIBILITY, { type: 'blur' });
                     }
                 }, true);
-                window.addEventListener('keydown', function () {
-                    return self.events.fire(Events.KEYBOARD_DOWN);
+                window.addEventListener('keydown', function (e) {
+                    return self.events.fire(Events.KEYBOARD_DOWN, e);
                 }, true);
-                window.addEventListener('keyup', function () {
-                    return self.events.fire(Events.KEYBOARD_UP);
+                window.addEventListener('keyup', function (e) {
+                    return self.events.fire(Events.KEYBOARD_UP, e);
                 }, true);
-                window.addEventListener('keypress', function () {
-                    return self.events.fire(Events.KEYBOARD_PRESS);
+                window.addEventListener('keypress', function (e) {
+                    return self.events.fire(Events.KEYBOARD_PRESS, e);
                 }, true);
                 window.addEventListener('resize', function () {
                     return self.events.fire(Events.RESIZE);
@@ -1886,114 +1908,178 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
      */
 
     /**
-     * Canvas interface.
+     * Color helper class.
      *
      * @author Patrick Schroen / https://github.com/pschroen
      */
 
-    var Canvas = function () {
-        function Canvas(w) {
-            var h = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : w;
-            var retina = arguments[2];
+    var Color = function Color(value) {
+        var _this12 = this;
 
-            _classCallCheck(this, Canvas);
+        _classCallCheck(this, Color);
 
-            this.element = document.createElement('canvas');
-            this.context = this.element.getContext('2d');
-            this.object = new Interface(this.element);
-            this.children = [];
-            this.retina = retina;
-            this.size(w, h, retina);
+        var self = this;
+        this.r = 1;
+        this.g = 1;
+        this.b = 1;
+
+        set(value);
+
+        function set(value) {
+            if (value instanceof Color) copy(value);else if (typeof value === 'number') setHex(value);else if (Array.isArray(value)) setRGB(value);else setHex(Number('0x' + value.slice(1)));
         }
 
-        _createClass(Canvas, [{
-            key: 'size',
-            value: function size(w, h, retina) {
-                var ratio = retina ? 2 : 1;
-                this.element.width = w * ratio;
-                this.element.height = h * ratio;
-                this.width = w;
-                this.height = h;
-                this.scale = ratio;
-                this.object.size(this.width, this.height);
-                this.context.scale(ratio, ratio);
-                this.element.style.width = w + 'px';
-                this.element.style.height = h + 'px';
+        function copy(color) {
+            self.r = color.r;
+            self.g = color.g;
+            self.b = color.b;
+        }
+
+        function setHex(hex) {
+            hex = Math.floor(hex);
+            self.r = (hex >> 16 & 255) / 255;
+            self.g = (hex >> 8 & 255) / 255;
+            self.b = (hex & 255) / 255;
+        }
+
+        function setRGB(values) {
+            self.r = values[0];
+            self.g = values[1];
+            self.b = values[2];
+        }
+
+        function hue2rgb(p, q, t) {
+            if (t < 0) t += 1;else if (t > 1) t -= 1;
+            if (t < 1 / 6) return p + (q - p) * 6 * t;
+            if (t < 1 / 2) return q;
+            if (t < 2 / 3) return p + (q - p) * 6 * (2 / 3 - t);
+            return p;
+        }
+
+        this.set = function (value) {
+            set(value);
+            return _this12;
+        };
+
+        this.setRGB = function (r, g, b) {
+            _this12.r = r;
+            _this12.g = g;
+            _this12.b = b;
+            return _this12;
+        };
+
+        this.setHSL = function (h, s, l) {
+            if (s === 0) {
+                _this12.r = _this12.g = _this12.b = l;
+            } else {
+                var p = l <= 0.5 ? l * (1 + s) : l + s - l * s,
+                    q = 2 * l - p;
+                _this12.r = hue2rgb(q, p, h + 1 / 3);
+                _this12.g = hue2rgb(q, p, h);
+                _this12.b = hue2rgb(q, p, h - 1 / 3);
             }
-        }, {
-            key: 'toDataURL',
-            value: function toDataURL(type, quality) {
-                return this.element.toDataURL(type, quality);
-            }
-        }, {
-            key: 'render',
-            value: function render(noClear) {
-                if (!(typeof noClear === 'boolean' && noClear)) this.clear();
-                for (var i = 0; i < this.children.length; i++) {
-                    this.children[i].render();
+            return _this12;
+        };
+
+        this.offsetHSL = function (h, s, l) {
+            var hsl = _this12.getHSL();
+            hsl.h += h;
+            hsl.s += s;
+            hsl.l += l;
+            _this12.setHSL(hsl.h, hsl.s, hsl.l);
+            return _this12;
+        };
+
+        this.getStyle = function (a) {
+            if (a) return 'rgba(' + (_this12.r * 255 | 0) + ', ' + (_this12.g * 255 | 0) + ', ' + (_this12.b * 255 | 0) + ', ' + a + ')';else return 'rgb(' + (_this12.r * 255 | 0) + ', ' + (_this12.g * 255 | 0) + ', ' + (_this12.b * 255 | 0) + ')';
+        };
+
+        this.getHex = function () {
+            return _this12.r * 255 << 16 ^ _this12.g * 255 << 8 ^ _this12.b * 255 << 0;
+        };
+
+        this.getHexString = function () {
+            return '#' + ('000000' + _this12.getHex().toString(16)).slice(-6);
+        };
+
+        this.getHSL = function () {
+            if (!_this12.hsl) _this12.hsl = { h: 0, s: 0, l: 0 };
+            var hsl = _this12.hsl,
+                r = _this12.r,
+                g = _this12.g,
+                b = _this12.b,
+                min = Math.min(r, g, b),
+                max = Math.max(r, g, b),
+                lightness = (min + max) / 2;
+            var hue = void 0,
+                saturation = void 0;
+            if (min === max) {
+                hue = 0;
+                saturation = 0;
+            } else {
+                var delta = max - min;
+                saturation = lightness <= 0.5 ? delta / (max + min) : delta / (2 - max - min);
+                switch (max) {
+                    case r:
+                        hue = (g - b) / delta + (g < b ? 6 : 0);
+                        break;
+                    case g:
+                        hue = (b - r) / delta + 2;
+                        break;
+                    case b:
+                        hue = (r - g) / delta + 4;
+                        break;
                 }
+                hue /= 6;
             }
-        }, {
-            key: 'clear',
-            value: function clear() {
-                this.context.clearRect(0, 0, this.element.width, this.element.height);
-            }
-        }, {
-            key: 'add',
-            value: function add(child) {
-                child.setCanvas(this);
-                child.parent = this;
-                this.children.push(child);
-                child.z = this.children.length;
-            }
-        }, {
-            key: 'remove',
-            value: function remove(child) {
-                child.canvas = null;
-                child.parent = null;
-                this.children.remove(child);
-            }
-        }, {
-            key: 'destroy',
-            value: function destroy() {
-                for (var i = 0; i < this.children.length; i++) {
-                    this.children[i].destroy();
-                }this.object.destroy();
-                return Utils.nullObject(this);
-            }
-        }, {
-            key: 'getImageData',
-            value: function getImageData() {
-                var x = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : 0;
-                var y = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 0;
-                var w = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : this.element.width;
-                var h = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : this.element.height;
+            hsl.h = hue;
+            hsl.s = saturation;
+            hsl.l = lightness;
+            return hsl;
+        };
 
-                this.imageData = this.context.getImageData(x, y, w, h);
-                return this.imageData;
-            }
-        }, {
-            key: 'getPixel',
-            value: function getPixel(x, y, dirty) {
-                if (!this.imageData || dirty) this.getImageData();
-                var imgData = {},
-                    index = (x + y * this.element.width) * 4,
-                    pixels = this.imageData.data;
-                imgData.r = pixels[index];
-                imgData.g = pixels[index + 1];
-                imgData.b = pixels[index + 2];
-                imgData.a = pixels[index + 3];
-                return imgData;
-            }
-        }, {
-            key: 'putImageData',
-            value: function putImageData(imageData) {
-                this.context.putImageData(imageData, 0, 0);
-            }
-        }]);
+        this.add = function (color) {
+            _this12.r += color.r;
+            _this12.g += color.g;
+            _this12.b += color.b;
+        };
 
-        return Canvas;
-    }();
+        this.mix = function (color, percent) {
+            _this12.r *= 1 - percent + color.r * percent;
+            _this12.g *= 1 - percent + color.g * percent;
+            _this12.b *= 1 - percent + color.b * percent;
+        };
+
+        this.addScalar = function (s) {
+            _this12.r += s;
+            _this12.g += s;
+            _this12.b += s;
+        };
+
+        this.multiply = function (color) {
+            _this12.r *= color.r;
+            _this12.g *= color.g;
+            _this12.b *= color.b;
+        };
+
+        this.multiplyScalar = function (s) {
+            _this12.r *= s;
+            _this12.g *= s;
+            _this12.b *= s;
+        };
+
+        this.clone = function () {
+            return new Color([_this12.r, _this12.g, _this12.b]);
+        };
+
+        this.toArray = function () {
+            if (!_this12.array) _this12.array = [];
+            _this12.array[0] = _this12.r;
+            _this12.array[1] = _this12.g;
+            _this12.array[2] = _this12.b;
+            return _this12.array;
+        };
+    };
 
     /**
      * Canvas values.
@@ -2151,7 +2237,8 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
                 if (this.styles.styled) {
                     var values = this.styles.values;
                     for (var key in values) {
-                        context[key] = values[key];
+                        var val = values[key];
+                        context[key] = val instanceof Color ? val.getHexString() : val;
                     }
                 }
             }
@@ -2291,29 +2378,30 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
             _classCallCheck(this, CanvasGraphics);
 
-            var _this12 = _possibleConstructorReturn(this, (CanvasGraphics.__proto__ || Object.getPrototypeOf(CanvasGraphics)).call(this));
+            var _this13 = _possibleConstructorReturn(this, (CanvasGraphics.__proto__ || Object.getPrototypeOf(CanvasGraphics)).call(this));
 
-            var self = _this12;
-            _this12.width = w;
-            _this12.height = h;
-            _this12.props = {};
+            var self = _this13;
+            _this13.width = w;
+            _this13.height = h;
+            _this13.props = {};
             var draw = [],
                 mask = void 0;
 
             function setProperties(context) {
                 for (var key in self.props) {
-                    context[key] = self.props[key];
+                    var val = self.props[key];
+                    context[key] = val instanceof Color ? val.getHexString() : val;
                 }
             }
 
-            _this12.draw = function (override) {
-                if (_this12.isMask() && !override) return false;
-                var context = _this12.canvas.context;
-                _this12.startDraw(_this12.px, _this12.py, override);
+            _this13.draw = function (override) {
+                if (_this13.isMask() && !override) return false;
+                var context = _this13.canvas.context;
+                _this13.startDraw(_this13.px, _this13.py, override);
                 setProperties(context);
-                if (_this12.clipWidth && _this12.clipHeight) {
+                if (_this13.clipWidth && _this13.clipHeight) {
                     context.beginPath();
-                    context.rect(_this12.clipX, _this12.clipY, _this12.clipWidth, _this12.clipHeight);
+                    context.rect(_this13.clipX, _this13.clipY, _this13.clipWidth, _this13.clipHeight);
                     context.clip();
                 }
                 for (var i = 0; i < draw.length; i++) {
@@ -2323,24 +2411,24 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
                     context[fn].apply(context, cmd);
                     cmd.unshift(fn);
                 }
-                _this12.endDraw();
+                _this13.endDraw();
                 if (mask) {
                     context.globalCompositeOperation = mask.blendMode;
                     mask.render(true);
                 }
             };
 
-            _this12.clear = function () {
+            _this13.clear = function () {
                 for (var i = 0; i < draw.length; i++) {
                     draw[i].length = 0;
                 }draw.length = 0;
             };
 
-            _this12.arc = function () {
+            _this13.arc = function () {
                 var x = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : 0;
                 var y = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 0;
                 var endAngle = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : 0;
-                var radius = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : _this12.radius || _this12.width / 2;
+                var radius = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : _this13.radius || _this13.width / 2;
                 var startAngle = arguments.length > 4 && arguments[4] !== undefined ? arguments[4] : 0;
                 var counterclockwise = arguments.length > 5 && arguments[5] !== undefined ? arguments[5] : false;
 
@@ -2355,63 +2443,63 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
                 draw.push(['arc', x, y, radius, Math.radians(startAngle), Math.radians(endAngle), counterclockwise]);
             };
 
-            _this12.quadraticCurveTo = function (cpx, cpy, x, y) {
+            _this13.quadraticCurveTo = function (cpx, cpy, x, y) {
                 draw.push(['quadraticCurveTo', cpx, cpy, x, y]);
             };
 
-            _this12.bezierCurveTo = function (cp1x, cp1y, cp2x, cp2y, x, y) {
+            _this13.bezierCurveTo = function (cp1x, cp1y, cp2x, cp2y, x, y) {
                 draw.push(['bezierCurveTo', cp1x, cp1y, cp2x, cp2y, x, y]);
             };
 
-            _this12.fillRect = function (x, y, w, h) {
+            _this13.fillRect = function (x, y, w, h) {
                 draw.push(['fillRect', x, y, w, h]);
             };
 
-            _this12.clearRect = function (x, y, w, h) {
+            _this13.clearRect = function (x, y, w, h) {
                 draw.push(['clearRect', x, y, w, h]);
             };
 
-            _this12.strokeRect = function (x, y, w, h) {
+            _this13.strokeRect = function (x, y, w, h) {
                 draw.push(['strokeRect', x, y, w, h]);
             };
 
-            _this12.moveTo = function (x, y) {
+            _this13.moveTo = function (x, y) {
                 draw.push(['moveTo', x, y]);
             };
 
-            _this12.lineTo = function (x, y) {
+            _this13.lineTo = function (x, y) {
                 draw.push(['lineTo', x, y]);
             };
 
-            _this12.stroke = function () {
+            _this13.stroke = function () {
                 draw.push(['stroke']);
             };
 
-            _this12.fill = function () {
+            _this13.fill = function () {
                 if (!mask) draw.push(['fill']);
             };
 
-            _this12.beginPath = function () {
+            _this13.beginPath = function () {
                 draw.push(['beginPath']);
             };
 
-            _this12.closePath = function () {
+            _this13.closePath = function () {
                 draw.push(['closePath']);
             };
 
-            _this12.fillText = function (text, x, y) {
+            _this13.fillText = function (text, x, y) {
                 draw.push(['fillText', text, x, y]);
             };
 
-            _this12.strokeText = function (text, x, y) {
+            _this13.strokeText = function (text, x, y) {
                 draw.push(['strokeText', text, x, y]);
             };
 
-            _this12.setLineDash = function (value) {
+            _this13.setLineDash = function (value) {
                 draw.push(['setLineDash', value]);
             };
 
-            _this12.drawImage = function (img) {
+            _this13.drawImage = function (img) {
                 var sx = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 0;
                 var sy = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : 0;
                 var sWidth = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : img.width;
@@ -2421,13 +2509,13 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
                 var dWidth = arguments.length > 7 && arguments[7] !== undefined ? arguments[7] : img.width;
                 var dHeight = arguments.length > 8 && arguments[8] !== undefined ? arguments[8] : img.height;
 
-                draw.push(['drawImage', img, sx, sy, sWidth, sHeight, dx + -_this12.px, dy + -_this12.py, dWidth, dHeight]);
+                draw.push(['drawImage', img, sx, sy, sWidth, sHeight, dx + -_this13.px, dy + -_this13.py, dWidth, dHeight]);
             };
 
-            _this12.mask = function (object) {
+            _this13.mask = function (object) {
                 if (!object) return mask = null;
                 mask = object;
-                object.masked = _this12;
+                object.masked = _this13;
                 for (var i = 0; i < draw.length; i++) {
                     if (draw[i][0] === 'fill' || draw[i][0] === 'stroke') {
                         draw[i].length = 0;
@@ -2436,21 +2524,21 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
                 }
             };
 
-            _this12.clone = function () {
-                var object = new CanvasGraphics(_this12.width, _this12.height);
-                object.visible = _this12.visible;
-                object.blendMode = _this12.blendMode;
-                object.opacity = _this12.opacity;
-                object.follow(_this12);
-                object.props = Utils.cloneObject(_this12.props);
+            _this13.clone = function () {
+                var object = new CanvasGraphics(_this13.width, _this13.height);
+                object.visible = _this13.visible;
+                object.blendMode = _this13.blendMode;
+                object.opacity = _this13.opacity;
+                object.follow(_this13);
+                object.props = Utils.cloneObject(_this13.props);
                 object.setDraw(Utils.cloneArray(draw));
                 return object;
             };
 
-            _this12.setDraw = function (array) {
+            _this13.setDraw = function (array) {
                 draw = array;
             };
-            return _this12;
+            return _this13;
         }
 
         _createClass(CanvasGraphics, [{
@@ -2539,6 +2627,118 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
     }(CanvasObject);
 
     /**
+     * Canvas interface.
+     *
+     * @author Patrick Schroen / https://github.com/pschroen
+     */
+
+    var Canvas = function Canvas(w) {
+        var h = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : w;
+
+        var _this14 = this;
+
+        var retina = arguments[2];
+        var alphaColor = arguments[3];
+
+        _classCallCheck(this, Canvas);
+
+        var self = this;
+        this.element = document.createElement('canvas');
+        this.context = this.element.getContext('2d');
+        this.object = new Interface(this.element);
+        this.children = [];
+        this.retina = retina;
+
+        size(w, h, retina);
+
+        function size(w, h, retina) {
+            var ratio = retina ? 2 : 1;
+            self.element.width = w * ratio;
+            self.element.height = h * ratio;
+            self.width = w;
+            self.height = h;
+            self.scale = ratio;
+            self.object.size(self.width, self.height);
+            self.context.scale(ratio, ratio);
+            self.element.style.width = w + 'px';
+            self.element.style.height = h + 'px';
+            if (alphaColor) {
+                var color = new Color(alphaColor),
+                    alpha = new CanvasGraphics(self.width, self.height);
+                alpha.fillStyle = color.getStyle('0.002');
+                alpha.fillRect(0, 0, self.width, self.height);
+                alpha.setCanvas(self);
+                alpha.parent = self;
+                alpha.z = 1;
+                self.children[0] = alpha;
+            }
+        }
+
+        this.size = size;
+
+        this.toDataURL = function (type, quality) {
+            return _this14.element.toDataURL(type, quality);
+        };
+
+        this.render = function (noClear) {
+            if (!(typeof noClear === 'boolean' && noClear)) _this14.clear();
+            for (var i = 0; i < _this14.children.length; i++) {
+                _this14.children[i].render();
+            }
+        };
+
+        this.clear = function () {
+            _this14.context.clearRect(0, 0, _this14.element.width, _this14.element.height);
+        };
+
+        this.add = function (child) {
+            child.setCanvas(_this14);
+            child.parent = _this14;
+            _this14.children.push(child);
+            child.z = _this14.children.length;
+        };
+
+        this.remove = function (child) {
+            child.canvas = null;
+            child.parent = null;
+            _this14.children.remove(child);
+        };
+
+        this.destroy = function () {
+            for (var i = 0; i < _this14.children.length; i++) {
+                _this14.children[i].destroy();
+            }_this14.object.destroy();
+            return Utils.nullObject(_this14);
+        };
+
+        this.getImageData = function () {
+            var x = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : 0;
+            var y = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 0;
+            var w = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : _this14.element.width;
+            var h = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : _this14.element.height;
+
+            _this14.imageData = _this14.context.getImageData(x, y, w, h);
+            return _this14.imageData;
+        };
+
+        this.getPixel = function (x, y, dirty) {
+            if (!_this14.imageData || dirty) _this14.getImageData();
+            var imgData = {},
+                index = (x + y * _this14.element.width) * 4,
+                pixels = _this14.imageData.data;
+            imgData.r = pixels[index];
+            imgData.g = pixels[index + 1];
+            imgData.b = pixels[index + 2];
+            imgData.a = pixels[index + 3];
+            return imgData;
+        };
+
+        this.putImageData = function (imageData) {
+            _this14.context.putImageData(imageData, 0, 0);
+        };
+    };
+
+    /**
      * Canvas font utilities.
      *
      * @author Patrick Schroen / https://github.com/pschroen
@@ -2563,7 +2763,13 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
      */
 
     /**
-     * Accelerometer helper class.
+     * Scroll interaction.
+     *
+     * @author Patrick Schroen / https://github.com/pschroen
+     */
+
+    /**
+     * Slide interaction.
      *
      * @author Patrick Schroen / https://github.com/pschroen
      */
@@ -2574,29 +2780,38 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
      * @author Patrick Schroen / https://github.com/pschroen
      */
 
-    var Images = new ( // Singleton pattern (IICE)
+    var Assets = new ( // Singleton pattern (IICE)
 
     function () {
-        function Images() {
-            _classCallCheck(this, Images);
+        function Assets() {
+            var _this15 = this;
 
+            _classCallCheck(this, Assets);
+
+            this.CDN = '';
             this.CORS = null;
-        }
+            var images = {};
 
-        _createClass(Images, [{
-            key: 'createImg',
-            value: function createImg(src, callback) {
+            this.createImage = function (src, store, callback) {
+                if (typeof store !== 'boolean') callback = store;
                 var img = new Image();
-                img.crossOrigin = this.CORS;
+                img.crossOrigin = _this15.CORS;
                 img.src = src;
                 img.onload = callback;
                 img.onerror = callback;
+                if (store) images[src] = img;
                 return img;
-            }
-        }, {
-            key: 'promise',
-            value: function promise(img) {
-                if (typeof img === 'string') img = this.createImg(img);
+            };
+
+            this.getImage = function (src) {
+                return images[src];
+            };
+        }
+
+        _createClass(Assets, [{
+            key: 'loadImage',
+            value: function loadImage(img) {
+                if (typeof img === 'string') img = this.createImage(img);
                 var promise = Promise.create();
                 img.onload = promise.resolve;
                 img.onerror = promise.resolve;
@@ -2604,8 +2819,32 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
             }
         }]);
 
-        return Images;
+        return Assets;
     }())(); // Singleton pattern (IICE)
+
+    /**
+     * Slide video.
+     *
+     * @author Patrick Schroen / https://github.com/pschroen
+     */
+
+    /**
+     * Slide loader with promise method.
+     *
+     * @author Patrick Schroen / https://github.com/pschroen
+     */
+
+    /**
+     * Accelerometer helper class.
+     *
+     * @author Patrick Schroen / https://github.com/pschroen
+     */
+
+    /**
+     * Loader helper class.
+     *
+     * @author Patrick Schroen / https://github.com/pschroen
+     */
 
     /**
      * Asset loader with promise method.
@@ -2630,16 +2869,15 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
             }
             var self = this;
             this.events = new Events();
-            this.CDN = Config.CDN || '';
             var total = Object.keys(assets).length;
             var loaded = 0;
 
             for (var key in assets) {
-                loadAsset(key, this.CDN + assets[key]);
+                loadAsset(key, Assets.CDN + assets[key]);
             }function loadAsset(key, asset) {
                 var ext = Utils.extension(asset);
                 if (ext.includes(['jpg', 'jpeg', 'png', 'gif', 'svg'])) {
-                    Images.createImg(asset, assetLoaded);
+                    Assets.createImage(asset, assetLoaded);
                     return;
                 }
                 if (ext.includes(['mp3', 'm4a', 'ogg', 'wav', 'aif'])) {
@@ -2648,7 +2886,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
                     return;
                 }
                 window.get(asset).then(function (data) {
-                    if (ext === 'js') window.eval(data.replace('use strict', ''));else if (ext.includes(['fs', 'vs', 'glsl']) && window.Shaders) window.Shaders.parse(data, asset);
+                    if (ext === 'js') window.eval(data.replace('use strict', ''));
                     assetLoaded();
                 }).catch(function () {
                     assetLoaded();
@@ -2656,7 +2894,8 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
             }
 
             function assetLoaded() {
-                self.events.fire(Events.PROGRESS, { percent: ++loaded / total });
+                self.percent = ++loaded / total;
+                self.events.fire(Events.PROGRESS, { percent: self.percent });
                 if (loaded === total) complete();
             }
 
@@ -2681,6 +2920,12 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
     /**
      * Font loader with promise method.
+     *
+     * @author Patrick Schroen / https://github.com/pschroen
+     */
+
+    /**
+     * State dispatcher.
      *
      * @author Patrick Schroen / https://github.com/pschroen
      */
@@ -2797,9 +3042,9 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
         function AlienKittyCanvas() {
             _classCallCheck(this, AlienKittyCanvas);
 
-            var _this13 = _possibleConstructorReturn(this, (AlienKittyCanvas.__proto__ || Object.getPrototypeOf(AlienKittyCanvas)).call(this, 'AlienKittyCanvas'));
+            var _this16 = _possibleConstructorReturn(this, (AlienKittyCanvas.__proto__ || Object.getPrototypeOf(AlienKittyCanvas)).call(this, 'AlienKittyCanvas'));
 
-            var self = _this13;
+            var self = _this16;
             var canvas = void 0,
                 alienkittyimg = void 0,
                 eyelidimg = void 0,
@@ -2820,9 +3065,9 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
             }
 
             function initImages() {
-                alienkittyimg = Images.createImg('assets/images/alienkitty.svg');
-                eyelidimg = Images.createImg('assets/images/alienkitty_eyelid.svg');
-                Promise.all([Images.promise(alienkittyimg), Images.promise(eyelidimg)]).then(finishSetup);
+                alienkittyimg = Assets.createImage('assets/images/alienkitty.svg');
+                eyelidimg = Assets.createImage('assets/images/alienkitty_eyelid.svg');
+                Promise.all([Assets.loadImage(alienkittyimg), Assets.loadImage(eyelidimg)]).then(finishSetup);
             }
 
             function finishSetup() {
@@ -2834,9 +3079,9 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
                 eyelid2 = new CanvasGraphics(24, 14);
                 eyelid2.transformPoint(0, 0).transform({ x: 53, y: 26, scaleX: 1, scaleY: 0.01 });
                 eyelid2.drawImage(eyelidimg);
+                alienkitty.add(eyelid1);
+                alienkitty.add(eyelid2);
                 canvas.add(alienkitty);
-                canvas.add(eyelid1);
-                canvas.add(eyelid2);
             }
 
             function blink() {
@@ -2869,19 +3114,19 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
                 canvas.render();
             }
 
-            _this13.animateIn = function () {
+            _this16.animateIn = function () {
                 blink();
-                _this13.tween({ opacity: 1 }, 500, 'easeOutQuart');
-                _this13.startRender(loop);
+                _this16.tween({ opacity: 1 }, 500, 'easeOutQuart');
+                _this16.startRender(loop);
             };
 
-            _this13.animateOut = function (callback) {
-                _this13.tween({ opacity: 0 }, 500, 'easeInOutQuad', function () {
+            _this16.animateOut = function (callback) {
+                _this16.tween({ opacity: 0 }, 500, 'easeInOutQuad', function () {
                     self.stopRender(loop);
                     if (callback) callback();
                 });
             };
-            return _this13;
+            return _this16;
         }
 
         return AlienKittyCanvas;
@@ -2893,16 +3138,16 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
         function Progress() {
             _classCallCheck(this, Progress);
 
-            var _this14 = _possibleConstructorReturn(this, (Progress.__proto__ || Object.getPrototypeOf(Progress)).call(this, 'Progress'));
+            var _this17 = _possibleConstructorReturn(this, (Progress.__proto__ || Object.getPrototypeOf(Progress)).call(this, 'Progress'));
 
-            var self = _this14;
+            var self = _this17;
             var size = 90;
             var canvas = void 0,
                 context = void 0;
 
             initHTML();
             initCanvas();
-            _this14.startRender(loop);
+            _this17.startRender(loop);
 
             function initHTML() {
                 self.size(size).center();
@@ -2936,15 +3181,15 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
                 self.stopRender(loop);
             }
 
-            _this14.update = function (e) {
-                if (_this14.complete) return;
-                TweenManager.tween(_this14, { progress: e.percent }, 500, 'easeOutCubic');
+            _this17.update = function (e) {
+                if (_this17.complete) return;
+                TweenManager.tween(_this17, { progress: e.percent }, 500, 'easeOutCubic');
             };
 
-            _this14.animateOut = function (callback) {
-                _this14.tween({ scale: 0.9, opacity: 0 }, 400, 'easeInCubic', callback);
+            _this17.animateOut = function (callback) {
+                _this17.tween({ scale: 0.9, opacity: 0 }, 400, 'easeInCubic', callback);
             };
-            return _this14;
+            return _this17;
         }
 
         return Progress;
@@ -2956,9 +3201,9 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
         function Loader() {
             _classCallCheck(this, Loader);
 
-            var _this15 = _possibleConstructorReturn(this, (Loader.__proto__ || Object.getPrototypeOf(Loader)).call(this, 'Loader'));
+            var _this18 = _possibleConstructorReturn(this, (Loader.__proto__ || Object.getPrototypeOf(Loader)).call(this, 'Loader'));
 
-            var self = _this15;
+            var self = _this18;
             var loader = void 0,
                 progress = void 0;
 
@@ -2971,7 +3216,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
             }
 
             function initLoader() {
-                loader = new AssetLoader(Config.ASSETS);
+                loader = self.initClass(AssetLoader, Config.ASSETS);
                 loader.events.add(Events.PROGRESS, loadUpdate);
             }
 
@@ -2985,14 +3230,13 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
             }
 
             function loadComplete() {
-                self.loaded = true;
                 self.events.fire(Events.COMPLETE);
             }
 
-            _this15.animateOut = function (callback) {
+            _this18.animateOut = function (callback) {
                 progress.animateOut(callback);
             };
-            return _this15;
+            return _this18;
         }
 
         return Loader;
@@ -3005,7 +3249,6 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
         container.appendChild(Stage.element);
 
-        var self = this;
         var loader = void 0,
             wrapper = void 0,
             alienkitty = void 0;
@@ -3027,7 +3270,6 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
         }
 
         function loadComplete() {
-            self.loaded = true;
             loader.animateOut(function () {
                 loader = loader.destroy();
                 Stage.events.fire(Events.COMPLETE);

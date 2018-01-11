@@ -5,10 +5,12 @@ uniform vec2 resolution;
 uniform sampler2D texture1;
 uniform sampler2D texture2;
 uniform float opacity;
+uniform float progress;
 
 varying vec2 vUv;
 
 void main() {
-    vec2 uv = vUv;
-    gl_FragColor = mix(texture2D(texture2, uv), texture2D(texture1, uv), opacity);
+    vec4 rgba = mix(texture2D(texture2, vUv), texture2D(texture1, vUv), progress);
+    rgba.a *= opacity;
+    gl_FragColor = rgba;
 }

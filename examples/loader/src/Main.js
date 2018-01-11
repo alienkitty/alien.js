@@ -35,7 +35,6 @@ class AlienKitty extends Interface {
         }
 
         function loadComplete() {
-            self.loaded = true;
             alienkitty.bg('assets/images/alienkitty.svg');
             eyelid1.bg('assets/images/alienkitty_eyelid.svg');
             eyelid2.bg('assets/images/alienkitty_eyelid.svg');
@@ -149,7 +148,7 @@ class Loader extends Interface {
         }
 
         function initLoader() {
-            loader = new AssetLoader(Config.ASSETS);
+            loader = self.initClass(AssetLoader, Config.ASSETS);
             loader.events.add(Events.PROGRESS, loadUpdate);
         }
 
@@ -163,7 +162,6 @@ class Loader extends Interface {
         }
 
         function loadComplete() {
-            self.loaded = true;
             self.events.fire(Events.COMPLETE);
         }
 
@@ -176,7 +174,6 @@ class Loader extends Interface {
 class Main {
 
     constructor() {
-        const self = this;
         let loader, wrapper, alienkitty;
 
         initStage();
@@ -196,7 +193,6 @@ class Main {
         }
 
         function loadComplete() {
-            self.loaded = true;
             loader.animateOut(() => {
                 loader = loader.destroy();
                 Stage.events.fire(Events.COMPLETE);

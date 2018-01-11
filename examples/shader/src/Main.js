@@ -41,7 +41,6 @@ class AlienKittyTexture extends Component {
         }
 
         function finishSetup() {
-            self.loaded = true;
             alienkitty = new CanvasGraphics(90, 86);
             alienkitty.drawImage(alienkittyimg);
             eyelid1 = new CanvasGraphics(24, 14);
@@ -50,9 +49,9 @@ class AlienKittyTexture extends Component {
             eyelid2 = new CanvasGraphics(24, 14);
             eyelid2.transformPoint(0, 0).transform({ x: 53, y: 26, scaleX: 1, scaleY: 0.01 });
             eyelid2.drawImage(eyelidimg);
+            alienkitty.add(eyelid1);
+            alienkitty.add(eyelid2);
             canvas.add(alienkitty);
-            canvas.add(eyelid1);
-            canvas.add(eyelid2);
             blink();
         }
 

@@ -45,12 +45,11 @@ class Main extends Interface {
         }
 
         function initLoader() {
-            loader = new AssetLoader(Config.ASSETS);
+            loader = self.initClass(AssetLoader, Config.ASSETS);
             loader.events.add(Events.COMPLETE, loadComplete);
         }
 
         function loadComplete() {
-            self.loaded = true;
             alienkitty.bg('assets/alienkitty.svg');
             eyelid1.bg('assets/alienkitty_eyelid.svg');
             eyelid2.bg('assets/alienkitty_eyelid.svg');

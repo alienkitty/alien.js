@@ -6,100 +6,69 @@
 
 /* global THREE */
 
-import { Events, Stage, Component, Canvas, CanvasGraphics, Device, Mouse, Interaction, Utils,
-    Assets, AssetLoader, TweenManager, Shader, Effects } from '../alien.js/src/Alien';
+import { Events, Stage, Interface, Component, Canvas, CanvasFont, Device, Mouse, Interaction,
+    Assets, AssetLoader, FontLoader, TweenManager, Shader, Effects } from '../alien.js/src/Alien';
 
-import vertBasicPass from './shaders/basic_pass.vert';
-//import fragBasicPass from './shaders/basic_pass.frag';
 import vertBasicShader from './shaders/basic_shader.vert';
 import fragBasicShader from './shaders/basic_shader.frag';
+import vertBasicPass from './shaders/basic_pass.vert';
+//import fragBasicPass from './shaders/basic_pass.frag';
 import fragChromaticAberration from './shaders/chromatic_aberration.frag';
+
+Config.UI_COLOR = 'white';
 
 Config.ASSETS = [
     'assets/js/lib/three.min.js',
-    'assets/images/NGC_1672_1920px.jpg',
-    'assets/images/alienkitty.svg',
-    'assets/images/alienkitty_eyelid.svg'
+    'assets/images/NGC_1672_1920px.jpg'
 ];
 
 Assets.CORS = 'Anonymous';
 
-class AlienKittyTexture extends Component {
+
+class TitleTexture extends Component {
 
     constructor() {
         super();
         const self = this;
-        let canvas, texture, alienkittyimg, eyelidimg, alienkitty, eyelid1, eyelid2;
+        let canvas, texture, text;
 
         initCanvas();
 
         function initCanvas() {
-            canvas = self.initClass(Canvas, 90, 86, true);
+            canvas = self.initClass(Canvas, Stage.width, Stage.height, true, '#FFFFFF');
             self.canvas = canvas;
             texture = new THREE.Texture(canvas.element);
             texture.minFilter = THREE.LinearFilter;
             self.texture = texture;
         }
 
-        function initImages() {
-            alienkittyimg = Assets.createImage('assets/images/alienkitty.svg');
-            eyelidimg = Assets.createImage('assets/images/alienkitty_eyelid.svg');
-            return Promise.all([Assets.loadImage(alienkittyimg), Assets.loadImage(eyelidimg)]).then(finishSetup);
-        }
-
-        function finishSetup() {
-            self.loaded = true;
-            alienkitty = new CanvasGraphics(90, 86);
-            alienkitty.drawImage(alienkittyimg);
-            eyelid1 = new CanvasGraphics(24, 14);
-            eyelid1.transformPoint('50%', 0).transform({ x: 35, y: 25, scaleX: 1.5, scaleY: 0.01 });
-            eyelid1.drawImage(eyelidimg);
-            eyelid2 = new CanvasGraphics(24, 14);
-            eyelid2.transformPoint(0, 0).transform({ x: 53, y: 26, scaleX: 1, scaleY: 0.01 });
-            eyelid2.drawImage(eyelidimg);
-            canvas.add(alienkitty);
-            canvas.add(eyelid1);
-            canvas.add(eyelid2);
-            blink();
-        }
-
-        function blink() {
-            self.delayedCall(Utils.headsTails(blink1, blink2), Utils.random(0, 10000));
-        }
-
-        function blink1() {
-            TweenManager.tween(eyelid1, { scaleY: 1.5 }, 120, 'easeOutCubic', () => {
-                TweenManager.tween(eyelid1, { scaleY: 0.01 }, 180, 'easeOutCubic');
+        this.update = () => {
+            canvas.size(Stage.width, Stage.height, true);
+            if (text) {
+                canvas.remove(text);
+                text = text.destroy();
+            }
+            text = CanvasFont.createText(canvas, Stage.width, Stage.height, 'Chromatic Aberration 2'.toUpperCase(), '200 66px Oswald', '#FFFFFF', {
+                lineHeight: 80,
+                letterSpacing: 0,
+                textAlign: 'center'
             });
-            TweenManager.tween(eyelid2, { scaleX: 1.3, scaleY: 1.3 }, 120, 'easeOutCubic', () => {
-                TweenManager.tween(eyelid2, { scaleX: 1, scaleY: 0.01 }, 180, 'easeOutCubic', () => {
-                    blink();
-                });
-            });
-        }
-
-        function blink2() {
-            TweenManager.tween(eyelid1, { scaleY: 1.5 }, 120, 'easeOutCubic', () => {
-                TweenManager.tween(eyelid1, { scaleY: 0.01 }, 180, 'easeOutCubic');
-            });
-            TweenManager.tween(eyelid2, { scaleX: 1.3, scaleY: 1.3 }, 180, 'easeOutCubic', () => {
-                TweenManager.tween(eyelid2, { scaleX: 1, scaleY: 0.01 }, 240, 'easeOutCubic', () => {
-                    blink();
-                });
-            });
-        }
-
-        this.ready = initImages;
+            const baseline = (Stage.height - text.totalHeight + 124) / 2;
+            text.y = baseline;
+            canvas.add(text);
+            canvas.render();
+            texture.needsUpdate = true;
+        };
     }
 }
 
-class AlienKittyScene extends Component {
+class Title extends Component {
 
     constructor() {
         super();
         const self = this;
         this.object3D = new THREE.Object3D();
-        let alienkitty, shader, mesh;
+        let title, shader, mesh;
 
         World.scene.add(this.object3D);
 
@@ -107,67 +76,57 @@ class AlienKittyScene extends Component {
         initMesh();
 
         function initCanvasTexture() {
-            alienkitty = self.initClass(AlienKittyTexture);
-            alienkitty.ready().then(finishSetup);
-        }
-
-        function finishSetup() {
-            self.startRender(loop);
-            self.object3D.visible = true;
-            shader.uniforms.opacity.value = 0;
-            TweenManager.tween(shader.uniforms.opacity, { value: 1 }, 1000, 'easeOutSine');
+            title = self.initClass(TitleTexture);
         }
 
         function initMesh() {
-            self.object3D.visible = false;
             shader = self.initClass(Shader, vertBasicShader, fragBasicShader, {
                 time: World.time,
                 resolution: World.resolution,
-                texture: { value: alienkitty.texture },
+                texture: { value: title.texture },
                 opacity: { value: 0 },
                 transparent: true,
                 depthWrite: false,
                 depthTest: false
             });
             mesh = new THREE.Mesh(new THREE.PlaneBufferGeometry(1, 1), shader.material);
-            mesh.scale.set(90, 86, 1);
-            if (World.dpr === 1) mesh.scale.set(90.5, 86.5, 1);
             self.object3D.add(mesh);
         }
 
-        function loop() {
-            if (!self.object3D.visible) return;
-            alienkitty.canvas.render();
-            alienkitty.texture.needsUpdate = true;
-        }
+        this.update = () => {
+            title.update();
+            mesh.scale.set(Stage.width, Stage.height, 1);
+        };
+
+        this.animateIn = () => {
+            shader.uniforms.opacity.value = 0;
+            TweenManager.tween(shader.uniforms.opacity, { value: 1 }, 250, 'linear');
+        };
     }
 }
 
-class SpaceScene extends Component {
+class Space extends Component {
 
     constructor() {
         super();
         const self = this;
         this.object3D = new THREE.Object3D();
         const ratio = 1920 / 1080;
-        let texture, textureimg, shader, mesh;
+        let texture, textureimg, shader, mesh, title;
 
         World.scene.add(this.object3D);
-
-        initTextures();
-        initMesh();
-        addListeners();
 
         function initTextures() {
             textureimg = Assets.createImage('assets/images/NGC_1672_1920px.jpg');
             texture = new THREE.Texture(null, null, THREE.ClampToEdgeWrapping, THREE.ClampToEdgeWrapping, THREE.LinearFilter, THREE.LinearFilter);
-            Promise.all([Assets.loadImage(textureimg)]).then(finishSetup);
+            return Promise.all([Assets.loadImage(textureimg)]).then(finishSetup);
         }
 
         function finishSetup() {
             texture.image = textureimg;
             texture.needsUpdate = true;
-            self.object3D.visible = true;
+            initMesh();
+            initTitle();
         }
 
         function initMesh() {
@@ -176,12 +135,16 @@ class SpaceScene extends Component {
                 time: World.time,
                 resolution: World.resolution,
                 texture: { value: texture },
-                opacity: { value: 1 },
+                opacity: { value: 0 },
                 depthWrite: false,
                 depthTest: false
             });
             mesh = new THREE.Mesh(new THREE.PlaneBufferGeometry(1, 1), shader.material);
             self.object3D.add(mesh);
+        }
+
+        function initTitle() {
+            title = self.initClass(Title);
         }
 
         function addListeners() {
@@ -192,7 +155,18 @@ class SpaceScene extends Component {
         function resize() {
             if (Stage.width / Stage.height > ratio) mesh.scale.set(Stage.width, Stage.width / ratio, 1);
             else mesh.scale.set(Stage.height * ratio, Stage.height, 1);
+            title.update();
         }
+
+        this.animateIn = () => {
+            addListeners();
+            self.object3D.visible = true;
+            shader.uniforms.opacity.value = 0;
+            TweenManager.tween(shader.uniforms.opacity, { value: 1 }, 1000, 'easeOutCubic');
+            title.animateIn();
+        };
+
+        this.ready = initTextures;
     }
 }
 
@@ -242,8 +216,6 @@ class World extends Component {
             World.effects = effects;
             World.time = { value: 0 };
             World.resolution = { value: new THREE.Vector2(Stage.width * World.dpr, Stage.height * World.dpr) };
-            shader.uniforms.distortion.value = 0;
-            TweenManager.tween(shader.uniforms.distortion, { value: 100 }, 7000, 'easeOutSine');
         }
 
         function addListeners() {
@@ -275,28 +247,150 @@ class World extends Component {
             effects.render();
             shader.uniforms.distortion.value += (distortion - shader.uniforms.distortion.value) * 0.3;
         }
+
+        this.initEffects = () => {
+            shader.uniforms.distortion.value = 0;
+            TweenManager.tween(shader.uniforms.distortion, { value: 100 }, 7000, 'easeOutSine');
+        };
+    }
+}
+
+class Progress extends Interface {
+
+    constructor() {
+        super('Progress');
+        const self = this;
+        const size = 90;
+        let canvas, context;
+
+        initHTML();
+        initCanvas();
+        this.startRender(loop);
+
+        function initHTML() {
+            self.size(size, size).center();
+            self.progress = 0;
+        }
+
+        function initCanvas() {
+            canvas = self.initClass(Canvas, size, size, true);
+            context = canvas.context;
+            context.lineWidth = 5;
+        }
+
+        function loop() {
+            if (self.progress >= 1 && !self.complete) complete();
+            context.clearRect(0, 0, size, size);
+            const progress = self.progress || 0,
+                x = size / 2,
+                y = size / 2,
+                radius = size * 0.4,
+                startAngle = Math.radians(-90),
+                endAngle = Math.radians(-90) + Math.radians(progress * 360);
+            context.beginPath();
+            context.arc(x, y, radius, startAngle, endAngle, false);
+            context.strokeStyle = Config.UI_COLOR;
+            context.stroke();
+        }
+
+        function complete() {
+            self.complete = true;
+            self.events.fire(Events.COMPLETE);
+            self.stopRender(loop);
+        }
+
+        this.update = e => {
+            if (this.complete) return;
+            TweenManager.tween(this, { progress: e.percent }, 500, 'easeOutCubic');
+        };
+
+        this.animateOut = callback => {
+            this.tween({ scale: 0.9, opacity: 0 }, 400, 'easeInCubic', callback);
+        };
+    }
+}
+
+class Loader extends Interface {
+
+    constructor() {
+        super('Loader');
+        const self = this;
+        let loader, progress;
+
+        initHTML();
+        initLoader();
+        initProgress();
+
+        function initHTML() {
+            self.size('100%');
+        }
+
+        function initLoader() {
+            loader = self.initClass(AssetLoader, Config.ASSETS);
+            loader.events.add(Events.PROGRESS, loadUpdate);
+        }
+
+        function initProgress() {
+            progress = self.initClass(Progress);
+            progress.events.add(Events.COMPLETE, loadComplete);
+        }
+
+        function loadUpdate(e) {
+            progress.update(e);
+        }
+
+        function loadComplete() {
+            self.events.fire(Events.COMPLETE);
+        }
+
+        this.animateOut = callback => {
+            progress.animateOut(callback);
+        };
     }
 }
 
 class Main {
 
     constructor() {
+        let loader, space;
 
         initStage();
+        initLoader();
+        addListeners();
 
         function initStage() {
             Stage.size('100%');
 
             Mouse.init();
-
-            AssetLoader.loadAssets(Config.ASSETS).then(initWorld);
         }
 
-        function initWorld() {
+        function initLoader() {
+            FontLoader.loadFonts(['Oswald', 'Karla']).then(() => {
+                loader = Stage.initClass(Loader);
+                loader.events.add(Events.COMPLETE, loadComplete);
+            });
+        }
+
+        function loadComplete() {
+            loader.animateOut(() => {
+                loader = loader.destroy();
+                Stage.events.fire(Events.COMPLETE);
+            });
+        }
+
+        function addListeners() {
+            Stage.events.add(Events.COMPLETE, complete);
+        }
+
+        function complete() {
             World.instance();
 
-            Stage.initClass(SpaceScene);
-            Stage.initClass(AlienKittyScene);
+            space = Stage.initClass(Space);
+            space.ready().then(() => {
+                space.animateIn();
+
+                World.instance().initEffects();
+            });
         }
     }
 }

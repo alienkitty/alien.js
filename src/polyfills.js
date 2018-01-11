@@ -177,5 +177,7 @@ window.getURL = function (url, target = '_blank') {
     window.open(url, target);
 };
 
-if (!window.Global) window.Global = {};
+if (!window.URL) window.URL = window.webkitURL;
+
 if (!window.Config) window.Config = {};
+if (!window.Global) window.Global = {};

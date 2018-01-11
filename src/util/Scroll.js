@@ -48,23 +48,17 @@ class Scroll extends Component {
             self.hitObject = params.hitObject || self.object;
             self.max.y = params.height || 0;
             self.max.x = params.width || 0;
-            self.scale = params.scale || 1;
-            self.drag = params.drag || Device.mobile;
-            self.mouseWheel = params.mouseWheel !== false;
-            self.limit = params.limit !== false;
             if (Array.isArray(params.axes)) axes = params.axes;
             if (self.object) self.object.css({ overflow: 'auto' });
         }
 
         function addListeners() {
-            if (!Device.mobile) Stage.bind('wheel', scroll);
-            if (self.drag) {
-                if (self.hitObject) self.hitObject.bind('touchstart', e => e.preventDefault());
-                const input = self.hitObject ? new Interaction(self.hitObject) : Mouse.input;
-                input.events.add(Interaction.START, down);
-                input.events.add(Interaction.DRAG, drag);
-                input.events.add(Interaction.END, up);
-            }
+            Stage.bind('wheel', scroll);
+            if (self.hitObject) self.hitObject.bind('touchstart', e => e.preventDefault());
+            const input = self.hitObject ? new Interaction(self.hitObject) : Mouse.input;
+            input.events.add(Interaction.START, down);
+            input.events.add(Interaction.DRAG, drag);
+            input.events.add(Interaction.END, up);
             Stage.events.add(Events.RESIZE, resize);
             resize();
         }
@@ -75,10 +69,12 @@ class Scroll extends Component {
 
         function scroll(e) {
             if (!self.enabled) return;
-            if (e.preventDefault) e.preventDefault();
-            if (!self.mouseWheel) return;
+            e.preventDefault();
             stopInertia();
-            axes.forEach(axis => scrollTarget[axis] += e['delta' + axis.toUpperCase()]);
+            axes.forEach(axis => {
+                if (!self.max[axis]) return;
+                scrollTarget[axis] += e['delta' + axis.toUpperCase()];
+            });
         }
 
         function down() {
@@ -88,7 +84,10 @@ class Scroll extends Component {
 
         function drag() {
             if (!self.enabled) return;
-            axes.forEach(axis => scrollTarget[axis] -= Mouse.input.delta[axis]);
+            axes.forEach(axis => {
+                if (!self.max[axis]) return;
+                scrollTarget[axis] -= Mouse.input.delta[axis];
+            });
         }
 
         function up() {
@@ -98,7 +97,10 @@ class Scroll extends Component {
                     return 25;
                 })(),
                 obj = {};
-            axes.forEach(axis => obj[axis] = scrollTarget[axis] - Mouse.input.delta[axis] * m);
+            axes.forEach(axis => {
+                if (!self.max[axis]) return;
+                obj[axis] = scrollTarget[axis] - Mouse.input.delta[axis] * m;
+            });
             TweenManager.tween(scrollTarget, obj, 2500, 'easeOutQuint');
         }
 
@@ -115,8 +117,9 @@ class Scroll extends Component {
 
         function loop() {
             axes.forEach(axis => {
-                if (self.limit) scrollTarget[axis] = Math.clamp(scrollTarget[axis], 0, self.max[axis] / self.scale);
-                self.delta[axis] = (scrollTarget[axis] * self.scale - self[axis]);
+                if (!self.max[axis]) return;
+                scrollTarget[axis] = Math.clamp(scrollTarget[axis], 0, self.max[axis]);
+                self.delta[axis] = scrollTarget[axis] - self[axis];
                 self[axis] += self.delta[axis];
                 if (self.object) {
                     if (axis === 'x') self.object.element.scrollLeft = self.x;

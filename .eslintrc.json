@@ -5,8 +5,8 @@
   },
   "globals": {
     "getURL": true,
-    "Global": true,
-    "Config": true
+    "Config": true,
+    "Global": true
   },
   "extends": "eslint:recommended",
   "parserOptions": {

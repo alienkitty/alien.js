@@ -152,7 +152,7 @@ To build a project, make sure you have [Node.js](https://nodejs.org/) installed 
 mkdir about
 cd about
 git init
-git submodule add https://github.com/pschroen/alien.js
+git submodule add -b master https://github.com/pschroen/alien.js
 cp -r alien.js/examples/about/* .
 cp alien.js/.eslintrc.json alien.js/.gitignore .
 npm install

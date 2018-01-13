@@ -184,6 +184,7 @@ npm run build
 
 * Docs
 * Tests
+* Dynamically import classes
 * Particle emitter
 * FX and lighting
 * Error handling

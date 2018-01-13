@@ -12,73 +12,77 @@ class StateDispatcher {
         const self = this;
         this.events = new Events();
         this.locked = false;
-        let storeHash,
-            pathRoot = '/';
+        let storePath, storeState,
+            rootPath = '/';
 
         createListener();
-        storeHash = getHash();
+        storePath = getPath();
 
         function createListener() {
-            if (forceHash) window.addEventListener('hashchange', () => handleStateChange(getHash()), true);
-            else window.addEventListener('popstate', () => handleStateChange(getHash()), true);
+            if (forceHash) window.addEventListener('hashchange', () => handleStateChange(null, getPath()), true);
+            else window.addEventListener('popstate', e => handleStateChange(e.state, getPath()), true);
         }
 
-        function getHash() {
+        function getPath() {
             if (forceHash) return location.hash.slice(3);
-            return pathRoot !== '/' ? location.pathname.split(pathRoot)[1] : location.pathname.slice(1) || '';
+            return rootPath !== '/' ? location.pathname.split(rootPath)[1] : location.pathname.slice(1) || '';
         }
 
-        function handleStateChange(hash) {
-            if (hash !== storeHash) {
+        function handleStateChange(state, path) {
+            if (path !== storePath) {
                 if (!self.locked) {
-                    storeHash = hash;
-                    self.events.fire(Events.UPDATE, { value: hash, split: hash.split('/') });
-                } else if (storeHash) {
-                    if (forceHash) location.hash = '!/' + storeHash;
-                    else history.pushState(null, null, pathRoot + storeHash);
+                    storePath = path;
+                    storeState = state;
+                    self.events.fire(Events.UPDATE, { value: state, path, split: path.split('/') });
+                } else if (storePath) {
+                    if (forceHash) location.hash = '!/' + storePath;
+                    else history.pushState(storeState, null, rootPath + storePath);
                 }
             }
         }
 
         this.getState = () => {
-            return getHash();
+            const path = getPath();
+            return { value: storeState, path, split: path.split('/') };
         };
 
-        this.setState = hash => {
-            if (hash !== storeHash) {
-                storeHash = hash;
-                if (forceHash) location.hash = '!/' + hash;
-                else history.pushState(null, null, pathRoot + hash);
+        this.setState = (state, path) => {
+            if (typeof state !== 'object') {
+                path = state;
+                state = null;
+            }
+            if (path !== storePath) {
+                storePath = path;
+                storeState = state;
+                if (forceHash) location.hash = '!/' + path;
+                else history.pushState(state, null, rootPath + path);
             }
         };
 
-        this.replaceState = hash => {
-            if (hash !== storeHash) {
-                storeHash = hash;
-                if (forceHash) history.replaceState(null, null, '#!/' + hash);
-                else history.replaceState(null, null, pathRoot + hash);
+        this.replaceState = (state, path) => {
+            if (typeof state !== 'object') {
+                path = state;
+                state = null;
+            }
+            if (path !== storePath) {
+                storePath = path;
+                storeState = state;
+                if (forceHash) history.replaceState(null, null, '#!/' + path);
+                else history.replaceState(state, null, rootPath + path);
             }
         };
 
-        this.setTitle = title => {
-            document.title = title;
-        };
+        this.setTitle = title => document.title = title;
 
-        this.lock = () => {
-            this.locked = true;
-        };
+        this.lock = () => this.locked = true;
 
-        this.unlock = () => {
-            this.locked = false;
-        };
+        this.unlock = () => this.locked = false;
 
-        this.forceHash = () => {
-            forceHash = true;
-        };
+        this.forceHash = () => forceHash = true;
 
         this.setPathRoot = path => {
-            if (path.charAt(0) === '/') pathRoot = path;
-            else pathRoot = '/' + path;
+            if (path.charAt(0) === '/') rootPath = path;
+            else rootPath = '/' + path;
         };
     }
 }

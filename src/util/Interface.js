@@ -258,8 +258,7 @@ class Interface {
                     if (~style.indexOf('px')) style = Number(style.slice(0, -2));
                     if (props === 'opacity') style = !isNaN(Number(this.element.style.opacity)) ? Number(this.element.style.opacity) : 1;
                 }
-                if (!style) style = 0;
-                return style;
+                return style || 0;
             } else {
                 this.element.style[props] = value;
                 return this;

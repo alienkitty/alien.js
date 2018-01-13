@@ -55,7 +55,7 @@ class Data extends StateDispatcher {
 
     constructor() {
 
-        // StateDispatcher @param {boolean} [forceHash=undefined] Force hash navigation
+        // StateDispatcher @param {boolean} [forceHash = undefined] Force hash navigation
         super(true);
         const self = this;
 
@@ -66,13 +66,11 @@ class Data extends StateDispatcher {
         }
 
         function stateChange(e) {
-            if (e.value !== '') self.setSlide(e);
+            if (e.path !== '') self.setSlide(e);
         }
 
         this.setSlide = e => {
-            let index = Stage.pathList.indexOf(e.value);
-            if (!~index) index = 0;
-            Stage.events.fire(Events.SLIDE_CHANGE, index);
+            Stage.events.fire(Events.SLIDE_CHANGE, e.value ? e.value.position : Stage.pathList.indexOf(e.path) || 0);
         };
     }
 }
@@ -228,7 +226,8 @@ class Space extends Component {
         }
 
         function addListeners() {
-            const index = Stage.pathList.indexOf(Data.instance().getState());
+            const state = Data.instance().getState(),
+                index = Stage.pathList.indexOf(state.path);
             if (~index) Global.SLIDE_INDEX = index;
             slide = self.initClass(Slide, {
                 num: Stage.list.length,
@@ -252,9 +251,12 @@ class Space extends Component {
                 title.direction = e.direction.y;
                 title.update();
                 title.animateIn();
-                Data.instance().setState(data.path);
+                const progress = slide.y / slide.max.y,
+                    i = Math.round(progress);
+                Data.instance().setState({ position: i }, data.path);
             } else {
-                const index = Stage.pathList.indexOf(Data.instance().getState());
+                const state = Data.instance().getState(),
+                    index = Stage.pathList.indexOf(state.path);
                 if (!~index) Data.instance().replaceState(data.path);
             }
             Data.instance().setTitle(data.pageTitle);

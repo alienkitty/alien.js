@@ -12,7 +12,10 @@ class Assets {
         const images = {};
 
         this.createImage = (src, store, callback) => {
-            if (typeof store !== 'boolean') callback = store;
+            if (typeof store !== 'boolean') {
+                callback = store;
+                store = undefined;
+            }
             const img = new Image();
             img.crossOrigin = this.CORS;
             img.src = src;

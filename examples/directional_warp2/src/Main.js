@@ -80,42 +80,46 @@ class TitleTexture extends Component {
     constructor() {
         super();
         const self = this;
-        let canvas, texture, text, text2;
 
         initCanvas();
 
         function initCanvas() {
-            canvas = self.initClass(Canvas, Stage.width, Stage.height, true, true);
-            self.canvas = canvas;
-            texture = new THREE.Texture(canvas.element);
-            texture.minFilter = THREE.LinearFilter;
-            self.texture = texture;
+            Config.LIST.forEach(data => {
+                const canvas = self.initClass(Canvas, Stage.width, Stage.height, true, true);
+                data.graphics = {};
+                data.graphics.canvas = canvas;
+            });
         }
 
         this.update = () => {
-            const data = Config.LIST[Global.SLIDE_INDEX];
-            canvas.size(Stage.width, Stage.height, true);
-            if (text) {
-                canvas.remove(text);
-                text = text2 = text.destroy();
-            }
-            text = CanvasFont.createText(canvas, Stage.width, Stage.height, data.title.toUpperCase(), '200 66px Oswald', Config.UI_COLOR, {
-                lineHeight: 80,
-                letterSpacing: 0,
-                textAlign: 'center'
+            Config.LIST.forEach(data => {
+                const canvas = data.graphics.canvas;
+                let text = data.graphics.text,
+                    text2 = data.graphics.text2;
+                canvas.size(Stage.width, Stage.height, true);
+                if (text) {
+                    canvas.remove(text);
+                    text = text2 = text.destroy();
+                }
+                text = CanvasFont.createText(canvas, Stage.width, Stage.height, data.title.toUpperCase(), '200 66px Oswald', Config.UI_COLOR, {
+                    lineHeight: 80,
+                    letterSpacing: 0,
+                    textAlign: 'center'
+                });
+                text2 = CanvasFont.createText(canvas, Stage.width, Stage.height, data.description.toUpperCase(), '400 14px Karla', Config.UI_COLOR, {
+                    lineHeight: 16,
+                    letterSpacing: 2.4,
+                    textAlign: 'center'
+                });
+                text2.y = 18 + text2.totalHeight;
+                text.add(text2);
+                const baseline = (Stage.height - (text.totalHeight + 18 + text2.totalHeight) + 124) / 2;
+                text.y = baseline;
+                canvas.add(text);
+                canvas.render();
+                data.graphics.text = text;
+                data.graphics.text2 = text2;
             });
-            text2 = CanvasFont.createText(canvas, Stage.width, Stage.height, data.description.toUpperCase(), '400 14px Karla', Config.UI_COLOR, {
-                lineHeight: 16,
-                letterSpacing: 2.4,
-                textAlign: 'center'
-            });
-            text2.y = 18 + text2.totalHeight;
-            text.add(text2);
-            const baseline = (Stage.height - (text.totalHeight + 18 + text2.totalHeight) + 124) / 2;
-            text.y = baseline;
-            canvas.add(text);
-            canvas.render();
-            texture.needsUpdate = true;
         };
     }
 }
@@ -126,7 +130,7 @@ class Title extends Component {
         super();
         const self = this;
         this.object3D = new THREE.Object3D();
-        let title, shader, mesh;
+        let title, texture, shader, mesh;
 
         World.scene.add(this.object3D);
 
@@ -135,13 +139,14 @@ class Title extends Component {
 
         function initCanvasTexture() {
             title = self.initClass(TitleTexture);
+            texture = new THREE.Texture(null, null, THREE.ClampToEdgeWrapping, THREE.ClampToEdgeWrapping, THREE.LinearFilter, THREE.LinearFilter);
         }
 
         function initMesh() {
             shader = self.initClass(Shader, vertRipple, fragRipple, {
                 time: World.time,
                 resolution: World.resolution,
-                texture: { value: title.texture },
+                texture: { value: texture },
                 opacity: { value: 0 },
                 progress: { value: 0 },
                 direction: { value: new THREE.Vector2(1.0, -1.0) },
@@ -153,9 +158,15 @@ class Title extends Component {
             self.object3D.add(mesh);
         }
 
-        this.update = () => {
+        this.resize = () => {
             title.update();
             mesh.scale.set(Stage.width, Stage.height, 1);
+        };
+
+        this.update = () => {
+            const data = Config.LIST[Global.SLIDE_INDEX];
+            texture.image = data.graphics.canvas.element;
+            texture.needsUpdate = true;
         };
 
         this.animateIn = callback => {
@@ -255,6 +266,8 @@ class Space extends Component {
                     i = Math.round(progress);
                 Data.instance().setState({ position: i }, data.path);
             } else {
+                title.direction = 1;
+                title.update();
                 const state = Data.instance().getState(),
                     index = Stage.pathList.indexOf(state.path);
                 if (!~index) Data.instance().replaceState(data.path);
@@ -270,6 +283,7 @@ class Space extends Component {
             if (Stage.width / Stage.height > ratio) mesh.scale.set(Stage.width, Stage.width / ratio, 1);
             else mesh.scale.set(Stage.height * ratio, Stage.height, 1);
             slide.max.y = Stage.height;
+            title.resize();
             title.update();
         }
 

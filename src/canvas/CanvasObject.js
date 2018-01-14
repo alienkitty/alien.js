@@ -65,16 +65,15 @@ class CanvasObject {
     }
 
     add(child) {
-        child.canvas = this.canvas;
+        child.setCanvas(this.canvas);
         child.parent = this;
         this.children.push(child);
         child.z = this.children.length;
-        for (let i = this.children.length - 1; i > -1; i--) this.children[i].setCanvas(this.canvas);
     }
 
     setCanvas(canvas) {
         this.canvas = canvas;
-        for (let i = this.children.length - 1; i > -1; i--) this.children[i].setCanvas(canvas);
+        for (let i = 0; i < this.children.length; i++) this.children[i].setCanvas(canvas);
     }
 
     remove(child) {
@@ -152,7 +151,7 @@ class CanvasObject {
     }
 
     destroy() {
-        for (let i = 0; i < this.children.length; i++) this.children[i].destroy();
+        for (let i = this.children.length - 1; i >= 0; i--) this.children[i].destroy();
         return Utils.nullObject(this);
     }
 }

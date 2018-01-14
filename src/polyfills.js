@@ -70,7 +70,7 @@ Array.prototype.last = function () {
 
 String.prototype.includes = function (str) {
     if (!Array.isArray(str)) return ~this.indexOf(str);
-    for (let i = str.length - 1; i >= 0; i--) if (~this.indexOf(str[i])) return true;
+    for (let i = 0; i < str.length; i++) if (~this.indexOf(str[i])) return true;
     return false;
 };
 

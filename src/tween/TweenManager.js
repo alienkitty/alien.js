@@ -80,7 +80,7 @@ class TweenManager {
         if (object.mathTween) object.mathTween.stop();
         if (object.mathTweens) {
             const tweens = object.mathTweens;
-            for (let i = 0; i < tweens.length; i++) {
+            for (let i = tweens.length - 1; i >= 0; i--) {
                 const tween = tweens[i];
                 if (tween) tween.stop();
             }
@@ -122,7 +122,7 @@ class TweenManager {
 
     getAllTransforms(object) {
         const obj = {};
-        for (let i = this.TRANSFORMS.length - 1; i > -1; i--) {
+        for (let i = 0; i < this.TRANSFORMS.length; i++) {
             const key = this.TRANSFORMS[i],
                 val = object[key];
             if (val !== 0 && typeof val === 'number') obj[key] = val;

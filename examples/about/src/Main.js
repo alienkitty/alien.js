@@ -504,7 +504,10 @@ class AlienKitty extends Interface {
         };
 
         this.animateOut = callback => {
-            this.tween({ opacity: 0 }, 500, 'easeInOutQuad', callback);
+            this.tween({ opacity: 0 }, 500, 'easeInOutQuad', () => {
+                this.clearTimers();
+                if (callback) callback();
+            });
         };
 
         this.ready = initImages;

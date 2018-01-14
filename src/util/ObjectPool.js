@@ -12,10 +12,7 @@ class ObjectPool {
         const pool = [];
         this.array = pool;
 
-        if (type) {
-            number = number || 10;
-            for (let i = 0; i < number; i++) pool.push(new type());
-        }
+        if (type) for (let i = 0; i < number || 10; i++) pool.push(new type());
 
         this.get = () => {
             return pool.shift() || (type ? new type() : null);
@@ -26,12 +23,12 @@ class ObjectPool {
         };
 
         this.put = object => {
-            if (object) pool.push(object);
+            pool.push(object);
         };
 
         this.insert = array => {
-            if (typeof array.push === 'undefined') array = [array];
-            for (let i = 0; i < array.length; i++) pool.push(array[i]);
+            if (!Array.isArray(array)) array = [array];
+            pool.push(...array);
         };
 
         this.length = () => {
@@ -39,7 +36,7 @@ class ObjectPool {
         };
 
         this.destroy = () => {
-            for (let i = 0; i < pool.length; i++) if (pool[i].destroy) pool[i].destroy();
+            for (let i = pool.length - 1; i >= 0; i--) if (pool[i].destroy) pool[i].destroy();
             return Utils.nullObject(this);
         };
     }

@@ -30,10 +30,7 @@ class Raycaster {
                 parent = parent.parent;
             }
             object.raycast(raycaster, intersects);
-            if (recursive === true) {
-                const children = object.children;
-                for (let i = 0, l = children.length; i < l; i++) intersectObject(children[i], raycaster, intersects, true);
-            }
+            if (recursive === true) object.children.forEach(object => intersectObject(object, raycaster, intersects, true));
         }
 
         function intersect(objects) {

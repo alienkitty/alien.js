@@ -20,7 +20,7 @@ class LinkedList {
         }
 
         function remove(object) {
-            for (let i = nodes.length - 1; i > -1; i--) {
+            for (let i = nodes.length - 1; i >= 0; i--) {
                 if (nodes[i].object === object) {
                     nodes[i] = null;
                     nodes.splice(i, 1);
@@ -30,7 +30,7 @@ class LinkedList {
         }
 
         function destroy() {
-            for (let i = nodes.length - 1; i > -1; i--) {
+            for (let i = nodes.length - 1; i >= 0; i--) {
                 nodes[i] = null;
                 nodes.splice(i, 1);
             }

@@ -6,6 +6,7 @@
 
 import { Events } from './Events';
 import { Render } from './Render';
+import { Timer } from './Timer';
 import { Utils } from './Utils';
 import { Device } from './Device';
 import { TweenManager } from '../tween/TweenManager';
@@ -60,7 +61,7 @@ class Interface {
     }
 
     delayedCall(callback, time = 0, ...params) {
-        const timer = setTimeout(() => {
+        const timer = Timer.create(() => {
             if (callback) callback(...params);
         }, time);
         this.timers.push(timer);
@@ -69,7 +70,7 @@ class Interface {
     }
 
     clearTimers() {
-        for (let i = this.timers.length - 1; i >= 0; i--) clearTimeout(this.timers[i]);
+        for (let i = this.timers.length - 1; i >= 0; i--) Timer.clearTimeout(this.timers[i]);
         this.timers.length = 0;
     }
 

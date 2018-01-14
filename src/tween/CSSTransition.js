@@ -4,6 +4,7 @@
  * @author Patrick Schroen / https://github.com/pschroen
  */
 
+import { Timer } from '../util/Timer';
 import { Utils } from '../util/Utils';
 import { Device } from '../util/Device';
 import { TweenManager } from './TweenManager';
@@ -47,12 +48,12 @@ class CSSTransition {
             object.cssTween = self;
             const strings = buildStrings(time, ease, delay);
             object.willChange(strings.props);
-            setTimeout(() => {
+            Timer.create(() => {
                 if (killed()) return;
                 object.element.style[Device.vendor('Transition')] = strings.transition;
                 object.css(props);
                 object.transform(transformProps);
-                setTimeout(() => {
+                Timer.create(() => {
                     if (killed()) return;
                     clearCSSTween();
                     if (callback) callback();

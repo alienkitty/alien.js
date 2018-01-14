@@ -37,8 +37,8 @@ class Canvas {
                 alpha.fillRect(0, 0, self.width, self.height);
                 alpha.setCanvas(self);
                 alpha.parent = self;
-                alpha.z = 1;
                 self.children[0] = alpha;
+                alpha.z = 1;
             }
         }
 
@@ -71,7 +71,7 @@ class Canvas {
         };
 
         this.destroy = () => {
-            for (let i = 0; i < this.children.length; i++) this.children[i].destroy();
+            for (let i = this.children.length - 1; i >= 0; i--) this.children[i].destroy();
             this.object.destroy();
             return Utils.nullObject(this);
         };

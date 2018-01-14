@@ -90,7 +90,8 @@ class AlienKittyCanvas extends Interface {
 
         this.animateOut = callback => {
             this.tween({ opacity: 0 }, 500, 'easeInOutQuad', () => {
-                self.stopRender(loop);
+                this.stopRender(loop);
+                this.clearTimers();
                 if (callback) callback();
             });
         };

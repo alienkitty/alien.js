@@ -47,7 +47,7 @@ class CanvasGraphics extends CanvasObject {
         };
 
         this.clear = () => {
-            for (let i = 0; i < draw.length; i++) draw[i].length = 0;
+            for (let i = draw.length - 1; i >= 0; i--) draw[i].length = 0;
             draw.length = 0;
         };
 

@@ -7,19 +7,20 @@ import bundleutils from 'rollup-plugin-bundleutils';
 const pad = bundleutils.pad;
 const timestamp = bundleutils.timestamp;
 const singletons = (values = []) => bundleutils.singletons([
-    'Render',
-    'Stage',
-    'CanvasFont',
-    'Device',
-    'Mouse',
-    'Accelerometer',
     'Utils',
+    'Render',
+    'Timer',
+    'Device',
+    'Accelerometer',
+    'Mouse',
     'Assets',
     'Storage',
     'WebAudio',
     'TweenManager',
     'Interpolation',
-    'Utils3D'
+    'CanvasFont',
+    'Utils3D',
+    'Stage'
 ].concat(values));
 const unexport = bundleutils.unexport;
 const babel = bundleutils.babel;

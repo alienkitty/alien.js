@@ -5,10 +5,12 @@
  */
 
 import { Events } from './Events';
+import { Component } from './Component';
 
-class MultiLoader {
+class MultiLoader extends Component {
 
     constructor() {
+        super();
         const self = this;
         this.events = new Events();
         const loaders = [];

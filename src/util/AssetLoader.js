@@ -5,12 +5,14 @@
  */
 
 import { Events } from './Events';
+import { Component } from './Component';
 import { Utils } from './Utils';
 import { Assets } from './Assets';
 
-class AssetLoader {
+class AssetLoader extends Component {
 
     constructor(assets, callback) {
+        super();
         if (Array.isArray(assets)) {
             assets = (() => {
                 const keys = assets.map(path => {

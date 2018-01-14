@@ -5,11 +5,13 @@
  */
 
 import { Events } from './Events';
+import { Component } from './Component';
 import { Stage } from '../view/Stage';
 
-class FontLoader {
+class FontLoader extends Component {
 
     constructor(fonts, callback) {
+        super();
         const self = this;
         this.events = new Events();
         let element;
@@ -32,7 +34,7 @@ class FontLoader {
                 if (callback) callback();
             };
             if (document.fonts && document.fonts.ready) document.fonts.ready.then(ready);
-            else setTimeout(ready, 500);
+            else self.delayedCall(ready, 500);
         }
     }
 

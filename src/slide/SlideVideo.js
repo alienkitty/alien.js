@@ -5,12 +5,14 @@
  */
 
 import { Events } from '../util/Events';
+import { Component } from '../util/Component';
 import { Device } from '../util/Device';
 import { Assets } from '../util/Assets';
 
-class SlideVideo {
+class SlideVideo extends Component {
 
     constructor(params, callback) {
+        super();
         if (!SlideVideo.initialized) {
             SlideVideo.test = SlideVideo.test || !Device.mobile && Device.browser !== 'safari' && !Device.detect('trident');
 
@@ -90,6 +92,7 @@ class SlideVideo {
         this.destroy = () => {
             this.pause();
             this.element.src = '';
+            return super.destroy();
         };
     }
 }

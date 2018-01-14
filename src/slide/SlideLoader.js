@@ -5,11 +5,13 @@
  */
 
 import { Events } from '../util/Events';
+import { Component } from '../util/Component';
 import { SlideVideo } from './SlideVideo';
 
-class SlideLoader {
+class SlideLoader extends Component {
 
     constructor(slides, callback) {
+        super();
         const self = this;
         this.events = new Events();
         this.list = [];
@@ -17,7 +19,7 @@ class SlideLoader {
         let loaded = 0;
 
         slides.forEach(params => {
-            this.list.push(new SlideVideo(params, slideLoaded));
+            this.list.push(this.initClass(SlideVideo, params, slideLoaded));
             this.pathList.push(params.path);
         });
 

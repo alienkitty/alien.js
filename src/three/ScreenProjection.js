@@ -6,11 +6,13 @@
 
 /* global THREE */
 
+import { Component } from '../util/Component';
 import { Stage } from '../view/Stage';
 
-class ScreenProjection {
+class ScreenProjection extends Component {
 
     constructor(camera) {
+        super();
         const v3 = new THREE.Vector3(),
             v32 = new THREE.Vector3(),
             value = new THREE.Vector3;

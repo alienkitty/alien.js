@@ -7,12 +7,14 @@
 /* global THREE */
 
 import { Events } from '../util/Events';
+import { Component } from '../util/Component';
 import { Stage } from '../view/Stage';
 import { Utils3D } from './Utils3D';
 
-class Effects {
+class Effects extends Component {
 
     constructor(stage, params) {
+        super();
         const self = this;
         this.stage = stage;
         this.renderer = params.renderer;

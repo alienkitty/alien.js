@@ -6,12 +6,13 @@
 
 /* global THREE */
 
-import { Utils } from '../util/Utils';
+import { Component } from '../util/Component';
 import { TweenManager } from '../tween/TweenManager';
 
-class Shader {
+class Shader extends Component {
 
     constructor(vertexShader, fragmentShader, props) {
+        super();
         const self = this;
         this.uniforms = {};
         this.properties = {};
@@ -99,7 +100,7 @@ class Shader {
 
     destroy() {
         this.material.dispose();
-        return Utils.nullObject(this);
+        return super.destroy();
     }
 }
 

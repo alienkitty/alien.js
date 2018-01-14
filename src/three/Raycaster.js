@@ -6,13 +6,14 @@
 
 /* global THREE */
 
-import { Utils } from '../util/Utils';
+import { Component } from '../util/Component';
 import { Mouse } from '../util/Mouse';
 import { Stage } from '../view/Stage';
 
-class Raycaster {
+class Raycaster extends Component {
 
     constructor(camera) {
+        super();
         this.camera = camera;
         const calc = new THREE.Vector2(),
             raycaster = new THREE.Raycaster();
@@ -77,10 +78,6 @@ class Raycaster {
         this.checkFromValues = (objects, origin, direction) => {
             raycaster.set(origin, direction, 0, Number.POSITIVE_INFINITY);
             return intersect(objects);
-        };
-
-        this.destroy = () => {
-            return Utils.nullObject(this);
         };
     }
 }

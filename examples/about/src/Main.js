@@ -108,7 +108,7 @@ class UIAbout extends Interface {
 
         function click(e) {
             WebAudio.mute();
-            self.delayedCall(() => {
+            setTimeout(() => {
                 const title = e.object.title.toLowerCase();
                 getURL(~title.indexOf('source') ? Config.ABOUT_GITHUB_URL : Config.ABOUT_HYDRA_URL);
             }, 300);
@@ -222,7 +222,7 @@ class UIFooter extends Interface {
 
         function sourceClick() {
             WebAudio.mute();
-            self.delayedCall(() => getURL(Config.ABOUT_GITHUB_URL), 300);
+            setTimeout(() => getURL(Config.ABOUT_GITHUB_URL), 300);
         }
 
         function aboutClick() {

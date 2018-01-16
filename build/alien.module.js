@@ -40,7 +40,7 @@ Math.clamp = function (value, min = 0, max = 1) {
 
 Math.range = function (value, oldMin = -1, oldMax = 1, newMin = 0, newMax = 1, isClamp) {
     const newValue = (value - oldMin) * (newMax - newMin) / (oldMax - oldMin) + newMin;
-    if (isClamp) return Math.clamp(newValue, Math.min(newMin, newMax), Math.max(newMin, newMax));
+    if (isClamp) return Math.clamp(newValue, newMin, newMax);
     return newValue;
 };
 
@@ -76,7 +76,7 @@ Array.prototype.last = function () {
 
 String.prototype.includes = function (str) {
     if (!Array.isArray(str)) return ~this.indexOf(str);
-    for (let i = str.length - 1; i >= 0; i--) if (~this.indexOf(str[i])) return true;
+    for (let i = 0; i < str.length; i++) if (~this.indexOf(str[i])) return true;
     return false;
 };
 
@@ -183,8 +183,10 @@ window.getURL = function (url, target = '_blank') {
     window.open(url, target);
 };
 
-if (!window.Global) window.Global = {};
+if (!window.URL) window.URL = window.webkitURL;
+
 if (!window.Config) window.Config = {};
+if (!window.Global) window.Global = {};
 
 /**
  * Alien utilities.
@@ -271,59 +273,6 @@ class Utils {
 )(); // Singleton pattern (IICE)
 
 /**
- * Event helper class.
- *
- * @author Patrick Schroen / https://github.com/pschroen
- */
-
-class Events {
-
-    constructor() {
-        const events = {};
-
-        this.add = (event, callback) => {
-            if (!events[event]) events[event] = [];
-            events[event].push(callback);
-        };
-
-        this.remove = (event, callback) => {
-            if (!events[event]) return;
-            events[event].remove(callback);
-        };
-
-        this.destroy = () => {
-            for (let event in events) {
-                for (let i = events[event].length - 1; i > -1; i--) {
-                    events[event][i] = null;
-                    events[event].splice(i, 1);
-                }
-            }
-            return Utils.nullObject(this);
-        };
-
-        this.fire = (event, object = {}) => {
-            if (!events[event]) return;
-            const clone = Utils.cloneArray(events[event]);
-            clone.forEach(callback => callback(object));
-        };
-    }
-}
-
-Events.VISIBILITY     = 'visibility';
-Events.KEYBOARD_PRESS = 'keyboard_press';
-Events.KEYBOARD_DOWN  = 'keyboard_down';
-Events.KEYBOARD_UP    = 'keyboard_up';
-Events.RESIZE         = 'resize';
-Events.COMPLETE       = 'complete';
-Events.PROGRESS       = 'progress';
-Events.UPDATE         = 'update';
-Events.LOADED         = 'loaded';
-Events.ERROR          = 'error';
-Events.READY          = 'ready';
-Events.HOVER          = 'hover';
-Events.CLICK          = 'click';
-
-/**
  * Render loop.
  *
  * @author Patrick Schroen / https://github.com/pschroen
@@ -396,6 +345,124 @@ class Render {
 )(); // Singleton pattern (IICE)
 
 /**
+ * Timer helper class.
+ *
+ * @author Patrick Schroen / https://github.com/pschroen
+ */
+
+const Timer = new ( // Singleton pattern (IICE)
+
+class Timer {
+
+    constructor() {
+        const callbacks = [],
+            discard = [];
+
+        Render.start(loop);
+
+        function loop(t, delta) {
+            for (let i = 0; i < discard.length; i++) {
+                const obj = discard[i];
+                obj.callback = null;
+                callbacks.remove(obj);
+            }
+            if (discard.length) discard.length = 0;
+            for (let i = 0; i < callbacks.length; i++) {
+                const obj = callbacks[i];
+                if (!obj) {
+                    callbacks.remove(obj);
+                    continue;
+                }
+                if ((obj.current += delta) >= obj.time) {
+                    if (obj.callback) obj.callback(...obj.args);
+                    discard.push(obj);
+                }
+            }
+        }
+
+        function find(ref) {
+            for (let i = 0; i < callbacks.length; i++) if (callbacks[i].ref === ref) return callbacks[i];
+            return null;
+        }
+
+        this.clearTimeout = ref => {
+            const obj = find(ref);
+            if (!obj) return false;
+            obj.callback = null;
+            callbacks.remove(obj);
+            return true;
+        };
+
+        this.create = (callback, time, ...args) => {
+            const obj = {
+                time: Math.max(1, time || 1),
+                current: 0,
+                ref: Utils.timestamp(),
+                callback,
+                args
+            };
+            callbacks.push(obj);
+            return obj.ref;
+        };
+    }
+}
+
+)(); // Singleton pattern (IICE)
+
+/**
+ * Event helper class.
+ *
+ * @author Patrick Schroen / https://github.com/pschroen
+ */
+
+class Events {
+
+    constructor() {
+        const events = {};
+
+        this.add = (event, callback) => {
+            if (!events[event]) events[event] = [];
+            events[event].push(callback);
+        };
+
+        this.remove = (event, callback) => {
+            if (!events[event]) return;
+            events[event].remove(callback);
+        };
+
+        this.destroy = () => {
+            for (let event in events) {
+                for (let i = events[event].length - 1; i >= 0; i--) {
+                    events[event][i] = null;
+                    events[event].splice(i, 1);
+                }
+            }
+            return Utils.nullObject(this);
+        };
+
+        this.fire = (event, object = {}) => {
+            if (!events[event]) return;
+            const clone = Utils.cloneArray(events[event]);
+            clone.forEach(callback => callback(object));
+        };
+    }
+}
+
+Events.VISIBILITY     = 'visibility';
+Events.KEYBOARD_PRESS = 'keyboard_press';
+Events.KEYBOARD_DOWN  = 'keyboard_down';
+Events.KEYBOARD_UP    = 'keyboard_up';
+Events.RESIZE         = 'resize';
+Events.COMPLETE       = 'complete';
+Events.PROGRESS       = 'progress';
+Events.UPDATE         = 'update';
+Events.LOADED         = 'loaded';
+Events.ERROR          = 'error';
+Events.READY          = 'ready';
+Events.HOVER          = 'hover';
+Events.CLICK          = 'click';
+
+/**
  * Browser detection and vendor prefixes.
  *
  * @author Patrick Schroen / https://github.com/pschroen
@@ -446,15 +513,61 @@ class Device {
             if (this.detect(['linux'])) return 'linux';
             return 'unknown';
         })();
-        this.mobile = ('ontouchstart' in window) && this.detect(['iphone', 'ipad', 'android', 'blackberry']);
+        this.browser = (() => {
+            if (this.os === 'ios') {
+                if (this.detect(['safari'])) return 'safari';
+                return 'unknown';
+            }
+            if (this.os === 'android') {
+                if (this.detect(['chrome'])) return 'chrome';
+                if (this.detect(['firefox'])) return 'firefox';
+                return 'browser';
+            }
+            if (this.detect(['msie'])) return 'ie';
+            if (this.detect(['trident']) && this.detect(['rv:'])) return 'ie';
+            if (this.detect(['windows']) && this.detect(['edge'])) return 'ie';
+            if (this.detect(['chrome'])) return 'chrome';
+            if (this.detect(['safari'])) return 'safari';
+            if (this.detect(['firefox'])) return 'firefox';
+            return 'unknown';
+        })();
+        this.mobile = 'ontouchstart' in window && this.detect(['iphone', 'ipad', 'android', 'blackberry']);
         this.tablet = Math.max(screen.width, screen.height) > 800;
         this.phone = !this.tablet;
+        this.webgl = (() => {
+            try {
+                const names = ['webgl', 'experimental-webgl', 'webkit-3d', 'moz-webgl'],
+                    canvas = document.createElement('canvas');
+                let gl;
+                for (let i = 0; i < names.length; i++) {
+                    gl = canvas.getContext(names[i]);
+                    if (gl) break;
+                }
+                const info = gl.getExtension('WEBGL_debug_renderer_info'),
+                    output = {};
+                if (info) {
+                    const gpu = info.UNMASKED_RENDERER_WEBGL;
+                    output.gpu = gl.getParameter(gpu).toLowerCase();
+                }
+                output.renderer = gl.getParameter(gl.RENDERER).toLowerCase();
+                output.version = gl.getParameter(gl.VERSION).toLowerCase();
+                output.glsl = gl.getParameter(gl.SHADING_LANGUAGE_VERSION).toLowerCase();
+                output.extensions = gl.getSupportedExtensions();
+                output.detect = matches => {
+                    if (output.gpu && output.gpu.includes(matches)) return true;
+                    if (output.version && output.version.includes(matches)) return true;
+                    for (let i = 0; i < output.extensions.length; i++) if (output.extensions[i].toLowerCase().includes(matches)) return true;
+                    return false;
+                };
+                return output;
+            } catch (e) {
+                return false;
+            }
+        })();
     }
 
-    detect(array) {
-        if (typeof array === 'string') array = [array];
-        for (let i = 0; i < array.length; i++) if (~this.agent.indexOf(array[i])) return true;
-        return false;
+    detect(matches) {
+        return this.agent.includes(matches);
     }
 
     vendor(style) {
@@ -462,11 +575,89 @@ class Device {
     }
 
     vibrate(time) {
-        navigator.vibrate && navigator.vibrate(time);
+        if (navigator.vibrate) navigator.vibrate(time);
     }
 }
 
 )(); // Singleton pattern (IICE)
+
+/**
+ * Alien component.
+ *
+ * @author Patrick Schroen / https://github.com/pschroen
+ */
+
+class Component {
+
+    constructor() {
+        this.events = new Events();
+        this.classes = [];
+        this.timers = [];
+        this.loops = [];
+    }
+
+    initClass(object, ...params) {
+        const child = new object(...params);
+        this.add(child);
+        return child;
+    }
+
+    add(child) {
+        if (child.destroy) {
+            this.classes.push(child);
+            child.parent = this;
+        }
+        return this;
+    }
+
+    delayedCall(callback, time = 0, ...params) {
+        const timer = Timer.create(() => {
+            if (callback) callback(...params);
+        }, time);
+        this.timers.push(timer);
+        if (this.timers.length > 50) this.timers.shift();
+        return timer;
+    }
+
+    clearTimers() {
+        for (let i = this.timers.length - 1; i >= 0; i--) Timer.clearTimeout(this.timers[i]);
+        this.timers.length = 0;
+    }
+
+    startRender(callback, fps) {
+        this.loops.push(callback);
+        Render.start(callback, fps);
+    }
+
+    stopRender(callback) {
+        this.loops.remove(callback);
+        Render.stop(callback);
+    }
+
+    clearRenders() {
+        for (let i = this.loops.length - 1; i >= 0; i--) this.stopRender(this.loops[i]);
+        this.loops.length = 0;
+    }
+
+    destroy() {
+        this.removed = true;
+        const parent = this.parent;
+        if (parent && !parent.removed && parent.remove) parent.remove(this);
+        for (let i = this.classes.length - 1; i >= 0; i--) {
+            const child = this.classes[i];
+            if (child && child.destroy) child.destroy();
+        }
+        this.classes.length = 0;
+        this.clearRenders();
+        this.clearTimers();
+        this.events.destroy();
+        return Utils.nullObject(this);
+    }
+
+    remove(child) {
+        this.classes.remove(child);
+    }
+}
 
 /**
  * Interpolation helper class.
@@ -909,7 +1100,7 @@ class TweenManager {
         if (object.mathTween) object.mathTween.stop();
         if (object.mathTweens) {
             const tweens = object.mathTweens;
-            for (let i = 0; i < tweens.length; i++) {
+            for (let i = tweens.length - 1; i >= 0; i--) {
                 const tween = tweens[i];
                 if (tween) tween.stop();
             }
@@ -951,7 +1142,7 @@ class TweenManager {
 
     getAllTransforms(object) {
         const obj = {};
-        for (let i = this.TRANSFORMS.length - 1; i > -1; i--) {
+        for (let i = 0; i < this.TRANSFORMS.length; i++) {
             const key = this.TRANSFORMS[i],
                 val = object[key];
             if (val !== 0 && typeof val === 'number') obj[key] = val;
@@ -1011,12 +1202,12 @@ class CSSTransition {
             object.cssTween = self;
             const strings = buildStrings(time, ease, delay);
             object.willChange(strings.props);
-            setTimeout(() => {
+            Timer.create(() => {
                 if (killed()) return;
                 object.element.style[Device.vendor('Transition')] = strings.transition;
                 object.css(props);
                 object.transform(transformProps);
-                setTimeout(() => {
+                Timer.create(() => {
                     if (killed()) return;
                     clearCSSTween();
                     if (callback) callback();
@@ -1080,7 +1271,7 @@ class Interface {
                     else this.element.className = name.substr(1);
                 }
                 this.element.style.position = 'absolute';
-                if (!detached) (window.Alien && window.Alien.Stage ? window.Alien.Stage : document.body).appendChild(this.element);
+                if (!detached) document.body.appendChild(this.element);
             } else {
                 this.element = name;
             }
@@ -1107,7 +1298,7 @@ class Interface {
     }
 
     delayedCall(callback, time = 0, ...params) {
-        const timer = setTimeout(() => {
+        const timer = Timer.create(() => {
             if (callback) callback(...params);
         }, time);
         this.timers.push(timer);
@@ -1116,7 +1307,7 @@ class Interface {
     }
 
     clearTimers() {
-        for (let i = this.timers.length - 1; i >= 0; i--) clearTimeout(this.timers[i]);
+        for (let i = this.timers.length - 1; i >= 0; i--) Timer.clearTimeout(this.timers[i]);
         this.timers.length = 0;
     }
 
@@ -1213,10 +1404,10 @@ class Interface {
         return this;
     }
 
-    size(w, h) {
+    size(w, h = w) {
         if (typeof w !== 'undefined') {
-            if (typeof h === 'undefined') h = w;
-            if (typeof w === 'string') {
+            if (typeof w === 'string' || typeof h === 'string') {
+                if (typeof w !== 'string') w = w + 'px';
                 if (typeof h !== 'string') h = h + 'px';
                 this.element.style.width = w;
                 this.element.style.height = h;
@@ -1305,8 +1496,7 @@ class Interface {
                     if (~style.indexOf('px')) style = Number(style.slice(0, -2));
                     if (props === 'opacity') style = !isNaN(Number(this.element.style.opacity)) ? Number(this.element.style.opacity) : 1;
                 }
-                if (!style) style = 0;
-                return style;
+                return style || 0;
             } else {
                 this.element.style[props] = value;
                 return this;
@@ -1329,8 +1519,6 @@ class Interface {
     }
 
     willChange(props) {
-        if (typeof props === 'boolean') this.willChangeLock = props;
-        else if (this.willChangeLock) return;
         const string = typeof props === 'string';
         if (props) this.element.style['will-change'] = string ? props : Device.transformProperty + ', opacity';
         else this.element.style['will-change'] = '';
@@ -1413,23 +1601,23 @@ class Interface {
     }
 
     convertTouchEvent(e) {
-        const touchEvent = {};
-        touchEvent.x = 0;
-        touchEvent.y = 0;
-        if (!e) return touchEvent;
+        const touch = {};
+        touch.x = 0;
+        touch.y = 0;
+        if (!e) return touch;
         if (e.touches || e.changedTouches) {
             if (e.touches.length) {
-                touchEvent.x = e.touches[0].pageX;
-                touchEvent.y = e.touches[0].pageY;
+                touch.x = e.touches[0].pageX;
+                touch.y = e.touches[0].pageY;
             } else {
-                touchEvent.x = e.changedTouches[0].pageX;
-                touchEvent.y = e.changedTouches[0].pageY;
+                touch.x = e.changedTouches[0].pageX;
+                touch.y = e.changedTouches[0].pageY;
             }
         } else {
-            touchEvent.x = e.pageX;
-            touchEvent.y = e.pageY;
+            touch.x = e.pageX;
+            touch.y = e.pageY;
         }
-        return touchEvent;
+        return touch;
     }
 
     click(callback) {
@@ -1626,24 +1814,28 @@ class Stage extends Interface {
         }
 
         function addListeners() {
-            window.addEventListener('focus', () => {
-                if (last !== 'focus') {
-                    last = 'focus';
-                    self.events.fire(Events.VISIBILITY, { type: 'focus' });
-                }
-            }, true);
-            window.addEventListener('blur', () => {
-                if (last !== 'blur') {
-                    last = 'blur';
-                    self.events.fire(Events.VISIBILITY, { type: 'blur' });
-                }
-            }, true);
-            window.addEventListener('keydown', () => self.events.fire(Events.KEYBOARD_DOWN), true);
-            window.addEventListener('keyup', () => self.events.fire(Events.KEYBOARD_UP), true);
-            window.addEventListener('keypress', () => self.events.fire(Events.KEYBOARD_PRESS), true);
+            window.addEventListener('focus', focus, true);
+            window.addEventListener('blur', blur, true);
+            window.addEventListener('keydown', e => self.events.fire(Events.KEYBOARD_DOWN, e), true);
+            window.addEventListener('keyup', e => self.events.fire(Events.KEYBOARD_UP, e), true);
+            window.addEventListener('keypress', e => self.events.fire(Events.KEYBOARD_PRESS, e), true);
             window.addEventListener('resize', () => self.events.fire(Events.RESIZE), true);
             self.events.add(Events.RESIZE, resize);
             resize();
+        }
+
+        function focus() {
+            if (last !== 'focus') {
+                last = 'focus';
+                self.events.fire(Events.VISIBILITY, { type: 'focus' });
+            }
+        }
+
+        function blur() {
+            if (last !== 'blur') {
+                last = 'blur';
+                self.events.fire(Events.VISIBILITY, { type: 'blur' });
+            }
         }
 
         function resize() {
@@ -1656,166 +1848,887 @@ class Stage extends Interface {
 )(); // Singleton pattern (IICE)
 
 /**
- * Alien component.
+ * 2D vector.
  *
  * @author Patrick Schroen / https://github.com/pschroen
  */
 
-class Component {
+class Vector2 {
 
-    constructor() {
-        this.events = new Events();
-        this.classes = [];
-        this.timers = [];
-        this.loops = [];
+    constructor(x, y) {
+        this.x = typeof x === 'number' ? x : 0;
+        this.y = typeof y === 'number' ? y : 0;
+        this.type = 'vector2';
     }
 
-    initClass(object, ...params) {
-        const child = new object(...params);
-        this.add(child);
-        return child;
-    }
-
-    add(child) {
-        if (child.destroy) {
-            this.classes.push(child);
-            child.parent = this;
-        }
+    set(x, y) {
+        this.x = x || 0;
+        this.y = y || 0;
         return this;
     }
 
-    delayedCall(callback, time = 0, ...params) {
-        const timer = setTimeout(() => {
-            if (callback) callback(...params);
-        }, time);
-        this.timers.push(timer);
-        if (this.timers.length > 50) this.timers.shift();
-        return timer;
+    clear() {
+        this.x = 0;
+        this.y = 0;
+        return this;
     }
 
-    clearTimers() {
-        for (let i = this.timers.length - 1; i >= 0; i--) clearTimeout(this.timers[i]);
-        this.timers.length = 0;
+    copyTo(v) {
+        v.x = this.x;
+        v.y = this.y;
+        return this;
     }
 
-    startRender(callback, fps) {
-        this.loops.push(callback);
-        Render.start(callback, fps);
+    copyFrom(v) {
+        this.x = v.x || 0;
+        this.y = v.y || 0;
+        return this;
     }
 
-    stopRender(callback) {
-        this.loops.remove(callback);
-        Render.stop(callback);
+    lengthSq() {
+        return this.x * this.x + this.y * this.y || 0.00001;
     }
 
-    clearRenders() {
-        for (let i = this.loops.length - 1; i >= 0; i--) this.stopRender(this.loops[i]);
-        this.loops.length = 0;
+    length() {
+        return Math.sqrt(this.lengthSq());
     }
 
-    destroy() {
-        this.removed = true;
-        const parent = this.parent;
-        if (parent && !parent.removed && parent.remove) parent.remove(this);
-        for (let i = this.classes.length - 1; i >= 0; i--) {
-            const child = this.classes[i];
-            if (child && child.destroy) child.destroy();
-        }
-        this.classes.length = 0;
-        this.clearRenders();
-        this.clearTimers();
-        this.events.destroy();
-        return Utils.nullObject(this);
+    normalize() {
+        const length = this.length();
+        this.x /= length;
+        this.y /= length;
+        return this;
     }
 
-    remove(child) {
-        this.classes.remove(child);
+    setLength(length) {
+        this.normalize().multiply(length);
+        return this;
+    }
+
+    addVectors(a, b) {
+        this.x = a.x + b.x;
+        this.y = a.y + b.y;
+        return this;
+    }
+
+    subVectors(a, b) {
+        this.x = a.x - b.x;
+        this.y = a.y - b.y;
+        return this;
+    }
+
+    multiplyVectors(a, b) {
+        this.x = a.x * b.x;
+        this.y = a.y * b.y;
+        return this;
+    }
+
+    add(v) {
+        this.x += v.x;
+        this.y += v.y;
+        return this;
+    }
+
+    sub(v) {
+        this.x -= v.x;
+        this.y -= v.y;
+        return this;
+    }
+
+    multiply(v) {
+        this.x *= v;
+        this.y *= v;
+        return this;
+    }
+
+    divide(v) {
+        this.x /= v;
+        this.y /= v;
+        return this;
+    }
+
+    perpendicular() {
+        const tx = this.x,
+            ty = this.y;
+        this.x = -ty;
+        this.y = tx;
+        return this;
+    }
+
+    lerp(v, alpha) {
+        this.x += (v.x - this.x) * alpha;
+        this.y += (v.y - this.y) * alpha;
+        return this;
+    }
+
+    deltaLerp(v, alpha, delta = 1) {
+        for (let i = 0; i < delta; i++) this.lerp(v, alpha);
+        return this;
+    }
+
+    interp(v, alpha, ease, dist = 5000) {
+        if (!this.calc) this.calc = new Vector2();
+        this.calc.subVectors(this, v);
+        const fn = Interpolation.convertEase(ease),
+            a = fn(Math.clamp(Math.range(this.calc.lengthSq(), 0, dist * dist, 1, 0), 0, 1) * (alpha / 10));
+        return this.lerp(v, a);
+    }
+
+    setAngleRadius(a, r) {
+        this.x = Math.cos(a) * r;
+        this.y = Math.sin(a) * r;
+        return this;
+    }
+
+    addAngleRadius(a, r) {
+        this.x += Math.cos(a) * r;
+        this.y += Math.sin(a) * r;
+        return this;
+    }
+
+    dot(a, b = this) {
+        return a.x * b.x + a.y * b.y;
+    }
+
+    clone() {
+        return new Vector2(this.x, this.y);
+    }
+
+    distanceTo(v, noSq) {
+        const dx = this.x - v.x,
+            dy = this.y - v.y;
+        if (!noSq) return Math.sqrt(dx * dx + dy * dy);
+        return dx * dx + dy * dy;
+    }
+
+    solveAngle(a, b = this) {
+        return Math.atan2(a.y - b.y, a.x - b.x);
+    }
+
+    equals(v) {
+        return this.x === v.x && this.y === v.y;
+    }
+
+    toString(split = ' ') {
+        return this.x + split + this.y;
     }
 }
 
 /**
- * Canvas interface.
+ * Interaction helper class.
  *
  * @author Patrick Schroen / https://github.com/pschroen
  */
 
-class Canvas {
+class Interaction {
 
-    constructor(w, h = w, retina) {
-        this.element = document.createElement('canvas');
-        this.context = this.element.getContext('2d');
-        this.object = new Interface(this.element);
-        this.children = [];
-        this.retina = retina;
-        this.size(w, h, retina);
-    }
+    constructor(object = Stage) {
+        if (!Interaction.initialized) {
+            Interaction.CLICK = 'interaction_click';
+            Interaction.START = 'interaction_start';
+            Interaction.MOVE  = 'interaction_move';
+            Interaction.DRAG  = 'interaction_drag';
+            Interaction.END   = 'interaction_end';
 
-    size(w, h, retina) {
-        const ratio = retina ? 2 : 1;
-        this.element.width = w * ratio;
-        this.element.height = h * ratio;
-        this.width = w;
-        this.height = h;
-        this.scale = ratio;
-        this.object.size(this.width, this.height);
-        this.context.scale(ratio, ratio);
-        this.element.style.width = w + 'px';
-        this.element.style.height = h + 'px';
-    }
+            const events = {
+                    touchstart: [],
+                    touchmove: [],
+                    touchend: []
+                },
+                touchStart = e => events.touchstart.forEach(callback => callback(e)),
+                touchMove = e => events.touchmove.forEach(callback => callback(e)),
+                touchEnd = e => events.touchend.forEach(callback => callback(e));
 
-    toDataURL(type, quality) {
-        return this.element.toDataURL(type, quality);
-    }
+            Interaction.bind = (event, callback) => events[event].push(callback);
+            Interaction.unbind = (event, callback) => events[event].remove(callback);
 
-    render(noClear) {
-        if (!(typeof noClear === 'boolean' && noClear)) this.clear();
-        for (let i = 0; i < this.children.length; i++) this.children[i].render();
-    }
+            Stage.bind('touchstart', touchStart);
+            Stage.bind('touchmove', touchMove);
+            Stage.bind('touchend', touchEnd);
+            Stage.bind('touchcancel', touchEnd);
 
-    clear() {
-        this.context.clearRect(0, 0, this.element.width, this.element.height);
-    }
+            Interaction.initialized = true;
+        }
+        const self = this;
+        this.events = new Events();
+        this.x = 0;
+        this.y = 0;
+        this.hold = new Vector2();
+        this.last = new Vector2();
+        this.delta = new Vector2();
+        this.move = new Vector2();
+        this.velocity = new Vector2();
+        let distance, timeDown, timeMove;
 
-    add(child) {
-        child.setCanvas(this);
-        child.parent = this;
-        this.children.push(child);
-        child.z = this.children.length;
-    }
+        addListeners();
 
-    remove(child) {
-        child.canvas = null;
-        child.parent = null;
-        this.children.remove(child);
-    }
+        function addListeners() {
+            if (object === Stage) Interaction.bind('touchstart', down);
+            else object.bind('touchstart', down);
+            Interaction.bind('touchmove', move);
+            Interaction.bind('touchend', up);
+        }
 
-    destroy() {
-        for (let i = 0; i < this.children.length; i++) this.children[i].destroy();
-        this.object.destroy();
-        return Utils.nullObject(this);
-    }
+        function down(e) {
+            e.preventDefault();
+            self.isTouching = true;
+            self.x = e.x;
+            self.y = e.y;
+            self.hold.x = self.last.x = e.x;
+            self.hold.y = self.last.y = e.y;
+            self.delta.x = self.move.x = self.velocity.x = 0;
+            self.delta.y = self.move.y = self.velocity.y = 0;
+            distance = 0;
+            self.events.fire(Interaction.START, e);
+            timeDown = timeMove = Render.TIME;
+        }
 
-    getImageData(x = 0, y = 0, w = this.element.width, h = this.element.height) {
-        this.imageData = this.context.getImageData(x, y, w, h);
-        return this.imageData;
-    }
+        function move(e) {
+            if (self.isTouching) {
+                self.move.x = e.x - self.hold.x;
+                self.move.y = e.y - self.hold.y;
+            }
+            self.x = e.x;
+            self.y = e.y;
+            self.delta.x = e.x - self.last.x;
+            self.delta.y = e.y - self.last.y;
+            self.last.x = e.x;
+            self.last.y = e.y;
+            distance += self.delta.length();
+            const delta = Math.max(0.001, Render.TIME - (timeMove || Render.TIME));
+            timeMove = Render.TIME;
+            self.velocity.x = Math.abs(self.delta.x) / delta;
+            self.velocity.y = Math.abs(self.delta.y) / delta;
+            self.events.fire(Interaction.MOVE, e);
+            if (self.isTouching) self.events.fire(Interaction.DRAG, e);
+        }
 
-    getPixel(x, y, dirty) {
-        if (!this.imageData || dirty) this.getImageData();
-        const imgData = {},
-            index = (x + y * this.element.width) * 4,
-            pixels = this.imageData.data;
-        imgData.r = pixels[index];
-        imgData.g = pixels[index + 1];
-        imgData.b = pixels[index + 2];
-        imgData.a = pixels[index + 3];
-        return imgData;
-    }
+        function up(e) {
+            if (!self.isTouching) return;
+            self.isTouching = false;
+            self.move.x = 0;
+            self.move.y = 0;
+            const delta = Math.max(0.001, Render.TIME - (timeMove || Render.TIME));
+            if (delta > 100) {
+                self.delta.x = 0;
+                self.delta.y = 0;
+            }
+            self.events.fire(Interaction.END, e);
+            if (distance < 20 && Render.TIME - timeDown < 2000) self.events.fire(Interaction.CLICK, e);
+        }
 
-    putImageData(imageData) {
-        this.context.putImageData(imageData, 0, 0);
+        this.destroy = () => {
+            Interaction.unbind('touchstart', down);
+            Interaction.unbind('touchmove', move);
+            Interaction.unbind('touchend', up);
+            if (object !== Stage && object.unbind) object.unbind('touchstart', down);
+            this.events.destroy();
+            return Utils.nullObject(this);
+        };
     }
 }
+
+/**
+ * Accelerometer helper class.
+ *
+ * @author Patrick Schroen / https://github.com/pschroen
+ */
+
+const Accelerometer = new ( // Singleton pattern (IICE)
+
+class Accelerometer {
+
+    constructor() {
+        const self = this;
+        this.x = 0;
+        this.y = 0;
+        this.z = 0;
+        this.alpha = 0;
+        this.beta = 0;
+        this.gamma = 0;
+        this.heading = 0;
+        this.rotationRate = {};
+        this.rotationRate.alpha = 0;
+        this.rotationRate.beta = 0;
+        this.rotationRate.gamma = 0;
+        this.toRadians = Device.os === 'ios' ? Math.PI / 180 : 1;
+
+        function updateAccel(e) {
+            switch (window.orientation) {
+                case 0:
+                    self.x = -e.accelerationIncludingGravity.x;
+                    self.y = e.accelerationIncludingGravity.y;
+                    self.z = e.accelerationIncludingGravity.z;
+                    if (e.rotationRate) {
+                        self.rotationRate.alpha = e.rotationRate.beta * self.toRadians;
+                        self.rotationRate.beta = -e.rotationRate.alpha * self.toRadians;
+                        self.rotationRate.gamma = e.rotationRate.gamma * self.toRadians;
+                    }
+                    break;
+                case 180:
+                    self.x = e.accelerationIncludingGravity.x;
+                    self.y = -e.accelerationIncludingGravity.y;
+                    self.z = e.accelerationIncludingGravity.z;
+                    if (e.rotationRate) {
+                        self.rotationRate.alpha = -e.rotationRate.beta * self.toRadians;
+                        self.rotationRate.beta = e.rotationRate.alpha * self.toRadians;
+                        self.rotationRate.gamma = e.rotationRate.gamma * self.toRadians;
+                    }
+                    break;
+                case 90:
+                    self.x = e.accelerationIncludingGravity.y;
+                    self.y = e.accelerationIncludingGravity.x;
+                    self.z = e.accelerationIncludingGravity.z;
+                    if (e.rotationRate) {
+                        self.rotationRate.alpha = e.rotationRate.alpha * self.toRadians;
+                        self.rotationRate.beta = e.rotationRate.beta * self.toRadians;
+                        self.rotationRate.gamma = e.rotationRate.gamma * self.toRadians;
+                    }
+                    break;
+                case -90:
+                    self.x = -e.accelerationIncludingGravity.y;
+                    self.y = -e.accelerationIncludingGravity.x;
+                    self.z = e.accelerationIncludingGravity.z;
+                    if (e.rotationRate) {
+                        self.rotationRate.alpha = -e.rotationRate.alpha * self.toRadians;
+                        self.rotationRate.beta = -e.rotationRate.beta * self.toRadians;
+                        self.rotationRate.gamma = e.rotationRate.gamma * self.toRadians;
+                    }
+                    break;
+            }
+        }
+
+        function updateOrientation(e) {
+            for (let key in e) if (~key.toLowerCase().indexOf('heading')) self.heading = e[key];
+            switch (window.orientation) {
+                case 0:
+                    self.alpha = e.beta * self.toRadians;
+                    self.beta = -e.alpha * self.toRadians;
+                    self.gamma = e.gamma * self.toRadians;
+                    break;
+                case 180:
+                    self.alpha = -e.beta * self.toRadians;
+                    self.beta = e.alpha * self.toRadians;
+                    self.gamma = e.gamma * self.toRadians;
+                    break;
+                case 90:
+                    self.alpha = e.alpha * self.toRadians;
+                    self.beta = e.beta * self.toRadians;
+                    self.gamma = e.gamma * self.toRadians;
+                    break;
+                case -90:
+                    self.alpha = -e.alpha * self.toRadians;
+                    self.beta = -e.beta * self.toRadians;
+                    self.gamma = e.gamma * self.toRadians;
+                    break;
+            }
+            self.tilt = e.beta * self.toRadians;
+            self.yaw = e.alpha * self.toRadians;
+            self.roll = -e.gamma * self.toRadians;
+            if (Device.os === 'Android') self.heading = compassHeading(e.alpha, e.beta, e.gamma);
+        }
+
+        function compassHeading(alpha, beta, gamma) {
+            const degtorad = Math.PI / 180,
+                x = beta ? beta * degtorad : 0,
+                y = gamma ? gamma * degtorad : 0,
+                z = alpha ? alpha * degtorad : 0,
+                cY = Math.cos(y),
+                cZ = Math.cos(z),
+                sX = Math.sin(x),
+                sY = Math.sin(y),
+                sZ = Math.sin(z),
+                Vx = -cZ * sY - sZ * sX * cY,
+                Vy = -sZ * sY + cZ * sX * cY;
+            let compassHeading = Math.atan(Vx / Vy);
+            if (Vy < 0) compassHeading += Math.PI;
+            else if (Vx < 0) compassHeading += 2 * Math.PI;
+            return compassHeading * (180 / Math.PI);
+        }
+
+        this.init = () => {
+            window.addEventListener('devicemotion', updateAccel, true);
+            window.addEventListener('deviceorientation', updateOrientation, true);
+        };
+    }
+}
+
+)(); // Singleton pattern (IICE)
+
+/**
+ * Mouse interaction.
+ *
+ * @author Patrick Schroen / https://github.com/pschroen
+ */
+
+const Mouse = new ( // Singleton pattern (IICE)
+
+class Mouse {
+
+    constructor() {
+        const self = this;
+        this.x = 0;
+        this.y = 0;
+        this.normal = {
+            x: 0,
+            y: 0
+        };
+        this.tilt = {
+            x: 0,
+            y: 0
+        };
+        this.inverseNormal = {
+            x: 0,
+            y: 0
+        };
+
+        function update(e) {
+            self.x = e.x;
+            self.y = e.y;
+            self.normal.x = e.x / Stage.width;
+            self.normal.y = e.y / Stage.height;
+            self.tilt.x = self.normal.x * 2 - 1;
+            self.tilt.y = 1 - self.normal.y * 2;
+            self.inverseNormal.x = self.normal.x;
+            self.inverseNormal.y = 1 - self.normal.y;
+        }
+
+        this.init = () => {
+            this.input = new Interaction();
+            this.input.events.add(Interaction.START, update);
+            this.input.events.add(Interaction.MOVE, update);
+            update({
+                x: Stage.width / 2,
+                y: Stage.height / 2
+            });
+        };
+    }
+}
+
+)(); // Singleton pattern (IICE)
+
+/**
+ * Image helper class with promise method.
+ *
+ * @author Patrick Schroen / https://github.com/pschroen
+ */
+
+const Assets = new ( // Singleton pattern (IICE)
+
+class Assets {
+
+    constructor() {
+        this.CDN = '';
+        this.CORS = null;
+        const images = {};
+
+        this.createImage = (src, store, callback) => {
+            if (typeof store !== 'boolean') {
+                callback = store;
+                store = undefined;
+            }
+            const img = new Image();
+            img.crossOrigin = this.CORS;
+            img.src = src;
+            img.onload = callback;
+            img.onerror = callback;
+            if (store) images[src] = img;
+            return img;
+        };
+
+        this.getImage = src => {
+            return images[src];
+        };
+    }
+
+    loadImage(img) {
+        if (typeof img === 'string') img = this.createImage(img);
+        const promise = Promise.create();
+        img.onload = promise.resolve;
+        img.onerror = promise.resolve;
+        return promise;
+    }
+}
+
+)(); // Singleton pattern (IICE)
+
+/**
+ * Asset loader with promise method.
+ *
+ * @author Patrick Schroen / https://github.com/pschroen
+ */
+
+class AssetLoader extends Component {
+
+    constructor(assets, callback) {
+        super();
+        if (Array.isArray(assets)) {
+            assets = (() => {
+                const keys = assets.map(path => {
+                    return Utils.basename(path);
+                });
+                return keys.reduce((o, k, i) => {
+                    o[k] = assets[i];
+                    return o;
+                }, {});
+            })();
+        }
+        const self = this;
+        this.events = new Events();
+        const total = Object.keys(assets).length;
+        let loaded = 0;
+
+        for (let key in assets) loadAsset(key, Assets.CDN + assets[key]);
+
+        function loadAsset(key, asset) {
+            const ext = Utils.extension(asset);
+            if (ext.includes(['jpg', 'jpeg', 'png', 'gif', 'svg'])) {
+                Assets.createImage(asset, assetLoaded);
+                return;
+            }
+            if (ext.includes(['mp3', 'm4a', 'ogg', 'wav', 'aif'])) {
+                if (!window.AudioContext || !window.WebAudio) return assetLoaded();
+                window.WebAudio.createSound(key, asset, assetLoaded);
+                return;
+            }
+            window.get(asset).then(data => {
+                if (ext === 'js') window.eval(data.replace('use strict', ''));
+                assetLoaded();
+            }).catch(() => {
+                assetLoaded();
+            });
+        }
+
+        function assetLoaded() {
+            self.percent = ++loaded / total;
+            self.events.fire(Events.PROGRESS, { percent: self.percent });
+            if (loaded === total) complete();
+        }
+
+        function complete() {
+            self.events.fire(Events.COMPLETE);
+            if (callback) callback();
+        }
+    }
+
+    static loadAssets(assets, callback) {
+        const promise = Promise.create();
+        if (!callback) callback = promise.resolve;
+        promise.loader = new AssetLoader(assets, callback);
+        return promise;
+    }
+}
+
+/**
+ * Loader helper class.
+ *
+ * @author Patrick Schroen / https://github.com/pschroen
+ */
+
+class MultiLoader extends Component {
+
+    constructor() {
+        super();
+        const self = this;
+        this.events = new Events();
+        const loaders = [];
+        let loaded = 0;
+
+        function progress() {
+            let percent = 0;
+            for (let i = 0; i < loaders.length; i++) percent += loaders[i].percent || 0;
+            percent /= loaders.length;
+            self.events.fire(Events.PROGRESS, { percent });
+        }
+
+        function complete() {
+            if (++loaded === loaders.length) self.events.fire(Events.COMPLETE);
+        }
+
+        this.push = loader => {
+            loaders.push(loader);
+            loader.events.add(Events.PROGRESS, progress);
+            loader.events.add(Events.COMPLETE, complete);
+        };
+
+        this.complete = () => {
+            this.events.fire(Events.PROGRESS, { percent: 1 });
+            this.events.fire(Events.COMPLETE);
+        };
+    }
+}
+
+/**
+ * Font loader with promise method.
+ *
+ * @author Patrick Schroen / https://github.com/pschroen
+ */
+
+class FontLoader extends Component {
+
+    constructor(fonts, callback) {
+        super();
+        const self = this;
+        this.events = new Events();
+        let element;
+
+        initFonts();
+        finish();
+
+        function initFonts() {
+            if (!Array.isArray(fonts)) fonts = [fonts];
+            element = Stage.create('FontLoader');
+            for (let i = 0; i < fonts.length; i++) element.create('font').fontStyle(fonts[i], 12, '#000').text('LOAD').css({ top: -999 });
+        }
+
+        function finish() {
+            const ready = () => {
+                element.destroy();
+                self.percent = 1;
+                self.events.fire(Events.PROGRESS, { percent: self.percent });
+                self.events.fire(Events.COMPLETE);
+                if (callback) callback();
+            };
+            if (document.fonts && document.fonts.ready) document.fonts.ready.then(ready);
+            else self.delayedCall(ready, 500);
+        }
+    }
+
+    static loadFonts(fonts, callback) {
+        const promise = Promise.create();
+        if (!callback) callback = promise.resolve;
+        promise.loader = new FontLoader(fonts, callback);
+        return promise;
+    }
+}
+
+/**
+ * State dispatcher.
+ *
+ * @author Patrick Schroen / https://github.com/pschroen
+ */
+
+class StateDispatcher {
+
+    constructor(forceHash) {
+        const self = this;
+        this.events = new Events();
+        this.locked = false;
+        let storePath, storeState,
+            rootPath = '/';
+
+        createListener();
+        storePath = getPath();
+
+        function createListener() {
+            if (forceHash) window.addEventListener('hashchange', () => handleStateChange(null, getPath()), true);
+            else window.addEventListener('popstate', e => handleStateChange(e.state, getPath()), true);
+        }
+
+        function getPath() {
+            if (forceHash) return location.hash.slice(3);
+            return rootPath !== '/' ? location.pathname.split(rootPath)[1] : location.pathname.slice(1) || '';
+        }
+
+        function handleStateChange(state, path) {
+            if (path !== storePath) {
+                if (!self.locked) {
+                    storePath = path;
+                    storeState = state;
+                    self.events.fire(Events.UPDATE, { value: state, path, split: path.split('/') });
+                } else if (storePath) {
+                    if (forceHash) location.hash = '!/' + storePath;
+                    else history.pushState(storeState, null, rootPath + storePath);
+                }
+            }
+        }
+
+        this.getState = () => {
+            const path = getPath();
+            return { value: storeState, path, split: path.split('/') };
+        };
+
+        this.setState = (state, path) => {
+            if (typeof state !== 'object') {
+                path = state;
+                state = null;
+            }
+            if (path !== storePath) {
+                storePath = path;
+                storeState = state;
+                if (forceHash) location.hash = '!/' + path;
+                else history.pushState(state, null, rootPath + path);
+            }
+        };
+
+        this.replaceState = (state, path) => {
+            if (typeof state !== 'object') {
+                path = state;
+                state = null;
+            }
+            if (path !== storePath) {
+                storePath = path;
+                storeState = state;
+                if (forceHash) history.replaceState(null, null, '#!/' + path);
+                else history.replaceState(state, null, rootPath + path);
+            }
+        };
+
+        this.setTitle = title => document.title = title;
+
+        this.lock = () => this.locked = true;
+
+        this.unlock = () => this.locked = false;
+
+        this.forceHash = () => forceHash = true;
+
+        this.setPathRoot = path => {
+            if (path.charAt(0) === '/') rootPath = path;
+            else rootPath = '/' + path;
+        };
+    }
+}
+
+/**
+ * Storage helper class.
+ *
+ * @author Patrick Schroen / https://github.com/pschroen
+ */
+
+const Storage = new ( // Singleton pattern (IICE)
+
+class Storage {
+
+    set(key, value) {
+        if (value !== null && typeof value === 'object') value = JSON.stringify(value);
+        if (value === null) window.localStorage.removeItem(key);
+        else window.localStorage[key] = value;
+    }
+
+    get(key) {
+        let value = window.localStorage[key];
+        if (value) {
+            let char0;
+            if (value.charAt) char0 = value.charAt(0);
+            if (char0 === '{' || char0 === '[') value = JSON.parse(value);
+            if (value === 'true' || value === 'false') value = value === 'true';
+        }
+        return value;
+    }
+}
+
+)(); // Singleton pattern (IICE)
+
+/**
+ * Web audio engine.
+ *
+ * @author Patrick Schroen / https://github.com/pschroen
+ */
+
+if (!window.AudioContext) window.AudioContext = window.webkitAudioContext || window.mozAudioContext || window.oAudioContext;
+
+const WebAudio = new ( // Singleton pattern (IICE)
+
+class WebAudio {
+
+    constructor() {
+        const self = this;
+        const sounds = {};
+        let context;
+
+        this.init = () => {
+            if (window.AudioContext) context = new AudioContext();
+            if (!context) return;
+            this.globalGain = context.createGain();
+            this.globalGain.connect(context.destination);
+            this.globalGain.value = this.globalGain.gain.defaultValue;
+            this.gain = {
+                set value(value) {
+                    self.globalGain.value = value;
+                    self.globalGain.gain.setTargetAtTime(value, context.currentTime, 0.01);
+                },
+                get value() {
+                    return self.globalGain.value;
+                }
+            };
+        };
+
+        this.loadSound = (id, callback) => {
+            const promise = Promise.create();
+            if (callback) promise.then(callback);
+            callback = promise.resolve;
+            const sound = this.getSound(id);
+            window.fetch(sound.asset).then(response => {
+                if (!response.ok) return callback();
+                response.arrayBuffer().then(data => {
+                    context.decodeAudioData(data, buffer => {
+                        sound.buffer = buffer;
+                        sound.complete = true;
+                        callback();
+                    });
+                });
+            }).catch(() => {
+                callback();
+            });
+            sound.ready = () => promise;
+        };
+
+        this.createSound = (id, asset, callback) => {
+            const sound = {};
+            sound.asset = asset;
+            sound.audioGain = context.createGain();
+            sound.audioGain.connect(this.globalGain);
+            sound.audioGain.value = sound.audioGain.gain.defaultValue;
+            sound.gain = {
+                set value(value) {
+                    sound.audioGain.value = value;
+                    sound.audioGain.gain.setTargetAtTime(value, context.currentTime, 0.01);
+                },
+                get value() {
+                    return sound.audioGain.value;
+                }
+            };
+            sounds[id] = sound;
+            if (Device.os === 'ios') callback();
+            else this.loadSound(id, callback);
+        };
+
+        this.getSound = id => {
+            return sounds[id];
+        };
+
+        this.trigger = id => {
+            if (!context) return;
+            if (context.state === 'suspended') context.resume();
+            const sound = this.getSound(id);
+            if (!sound.ready) this.loadSound(id);
+            sound.ready().then(() => {
+                if (sound.complete) {
+                    const source = context.createBufferSource();
+                    source.buffer = sound.buffer;
+                    source.connect(sound.audioGain);
+                    sound.audioGain.gain.setValueAtTime(sound.audioGain.value, context.currentTime);
+                    source.loop = !!sound.loop;
+                    source.start(0);
+                }
+            });
+        };
+
+        this.mute = () => {
+            if (!context) return;
+            TweenManager.tween(this.gain, { value: 0 }, 300, 'easeOutSine');
+        };
+
+        this.unmute = () => {
+            if (!context) return;
+            TweenManager.tween(this.gain, { value: 1 }, 500, 'easeOutSine');
+        };
+
+        window.WebAudio = this;
+    }
+}
+
+)(); // Singleton pattern (IICE)
 
 /**
  * Canvas values.
@@ -1964,16 +2877,15 @@ class CanvasObject {
     }
 
     add(child) {
-        child.canvas = this.canvas;
+        child.setCanvas(this.canvas);
         child.parent = this;
         this.children.push(child);
         child.z = this.children.length;
-        for (let i = this.children.length - 1; i > -1; i--) this.children[i].setCanvas(this.canvas);
     }
 
     setCanvas(canvas) {
         this.canvas = canvas;
-        for (let i = this.children.length - 1; i > -1; i--) this.children[i].setCanvas(canvas);
+        for (let i = 0; i < this.children.length; i++) this.children[i].setCanvas(canvas);
     }
 
     remove(child) {
@@ -2051,7 +2963,7 @@ class CanvasObject {
     }
 
     destroy() {
-        for (let i = 0; i < this.children.length; i++) this.children[i].destroy();
+        for (let i = this.children.length - 1; i >= 0; i--) this.children[i].destroy();
         return Utils.nullObject(this);
     }
 }
@@ -2102,7 +3014,7 @@ class CanvasGraphics extends CanvasObject {
         };
 
         this.clear = () => {
-            for (let i = 0; i < draw.length; i++) draw[i].length = 0;
+            for (let i = draw.length - 1; i >= 0; i--) draw[i].length = 0;
             draw.length = 0;
         };
 
@@ -2288,6 +3200,103 @@ class CanvasGraphics extends CanvasObject {
 }
 
 /**
+ * Canvas interface.
+ *
+ * @author Patrick Schroen / https://github.com/pschroen
+ */
+
+class Canvas {
+
+    constructor(w, h = w, retina, whiteAlpha) {
+        const self = this;
+        this.element = document.createElement('canvas');
+        this.context = this.element.getContext('2d');
+        this.object = new Interface(this.element);
+        this.children = [];
+        this.retina = retina;
+
+        size(w, h, retina);
+
+        function size(w, h, retina) {
+            const ratio = retina ? 2 : 1;
+            self.element.width = w * ratio;
+            self.element.height = h * ratio;
+            self.width = w;
+            self.height = h;
+            self.scale = ratio;
+            self.object.size(self.width, self.height);
+            self.context.scale(ratio, ratio);
+            self.element.style.width = w + 'px';
+            self.element.style.height = h + 'px';
+            if (whiteAlpha) {
+                const alpha = new CanvasGraphics(self.width, self.height);
+                alpha.fillStyle = 'rgba(255, 255, 255, 0.002)';
+                alpha.fillRect(0, 0, self.width, self.height);
+                alpha.setCanvas(self);
+                alpha.parent = self;
+                self.children[0] = alpha;
+                alpha.z = 1;
+            }
+        }
+
+        this.size = size;
+
+        this.toDataURL = (type, quality) => {
+            return this.element.toDataURL(type, quality);
+        };
+
+        this.render = noClear => {
+            if (!(typeof noClear === 'boolean' && noClear)) this.clear();
+            for (let i = 0; i < this.children.length; i++) this.children[i].render();
+        };
+
+        this.clear = () => {
+            this.context.clearRect(0, 0, this.element.width, this.element.height);
+        };
+
+        this.add = child => {
+            child.setCanvas(this);
+            child.parent = this;
+            this.children.push(child);
+            child.z = this.children.length;
+        };
+
+        this.remove = child => {
+            child.canvas = null;
+            child.parent = null;
+            this.children.remove(child);
+        };
+
+        this.destroy = () => {
+            for (let i = this.children.length - 1; i >= 0; i--) this.children[i].destroy();
+            this.object.destroy();
+            return Utils.nullObject(this);
+        };
+
+        this.getImageData = (x = 0, y = 0, w = this.element.width, h = this.element.height) => {
+            this.imageData = this.context.getImageData(x, y, w, h);
+            return this.imageData;
+        };
+
+        this.getPixel = (x, y, dirty) => {
+            if (!this.imageData || dirty) this.getImageData();
+            const imgData = {},
+                index = (x + y * this.element.width) * 4,
+                pixels = this.imageData.data;
+            imgData.r = pixels[index];
+            imgData.g = pixels[index + 1];
+            imgData.b = pixels[index + 2];
+            imgData.a = pixels[index + 3];
+            return imgData;
+        };
+
+        this.putImageData = imageData => {
+            this.context.putImageData(imageData, 0, 0);
+        };
+    }
+}
+
+/**
  * Canvas font utilities.
  *
  * @author Patrick Schroen / https://github.com/pschroen
@@ -2299,11 +3308,12 @@ class CanvasFont {
 
     constructor() {
 
-        function createText(canvas, width, height, str, font, fillStyle, letterSpacing, textAlign) {
+        function createText(canvas, width, height, str, font, fillStyle, textBaseline, letterSpacing, textAlign) {
             const context = canvas.context,
                 graphics = new CanvasGraphics(width, height);
             graphics.font = font;
             graphics.fillStyle = fillStyle;
+            graphics.textBaseline = textBaseline;
             graphics.totalWidth = 0;
             graphics.totalHeight = height;
             const characters = str.split('');
@@ -2333,10 +3343,10 @@ class CanvasFont {
             return graphics;
         }
 
-        this.createText = (canvas, width, height, str, font, fillStyle, { letterSpacing = 0, lineHeight = height, textAlign = 'start' }) => {
+        this.createText = (canvas, width, height, str, font, fillStyle, { textBaseline = 'alphabetic', lineHeight = height, letterSpacing = 0, textAlign = 'start' }) => {
             const context = canvas.context;
             if (height === lineHeight) {
-                return createText(canvas, width, height, str, font, fillStyle, letterSpacing, textAlign);
+                return createText(canvas, width, height, str, font, fillStyle, textBaseline, letterSpacing, textAlign);
             } else {
                 const text = new CanvasGraphics(width, height),
                     words = str.split(' '),
@@ -2358,13 +3368,12 @@ class CanvasFont {
                     }
                 }
                 lines.push(line);
-                lines.every((e, i) => {
-                    const graphics = createText(canvas, width, lineHeight, e, font, fillStyle, letterSpacing, textAlign);
+                lines.forEach((line, i) => {
+                    const graphics = createText(canvas, width, lineHeight, line.slice(0, -1), font, fillStyle, textBaseline, letterSpacing, textAlign);
                     graphics.y = i * lineHeight;
                     text.add(graphics);
                     text.totalWidth = Math.max(graphics.totalWidth, text.totalWidth);
                     text.totalHeight += lineHeight;
-                    return true;
                 });
                 return text;
             }
@@ -2373,609 +3382,6 @@ class CanvasFont {
 }
 
 )(); // Singleton pattern (IICE)
-
-/**
- * 2D vector.
- *
- * @author Patrick Schroen / https://github.com/pschroen
- */
-
-class Vector2 {
-
-    constructor(x, y) {
-        this.x = typeof x === 'number' ? x : 0;
-        this.y = typeof y === 'number' ? y : 0;
-        this.type = 'vector2';
-    }
-
-    set(x, y) {
-        this.x = x || 0;
-        this.y = y || 0;
-        return this;
-    }
-
-    clear() {
-        this.x = 0;
-        this.y = 0;
-        return this;
-    }
-
-    copyTo(v) {
-        v.x = this.x;
-        v.y = this.y;
-        return this;
-    }
-
-    copyFrom(v) {
-        this.x = v.x || 0;
-        this.y = v.y || 0;
-        return this;
-    }
-
-    lengthSq() {
-        return this.x * this.x + this.y * this.y || 0.00001;
-    }
-
-    length() {
-        return Math.sqrt(this.lengthSq());
-    }
-
-    normalize() {
-        const length = this.length();
-        this.x /= length;
-        this.y /= length;
-        return this;
-    }
-
-    setLength(length) {
-        this.normalize().multiply(length);
-        return this;
-    }
-
-    addVectors(a, b) {
-        this.x = a.x + b.x;
-        this.y = a.y + b.y;
-        return this;
-    }
-
-    subVectors(a, b) {
-        this.x = a.x - b.x;
-        this.y = a.y - b.y;
-        return this;
-    }
-
-    multiplyVectors(a, b) {
-        this.x = a.x * b.x;
-        this.y = a.y * b.y;
-        return this;
-    }
-
-    add(v) {
-        this.x += v.x;
-        this.y += v.y;
-        return this;
-    }
-
-    sub(v) {
-        this.x -= v.x;
-        this.y -= v.y;
-        return this;
-    }
-
-    multiply(v) {
-        this.x *= v;
-        this.y *= v;
-        return this;
-    }
-
-    divide(v) {
-        this.x /= v;
-        this.y /= v;
-        return this;
-    }
-
-    perpendicular() {
-        const tx = this.x,
-            ty = this.y;
-        this.x = -ty;
-        this.y = tx;
-        return this;
-    }
-
-    lerp(v, alpha) {
-        this.x += (v.x - this.x) * alpha;
-        this.y += (v.y - this.y) * alpha;
-        return this;
-    }
-
-    deltaLerp(v, alpha, delta = 1) {
-        for (let i = 0; i < delta; i++) this.lerp(v, alpha);
-        return this;
-    }
-
-    interp(v, alpha, ease, dist = 5000) {
-        if (!this.calc) this.calc = new Vector2();
-        this.calc.subVectors(this, v);
-        const fn = Interpolation.convertEase(ease),
-            a = fn(Math.clamp(Math.range(this.calc.lengthSq(), 0, dist * dist, 1, 0), 0, 1) * (alpha / 10));
-        return this.lerp(v, a);
-    }
-
-    setAngleRadius(a, r) {
-        this.x = Math.cos(a) * r;
-        this.y = Math.sin(a) * r;
-        return this;
-    }
-
-    addAngleRadius(a, r) {
-        this.x += Math.cos(a) * r;
-        this.y += Math.sin(a) * r;
-        return this;
-    }
-
-    dot(a, b = this) {
-        return a.x * b.x + a.y * b.y;
-    }
-
-    clone() {
-        return new Vector2(this.x, this.y);
-    }
-
-    distanceTo(v, noSq) {
-        const dx = this.x - v.x,
-            dy = this.y - v.y;
-        if (!noSq) return Math.sqrt(dx * dx + dy * dy);
-        return dx * dx + dy * dy;
-    }
-
-    solveAngle(a, b = this) {
-        return Math.atan2(a.y - b.y, a.x - b.x);
-    }
-
-    equals(v) {
-        return this.x === v.x && this.y === v.y;
-    }
-
-    toString(split = ' ') {
-        return this.x + split + this.y;
-    }
-}
-
-/**
- * Interaction helper class.
- *
- * @author Patrick Schroen / https://github.com/pschroen
- */
-
-class Interaction {
-
-    constructor(object = Stage) {
-
-        if (!Interaction.instance) {
-            Interaction.CLICK = 'interaction_click';
-            Interaction.START = 'interaction_start';
-            Interaction.MOVE  = 'interaction_move';
-            Interaction.DRAG  = 'interaction_drag';
-            Interaction.END   = 'interaction_end';
-
-            const events = {
-                    touchstart: [],
-                    touchmove: [],
-                    touchend: []
-                },
-                touchStart = e => events.touchstart.forEach(callback => callback(e)),
-                touchMove = e => events.touchmove.forEach(callback => callback(e)),
-                touchEnd = e => events.touchend.forEach(callback => callback(e));
-
-            Interaction.bind = (event, callback) => events[event].push(callback);
-            Interaction.unbind = (event, callback) => events[event].remove(callback);
-
-            Stage.bind('touchstart', touchStart);
-            Stage.bind('touchmove', touchMove);
-            Stage.bind('touchend', touchEnd);
-            Stage.bind('touchcancel', touchEnd);
-
-            Interaction.instance = this;
-        }
-
-        const self = this;
-        this.events = new Events();
-        this.x = 0;
-        this.y = 0;
-        this.hold = new Vector2();
-        this.last = new Vector2();
-        this.delta = new Vector2();
-        this.move = new Vector2();
-        this.velocity = new Vector2();
-        let distance, timeDown, timeMove;
-
-        addListeners();
-
-        function addListeners() {
-            if (object === Stage) Interaction.bind('touchstart', down);
-            else object.bind('touchstart', down);
-            Interaction.bind('touchmove', move);
-            Interaction.bind('touchend', up);
-        }
-
-        function down(e) {
-            e.preventDefault();
-            self.isTouching = true;
-            self.x = e.x;
-            self.y = e.y;
-            self.hold.x = self.last.x = e.x;
-            self.hold.y = self.last.y = e.y;
-            self.delta.x = self.move.x = self.velocity.x = 0;
-            self.delta.y = self.move.y = self.velocity.y = 0;
-            distance = 0;
-            self.events.fire(Interaction.START, e);
-            timeDown = timeMove = Render.TIME;
-        }
-
-        function move(e) {
-            if (self.isTouching) {
-                self.move.x = e.x - self.hold.x;
-                self.move.y = e.y - self.hold.y;
-            }
-            self.x = e.x;
-            self.y = e.y;
-            self.delta.x = e.x - self.last.x;
-            self.delta.y = e.y - self.last.y;
-            self.last.x = e.x;
-            self.last.y = e.y;
-            distance += self.delta.length();
-            const delta = Math.max(0.001, Render.TIME - (timeMove || Render.TIME));
-            timeMove = Render.TIME;
-            self.velocity.x = Math.abs(self.delta.x) / delta;
-            self.velocity.y = Math.abs(self.delta.y) / delta;
-            self.events.fire(Interaction.MOVE, e);
-            if (self.isTouching) self.events.fire(Interaction.DRAG, e);
-        }
-
-        function up(e) {
-            if (!self.isTouching) return;
-            self.isTouching = false;
-            self.move.x = 0;
-            self.move.y = 0;
-            const delta = Math.max(0.001, Render.TIME - (timeMove || Render.TIME));
-            if (delta > 100) {
-                self.delta.x = 0;
-                self.delta.y = 0;
-            }
-            self.events.fire(Interaction.END, e);
-            if (distance < 20 && Render.TIME - timeDown < 2000) self.events.fire(Interaction.CLICK, e);
-        }
-
-        this.destroy = () => {
-            Interaction.unbind('touchstart', down);
-            Interaction.unbind('touchmove', move);
-            Interaction.unbind('touchend', up);
-            if (object !== Stage && object.unbind) object.unbind('touchstart', down);
-            this.events.destroy();
-            return Utils.nullObject(this);
-        };
-    }
-}
-
-/**
- * Mouse interaction.
- *
- * @author Patrick Schroen / https://github.com/pschroen
- */
-
-const Mouse = new ( // Singleton pattern (IICE)
-
-class Mouse {
-
-    constructor() {
-        const self = this;
-        this.x = 0;
-        this.y = 0;
-        this.normal = {
-            x: 0,
-            y: 0
-        };
-        this.tilt = {
-            x: 0,
-            y: 0
-        };
-        this.inverseNormal = {
-            x: 0,
-            y: 0
-        };
-
-        function update(e) {
-            self.x = e.x;
-            self.y = e.y;
-            self.normal.x = e.x / Stage.width;
-            self.normal.y = e.y / Stage.height;
-            self.tilt.x = self.normal.x * 2 - 1;
-            self.tilt.y = 1 - self.normal.y * 2;
-            self.inverseNormal.x = self.normal.x;
-            self.inverseNormal.y = 1 - self.normal.y;
-        }
-
-        this.init = () => {
-            this.input = new Interaction();
-            this.input.events.add(Interaction.START, update);
-            this.input.events.add(Interaction.MOVE, update);
-            update({
-                x: Stage.width / 2,
-                y: Stage.height / 2
-            });
-        };
-    }
-}
-
-)(); // Singleton pattern (IICE)
-
-/**
- * Accelerometer helper class.
- *
- * @author Patrick Schroen / https://github.com/pschroen
- */
-
-const Accelerometer = new ( // Singleton pattern (IICE)
-
-class Accelerometer {
-
-    constructor() {
-        const self = this;
-        this.x = 0;
-        this.y = 0;
-        this.z = 0;
-        this.alpha = 0;
-        this.beta = 0;
-        this.gamma = 0;
-        this.heading = 0;
-        this.rotationRate = {};
-        this.rotationRate.alpha = 0;
-        this.rotationRate.beta = 0;
-        this.rotationRate.gamma = 0;
-        this.toRadians = Device.os === 'ios' ? Math.PI / 180 : 1;
-
-        function updateAccel(e) {
-            switch (window.orientation) {
-                case 0:
-                    self.x = -e.accelerationIncludingGravity.x;
-                    self.y = e.accelerationIncludingGravity.y;
-                    self.z = e.accelerationIncludingGravity.z;
-                    if (e.rotationRate) {
-                        self.rotationRate.alpha = e.rotationRate.beta * self.toRadians;
-                        self.rotationRate.beta = -e.rotationRate.alpha * self.toRadians;
-                        self.rotationRate.gamma = e.rotationRate.gamma * self.toRadians;
-                    }
-                    break;
-                case 180:
-                    self.x = e.accelerationIncludingGravity.x;
-                    self.y = -e.accelerationIncludingGravity.y;
-                    self.z = e.accelerationIncludingGravity.z;
-                    if (e.rotationRate) {
-                        self.rotationRate.alpha = -e.rotationRate.beta * self.toRadians;
-                        self.rotationRate.beta = e.rotationRate.alpha * self.toRadians;
-                        self.rotationRate.gamma = e.rotationRate.gamma * self.toRadians;
-                    }
-                    break;
-                case 90:
-                    self.x = e.accelerationIncludingGravity.y;
-                    self.y = e.accelerationIncludingGravity.x;
-                    self.z = e.accelerationIncludingGravity.z;
-                    if (e.rotationRate) {
-                        self.rotationRate.alpha = e.rotationRate.alpha * self.toRadians;
-                        self.rotationRate.beta = e.rotationRate.beta * self.toRadians;
-                        self.rotationRate.gamma = e.rotationRate.gamma * self.toRadians;
-                    }
-                    break;
-                case -90:
-                    self.x = -e.accelerationIncludingGravity.y;
-                    self.y = -e.accelerationIncludingGravity.x;
-                    self.z = e.accelerationIncludingGravity.z;
-                    if (e.rotationRate) {
-                        self.rotationRate.alpha = -e.rotationRate.alpha * self.toRadians;
-                        self.rotationRate.beta = -e.rotationRate.beta * self.toRadians;
-                        self.rotationRate.gamma = e.rotationRate.gamma * self.toRadians;
-                    }
-                    break;
-            }
-        }
-
-        function updateOrientation(e) {
-            for (let key in e) if (~key.toLowerCase().indexOf('heading')) self.heading = e[key];
-            switch (window.orientation) {
-                case 0:
-                    self.alpha = e.beta * self.toRadians;
-                    self.beta = -e.alpha * self.toRadians;
-                    self.gamma = e.gamma * self.toRadians;
-                    break;
-                case 180:
-                    self.alpha = -e.beta * self.toRadians;
-                    self.beta = e.alpha * self.toRadians;
-                    self.gamma = e.gamma * self.toRadians;
-                    break;
-                case 90:
-                    self.alpha = e.alpha * self.toRadians;
-                    self.beta = e.beta * self.toRadians;
-                    self.gamma = e.gamma * self.toRadians;
-                    break;
-                case -90:
-                    self.alpha = -e.alpha * self.toRadians;
-                    self.beta = -e.beta * self.toRadians;
-                    self.gamma = e.gamma * self.toRadians;
-                    break;
-            }
-            self.tilt = e.beta * self.toRadians;
-            self.yaw = e.alpha * self.toRadians;
-            self.roll = -e.gamma * self.toRadians;
-            if (Device.os === 'Android') self.heading = compassHeading(e.alpha, e.beta, e.gamma);
-        }
-
-        function compassHeading(alpha, beta, gamma) {
-            const degtorad = Math.PI / 180,
-                x = beta ? beta * degtorad : 0,
-                y = gamma ? gamma * degtorad : 0,
-                z = alpha ? alpha * degtorad : 0,
-                cY = Math.cos(y),
-                cZ = Math.cos(z),
-                sX = Math.sin(x),
-                sY = Math.sin(y),
-                sZ = Math.sin(z),
-                Vx = -cZ * sY - sZ * sX * cY,
-                Vy = -sZ * sY + cZ * sX * cY;
-            let compassHeading = Math.atan(Vx / Vy);
-            if (Vy < 0) compassHeading += Math.PI;
-            else if (Vx < 0) compassHeading += 2 * Math.PI;
-            return compassHeading * (180 / Math.PI);
-        }
-
-        this.init = () => {
-            window.addEventListener('devicemotion', updateAccel, true);
-            window.addEventListener('deviceorientation', updateOrientation, true);
-        };
-    }
-}
-
-)(); // Singleton pattern (IICE)
-
-/**
- * Image helper class with promise method.
- *
- * @author Patrick Schroen / https://github.com/pschroen
- */
-
-const Images = new ( // Singleton pattern (IICE)
-
-class Images {
-
-    constructor() {
-        this.CORS = null;
-    }
-
-    createImg(src, callback) {
-        const img = new Image();
-        img.crossOrigin = this.CORS;
-        img.src = src;
-        img.onload = callback;
-        img.onerror = callback;
-        return img;
-    }
-
-    promise(img) {
-        if (typeof img === 'string') img = this.createImg(img);
-        const promise = Promise.create();
-        img.onload = promise.resolve;
-        img.onerror = promise.resolve;
-        return promise;
-    }
-}
-
-)(); // Singleton pattern (IICE)
-
-/**
- * Asset loader with promise method.
- *
- * @author Patrick Schroen / https://github.com/pschroen
- */
-
-class AssetLoader {
-
-    constructor(assets, callback) {
-        if (Array.isArray(assets)) {
-            assets = (() => {
-                const keys = assets.map(path => {
-                    return Utils.basename(path);
-                });
-                return keys.reduce((o, k, i) => {
-                    o[k] = assets[i];
-                    return o;
-                }, {});
-            })();
-        }
-        const self = this;
-        this.events = new Events();
-        this.CDN = Config.CDN || '';
-        const total = Object.keys(assets).length;
-        let loaded = 0;
-
-        for (let key in assets) loadAsset(key, this.CDN + assets[key]);
-
-        function loadAsset(key, asset) {
-            const ext = Utils.extension(asset);
-            if (ext.includes(['jpg', 'jpeg', 'png', 'gif', 'svg'])) {
-                Images.createImg(asset, assetLoaded);
-                return;
-            }
-            if (ext.includes(['mp3', 'm4a', 'ogg', 'wav', 'aif'])) {
-                if (!window.AudioContext || !window.WebAudio) return assetLoaded();
-                window.WebAudio.createSound(key, asset, assetLoaded);
-                return;
-            }
-            window.get(asset).then(data => {
-                if (ext === 'js') window.eval(data.replace('use strict', ''));
-                else if (ext.includes(['fs', 'vs', 'glsl']) && window.Shaders) window.Shaders.parse(data, asset);
-                assetLoaded();
-            }).catch(() => {
-                assetLoaded();
-            });
-        }
-
-        function assetLoaded() {
-            self.events.fire(Events.PROGRESS, { percent: ++loaded / total });
-            if (loaded === total) complete();
-        }
-
-        function complete() {
-            self.events.fire(Events.COMPLETE);
-            if (callback) callback();
-        }
-    }
-
-    static loadAssets(assets, callback) {
-        const promise = Promise.create();
-        if (!callback) callback = promise.resolve;
-        promise.loader = new AssetLoader(assets, callback);
-        return promise;
-    }
-}
-
-/**
- * Font loader with promise method.
- *
- * @author Patrick Schroen / https://github.com/pschroen
- */
-
-class FontLoader {
-
-    constructor(fonts, callback) {
-        const self = this;
-        this.events = new Events();
-        let element;
-
-        initFonts();
-        finish();
-
-        function initFonts() {
-            if (!Array.isArray(fonts)) fonts = [fonts];
-            element = Stage.create('FontLoader');
-            for (let i = 0; i < fonts.length; i++) element.create('font').fontStyle(fonts[i], 12, '#000').text('LOAD').css({ top: -999 });
-        }
-
-        function finish() {
-            setTimeout(() => {
-                element.destroy();
-                self.complete = true;
-                self.events.fire(Events.COMPLETE);
-                if (callback) callback();
-            }, 500);
-        }
-    }
-
-    static loadFonts(fonts, callback) {
-        const promise = Promise.create();
-        if (!callback) callback = promise.resolve;
-        promise.loader = new FontLoader(fonts, callback);
-        return promise;
-    }
-}
 
 /**
  * Video interface.
@@ -2988,7 +3394,6 @@ class Video extends Component {
     constructor(params) {
         super();
         const self = this;
-        this.CDN = Config.CDN || '';
         this.loaded = {
             start: 0,
             end: 0,
@@ -3003,7 +3408,7 @@ class Video extends Component {
 
         function createElement() {
             let src = params.src;
-            if (src) src = self.CDN + params.src;
+            if (src) src = Assets.CDN + src;
             self.element = document.createElement('video');
             if (src) self.element.src = src;
             self.element.controls = params.controls;
@@ -3139,7 +3544,7 @@ class Video extends Component {
         };
 
         this.ready = () => {
-            return this.element.readyState >= 2;
+            return this.element.readyState > this.element.HAVE_CURRENT_DATA;
         };
 
         this.size = (w, h) => {
@@ -3174,7 +3579,7 @@ class Video extends Component {
     }
 
     set src(src) {
-        this.element.src = this.CDN + src;
+        this.element.src = Assets.CDN + src;
     }
 
     get src() {
@@ -3277,140 +3682,439 @@ class SVG {
 }
 
 /**
- * Storage helper class.
+ * Scroll interaction.
  *
  * @author Patrick Schroen / https://github.com/pschroen
  */
 
-const Storage = new ( // Singleton pattern (IICE)
+class Scroll extends Component {
 
-class Storage {
-
-    set(key, value) {
-        if (value !== null && typeof value === 'object') value = JSON.stringify(value);
-        if (value === null) window.localStorage.removeItem(key);
-        else window.localStorage[key] = value;
-    }
-
-    get(key) {
-        let value = window.localStorage[key];
-        if (value) {
-            let char0;
-            if (value.charAt) char0 = value.charAt(0);
-            if (char0 === '{' || char0 === '[') value = JSON.parse(value);
-            if (value === 'true' || value === 'false') value = value === 'true';
+    constructor(object, params) {
+        super();
+        if (!object || !object.element) {
+            params = object;
+            object = null;
         }
-        return value;
+        if (!params) params = {};
+        const self = this;
+        this.x = 0;
+        this.y = 0;
+        this.max = {
+            x: 0,
+            y: 0
+        };
+        this.delta = {
+            x: 0,
+            y: 0
+        };
+        this.enabled = true;
+        const scrollTarget = {
+            x: 0,
+            y: 0
+        };
+        let axes = ['x', 'y'];
+
+        initParameters();
+        addListeners();
+        this.startRender(loop);
+
+        function initParameters() {
+            self.object = object;
+            self.hitObject = params.hitObject || self.object;
+            self.max.y = params.height || 0;
+            self.max.x = params.width || 0;
+            if (Array.isArray(params.axes)) axes = params.axes;
+            if (self.object) self.object.css({ overflow: 'auto' });
+        }
+
+        function addListeners() {
+            Stage.bind('wheel', scroll);
+            if (self.hitObject) self.hitObject.bind('touchstart', e => e.preventDefault());
+            const input = self.hitObject ? new Interaction(self.hitObject) : Mouse.input;
+            input.events.add(Interaction.START, down);
+            input.events.add(Interaction.DRAG, drag);
+            input.events.add(Interaction.END, up);
+            Stage.events.add(Events.RESIZE, resize);
+            resize();
+        }
+
+        function stopInertia() {
+            TweenManager.clearTween(scrollTarget);
+        }
+
+        function scroll(e) {
+            if (!self.enabled) return;
+            e.preventDefault();
+            stopInertia();
+            axes.forEach(axis => {
+                if (!self.max[axis]) return;
+                scrollTarget[axis] += e['delta' + axis.toUpperCase()];
+            });
+        }
+
+        function down() {
+            if (!self.enabled) return;
+            stopInertia();
+        }
+
+        function drag() {
+            if (!self.enabled) return;
+            axes.forEach(axis => {
+                if (!self.max[axis]) return;
+                scrollTarget[axis] -= Mouse.input.delta[axis];
+            });
+        }
+
+        function up() {
+            if (!self.enabled) return;
+            const m = (() => {
+                    if (Device.os === 'android') return 35;
+                    return 25;
+                })(),
+                obj = {};
+            axes.forEach(axis => {
+                if (!self.max[axis]) return;
+                obj[axis] = scrollTarget[axis] - Mouse.input.delta[axis] * m;
+            });
+            TweenManager.tween(scrollTarget, obj, 2500, 'easeOutQuint');
+        }
+
+        function resize() {
+            if (!self.enabled) return;
+            stopInertia();
+            if (!self.object) return;
+            const p = {};
+            if (Device.mobile) axes.forEach(axis => p[axis] = self.max[axis] ? scrollTarget[axis] / self.max[axis] : 0);
+            if (typeof params.height === 'undefined') self.max.y = self.object.element.scrollHeight - self.object.element.clientHeight;
+            if (typeof params.width === 'undefined') self.max.x = self.object.element.scrollWidth - self.object.element.clientWidth;
+            if (Device.mobile) axes.forEach(axis => self[axis] = scrollTarget[axis] = p[axis] * self.max[axis]);
+        }
+
+        function loop() {
+            axes.forEach(axis => {
+                if (!self.max[axis]) return;
+                scrollTarget[axis] = Math.clamp(scrollTarget[axis], 0, self.max[axis]);
+                self.delta[axis] = scrollTarget[axis] - self[axis];
+                self[axis] += self.delta[axis];
+                if (self.object) {
+                    if (axis === 'x') self.object.element.scrollLeft = self.x;
+                    if (axis === 'y') self.object.element.scrollTop = self.y;
+                }
+            });
+        }
+
+        this.destroy = () => {
+            Stage.unbind('wheel', scroll);
+            return super.destroy();
+        };
     }
 }
-
-)(); // Singleton pattern (IICE)
 
 /**
- * Web audio engine.
+ * Slide interaction.
  *
  * @author Patrick Schroen / https://github.com/pschroen
  */
 
-if (!window.AudioContext) window.AudioContext = window.webkitAudioContext || window.mozAudioContext || window.oAudioContext;
+class Slide extends Component {
 
-const WebAudio = new ( // Singleton pattern (IICE)
-
-class WebAudio {
-
-    constructor() {
+    constructor(params = {}) {
+        super();
         const self = this;
-        const sounds = {};
-        let context;
-
-        this.init = () => {
-            if (window.AudioContext) context = new AudioContext();
-            if (!context) return;
-            this.globalGain = context.createGain();
-            this.globalGain.connect(context.destination);
-            this.gain = {
-                set value(value) {
-                    self.globalGain.gain.setTargetAtTime(value, context.currentTime, 0.01);
-                },
-                get value() {
-                    return self.globalGain.gain.value;
-                }
-            };
+        this.x = 0;
+        this.y = 0;
+        this.max = {
+            x: 0,
+            y: 0
         };
+        this.delta = {
+            x: 0,
+            y: 0
+        };
+        this.direction = {
+            x: 0,
+            y: 0
+        };
+        this.position = 0;
+        this.progress = 0;
+        this.floor = 0;
+        this.ceil = 0;
+        this.index = 0;
+        this.enabled = true;
+        const scrollTarget = {
+                x: 0,
+                y: 0
+            },
+            scrollInertia = {
+                x: 0,
+                y: 0
+            },
+            ease = Interpolation.convertEase('easeOutSine'),
+            event = {};
+        let axes = ['x', 'y'],
+            slideIndex;
 
-        this.loadSound = (id, callback) => {
-            const promise = Promise.create();
-            if (callback) promise.then(callback);
-            callback = promise.resolve;
-            const sound = this.getSound(id);
-            window.fetch(sound.asset).then(response => {
-                if (!response.ok) return callback();
-                response.arrayBuffer().then(data => {
-                    context.decodeAudioData(data, buffer => {
-                        sound.buffer = buffer;
-                        sound.complete = true;
-                        callback();
-                    });
-                });
-            }).catch(() => {
-                callback();
+        initParameters();
+        addListeners();
+        this.startRender(loop);
+
+        function initParameters() {
+            self.num = params.num || 0;
+            if (params.max) self.max = params.max;
+            if (params.index) {
+                self.index = params.index;
+                self.x = scrollTarget.x = self.index * self.max.x;
+                self.y = scrollTarget.y = self.index * self.max.y;
+            }
+            if (params.axes) axes = params.axes;
+        }
+
+        function addListeners() {
+            Stage.bind('wheel', scroll);
+            Mouse.input.events.add(Interaction.START, down);
+            Mouse.input.events.add(Interaction.DRAG, drag);
+            Stage.events.add(Events.KEYBOARD_DOWN, keyPress);
+            Stage.events.add(Events.RESIZE, resize);
+            resize();
+        }
+
+        function stopInertia() {
+            self.isInertia = false;
+            TweenManager.clearTween(scrollTarget);
+        }
+
+        function scroll(e) {
+            if (!self.enabled) return;
+            if (e.preventDefault) e.preventDefault();
+            stopInertia();
+            axes.forEach(axis => {
+                if (!self.max[axis]) return;
+                scrollTarget[axis] += e['delta' + axis.toUpperCase()];
             });
-            sound.ready = () => promise;
-        };
+        }
 
-        this.createSound = (id, asset, callback) => {
-            const sound = {};
-            sound.asset = asset;
-            sound.audioGain = context.createGain();
-            sound.audioGain.connect(this.globalGain);
-            sound.gain = {
-                set value(value) {
-                    sound.audioGain.gain.setTargetAtTime(value, context.currentTime, 0.01);
-                },
-                get value() {
-                    return sound.audioGain.gain.value;
-                }
-            };
-            sounds[id] = sound;
-            if (Device.os === 'ios') callback();
-            else this.loadSound(id, callback);
-        };
+        function down() {
+            if (!self.enabled) return;
+            stopInertia();
+        }
 
-        this.getSound = id => {
-            return sounds[id];
-        };
-
-        this.trigger = id => {
-            if (!context) return;
-            if (context.state === 'suspended') context.resume();
-            const sound = this.getSound(id);
-            if (!sound.ready) this.loadSound(id);
-            sound.ready().then(() => {
-                if (sound.complete) {
-                    const source = context.createBufferSource();
-                    source.buffer = sound.buffer;
-                    source.connect(sound.audioGain);
-                    source.loop = !!sound.loop;
-                    source.start(0);
-                }
+        function drag() {
+            if (!self.enabled) return;
+            axes.forEach(axis => {
+                if (!self.max[axis]) return;
+                scrollTarget[axis] += -Mouse.input.delta[axis] * 4;
+                scrollInertia[axis] = -Mouse.input.delta[axis] * 4;
+                self.isInertia = true;
             });
+        }
+
+        function keyPress(e) {
+            if (!self.enabled) return;
+            if (e.keyCode === 40) self.next(); // Down
+            if (e.keyCode === 39) self.next(); // Right
+            if (e.keyCode === 38) self.prev(); // Up
+            if (e.keyCode === 37) self.prev(); // Left
+        }
+
+        function resize() {
+            if (!self.enabled) return;
+            stopInertia();
+        }
+
+        function loop() {
+            axes.forEach(axis => {
+                if (!self.max[axis]) return;
+                const progress = self[axis] / self.max[axis],
+                    i = Math.round(progress);
+                if (scrollTarget[axis] === i * self.max[axis]) return;
+                if (scrollInertia[axis] !== 0) {
+                    scrollInertia[axis] *= 0.9;
+                    if (Math.abs(scrollInertia[axis]) < 0.001) scrollInertia[axis] = 0;
+                    scrollTarget[axis] += scrollInertia[axis];
+                }
+                const limit = self.max[axis] * 0.035;
+                scrollTarget[axis] += ease(Math.round(self.progress) - self.progress) * limit;
+                if (Math.abs(scrollTarget[axis] - self[axis]) > limit) scrollTarget[axis] -= (scrollTarget[axis] - self[axis]) * 0.5;
+                else if (Math.abs(scrollTarget[axis] - self[axis]) < 0.001) scrollTarget[axis] = i * self.max[axis];
+                self.delta[axis] = scrollTarget[axis] - self[axis];
+                self.delta[axis] = self.delta[axis] < 0 ? Math.max(self.delta[axis], -limit) : Math.min(self.delta[axis], limit);
+                self[axis] += self.delta[axis];
+            });
+            self.position = (self.x + self.y) / (self.max.x + self.max.y) % self.num + self.num;
+            self.progress = self.position % 1;
+            self.floor = Math.floor(self.position) % self.num;
+            self.ceil = Math.ceil(self.position) % self.num;
+            self.index = Math.round(self.position) % self.num;
+            if (slideIndex !== self.index) {
+                slideIndex = self.index;
+                self.direction.x = self.delta.x < 0 ? -1 : 1;
+                self.direction.y = self.delta.y < 0 ? -1 : 1;
+                event.index = self.index;
+                event.direction = self.direction;
+                self.events.fire(Events.UPDATE, event);
+            }
+        }
+
+        this.goto = i => {
+            const obj = {};
+            obj.x = i * this.max.x;
+            obj.y = i * this.max.y;
+            TweenManager.tween(scrollTarget, obj, 2500, 'easeOutQuint');
         };
 
-        this.mute = () => {
-            if (!context) return;
-            TweenManager.tween(this.gain, { value: 0 }, 300, 'easeOutSine');
+        this.next = () => {
+            const progress = (this.x + this.y) / (this.max.x + this.max.y),
+                i = Math.round(progress);
+            this.goto(i + 1);
         };
 
-        this.unmute = () => {
-            if (!context) return;
-            TweenManager.tween(this.gain, { value: 1 }, 500, 'easeOutSine');
+        this.prev = () => {
+            const progress = (this.x + this.y) / (this.max.x + this.max.y),
+                i = Math.round(progress);
+            this.goto(i - 1);
         };
 
-        window.WebAudio = this;
+        this.destroy = () => {
+            Stage.unbind('wheel', scroll);
+            return super.destroy();
+        };
     }
 }
 
-)(); // Singleton pattern (IICE)
+/**
+ * Slide video.
+ *
+ * @author Patrick Schroen / https://github.com/pschroen
+ */
+
+class SlideVideo extends Component {
+
+    constructor(params, callback) {
+        super();
+        if (!SlideVideo.initialized) {
+            SlideVideo.test = SlideVideo.test || !Device.mobile && Device.browser !== 'safari' && !Device.detect('trident');
+
+            SlideVideo.initialized = true;
+        }
+        const self = this;
+        this.events = new Events();
+        this.img = params.img;
+        if (this.img) this.img = Assets.CDN + this.img;
+        this.src = params.src;
+        if (this.src) this.src = Assets.CDN + this.src;
+
+        if (this.src && SlideVideo.test) {
+            window.fetch(this.src).then(response => {
+                if (!response.ok) return error();
+                response.blob().then(data => {
+                    this.element = document.createElement('video');
+                    this.element.src = URL.createObjectURL(data);
+                    this.element.muted = true;
+                    this.element.loop = true;
+                    ready();
+                    if (callback) callback();
+                });
+            }).catch(() => {
+                error();
+                if (callback) callback();
+            });
+        } else {
+            const img = Assets.createImage(this.img);
+            img.onload = () => {
+                this.element = img;
+                if (callback) callback();
+            };
+            img.onerror = error;
+        }
+
+        function error() {
+            self.events.fire(Events.ERROR);
+        }
+
+        function ready() {
+            self.element.addEventListener('playing', playing, true);
+            self.element.addEventListener('pause', pause, true);
+            if (self.willPlay) self.play();
+        }
+
+        function playing() {
+            self.playing = true;
+            self.events.fire(Events.READY);
+        }
+
+        function pause() {
+            self.playing = false;
+        }
+
+        this.resume = () => {
+            this.play(true);
+        };
+
+        this.play = (resume = false) => {
+            this.willPlay = true;
+            if (this.element && this.element.paused && !this.playing) {
+                if (!resume) this.element.currentTime = 0;
+                this.element.play();
+            }
+        };
+
+        this.pause = () => {
+            this.willPlay = false;
+            if (this.element && !this.element.paused && this.playing) this.element.pause();
+        };
+
+        this.ready = () => {
+            return this.element.readyState > this.element.HAVE_CURRENT_DATA;
+        };
+
+        this.destroy = () => {
+            this.pause();
+            this.element.src = '';
+            return super.destroy();
+        };
+    }
+}
+
+/**
+ * Slide loader with promise method.
+ *
+ * @author Patrick Schroen / https://github.com/pschroen
+ */
+
+class SlideLoader extends Component {
+
+    constructor(slides, callback) {
+        super();
+        const self = this;
+        this.events = new Events();
+        this.list = [];
+        this.pathList = [];
+        let loaded = 0;
+
+        slides.forEach(params => {
+            this.list.push(this.initClass(SlideVideo, params, slideLoaded));
+            this.pathList.push(params.path);
+        });
+
+        function slideLoaded() {
+            self.percent = ++loaded / self.list.length;
+            self.events.fire(Events.PROGRESS, { percent: self.percent });
+            if (loaded === self.list.length) complete();
+        }
+
+        function complete() {
+            self.events.fire(Events.COMPLETE);
+            if (callback) callback();
+        }
+    }
+
+    static loadSlides(slides, callback) {
+        const promise = Promise.create();
+        if (!callback) callback = promise.resolve;
+        promise.loader = new SlideLoader(slides, callback);
+        return promise;
+    }
+}
 
 /**
  * Linked list.
@@ -3432,7 +4136,7 @@ class LinkedList {
         }
 
         function remove(object) {
-            for (let i = nodes.length - 1; i > -1; i--) {
+            for (let i = nodes.length - 1; i >= 0; i--) {
                 if (nodes[i].object === object) {
                     nodes[i] = null;
                     nodes.splice(i, 1);
@@ -3442,7 +4146,7 @@ class LinkedList {
         }
 
         function destroy() {
-            for (let i = nodes.length - 1; i > -1; i--) {
+            for (let i = nodes.length - 1; i >= 0; i--) {
                 nodes[i] = null;
                 nodes.splice(i, 1);
             }
@@ -3525,10 +4229,7 @@ class ObjectPool {
         const pool = [];
         this.array = pool;
 
-        if (type) {
-            number = number || 10;
-            for (let i = 0; i < number; i++) pool.push(new type());
-        }
+        if (type) for (let i = 0; i < number || 10; i++) pool.push(new type());
 
         this.get = () => {
             return pool.shift() || (type ? new type() : null);
@@ -3539,12 +4240,12 @@ class ObjectPool {
         };
 
         this.put = object => {
-            if (object) pool.push(object);
+            pool.push(object);
         };
 
         this.insert = array => {
-            if (typeof array.push === 'undefined') array = [array];
-            for (let i = 0; i < array.length; i++) pool.push(array[i]);
+            if (!Array.isArray(array)) array = [array];
+            pool.push(...array);
         };
 
         this.length = () => {
@@ -3552,7 +4253,7 @@ class ObjectPool {
         };
 
         this.destroy = () => {
-            for (let i = 0; i < pool.length; i++) if (pool[i].destroy) pool[i].destroy();
+            for (let i = pool.length - 1; i >= 0; i--) if (pool[i].destroy) pool[i].destroy();
             return Utils.nullObject(this);
         };
     }
@@ -3821,7 +4522,7 @@ class Utils3D {
 
         this.getTexture = src => {
             if (!textures[src]) {
-                const img = Images.createImg(this.PATH + src),
+                const img = Assets.createImage(this.PATH + src),
                     texture = new THREE.Texture(img);
                 img.onload = () => {
                     texture.needsUpdate = true;
@@ -3852,14 +4553,11 @@ class Utils3D {
             if (!textures[path]) {
                 const images = [];
                 for (let i = 0; i < 6; i++) {
-                    const img = Images.createImg(this.PATH + (Array.isArray(src) ? src[i] : src));
+                    const img = Assets.createImage(this.PATH + (Array.isArray(src) ? src[i] : src));
                     images.push(img);
-                    img.onload = () => {
-                        textures[path].needsUpdate = true;
-                    };
+                    img.onload = () => textures[path].needsUpdate = true;
                 }
-                textures[path] = new THREE.Texture();
-                textures[path].image = images;
+                textures[path] = new THREE.Texture(images);
                 textures[path].minFilter = THREE.LinearFilter;
             }
             return textures[path];
@@ -3921,9 +4619,7 @@ class Utils3D {
 
         this.getRepeatTexture = src => {
             const texture = this.getTexture(src);
-            texture.onload = () => {
-                texture.wrapS = texture.wrapT = THREE.RepeatWrapping;
-            };
+            texture.onload = () => texture.wrapS = texture.wrapT = THREE.RepeatWrapping;
             return texture;
         };
     }
@@ -3939,9 +4635,10 @@ class Utils3D {
 
 /* global THREE */
 
-class Raycaster {
+class Raycaster extends Component {
 
     constructor(camera) {
+        super();
         this.camera = camera;
         const calc = new THREE.Vector2(),
             raycaster = new THREE.Raycaster();
@@ -3959,10 +4656,7 @@ class Raycaster {
                 parent = parent.parent;
             }
             object.raycast(raycaster, intersects);
-            if (recursive === true) {
-                const children = object.children;
-                for (let i = 0, l = children.length; i < l; i++) intersectObject(children[i], raycaster, intersects, true);
-            }
+            if (recursive === true) object.children.forEach(object => intersectObject(object, raycaster, intersects, true));
         }
 
         function intersect(objects) {
@@ -4010,10 +4704,6 @@ class Raycaster {
             raycaster.set(origin, direction, 0, Number.POSITIVE_INFINITY);
             return intersect(objects);
         };
-
-        this.destroy = () => {
-            return Utils.nullObject(this);
-        };
     }
 }
 
@@ -4026,14 +4716,12 @@ class Raycaster {
 class Interaction3D {
 
     constructor(camera) {
-
-        if (!Interaction3D.instance) {
+        if (!Interaction3D.initialized) {
             Interaction3D.HOVER = 'interaction3d_hover';
             Interaction3D.CLICK = 'interaction3d_click';
 
-            Interaction3D.instance = this;
+            Interaction3D.initialized = true;
         }
-
         const self = this;
         this.events = new Events();
         this.ray = new Raycaster(camera);
@@ -4165,9 +4853,10 @@ class Interaction3D {
 
 /* global THREE */
 
-class ScreenProjection {
+class ScreenProjection extends Component {
 
     constructor(camera) {
+        super();
         const v3 = new THREE.Vector3(),
             v32 = new THREE.Vector3(),
             value = new THREE.Vector3;
@@ -4211,9 +4900,10 @@ class ScreenProjection {
 
 /* global THREE */
 
-class Shader {
+class Shader extends Component {
 
     constructor(vertexShader, fragmentShader, props) {
+        super();
         const self = this;
         this.uniforms = {};
         this.properties = {};
@@ -4301,7 +4991,7 @@ class Shader {
 
     destroy() {
         this.material.dispose();
-        return Utils.nullObject(this);
+        return super.destroy();
     }
 }
 
@@ -4313,9 +5003,10 @@ class Shader {
 
 /* global THREE */
 
-class Effects {
+class Effects extends Component {
 
     constructor(stage, params) {
+        super();
         const self = this;
         this.stage = stage;
         this.renderer = params.renderer;
@@ -4366,29 +5057,34 @@ class Effects {
  * @author Patrick Schroen / https://github.com/pschroen
  */
 
-exports.Events = Events;
+exports.Utils = Utils;
 exports.Render = Render;
-exports.Stage = Stage;
-exports.Interface = Interface;
-exports.Component = Component;
-exports.Canvas = Canvas;
-exports.CanvasGraphics = CanvasGraphics;
-exports.CanvasFont = CanvasFont;
+exports.Timer = Timer;
+exports.Events = Events;
 exports.Device = Device;
-exports.Mouse = Mouse;
+exports.Component = Component;
+exports.Interface = Interface;
 exports.Interaction = Interaction;
 exports.Accelerometer = Accelerometer;
-exports.Utils = Utils;
+exports.Mouse = Mouse;
+exports.Assets = Assets;
 exports.AssetLoader = AssetLoader;
+exports.MultiLoader = MultiLoader;
 exports.FontLoader = FontLoader;
-exports.Video = Video;
-exports.Images = Images;
-exports.SVG = SVG;
+exports.StateDispatcher = StateDispatcher;
 exports.Storage = Storage;
 exports.WebAudio = WebAudio;
 exports.TweenManager = TweenManager;
 exports.Interpolation = Interpolation;
-exports.MathTween = MathTween;
+exports.Canvas = Canvas;
+exports.CanvasGraphics = CanvasGraphics;
+exports.CanvasFont = CanvasFont;
+exports.Video = Video;
+exports.SVG = SVG;
+exports.Scroll = Scroll;
+exports.Slide = Slide;
+exports.SlideLoader = SlideLoader;
+exports.SlideVideo = SlideVideo;
 exports.LinkedList = LinkedList;
 exports.ObjectPool = ObjectPool;
 exports.Vector2 = Vector2;
@@ -4399,6 +5095,7 @@ exports.Raycaster = Raycaster;
 exports.ScreenProjection = ScreenProjection;
 exports.Shader = Shader;
 exports.Effects = Effects;
+exports.Stage = Stage;
 
 Object.defineProperty(exports, '__esModule', { value: true });
 

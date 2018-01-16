@@ -6,6 +6,8 @@ function _possibleConstructorReturn(self, call) { if (!self) { throw new Referen
 
 function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
+function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr2 = Array(arr.length); i < arr.length; i++) { arr2[i] = arr[i]; } return arr2; } else { return Array.from(arr); } }
+
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 (function (global, factory) {
@@ -94,7 +96,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
     String.prototype.includes = function (str) {
         if (!Array.isArray(str)) return ~this.indexOf(str);
-        for (var i = str.length - 1; i >= 0; i--) {
+        for (var i = 0; i < str.length; i++) {
             if (~this.indexOf(str[i])) return true;
         }return false;
     };
@@ -374,64 +376,6 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
     }())(); // Singleton pattern (IICE)
 
     /**
-     * Event helper class.
-     *
-     * @author Patrick Schroen / https://github.com/pschroen
-     */
-
-    var Events = function Events() {
-        var _this = this;
-
-        _classCallCheck(this, Events);
-
-        var events = {};
-
-        this.add = function (event, callback) {
-            if (!events[event]) events[event] = [];
-            events[event].push(callback);
-        };
-
-        this.remove = function (event, callback) {
-            if (!events[event]) return;
-            events[event].remove(callback);
-        };
-
-        this.destroy = function () {
-            for (var event in events) {
-                for (var i = events[event].length - 1; i > -1; i--) {
-                    events[event][i] = null;
-                    events[event].splice(i, 1);
-                }
-            }
-            return Utils.nullObject(_this);
-        };
-
-        this.fire = function (event) {
-            var object = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
-
-            if (!events[event]) return;
-            var clone = Utils.cloneArray(events[event]);
-            clone.forEach(function (callback) {
-                return callback(object);
-            });
-        };
-    };
-
-    Events.VISIBILITY = 'visibility';
-    Events.KEYBOARD_PRESS = 'keyboard_press';
-    Events.KEYBOARD_DOWN = 'keyboard_down';
-    Events.KEYBOARD_UP = 'keyboard_up';
-    Events.RESIZE = 'resize';
-    Events.COMPLETE = 'complete';
-    Events.PROGRESS = 'progress';
-    Events.UPDATE = 'update';
-    Events.LOADED = 'loaded';
-    Events.ERROR = 'error';
-    Events.READY = 'ready';
-    Events.HOVER = 'hover';
-    Events.CLICK = 'click';
-
-    /**
      * Render loop.
      *
      * @author Patrick Schroen / https://github.com/pschroen
@@ -449,7 +393,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
     var Render = new // Singleton pattern (IICE)
 
     function Render() {
-        var _this2 = this;
+        var _this = this;
 
         _classCallCheck(this, Render);
 
@@ -496,15 +440,140 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
         };
 
         this.pause = function () {
-            _this2.paused = true;
+            _this.paused = true;
         };
 
         this.resume = function () {
-            if (!_this2.paused) return;
-            _this2.paused = false;
+            if (!_this.paused) return;
+            _this.paused = false;
             requestAnimationFrame(step);
         };
     }(); // Singleton pattern (IICE)
+
+    /**
+     * Timer helper class.
+     *
+     * @author Patrick Schroen / https://github.com/pschroen
+     */
+
+    var Timer = new // Singleton pattern (IICE)
+
+    function Timer() {
+        _classCallCheck(this, Timer);
+
+        var callbacks = [],
+            discard = [];
+
+        Render.start(loop);
+
+        function loop(t, delta) {
+            for (var i = 0; i < discard.length; i++) {
+                var obj = discard[i];
+                obj.callback = null;
+                callbacks.remove(obj);
+            }
+            if (discard.length) discard.length = 0;
+            for (var _i = 0; _i < callbacks.length; _i++) {
+                var _obj = callbacks[_i];
+                if (!_obj) {
+                    callbacks.remove(_obj);
+                    continue;
+                }
+                if ((_obj.current += delta) >= _obj.time) {
+                    if (_obj.callback) _obj.callback.apply(_obj, _toConsumableArray(_obj.args));
+                    discard.push(_obj);
+                }
+            }
+        }
+
+        function find(ref) {
+            for (var i = 0; i < callbacks.length; i++) {
+                if (callbacks[i].ref === ref) return callbacks[i];
+            }return null;
+        }
+
+        this.clearTimeout = function (ref) {
+            var obj = find(ref);
+            if (!obj) return false;
+            obj.callback = null;
+            callbacks.remove(obj);
+            return true;
+        };
+
+        this.create = function (callback, time) {
+            for (var _len2 = arguments.length, args = Array(_len2 > 2 ? _len2 - 2 : 0), _key2 = 2; _key2 < _len2; _key2++) {
+                args[_key2 - 2] = arguments[_key2];
+            }
+
+            var obj = {
+                time: Math.max(1, time || 1),
+                current: 0,
+                ref: Utils.timestamp(),
+                callback: callback,
+                args: args
+            };
+            callbacks.push(obj);
+            return obj.ref;
+        };
+    }(); // Singleton pattern (IICE)
+
+    /**
+     * Event helper class.
+     *
+     * @author Patrick Schroen / https://github.com/pschroen
+     */
+
+    var Events = function Events() {
+        var _this2 = this;
+
+        _classCallCheck(this, Events);
+
+        var events = {};
+
+        this.add = function (event, callback) {
+            if (!events[event]) events[event] = [];
+            events[event].push(callback);
+        };
+
+        this.remove = function (event, callback) {
+            if (!events[event]) return;
+            events[event].remove(callback);
+        };
+
+        this.destroy = function () {
+            for (var event in events) {
+                for (var i = events[event].length - 1; i >= 0; i--) {
+                    events[event][i] = null;
+                    events[event].splice(i, 1);
+                }
+            }
+            return Utils.nullObject(_this2);
+        };
+
+        this.fire = function (event) {
+            var object = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
+
+            if (!events[event]) return;
+            var clone = Utils.cloneArray(events[event]);
+            clone.forEach(function (callback) {
+                return callback(object);
+            });
+        };
+    };
+
+    Events.VISIBILITY = 'visibility';
+    Events.KEYBOARD_PRESS = 'keyboard_press';
+    Events.KEYBOARD_DOWN = 'keyboard_down';
+    Events.KEYBOARD_UP = 'keyboard_up';
+    Events.RESIZE = 'resize';
+    Events.COMPLETE = 'complete';
+    Events.PROGRESS = 'progress';
+    Events.UPDATE = 'update';
+    Events.LOADED = 'loaded';
+    Events.ERROR = 'error';
+    Events.READY = 'ready';
+    Events.HOVER = 'hover';
+    Events.CLICK = 'click';
 
     /**
      * Browser detection and vendor prefixes.
@@ -581,15 +650,43 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
             this.mobile = 'ontouchstart' in window && this.detect(['iphone', 'ipad', 'android', 'blackberry']);
             this.tablet = Math.max(screen.width, screen.height) > 800;
             this.phone = !this.tablet;
+            this.webgl = function () {
+                try {
+                    var names = ['webgl', 'experimental-webgl', 'webkit-3d', 'moz-webgl'],
+                        canvas = document.createElement('canvas');
+                    var gl = void 0;
+                    for (var i = 0; i < names.length; i++) {
+                        gl = canvas.getContext(names[i]);
+                        if (gl) break;
+                    }
+                    var info = gl.getExtension('WEBGL_debug_renderer_info'),
+                        output = {};
+                    if (info) {
+                        var gpu = info.UNMASKED_RENDERER_WEBGL;
+                        output.gpu = gl.getParameter(gpu).toLowerCase();
+                    }
+                    output.renderer = gl.getParameter(gl.RENDERER).toLowerCase();
+                    output.version = gl.getParameter(gl.VERSION).toLowerCase();
+                    output.glsl = gl.getParameter(gl.SHADING_LANGUAGE_VERSION).toLowerCase();
+                    output.extensions = gl.getSupportedExtensions();
+                    output.detect = function (matches) {
+                        if (output.gpu && output.gpu.includes(matches)) return true;
+                        if (output.version && output.version.includes(matches)) return true;
+                        for (var _i2 = 0; _i2 < output.extensions.length; _i2++) {
+                            if (output.extensions[_i2].toLowerCase().includes(matches)) return true;
+                        }return false;
+                    };
+                    return output;
+                } catch (e) {
+                    return false;
+                }
+            }();
         }
 
         _createClass(Device, [{
             key: 'detect',
-            value: function detect(array) {
-                if (typeof array === 'string') array = [array];
-                for (var i = 0; i < array.length; i++) {
-                    if (~this.agent.indexOf(array[i])) return true;
-                }return false;
+            value: function detect(matches) {
+                return this.agent.includes(matches);
             }
         }, {
             key: 'vendor',
@@ -599,12 +696,116 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
         }, {
             key: 'vibrate',
             value: function vibrate(time) {
-                navigator.vibrate && navigator.vibrate(time);
+                if (navigator.vibrate) navigator.vibrate(time);
             }
         }]);
 
         return Device;
     }())(); // Singleton pattern (IICE)
+
+    /**
+     * Alien component.
+     *
+     * @author Patrick Schroen / https://github.com/pschroen
+     */
+
+    var Component = function () {
+        function Component() {
+            _classCallCheck(this, Component);
+
+            this.events = new Events();
+            this.classes = [];
+            this.timers = [];
+            this.loops = [];
+        }
+
+        _createClass(Component, [{
+            key: 'initClass',
+            value: function initClass(object) {
+                for (var _len3 = arguments.length, params = Array(_len3 > 1 ? _len3 - 1 : 0), _key3 = 1; _key3 < _len3; _key3++) {
+                    params[_key3 - 1] = arguments[_key3];
+                }
+
+                var child = new (Function.prototype.bind.apply(object, [null].concat(params)))();
+                this.add(child);
+                return child;
+            }
+        }, {
+            key: 'add',
+            value: function add(child) {
+                if (child.destroy) {
+                    this.classes.push(child);
+                    child.parent = this;
+                }
+                return this;
+            }
+        }, {
+            key: 'delayedCall',
+            value: function delayedCall(callback) {
+                for (var _len4 = arguments.length, params = Array(_len4 > 2 ? _len4 - 2 : 0), _key4 = 2; _key4 < _len4; _key4++) {
+                    params[_key4 - 2] = arguments[_key4];
+                }
+
+                var time = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 0;
+
+                var timer = Timer.create(function () {
+                    if (callback) callback.apply(undefined, params);
+                }, time);
+                this.timers.push(timer);
+                if (this.timers.length > 50) this.timers.shift();
+                return timer;
+            }
+        }, {
+            key: 'clearTimers',
+            value: function clearTimers() {
+                for (var i = this.timers.length - 1; i >= 0; i--) {
+                    Timer.clearTimeout(this.timers[i]);
+                }this.timers.length = 0;
+            }
+        }, {
+            key: 'startRender',
+            value: function startRender(callback, fps) {
+                this.loops.push(callback);
+                Render.start(callback, fps);
+            }
+        }, {
+            key: 'stopRender',
+            value: function stopRender(callback) {
+                this.loops.remove(callback);
+                Render.stop(callback);
+            }
+        }, {
+            key: 'clearRenders',
+            value: function clearRenders() {
+                for (var i = this.loops.length - 1; i >= 0; i--) {
+                    this.stopRender(this.loops[i]);
+                }this.loops.length = 0;
+            }
+        }, {
+            key: 'destroy',
+            value: function destroy() {
+                this.removed = true;
+                var parent = this.parent;
+                if (parent && !parent.removed && parent.remove) parent.remove(this);
+                for (var i = this.classes.length - 1; i >= 0; i--) {
+                    var child = this.classes[i];
+                    if (child && child.destroy) child.destroy();
+                }
+                this.classes.length = 0;
+                this.clearRenders();
+                this.clearTimers();
+                this.events.destroy();
+                return Utils.nullObject(this);
+            }
+        }, {
+            key: 'remove',
+            value: function remove(child) {
+                this.classes.remove(child);
+            }
+        }]);
+
+        return Component;
+    }();
 
     /**
      * Interpolation helper class.
@@ -1067,7 +1268,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
                 if (object.mathTween) object.mathTween.stop();
                 if (object.mathTweens) {
                     var _tweens = object.mathTweens;
-                    for (var i = 0; i < _tweens.length; i++) {
+                    for (var i = _tweens.length - 1; i >= 0; i--) {
                         var tween = _tweens[i];
                         if (tween) tween.stop();
                     }
@@ -1112,7 +1313,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
             key: 'getAllTransforms',
             value: function getAllTransforms(object) {
                 var obj = {};
-                for (var i = this.TRANSFORMS.length - 1; i > -1; i--) {
+                for (var i = 0; i < this.TRANSFORMS.length; i++) {
                     var key = this.TRANSFORMS[i],
                         val = object[key];
                     if (val !== 0 && typeof val === 'number') obj[key] = val;
@@ -1175,12 +1376,12 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
             object.cssTween = self;
             var strings = buildStrings(time, ease, delay);
             object.willChange(strings.props);
-            setTimeout(function () {
+            Timer.create(function () {
                 if (killed()) return;
                 object.element.style[Device.vendor('Transition')] = strings.transition;
                 object.css(props);
                 object.transform(transformProps);
-                setTimeout(function () {
+                Timer.create(function () {
                     if (killed()) return;
                     clearCSSTween();
                     if (callback) callback();
@@ -1257,8 +1458,8 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
         _createClass(Interface, [{
             key: 'initClass',
             value: function initClass(object) {
-                for (var _len2 = arguments.length, params = Array(_len2 > 1 ? _len2 - 1 : 0), _key2 = 1; _key2 < _len2; _key2++) {
-                    params[_key2 - 1] = arguments[_key2];
+                for (var _len5 = arguments.length, params = Array(_len5 > 1 ? _len5 - 1 : 0), _key5 = 1; _key5 < _len5; _key5++) {
+                    params[_key5 - 1] = arguments[_key5];
                 }
 
                 var child = new (Function.prototype.bind.apply(object, [null].concat(params)))();
@@ -1281,13 +1482,13 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
         }, {
             key: 'delayedCall',
             value: function delayedCall(callback) {
-                for (var _len3 = arguments.length, params = Array(_len3 > 2 ? _len3 - 2 : 0), _key3 = 2; _key3 < _len3; _key3++) {
-                    params[_key3 - 2] = arguments[_key3];
+                for (var _len6 = arguments.length, params = Array(_len6 > 2 ? _len6 - 2 : 0), _key6 = 2; _key6 < _len6; _key6++) {
+                    params[_key6 - 2] = arguments[_key6];
                 }
 
                 var time = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 0;
 
-                var timer = setTimeout(function () {
+                var timer = Timer.create(function () {
                     if (callback) callback.apply(undefined, params);
                 }, time);
                 this.timers.push(timer);
@@ -1298,7 +1499,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
             key: 'clearTimers',
             value: function clearTimers() {
                 for (var i = this.timers.length - 1; i >= 0; i--) {
-                    clearTimeout(this.timers[i]);
+                    Timer.clearTimeout(this.timers[i]);
                 }this.timers.length = 0;
             }
         }, {
@@ -1511,8 +1712,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
                             if (~style.indexOf('px')) style = Number(style.slice(0, -2));
                             if (props === 'opacity') style = !isNaN(Number(this.element.style.opacity)) ? Number(this.element.style.opacity) : 1;
                         }
-                        if (!style) style = 0;
-                        return style;
+                        return style || 0;
                     } else {
                         this.element.style[props] = value;
                         return this;
@@ -1905,184 +2105,188 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
     }(Interface))(); // Singleton pattern (IICE)
 
     /**
-     * Alien component.
+     * 2D vector.
      *
      * @author Patrick Schroen / https://github.com/pschroen
      */
 
     /**
-     * Color helper class.
+     * Interaction helper class.
      *
      * @author Patrick Schroen / https://github.com/pschroen
      */
 
-    var Color = function Color(value) {
-        var _this12 = this;
+    /**
+     * Accelerometer helper class.
+     *
+     * @author Patrick Schroen / https://github.com/pschroen
+     */
 
-        _classCallCheck(this, Color);
+    /**
+     * Mouse interaction.
+     *
+     * @author Patrick Schroen / https://github.com/pschroen
+     */
 
-        var self = this;
-        this.r = 1;
-        this.g = 1;
-        this.b = 1;
+    /**
+     * Image helper class with promise method.
+     *
+     * @author Patrick Schroen / https://github.com/pschroen
+     */
 
-        set(value);
+    var Assets = new ( // Singleton pattern (IICE)
 
-        function set(value) {
-            if (value instanceof Color) copy(value);else if (typeof value === 'number') setHex(value);else if (Array.isArray(value)) setRGB(value);else setHex(Number('0x' + value.slice(1)));
-        }
+    function () {
+        function Assets() {
+            var _this12 = this;
 
-        function copy(color) {
-            self.r = color.r;
-            self.g = color.g;
-            self.b = color.b;
-        }
+            _classCallCheck(this, Assets);
 
-        function setHex(hex) {
-            hex = Math.floor(hex);
-            self.r = (hex >> 16 & 255) / 255;
-            self.g = (hex >> 8 & 255) / 255;
-            self.b = (hex & 255) / 255;
-        }
+            this.CDN = '';
+            this.CORS = null;
+            var images = {};
 
-        function setRGB(values) {
-            self.r = values[0];
-            self.g = values[1];
-            self.b = values[2];
-        }
-
-        function hue2rgb(p, q, t) {
-            if (t < 0) t += 1;else if (t > 1) t -= 1;
-            if (t < 1 / 6) return p + (q - p) * 6 * t;
-            if (t < 1 / 2) return q;
-            if (t < 2 / 3) return p + (q - p) * 6 * (2 / 3 - t);
-            return p;
-        }
-
-        this.set = function (value) {
-            set(value);
-            return _this12;
-        };
-
-        this.setRGB = function (r, g, b) {
-            _this12.r = r;
-            _this12.g = g;
-            _this12.b = b;
-            return _this12;
-        };
-
-        this.setHSL = function (h, s, l) {
-            if (s === 0) {
-                _this12.r = _this12.g = _this12.b = l;
-            } else {
-                var p = l <= 0.5 ? l * (1 + s) : l + s - l * s,
-                    q = 2 * l - p;
-                _this12.r = hue2rgb(q, p, h + 1 / 3);
-                _this12.g = hue2rgb(q, p, h);
-                _this12.b = hue2rgb(q, p, h - 1 / 3);
-            }
-            return _this12;
-        };
-
-        this.offsetHSL = function (h, s, l) {
-            var hsl = _this12.getHSL();
-            hsl.h += h;
-            hsl.s += s;
-            hsl.l += l;
-            _this12.setHSL(hsl.h, hsl.s, hsl.l);
-            return _this12;
-        };
-
-        this.getStyle = function (a) {
-            if (a) return 'rgba(' + (_this12.r * 255 | 0) + ', ' + (_this12.g * 255 | 0) + ', ' + (_this12.b * 255 | 0) + ', ' + a + ')';else return 'rgb(' + (_this12.r * 255 | 0) + ', ' + (_this12.g * 255 | 0) + ', ' + (_this12.b * 255 | 0) + ')';
-        };
-
-        this.getHex = function () {
-            return _this12.r * 255 << 16 ^ _this12.g * 255 << 8 ^ _this12.b * 255 << 0;
-        };
-
-        this.getHexString = function () {
-            return '#' + ('000000' + _this12.getHex().toString(16)).slice(-6);
-        };
-
-        this.getHSL = function () {
-            if (!_this12.hsl) _this12.hsl = { h: 0, s: 0, l: 0 };
-            var hsl = _this12.hsl,
-                r = _this12.r,
-                g = _this12.g,
-                b = _this12.b,
-                min = Math.min(r, g, b),
-                max = Math.max(r, g, b),
-                lightness = (min + max) / 2;
-            var hue = void 0,
-                saturation = void 0;
-            if (min === max) {
-                hue = 0;
-                saturation = 0;
-            } else {
-                var delta = max - min;
-                saturation = lightness <= 0.5 ? delta / (max + min) : delta / (2 - max - min);
-                switch (max) {
-                    case r:
-                        hue = (g - b) / delta + (g < b ? 6 : 0);
-                        break;
-                    case g:
-                        hue = (b - r) / delta + 2;
-                        break;
-                    case b:
-                        hue = (r - g) / delta + 4;
-                        break;
+            this.createImage = function (src, store, callback) {
+                if (typeof store !== 'boolean') {
+                    callback = store;
+                    store = undefined;
                 }
-                hue /= 6;
+                var img = new Image();
+                img.crossOrigin = _this12.CORS;
+                img.src = src;
+                img.onload = callback;
+                img.onerror = callback;
+                if (store) images[src] = img;
+                return img;
+            };
+
+            this.getImage = function (src) {
+                return images[src];
+            };
+        }
+
+        _createClass(Assets, [{
+            key: 'loadImage',
+            value: function loadImage(img) {
+                if (typeof img === 'string') img = this.createImage(img);
+                var promise = Promise.create();
+                img.onload = promise.resolve;
+                img.onerror = promise.resolve;
+                return promise;
             }
-            hsl.h = hue;
-            hsl.s = saturation;
-            hsl.l = lightness;
-            return hsl;
-        };
+        }]);
 
-        this.add = function (color) {
-            _this12.r += color.r;
-            _this12.g += color.g;
-            _this12.b += color.b;
-        };
+        return Assets;
+    }())(); // Singleton pattern (IICE)
 
-        this.mix = function (color, percent) {
-            _this12.r *= 1 - percent + color.r * percent;
-            _this12.g *= 1 - percent + color.g * percent;
-            _this12.b *= 1 - percent + color.b * percent;
-        };
+    /**
+     * Asset loader with promise method.
+     *
+     * @author Patrick Schroen / https://github.com/pschroen
+     */
 
-        this.addScalar = function (s) {
-            _this12.r += s;
-            _this12.g += s;
-            _this12.b += s;
-        };
+    var AssetLoader = function (_Component) {
+        _inherits(AssetLoader, _Component);
 
-        this.multiply = function (color) {
-            _this12.r *= color.r;
-            _this12.g *= color.g;
-            _this12.b *= color.b;
-        };
+        function AssetLoader(assets, callback) {
+            _classCallCheck(this, AssetLoader);
 
-        this.multiplyScalar = function (s) {
-            _this12.r *= s;
-            _this12.g *= s;
-            _this12.b *= s;
-        };
+            var _this13 = _possibleConstructorReturn(this, (AssetLoader.__proto__ || Object.getPrototypeOf(AssetLoader)).call(this));
 
-        this.clone = function () {
-            return new Color([_this12.r, _this12.g, _this12.b]);
-        };
+            if (Array.isArray(assets)) {
+                assets = function () {
+                    var keys = assets.map(function (path) {
+                        return Utils.basename(path);
+                    });
+                    return keys.reduce(function (o, k, i) {
+                        o[k] = assets[i];
+                        return o;
+                    }, {});
+                }();
+            }
+            var self = _this13;
+            _this13.events = new Events();
+            var total = Object.keys(assets).length;
+            var loaded = 0;
 
-        this.toArray = function () {
-            if (!_this12.array) _this12.array = [];
-            _this12.array[0] = _this12.r;
-            _this12.array[1] = _this12.g;
-            _this12.array[2] = _this12.b;
-            return _this12.array;
-        };
-    };
+            for (var key in assets) {
+                loadAsset(key, Assets.CDN + assets[key]);
+            }function loadAsset(key, asset) {
+                var ext = Utils.extension(asset);
+                if (ext.includes(['jpg', 'jpeg', 'png', 'gif', 'svg'])) {
+                    Assets.createImage(asset, assetLoaded);
+                    return;
+                }
+                if (ext.includes(['mp3', 'm4a', 'ogg', 'wav', 'aif'])) {
+                    if (!window.AudioContext || !window.WebAudio) return assetLoaded();
+                    window.WebAudio.createSound(key, asset, assetLoaded);
+                    return;
+                }
+                window.get(asset).then(function (data) {
+                    if (ext === 'js') window.eval(data.replace('use strict', ''));
+                    assetLoaded();
+                }).catch(function () {
+                    assetLoaded();
+                });
+            }
+
+            function assetLoaded() {
+                self.percent = ++loaded / total;
+                self.events.fire(Events.PROGRESS, { percent: self.percent });
+                if (loaded === total) complete();
+            }
+
+            function complete() {
+                self.events.fire(Events.COMPLETE);
+                if (callback) callback();
+            }
+            return _this13;
+        }
+
+        _createClass(AssetLoader, null, [{
+            key: 'loadAssets',
+            value: function loadAssets(assets, callback) {
+                var promise = Promise.create();
+                if (!callback) callback = promise.resolve;
+                promise.loader = new AssetLoader(assets, callback);
+                return promise;
+            }
+        }]);
+
+        return AssetLoader;
+    }(Component);
+
+    /**
+     * Loader helper class.
+     *
+     * @author Patrick Schroen / https://github.com/pschroen
+     */
+
+    /**
+     * Font loader with promise method.
+     *
+     * @author Patrick Schroen / https://github.com/pschroen
+     */
+
+    /**
+     * State dispatcher.
+     *
+     * @author Patrick Schroen / https://github.com/pschroen
+     */
+
+    /**
+     * Storage helper class.
+     *
+     * @author Patrick Schroen / https://github.com/pschroen
+     */
+
+    /**
+     * Web audio engine.
+     *
+     * @author Patrick Schroen / https://github.com/pschroen
+     */
+
+    if (!window.AudioContext) window.AudioContext = window.webkitAudioContext || window.mozAudioContext || window.oAudioContext;
 
     /**
      * Canvas values.
@@ -2240,8 +2444,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
                 if (this.styles.styled) {
                     var values = this.styles.values;
                     for (var key in values) {
-                        var val = values[key];
-                        context[key] = val instanceof Color ? val.getHexString() : val;
+                        context[key] = values[key];
                     }
                 }
             }
@@ -2253,19 +2456,16 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
         }, {
             key: 'add',
             value: function add(child) {
-                child.canvas = this.canvas;
+                child.setCanvas(this.canvas);
                 child.parent = this;
                 this.children.push(child);
                 child.z = this.children.length;
-                for (var i = this.children.length - 1; i > -1; i--) {
-                    this.children[i].setCanvas(this.canvas);
-                }
             }
         }, {
             key: 'setCanvas',
             value: function setCanvas(canvas) {
                 this.canvas = canvas;
-                for (var i = this.children.length - 1; i > -1; i--) {
+                for (var i = 0; i < this.children.length; i++) {
                     this.children[i].setCanvas(canvas);
                 }
             }
@@ -2357,7 +2557,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
         }, {
             key: 'destroy',
             value: function destroy() {
-                for (var i = 0; i < this.children.length; i++) {
+                for (var i = this.children.length - 1; i >= 0; i--) {
                     this.children[i].destroy();
                 }return Utils.nullObject(this);
             }
@@ -2381,30 +2581,29 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
             _classCallCheck(this, CanvasGraphics);
 
-            var _this13 = _possibleConstructorReturn(this, (CanvasGraphics.__proto__ || Object.getPrototypeOf(CanvasGraphics)).call(this));
+            var _this14 = _possibleConstructorReturn(this, (CanvasGraphics.__proto__ || Object.getPrototypeOf(CanvasGraphics)).call(this));
 
-            var self = _this13;
-            _this13.width = w;
-            _this13.height = h;
-            _this13.props = {};
+            var self = _this14;
+            _this14.width = w;
+            _this14.height = h;
+            _this14.props = {};
             var draw = [],
                 mask = void 0;
 
             function setProperties(context) {
                 for (var key in self.props) {
-                    var val = self.props[key];
-                    context[key] = val instanceof Color ? val.getHexString() : val;
+                    context[key] = self.props[key];
                 }
             }
 
-            _this13.draw = function (override) {
-                if (_this13.isMask() && !override) return false;
-                var context = _this13.canvas.context;
-                _this13.startDraw(_this13.px, _this13.py, override);
+            _this14.draw = function (override) {
+                if (_this14.isMask() && !override) return false;
+                var context = _this14.canvas.context;
+                _this14.startDraw(_this14.px, _this14.py, override);
                 setProperties(context);
-                if (_this13.clipWidth && _this13.clipHeight) {
+                if (_this14.clipWidth && _this14.clipHeight) {
                     context.beginPath();
-                    context.rect(_this13.clipX, _this13.clipY, _this13.clipWidth, _this13.clipHeight);
+                    context.rect(_this14.clipX, _this14.clipY, _this14.clipWidth, _this14.clipHeight);
                     context.clip();
                 }
                 for (var i = 0; i < draw.length; i++) {
@@ -2414,24 +2613,24 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
                     context[fn].apply(context, cmd);
                     cmd.unshift(fn);
                 }
-                _this13.endDraw();
+                _this14.endDraw();
                 if (mask) {
                     context.globalCompositeOperation = mask.blendMode;
                     mask.render(true);
                 }
             };
 
-            _this13.clear = function () {
-                for (var i = 0; i < draw.length; i++) {
+            _this14.clear = function () {
+                for (var i = draw.length - 1; i >= 0; i--) {
                     draw[i].length = 0;
                 }draw.length = 0;
             };
 
-            _this13.arc = function () {
+            _this14.arc = function () {
                 var x = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : 0;
                 var y = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 0;
                 var endAngle = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : 0;
-                var radius = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : _this13.radius || _this13.width / 2;
+                var radius = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : _this14.radius || _this14.width / 2;
                 var startAngle = arguments.length > 4 && arguments[4] !== undefined ? arguments[4] : 0;
                 var counterclockwise = arguments.length > 5 && arguments[5] !== undefined ? arguments[5] : false;
 
@@ -2446,63 +2645,63 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
                 draw.push(['arc', x, y, radius, Math.radians(startAngle), Math.radians(endAngle), counterclockwise]);
             };
 
-            _this13.quadraticCurveTo = function (cpx, cpy, x, y) {
+            _this14.quadraticCurveTo = function (cpx, cpy, x, y) {
                 draw.push(['quadraticCurveTo', cpx, cpy, x, y]);
             };
 
-            _this13.bezierCurveTo = function (cp1x, cp1y, cp2x, cp2y, x, y) {
+            _this14.bezierCurveTo = function (cp1x, cp1y, cp2x, cp2y, x, y) {
                 draw.push(['bezierCurveTo', cp1x, cp1y, cp2x, cp2y, x, y]);
             };
 
-            _this13.fillRect = function (x, y, w, h) {
+            _this14.fillRect = function (x, y, w, h) {
                 draw.push(['fillRect', x, y, w, h]);
             };
 
-            _this13.clearRect = function (x, y, w, h) {
+            _this14.clearRect = function (x, y, w, h) {
                 draw.push(['clearRect', x, y, w, h]);
             };
 
-            _this13.strokeRect = function (x, y, w, h) {
+            _this14.strokeRect = function (x, y, w, h) {
                 draw.push(['strokeRect', x, y, w, h]);
             };
 
-            _this13.moveTo = function (x, y) {
+            _this14.moveTo = function (x, y) {
                 draw.push(['moveTo', x, y]);
             };
 
-            _this13.lineTo = function (x, y) {
+            _this14.lineTo = function (x, y) {
                 draw.push(['lineTo', x, y]);
             };
 
-            _this13.stroke = function () {
+            _this14.stroke = function () {
                 draw.push(['stroke']);
             };
 
-            _this13.fill = function () {
+            _this14.fill = function () {
                 if (!mask) draw.push(['fill']);
             };
 
-            _this13.beginPath = function () {
+            _this14.beginPath = function () {
                 draw.push(['beginPath']);
             };
 
-            _this13.closePath = function () {
+            _this14.closePath = function () {
                 draw.push(['closePath']);
             };
 
-            _this13.fillText = function (text, x, y) {
+            _this14.fillText = function (text, x, y) {
                 draw.push(['fillText', text, x, y]);
             };
 
-            _this13.strokeText = function (text, x, y) {
+            _this14.strokeText = function (text, x, y) {
                 draw.push(['strokeText', text, x, y]);
             };
 
-            _this13.setLineDash = function (value) {
+            _this14.setLineDash = function (value) {
                 draw.push(['setLineDash', value]);
             };
 
-            _this13.drawImage = function (img) {
+            _this14.drawImage = function (img) {
                 var sx = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 0;
                 var sy = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : 0;
                 var sWidth = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : img.width;
@@ -2512,13 +2711,13 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
                 var dWidth = arguments.length > 7 && arguments[7] !== undefined ? arguments[7] : img.width;
                 var dHeight = arguments.length > 8 && arguments[8] !== undefined ? arguments[8] : img.height;
 
-                draw.push(['drawImage', img, sx, sy, sWidth, sHeight, dx + -_this13.px, dy + -_this13.py, dWidth, dHeight]);
+                draw.push(['drawImage', img, sx, sy, sWidth, sHeight, dx + -_this14.px, dy + -_this14.py, dWidth, dHeight]);
             };
 
-            _this13.mask = function (object) {
+            _this14.mask = function (object) {
                 if (!object) return mask = null;
                 mask = object;
-                object.masked = _this13;
+                object.masked = _this14;
                 for (var i = 0; i < draw.length; i++) {
                     if (draw[i][0] === 'fill' || draw[i][0] === 'stroke') {
                         draw[i].length = 0;
@@ -2527,21 +2726,21 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
                 }
             };
 
-            _this13.clone = function () {
-                var object = new CanvasGraphics(_this13.width, _this13.height);
-                object.visible = _this13.visible;
-                object.blendMode = _this13.blendMode;
-                object.opacity = _this13.opacity;
-                object.follow(_this13);
-                object.props = Utils.cloneObject(_this13.props);
+            _this14.clone = function () {
+                var object = new CanvasGraphics(_this14.width, _this14.height);
+                object.visible = _this14.visible;
+                object.blendMode = _this14.blendMode;
+                object.opacity = _this14.opacity;
+                object.follow(_this14);
+                object.props = Utils.cloneObject(_this14.props);
                 object.setDraw(Utils.cloneArray(draw));
                 return object;
             };
 
-            _this13.setDraw = function (array) {
+            _this14.setDraw = function (array) {
                 draw = array;
             };
-            return _this13;
+            return _this14;
         }
 
         _createClass(CanvasGraphics, [{
@@ -2638,10 +2837,10 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
     var Canvas = function Canvas(w) {
         var h = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : w;
 
-        var _this14 = this;
+        var _this15 = this;
 
         var retina = arguments[2];
-        var alphaColor = arguments[3];
+        var whiteAlpha = arguments[3];
 
         _classCallCheck(this, Canvas);
 
@@ -2665,70 +2864,69 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
             self.context.scale(ratio, ratio);
             self.element.style.width = w + 'px';
             self.element.style.height = h + 'px';
-            if (alphaColor) {
-                var color = new Color(alphaColor),
-                    alpha = new CanvasGraphics(self.width, self.height);
-                alpha.fillStyle = color.getStyle('0.002');
+            if (whiteAlpha) {
+                var alpha = new CanvasGraphics(self.width, self.height);
+                alpha.fillStyle = 'rgba(255, 255, 255, 0.002)';
                 alpha.fillRect(0, 0, self.width, self.height);
                 alpha.setCanvas(self);
                 alpha.parent = self;
-                alpha.z = 1;
                 self.children[0] = alpha;
+                alpha.z = 1;
             }
         }
 
         this.size = size;
 
         this.toDataURL = function (type, quality) {
-            return _this14.element.toDataURL(type, quality);
+            return _this15.element.toDataURL(type, quality);
         };
 
         this.render = function (noClear) {
-            if (!(typeof noClear === 'boolean' && noClear)) _this14.clear();
-            for (var i = 0; i < _this14.children.length; i++) {
-                _this14.children[i].render();
+            if (!(typeof noClear === 'boolean' && noClear)) _this15.clear();
+            for (var i = 0; i < _this15.children.length; i++) {
+                _this15.children[i].render();
             }
         };
 
         this.clear = function () {
-            _this14.context.clearRect(0, 0, _this14.element.width, _this14.element.height);
+            _this15.context.clearRect(0, 0, _this15.element.width, _this15.element.height);
         };
 
         this.add = function (child) {
-            child.setCanvas(_this14);
-            child.parent = _this14;
-            _this14.children.push(child);
-            child.z = _this14.children.length;
+            child.setCanvas(_this15);
+            child.parent = _this15;
+            _this15.children.push(child);
+            child.z = _this15.children.length;
         };
 
         this.remove = function (child) {
             child.canvas = null;
             child.parent = null;
-            _this14.children.remove(child);
+            _this15.children.remove(child);
         };
 
         this.destroy = function () {
-            for (var i = 0; i < _this14.children.length; i++) {
-                _this14.children[i].destroy();
-            }_this14.object.destroy();
-            return Utils.nullObject(_this14);
+            for (var i = _this15.children.length - 1; i >= 0; i--) {
+                _this15.children[i].destroy();
+            }_this15.object.destroy();
+            return Utils.nullObject(_this15);
         };
 
         this.getImageData = function () {
             var x = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : 0;
             var y = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 0;
-            var w = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : _this14.element.width;
-            var h = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : _this14.element.height;
+            var w = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : _this15.element.width;
+            var h = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : _this15.element.height;
 
-            _this14.imageData = _this14.context.getImageData(x, y, w, h);
-            return _this14.imageData;
+            _this15.imageData = _this15.context.getImageData(x, y, w, h);
+            return _this15.imageData;
         };
 
         this.getPixel = function (x, y, dirty) {
-            if (!_this14.imageData || dirty) _this14.getImageData();
+            if (!_this15.imageData || dirty) _this15.getImageData();
             var imgData = {},
-                index = (x + y * _this14.element.width) * 4,
-                pixels = _this14.imageData.data;
+                index = (x + y * _this15.element.width) * 4,
+                pixels = _this15.imageData.data;
             imgData.r = pixels[index];
             imgData.g = pixels[index + 1];
             imgData.b = pixels[index + 2];
@@ -2737,198 +2935,12 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
         };
 
         this.putImageData = function (imageData) {
-            _this14.context.putImageData(imageData, 0, 0);
+            _this15.context.putImageData(imageData, 0, 0);
         };
     };
 
     /**
      * Canvas font utilities.
-     *
-     * @author Patrick Schroen / https://github.com/pschroen
-     */
-
-    /**
-     * 2D vector.
-     *
-     * @author Patrick Schroen / https://github.com/pschroen
-     */
-
-    /**
-     * Interaction helper class.
-     *
-     * @author Patrick Schroen / https://github.com/pschroen
-     */
-
-    /**
-     * Mouse interaction.
-     *
-     * @author Patrick Schroen / https://github.com/pschroen
-     */
-
-    /**
-     * Scroll interaction.
-     *
-     * @author Patrick Schroen / https://github.com/pschroen
-     */
-
-    /**
-     * Slide interaction.
-     *
-     * @author Patrick Schroen / https://github.com/pschroen
-     */
-
-    /**
-     * Image helper class with promise method.
-     *
-     * @author Patrick Schroen / https://github.com/pschroen
-     */
-
-    var Assets = new ( // Singleton pattern (IICE)
-
-    function () {
-        function Assets() {
-            var _this15 = this;
-
-            _classCallCheck(this, Assets);
-
-            this.CDN = '';
-            this.CORS = null;
-            var images = {};
-
-            this.createImage = function (src, store, callback) {
-                if (typeof store !== 'boolean') callback = store;
-                var img = new Image();
-                img.crossOrigin = _this15.CORS;
-                img.src = src;
-                img.onload = callback;
-                img.onerror = callback;
-                if (store) images[src] = img;
-                return img;
-            };
-
-            this.getImage = function (src) {
-                return images[src];
-            };
-        }
-
-        _createClass(Assets, [{
-            key: 'loadImage',
-            value: function loadImage(img) {
-                if (typeof img === 'string') img = this.createImage(img);
-                var promise = Promise.create();
-                img.onload = promise.resolve;
-                img.onerror = promise.resolve;
-                return promise;
-            }
-        }]);
-
-        return Assets;
-    }())(); // Singleton pattern (IICE)
-
-    /**
-     * Slide video.
-     *
-     * @author Patrick Schroen / https://github.com/pschroen
-     */
-
-    /**
-     * Slide loader with promise method.
-     *
-     * @author Patrick Schroen / https://github.com/pschroen
-     */
-
-    /**
-     * Accelerometer helper class.
-     *
-     * @author Patrick Schroen / https://github.com/pschroen
-     */
-
-    /**
-     * Loader helper class.
-     *
-     * @author Patrick Schroen / https://github.com/pschroen
-     */
-
-    /**
-     * Asset loader with promise method.
-     *
-     * @author Patrick Schroen / https://github.com/pschroen
-     */
-
-    var AssetLoader = function () {
-        function AssetLoader(assets, callback) {
-            _classCallCheck(this, AssetLoader);
-
-            if (Array.isArray(assets)) {
-                assets = function () {
-                    var keys = assets.map(function (path) {
-                        return Utils.basename(path);
-                    });
-                    return keys.reduce(function (o, k, i) {
-                        o[k] = assets[i];
-                        return o;
-                    }, {});
-                }();
-            }
-            var self = this;
-            this.events = new Events();
-            var total = Object.keys(assets).length;
-            var loaded = 0;
-
-            for (var key in assets) {
-                loadAsset(key, Assets.CDN + assets[key]);
-            }function loadAsset(key, asset) {
-                var ext = Utils.extension(asset);
-                if (ext.includes(['jpg', 'jpeg', 'png', 'gif', 'svg'])) {
-                    Assets.createImage(asset, assetLoaded);
-                    return;
-                }
-                if (ext.includes(['mp3', 'm4a', 'ogg', 'wav', 'aif'])) {
-                    if (!window.AudioContext || !window.WebAudio) return assetLoaded();
-                    window.WebAudio.createSound(key, asset, assetLoaded);
-                    return;
-                }
-                window.get(asset).then(function (data) {
-                    if (ext === 'js') window.eval(data.replace('use strict', ''));
-                    assetLoaded();
-                }).catch(function () {
-                    assetLoaded();
-                });
-            }
-
-            function assetLoaded() {
-                self.percent = ++loaded / total;
-                self.events.fire(Events.PROGRESS, { percent: self.percent });
-                if (loaded === total) complete();
-            }
-
-            function complete() {
-                self.events.fire(Events.COMPLETE);
-                if (callback) callback();
-            }
-        }
-
-        _createClass(AssetLoader, null, [{
-            key: 'loadAssets',
-            value: function loadAssets(assets, callback) {
-                var promise = Promise.create();
-                if (!callback) callback = promise.resolve;
-                promise.loader = new AssetLoader(assets, callback);
-                return promise;
-            }
-        }]);
-
-        return AssetLoader;
-    }();
-
-    /**
-     * Font loader with promise method.
-     *
-     * @author Patrick Schroen / https://github.com/pschroen
-     */
-
-    /**
-     * State dispatcher.
      *
      * @author Patrick Schroen / https://github.com/pschroen
      */
@@ -2946,18 +2958,28 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
      */
 
     /**
-     * Storage helper class.
+     * Scroll interaction.
      *
      * @author Patrick Schroen / https://github.com/pschroen
      */
 
     /**
-     * Web audio engine.
+     * Slide interaction.
      *
      * @author Patrick Schroen / https://github.com/pschroen
      */
 
-    if (!window.AudioContext) window.AudioContext = window.webkitAudioContext || window.mozAudioContext || window.oAudioContext;
+    /**
+     * Slide video.
+     *
+     * @author Patrick Schroen / https://github.com/pschroen
+     */
+
+    /**
+     * Slide loader with promise method.
+     *
+     * @author Patrick Schroen / https://github.com/pschroen
+     */
 
     /**
      * Linked list.
@@ -3125,7 +3147,8 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
             _this16.animateOut = function (callback) {
                 _this16.tween({ opacity: 0 }, 500, 'easeInOutQuad', function () {
-                    self.stopRender(loop);
+                    _this16.stopRender(loop);
+                    _this16.clearTimers();
                     if (callback) callback();
                 });
             };

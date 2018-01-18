@@ -28,11 +28,11 @@ Math.radians = function (degrees) {
     return degrees * (Math.PI / 180);
 };
 
-Math.clamp = function (value, min = 0, max = 1) {
+Math.clamp = function (value, min, max) {
     return Math.min(Math.max(value, Math.min(min, max)), Math.max(min, max));
 };
 
-Math.range = function (value, oldMin = -1, oldMax = 1, newMin = 0, newMax = 1, isClamp) {
+Math.range = function (value, oldMin, oldMax, newMin, newMax, isClamp) {
     const newValue = (value - oldMin) * (newMax - newMin) / (oldMax - oldMin) + newMin;
     if (isClamp) return Math.clamp(newValue, newMin, newMax);
     return newValue;

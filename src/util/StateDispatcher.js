@@ -33,7 +33,7 @@ class StateDispatcher {
                 if (!self.locked) {
                     storePath = path;
                     storeState = state;
-                    self.events.fire(Events.UPDATE, { value: state, path, split: path.split('/') });
+                    self.events.fire(Events.UPDATE, { value: state, path });
                 } else if (storePath) {
                     if (forceHash) location.hash = '!/' + storePath;
                     else history.pushState(storeState, null, rootPath + storePath);
@@ -43,7 +43,7 @@ class StateDispatcher {
 
         this.getState = () => {
             const path = getPath();
-            return { value: storeState, path, split: path.split('/') };
+            return { value: storeState, path };
         };
 
         this.setState = (state, path) => {

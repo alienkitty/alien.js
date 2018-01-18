@@ -384,4 +384,4 @@ class Main {
     }
 }
 
-new Main();
+window.onload = () => new Main();

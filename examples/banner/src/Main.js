@@ -95,4 +95,4 @@ class Main extends Interface {
     }
 }
 
-new Main();
+window.onload = () => new Main();

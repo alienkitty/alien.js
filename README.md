@@ -84,7 +84,7 @@ class Main {
     }
 }
 
-new Main();
+window.onload = () => new Main();
 ```
 
 ### Example Singleton design pattern
@@ -141,7 +141,7 @@ class Main {
     }
 }
 
-new Main();
+window.onload = () => new Main();
 ```
 
 ### Quickstart
@@ -196,8 +196,9 @@ npm run build
 
 ### Inspiration
 
-* [Active Theory](https://activetheory.net/)
+* Active Theory's [Finding Love Shaders](https://github.com/activetheory/Finding-Love-Shaders)
 * Active Theory's [Mira](https://medium.com/@activetheory/mira-exploring-the-potential-of-the-future-web-e1f7f326d58e)
+* [Active Theory](https://activetheory.net/)
 * [How to Set Up Smaller, More Efficient JavaScript Bundling Using Rollup](https://code.lengstorf.com/learn-rollup-js/)
 
 ### Links

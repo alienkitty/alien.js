@@ -184,6 +184,7 @@ npm run build
 
 * Docs
 * Tests
+* Import three.js via modules
 * Dynamically import classes
 * Particle emitter
 * FX and lighting

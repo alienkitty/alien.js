@@ -231,4 +231,4 @@ class Main {
     }
 }
 
-window.onload = () => new Main();
+new Main();

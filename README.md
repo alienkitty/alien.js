@@ -84,7 +84,7 @@ class Main {
     }
 }
 
-window.onload = () => new Main();
+new Main();
 ```
 
 ### Example Singleton design pattern
@@ -141,7 +141,7 @@ class Main {
     }
 }
 
-window.onload = () => new Main();
+new Main();
 ```
 
 ### Quickstart

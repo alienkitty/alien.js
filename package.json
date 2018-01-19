@@ -25,10 +25,11 @@
   "license": "MIT",
   "main": "build/alien.module.js",
   "scripts": {
-    "build": "rollup -c && npm run build-uglify && npm run build-babel && npm run build-babel-uglify",
+    "build": "rollup -c && npm run build-uglify && npm run build-babel && npm run build-babel-uglify && npm run build-babel-uglify-nosingleton",
     "build-uglify": "rollup -c --environment uglify",
     "build-babel": "rollup -c --environment babel",
-    "build-babel-uglify": "rollup -c --environment babel,uglify",
+    "build-babel-nosingleton": "rollup -c --environment babel,nosingleton",
+    "build-babel-uglify-nosingleton": "rollup -c --environment babel,uglify,nosingleton",
     "build-examples": "for x in `find examples -name 'rollup.config.js' -maxdepth 2 ! -path './alien.js*' -exec dirname {} \\;`; do cd \"$x\" && ln -sfn ../.. alien.js && rollup -c && rm -rf alien.js && cd ../..; done",
     "build-world": "npm run build && npm run build-examples",
     "dev": "concurrently --names \"ROLLUP,HTTP\" -c \"bgBlue.bold,bgGreen.bold\" \"rollup -c -w -m inline\" \"serve --port 8080\" || exit 0",

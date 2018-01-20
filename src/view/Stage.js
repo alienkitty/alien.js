@@ -28,6 +28,7 @@ class Stage extends Interface {
             window.addEventListener('keyup', e => self.events.fire(Events.KEYBOARD_UP, e), true);
             window.addEventListener('keypress', e => self.events.fire(Events.KEYBOARD_PRESS, e), true);
             window.addEventListener('resize', () => self.events.fire(Events.RESIZE), true);
+            window.addEventListener('orientationchange', () => Stage.events.fire(Events.RESIZE), true);
             self.events.add(Events.RESIZE, resize);
             resize();
         }

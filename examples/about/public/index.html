@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <meta name="description" content="Future web pattern.">
+    <meta name="keywords" content="alien, alienjs, javascript, html5, css3, animation, svg, canvas, webgl, threejs, webaudio, es6, ecmascript6">
+
+    <title>Alien.js</title>
+
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://alien.js.org/">
+    <meta property="og:site_name" content="Alien.js">
+    <meta property="og:title" content="Alien.js">
+    <meta property="og:description" content="Future web pattern.">
+    <meta property="og:image" content="https://alien.js.org/assets/meta/share.png">
+
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:site" content="@pschroen">
+    <meta name="twitter:creator" content="@pschroen">
+
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto+Mono&family=Roboto:wght@500&family=Ropa+Sans">
+    <link rel="stylesheet" href="assets/css/style.css">
+    <link rel="preload" as="script" href="assets/js/loader.js" crossorigin>
+    <link rel="preload" as="script" href="assets/js/main.js" crossorigin>
+</head>
+<body>
+    <div id="root"></div>
+    <script type="module">
+        import { Preloader } from './assets/js/loader.js';
+
+        Preloader.init();
+    </script>
+    <script nomodule>
+        window.location = 'unsupported.html';
+    </script>
+</body>
+</html>

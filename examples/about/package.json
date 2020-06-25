@@ -1,0 +1,29 @@
+{
+  "name": "alien-project",
+  "version": "1.0.0",
+  "author": "Patrick Schroen",
+  "private": true,
+  "scripts": {
+    "build": "rollup -c",
+    "dev": "concurrently --names \"ROLLUP,HTTP\" -c \"bgBlue.bold,bgGreen.bold\" \"rollup -c -w -m inline\" \"http-server -c-1 -p 8080\"",
+    "start": "http-server -c-1 -p 8080",
+    "lint": "eslint src"
+  },
+  "devDependencies": {
+    "@babel/plugin-proposal-class-properties": "^7.10.1",
+    "@rollup/plugin-node-resolve": "^8.1.0",
+    "alien.js": "^0.18.0",
+    "babel-eslint": "^10.1.0",
+    "chokidar": "^3.4.0",
+    "concurrently": "^5.2.0",
+    "eslint": "^7.3.1",
+    "eslint-plugin-babel": "^5.3.0",
+    "http-server": "^0.12.3",
+    "rollup": "^2.18.0",
+    "rollup-plugin-bundleutils": "^1.2.3"
+  },
+  "dependencies": {
+    "gsap": "^3.3.4",
+    "three": "^0.118.1"
+  }
+}

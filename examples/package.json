@@ -1,0 +1,22 @@
+{
+  "name": "alien-examples",
+  "version": "1.0.0",
+  "author": "Patrick Schroen",
+  "private": true,
+  "eslintConfig": {
+    "plugins": [
+      "html"
+    ]
+  },
+  "scripts": {
+    "build": "rollup -c",
+    "start": "http-server -c-1 -p 8080 ../",
+    "lint": "eslint *.html"
+  },
+  "devDependencies": {
+    "eslint": "^7.3.1",
+    "eslint-plugin-html": "^6.0.2",
+    "http-server": "^0.12.3",
+    "rollup": "^2.18.0"
+  }
+}

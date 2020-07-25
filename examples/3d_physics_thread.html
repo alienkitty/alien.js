@@ -13,13 +13,11 @@
 <body>
     <div id="root"></div>
     <script type="module">
-        import { AmbientLight, AssetLoader, Assets, Color, CylinderBufferGeometry, Events, Fog, Group, MathUtils, Mesh, MeshStandardMaterial, Object3D, ObjectPool, OrbitControls, PerspectiveCamera, PointLight, Scene, Sound3D, SphereBufferGeometry, Stage, Thread, Uniform, Vector2, Vector3, WebAudio, WebGLRenderer, clamp, delayedCall, getFrustum, gsap, range, tween, updateRoot, wait } from '../build/alien.js';
+        import { AmbientLight, AssetLoader, Assets, Color, CylinderBufferGeometry, Events, Fog, Group, MathUtils, Mesh, MeshStandardMaterial, Object3D, PerspectiveCamera, PointLight, Scene, Sound3D, SphereBufferGeometry, Stage, Thread, Uniform, Vector2, Vector3, WebAudio, WebGLRenderer, clamp, delayedCall, getFrustum, gsap, range, updateRoot, wait } from '../build/alien.js';
 
         import { World } from 'https://unpkg.com/oimo/build/oimo.module.js';
 
         class Config {
-            static DEBUG = location.search === '?debug';
-
             static BG_COLOR = '#0e0e0e';
             static UI_COLOR = 'rgba(255, 255, 255, 0.94)';
 
@@ -287,8 +285,7 @@
                 this.geometry = new SphereBufferGeometry(2, 24, 24);
 
                 this.material = new MeshStandardMaterial({
-                    emissive: 0xffffff,
-                    transparent: true
+                    emissive: 0xffffff
                 });
 
                 this.mesh = new Mesh(this.geometry, this.material);
@@ -302,15 +299,6 @@
                 this.light = new PointLight(0xffffff, 0.2);
                 this.add(this.light);
             }
-
-            /**
-             * Public methods
-             */
-
-            destroy = () => {
-                this.material.dispose();
-                this.geometry.dispose();
-            };
         }
 
         class Wand extends Object3D {
@@ -445,40 +433,7 @@
             static init(rod) {
                 this.rod = rod;
 
-                if (Config.DEBUG) {
-                    this.initMalletPool();
-                    this.initMalletAudio();
-                }
-
                 this.addListeners();
-            }
-
-            static initMalletPool() {
-                this.malletPool = new ObjectPool();
-
-                for (let i = 0; i < 10; i++) {
-                    const mallet = new Mallet();
-
-                    const gong = new Sound3D(WorldController.camera, 'gong');
-                    // gong.panner.refDistance = WorldController.camera.position.z - this.rod.mallet.position.z;
-                    mallet.add(gong);
-
-                    this.malletPool.put(mallet);
-                }
-            }
-
-            static async initMalletAudio() {
-                const path = 'about/public/assets/sounds/deep_spacy_loop.mp3';
-
-                await AssetLoader.loadAssets([path]);
-
-                const deepSpacy = new Sound3D(WorldController.camera, 'deep_spacy_loop', Assets.get(path));
-                // deepSpacy.panner.refDistance = WorldController.camera.position.z - this.rod.mallet.position.z;
-                // deepSpacy.audioDistance = WorldController.camera.position.z - this.rod.mallet.position.z;
-                this.rod.mallet.add(deepSpacy);
-                this.rod.mallet.updateMatrixWorld();
-
-                WebAudio.play('deep_spacy_loop', 1, true);
             }
 
             static addListeners() {
@@ -517,50 +472,19 @@
 
                 switch (event) {
                     case 'gong': {
-                        if (Config.DEBUG) {
-                            const mallet = this.malletPool.get();
-                            mallet.position.copy(this.rod.mallet.position);
-                            mallet.quaternion.copy(this.rod.mallet.quaternion);
-                            mallet.updateMatrixWorld();
+                        const gong = new Sound3D(WorldController.camera, 'gong');
+                        gong.position.copy(this.rod.mallet.position);
+                        gong.quaternion.copy(this.rod.mallet.quaternion);
+                        gong.updateMatrixWorld();
 
-                            WorldController.scene.add(mallet);
+                        const strength = range(params[0], 0, 1000, 0, 1, true);
+                        gong.sound.gain.alpha = strength * 0.5;
+                        gong.sound.playbackRate.alpha = clamp(0.8 + strength * 0.4, 0.8, 1.2);
+                        gong.sound.play();
 
-                            const gong = mallet.children[2];
-
-                            const strength = range(params[0], 0, 1000, 0, 1, true);
-                            gong.sound.gain.alpha = strength * 0.5;
-                            gong.sound.playbackRate.alpha = clamp(0.8 + strength * 0.4, 0.8, 1.2);
-                            gong.sound.play();
-
-                            const opacity = mallet.material.opacity;
-                            const intensity = mallet.light.intensity;
-
-                            tween(mallet.material, { opacity: 0 }, 5000, 'linear', () => {
-                                WorldController.scene.remove(mallet);
-
-                                mallet.material.opacity = opacity;
-                                mallet.light.intensity = intensity;
-
-                                this.malletPool.put(mallet);
-                            }, () => {
-                                mallet.light.intensity = mallet.material.opacity;
-                            });
-                        } else {
-                            const gong = new Sound3D(WorldController.camera, 'gong');
-                            gong.position.copy(this.rod.mallet.position);
-                            gong.quaternion.copy(this.rod.mallet.quaternion);
-                            // gong.panner.refDistance = WorldController.camera.position.z - this.rod.mallet.position.z;
-                            gong.updateMatrixWorld();
-
-                            const strength = range(params[0], 0, 1000, 0, 1, true);
-                            gong.sound.gain.alpha = strength * 0.5;
-                            gong.sound.playbackRate.alpha = clamp(0.8 + strength * 0.4, 0.8, 1.2);
-                            gong.sound.play();
-
-                            delayedCall(6000, () => {
-                                gong.destroy();
-                            });
-                        }
+                        delayedCall(6000, () => {
+                            gong.destroy();
+                        });
                         break;
                     }
                 }
@@ -597,8 +521,6 @@
             static init() {
                 this.initWorld();
                 this.initLights();
-                this.initAudio();
-                this.initControls();
             }
 
             static initWorld() {
@@ -630,20 +552,6 @@
                 this.scene.add(pointLight);
             }
 
-            static initAudio() {
-                // this.audio = new WebAudio3D();
-                // this.camera.add(this.audio);
-            }
-
-            static initControls() {
-                this.controls = new OrbitControls(this.camera, this.renderer.domElement);
-                this.controls.enabled = false;
-
-                if (Config.DEBUG) {
-                    this.controls.enabled = true;
-                }
-            }
-
             /**
              * Public methods
              */
@@ -662,8 +570,6 @@
             static update = (time, delta, frame) => {
                 this.time.value = time;
                 this.frame.value = frame;
-
-                this.controls.update();
             };
 
             static getFrustum = offsetZ => getFrustum(this.camera, offsetZ);

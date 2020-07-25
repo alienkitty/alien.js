@@ -1,0 +1,673 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+    <title>Alien.js — 3D Audio</title>
+
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto+Mono">
+    <link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+    <div id="root"></div>
+    <script type="module">
+        import { AmbientLight, AssetLoader, Assets, Color, Events, Fog, Group, MathUtils, Mesh, MeshStandardMaterial, Object3D, PerspectiveCamera, PointLight, Scene, Sound3D, SphereBufferGeometry, Stage, Thread, Uniform, Vector2, Vector3, WebAudio, WebGLRenderer, clamp, delayedCall, getFrustum, gsap, range, updateRoot, wait } from '../build/alien.js';
+
+        import { World } from 'https://unpkg.com/oimo/build/oimo.module.js';
+
+        class Config {
+            static BG_COLOR = '#0e0e0e';
+            static UI_COLOR = 'rgba(255, 255, 255, 0.94)';
+
+            static ASSETS = [
+                'assets/sounds/gong.mp3'
+            ];
+        }
+
+        class Global {
+            static BALL_X = 45;
+        }
+
+        class TetherPhysicsThread {
+            constructor() {
+                this.bodies = [];
+                this.force = new Vector3();
+                this.pos = new Vector2();
+                this.target = new Vector2();
+
+                // Mallet initial position
+                this.target.set(0.24, 0.32);
+                this.pos.copy(this.target);
+
+                this.addListeners();
+            }
+
+            addListeners() {
+                addEventListener('message', this.onMessage);
+            }
+
+            /**
+             * Event handlers
+             */
+
+            onMessage = ({ data }) => {
+                this[data.message.fn].call(this, data.message);
+            };
+
+            /**
+             * Public methods
+             */
+
+            init = ({ shapes }) => {
+                this.world = new World();
+                this.world.gravity = new Vector3(0, -98, 0); // More realistic gravity
+
+                shapes.forEach(shape => this.bodies.push(this.world.add(shape)));
+
+                const ball = this.bodies[0];
+
+                // Ball joint
+                this.world.add({ name: 'body', pos: [0, 15, 0] });
+                this.world.add({ type: 'jointDistance', body1: 'body', body2: 'ball', pos1: [0, 15, 0], pos2: [0, 15, 0], min: 0, max: ball.pos.x });
+
+                // Ball initial motion
+                ball.linearVelocity.set(0, 0, -100);
+
+                this.buffer = new Float32Array(shapes.length * 8);
+
+                postMessage({ event: 'ready' });
+            };
+
+            resize = ({ width, height }) => {
+                this.width = width;
+                this.height = height;
+            };
+
+            update = () => {
+                this.world.step();
+
+                let index = 0;
+
+                this.bodies.forEach((body, i) => {
+                    index = i * 8;
+
+                    if (body.sleeping) {
+                        this.buffer[index + 7] = 1;
+                    } else {
+                        this.buffer[index + 7] = 0;
+                        body.getPosition().toArray(this.buffer, index);
+                        body.getQuaternion().toArray(this.buffer, index + 3);
+                    }
+                });
+
+                const ball = this.bodies[0];
+                const mallet = this.bodies[1];
+
+                // Mallet position
+                this.pos.lerp(this.target, 0.25);
+
+                const malletX = this.pos.x * (this.width * 0.5);
+                const malletY = this.pos.y * (this.height * 0.5);
+                const malletZ = mallet.position.z;
+
+                mallet.setPosition(new Vector3(malletX, malletY, malletZ));
+
+                postMessage({ event: 'update', message: { buffer: this.buffer } });
+
+                // Contact test
+                const contact = this.world.getContact(mallet, ball);
+
+                if (contact && !contact.close) {
+                    this.force.x += (ball.linearVelocity.x * ball.mass) - (mallet.linearVelocity.x * mallet.mass);
+                    this.force.y += (ball.linearVelocity.y * ball.mass) - (mallet.linearVelocity.y * mallet.mass);
+                    this.force.z += (ball.linearVelocity.z * ball.mass) - (mallet.linearVelocity.z * mallet.mass);
+
+                    this.force.multiplyScalar(0.5);
+
+                    if (this.force.length() < 0.1) {
+                        this.force.set(0, 0, 0);
+                    }
+
+                    postMessage({ event: 'contact', message: { force: this.force.toArray() } });
+                }
+            };
+
+            motion = ({ x, y }) => {
+                this.target.set(
+                    x * 2 - 1,
+                    y * -2 + 1
+                );
+            };
+        }
+
+        class TetherPhysics {
+            constructor(tether) {
+                this.tether = tether;
+                this.meshes = [];
+                this.shapes = [];
+                this.density = 1000;
+                this.promise = new Promise(resolve => this.resolve = resolve);
+
+                this.initBuffer();
+                this.initEngine();
+
+                this.addListeners();
+            }
+
+            initBuffer() {
+                const { ball, mallet } = this.tether;
+
+                this.meshes.push(ball);
+                this.shapes.push(this.createShapeObject('ball', 'sphere', ball.size, ball.position, ball.rotation, true));
+
+                this.meshes.push(mallet);
+                this.shapes.push(this.createShapeObject('paddle', 'sphere', mallet.size, mallet.position, mallet.rotation, true, true));
+
+                this.buffer = new Float32Array(this.shapes.length * 8);
+            }
+
+            initEngine() {
+                this.thread = new Thread({
+                    imports: [
+                        ['../build/alien.js', 'Vector2', 'Vector3'],
+                        ['https://unpkg.com/oimo/build/oimo.module.js', 'World']
+                    ],
+                    controller: [TetherPhysicsThread, 'init', 'resize', 'update']
+                });
+
+                this.thread.init({ shapes: this.shapes });
+            }
+
+            createShapeObject(name, type, size, position, rotation, move, paddle) {
+                const object = {};
+
+                object.name = name;
+                object.type = type;
+                object.pos = [position.x, position.y, position.z];
+                object.rot = [MathUtils.radToDeg(rotation.x), MathUtils.radToDeg(rotation.y), MathUtils.radToDeg(rotation.z)];
+                object.move = true;
+                object.noSleep = true;
+
+                if (type === 'box') {
+                    object.size = [size.x, size.y, size.z];
+                }
+
+                if (type === 'sphere') {
+                    object.size = [size.x];
+                }
+
+                if (type === 'cylinder') {
+                    object.size = [size.x, size.z];
+                }
+
+                const config = [
+                    100, // The density of the shape.
+                    0, // The coefficient of friction of the shape.
+                    0, // The coefficient of restitution of the shape.
+                    1, // The bits of the collision groups to which the shape belongs.
+                    0xffffffff // The bits of the collision groups with which the shape collides.
+                ];
+
+                if (paddle) {
+                    config[0] = this.density;
+                    object.kinematic = true;
+                }
+
+                object.config = config;
+
+                return object;
+            }
+
+            addListeners() {
+                this.thread.on('ready', this.onReady);
+                this.thread.on('update', this.onUpdate);
+                this.thread.on('contact', this.onContact);
+            }
+
+            /**
+             * Event handlers
+             */
+
+            onReady = () => {
+                this.resolve();
+            };
+
+            onUpdate = ({ buffer }) => {
+                this.buffer = buffer;
+
+                let index = 0;
+
+                this.meshes.forEach((mesh, i) => {
+                    index = i * 8;
+
+                    if (this.buffer[index + 7] !== 1) {
+                        mesh.position.fromArray(this.buffer, index);
+                        mesh.quaternion.fromArray(this.buffer, index + 3);
+                    }
+                });
+            };
+
+            onContact = ({ force }) => {
+                force = (new Vector3()).fromArray(force).length() / this.density;
+
+                if (force > 0) {
+                    AudioController.trigger('gong', force);
+                }
+            };
+
+            /**
+             * Public methods
+             */
+
+            resize = (width, height) => {
+                this.thread.resize({ width, height });
+            };
+
+            update = () => {
+                this.thread.update();
+            };
+
+            send = (event, message = {}) => {
+                this.thread.send(event, message);
+            };
+
+            ready = () => this.promise;
+        }
+
+        class Mallet extends Object3D {
+            constructor() {
+                super();
+
+                this.initMesh();
+                this.initLight();
+            }
+
+            initMesh() {
+                this.size = new Vector3(2, 24, 24);
+                this.geometry = new SphereBufferGeometry(2, 24, 24);
+
+                this.material = new MeshStandardMaterial({
+                    emissive: 0xffffff
+                });
+
+                this.mesh = new Mesh(this.geometry, this.material);
+
+                this.position.set(0, 0, 25);
+
+                this.add(this.mesh);
+            }
+
+            initLight() {
+                this.light = new PointLight(0xffffff, 0.2);
+                this.add(this.light);
+            }
+        }
+
+        class Ball extends Object3D {
+            constructor() {
+                super();
+
+                this.initMesh();
+            }
+
+            initMesh() {
+                this.size = new Vector3(5, 32, 32);
+                this.geometry = new SphereBufferGeometry(5, 32, 32);
+
+                this.material = new MeshStandardMaterial({
+                    color: Config.BG_COLOR,
+                    roughness: 0.3,
+                    metalness: 1
+                });
+
+                this.mesh = new Mesh(this.geometry, this.material);
+
+                this.position.set(Global.BALL_X, 0, 0);
+
+                this.add(this.mesh);
+            }
+        }
+
+        class Tether extends Group {
+            constructor() {
+                super();
+
+                this.visible = false;
+
+                this.initViews();
+            }
+
+            initViews() {
+                this.ball = new Ball();
+                this.add(this.ball);
+
+                this.mallet = new Mallet();
+                this.add(this.mallet);
+            }
+        }
+
+        class TetherController {
+            static init(tether) {
+                this.tether = tether;
+
+                this.initPhysics();
+
+                this.addListeners();
+            }
+
+            static initPhysics() {
+                this.physics = new TetherPhysics(this.tether);
+            }
+
+            static addListeners() {
+                Stage.element.addEventListener('touchstart', this.onTouchStart);
+                Stage.element.addEventListener('mousedown', this.onTouchStart);
+                window.addEventListener('touchmove', this.onTouchMove);
+                window.addEventListener('mousemove', this.onTouchMove);
+            }
+
+            /**
+             * Event handlers
+             */
+
+            static onTouchStart = e => {
+                e.preventDefault();
+
+                if (!this.tether.visible) {
+                    return;
+                }
+
+                this.onTouchMove(e);
+            };
+
+            static onTouchMove = e => {
+                if (!this.tether.visible) {
+                    return;
+                }
+
+                const event = {};
+
+                if (e.changedTouches && e.changedTouches.length) {
+                    event.x = e.changedTouches[0].pageX;
+                    event.y = e.changedTouches[0].pageY;
+                } else {
+                    event.x = e.clientX;
+                    event.y = e.clientY;
+                }
+
+                this.send(event);
+            };
+
+            /**
+             * Public methods
+             */
+
+            static resize = (width, height) => {
+                this.width = width;
+                this.height = height;
+
+                const frustum = WorldController.getFrustum(this.tether.mallet.position.z);
+
+                this.physics.resize(frustum.width, frustum.height);
+            };
+
+            static update = () => {
+                this.physics.update();
+            };
+
+            static send = e => {
+                this.physics.send('motion', {
+                    x: e.x / this.width,
+                    y: e.y / this.height
+                });
+            };
+
+            static animateIn = () => {
+                this.tether.visible = true;
+            };
+
+            static ready = () => this.physics.ready();
+        }
+
+        class AudioController {
+            static init(tether) {
+                this.tether = tether;
+
+                this.addListeners();
+            }
+
+            static addListeners() {
+                Stage.events.on(Events.VISIBILITY, this.onVisibility);
+                Stage.element.addEventListener('touchstart', this.onTouchStart);
+                Stage.element.addEventListener('mousedown', this.onTouchStart);
+            }
+
+            /**
+             * Event handlers
+             */
+
+            static onVisibility = () => {
+                if (document.hidden) {
+                    WebAudio.mute();
+                } else {
+                    WebAudio.unmute();
+                }
+            };
+
+            static onTouchStart = () => {
+                Stage.element.removeEventListener('touchstart', this.onTouchStart);
+                Stage.element.removeEventListener('mousedown', this.onTouchStart);
+
+                this.trigger('gong', 500);
+            };
+
+            /**
+             * Public methods
+             */
+
+            static trigger = (event, ...params) => {
+                if (!WebAudio.context) {
+                    return;
+                }
+
+                switch (event) {
+                    case 'gong': {
+                        const gong = new Sound3D(WorldController.camera, 'gong');
+                        this.tether.ball.add(gong);
+                        this.tether.ball.updateMatrixWorld();
+
+                        const strength = range(params[0], 0, 1000, 0, 1, true);
+                        gong.sound.gain.alpha = strength * 0.5;
+                        gong.sound.playbackRate.alpha = clamp(0.8 + strength * 0.4, 0.8, 1.2);
+                        gong.sound.play();
+
+                        delayedCall(6000, () => {
+                            this.tether.ball.remove(gong);
+                            gong.destroy();
+                        });
+                        break;
+                    }
+                }
+            };
+        }
+
+        class RenderManager {
+            static init(renderer, scene, camera) {
+                this.renderer = renderer;
+                this.scene = scene;
+                this.camera = camera;
+
+                this.initRenderer();
+            }
+
+            static initRenderer() {
+            }
+
+            /**
+             * Public methods
+             */
+
+            static resize = (width, height, dpr) => {
+                this.renderer.setPixelRatio(dpr);
+                this.renderer.setSize(width, height);
+            };
+
+            static update = () => {
+                this.renderer.render(this.scene, this.camera);
+            };
+        }
+
+        class WorldController {
+            static init() {
+                this.initWorld();
+                this.initLights();
+            }
+
+            static initWorld() {
+                this.renderer = new WebGLRenderer({ powerPreference: 'high-performance' });
+                this.element = this.renderer.domElement;
+
+                // 3D scene
+                this.scene = new Scene();
+                this.scene.background = new Color(Config.BG_COLOR);
+                this.scene.fog = new Fog(Config.BG_COLOR, 1, 250);
+                this.camera = new PerspectiveCamera(30);
+                this.camera.near = 1;
+                this.camera.far = 4000;
+                this.camera.position.z = 150;
+
+                // Global uniforms
+                this.resolution = new Uniform(new Vector2());
+                this.aspect = new Uniform(1);
+                this.time = new Uniform(0);
+                this.frame = new Uniform(0);
+            }
+
+            static initLights() {
+                const ambientLight = new AmbientLight(0xffffff);
+                this.scene.add(ambientLight);
+
+                const pointLight = new PointLight(0xffffff, 0.2);
+                pointLight.position.z = 10000;
+                this.scene.add(pointLight);
+            }
+
+            /**
+             * Public methods
+             */
+
+            static resize = (width, height, dpr) => {
+                this.camera.aspect = width / height;
+                this.camera.updateProjectionMatrix();
+
+                width = Math.round(width * dpr);
+                height = Math.round(height * dpr);
+
+                this.resolution.value.set(width, height);
+                this.aspect.value = width / height;
+            };
+
+            static update = (time, delta, frame) => {
+                this.time.value = time;
+                this.frame.value = frame;
+            };
+
+            static getFrustum = offsetZ => getFrustum(this.camera, offsetZ);
+        }
+
+        class App {
+            static async init() {
+                Assets.cache = true;
+
+                this.last = performance.now();
+                this.frame = 0;
+
+                this.initWorld();
+                this.initViews();
+                this.initControllers();
+                this.initLoader();
+
+                this.addListeners();
+                this.onResize();
+
+                await TetherController.ready();
+                requestAnimationFrame(this.step);
+
+                await wait(250);
+                TetherController.animateIn();
+            }
+
+            static initWorld() {
+                WorldController.init();
+                Stage.add(WorldController.element);
+            }
+
+            static initViews() {
+                this.tether = new Tether();
+                WorldController.scene.add(this.tether);
+            }
+
+            static initControllers() {
+                const { renderer, scene, camera } = WorldController;
+
+                TetherController.init(this.tether);
+                RenderManager.init(renderer, scene, camera);
+            }
+
+            static initLoader() {
+                this.loader = new AssetLoader(Config.ASSETS);
+            }
+
+            static addListeners() {
+                Stage.events.on(Events.RESIZE, this.onResize);
+                TetherController.physics.thread.on('update', this.onUpdate);
+                this.loader.events.on(Events.COMPLETE, this.onComplete);
+
+                // Unhooks the GSAP ticker
+                gsap.ticker.remove(gsap.updateRoot);
+            }
+
+            /**
+             * Event handlers
+             */
+
+            static onResize = () => {
+                const width = Stage.width;
+                const height = Stage.height;
+                const dpr = Stage.dpr;
+
+                WorldController.resize(width, height, dpr);
+                TetherController.resize(width, height);
+                RenderManager.resize(width, height, dpr);
+            };
+
+            static onUpdate = () => {
+                requestAnimationFrame(this.step);
+            };
+
+            static onComplete = async () => {
+                this.loader = this.loader.destroy();
+
+                WebAudio.init(Assets.filter(path => /sounds/.test(path)));
+                AudioController.init(this.tether);
+            };
+
+            static step = time => {
+                this.delta = time - this.last;
+                this.last = time;
+                this.frame++;
+
+                updateRoot(time);
+
+                WorldController.update(time, this.delta, this.frame);
+                TetherController.update();
+                RenderManager.update(time, this.delta, this.frame);
+            };
+        }
+
+        App.init();
+    </script>
+</body>
+</html>

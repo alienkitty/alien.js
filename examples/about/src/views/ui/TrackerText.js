@@ -44,8 +44,8 @@ export class TrackerText extends Interface {
         }
 
         if (data.remoteAddress) {
-            // this.text.text(data.nickname ? data.nickname : data.remoteAddress);
-            this.text.text(data.nickname ? data.nickname : data.id);
+            // this.text.text(data.nickname || data.remoteAddress);
+            this.text.text(data.nickname || data.id);
         }
 
         if (data.latency) {

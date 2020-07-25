@@ -10,7 +10,7 @@
   },
   "scripts": {
     "build": "rollup -c",
-    "start": "http-server -c-1 -p 8080 ../",
+    "start": "http-server -c-1 ../",
     "lint": "eslint *.html"
   },
   "devDependencies": {

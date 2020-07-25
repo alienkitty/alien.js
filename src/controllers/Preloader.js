@@ -11,7 +11,7 @@ import { PreloaderView } from '../views/PreloaderView.js';
 export class Preloader {
     static init() {
         // if (!Device.webgl) {
-        //     return location = 'fallback.html';
+        //     return location.href = 'fallback.html';
         // }
 
         Assets.path = Config.CDN;
@@ -19,7 +19,7 @@ export class Preloader {
 
         Assets.options = {
             mode: 'cors',
-            //credentials: 'include'
+            // credentials: 'include'
         };
 
         // Assets.cache = true;
@@ -62,11 +62,15 @@ export class Preloader {
     static addListeners() {
         this.loader.events.on(Events.PROGRESS, this.view.onProgress);
         this.view.events.on(Events.COMPLETE, this.onComplete);
+        document.addEventListener('touchstart', this.onTouchStart);
+        document.addEventListener('mousedown', this.onTouchStart);
     }
 
     static removeListeners() {
         this.loader.events.off(Events.PROGRESS, this.view.onProgress);
         this.view.events.off(Events.COMPLETE, this.onComplete);
+        document.removeEventListener('touchstart', this.onTouchStart);
+        document.removeEventListener('mousedown', this.onTouchStart);
     }
 
     /**
@@ -80,5 +84,12 @@ export class Preloader {
         this.view = this.view.destroy();
 
         this.app.start();
+    };
+
+    static onTouchStart = () => {
+        document.removeEventListener('touchstart', this.onTouchStart);
+        document.removeEventListener('mousedown', this.onTouchStart);
+
+        // WebAudio.resume();
     };
 }

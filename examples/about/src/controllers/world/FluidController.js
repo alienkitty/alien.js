@@ -1,11 +1,10 @@
 import {
-    FloatType,
     HalfFloatType,
     Vector2,
     WebGLRenderTarget
 } from 'three';
 
-import { Device, Stage } from 'alien.js';
+import { Stage } from 'alien.js';
 
 import { Events } from '../../config/Events.js';
 import { Global } from '../../config/Global.js';
@@ -36,7 +35,7 @@ export class FluidController {
     static initRenderer() {
         // Render targets
         this.renderTargetA = new WebGLRenderTarget(this.width, this.height, {
-            type: Device.os === 'ios' ? HalfFloatType : FloatType,
+            type: HalfFloatType,
             depthBuffer: false,
             stencilBuffer: false
         });
@@ -170,12 +169,10 @@ export class FluidController {
             this.pointer[e.id].tracker = this.trackers.add(new Tracker());
             this.pointer[e.id].tracker.css({ left: Math.round(this.pointer[e.id].pos.x), top: Math.round(this.pointer[e.id].pos.y) });
             this.pointer[e.id].tracker.setData(Data.getUser(e.id));
-            this.pointer[e.id].frame = 0;
         }
 
         this.pointer[e.id].isDown = e.isDown;
         this.pointer[e.id].target.set(e.x * this.width, e.y * this.height);
-        this.pointer[e.id].frame = 0;
     };
 
     /**
@@ -200,12 +197,6 @@ export class FluidController {
 
         Object.keys(this.pointer).forEach((id, i) => {
             if (id !== 'main') {
-                this.pointer[id].frame++;
-
-                if (this.pointer[id].frame > 100) {
-                    return;
-                }
-
                 this.pointer[id].pos.lerp(this.pointer[id].target, 0.07);
                 this.pointer[id].tracker.css({ left: Math.round(this.pointer[id].pos.x), top: Math.round(this.pointer[id].pos.y) });
 

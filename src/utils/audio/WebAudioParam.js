@@ -26,4 +26,11 @@ export class WebAudioParam {
 
         this.alpha = value;
     }
+
+    fade(value, time) {
+        if (this.parent[this.node]) {
+            this.parent[this.node][this.param].cancelScheduledValues(this.parent.context.currentTime);
+            this.parent[this.node][this.param].setTargetAtTime(value, this.parent.context.currentTime, time * 0.001);
+        }
+    }
 }

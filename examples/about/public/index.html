@@ -32,8 +32,12 @@
 
         Preloader.init();
     </script>
-    <script nomodule>
-        window.location = 'unsupported.html';
+    <script>
+        try {
+            eval('(async () => {try {await import(\'foo\');} catch (e) {}})();');
+        } catch (e) {
+            location.href = 'unsupported.html';
+        }
     </script>
 </body>
 </html>

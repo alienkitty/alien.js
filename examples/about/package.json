@@ -5,8 +5,8 @@
   "private": true,
   "scripts": {
     "build": "rollup -c",
-    "dev": "concurrently --names \"ROLLUP,HTTP\" -c \"bgBlue.bold,bgGreen.bold\" \"rollup -c -w -m inline\" \"http-server -c-1 -p 8080\"",
-    "start": "http-server -c-1 -p 8080",
+    "dev": "concurrently --names \"ROLLUP,HTTP\" -c \"bgBlue.bold,bgGreen.bold\" \"rollup -c -w -m inline\" \"http-server -c-1\"",
+    "start": "http-server -c-1",
     "lint": "eslint src"
   },
   "devDependencies": {

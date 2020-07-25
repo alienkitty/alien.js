@@ -8,7 +8,6 @@ import fragmentShader from '../shaders/FluidView.frag.js';
 export class FluidViewMaterial extends RawShaderMaterial {
     constructor() {
         super({
-            type: 'FluidViewMaterial',
             uniforms: {
                 tMap: new Uniform(null),
                 uResolution: WorldController.resolution

@@ -7,7 +7,7 @@ import { PreloaderView } from '../views/PreloaderView.js';
 export class Preloader {
     static init() {
         if (!Device.webgl) {
-            return location = 'fallback.html';
+            return location.href = 'fallback.html';
         }
 
         Assets.path = Config.CDN;
@@ -34,17 +34,9 @@ export class Preloader {
     static async initLoader() {
         this.view.animateIn();
 
-        let assets = Config.ASSETS.slice();
-
-        if (Device.mobile) {
-            assets = assets.filter(path => !/desktop/.test(path));
-        } else {
-            assets = assets.filter(path => !/mobile/.test(path));
-        }
-
         this.loader = new MultiLoader();
         this.loader.load(new FontLoader(['Roboto Mono', 'Roboto', 'Ropa Sans']));
-        this.loader.load(new AssetLoader(assets));
+        this.loader.load(new AssetLoader(Config.ASSETS));
         this.loader.add(1);
 
         const { App } = await import('./App.js');
@@ -71,6 +63,8 @@ export class Preloader {
 
     static onComplete = async () => {
         this.removeListeners();
+
+        this.loader = this.loader.destroy();
 
         await this.view.animateOut();
         this.view = this.view.destroy();

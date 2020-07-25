@@ -5,8 +5,6 @@ export const Stage = new Interface(document.getElementById('root'));
 
 {
     window.addEventListener('popstate', onPopState);
-    window.addEventListener('focus', onVisibility);
-    window.addEventListener('blur', onVisibility);
     window.addEventListener('keydown', onKeyDown);
     window.addEventListener('keyup', onKeyUp);
     window.addEventListener('keypress', onKeyPress);
@@ -24,10 +22,6 @@ export const Stage = new Interface(document.getElementById('root'));
         Stage.path = location.pathname;
 
         Stage.events.emit(Events.STATE_CHANGE, e);
-    }
-
-    function onVisibility(e) {
-        Stage.events.emit(Events.VISIBILITY, e);
     }
 
     function onKeyDown(e) {
@@ -49,6 +43,10 @@ export const Stage = new Interface(document.getElementById('root'));
         Stage.aspect = Stage.width / Stage.height;
 
         Stage.events.emit(Events.RESIZE, e);
+    }
+
+    function onVisibility(e) {
+        Stage.events.emit(Events.VISIBILITY, e);
     }
 
     /**

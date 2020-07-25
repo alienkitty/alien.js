@@ -25,7 +25,7 @@ export class Sound {
         this.stereoPan = new WebAudioParam(this, 'stereo', 'pan', 0);
         this.playbackRate = new WebAudioParam(this, 'source', 'playbackRate', 1);
 
-        if (Device.os !== 'ios') {
+        if (!Device.mobile || this.context.state === 'running') {
             this.load();
         }
     }
@@ -53,8 +53,7 @@ export class Sound {
 
         this.ready().then(() => {
             this.output.gain.cancelScheduledValues(this.context.currentTime);
-            this.output.gain.setValueAtTime(0, this.context.currentTime);
-            this.output.gain.setTargetAtTime(this.gain.value, this.context.currentTime, 0.1);
+            this.output.gain.setValueAtTime(this.gain.value, this.context.currentTime);
 
             if (this.stereo) {
                 this.stereo.pan.cancelScheduledValues(this.context.currentTime);

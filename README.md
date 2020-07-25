@@ -38,9 +38,6 @@ In its design, everything is an ES module, all user interfaces and components fo
 ```js
 import gsap from 'gsap';
 
-import { Events } from '../config/Events.js';
-import { Stage } from '../controllers/Stage.js';
-
 export class Logo {
     constructor() {
         this.element;
@@ -50,20 +47,6 @@ export class Logo {
 
         this.addListeners();
         this.onResize();
-    }
-
-    addListeners() {
-        Stage.events.on(Events.RESIZE, this.onResize);
-        this.element.addEventListener('mouseenter', this.onHover);
-        this.element.addEventListener('mouseleave', this.onHover);
-        this.element.addEventListener('click', this.onClick);
-    }
-
-    removeListeners() {
-        Stage.events.off(Events.RESIZE, this.onResize);
-        this.element.removeEventListener('mouseenter', this.onHover);
-        this.element.removeEventListener('mouseleave', this.onHover);
-        this.element.removeEventListener('click', this.onClick);
     }
 
     initHTML() {
@@ -87,15 +70,28 @@ export class Logo {
         this.element.appendChild(this.image);
     }
 
+    addListeners() {
+        window.addEventListener('resize', this.onResize);
+        window.addEventListener('orientationchange', this.onResize);
+        this.element.addEventListener('mouseenter', this.onHover);
+        this.element.addEventListener('mouseleave', this.onHover);
+        this.element.addEventListener('click', this.onClick);
+    }
+
+    removeListeners() {
+        window.removeEventListener('resize', this.onResize);
+        window.removeEventListener('orientationchange', this.onResize);
+        this.element.removeEventListener('mouseenter', this.onHover);
+        this.element.removeEventListener('mouseleave', this.onHover);
+        this.element.removeEventListener('click', this.onClick);
+    }
+
     /**
      * Event handlers
      */
 
     onResize = () => {
-        const width = window.innerWidth;
-        const height = window.innerHeight;
-
-        if (width < height) {
+        if (window.innerWidth < window.innerHeight) {
             gsap.set(this.element, {
                 top: 30,
                 left: 30,
@@ -121,8 +117,7 @@ export class Logo {
     };
 
     onClick = () => {
-        //open('https://alien.js.org/');
-        Stage.setPath('/');
+        open('https://alien.js.org/');
     };
 
     /**
@@ -355,5 +350,5 @@ npm run build
 * Pierfrancesco Soffritti's [Doodles](https://github.com/PierfrancescoSoffritti/doodles).
 * Jaume Sanchez Elias' [Codevember 2016](https://github.com/spite/codevember-2016).
 * Jaume Sanchez Elias' [Wagner](https://github.com/spite/Wagner).
-* Active Theory's [Finding Love Shaders](https://github.com/activetheory/Finding-Love-Shaders)
+* Active Theory's [Finding Love Shaders](https://github.com/activetheory/Finding-Love-Shaders).
 * Inspired by [Active Theory](https://github.com/activetheory)'s class structure and code style.

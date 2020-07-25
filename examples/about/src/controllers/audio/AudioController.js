@@ -1,14 +1,18 @@
 import { Stage, WebAudio, clamp, tween } from 'alien.js';
 
+import { Config } from '../../config/Config.js';
 import { Events } from '../../config/Events.js';
 import { Global } from '../../config/Global.js';
 
 export class AudioController {
     static init() {
-        this.water = {};
+        if (!WebAudio.context) {
+            return;
+        }
 
-        const sound = localStorage.getItem('sound');
-        Global.SOUND = sound ? JSON.parse(sound) : true;
+        this.water = {};
+        this.multiplier = 8;
+        this.easing = 0.97;
 
         if (!Global.SOUND) {
             WebAudio.gain.value = 0;
@@ -19,11 +23,12 @@ export class AudioController {
 
     static addListeners() {
         Stage.events.on(Events.VISIBILITY, this.onVisibility);
-        document.addEventListener('click', this.onClick);
+        Stage.element.addEventListener('touchstart', this.onTouchStart);
+        Stage.element.addEventListener('mousedown', this.onTouchStart);
     }
 
     static getMouseSpeed(id, normalX, normalY) {
-        const time = WebAudio.context.currentTime - this.water[id].lastEventTime;
+        const time = performance.now() - this.water[id].lastEventTime;
 
         if (time === 0) {
             return this.water[id].mouseSpeed;
@@ -32,14 +37,14 @@ export class AudioController {
         const distance = Math.abs(normalX - this.water[id].lastMouseX) + Math.abs(normalY - this.water[id].lastMouseY);
         const speed = distance / time;
 
-        this.water[id].mouseSpeed += speed * 0.01;
-        this.water[id].mouseSpeed *= 0.97;
+        this.water[id].mouseSpeed += speed * this.multiplier;
+        this.water[id].mouseSpeed *= this.easing;
 
         if (Math.abs(this.water[id].mouseSpeed) < 0.001) {
             this.water[id].mouseSpeed = 0;
         }
 
-        this.water[id].lastEventTime = WebAudio.context.currentTime;
+        this.water[id].lastEventTime = performance.now();
         this.water[id].lastMouseX = normalX;
         this.water[id].lastMouseY = normalY;
 
@@ -50,20 +55,21 @@ export class AudioController {
      * Event handlers
      */
 
-    static onVisibility = ({ type }) => {
+    static onVisibility = () => {
         if (!Global.SOUND) {
             return;
         }
 
-        if (type === 'blur' || document.hidden) {
+        if (document.hidden) {
             WebAudio.mute();
         } else {
             WebAudio.unmute();
         }
     };
 
-    static onClick = () => {
-        document.removeEventListener('click', this.onClick);
+    static onTouchStart = () => {
+        Stage.element.removeEventListener('touchstart', this.onTouchStart);
+        Stage.element.removeEventListener('mousedown', this.onTouchStart);
 
         this.trigger('bass_drum');
     };
@@ -72,36 +78,49 @@ export class AudioController {
      * Public methods
      */
 
+    static resize = () => {
+        if (Stage.width < Config.BREAKPOINT) {
+            this.easing = 0.8;
+        } else {
+            this.easing = 0.97;
+        }
+    };
+
     static update = (id, x, y) => {
         if (!WebAudio.context) {
             return;
         }
 
+        const normalX = x / Stage.width;
+        const normalY = y / Stage.height;
+
         if (!this.water[id]) {
             this.water[id] = {};
             this.water[id].mouseSpeed = 0;
-            this.water[id].lastEventTime = 0;
-            this.water[id].lastMouseX = 0.5;
-            this.water[id].lastMouseY = 0.5;
+            this.water[id].lastEventTime = performance.now();
+            this.water[id].lastMouseX = normalX;
+            this.water[id].lastMouseY = normalY;
             this.water[id].sound = WebAudio.createSound(id, WebAudio.get('water_loop').buffer);
 
             WebAudio.play(id, 0, true);
         }
 
-        const normalX = x / Stage.width;
-        const normalY = y / Stage.height;
         const speed = clamp(this.getMouseSpeed(id, normalX, normalY) * 0.5, 0, 1);
         const pan = clamp(((normalX * 2) - 1) * 0.8, -1, 1);
-        const rate = clamp(0.8 + (1 - normalY) / 2.5, 0.8, 1.2);
+        const rate = clamp(0.8 + (1 - normalY) * 0.4, 0.8, 1.2);
 
         this.trigger('mouse_move', id, speed, pan, rate);
     };
 
     static trigger = (event, ...params) => {
+        if (!WebAudio.context) {
+            return;
+        }
+
         switch (event) {
             case 'bass_drum':
                 WebAudio.play('bass_drum');
-                WebAudio.fadeOutAndStop('bass_drum', 2000, 'linear');
+                WebAudio.fadeOutAndStop('bass_drum', 2000, 'easeOutSine');
                 break;
             case 'fluid_start':
                 WebAudio.fadeInAndPlay('deep_spacy_loop', 0.2, true, 2000, 'linear');
@@ -116,16 +135,16 @@ export class AudioController {
                 }
                 break;
             case 'about_section':
-                tween(WebAudio.gain, { value: 0.3 }, 1000, 'linear');
+                tween(WebAudio.gain, { value: 0.3 }, 1000, 'easeOutSine');
                 break;
             case 'fluid_section':
-                tween(WebAudio.gain, { value: 1 }, 500, 'linear');
+                tween(WebAudio.gain, { value: 1 }, 1000, 'easeOutSine');
                 break;
             case 'sound_off':
-                tween(WebAudio.gain, { value: 0 }, 300, 'linear');
+                tween(WebAudio.gain, { value: 0 }, 500, 'easeOutSine');
                 break;
             case 'sound_on':
-                tween(WebAudio.gain, { value: 1 }, 500, 'linear');
+                tween(WebAudio.gain, { value: 1 }, 500, 'easeOutSine');
                 break;
         }
     };
@@ -137,7 +156,9 @@ export class AudioController {
             delete this.water[id];
         }
 
-        WebAudio.remove(id);
+        WebAudio.fadeOutAndStop(id, 500, 'easeOutSine', () => {
+            WebAudio.remove(id);
+        });
     };
 
     static mute = () => {

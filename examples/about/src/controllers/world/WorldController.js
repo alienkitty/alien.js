@@ -22,7 +22,7 @@ export class WorldController {
         this.scene = new Scene();
         this.camera = new OrthographicCamera(-1, 1, 1, -1, 0, 1);
 
-        // Fullscreen triangle
+        // Global geometries
         this.screenTriangle = getFullscreenTriangle();
 
         this.screen = new Mesh(this.screenTriangle);

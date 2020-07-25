@@ -29,9 +29,9 @@ export class MuteButton extends Interface {
             bottom: 20,
             width: this.width + 20,
             height: this.height + 20,
-            opacity: 0,
             cursor: 'pointer',
-            pointerEvents: 'none'
+            pointerEvents: 'none',
+            opacity: 0
         });
     }
 
@@ -198,11 +198,11 @@ export class MuteButton extends Interface {
         tween(this, { progress: 1 }, 1000, 'easeInOutExpo', () => {
             this.needsUpdate = false;
             this.animatedIn = true;
+
+            this.css({ pointerEvents: 'auto' });
         });
 
         this.tween({ opacity: 1 }, 400, 'easeOutCubic');
-
-        this.css({ pointerEvents: 'auto' });
     };
 
     hideButton = () => {

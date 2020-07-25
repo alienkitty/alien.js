@@ -9,17 +9,17 @@ import { Assets } from '../../loaders/Assets.js';
 import { WebAudioParam } from './WebAudioParam.js';
 import { Sound } from './Sound.js';
 
-export class WebAudio {
-    static init(assets) {
-        const AudioContext = window.AudioContext || window.webkitAudioContext;
+const AudioContext = window.AudioContext || window.webkitAudioContext;
 
-        if (!AudioContext) {
+export class WebAudio {
+    static context = AudioContext ? new AudioContext() : null;
+
+    static init(assets = {}) {
+        if (!this.context) {
             return;
         }
 
         this.sounds = {};
-
-        this.context = new AudioContext();
 
         this.output = this.context.createGain();
         this.output.connect(this.context.destination);
@@ -96,9 +96,15 @@ export class WebAudio {
         }
     }
 
-    static fadeInAndPlay(id, volume, loop, time, ease, delay = 0) {
+    static fadeInAndPlay(id, volume, loop, time, ease, delay = 0, complete, update) {
         if (!this.context) {
             return;
+        }
+
+        if (typeof delay !== 'number') {
+            update = complete;
+            complete = delay;
+            delay = 0;
         }
 
         const sound = this.sounds[id];
@@ -109,13 +115,19 @@ export class WebAudio {
 
             this.trigger(id);
 
-            tween(sound.gain, { value: volume }, time, ease, delay);
+            tween(sound.gain, { value: volume }, time, ease, delay, complete, update);
         }
     }
 
-    static fadeOutAndStop(id, time, ease, delay = 0) {
+    static fadeOutAndStop(id, time, ease, delay = 0, complete, update) {
         if (!this.context) {
             return;
+        }
+
+        if (typeof delay !== 'number') {
+            update = complete;
+            complete = delay;
+            delay = 0;
         }
 
         const sound = this.sounds[id];
@@ -128,7 +140,11 @@ export class WebAudio {
 
                 sound.stopping = false;
                 sound.stop();
-            });
+
+                if (complete) {
+                    complete();
+                }
+            }, update);
 
             sound.stopping = true;
         }
@@ -139,7 +155,7 @@ export class WebAudio {
             return;
         }
 
-        tween(this.gain, { value: 0 }, 300, 'easeOutSine');
+        this.gain.fade(0, 300);
     }
 
     static unmute() {
@@ -147,7 +163,17 @@ export class WebAudio {
             return;
         }
 
-        tween(this.gain, { value: 1 }, 500, 'easeOutSine');
+        this.gain.fade(1, 500);
+    }
+
+    static resume() {
+        if (!this.context) {
+            return;
+        }
+
+        if (this.context.state === 'suspended') {
+            this.context.resume();
+        }
     }
 
     static remove(id) {

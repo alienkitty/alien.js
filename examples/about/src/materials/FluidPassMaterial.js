@@ -9,7 +9,6 @@ import fragmentShader from '../shaders/FluidPass.frag.js';
 export class FluidPassMaterial extends RawShaderMaterial {
     constructor() {
         super({
-            type: 'FluidPassMaterial',
             defines: {
                 NUM_POINTERS: Global.NUM_POINTERS,
                 MAX_ITERATIONS: '5.0'

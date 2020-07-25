@@ -49,11 +49,11 @@ export class ProgressCanvas extends Interface {
         this.needsUpdate = true;
 
         tween(this, { progress }, 500, 'easeOutCubic', () => {
+            this.needsUpdate = false;
+
             if (this.progress >= 1) {
                 this.complete();
             }
-
-            this.needsUpdate = false;
         });
     };
 

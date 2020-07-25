@@ -37,8 +37,6 @@ export class AssetLoader extends Loader {
 
         if (/\.(jpe?g|png|gif|svg)$/.test(path)) {
             promise = Assets.loadImage(path);
-        } else if (/\.js$/.test(path)) {
-            promise = Assets.loadScript(path);
         } else {
             promise = fetch(path, Assets.options).then(response => {
                 if (/\.(mp3|m4a|ogg|wav|aiff?)$/.test(path)) {

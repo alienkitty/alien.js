@@ -47,8 +47,6 @@ gsap.config({
     }
 });
 
-export { gsap } from 'gsap';
-
 /**
  * Global requestAnimationFrame event loop.
  *
@@ -61,6 +59,23 @@ export { gsap } from 'gsap';
  * ticker.add(loop);
  */
 export const ticker = gsap.ticker;
+
+/**
+ * Manually update the global timeline.
+ *
+ * See the gsap.updateRoot() documentation for usage examples.
+ * https://greensock.com/docs/v3/GSAP/gsap.updateRoot()
+ *
+ * @export
+ * @param {number} time Time in milliseconds.
+ * @returns {void}
+ * @example
+ * gsap.ticker.remove(gsap.updateRoot);
+ * updateRoot(time);
+ */
+export function updateRoot(time) {
+    gsap.updateRoot(time * 0.001);
+}
 
 /**
  * Converts a common name for an easing function to the corresponding GSAP format.

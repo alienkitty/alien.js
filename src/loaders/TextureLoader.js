@@ -4,10 +4,10 @@
 
 import {
     LinearFilter,
+    MathUtils,
     RGBAFormat,
     RGBFormat,
-    Texture,
-    Math as ThreeMath
+    Texture
 } from 'three';
 
 import { Device } from '../config/Device.js';
@@ -71,7 +71,7 @@ export class TextureLoader extends Loader {
             texture.image = image;
             texture.format = /jpe?g/.test(path) ? RGBFormat : RGBAFormat;
 
-            if (!ThreeMath.isPowerOfTwo(image.width, image.height)) {
+            if (!MathUtils.isPowerOfTwo(image.width, image.height)) {
                 texture.minFilter = LinearFilter;
                 texture.generateMipmaps = false;
             }

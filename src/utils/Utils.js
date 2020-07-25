@@ -3,21 +3,21 @@
  */
 
 export function degrees(radians) {
-    return radians * (180 / Math.PI);
+    return radians * 180 / Math.PI;
 }
 
 export function radians(degrees) {
-    return degrees * (Math.PI / 180);
+    return degrees * Math.PI / 180;
 }
 
 export function clamp(value, min, max) {
     return Math.max(min, Math.min(max, value));
 }
 
-export function range(value, oldMin, oldMax, newMin, newMax, isClamp) {
+export function range(value, oldMin, oldMax, newMin, newMax, clamped) {
     const newValue = (value - oldMin) * (newMax - newMin) / (oldMax - oldMin) + newMin;
 
-    if (isClamp) {
+    if (clamped) {
         return clamp(newValue, newMin, newMax);
     }
 

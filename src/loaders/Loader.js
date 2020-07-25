@@ -35,9 +35,9 @@ export class Loader {
     }
 
     complete() {
-        this.events.emit(Events.COMPLETE);
-
         this.resolve();
+
+        this.events.emit(Events.COMPLETE);
 
         if (this.callback) {
             this.callback();

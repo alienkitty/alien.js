@@ -81,32 +81,4 @@ export class Assets {
 
         return promise;
     }
-
-    static loadScript(path, callback) {
-        const script = document.createElement('script');
-
-        script.src = this.getPath(path);
-
-        document.head.appendChild(script);
-
-        const promise = new Promise((resolve, reject) => {
-            script.onload = () => {
-                resolve(script);
-
-                script.onload = null;
-            };
-
-            script.onerror = event => {
-                reject(event);
-
-                script.onerror = null;
-            };
-        });
-
-        if (callback) {
-            promise.then(callback);
-        }
-
-        return promise;
-    }
 }

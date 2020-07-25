@@ -225,6 +225,7 @@ src
 │   ├── ImageBitmapLoaderThread.js
 │   ├── Loader.js
 │   ├── MultiLoader.js
+│   ├── OBJLoaderThread.js
 │   └── TextureLoader.js
 │
 ├── materials

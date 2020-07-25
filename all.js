@@ -15,6 +15,7 @@ export { MultiLoader } from './src/loaders/MultiLoader.js';
 export { ImageBitmapLoader } from './src/loaders/ImageBitmapLoader.js';
 export { ImageBitmapLoaderThread } from './src/loaders/ImageBitmapLoaderThread.js';
 export { TextureLoader } from './src/loaders/TextureLoader.js';
+export { OBJLoaderThread } from './src/loaders/OBJLoaderThread.js';
 
 // Utils
 export * from './src/utils/Tween.js';
@@ -38,3 +39,4 @@ export * from './src/utils/world/Utils3D.js';
 // Dependencies
 export * from 'gsap';
 export * from 'three';
+export * from 'three/examples/jsm/loaders/OBJLoader.js';

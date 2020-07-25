@@ -1,7 +1,7 @@
 import resolve from '@rollup/plugin-node-resolve';
 
 export default {
-    input: '../index.js',
+    input: '../all.js',
     output: {
         file: '../build/alien.js',
         format: 'es'

@@ -42,3 +42,4 @@ export { Sound3D } from './src/utils/audio/Sound3D.js';
 export * from 'gsap';
 export * from 'three';
 export * from 'three/examples/jsm/loaders/OBJLoader.js';
+export * from 'three/examples/jsm/controls/OrbitControls.js';

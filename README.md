@@ -345,8 +345,11 @@ npm run build
 * [OGL](https://github.com/oframe/ogl)
 * [three.js](https://github.com/mrdoob/three.js)
 * [Post Processing](https://github.com/vanruesc/postprocessing)
+* [Oimo.js](https://github.com/lo-th/Oimo.js)
 * Bruno Simon's [Folio 2019](https://github.com/brunosimon/folio-2019).
 * Pierfrancesco Soffritti's [Doodles](https://github.com/PierfrancescoSoffritti/doodles).
+* Jaume Sanchez Elias' [WebVR Physics](https://github.com/spite/WebVR-Physics).
+* Jaume Sanchez Elias' [Codevember 2017](https://github.com/spite/codevember-2017).
 * Jaume Sanchez Elias' [Codevember 2016](https://github.com/spite/codevember-2016).
 * Jaume Sanchez Elias' [Wagner](https://github.com/spite/Wagner).
 * Active Theory's [Finding Love Shaders](https://github.com/activetheory/Finding-Love-Shaders).

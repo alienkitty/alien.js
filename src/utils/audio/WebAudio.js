@@ -30,21 +30,37 @@ export class WebAudio {
 
         this.gain = new WebAudioParam(this, 'output', 'gain', 1);
 
+        this.input = this.output;
+
         for (const path in assets) {
-            this.createSound(basename(path), assets[path]);
+            this.createSound(this, basename(path), assets[path]);
         }
     }
 
-    static createSound(id, buffer) {
-        const sound = new Sound(this, id, buffer);
+    static createSound(parent, id, buffer, bypass) {
+        if (typeof id !== 'string') {
+            bypass = buffer;
+            buffer = id;
+            id = parent;
+            parent = this;
+        }
+
+        const sound = new Sound(parent, id, buffer, bypass);
 
         this.sounds[id] = sound;
 
         return this.sounds[id];
     }
 
-    static createStream(id, path) {
-        const sound = new Sound(this, id, null);
+    static createStream(parent, id, path, bypass) {
+        if (typeof id !== 'string') {
+            bypass = path;
+            path = id;
+            id = parent;
+            parent = this;
+        }
+
+        const sound = new Sound(parent, id, null, bypass);
         const audio = new Audio();
 
         audio.crossOrigin = Assets.crossOrigin;
@@ -52,7 +68,7 @@ export class WebAudio {
         audio.loop = sound.loop;
         audio.src = Assets.getPath(path);
         sound.source = this.context.createMediaElementSource(audio);
-        sound.source.connect(sound.stereo ? sound.stereo : sound.output);
+        sound.source.connect(sound.stereo || sound.output);
         sound.element = audio;
 
         this.sounds[id] = sound;
@@ -119,7 +135,9 @@ export class WebAudio {
 
             this.trigger(id);
 
-            tween(sound.gain, { value: volume }, time, ease, delay, complete, update);
+            sound.ready().then(() => {
+                tween(sound.gain, { value: volume }, time, ease, delay, complete, update);
+            });
         }
     }
 
@@ -137,18 +155,20 @@ export class WebAudio {
         const sound = this.sounds[id];
 
         if (sound && sound.playing) {
-            tween(sound.gain, { value: 0 }, time, ease, delay, () => {
-                if (!sound.stopping) {
-                    return;
-                }
+            sound.ready().then(() => {
+                tween(sound.gain, { value: 0 }, time, ease, delay, () => {
+                    if (!sound.stopping) {
+                        return;
+                    }
 
-                sound.stopping = false;
-                sound.stop();
+                    sound.stopping = false;
+                    sound.stop();
 
-                if (complete) {
-                    complete();
-                }
-            }, update);
+                    if (complete) {
+                        complete();
+                    }
+                }, update);
+            });
 
             sound.stopping = true;
         }

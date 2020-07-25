@@ -35,6 +35,8 @@ export { Sound } from './src/utils/audio/Sound.js';
 
 // 3D
 export * from './src/utils/world/Utils3D.js';
+export { WebAudio3D } from './src/utils/audio/WebAudio3D.js';
+export { Sound3D } from './src/utils/audio/Sound3D.js';
 
 // Dependencies
 export * from 'gsap';

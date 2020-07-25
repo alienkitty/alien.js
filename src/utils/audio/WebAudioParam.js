@@ -8,6 +8,10 @@ export class WebAudioParam {
         this.node = node;
         this.param = param;
         this.alpha = alpha;
+
+        if (this.parent[this.node]) {
+            this.parent[this.node][this.param].setValueAtTime(this.alpha, this.parent.context.currentTime);
+        }
     }
 
     get value() {

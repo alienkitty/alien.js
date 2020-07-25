@@ -6,17 +6,17 @@ import { Device } from '../../config/Device.js';
 import { WebAudioParam } from './WebAudioParam.js';
 
 export class Sound {
-    constructor({ context, output }, id, buffer) {
-        this.context = context;
+    constructor(parent, id, buffer, bypass) {
+        this.context = parent.context;
         this.id = id;
         this.buffer = buffer;
         this.loop = false;
         this.playing = false;
 
         this.output = this.context.createGain();
-        this.output.connect(output);
+        this.output.connect(parent.input);
 
-        if (this.context.createStereoPanner) {
+        if (this.context.createStereoPanner && !bypass) {
             this.stereo = this.context.createStereoPanner();
             this.stereo.connect(this.output);
         }
@@ -24,6 +24,8 @@ export class Sound {
         this.gain = new WebAudioParam(this, 'output', 'gain', 1);
         this.stereoPan = new WebAudioParam(this, 'stereo', 'pan', 0);
         this.playbackRate = new WebAudioParam(this, 'source', 'playbackRate', 1);
+
+        this.input = this.stereo || this.output;
 
         if (!Device.mobile || this.context.state === 'running') {
             this.load();
@@ -51,12 +53,10 @@ export class Sound {
             this.load();
         }
 
-        this.ready().then(() => {
-            this.output.gain.cancelScheduledValues(this.context.currentTime);
+        this.context.resume().then(this.ready).then(() => {
             this.output.gain.setValueAtTime(this.gain.value, this.context.currentTime);
 
             if (this.stereo) {
-                this.stereo.pan.cancelScheduledValues(this.context.currentTime);
                 this.stereo.pan.setValueAtTime(this.stereoPan.value, this.context.currentTime);
             }
 
@@ -72,10 +72,11 @@ export class Sound {
                 this.source = this.context.createBufferSource();
                 this.source.buffer = this.buffer;
                 this.source.loop = this.loop;
-                this.source.playbackRate.cancelScheduledValues(this.context.currentTime);
-                this.source.playbackRate.setValueAtTime(this.playbackRate.value, this.context.currentTime);
-                this.source.connect(this.stereo ? this.stereo : this.output);
                 this.source.start();
+
+                this.source.playbackRate.setValueAtTime(this.playbackRate.value, this.context.currentTime);
+
+                this.source.connect(this.input);
             }
         });
     }

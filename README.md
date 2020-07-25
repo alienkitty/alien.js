@@ -251,7 +251,9 @@ src
 │   ├── audio
 │   │   │
 │   │   ├── Sound.js
+│   │   ├── Sound3D.js
 │   │   ├── WebAudio.js
+│   │   ├── WebAudio3D.js
 │   │   └── WebAudioParam.js
 │   │
 │   ├── world

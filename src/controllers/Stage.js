@@ -1,9 +1,11 @@
 import { Events } from '../config/Events.js';
 import { Interface } from '../utils/Interface.js';
 
-export const Stage = new Interface(document.getElementById('root'));
+export var Stage;
 
-{
+if (typeof window !== 'undefined') {
+    Stage = new Interface(document.getElementById('root'));
+
     window.addEventListener('popstate', onPopState);
     window.addEventListener('keydown', onKeyDown);
     window.addEventListener('keyup', onKeyUp);

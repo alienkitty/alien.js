@@ -222,6 +222,7 @@ src
 │   ├── Assets.js
 │   ├── FontLoader.js
 │   ├── ImageBitmapLoader.js
+│   ├── ImageBitmapLoaderThread.js
 │   ├── Loader.js
 │   ├── MultiLoader.js
 │   └── TextureLoader.js
@@ -259,7 +260,6 @@ src
 │   ├── Cluster.js
 │   ├── Component.js
 │   ├── EventEmitter.js
-│   ├── ImageBitmapThread.js
 │   ├── Interface.js
 │   ├── LinkedList.js
 │   ├── ObjectPool.js
@@ -295,10 +295,6 @@ App (main thread)
 └── Thread (instance thread)
     │
     ├── shared (navigator.hardwareConcurrency)
-    │
-    ├── importScript
-    ├── importClass
-    ├── loadFunction
     │
     └── events
         │

@@ -25,7 +25,6 @@
     "new-parens": "error",
     "no-inner-declarations": "off",
     "no-return-await": "error",
-    "no-var": "error",
     "object-curly-spacing": ["error", "always"],
     "object-shorthand":  ["error", "always"],
     "one-var": ["error", { "initialized": "never" }],

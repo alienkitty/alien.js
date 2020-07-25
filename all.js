@@ -13,6 +13,7 @@ export { AssetLoader } from './src/loaders/AssetLoader.js';
 export { FontLoader } from './src/loaders/FontLoader.js';
 export { MultiLoader } from './src/loaders/MultiLoader.js';
 export { ImageBitmapLoader } from './src/loaders/ImageBitmapLoader.js';
+export { ImageBitmapLoaderThread } from './src/loaders/ImageBitmapLoaderThread.js';
 export { TextureLoader } from './src/loaders/TextureLoader.js';
 
 // Utils
@@ -25,7 +26,6 @@ export { LinkedList } from './src/utils/LinkedList.js';
 export { ObjectPool } from './src/utils/ObjectPool.js';
 export { Cluster } from './src/utils/Cluster.js';
 export { Thread } from './src/utils/Thread.js';
-export { ImageBitmapThread } from './src/utils/ImageBitmapThread.js';
 
 // Audio
 export { WebAudio } from './src/utils/audio/WebAudio.js';

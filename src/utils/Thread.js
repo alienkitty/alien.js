@@ -8,57 +8,89 @@ import { Assets } from '../loaders/Assets.js';
 import { EventEmitter } from './EventEmitter.js';
 import { Cluster } from './Cluster.js';
 
-const THREAD = /* js */`
-var selfRef = self;
-
-self.addEventListener('message', ({ data }) => {
-    if (data.message && data.message.fn) {
-        self[data.message.fn](data.message);
-    } else if (data.code) {
-        self.eval(data.code);
-    } else if (data.importScript) {
-        importScripts(data.path);
-    }
-});
-`;
-
 export class Thread extends EventEmitter {
     static count = navigator.hardwareConcurrency || 4;
+    static params = {};
 
-    static shared(list) {
+    static shared(params) {
         if (!this.threads) {
+            this.params = params;
+            this.params.chunks = this.chunks;
             this.threads = new Cluster(Thread, this.count);
         }
 
-        return !list ? this.threads.get() : this.threads;
+        return !params ? this.threads.get() : this.threads;
     }
 
-    static upload(object) {
-        const threads = this.shared(true);
-
-        for (let i = 0, l = threads.array.length; i < l; i++) {
-            threads.array[i].loadFunction(object);
+    static upload(...objects) {
+        if (!this.chunks) {
+            this.chunks = [];
         }
+
+        objects.forEach(object => this.chunks.push(getConstructorName(object), object));
     }
 
-    constructor() {
+    constructor({
+        imports = [],
+        classes = [],
+        controller = [],
+        chunks = []
+    } = Thread.params) {
         super();
 
-        this.worker = new Worker(URL.createObjectURL(new Blob([THREAD], { type: 'text/javascript' })));
+        const code = [];
+
+        imports.forEach(bundle => {
+            const [path, ...named] = bundle;
+
+            code.push(`import { ${named.join(', ')} } from '${absolute(Assets.getPath(path))}';`);
+        });
+
+        if (classes.length) {
+            code.push(classes.map(object => object.toString()).join('\n\n'));
+        }
+
+        if (controller.length) {
+            controller.forEach(object => {
+                if (typeof object === 'string') {
+                    this.createMethod(object);
+                } else {
+                    code.push(`${object.toString()}\n\nnew ${getConstructorName(object)}();`);
+                }
+            });
+        } else {
+            code.push('addEventListener(\'message\', ({ data }) => self[data.message.fn].call(self, data.message));');
+
+            chunks.forEach(object => {
+                if (typeof object === 'string') {
+                    this.createMethod(object);
+                } else {
+                    code.push(`self.${getConstructorName(object)}=${object.toString()};`);
+                }
+            });
+        }
+
+        this.worker = new Worker(URL.createObjectURL(new Blob([code.join('\n\n')], { type: 'text/javascript' })), { type: 'module' });
 
         this.addListeners();
     }
 
     addListeners() {
-        this.worker.addEventListener('message', ({ data }) => {
-            if (data.event) {
-                this.emit(data.event, data.message);
-            } else if (data.id) {
-                this.emit(data.id, data.message);
-                this.off(data.id);
-            }
-        });
+        this.worker.addEventListener('message', this.onMessage);
     }
+
+    removeListeners() {
+        this.worker.removeEventListener('message', this.onMessage);
+    }
+
+    onMessage = ({ data }) => {
+        if (data.event) {
+            this.emit(data.event, data.message);
+        } else if (data.id) {
+            this.emit(data.id, data.message);
+            this.off(data.id);
+        }
+    };
 
     createMethod(name) {
         this[name] = (message = {}, callback) => {
@@ -72,47 +104,25 @@ export class Thread extends EventEmitter {
         };
     }
 
-    importScript(path) {
-        path = absolute(Assets.getPath(path));
-
-        this.worker.postMessage({ importScript: true, path });
-    }
-
-    importClasses(...objects) {
-        objects.forEach(object => this.importClass(object));
-    }
-
-    importClass(object) {
-        const code = object.toString();
-
-        this.worker.postMessage({ code });
-    }
-
-    loadFunctions(...objects) {
-        objects.forEach(object => this.loadFunction(object));
-    }
-
-    loadFunction(object) {
-        let code = object.toString();
-        const name = getConstructorName(object);
-
-        code = `self.${name}=${code};`;
-
-        this.createMethod(name);
-
-        this.worker.postMessage({ code });
-    }
-
     send(name, message = {}, callback) {
-        const id = guid();
-
-        message.id = id;
         message.fn = name;
 
         if (callback) {
+            const id = guid();
+
+            message.id = id;
+
             this.on(id, callback);
         }
 
         this.worker.postMessage({ message }, message.buffer);
+    }
+
+    destroy() {
+        this.removeListeners();
+
+        this.worker.terminate();
+
+        return super.destroy();
     }
 }

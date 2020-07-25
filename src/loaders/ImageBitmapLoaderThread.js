@@ -2,12 +2,12 @@
  * @author pschroen / https://ufo.ai/
  */
 
-import { absolute } from './Utils.js';
+import { absolute } from '../utils/Utils.js';
 
-import { Assets } from '../loaders/Assets.js';
-import { Thread } from './Thread.js';
+import { Thread } from '../utils/Thread.js';
+import { Assets } from './Assets.js';
 
-export class ImageBitmapThread {
+export class ImageBitmapLoaderThread {
     static init() {
         Thread.upload(loadImage);
 
@@ -18,8 +18,12 @@ export class ImageBitmapThread {
                 return createImageBitmap(blob, params);
             }).then(bitmap => {
                 postMessage({ id, message: bitmap }, [bitmap]);
-            }).catch(event => {
-                postMessage({ id, message: { error: event } });
+            }).catch(error => {
+                if (error instanceof Error) {
+                    error = error.name + ': ' + error.message;
+                }
+
+                postMessage({ id, message: { error } });
             });
         }
     }

@@ -9,7 +9,11 @@ import { Assets } from '../../loaders/Assets.js';
 import { WebAudioParam } from './WebAudioParam.js';
 import { Sound } from './Sound.js';
 
-const AudioContext = window.AudioContext || window.webkitAudioContext;
+var AudioContext;
+
+if (typeof window !== 'undefined') {
+    AudioContext = window.AudioContext || window.webkitAudioContext;
+}
 
 export class WebAudio {
     static context = AudioContext ? new AudioContext() : null;

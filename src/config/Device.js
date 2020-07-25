@@ -8,6 +8,10 @@ export class Device {
     static phone = this.mobile && !this.tablet;
 
     static webgl = (() => {
+        if (typeof window === 'undefined') {
+            return;
+        }
+
         const contextOptions = {
             failIfMajorPerformanceCaveat: true
         };

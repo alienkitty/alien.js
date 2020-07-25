@@ -3,7 +3,7 @@
  */
 
 import { Thread } from '../utils/Thread.js';
-import { ImageBitmapThread } from '../utils/ImageBitmapThread.js';
+import { ImageBitmapLoaderThread } from './ImageBitmapLoaderThread.js';
 import { Assets } from './Assets.js';
 import { Loader } from './Loader.js';
 
@@ -38,7 +38,7 @@ export class ImageBitmapLoader extends Loader {
         let promise;
 
         if (Thread.threads) {
-            promise = ImageBitmapThread.load(path, Assets.options, this.options);
+            promise = ImageBitmapLoaderThread.load(path, Assets.options, this.options);
         } else {
             promise = fetch(path, Assets.options).then(response => {
                 return response.blob();

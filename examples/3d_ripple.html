@@ -13,7 +13,7 @@
 <body>
     <div id="root"></div>
     <script type="module">
-        import { AmbientLight, Assets, Color, Events, Group, Interface, LinearFilter, Mesh, MeshStandardMaterial, PerspectiveCamera, PlaneBufferGeometry, PointLight, Scene, Stage, Texture, Uniform, Vector2, WebGLRenderer, clearTween, delayedCall, getFrustum, ticker } from '../build/alien.js';
+        import { Assets, Color, DirectionalLight, Events, Group, HemisphereLight, Interface, LinearFilter, Mesh, MeshStandardMaterial, PerspectiveCamera, PlaneBufferGeometry, Scene, Stage, Texture, Uniform, Vector2, WebGLRenderer, clearTween, delayedCall, getFrustum, ticker } from '../build/alien.js';
 
         class Config {
             static BG_COLOR = '#0e0e0e';
@@ -114,7 +114,7 @@
                     map: this.texture.grid,
                     // map: this.texture.displace,
                     displacementMap: this.texture.displace,
-                    displacementScale: 5,
+                    displacementScale: 0.3,
                     transparent: true,
                     depthWrite: false,
                     depthTest: false,
@@ -395,7 +395,7 @@
                 this.scene = new Scene();
                 this.scene.background = new Color(Config.BG_COLOR);
                 this.camera = new PerspectiveCamera(25);
-                this.camera.near = 1;
+                this.camera.near = 0.1;
                 this.camera.far = 1000;
                 this.camera.position.z = 100;
 
@@ -407,12 +407,11 @@
             }
 
             static initLights() {
-                const ambientLight = new AmbientLight(0xffffff);
-                this.scene.add(ambientLight);
+                this.scene.add(new HemisphereLight(0x606060, 0x404040));
 
-                const pointLight = new PointLight(0xffffff, 0.2);
-                pointLight.position.z = 10000;
-                this.scene.add(pointLight);
+                const light = new DirectionalLight(0xffffff);
+                light.position.set(1, 1, 1);
+                this.scene.add(light);
             }
 
             /**

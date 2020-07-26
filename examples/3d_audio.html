@@ -13,7 +13,7 @@
 <body>
     <div id="root"></div>
     <script type="module">
-        import { AmbientLight, AssetLoader, Assets, Color, Events, Fog, Group, MathUtils, Mesh, MeshStandardMaterial, Object3D, PerspectiveCamera, PointLight, Scene, Sound3D, SphereBufferGeometry, Stage, Thread, Uniform, Vector2, Vector3, WebAudio, WebAudio3D, WebGLRenderer, clamp, delayedCall, getFrustum, gsap, range, updateRoot, wait } from '../build/alien.js';
+        import { AssetLoader, Assets, Color, DirectionalLight, Events, Fog, Group, HemisphereLight, MathUtils, Mesh, MeshStandardMaterial, Object3D, PerspectiveCamera, PointLight, Scene, Sound3D, SphereBufferGeometry, Stage, Thread, Uniform, Vector2, Vector3, WebAudio, WebAudio3D, WebGLRenderer, clamp, delayedCall, getFrustum, gsap, range, updateRoot, wait } from '../build/alien.js';
 
         import { World } from 'https://unpkg.com/oimo/build/oimo.module.js';
 
@@ -27,7 +27,7 @@
         }
 
         class Global {
-            static BALL_X = 45;
+            static BALL_X = 22.5;
         }
 
         class TetherPhysicsThread {
@@ -69,11 +69,11 @@
                 const ball = this.bodies[0];
 
                 // Ball joint
-                this.world.add({ name: 'body', pos: [0, 15, 0] });
-                this.world.add({ type: 'jointDistance', body1: 'body', body2: 'ball', pos1: [0, 15, 0], pos2: [0, 15, 0], min: 0, max: ball.pos.x });
+                this.world.add({ name: 'body', pos: [0, 3.75, 0] });
+                this.world.add({ type: 'jointDistance', body1: 'body', body2: 'ball', pos1: [0, 3.75, 0], pos2: [0, 3.75, 0], min: 0, max: ball.pos.x / 2 });
 
                 // Ball initial motion
-                ball.linearVelocity.set(0, 0, -100);
+                ball.linearVelocity.set(0, 0, -25);
 
                 this.buffer = new Float32Array(shapes.length * 8);
 
@@ -147,7 +147,6 @@
                 this.tether = tether;
                 this.meshes = [];
                 this.shapes = [];
-                this.density = 1000;
                 this.promise = new Promise(resolve => this.resolve = resolve);
 
                 this.initBuffer();
@@ -203,7 +202,7 @@
                 }
 
                 const config = [
-                    100, // The density of the shape.
+                    1, // The density of the shape.
                     0, // The coefficient of friction of the shape.
                     0, // The coefficient of restitution of the shape.
                     1, // The bits of the collision groups to which the shape belongs.
@@ -211,7 +210,7 @@
                 ];
 
                 if (paddle) {
-                    config[0] = this.density;
+                    config[0] = 100;
                     object.kinematic = true;
                 }
 
@@ -250,7 +249,7 @@
             };
 
             onContact = ({ force }) => {
-                force = (new Vector3()).fromArray(force).length() / this.density;
+                force = (new Vector3()).fromArray(force).length();
 
                 if (force > 0) {
                     AudioController.trigger('gong', force);
@@ -285,8 +284,8 @@
             }
 
             initMesh() {
-                this.size = new Vector3(2, 24, 24);
-                this.geometry = new SphereBufferGeometry(2, 24, 24);
+                this.size = new Vector3(0.5, 0.5, 0.5);
+                this.geometry = new SphereBufferGeometry(0.5, 24, 24);
 
                 this.material = new MeshStandardMaterial({
                     emissive: 0xffffff
@@ -294,7 +293,7 @@
 
                 this.mesh = new Mesh(this.geometry, this.material);
 
-                this.position.set(0, 0, 25);
+                this.position.set(0, 0, 6.25);
 
                 this.add(this.mesh);
             }
@@ -313,8 +312,8 @@
             }
 
             initMesh() {
-                this.size = new Vector3(5, 32, 32);
-                this.geometry = new SphereBufferGeometry(5, 32, 32);
+                this.size = new Vector3(1.25, 1.25, 1.25);
+                this.geometry = new SphereBufferGeometry(1.25, 32, 32);
 
                 this.material = new MeshStandardMaterial({
                     color: Config.BG_COLOR,
@@ -534,11 +533,11 @@
                 // 3D scene
                 this.scene = new Scene();
                 this.scene.background = new Color(Config.BG_COLOR);
-                this.scene.fog = new Fog(Config.BG_COLOR, 1, 250);
+                this.scene.fog = new Fog(Config.BG_COLOR, 1, 62.5);
                 this.camera = new PerspectiveCamera(30);
-                this.camera.near = 1;
-                this.camera.far = 4000;
-                this.camera.position.z = 150;
+                this.camera.near = 0.1;
+                this.camera.far = 1000;
+                this.camera.position.z = 37.5;
 
                 // Global uniforms
                 this.resolution = new Uniform(new Vector2());
@@ -548,12 +547,11 @@
             }
 
             static initLights() {
-                const ambientLight = new AmbientLight(0xffffff);
-                this.scene.add(ambientLight);
+                this.scene.add(new HemisphereLight(0x606060, 0x404040));
 
-                const pointLight = new PointLight(0xffffff, 0.2);
-                pointLight.position.z = 10000;
-                this.scene.add(pointLight);
+                const light = new DirectionalLight(0xffffff);
+                light.position.set(1, 1, 1);
+                this.scene.add(light);
             }
 
             static initAudio() {
@@ -589,6 +587,7 @@
                 Assets.cache = true;
 
                 this.last = performance.now();
+                this.delta = 0;
                 this.frame = 0;
 
                 this.initWorld();

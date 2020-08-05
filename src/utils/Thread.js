@@ -14,7 +14,7 @@ export class Thread extends EventEmitter {
 
     static shared(params) {
         if (!this.threads) {
-            this.params = params;
+            this.params = params || {};
             this.params.chunks = this.chunks;
             this.threads = new Cluster(Thread, this.count);
         }

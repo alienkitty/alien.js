@@ -207,6 +207,8 @@
                     y: Mouse.tilt.y
                 };
 
+                this.lerpSpeed = 0.04;
+
                 this.initHTML();
                 this.initViews();
 
@@ -260,9 +262,9 @@
              */
 
             onUpdate = () => {
-                // this.mouse.lerp(Mouse.tilt, 0.04);
-                this.mouse.x += (Mouse.tilt.x - this.mouse.x) * 0.04;
-                this.mouse.y += (Mouse.tilt.y - this.mouse.y) * 0.04;
+                // this.mouse.lerp(Mouse.tilt, this.lerpSpeed);
+                this.mouse.x += (Mouse.tilt.x - this.mouse.x) * this.lerpSpeed;
+                this.mouse.y += (Mouse.tilt.y - this.mouse.y) * this.lerpSpeed;
                 this.rotate.css({
                     rotationX: this.mouse.y * 20,
                     rotationY: this.mouse.x * 15

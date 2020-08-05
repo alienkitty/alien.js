@@ -13,6 +13,7 @@ export class AudioController {
         this.water = {};
         this.multiplier = 8;
         this.easing = 0.97;
+        this.lerpSpeed = 0.07;
 
         if (!Global.SOUND) {
             WebAudio.gain.value = 0;
@@ -129,9 +130,9 @@ export class AudioController {
                 if (this.water[params[0]] && this.water[params[0]].sound) {
                     const sound = this.water[params[0]].sound;
 
-                    sound.gain.value += (params[1] - sound.gain.value) * 0.07;
-                    sound.stereoPan.value += (params[2] - sound.stereoPan.value) * 0.07;
-                    sound.playbackRate.value += (params[3] - sound.playbackRate.value) * 0.07;
+                    sound.gain.value += (params[1] - sound.gain.value) * this.lerpSpeed;
+                    sound.stereoPan.value += (params[2] - sound.stereoPan.value) * this.lerpSpeed;
+                    sound.playbackRate.value += (params[3] - sound.playbackRate.value) * this.lerpSpeed;
                 }
                 break;
             case 'about_section':

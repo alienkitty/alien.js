@@ -7,6 +7,7 @@ import { WebAudioParam } from './WebAudioParam.js';
 
 export class Sound {
     constructor(parent, id, buffer, bypass) {
+        this.parent = parent;
         this.context = parent.context;
         this.id = id;
         this.buffer = buffer;
@@ -47,8 +48,6 @@ export class Sound {
     }
 
     play() {
-        this.playing = true;
-
         if (!this.ready) {
             this.load();
         }
@@ -78,6 +77,8 @@ export class Sound {
 
                 this.source.connect(this.input);
             }
+
+            this.playing = true;
         });
     }
 
@@ -89,5 +90,23 @@ export class Sound {
         }
 
         this.playing = false;
+    }
+
+    destroy() {
+        if (this.element) {
+            this.element.pause();
+            this.element.src = '';
+        } else {
+            this.source.stop();
+            this.source.buffer = null;
+        }
+
+        this.source.disconnect();
+
+        for (const prop in this) {
+            this[prop] = null;
+        }
+
+        return null;
     }
 }

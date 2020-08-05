@@ -33,51 +33,78 @@ export class WebAudio {
         this.input = this.output;
 
         for (const path in assets) {
-            this.createSound(this, basename(path), assets[path]);
+            this.add(this, basename(path), assets[path]);
         }
     }
 
-    static createSound(parent, id, buffer, bypass) {
-        if (typeof id !== 'string') {
+    static add(parent, id, buffer, bypass) {
+        if (!this.context) {
+            return;
+        }
+
+        if (typeof parent === 'string') {
             bypass = buffer;
             buffer = id;
             id = parent;
             parent = this;
         }
 
-        const sound = new Sound(parent, id, buffer, bypass);
+        let sound;
+
+        if (typeof buffer === 'string') {
+            sound = new Sound(parent, id, null, bypass);
+
+            const audio = new Audio();
+            audio.crossOrigin = Assets.crossOrigin;
+            audio.autoplay = false;
+            audio.loop = sound.loop;
+            audio.src = Assets.getPath(buffer);
+
+            sound.source = this.context.createMediaElementSource(audio);
+            sound.source.connect(sound.input);
+            sound.element = audio;
+        } else {
+            sound = new Sound(parent, id, buffer, bypass);
+        }
 
         this.sounds[id] = sound;
 
-        return this.sounds[id];
+        return sound;
     }
 
-    static createStream(parent, id, path, bypass) {
-        if (typeof id !== 'string') {
-            bypass = path;
-            path = id;
-            id = parent;
+    static remove(id) {
+        if (!this.context) {
+            return;
+        }
+
+        const sound = this.sounds[id];
+
+        if (sound) {
+            sound.destroy();
+        }
+
+        delete this.sounds[id];
+    }
+
+    static clone(parent, from, to, bypass) {
+        if (!this.context) {
+            return;
+        }
+
+        if (typeof parent === 'string') {
+            bypass = to;
+            to = from;
+            from = parent;
             parent = this;
         }
 
-        const sound = new Sound(parent, id, null, bypass);
-        const audio = new Audio();
+        const sound = this.sounds[from];
 
-        audio.crossOrigin = Assets.crossOrigin;
-        audio.autoplay = false;
-        audio.loop = sound.loop;
-        audio.src = Assets.getPath(path);
-        sound.source = this.context.createMediaElementSource(audio);
-        sound.source.connect(sound.stereo || sound.output);
-        sound.element = audio;
+        if (sound) {
+            return this.add(parent, to, sound.buffer, bypass);
+        }
 
-        this.sounds[id] = sound;
-
-        return this.sounds[id];
-    }
-
-    static get(id) {
-        return this.sounds[id];
+        return sound;
     }
 
     static trigger(id) {
@@ -94,6 +121,8 @@ export class WebAudio {
         if (sound) {
             sound.play();
         }
+
+        return sound;
     }
 
     static play(id, volume = 1, loop) {
@@ -114,6 +143,8 @@ export class WebAudio {
 
             this.trigger(id);
         }
+
+        return sound;
     }
 
     static fadeInAndPlay(id, volume, loop, time, ease, delay = 0, complete, update) {
@@ -139,6 +170,8 @@ export class WebAudio {
                 tween(sound.gain, { value: volume }, time, ease, delay, complete, update);
             });
         }
+
+        return sound;
     }
 
     static fadeOutAndStop(id, time, ease, delay = 0, complete, update) {
@@ -154,7 +187,7 @@ export class WebAudio {
 
         const sound = this.sounds[id];
 
-        if (sound && sound.playing) {
+        if (sound) {
             sound.ready().then(() => {
                 tween(sound.gain, { value: 0 }, time, ease, delay, () => {
                     if (!sound.stopping) {
@@ -172,6 +205,8 @@ export class WebAudio {
 
             sound.stopping = true;
         }
+
+        return sound;
     }
 
     static mute() {
@@ -200,39 +235,18 @@ export class WebAudio {
         }
     }
 
-    static remove(id) {
+    static destroy() {
         if (!this.context) {
             return;
         }
 
-        const sound = this.sounds[id];
-
-        if (sound && sound.source) {
-            if (sound.element) {
-                sound.element.pause();
-                sound.element.src = '';
-            } else {
-                sound.source.stop();
-                sound.source.buffer = null;
-                sound.buffer = null;
+        for (const id in this.sounds) {
+            if (this.sounds[id] && this.sounds[id].destroy) {
+                this.sounds[id].destroy();
             }
-
-            sound.source.disconnect();
-            sound.source = null;
-            sound.playing = false;
-
-            delete this.sounds[id];
         }
-    }
 
-    static destroy() {
-        if (this.context) {
-            for (const id in this.sounds) {
-                this.remove(id);
-            }
-
-            this.context.close();
-        }
+        this.context.close();
 
         for (const prop in this) {
             this[prop] = null;

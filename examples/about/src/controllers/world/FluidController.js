@@ -36,8 +36,8 @@ export class FluidController {
         // Render targets
         this.renderTargetA = new WebGLRenderTarget(this.width, this.height, {
             type: HalfFloatType,
-            depthBuffer: false,
-            stencilBuffer: false
+            stencilBuffer: false,
+            depthBuffer: false
         });
         this.renderTargetA.texture.generateMipmaps = false;
         this.renderTargetB = this.renderTargetA.clone();

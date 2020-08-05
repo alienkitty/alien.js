@@ -80,6 +80,8 @@ export class Preloader {
     static onComplete = async () => {
         this.removeListeners();
 
+        this.loader = this.loader.destroy();
+
         await this.view.animateOut();
         this.view = this.view.destroy();
 

@@ -335,13 +335,6 @@ npm run build
 
 ## See also
 
-* [rollup-starter-app](https://github.com/rollup/rollup-starter-app)
-* [rollup-starter-code-splitting](https://github.com/rollup/rollup-starter-code-splitting)
-* [Writing a Simple MVC App in Plain JavaScript](https://www.taniarascia.com/javascript-mvc-todo-app/)
-* [Class fields](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Classes/Class_fields)
-
-## Inspiration
-
 * [OGL](https://github.com/oframe/ogl)
 * [three.js](https://github.com/mrdoob/three.js)
 * [Post Processing](https://github.com/vanruesc/postprocessing)

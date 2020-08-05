@@ -13,8 +13,7 @@ export class TrackerText extends Interface {
             top: '50%',
             marginTop: -9,
             width: 145,
-            height: 11,
-            opacity: 0
+            height: 11
         });
 
         this.text = new Interface('.text');
@@ -51,13 +50,5 @@ export class TrackerText extends Interface {
         if (data.latency) {
             this.latency.text(`${data.latency}ms`);
         }
-    };
-
-    animateIn = () => {
-        this.css({ opacity: 1 });
-    };
-
-    animateOut = () => {
-        this.css({ opacity: 0 });
     };
 }

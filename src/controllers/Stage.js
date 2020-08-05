@@ -11,7 +11,6 @@ if (typeof window !== 'undefined') {
     window.addEventListener('keyup', onKeyUp);
     window.addEventListener('keypress', onKeyPress);
     window.addEventListener('resize', onResize);
-    window.addEventListener('orientationchange', onResize);
     document.addEventListener('visibilitychange', onVisibility);
 
     onResize();

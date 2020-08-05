@@ -74,9 +74,9 @@ export class Sound3D extends Object3D {
         }
 
         if (buffer) {
-            this.sound = WebAudio.createSound(this, id, buffer, true);
+            this.sound = WebAudio.add(this, id, buffer, true);
         } else {
-            this.sound = WebAudio.createSound(this, guid(), WebAudio.get(id).buffer, true);
+            this.sound = WebAudio.clone(this, id, guid(), true);
         }
     }
 

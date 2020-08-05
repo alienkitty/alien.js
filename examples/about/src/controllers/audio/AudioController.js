@@ -101,7 +101,7 @@ export class AudioController {
             this.water[id].lastEventTime = performance.now();
             this.water[id].lastMouseX = normalX;
             this.water[id].lastMouseY = normalY;
-            this.water[id].sound = WebAudio.createSound(id, WebAudio.get('water_loop').buffer);
+            this.water[id].sound = WebAudio.clone('water_loop', id);
 
             WebAudio.play(id, 0, true);
         }
@@ -120,21 +120,21 @@ export class AudioController {
 
         switch (event) {
             case 'bass_drum':
-                WebAudio.play('bass_drum');
-                WebAudio.fadeOutAndStop('bass_drum', 2000, 'easeOutSine');
+                WebAudio.play('bass_drum').gain.fade(0, 2000);
                 break;
             case 'fluid_start':
                 WebAudio.fadeInAndPlay('deep_spacy_loop', 0.2, true, 2000, 'linear');
                 break;
-            case 'mouse_move':
-                if (this.water[params[0]] && this.water[params[0]].sound) {
-                    const sound = this.water[params[0]].sound;
+            case 'mouse_move': {
+                const sound = this.water[params[0]] && this.water[params[0]].sound;
 
+                if (sound && sound.playing) {
                     sound.gain.value += (params[1] - sound.gain.value) * this.lerpSpeed;
                     sound.stereoPan.value += (params[2] - sound.stereoPan.value) * this.lerpSpeed;
                     sound.playbackRate.value += (params[3] - sound.playbackRate.value) * this.lerpSpeed;
                 }
                 break;
+            }
             case 'about_section':
                 tween(WebAudio.gain, { value: 0.3 }, 1000, 'easeOutSine');
                 break;

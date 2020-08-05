@@ -14,6 +14,10 @@ export class Component {
     }
 
     add(child) {
+        if (!this.children) {
+            return;
+        }
+
         if (child.destroy) {
             this.children.push(child);
 
@@ -28,6 +32,10 @@ export class Component {
     }
 
     remove(child) {
+        if (!this.children) {
+            return;
+        }
+
         if (child.group && this.group && this.group.remove) {
             this.group.remove(child.group);
         }
@@ -50,6 +58,10 @@ export class Component {
     }
 
     delayedCall(time, callback, ...params) {
+        if (!this.timeouts) {
+            return;
+        }
+
         const timeout = delayedCall(time, () => {
             this.clearTimeout(timeout);
 
@@ -62,6 +74,10 @@ export class Component {
     }
 
     clearTimeout(callback) {
+        if (!this.timeouts) {
+            return;
+        }
+
         clearTween(callback);
 
         const index = this.timeouts.indexOf(callback);
@@ -72,6 +88,10 @@ export class Component {
     }
 
     clearTimeouts() {
+        if (!this.timeouts) {
+            return;
+        }
+
         for (let i = this.timeouts.length - 1; i >= 0; i--) {
             this.clearTimeout(this.timeouts[i]);
         }
@@ -80,6 +100,10 @@ export class Component {
     }
 
     destroy() {
+        if (!this.children) {
+            return;
+        }
+
         if (this.parent && this.parent.remove) {
             this.parent.remove(this);
         }

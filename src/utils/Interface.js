@@ -40,10 +40,18 @@ export class Interface {
     }
 
     bounds() {
+        if (!this.element) {
+            return;
+        }
+
         return this.element.getBoundingClientRect();
     }
 
     add(child) {
+        if (!this.children) {
+            return;
+        }
+
         if (child.destroy) {
             this.children.push(child);
 
@@ -60,6 +68,10 @@ export class Interface {
     }
 
     remove(child) {
+        if (!this.children) {
+            return;
+        }
+
         if (child.element) {
             child.element.parentNode.removeChild(child.element);
         } else if (child.nodeName) {
@@ -74,10 +86,18 @@ export class Interface {
     }
 
     clone() {
+        if (!this.element) {
+            return;
+        }
+
         return new Interface(this.element.cloneNode(true));
     }
 
     empty() {
+        if (!this.element) {
+            return;
+        }
+
         for (let i = this.children.length - 1; i >= 0; i--) {
             if (this.children[i] && this.children[i].destroy) {
                 this.children[i].destroy();
@@ -92,12 +112,20 @@ export class Interface {
     }
 
     css(props) {
+        if (!this.element) {
+            return;
+        }
+
         this.setStyle(props);
 
         return this;
     }
 
     attr(props) {
+        if (!this.element) {
+            return;
+        }
+
         this.setAttribute(props);
 
         return this;
@@ -114,6 +142,10 @@ export class Interface {
     }
 
     delayedCall(time, callback, ...params) {
+        if (!this.timeouts) {
+            return;
+        }
+
         const timeout = delayedCall(time, () => {
             this.clearTimeout(timeout);
 
@@ -126,6 +158,10 @@ export class Interface {
     }
 
     clearTimeout(callback) {
+        if (!this.timeouts) {
+            return;
+        }
+
         clearTween(callback);
 
         const index = this.timeouts.indexOf(callback);
@@ -136,6 +172,10 @@ export class Interface {
     }
 
     clearTimeouts() {
+        if (!this.timeouts) {
+            return;
+        }
+
         for (let i = this.timeouts.length - 1; i >= 0; i--) {
             this.clearTimeout(this.timeouts[i]);
         }
@@ -144,6 +184,10 @@ export class Interface {
     }
 
     text(str) {
+        if (!this.element) {
+            return;
+        }
+
         if (typeof str === 'undefined') {
             return this.element.textContent;
         } else {
@@ -154,6 +198,10 @@ export class Interface {
     }
 
     html(str) {
+        if (!this.element) {
+            return;
+        }
+
         if (typeof str === 'undefined') {
             return this.element.innerHTML;
         } else {
@@ -193,6 +241,10 @@ export class Interface {
     }
 
     destroy() {
+        if (!this.children) {
+            return;
+        }
+
         if (this.parent && this.parent.remove) {
             this.parent.remove(this);
         }

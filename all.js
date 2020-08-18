@@ -47,6 +47,7 @@ export { CopyMaterial } from './src/materials/CopyMaterial.js';
 export { FXAAMaterial } from './src/materials/FXAAMaterial.js';
 export { LuminosityMaterial } from './src/materials/LuminosityMaterial.js';
 export { NormalMaterial } from './src/materials/NormalMaterial.js';
+export { PoissonDiscBlurMaterial } from './src/materials/PoissonDiscBlurMaterial.js';
 export { UnrealBloomBlurMaterial } from './src/materials/UnrealBloomBlurMaterial.js';
 export { UnrealBloomCompositeMaterial } from './src/materials/UnrealBloomCompositeMaterial.js';
 

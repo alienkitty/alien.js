@@ -13,7 +13,7 @@
 <body>
     <div id="root"></div>
     <script type="module">
-        import { BasicMaterial, Color, ColorMaterial, DirectionalLight, Events, FXAAMaterial, Group, HemisphereLight, ImageBitmapLoaderThread, Mesh, MeshNormalMaterial, MeshStandardMaterial, NormalMaterial, OrbitControls, OrthographicCamera, PerspectiveCamera, Scene, SphereBufferGeometry, Stage, TextureLoader, Thread, Uniform, Vector2, WebGLRenderTarget, WebGLRenderer, getFullscreenTriangle, ticker } from '../build/alien.js';
+        import { Color, DirectionalLight, Events, FXAAMaterial, Group, HemisphereLight, Mesh, MeshStandardMaterial, OrthographicCamera, PerspectiveCamera, Scene, SphereBufferGeometry, Stage, Uniform, Vector2, WebGLRenderTarget, WebGLRenderer, getFullscreenTriangle, ticker } from '../build/alien.js';
 
         import periodic3d from '../src/shaders/modules/noise/periodic3d.glsl.js';
 
@@ -39,10 +39,6 @@
             initMesh() {
                 this.geometry = new SphereBufferGeometry(1, 80, 80);
 
-                // this.material = new NormalMaterial();
-                // this.material = new ColorMaterial('#f00');
-                // this.material = new BasicMaterial(new TextureLoader().load('assets/images/alienkitty.png'));
-                // this.material = new MeshNormalMaterial();
                 this.material = new MeshStandardMaterial({
                     roughness: 0
                 });
@@ -141,7 +137,6 @@
             static init() {
                 this.initWorld();
                 this.initLights();
-                this.initControls();
             }
 
             static initWorld() {
@@ -175,10 +170,6 @@
                 this.scene.add(light);
             }
 
-            static initControls() {
-                this.controls = new OrbitControls(this.camera, this.renderer.domElement);
-            }
-
             /**
              * Public methods
              */
@@ -202,19 +193,12 @@
 
         class App {
             static async init() {
-                this.initThread();
                 this.initWorld();
                 this.initViews();
                 this.initControllers();
 
                 this.addListeners();
                 this.onResize();
-            }
-
-            static initThread() {
-                ImageBitmapLoaderThread.init();
-
-                Thread.shared();
             }
 
             static initWorld() {

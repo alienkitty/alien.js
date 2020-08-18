@@ -40,11 +40,15 @@ export { Sound3D } from './src/utils/audio/Sound3D.js';
 
 // Materials
 export { BasicMaterial } from './src/materials/BasicMaterial.js';
+export { BloomCompositeMaterial } from './src/materials/BloomCompositeMaterial.js';
 export { BlurDirectionX, BlurDirectionY, BlurMaterial } from './src/materials/BlurMaterial.js';
 export { ColorMaterial } from './src/materials/ColorMaterial.js';
 export { CopyMaterial } from './src/materials/CopyMaterial.js';
 export { FXAAMaterial } from './src/materials/FXAAMaterial.js';
+export { LuminosityMaterial } from './src/materials/LuminosityMaterial.js';
 export { NormalMaterial } from './src/materials/NormalMaterial.js';
+export { UnrealBloomBlurMaterial } from './src/materials/UnrealBloomBlurMaterial.js';
+export { UnrealBloomCompositeMaterial } from './src/materials/UnrealBloomCompositeMaterial.js';
 
 // Dependencies
 export * from 'gsap';

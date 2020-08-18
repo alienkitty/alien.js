@@ -24,14 +24,39 @@ export function range(value, oldMin, oldMax, newMin, newMax, clamped) {
     return newValue;
 }
 
-export function random(min, max, precision = 0) {
-    const multiplier = Math.pow(10, precision);
+export function mix(a, b, alpha) {
+    return a * (1 - alpha) + b * alpha;
+}
 
-    return Math.round((Math.random() * (max - min) + min) * multiplier) / multiplier;
+export function step(edge, value) {
+    return value < edge ? 0 : 1;
+}
+
+export function smoothStep(min, max, value) {
+    const x = Math.max(0, Math.min(1, (value - min) / (max - min)));
+    return x * x * (3 - 2 * x);
+}
+
+export function fract(value) {
+    return value - Math.floor(value);
+}
+
+export function lerp(target, value, alpha) {
+    return value + ((target - value) * alpha);
+}
+
+export function mod(value, n) {
+    return (value % n + n) % n;
 }
 
 export function shuffle(array) {
     return array.sort(() => Math.random() - 0.5);
+}
+
+export function random(min, max, precision = 0) {
+    const multiplier = Math.pow(10, precision);
+
+    return Math.round((Math.random() * (max - min) + min) * multiplier) / multiplier;
 }
 
 export function headsTails(heads, tails) {

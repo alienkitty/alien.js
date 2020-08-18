@@ -1,4 +1,4 @@
-// Based on {@link module:three/examples/jsm/postprocessing/UnrealBloomPass.js} by spidersharma03 and bhouston
+// Based on {@link module:three/examples/jsm/postprocessing/UnrealBloomPass.js} by spidersharma and bhouston
 
 export default /* glsl */`
 #define MAX_KERNEL_RADIUS 11

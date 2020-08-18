@@ -1,4 +1,4 @@
-// 2D noise from https://www.shadertoy.com/view/4dS3Wd by morgan3d
+// 2D noise based on https://www.shadertoy.com/view/4dS3Wd by morgan3d
 
 import random from '../random/random.glsl.js';
 

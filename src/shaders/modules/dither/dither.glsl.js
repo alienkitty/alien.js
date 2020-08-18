@@ -1,11 +1,10 @@
-// Based on https://github.com/egret-labs/egret3d
+// Based on https://www.shadertoy.com/view/MslGR8 by hornet
 
 import random from '../random/random.glsl.js';
 
 export default /* glsl */`
 ${random}
 
-// Based on https://www.shadertoy.com/view/MslGR8
 vec3 dither(vec3 color) {
     // Calculate grid position
     float grid_position = random(gl_FragCoord.xy);

@@ -21,8 +21,7 @@ export class TextureLoader extends Loader {
         super(assets, callback);
 
         this.defaultOptions = {
-            imageOrientation: 'flipY',
-            premultiplyAlpha: 'none'
+            imageOrientation: 'flipY'
         };
 
         this.options = this.defaultOptions;

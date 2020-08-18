@@ -38,6 +38,13 @@ export * from './src/utils/world/Utils3D.js';
 export { WebAudio3D } from './src/utils/audio/WebAudio3D.js';
 export { Sound3D } from './src/utils/audio/Sound3D.js';
 
+// Materials
+export { BasicMaterial } from './src/materials/BasicMaterial.js';
+export { ColorMaterial } from './src/materials/ColorMaterial.js';
+export { CopyMaterial } from './src/materials/CopyMaterial.js';
+export { FXAAMaterial } from './src/materials/FXAAMaterial.js';
+export { NormalMaterial } from './src/materials/NormalMaterial.js';
+
 // Dependencies
 export * from 'gsap';
 export * from 'three';

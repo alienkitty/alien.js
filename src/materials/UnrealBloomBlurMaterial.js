@@ -1,5 +1,3 @@
-// Based on {@link module:three/examples/jsm/postprocessing/UnrealBloomPass.js} by spidersharma and bhouston
-
 import { NoBlending, RawShaderMaterial, Uniform, Vector2 } from 'three';
 
 import vertexShader from '../shaders/UnrealBloomBlurPass.vert.js';

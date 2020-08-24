@@ -1,12 +1,19 @@
-// Based on {@link module:three/examples/jsm/postprocessing/UnrealBloomPass.js} by spidersharma and bhouston
+import { NearestFilter, NoBlending, RawShaderMaterial, RepeatWrapping, Uniform, Vector2 } from 'three';
 
-import { NoBlending, RawShaderMaterial, Uniform } from 'three';
+import { TextureLoader } from '../loaders/TextureLoader.js';
 
 import vertexShader from '../shaders/BloomCompositePass.vert.js';
 import fragmentShader from '../shaders/BloomCompositePass.frag.js';
 
 export class BloomCompositeMaterial extends RawShaderMaterial {
     constructor(nMips) {
+        const texture = new TextureLoader().load('assets/textures/blue_noise.png');
+        texture.wrapS = RepeatWrapping;
+        texture.wrapT = RepeatWrapping;
+        texture.magFilter = NearestFilter;
+        texture.minFilter = NearestFilter;
+        texture.generateMipmaps = false;
+
         super({
             defines: {
                 NUM_MIPS: nMips
@@ -17,6 +24,8 @@ export class BloomCompositeMaterial extends RawShaderMaterial {
                 tBlur3: new Uniform(null),
                 tBlur4: new Uniform(null),
                 tBlur5: new Uniform(null),
+                tBlueNoise: new Uniform(texture),
+                uBlueNoiseTexelSize: new Uniform(new Vector2(1 / 256, 1 / 256)),
                 uBloomFactors: new Uniform(null)
             },
             vertexShader,

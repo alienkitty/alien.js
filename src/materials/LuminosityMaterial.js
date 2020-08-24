@@ -1,5 +1,3 @@
-// Based on {@link module:three/examples/jsm/shaders/LuminosityHighPassShader.js} by bhouston
-
 import { Color, NoBlending, RawShaderMaterial, Uniform } from 'three';
 
 import vertexShader from '../shaders/LuminosityPass.vert.js';

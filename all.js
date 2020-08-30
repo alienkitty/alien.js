@@ -46,6 +46,8 @@ export { Sound3D } from './src/utils/audio/Sound3D.js';
 export { BasicMaterial } from './src/materials/BasicMaterial.js';
 export { BloomCompositeMaterial } from './src/materials/BloomCompositeMaterial.js';
 export { BlurDirectionX, BlurDirectionY, BlurMaterial } from './src/materials/BlurMaterial.js';
+export { BokehBlurMaterial1 } from './src/materials/BokehBlurMaterial1.js';
+export { BokehBlurMaterial2 } from './src/materials/BokehBlurMaterial2.js';
 export { CameraMotionBlurMaterial } from './src/materials/CameraMotionBlurMaterial.js';
 export { ColorMaterial } from './src/materials/ColorMaterial.js';
 export { CopyMaterial } from './src/materials/CopyMaterial.js';

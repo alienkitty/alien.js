@@ -13,7 +13,7 @@
 <body>
     <div id="root"></div>
     <script type="module">
-        import { ACESFilmicToneMapping, AmbientLight, BloomCompositeMaterial, BlurDirectionX, BlurDirectionY, BoxGeometry, BufferAttribute, BufferGeometry, CameraMotionBlurMaterial, Color, CubeCamera, DepthTexture, DirectionalLight, Events, FXAAMaterial, Group, HemisphereLight, ImageBitmapLoaderThread, LinearMipmapLinearFilter, MathUtils, Matrix4, Mesh, MeshBasicMaterial, MeshStandardMaterial, NoBlending, OrbitControls, OrthographicCamera, PerspectiveCamera, Points, RawShaderMaterial, Scene, SphericalCubeTextureLoader, Stage, TextureLoader, Thread, Uniform, UnrealBloomBlurMaterial, Vector2, Vector3, WebGLCubeRenderTarget, WebGLRenderTarget, WebGLRenderer, getFullscreenTriangle, mix, ticker } from '../build/alien.js';
+        import { ACESFilmicToneMapping, AmbientLight, BloomCompositeMaterial, BlurDirectionX, BlurDirectionY, BoxGeometry, BufferAttribute, BufferGeometry, Color, DepthTexture, DirectionalLight, EnvironmentTextureLoader, Events, FXAAMaterial, Group, HemisphereLight, ImageBitmapLoaderThread, MathUtils, Mesh, MeshStandardMaterial, NoBlending, OrbitControls, OrthographicCamera, PerspectiveCamera, Points, RawShaderMaterial, Scene, SphericalCubeTextureLoader, Stage, TextureLoader, Thread, Uniform, UnrealBloomBlurMaterial, Vector2, WebGLRenderTarget, WebGLRenderer, getFullscreenTriangle, mix, ticker } from '../build/alien.js';
 
         import simplex3d from '../src/shaders/modules/noise/simplex3d.glsl.js';
         import depth from '../src/shaders/modules/depth/depth.glsl.js';
@@ -207,7 +207,6 @@
                 });
 
                 this.points = new Points(this.geometry, this.material);
-                // this.points.frustumCulled = false;
 
                 this.add(this.points);
             }
@@ -220,7 +219,7 @@
                 this.initMesh();
             }
 
-            initMesh() {
+            async initMesh() {
                 const { getEnvironmentTexture, getSphericalCubeTextures } = WorldController;
 
                 // Spherical cube geometry
@@ -243,32 +242,28 @@
                 // https://occlusion-roughness-metalness.glitch.me/
                 const ormMap = getSphericalCubeTextures('assets/textures/pbr/pitted_metal_orm.jpg');
 
-                const envMap = getEnvironmentTexture();
+                const envMap = await getEnvironmentTexture('assets/textures/env.jpg');
 
                 // Materials
-                this.material = new MeshBasicMaterial({
-                    envMap
-                });
+                this.material = [];
 
-                // this.material = [];
-
-                // for (let i = 0; i < 6; i++) {
-                //     this.material[i] = new MeshStandardMaterial({
-                //         color: new Color(1, 1, 1),
-                //         roughness: 1,
-                //         metalness: 1,
-                //         map: map[i],
-                //         aoMap: ormMap[i],
-                //         aoMapIntensity: 1,
-                //         roughnessMap: ormMap[i],
-                //         metalnessMap: ormMap[i],
-                //         normalMap: normalMap[i],
-                //         normalScale: new Vector2(1, 1),
-                //         envMap,
-                //         envMapIntensity: 0.5,
-                //         transparent: true
-                //     });
-                // }
+                for (let i = 0; i < 6; i++) {
+                    this.material[i] = new MeshStandardMaterial({
+                        color: Config.BG_COLOR,
+                        roughness: 1,
+                        metalness: 1,
+                        map: map[i],
+                        aoMap: ormMap[i],
+                        aoMapIntensity: 1,
+                        roughnessMap: ormMap[i],
+                        metalnessMap: ormMap[i],
+                        normalMap: normalMap[i],
+                        normalScale: new Vector2(1, 1),
+                        envMap,
+                        envMapIntensity: 0.5,
+                        transparent: true
+                    });
+                }
 
                 this.mesh = new Mesh(this.geometry, this.material);
 
@@ -280,12 +275,10 @@
         }
 
         class RenderManager {
-            static init(renderer, scene, camera, cubeCamera, view, dust) {
+            static init(renderer, scene, camera, dust) {
                 this.renderer = renderer;
                 this.scene = scene;
                 this.camera = camera;
-                this.cubeCamera = cubeCamera;
-                this.view = view;
                 this.dust = dust;
 
                 this.bloomStrength = 0.3;
@@ -316,7 +309,6 @@
                 this.renderTargetA = this.renderTarget.clone();
                 this.renderTargetB = this.renderTarget.clone();
                 this.renderTargetC = this.renderTarget.clone();
-                this.renderTargetD = this.renderTarget.clone();
 
                 this.renderTargetsHorizontal = [];
                 this.renderTargetsVertical = [];
@@ -368,16 +360,6 @@
 
                 // Composite material
                 this.compositeMaterial = new CompositeMaterial();
-
-                // Motion blur material
-                this.motionBlurMaterial = new CameraMotionBlurMaterial();
-                this.motionBlurMaterial.uniforms.tDepth.value = this.renderTarget.depthTexture;
-                this.motionBlurMaterial.uniforms.uVelocityFactor.value = this.camera.far / 1000;
-
-                this.previousMatrixWorldInverse = new Matrix4();
-                this.previousProjectionMatrix = new Matrix4();
-                this.previousCameraPosition = new Vector3();
-                this.tmpMatrix = new Matrix4();
             }
 
             /**
@@ -395,7 +377,6 @@
                 this.renderTargetA.setSize(width, height);
                 this.renderTargetB.setSize(width, height);
                 this.renderTargetC.setSize(width, height);
-                this.renderTargetD.setSize(width, height);
 
                 width = Math.round(width / 2);
                 height = Math.round(height / 2);
@@ -411,7 +392,7 @@
                 }
             };
 
-            static update = (time, delta) => {
+            static update = () => {
                 const renderer = this.renderer;
                 const scene = this.scene;
                 const camera = this.camera;
@@ -429,21 +410,12 @@
                 const renderTargetA = this.renderTargetA;
                 const renderTargetB = this.renderTargetB;
                 const renderTargetC = this.renderTargetC;
-                const renderTargetD = this.renderTargetD;
                 const renderTargetsHorizontal = this.renderTargetsHorizontal;
                 const renderTargetsVertical = this.renderTargetsVertical;
 
                 // Background pass
                 renderer.setRenderTarget(renderTargetA);
                 renderer.render(this.backgroundScene, camera);
-
-                // Environment pass (dust)
-                // this.view.visible = false;
-
-                // this.cubeCamera.position.copy(this.view.position);
-                this.cubeCamera.update(this.renderer, this.dustScene);
-
-                // this.view.visible = true;
 
                 // Scene pass
                 renderer.setRenderTarget(renderTarget);
@@ -483,40 +455,19 @@
                 renderer.setRenderTarget(renderTargetC);
                 renderer.render(this.dustScene, camera);
 
-                // Composite pass
+                // Composite pass (render to screen)
                 this.compositeMaterial.uniforms.tBackground.value = renderTargetA.texture;
                 this.compositeMaterial.uniforms.tScene.value = renderTargetB.texture;
                 this.compositeMaterial.uniforms.tBloom.value = renderTargetsHorizontal[0].texture;
                 this.compositeMaterial.uniforms.tDust.value = renderTargetC.texture;
                 this.screen.material = this.compositeMaterial;
-                renderer.setRenderTarget(renderTargetD);
-                renderer.render(screenScene, screenCamera);
-
-                // Motion blur pass (render to screen)
-                this.motionBlurMaterial.uniforms.uDelta.value = delta;
-                this.motionBlurMaterial.uniforms.uClipToWorldMatrix.value
-                    .getInverse(this.camera.matrixWorldInverse).multiply(this.tmpMatrix.getInverse(this.camera.projectionMatrix));
-                this.motionBlurMaterial.uniforms.uWorldToClipMatrix.value
-                    .copy(this.camera.projectionMatrix).multiply(this.camera.matrixWorldInverse);
-                this.motionBlurMaterial.uniforms.uPreviousWorldToClipMatrix.value
-                    .copy(this.previousProjectionMatrix.multiply(this.previousMatrixWorldInverse));
-                this.motionBlurMaterial.uniforms.uCameraMove.value.copy(this.camera.position).sub(this.previousCameraPosition);
-
-                this.motionBlurMaterial.uniforms.tMap.value = renderTargetD.texture;
-                this.screen.material = this.motionBlurMaterial;
                 renderer.setRenderTarget(null);
                 renderer.render(screenScene, screenCamera);
-
-                this.previousMatrixWorldInverse.copy(this.camera.matrixWorldInverse);
-                this.previousProjectionMatrix.copy(this.camera.projectionMatrix);
-                this.previousCameraPosition.copy(this.camera.position);
             };
         }
 
         class WorldController {
             static init() {
-                this.tileSize = 256;
-
                 this.initWorld();
                 this.initLights();
                 this.initLoaders();
@@ -537,14 +488,6 @@
                 this.camera.near = 0.5;
                 this.camera.far = 50;
                 this.camera.position.z = 10;
-
-                // Environment cube camera
-                this.renderTargetCube = new WebGLCubeRenderTarget(this.tileSize, {
-                    minFilter: LinearMipmapLinearFilter,
-                    generateMipmaps: true
-                });
-
-                this.cubeCamera = new CubeCamera(this.camera.near, this.camera.far, this.renderTargetCube);
 
                 // Global geometries
                 this.screenTriangle = getFullscreenTriangle();
@@ -571,14 +514,16 @@
 
                 this.spherizeLoader = new SphericalCubeTextureLoader(this.renderer, true);
                 this.spherizeLoader.setOptions({
-                    size: this.tileSize
+                    size: 256
                 });
+
+                this.environmentLoader = new EnvironmentTextureLoader(this.renderer);
             }
 
             static initControls() {
                 this.controls = new OrbitControls(this.camera, this.renderer.domElement);
                 this.controls.enableDamping = true;
-                // this.controls.enableZoom = false;
+                this.controls.enableZoom = false;
             }
 
             /**
@@ -607,7 +552,7 @@
 
             static getSphericalCubeTextures = path => this.spherizeLoader.load(path);
 
-            static getEnvironmentTexture = () => this.renderTargetCube.texture;
+            static getEnvironmentTexture = path => this.environmentLoader.loadAsync(path);
         }
 
         class App {
@@ -637,13 +582,12 @@
                 WorldController.scene.add(this.view);
 
                 this.dust = new Dust(4000);
-                // WorldController.scene.add(this.dust);
             }
 
             static initControllers() {
-                const { renderer, scene, camera, cubeCamera } = WorldController;
+                const { renderer, scene, camera } = WorldController;
 
-                RenderManager.init(renderer, scene, camera, cubeCamera, this.view, this.dust);
+                RenderManager.init(renderer, scene, camera, this.dust);
             }
 
             static addListeners() {

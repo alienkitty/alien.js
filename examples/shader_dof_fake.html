@@ -15,12 +15,6 @@
     <script type="module">
         import { ACESFilmicToneMapping, AmbientLight, BloomCompositeMaterial, BlurDirectionX, BlurDirectionY, BoxGeometry, BufferAttribute, BufferGeometry, Color, CopyMaterial, DepthTexture, DirectionalLight, EnvironmentTextureLoader, Events, FXAAMaterial, Group, HemisphereLight, ImageBitmapLoaderThread, MathUtils, Mesh, MeshStandardMaterial, NoBlending, OrbitControls, OrthographicCamera, PerspectiveCamera, Points, RawShaderMaterial, Scene, SphericalCubeTextureLoader, Stage, TextureLoader, Thread, Uniform, UnrealBloomBlurMaterial, Vector2, WebGLRenderTarget, WebGLRenderer, getFullscreenTriangle, mix, ticker } from '../build/alien.js';
 
-        import parabola from '../src/shaders/modules/parabola/parabola.glsl.js';
-        import translate from '../src/shaders/modules/transform/translate.glsl.js';
-        import rotate from '../src/shaders/modules/transform/rotate.glsl.js';
-        import scale from '../src/shaders/modules/transform/scale.glsl.js';
-        import transform from '../src/shaders/modules/transform/transform.glsl.js';
-
         // Based on https://www.shadertoy.com/view/4lVfDt by battlebottle
 
         const vertexBokehBlur1Shader = /* glsl */`
@@ -43,23 +37,11 @@
             #define MAX_SAMPLES 28.0
 
             uniform sampler2D tMap;
-            uniform vec2 uTranslate;
-            uniform float uRotation;
-            uniform vec2 uScale;
-            uniform vec2 uTransformOrigin;
-            uniform float uRadial;
-            uniform float uParabola;
             uniform float uPower;
             uniform float uAmount;
             uniform vec2 uResolution;
 
             varying vec2 vUv;
-
-            ${parabola}
-            ${translate}
-            ${rotate}
-            ${scale}
-            ${transform}
 
             const float blurRadMax = 0.08;
             const float blurCircles = 4.0;
@@ -69,17 +51,7 @@
                 uv.x *= uResolution.x / uResolution.y;
                 uv += 0.5;
 
-                // uv = translate(uv, uTranslate);
-                // uv = rotate(uv, radians(uRotation), uTransformOrigin);
-                // uv = scale(uv, uScale, uTransformOrigin);
-
-                uv = transform(uv, translate(uTranslate) * rotate(radians(uRotation)) * scale(uScale), uTransformOrigin);
-
-                float linear = uv.y;
-                float radial = length(uv - 0.5);
-
-                float amount = mix(linear, radial, uRadial);
-                amount = mix(amount, parabola(clamp(amount, 0.0, 1.0), 1.0), uParabola);
+                float amount = length(uv - 0.5);
                 amount = pow(amount, uPower);
                 amount *= uAmount;
 
@@ -119,12 +91,6 @@
                 super({
                     uniforms: {
                         tMap: new Uniform(null),
-                        uTranslate: new Uniform(new Vector2()),
-                        uRotation: new Uniform(-45),
-                        uScale: new Uniform(new Vector2(1, 1)),
-                        uTransformOrigin: new Uniform(new Vector2(0.5, 0.5)),
-                        uRadial: new Uniform(1),
-                        uParabola: new Uniform(0),
                         uPower: new Uniform(2),
                         uAmount: new Uniform(1),
                         uResolution: new Uniform(new Vector2())
@@ -158,24 +124,12 @@
             #define MAX_SAMPLES 20.0
 
             uniform sampler2D tMap;
-            uniform vec2 uTranslate;
-            uniform float uRotation;
-            uniform vec2 uScale;
-            uniform vec2 uTransformOrigin;
-            uniform float uRadial;
-            uniform float uParabola;
             uniform float uPower;
             uniform float uAmount;
             uniform float uDebug;
             uniform vec2 uResolution;
 
             varying vec2 vUv;
-
-            ${parabola}
-            ${translate}
-            ${rotate}
-            ${scale}
-            ${transform}
 
             const float blurRadMax = 0.08;
             const float blurCircles = 3.0;
@@ -185,17 +139,7 @@
                 uv.x *= uResolution.x / uResolution.y;
                 uv += 0.5;
 
-                // uv = translate(uv, uTranslate);
-                // uv = rotate(uv, radians(uRotation), uTransformOrigin);
-                // uv = scale(uv, uScale, uTransformOrigin);
-
-                uv = transform(uv, translate(uTranslate) * rotate(radians(uRotation)) * scale(uScale), uTransformOrigin);
-
-                float linear = uv.y;
-                float radial = length(uv - 0.5);
-
-                float amount = mix(linear, radial, uRadial);
-                amount = mix(amount, parabola(clamp(amount, 0.0, 1.0), 1.0), uParabola);
+                float amount = length(uv - 0.5);
                 amount = pow(amount, uPower);
                 amount *= uAmount;
 
@@ -235,12 +179,6 @@
                 super({
                     uniforms: {
                         tMap: new Uniform(null),
-                        uTranslate: new Uniform(new Vector2()),
-                        uRotation: new Uniform(-45),
-                        uScale: new Uniform(new Vector2(1, 1)),
-                        uTransformOrigin: new Uniform(new Vector2(0.5, 0.5)),
-                        uRadial: new Uniform(1),
-                        uParabola: new Uniform(0),
                         uPower: new Uniform(2),
                         uAmount: new Uniform(1),
                         uDebug: new Uniform(0),
@@ -802,7 +740,7 @@
             static initControls() {
                 this.controls = new OrbitControls(this.camera, this.renderer.domElement);
                 this.controls.enableDamping = true;
-                // this.controls.enableZoom = false;
+                this.controls.enableZoom = false;
             }
 
             /**

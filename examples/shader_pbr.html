@@ -13,7 +13,7 @@
 <body>
     <div id="root"></div>
     <script type="module">
-        import { ACESFilmicToneMapping, AmbientLight, BloomCompositeMaterial, BlurDirectionX, BlurDirectionY, BoxGeometry, Color, DirectionalLight, EnvironmentTextureLoader, Events, FXAAMaterial, Group, HemisphereLight, ImageBitmapLoaderThread, Mesh, MeshPhysicalMaterial, NoBlending, OrbitControls, OrthographicCamera, PerspectiveCamera, RawShaderMaterial, Scene, SphericalCubeTextureLoader, Stage, TextureLoader, Thread, Uniform, UnrealBloomBlurMaterial, Vector2, WebGLRenderTarget, WebGLRenderer, getFullscreenTriangle, mix, sRGBEncoding, ticker } from '../build/alien.js';
+        import { ACESFilmicToneMapping, AmbientLight, BloomCompositeMaterial, BlurDirectionX, BlurDirectionY, BoxGeometry, Color, DirectionalLight, EnvironmentTextureLoader, Events, FXAAMaterial, Group, HemisphereLight, ImageBitmapLoaderThread, Mesh, MeshStandardMaterial, NoBlending, OrbitControls, OrthographicCamera, PerspectiveCamera, RawShaderMaterial, Scene, SphericalCubeTextureLoader, Stage, TextureLoader, Thread, Uniform, UnrealBloomBlurMaterial, Vector2, WebGLRenderTarget, WebGLRenderer, getFullscreenTriangle, mix, ticker } from '../build/alien.js';
 
         import blendAlpha from '../src/shaders/modules/blending/alpha.glsl.js';
 
@@ -105,12 +105,6 @@
                 this.geometry.faceVertexUvs[1] = this.geometry.faceVertexUvs[0];
 
                 // Textures
-                // const map = getSphericalCubeTextures('assets/textures/pbr/pitted-metal-bl/pitted-metal_albedo.png');
-                // const aoMap = getSphericalCubeTextures('assets/textures/pbr/pitted-metal-bl/pitted-metal_ao.png');
-                // const roughnessMap = getSphericalCubeTextures('assets/textures/pbr/pitted-metal-bl/pitted-metal_roughness.png');
-                // const metalnessMap = getSphericalCubeTextures('assets/textures/pbr/pitted-metal-bl/pitted-metal_metallic.png');
-                // const normalMap = getSphericalCubeTextures('assets/textures/pbr/pitted-metal-bl/pitted-metal_normal-ogl.png');
-
                 const map = getSphericalCubeTextures('assets/textures/pbr/pitted_metal_basecolor.jpg');
                 const normalMap = getSphericalCubeTextures('assets/textures/pbr/pitted_metal_normal.jpg');
 
@@ -123,18 +117,14 @@
                 this.material = [];
 
                 for (let i = 0; i < 6; i++) {
-                    this.material[i] = new MeshPhysicalMaterial({
+                    this.material[i] = new MeshStandardMaterial({
                         color: new Color(1, 1, 1),
-                        // color: Config.BG_COLOR,
                         roughness: 1,
                         metalness: 1,
                         map: map[i],
-                        // aoMap: aoMap[i],
                         aoMap: ormMap[i],
                         aoMapIntensity: 1,
-                        // roughnessMap: roughnessMap[i],
                         roughnessMap: ormMap[i],
-                        // metalnessMap: metalnessMap[i],
                         metalnessMap: ormMap[i],
                         normalMap: normalMap[i],
                         normalScale: new Vector2(1, 1),
@@ -344,7 +334,6 @@
                 // Tone mapping
                 this.renderer.toneMapping = ACESFilmicToneMapping;
                 this.renderer.toneMappingExposure = 1;
-                this.renderer.outputEncoding = sRGBEncoding;
 
                 // 3D scene
                 this.scene = new Scene();
@@ -387,7 +376,7 @@
             static initControls() {
                 this.controls = new OrbitControls(this.camera, this.renderer.domElement);
                 this.controls.enableDamping = true;
-                // this.controls.enableZoom = false;
+                this.controls.enableZoom = false;
             }
 
             /**

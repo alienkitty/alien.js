@@ -4,10 +4,10 @@
 
 import { OBJLoader } from 'three/examples/jsm/loaders/OBJLoader.js';
 
-import { absolute } from '../utils/Utils.js';
+import { absolute } from '../../utils/Utils.js';
 
-import { Thread } from '../utils/Thread.js';
-import { Assets } from './Assets.js';
+import { Thread } from '../../utils/Thread.js';
+import { Assets } from '../Assets.js';
 
 export class OBJLoaderThread {
     static init() {

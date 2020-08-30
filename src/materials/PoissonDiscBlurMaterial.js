@@ -1,6 +1,6 @@
 import { NearestFilter, NoBlending, RawShaderMaterial, RepeatWrapping, Uniform, Vector2 } from 'three';
 
-import { TextureLoader } from '../loaders/TextureLoader.js';
+import { TextureLoader } from '../loaders/world/TextureLoader.js';
 
 import vertexShader from '../shaders/PoissonDiscBlurPass.vert.js';
 import fragmentShader from '../shaders/PoissonDiscBlurPass.frag.js';

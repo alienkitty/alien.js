@@ -218,15 +218,21 @@ src
 │
 ├── loaders
 │   │
+│   ├── world
+│   │   │
+│   │   ├── EnvironmentTextureLoader.js
+│   │   ├── OBJLoaderThread.js
+│   │   ├── SphericalCubeTextureLoader.js
+│   │   ├── SpherizeTextureLoader.js
+│   │   └── TextureLoader.js
+│   │
 │   ├── AssetLoader.js
 │   ├── Assets.js
 │   ├── FontLoader.js
 │   ├── ImageBitmapLoader.js
 │   ├── ImageBitmapLoaderThread.js
 │   ├── Loader.js
-│   ├── MultiLoader.js
-│   ├── OBJLoaderThread.js
-│   └── TextureLoader.js
+│   └── MultiLoader.js
 │
 ├── materials
 │   │
@@ -258,6 +264,7 @@ src
 │   │
 │   ├── world
 │   │   │
+│   │   ├── SpherizeImage.js
 │   │   └── Utils3D.js
 │   │
 │   ├── Cluster.js

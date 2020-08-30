@@ -7,14 +7,15 @@ import {
     MathUtils,
     RGBAFormat,
     RGBFormat,
-    Texture
+    Texture,
+    sRGBEncoding
 } from 'three';
 
-import { Device } from '../config/Device.js';
-import { Thread } from '../utils/Thread.js';
-import { ImageBitmapLoaderThread } from './ImageBitmapLoaderThread.js';
-import { Assets } from './Assets.js';
-import { Loader } from './Loader.js';
+import { Device } from '../../config/Device.js';
+import { Thread } from '../../utils/Thread.js';
+import { ImageBitmapLoaderThread } from '../ImageBitmapLoaderThread.js';
+import { Assets } from '../Assets.js';
+import { Loader } from '../Loader.js';
 
 export class TextureLoader extends Loader {
     constructor(assets, callback) {
@@ -69,6 +70,7 @@ export class TextureLoader extends Loader {
 
             texture.image = image;
             texture.format = /jpe?g/.test(path) ? RGBFormat : RGBAFormat;
+            texture.encoding = sRGBEncoding;
 
             if (!MathUtils.isPowerOfTwo(image.width, image.height)) {
                 texture.minFilter = LinearFilter;
@@ -82,16 +84,16 @@ export class TextureLoader extends Loader {
                     image.close();
                 }
 
-                Assets.add(path, texture);
-
-                this.increment();
-
-                if (callback) {
-                    callback(texture);
-                }
-
                 texture.onUpdate = null;
             };
+
+            Assets.add(path, texture);
+
+            this.increment();
+
+            if (callback) {
+                callback(texture);
+            }
         }).catch(event => {
             this.increment();
 

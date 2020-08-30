@@ -14,8 +14,11 @@ export { FontLoader } from './src/loaders/FontLoader.js';
 export { MultiLoader } from './src/loaders/MultiLoader.js';
 export { ImageBitmapLoader } from './src/loaders/ImageBitmapLoader.js';
 export { ImageBitmapLoaderThread } from './src/loaders/ImageBitmapLoaderThread.js';
-export { TextureLoader } from './src/loaders/TextureLoader.js';
-export { OBJLoaderThread } from './src/loaders/OBJLoaderThread.js';
+export { TextureLoader } from './src/loaders/world/TextureLoader.js';
+export { SpherizeTextureLoader } from './src/loaders/world/SpherizeTextureLoader.js';
+export { SphericalCubeTextureLoader } from './src/loaders/world/SphericalCubeTextureLoader.js';
+export { EnvironmentTextureLoader } from './src/loaders/world/EnvironmentTextureLoader.js';
+export { OBJLoaderThread } from './src/loaders/world/OBJLoaderThread.js';
 
 // Utils
 export * from './src/utils/Tween.js';
@@ -35,5 +38,6 @@ export { Sound } from './src/utils/audio/Sound.js';
 
 // 3D
 export * from './src/utils/world/Utils3D.js';
+export { SpherizeImage } from './src/utils/world/SpherizeImage.js';
 export { WebAudio3D } from './src/utils/audio/WebAudio3D.js';
 export { Sound3D } from './src/utils/audio/Sound3D.js';

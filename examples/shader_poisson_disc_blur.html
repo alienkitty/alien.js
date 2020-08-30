@@ -53,8 +53,6 @@
 
                 this.mesh = new Mesh(this.geometry, this.material);
 
-                this.position.z = -4;
-
                 this.add(this.mesh);
             }
         }
@@ -82,24 +80,22 @@
 
                 // Render targets
                 this.renderTargetA = new WebGLRenderTarget(1, 1, {
-                    stencilBuffer: false,
                     depthBuffer: false
                 });
-                this.renderTargetA.texture.generateMipmaps = false;
 
                 this.renderTargetB = this.renderTargetA.clone();
 
                 this.renderTargetA.depthBuffer = true;
+
+                // FXAA material
+                this.fxaaMaterial = new FXAAMaterial();
+                this.fxaaMaterial.uniforms.uResolution = WorldController.resolution;
 
                 // Poisson-disc blur material
                 this.blurMaterial = new PoissonDiscBlurMaterial();
                 this.blurMaterial.uniforms.uRadius.value = this.blurFactor;
                 this.blurMaterial.uniforms.uResolution = WorldController.resolution;
                 this.blurMaterial.uniforms.uTime = WorldController.time;
-
-                // FXAA material
-                this.fxaaMaterial = new FXAAMaterial();
-                this.fxaaMaterial.uniforms.uResolution = WorldController.resolution;
             }
 
             /**
@@ -166,10 +162,9 @@
                 this.scene = new Scene();
                 this.scene.background = new Color(Config.BG_COLOR);
                 this.camera = new PerspectiveCamera(30);
-                this.camera.near = 0.1;
-                this.camera.far = 1000;
-                this.camera.position.set(0, 0, 6);
-                this.camera.lookAt(0, 0, -4);
+                this.camera.near = 0.5;
+                this.camera.far = 50;
+                this.camera.position.z = 10;
 
                 // Global geometries
                 this.screenTriangle = getFullscreenTriangle();
@@ -246,9 +241,7 @@
              */
 
             static onResize = () => {
-                const width = Stage.width;
-                const height = Stage.height;
-                const dpr = Stage.dpr;
+                const { width, height, dpr } = Stage;
 
                 WorldController.resize(width, height, dpr);
                 RenderManager.resize(width, height, dpr);

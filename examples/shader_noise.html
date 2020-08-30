@@ -194,9 +194,7 @@
              */
 
             static onResize = () => {
-                const width = Stage.width;
-                const height = Stage.height;
-                const dpr = Stage.dpr;
+                const { width, height, dpr } = Stage;
 
                 WorldController.resize(width, height, dpr);
                 RenderManager.resize(width, height, dpr);

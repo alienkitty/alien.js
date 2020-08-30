@@ -202,7 +202,7 @@
                 }
 
                 const config = [
-                    1, // The density of the shape.
+                    10, // The density of the shape.
                     0, // The coefficient of friction of the shape.
                     0, // The coefficient of restitution of the shape.
                     1, // The bits of the collision groups to which the shape belongs.
@@ -633,9 +633,7 @@
              */
 
             static onResize = () => {
-                const width = Stage.width;
-                const height = Stage.height;
-                const dpr = Stage.dpr;
+                const { width, height, dpr } = Stage;
 
                 WorldController.resize(width, height, dpr);
                 TetherController.resize(width, height);

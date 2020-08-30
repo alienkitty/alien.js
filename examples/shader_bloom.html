@@ -16,7 +16,6 @@
         import { BlurDirectionX, BlurDirectionY, BlurMaterial, Color, DirectionalLight, Events, FXAAMaterial, Group, HemisphereLight, Mesh, MeshStandardMaterial, NoBlending, OrthographicCamera, PerspectiveCamera, RawShaderMaterial, Scene, SphereBufferGeometry, Stage, Uniform, Vector2, WebGLRenderTarget, WebGLRenderer, getFullscreenTriangle, ticker } from '../build/alien.js';
 
         import periodic3d from '../src/shaders/modules/noise/periodic3d.glsl.js';
-        import blendAlpha from '../src/shaders/modules/blending/alpha.glsl.js';
 
         // Based on https://github.com/spite/perlin-experiments
 
@@ -25,7 +24,9 @@
             vec3 transformed = position + f * normal;
         `;
 
-        const vertexShader = /* glsl */`
+        import blendAlpha from '../src/shaders/modules/blending/alpha.glsl.js';
+
+        const vertexCompositeShader = /* glsl */`
             attribute vec2 uv;
             attribute vec3 position;
 
@@ -37,7 +38,7 @@
             }
         `;
 
-        const fragmentShader = /* glsl */`
+        const fragmentCompositeShader = /* glsl */`
             precision highp float;
 
             uniform sampler2D tBackground;
@@ -75,8 +76,8 @@
                         uMinBright: new Uniform(0.1247),
                         uBlurBright: new Uniform(0.4166)
                     },
-                    vertexShader,
-                    fragmentShader,
+                    vertexShader: vertexCompositeShader,
+                    fragmentShader: fragmentCompositeShader,
                     blending: NoBlending,
                     depthWrite: false,
                     depthTest: false
@@ -113,8 +114,6 @@
 
                 this.mesh = new Mesh(this.geometry, this.material);
 
-                this.position.z = -4;
-
                 this.add(this.mesh);
             }
         }
@@ -146,19 +145,21 @@
                 this.backgroundScene.background = new Color(Config.BG_COLOR);
 
                 // Render targets
-                this.renderTargetA = new WebGLRenderTarget(1, 1, {
-                    stencilBuffer: false,
+                this.renderTarget = new WebGLRenderTarget(1, 1, {
                     depthBuffer: false
                 });
-                this.renderTargetA.texture.generateMipmaps = false;
 
-                this.renderTargetB = this.renderTargetA.clone();
-                this.renderTargetB.depthBuffer = true;
+                this.renderTargetA = this.renderTarget.clone();
+                this.renderTargetB = this.renderTarget.clone();
 
-                this.renderTargetC = this.renderTargetA.clone();
+                this.renderTargetBlurA = this.renderTarget.clone();
+                this.renderTargetBlurB = this.renderTarget.clone();
 
-                this.renderTargetBlurA = this.renderTargetA.clone();
-                this.renderTargetBlurB = this.renderTargetA.clone();
+                this.renderTarget.depthBuffer = true;
+
+                // FXAA material
+                this.fxaaMaterial = new FXAAMaterial();
+                this.fxaaMaterial.uniforms.uResolution = WorldController.resolution;
 
                 // Gaussian blur materials
                 this.hBlurMaterial = new BlurMaterial(BlurDirectionX);
@@ -169,10 +170,6 @@
 
                 // Composite material
                 this.compositeMaterial = new CompositeMaterial();
-
-                // FXAA material
-                this.fxaaMaterial = new FXAAMaterial();
-                this.fxaaMaterial.uniforms.uResolution = WorldController.resolution;
             }
 
             /**
@@ -186,9 +183,9 @@
                 width = Math.round(width * dpr);
                 height = Math.round(height * dpr);
 
+                this.renderTarget.setSize(width, height);
                 this.renderTargetA.setSize(width, height);
                 this.renderTargetB.setSize(width, height);
-                this.renderTargetC.setSize(width, height);
 
                 width = Math.round(width * this.blurResolutionScale);
                 height = Math.round(height * this.blurResolutionScale);
@@ -213,9 +210,9 @@
                 const screenScene = this.screenScene;
                 const screenCamera = this.screenCamera;
 
+                const renderTarget = this.renderTarget;
                 const renderTargetA = this.renderTargetA;
                 const renderTargetB = this.renderTargetB;
-                const renderTargetC = this.renderTargetC;
                 const renderTargetBlurA = this.renderTargetBlurA;
                 const renderTargetBlurB = this.renderTargetBlurB;
 
@@ -224,18 +221,18 @@
                 renderer.render(this.backgroundScene, camera);
 
                 // Scene pass
-                renderer.setRenderTarget(renderTargetB);
+                renderer.setRenderTarget(renderTarget);
                 renderer.render(scene, camera);
 
                 // FXAA pass
-                this.fxaaMaterial.uniforms.tMap.value = renderTargetB.texture;
+                this.fxaaMaterial.uniforms.tMap.value = renderTarget.texture;
                 this.screen.material = this.fxaaMaterial;
-                renderer.setRenderTarget(renderTargetC);
+                renderer.setRenderTarget(renderTargetB);
                 renderer.render(screenScene, screenCamera);
 
                 // Two pass Gaussian blur
                 this.hBlurMaterial.uniforms.uBluriness.value = blurFactor;
-                this.hBlurMaterial.uniforms.tMap.value = renderTargetC.texture;
+                this.hBlurMaterial.uniforms.tMap.value = renderTargetB.texture;
                 this.screen.material = this.hBlurMaterial;
                 renderer.setRenderTarget(renderTargetBlurA);
                 renderer.render(screenScene, screenCamera);
@@ -248,7 +245,7 @@
 
                 // Composite pass (render to screen)
                 this.compositeMaterial.uniforms.tBackground.value = renderTargetA.texture;
-                this.compositeMaterial.uniforms.tScene.value = renderTargetC.texture;
+                this.compositeMaterial.uniforms.tScene.value = renderTargetB.texture;
                 this.compositeMaterial.uniforms.tBloom.value = renderTargetBlurB.texture;
                 this.screen.material = this.compositeMaterial;
                 renderer.setRenderTarget(null);
@@ -269,10 +266,9 @@
                 // 3D scene
                 this.scene = new Scene();
                 this.camera = new PerspectiveCamera(30);
-                this.camera.near = 0.1;
-                this.camera.far = 1000;
-                this.camera.position.set(0, 0, 6);
-                this.camera.lookAt(0, 0, -4);
+                this.camera.near = 0.5;
+                this.camera.far = 50;
+                this.camera.position.z = 10;
 
                 // Global geometries
                 this.screenTriangle = getFullscreenTriangle();
@@ -349,9 +345,7 @@
              */
 
             static onResize = () => {
-                const width = Stage.width;
-                const height = Stage.height;
-                const dpr = Stage.dpr;
+                const { width, height, dpr } = Stage;
 
                 WorldController.resize(width, height, dpr);
                 RenderManager.resize(width, height, dpr);

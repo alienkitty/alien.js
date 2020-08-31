@@ -19,8 +19,8 @@ export class FluidPassMaterial extends RawShaderMaterial {
                 uLast: new Uniform([]),
                 uVelocity: new Uniform([]),
                 uStrength: new Uniform([]),
-                uFrame: WorldController.frame,
-                uResolution: WorldController.resolution
+                uResolution: WorldController.resolution,
+                uFrame: WorldController.frame
             },
             vertexShader,
             fragmentShader,

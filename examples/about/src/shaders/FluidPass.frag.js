@@ -8,8 +8,8 @@ uniform vec2 uMouse[NUM_POINTERS];
 uniform vec2 uLast[NUM_POINTERS];
 uniform vec2 uVelocity[NUM_POINTERS];
 uniform vec2 uStrength[NUM_POINTERS];
-uniform int uFrame;
 uniform vec2 uResolution;
+uniform int uFrame;
 
 #define T(p) texture2D(tMap, (p) / uResolution.xy)
 #define length2(p) dot(p, p)

@@ -28,6 +28,8 @@
             }
 
             async initMesh() {
+                const { getSphericalCubeTextures } = WorldController;
+
                 // Spherical cube geometry
                 this.geometry = new BoxGeometry(1, 1, 1, 32, 32, 32);
 
@@ -39,7 +41,7 @@
                 this.geometry.computeVertexNormals();
 
                 // Textures
-                const map = WorldController.getSphericalCubeTextures('assets/textures/uv.jpg');
+                const map = getSphericalCubeTextures('assets/textures/uv.jpg');
 
                 // Materials
                 this.material = [];
@@ -71,11 +73,13 @@
             }
 
             static initRenderer() {
+                const { resolution, screenTriangle } = WorldController;
+
                 // Fullscreen triangle
                 this.screenScene = new Scene();
                 this.screenCamera = new OrthographicCamera(-1, 1, 1, -1, 0, 1);
 
-                this.screen = new Mesh(WorldController.screenTriangle);
+                this.screen = new Mesh(screenTriangle);
                 this.screen.frustumCulled = false;
                 this.screenScene.add(this.screen);
 
@@ -85,7 +89,7 @@
                 // FXAA material
                 this.fxaaMaterial = new FXAAMaterial();
                 this.fxaaMaterial.uniforms.tMap.value = this.renderTarget.texture;
-                this.fxaaMaterial.uniforms.uResolution = WorldController.resolution;
+                this.fxaaMaterial.uniforms.uResolution = resolution;
                 this.screen.material = this.fxaaMaterial;
             }
 

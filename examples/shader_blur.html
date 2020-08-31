@@ -37,6 +37,8 @@
             }
 
             initMesh() {
+                const { time } = WorldController;
+
                 this.geometry = new SphereBufferGeometry(1, 80, 80);
 
                 this.material = new MeshStandardMaterial({
@@ -45,7 +47,7 @@
 
                 // https://threejs.org/examples/#webgl_materials_modified
                 this.material.onBeforeCompile = shader => {
-                    shader.uniforms.time = WorldController.time;
+                    shader.uniforms.time = time;
 
                     shader.vertexShader = 'uniform float time;\n' + periodic3d + shader.vertexShader;
                     shader.vertexShader = shader.vertexShader.replace('#include <begin_vertex>', vertexShaderChunk);
@@ -71,11 +73,13 @@
             }
 
             static initRenderer() {
+                const { resolution, screenTriangle } = WorldController;
+
                 // Fullscreen triangle
                 this.screenScene = new Scene();
                 this.screenCamera = new OrthographicCamera(-1, 1, 1, -1, 0, 1);
 
-                this.screen = new Mesh(WorldController.screenTriangle);
+                this.screen = new Mesh(screenTriangle);
                 this.screen.frustumCulled = false;
                 this.screenScene.add(this.screen);
 
@@ -93,16 +97,16 @@
 
                 // FXAA material
                 this.fxaaMaterial = new FXAAMaterial();
-                this.fxaaMaterial.uniforms.uResolution = WorldController.resolution;
+                this.fxaaMaterial.uniforms.uResolution = resolution;
 
                 // Gaussian blur materials
                 this.hBlurMaterial = new BlurMaterial(BlurDirectionX);
                 this.hBlurMaterial.uniforms.uBluriness.value = this.blurFactor;
-                this.hBlurMaterial.uniforms.uResolution = WorldController.resolution;
+                this.hBlurMaterial.uniforms.uResolution = resolution;
 
                 this.vBlurMaterial = new BlurMaterial(BlurDirectionY);
                 this.vBlurMaterial.uniforms.uBluriness.value = this.blurFactor;
-                this.vBlurMaterial.uniforms.uResolution = WorldController.resolution;
+                this.vBlurMaterial.uniforms.uResolution = resolution;
 
                 // Copy material
                 this.copyMaterial = new CopyMaterial();

@@ -289,11 +289,13 @@
             }
 
             static initRenderer() {
+                const { resolution, screenTriangle } = WorldController;
+
                 // Fullscreen triangle
                 this.screenScene = new Scene();
                 this.screenCamera = new OrthographicCamera(-1, 1, 1, -1, 0, 1);
 
-                this.screen = new Mesh(WorldController.screenTriangle);
+                this.screen = new Mesh(screenTriangle);
                 this.screen.frustumCulled = false;
                 this.screenScene.add(this.screen);
 
@@ -325,7 +327,7 @@
 
                 // FXAA material
                 this.fxaaMaterial = new FXAAMaterial();
-                this.fxaaMaterial.uniforms.uResolution = WorldController.resolution;
+                this.fxaaMaterial.uniforms.uResolution = resolution;
 
                 // Gaussian blur materials
                 this.blurMaterials = [];
@@ -364,7 +366,7 @@
 
                 // Chromatic aberration material
                 this.chromaticAberrationMaterial = new ChromaticAberrationMaterial();
-                this.chromaticAberrationMaterial.uniforms.uIntensity.value = 10;
+                this.chromaticAberrationMaterial.uniforms.uIntensity.value = 4;
             }
 
             /**

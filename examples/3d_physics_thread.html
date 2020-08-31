@@ -198,7 +198,7 @@
                 }
 
                 const config = [
-                    10, // The density of the shape.
+                    4, // The density of the shape.
                     0, // The coefficient of friction of the shape.
                     0, // The coefficient of restitution of the shape.
                     1, // The bits of the collision groups to which the shape belongs.
@@ -650,14 +650,15 @@
             };
 
             static step = time => {
+                RodController.update();
+
+                updateRoot(time);
+
                 this.delta = time - this.last;
                 this.last = time;
                 this.frame++;
 
-                updateRoot(time);
-
                 WorldController.update(time, this.delta, this.frame);
-                RodController.update();
                 RenderManager.update(time, this.delta, this.frame);
             };
         }

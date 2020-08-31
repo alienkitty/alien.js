@@ -49,6 +49,7 @@ export { BlurDirectionX, BlurDirectionY, BlurMaterial } from './src/materials/Bl
 export { BokehBlurMaterial1 } from './src/materials/BokehBlurMaterial1.js';
 export { BokehBlurMaterial2 } from './src/materials/BokehBlurMaterial2.js';
 export { CameraMotionBlurMaterial } from './src/materials/CameraMotionBlurMaterial.js';
+export { ChromaticAberrationMaterial } from './src/materials/ChromaticAberrationMaterial.js';
 export { ColorMaterial } from './src/materials/ColorMaterial.js';
 export { CopyMaterial } from './src/materials/CopyMaterial.js';
 export { FXAAMaterial } from './src/materials/FXAAMaterial.js';

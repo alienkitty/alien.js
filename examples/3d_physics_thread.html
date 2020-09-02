@@ -198,7 +198,7 @@
                 }
 
                 const config = [
-                    4, // The density of the shape.
+                    2, // The density of the shape.
                     0, // The coefficient of friction of the shape.
                     0, // The coefficient of restitution of the shape.
                     1, // The bits of the collision groups to which the shape belongs.
@@ -314,7 +314,8 @@
                 this.material = new MeshStandardMaterial({
                     color: Config.BG_COLOR,
                     roughness: 0.3,
-                    metalness: 1
+                    metalness: 1,
+                    dithering: true
                 });
 
                 this.mesh = new Mesh(this.geometry, this.material);

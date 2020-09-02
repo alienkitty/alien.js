@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+    <title>Alien.js — Penrose Triangle</title>
+
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto+Mono">
+    <link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+    <div id="root"></div>
+    <script type="module">
+        import { BoxBufferGeometry, BufferAttribute, BufferGeometry, DirectionalLight, Events, FXAAMaterial, Group, MathUtils, Mesh, MeshLambertMaterial, OrthographicCamera, PlaneBufferGeometry, Scene, Stage, TextureLoader, Uniform, Vector2, WebGLRenderTarget, WebGLRenderer, getFullscreenTriangle, ticker } from '../build/alien.js';
+
+        // Based on https://codepen.io/zachgoldstein/pen/LXRXVw
+
+        class Config {
+            static BG_COLOR = '#0e0e0e';
+            static UI_COLOR = 'rgba(255, 255, 255, 0.94)';
+        }
+
+        class SceneView extends Group {
+            constructor() {
+                super();
+
+                this.initMesh();
+            }
+
+            initMesh() {
+                const { getTexture, getTextureFlipped } = WorldController;
+
+                // Textures
+                const map = getTexture('assets/textures/uv.jpg');
+                const mapFlipped = getTextureFlipped('assets/textures/uv.jpg');
+
+                // Materials
+                const material = new MeshLambertMaterial({
+                    map
+                });
+                const materialFlipped = new MeshLambertMaterial({
+                    map: mapFlipped
+                });
+
+                // Penrose triangle geometry
+                const bottomBox = new BoxBufferGeometry(50, 50, 50);
+                const bottomMesh = new Mesh(bottomBox, material);
+                bottomMesh.position.set(0, 0, -125);
+                this.add(bottomMesh);
+
+                for (let i = 0; i < 5; i++) {
+                    const mesh = bottomMesh.clone();
+                    mesh.position.z += 50 + i * 50;
+                    this.add(mesh);
+                }
+
+                const upBox = new BoxBufferGeometry(50, 50, 50);
+                const upMesh = new Mesh(upBox, material);
+                upMesh.position.set(0, 50, 125);
+                this.add(upMesh);
+
+                for (let i = 0; i < 4; i++) {
+                    const mesh = upMesh.clone();
+                    mesh.position.y += 50 + i * 50;
+                    this.add(mesh);
+                }
+
+                const topBox = new BoxBufferGeometry(50, 50, 50);
+                const topMesh = new Mesh(topBox, material);
+                topMesh.position.set(50, 250, 125);
+                this.add(topMesh);
+
+                for (let i = 0; i < 2; i++) {
+                    const mesh = topMesh.clone();
+                    mesh.position.x += 50 + i * 50;
+                    this.add(mesh);
+                }
+
+                const topPlane = new PlaneBufferGeometry(50, 50, 32);
+                const topPlaneMesh = new Mesh(topPlane, material);
+                topPlaneMesh.position.set(200, 275, 125);
+                topPlaneMesh.rotation.x = MathUtils.degToRad(-90);
+                this.add(topPlaneMesh);
+
+                const topTri = new BufferGeometry();
+                const vertices = new Float32Array([0, 0, 0, 50, 0, 0, 0, 50, 0]);
+                const uvs = new Float32Array([0, 0, 1, 0, 0, 1]);
+                topTri.setAttribute('position', new BufferAttribute(vertices, 3));
+                topTri.setAttribute('uv', new BufferAttribute(uvs, 2));
+                topTri.computeVertexNormals();
+                const topTriMesh = new Mesh(topTri, materialFlipped);
+                topTriMesh.position.set(175, 275, 150);
+                topTriMesh.scale.y = -1;
+                this.add(topTriMesh);
+
+                this.position.set(0, -62.5, 0);
+            }
+        }
+
+        class RenderManager {
+            static init(renderer, scene, camera) {
+                this.renderer = renderer;
+                this.scene = scene;
+                this.camera = camera;
+
+                this.enabled = true;
+
+                this.initRenderer();
+            }
+
+            static initRenderer() {
+                const { resolution, screenTriangle } = WorldController;
+
+                // Fullscreen triangle
+                this.screenScene = new Scene();
+                this.screenCamera = new OrthographicCamera(-1, 1, 1, -1, 0, 1);
+
+                this.screen = new Mesh(screenTriangle);
+                this.screen.frustumCulled = false;
+                this.screenScene.add(this.screen);
+
+                // Render targets
+                this.renderTarget = new WebGLRenderTarget(1, 1);
+
+                // FXAA material
+                this.fxaaMaterial = new FXAAMaterial();
+                this.fxaaMaterial.uniforms.tMap.value = this.renderTarget.texture;
+                this.fxaaMaterial.uniforms.uResolution = resolution;
+                this.screen.material = this.fxaaMaterial;
+            }
+
+            /**
+             * Public methods
+             */
+
+            static resize = (width, height, dpr) => {
+                this.renderer.setPixelRatio(dpr);
+                this.renderer.setSize(width, height);
+
+                width = Math.round(width * dpr);
+                height = Math.round(height * dpr);
+
+                this.renderTarget.setSize(width, height);
+            };
+
+            static update = () => {
+                const renderer = this.renderer;
+                const scene = this.scene;
+                const camera = this.camera;
+
+                if (!this.enabled) {
+                    renderer.setRenderTarget(null);
+                    renderer.render(scene, camera);
+                    return;
+                }
+
+                const screenScene = this.screenScene;
+                const screenCamera = this.screenCamera;
+
+                const renderTarget = this.renderTarget;
+
+                // Scene pass
+                renderer.setRenderTarget(renderTarget);
+                renderer.render(scene, camera);
+
+                // FXAA pass (render to screen)
+                renderer.setRenderTarget(null);
+                renderer.render(screenScene, screenCamera);
+            };
+        }
+
+        class WorldController {
+            static init() {
+                this.initWorld();
+                this.initLights();
+                this.initLoaders();
+            }
+
+            static initWorld() {
+                this.renderer = new WebGLRenderer({ powerPreference: 'high-performance' });
+                this.element = this.renderer.domElement;
+
+                // 2D scene
+                this.scene = new Scene();
+                this.camera = new OrthographicCamera(-1, 1, 1, -1, 0, 1000);
+                this.camera.position.set(500, 500, 500);
+                this.camera.lookAt(this.scene.position);
+
+                // Global geometries
+                this.screenTriangle = getFullscreenTriangle();
+
+                // Global uniforms
+                this.resolution = new Uniform(new Vector2());
+                this.aspect = new Uniform(1);
+                this.time = new Uniform(0);
+                this.frame = new Uniform(0);
+            }
+
+            static initLights() {
+                const light = new DirectionalLight(0xffffff, 1.8);
+                light.position.set(60, 100, 20);
+                this.scene.add(light);
+            }
+
+            static initLoaders() {
+                this.textureLoader = new TextureLoader();
+
+                this.textureLoaderFlipped = new TextureLoader();
+                this.textureLoaderFlipped.setOptions({
+                    imageOrientation: 'none'
+                });
+            }
+
+            /**
+             * Public methods
+             */
+
+            static resize = (width, height, dpr) => {
+                this.camera.left = -width / 2;
+                this.camera.right = width / 2;
+                this.camera.top = height / 2;
+                this.camera.bottom = -height / 2;
+                this.camera.updateProjectionMatrix();
+
+                width = Math.round(width * dpr);
+                height = Math.round(height * dpr);
+
+                this.resolution.value.set(width, height);
+                this.aspect.value = width / height;
+            };
+
+            static update = (time, delta, frame) => {
+                this.time.value = time;
+                this.frame.value = frame;
+            };
+
+            static getTexture = path => this.textureLoader.load(path);
+
+            static getTextureFlipped = path => this.textureLoaderFlipped.load(path);
+        }
+
+        class App {
+            static async init() {
+                this.initWorld();
+                this.initViews();
+                this.initControllers();
+
+                this.addListeners();
+                this.onResize();
+            }
+
+            static initWorld() {
+                WorldController.init();
+                Stage.add(WorldController.element);
+            }
+
+            static initViews() {
+                this.view = new SceneView();
+                WorldController.scene.add(this.view);
+            }
+
+            static initControllers() {
+                const { renderer, scene, camera } = WorldController;
+
+                RenderManager.init(renderer, scene, camera);
+            }
+
+            static addListeners() {
+                Stage.events.on(Events.RESIZE, this.onResize);
+                ticker.add(this.onUpdate);
+            }
+
+            /**
+             * Event handlers
+             */
+
+            static onResize = () => {
+                const { width, height, dpr } = Stage;
+
+                WorldController.resize(width, height, dpr);
+                RenderManager.resize(width, height, dpr);
+            };
+
+            static onUpdate = (time, delta, frame) => {
+                WorldController.update(time, delta, frame);
+                RenderManager.update(time, delta, frame);
+            };
+        }
+
+        App.init();
+    </script>
+</body>
+</html>

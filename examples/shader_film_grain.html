@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+    <title>Alien.js — Post-processing Film Grain</title>
+
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto+Mono">
+    <link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+    <div id="root"></div>
+    <script type="module">
+        import { ACESFilmicToneMapping, AmbientLight, BloomCompositeMaterial, BlurDirectionX, BlurDirectionY, BoxBufferGeometry, BufferAttribute, BufferGeometry, Color, DirectionalLight, Events, FilmGrainFXAAMaterial, Group, HemisphereLight, MathUtils, Mesh, MeshStandardMaterial, NoBlending, OrthographicCamera, PlaneBufferGeometry, RawShaderMaterial, Scene, Stage, Uniform, UnrealBloomBlurMaterial, Vector2, WebGLRenderTarget, WebGLRenderer, getFullscreenTriangle, mix, ticker } from '../build/alien.js';
+
+        import rgbshift from '../src/shaders/modules/rgbshift/rgbshift.glsl.js';
+        import blendAlpha from '../src/shaders/modules/blending/alpha.glsl.js';
+
+        const vertexCompositeShader = /* glsl */`
+            attribute vec2 uv;
+            attribute vec3 position;
+
+            varying vec2 vUv;
+
+            void main() {
+                vUv = uv;
+
+                gl_Position = vec4(position, 1.0);
+            }
+        `;
+
+        const fragmentCompositeShader = /* glsl */`
+            precision highp float;
+
+            uniform sampler2D tBackground;
+            uniform sampler2D tScene;
+            uniform sampler2D tBloom;
+            uniform float uMinBright;
+            uniform float uBlurBright;
+            uniform float uDistortion;
+
+            varying vec2 vUv;
+
+            ${rgbshift}
+            ${blendAlpha}
+
+            void main() {
+                vec4 base = texture2D(tBackground, vUv);
+                vec4 blend = texture2D(tScene, vUv);
+
+                gl_FragColor = blendAlpha(base, blend, 1.0);
+
+                float angle = length(vUv - vec2(0.5));
+                float amount = uDistortion + 0.0002;
+
+                vec3 bloom = getRGB(tBloom, vUv, angle, amount).rgb;
+                bloom.x = max(0.0, bloom.x - uMinBright);
+                bloom.y = max(0.0, bloom.y - uMinBright);
+                bloom.z = max(0.0, bloom.z - uMinBright);
+
+                gl_FragColor.rgb += bloom * uBlurBright;
+            }
+        `;
+
+        class CompositeMaterial extends RawShaderMaterial {
+            constructor() {
+                super({
+                    uniforms: {
+                        tBackground: new Uniform(null),
+                        tScene: new Uniform(null),
+                        tBloom: new Uniform(null),
+                        uMinBright: new Uniform(0),
+                        uBlurBright: new Uniform(0.6),
+                        uDistortion: new Uniform(0.00125)
+                    },
+                    vertexShader: vertexCompositeShader,
+                    fragmentShader: fragmentCompositeShader,
+                    blending: NoBlending,
+                    depthWrite: false,
+                    depthTest: false
+                });
+            }
+        }
+
+        // Based on https://codepen.io/zachgoldstein/pen/LXRXVw
+
+        class Config {
+            static BG_COLOR = '#0e0e0e';
+            static UI_COLOR = 'rgba(255, 255, 255, 0.94)';
+        }
+
+        class SceneView extends Group {
+            constructor() {
+                super();
+
+                this.initMesh();
+            }
+
+            initMesh() {
+                this.material = new MeshStandardMaterial({
+                    metalness: 1
+                });
+
+                // Penrose triangle geometry
+                const bottomBox = new BoxBufferGeometry(50, 50, 300);
+                const bottomMesh = new Mesh(bottomBox, this.material);
+                this.add(bottomMesh);
+
+                const upBox = new BoxBufferGeometry(50, 250, 50);
+                const upMesh = new Mesh(upBox, this.material);
+                upMesh.position.set(0, 150, 125);
+                this.add(upMesh);
+
+                const topBox = new BoxBufferGeometry(150, 50, 50);
+                const topMesh = new Mesh(topBox, this.material);
+                topMesh.position.set(100, 250, 125);
+                this.add(topMesh);
+
+                const topPlane = new PlaneBufferGeometry(50, 50, 32);
+                const topPlaneMesh = new Mesh(topPlane, this.material);
+                topPlaneMesh.position.set(200, 275, 125);
+                topPlaneMesh.rotation.x = MathUtils.degToRad(-90);
+                this.add(topPlaneMesh);
+
+                const topTri = new BufferGeometry();
+                const vertices = new Float32Array([0, 0, 0, 50, 0, 0, 0, 50, 0]);
+                const uvs = new Float32Array([0, 0, 1, 0, 0, 1]);
+                topTri.setAttribute('position', new BufferAttribute(vertices, 3));
+                topTri.setAttribute('uv', new BufferAttribute(uvs, 2));
+                topTri.computeVertexNormals();
+                const topTriMesh = new Mesh(topTri, this.material);
+                topTriMesh.position.set(175, 275, 150);
+                topTriMesh.scale.y = -1;
+                this.add(topTriMesh);
+
+                // Centre
+                this.position.set(0, -62.5, 0);
+            }
+        }
+
+        class RenderManager {
+            static init(renderer, scene, camera) {
+                this.renderer = renderer;
+                this.scene = scene;
+                this.camera = camera;
+
+                this.grainEffect = 0.15;
+                this.bloomStrength = 0.3;
+                this.bloomRadius = 0.75;
+                this.enabled = true;
+
+                this.initRenderer();
+            }
+
+            static initRenderer() {
+                const { resolution, screenTriangle, time } = WorldController;
+
+                // Fullscreen triangle
+                this.screenScene = new Scene();
+                this.screenCamera = new OrthographicCamera(-1, 1, 1, -1, 0, 1);
+
+                this.screen = new Mesh(screenTriangle);
+                this.screen.frustumCulled = false;
+                this.screenScene.add(this.screen);
+
+                // Background scene
+                this.backgroundScene = new Scene();
+                this.backgroundScene.background = new Color(Config.BG_COLOR);
+
+                // Render targets
+                this.renderTarget = new WebGLRenderTarget(1, 1, {
+                    anisotropy: 0,
+                    depthBuffer: false
+                });
+
+                this.renderTargetA = this.renderTarget.clone();
+                this.renderTargetB = this.renderTarget.clone();
+
+                this.renderTargetsHorizontal = [];
+                this.renderTargetsVertical = [];
+                this.nMips = 5;
+
+                for (let i = 0, l = this.nMips; i < l; i++) {
+                    this.renderTargetsHorizontal.push(this.renderTarget.clone());
+                    this.renderTargetsVertical.push(this.renderTarget.clone());
+                }
+
+                this.renderTarget.depthBuffer = true;
+
+                // FXAA material
+                this.fxaaMaterial = new FilmGrainFXAAMaterial();
+                this.fxaaMaterial.uniforms.uIntensity.value = this.grainEffect;
+                this.fxaaMaterial.uniforms.uResolution = resolution;
+                this.fxaaMaterial.uniforms.uTime = time;
+
+                // Gaussian blur materials
+                this.blurMaterials = [];
+
+                const kernelSizeArray = [3, 5, 7, 9, 11];
+
+                for (let i = 0, l = this.nMips; i < l; i++) {
+                    this.blurMaterials.push(new UnrealBloomBlurMaterial(kernelSizeArray[i]));
+                    this.blurMaterials[i].uniforms.uResolution.value = new Vector2();
+                }
+
+                // Bloom composite material
+                const bloomFactors = [1.0, 0.8, 0.6, 0.4, 0.2];
+
+                for (let i = 0, l = this.nMips; i < l; i++) {
+                    const factor = bloomFactors[i];
+                    bloomFactors[i] = this.bloomStrength * mix(factor, 1.2 - factor, this.bloomRadius);
+                }
+
+                this.bloomCompositeMaterial = new BloomCompositeMaterial(this.nMips);
+                this.bloomCompositeMaterial.uniforms.tBlur1.value = this.renderTargetsVertical[0].texture;
+                this.bloomCompositeMaterial.uniforms.tBlur2.value = this.renderTargetsVertical[1].texture;
+                this.bloomCompositeMaterial.uniforms.tBlur3.value = this.renderTargetsVertical[2].texture;
+                this.bloomCompositeMaterial.uniforms.tBlur4.value = this.renderTargetsVertical[3].texture;
+                this.bloomCompositeMaterial.uniforms.tBlur5.value = this.renderTargetsVertical[4].texture;
+                this.bloomCompositeMaterial.uniforms.uBloomFactors.value = bloomFactors;
+
+                // Composite material
+                this.compositeMaterial = new CompositeMaterial();
+            }
+
+            /**
+             * Public methods
+             */
+
+            static resize = (width, height, dpr) => {
+                this.renderer.setPixelRatio(dpr);
+                this.renderer.setSize(width, height);
+
+                width = Math.round(width * dpr);
+                height = Math.round(height * dpr);
+
+                this.renderTarget.setSize(width, height);
+                this.renderTargetA.setSize(width, height);
+                this.renderTargetB.setSize(width, height);
+
+                width = Math.round(width / 2);
+                height = Math.round(height / 2);
+
+                for (let i = 0, l = this.nMips; i < l; i++) {
+                    this.renderTargetsHorizontal[i].setSize(width, height);
+                    this.renderTargetsVertical[i].setSize(width, height);
+
+                    this.blurMaterials[i].uniforms.uResolution.value.set(width, height);
+
+                    width = Math.round(width / 2);
+                    height = Math.round(height / 2);
+                }
+            };
+
+            static update = () => {
+                const renderer = this.renderer;
+                const scene = this.scene;
+                const camera = this.camera;
+
+                if (!this.enabled) {
+                    renderer.setRenderTarget(null);
+                    renderer.render(scene, camera);
+                    return;
+                }
+
+                const screenScene = this.screenScene;
+                const screenCamera = this.screenCamera;
+
+                const renderTarget = this.renderTarget;
+                const renderTargetA = this.renderTargetA;
+                const renderTargetB = this.renderTargetB;
+                const renderTargetsHorizontal = this.renderTargetsHorizontal;
+                const renderTargetsVertical = this.renderTargetsVertical;
+
+                // Background pass
+                renderer.setRenderTarget(renderTargetA);
+                renderer.render(this.backgroundScene, camera);
+
+                // Scene pass
+                renderer.setRenderTarget(renderTarget);
+                renderer.render(scene, camera);
+
+                // FXAA pass
+                this.fxaaMaterial.uniforms.tMap.value = renderTarget.texture;
+                this.screen.material = this.fxaaMaterial;
+                renderer.setRenderTarget(renderTargetB);
+                renderer.render(screenScene, screenCamera);
+
+                // Blur all the mips progressively
+                let inputRenderTarget = renderTargetB;
+
+                for (let i = 0, l = this.nMips; i < l; i++) {
+                    this.screen.material = this.blurMaterials[i];
+
+                    this.blurMaterials[i].uniforms.tMap.value = inputRenderTarget.texture;
+                    this.blurMaterials[i].uniforms.uDirection.value = BlurDirectionX;
+                    renderer.setRenderTarget(renderTargetsHorizontal[i]);
+                    renderer.render(screenScene, screenCamera);
+
+                    this.blurMaterials[i].uniforms.tMap.value = this.renderTargetsHorizontal[i].texture;
+                    this.blurMaterials[i].uniforms.uDirection.value = BlurDirectionY;
+                    renderer.setRenderTarget(renderTargetsVertical[i]);
+                    renderer.render(screenScene, screenCamera);
+
+                    inputRenderTarget = renderTargetsVertical[i];
+                }
+
+                // Composite all the mips
+                this.screen.material = this.bloomCompositeMaterial;
+                renderer.setRenderTarget(renderTargetsHorizontal[0]);
+                renderer.render(screenScene, screenCamera);
+
+                // Composite pass (render to screen)
+                this.compositeMaterial.uniforms.tBackground.value = renderTargetA.texture;
+                this.compositeMaterial.uniforms.tScene.value = renderTargetB.texture;
+                this.compositeMaterial.uniforms.tBloom.value = renderTargetsHorizontal[0].texture;
+                this.screen.material = this.compositeMaterial;
+                renderer.setRenderTarget(null);
+                renderer.render(screenScene, screenCamera);
+            };
+        }
+
+        class WorldController {
+            static init() {
+                this.initWorld();
+                this.initLights();
+            }
+
+            static initWorld() {
+                this.renderer = new WebGLRenderer({
+                    powerPreference: 'high-performance',
+                    stencil: false,
+                    depth: false
+                });
+                this.element = this.renderer.domElement;
+
+                // Tone mapping
+                this.renderer.toneMapping = ACESFilmicToneMapping;
+                this.renderer.toneMappingExposure = 1;
+
+                // 2D scene
+                this.scene = new Scene();
+                this.camera = new OrthographicCamera(-1, 1, 1, -1, 0, 1000);
+                this.camera.position.set(500, 500, 500);
+                this.camera.lookAt(this.scene.position);
+
+                // Global geometries
+                this.screenTriangle = getFullscreenTriangle();
+
+                // Global uniforms
+                this.resolution = new Uniform(new Vector2());
+                this.aspect = new Uniform(1);
+                this.time = new Uniform(0);
+                this.frame = new Uniform(0);
+            }
+
+            static initLights() {
+                this.scene.add(new AmbientLight(0xffffff, 2));
+
+                this.scene.add(new HemisphereLight(0x606060, 0x404040));
+
+                const light = new DirectionalLight(0xffffff, 2);
+                light.position.set(60, 100, 20);
+                this.scene.add(light);
+            }
+
+            /**
+             * Public methods
+             */
+
+            static resize = (width, height, dpr) => {
+                this.camera.left = -width / 2;
+                this.camera.right = width / 2;
+                this.camera.top = height / 2;
+                this.camera.bottom = -height / 2;
+                this.camera.updateProjectionMatrix();
+
+                width = Math.round(width * dpr);
+                height = Math.round(height * dpr);
+
+                this.resolution.value.set(width, height);
+                this.aspect.value = width / height;
+            };
+
+            static update = (time, delta, frame) => {
+                this.time.value = time;
+                this.frame.value = frame;
+            };
+        }
+
+        class App {
+            static async init() {
+                this.initWorld();
+                this.initViews();
+                this.initControllers();
+
+                this.addListeners();
+                this.onResize();
+            }
+
+            static initWorld() {
+                WorldController.init();
+                Stage.add(WorldController.element);
+            }
+
+            static initViews() {
+                this.view = new SceneView();
+                WorldController.scene.add(this.view);
+            }
+
+            static initControllers() {
+                const { renderer, scene, camera } = WorldController;
+
+                RenderManager.init(renderer, scene, camera);
+            }
+
+            static addListeners() {
+                Stage.events.on(Events.RESIZE, this.onResize);
+                ticker.add(this.onUpdate);
+            }
+
+            /**
+             * Event handlers
+             */
+
+            static onResize = () => {
+                const { width, height, dpr } = Stage;
+
+                WorldController.resize(width, height, dpr);
+                RenderManager.resize(width, height, dpr);
+            };
+
+            static onUpdate = (time, delta, frame) => {
+                WorldController.update(time, delta, frame);
+                RenderManager.update(time, delta, frame);
+            };
+        }
+
+        App.init();
+    </script>
+</body>
+</html>

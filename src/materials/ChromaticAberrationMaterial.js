@@ -8,7 +8,10 @@ export class ChromaticAberrationMaterial extends RawShaderMaterial {
         super({
             uniforms: {
                 tMap: new Uniform(null),
-                uIntensity: new Uniform(1)
+                uRedOffset: new Uniform(-0.004),
+                uGreenOffset: new Uniform(0.0015),
+                uBlueOffset: new Uniform(0),
+                uIntensity: new Uniform(1.5)
             },
             vertexShader,
             fragmentShader,

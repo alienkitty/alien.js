@@ -8,6 +8,8 @@ export class Tracker extends Interface {
     constructor() {
         super('.tracker');
 
+        this.animatedIn = false;
+
         this.initHTML();
         this.initView();
     }

@@ -25,6 +25,7 @@ export class FluidController {
         this.pointer = {};
         this.width = 1;
         this.height = 1;
+        this.animatedIn = false;
 
         this.initRenderer();
         this.initPointers();
@@ -36,6 +37,7 @@ export class FluidController {
         // Render targets
         this.renderTargetA = new WebGLRenderTarget(this.width, this.height, {
             type: HalfFloatType,
+            anisotropy: 0,
             depthBuffer: false
         });
 
@@ -228,9 +230,9 @@ export class FluidController {
         this.renderer.render(this.scene, this.camera);
 
         // Swap render targets
-        const renderTarget = this.renderTargetA;
+        const temp = this.renderTargetA;
         this.renderTargetA = this.renderTargetB;
-        this.renderTargetB = renderTarget;
+        this.renderTargetB = temp;
     };
 
     static send = e => {

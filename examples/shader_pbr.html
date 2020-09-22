@@ -25,6 +25,7 @@
 
             void main() {
                 vUv = uv;
+
                 gl_Position = vec4(position, 1.0);
             }
         `;
@@ -173,6 +174,7 @@
 
                 // Render targets
                 this.renderTarget = new WebGLRenderTarget(1, 1, {
+                    anisotropy: 0,
                     depthBuffer: false
                 });
 
@@ -330,7 +332,11 @@
             }
 
             static initWorld() {
-                this.renderer = new WebGLRenderer({ powerPreference: 'high-performance' });
+                this.renderer = new WebGLRenderer({
+                    powerPreference: 'high-performance',
+                    stencil: false,
+                    depth: false
+                });
                 this.element = this.renderer.domElement;
 
                 // Tone mapping

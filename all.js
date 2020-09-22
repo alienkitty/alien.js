@@ -43,21 +43,21 @@ export { WebAudio3D } from './src/utils/audio/WebAudio3D.js';
 export { Sound3D } from './src/utils/audio/Sound3D.js';
 
 // Materials
-export { BasicMaterial } from './src/materials/BasicMaterial.js';
-export { BloomCompositeMaterial } from './src/materials/BloomCompositeMaterial.js';
-export { BlurDirectionX, BlurDirectionY, BlurMaterial } from './src/materials/BlurMaterial.js';
-export { BokehBlurMaterial1 } from './src/materials/BokehBlurMaterial1.js';
-export { BokehBlurMaterial2 } from './src/materials/BokehBlurMaterial2.js';
-export { CameraMotionBlurMaterial } from './src/materials/CameraMotionBlurMaterial.js';
-export { ChromaticAberrationMaterial } from './src/materials/ChromaticAberrationMaterial.js';
+export { NormalMaterial } from './src/materials/NormalMaterial.js';
 export { ColorMaterial } from './src/materials/ColorMaterial.js';
+export { BasicMaterial } from './src/materials/BasicMaterial.js';
 export { CopyMaterial } from './src/materials/CopyMaterial.js';
 export { FXAAMaterial } from './src/materials/FXAAMaterial.js';
+export { BlurDirectionX, BlurDirectionY, BlurMaterial } from './src/materials/BlurMaterial.js';
 export { LuminosityMaterial } from './src/materials/LuminosityMaterial.js';
-export { NormalMaterial } from './src/materials/NormalMaterial.js';
-export { PoissonDiscBlurMaterial } from './src/materials/PoissonDiscBlurMaterial.js';
 export { UnrealBloomBlurMaterial } from './src/materials/UnrealBloomBlurMaterial.js';
 export { UnrealBloomCompositeMaterial } from './src/materials/UnrealBloomCompositeMaterial.js';
+export { BloomCompositeMaterial } from './src/materials/BloomCompositeMaterial.js';
+export { PoissonDiscBlurMaterial } from './src/materials/PoissonDiscBlurMaterial.js';
+export { CameraMotionBlurMaterial } from './src/materials/CameraMotionBlurMaterial.js';
+export { BokehBlurMaterial1 } from './src/materials/BokehBlurMaterial1.js';
+export { BokehBlurMaterial2 } from './src/materials/BokehBlurMaterial2.js';
+export { ChromaticAberrationMaterial } from './src/materials/ChromaticAberrationMaterial.js';
 
 // Dependencies
 export * from 'gsap';

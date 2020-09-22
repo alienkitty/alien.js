@@ -84,7 +84,9 @@
                 this.screenScene.add(this.screen);
 
                 // Render targets
-                this.renderTarget = new WebGLRenderTarget(1, 1);
+                this.renderTarget = new WebGLRenderTarget(1, 1, {
+                    anisotropy: 0
+                });
 
                 // FXAA material
                 this.fxaaMaterial = new FXAAMaterial();
@@ -141,7 +143,11 @@
             }
 
             static initWorld() {
-                this.renderer = new WebGLRenderer({ powerPreference: 'high-performance' });
+                this.renderer = new WebGLRenderer({
+                    powerPreference: 'high-performance',
+                    stencil: false,
+                    depth: false
+                });
                 this.element = this.renderer.domElement;
 
                 // 3D scene

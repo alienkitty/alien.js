@@ -26,6 +26,5 @@ void main() {
     float blueNoise = getBlueNoise(tBlueNoise, gl_FragCoord.xy, uBlueNoiseTexelSize);
 
     gl_FragColor.rgb += blueNoise / 128.0;
-    gl_FragColor.a = 1.0;
 }
 `;

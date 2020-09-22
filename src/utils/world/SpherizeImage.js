@@ -7,7 +7,6 @@ import {
     Mesh,
     NoBlending,
     OrthographicCamera,
-    PlaneBufferGeometry,
     RawShaderMaterial,
     Scene,
     Texture,
@@ -15,6 +14,8 @@ import {
     WebGLRenderTarget,
     sRGBEncoding
 } from 'three';
+
+import { getFullscreenTriangle } from './Utils3D.js';
 
 import vertexShader from '../../shaders/SpherizePass.vert.js';
 import fragmentShader from '../../shaders/SpherizePass.frag.js';
@@ -26,7 +27,7 @@ export class SpherizeImage {
         this.scene = new Scene();
         this.camera = new OrthographicCamera(-1, 1, 1, -1, 0, 1);
 
-        this.geometry = new PlaneBufferGeometry(1, 1);
+        this.geometry = getFullscreenTriangle();
 
         this.material = new RawShaderMaterial({
             uniforms: {
@@ -40,10 +41,12 @@ export class SpherizeImage {
             depthTest: false
         });
 
-        this.quad = new Mesh(this.geometry, this.material);
-        this.scene.add(this.quad);
+        this.screen = new Mesh(this.geometry, this.material);
+        this.screen.frustumCulled = false;
+        this.scene.add(this.screen);
 
         this.output = new WebGLRenderTarget(1, 1, {
+            anisotropy: 0,
             depthBuffer: false
         });
     }
@@ -51,14 +54,6 @@ export class SpherizeImage {
     setSize(width, height) {
         this.width = width;
         this.height = height;
-
-        this.quad.scale.set(width, height, 1);
-
-        this.camera.left = -width / 2;
-        this.camera.right = width / 2;
-        this.camera.top = height / 2;
-        this.camera.bottom = -height / 2;
-        this.camera.updateProjectionMatrix();
 
         this.output.setSize(width, height);
     }
@@ -72,12 +67,19 @@ export class SpherizeImage {
         texture.generateMipmaps = false;
         texture.needsUpdate = true;
 
-        this.quad.material.uniforms.tMap.value = texture;
+        this.material.uniforms.tMap.value = texture;
+
+        const currentRenderTarget = this.renderer.getRenderTarget();
 
         this.renderer.setRenderTarget(this.output);
-        this.renderer.clear();
+
+        if (this.renderer.autoClear === false) {
+            this.renderer.clear();
+        }
+
         this.renderer.render(this.scene, this.camera);
-        this.renderer.setRenderTarget(null);
+
+        this.renderer.setRenderTarget(currentRenderTarget);
 
         texture.dispose();
 

@@ -41,11 +41,14 @@ void main() {
     vec2 offset = vec2(0.0);
     float weight = 0.0;
     const int samples = 20;
+
     for (int i = 0; i < samples; i++) {
         offset = velocity * (float(i) / (float(samples) - 1.0) - 0.5);
         finalColor += texture2D(tMap, vUv + offset);
     }
+
     finalColor /= float(samples);
+
     gl_FragColor = vec4(finalColor.rgb, 1.0);
 }
 `;

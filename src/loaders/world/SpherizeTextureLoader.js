@@ -32,14 +32,20 @@ export class SpherizeTextureLoader extends Loader {
     }
 
     load(path, callback) {
-        return this.textureLoader.load(path, texture => {
+        const texture = this.textureLoader.load(path, texture => {
             texture.image = this.spherize.convert(texture.image, this.options);
             texture.needsUpdate = true;
+
+            this.increment();
 
             if (callback) {
                 callback(texture);
             }
         });
+
+        this.total++;
+
+        return texture;
     }
 
     setOptions(options) {

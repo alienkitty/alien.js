@@ -68,10 +68,14 @@ export class SphericalCubeTextureLoader extends Loader {
 
             renderTargetCube.dispose();
 
+            this.increment();
+
             if (callback) {
                 callback(textures);
             }
         });
+
+        this.total++;
 
         return textures;
     }

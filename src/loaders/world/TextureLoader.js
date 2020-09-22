@@ -72,7 +72,7 @@ export class TextureLoader extends Loader {
             texture.format = /jpe?g/.test(path) ? RGBFormat : RGBAFormat;
             texture.encoding = sRGBEncoding;
 
-            if (!MathUtils.isPowerOfTwo(image.width, image.height)) {
+            if (!MathUtils.isPowerOfTwo(image.width) || !MathUtils.isPowerOfTwo(image.height)) {
                 texture.minFilter = LinearFilter;
                 texture.generateMipmaps = false;
             }

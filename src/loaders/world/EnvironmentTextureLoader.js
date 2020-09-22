@@ -24,10 +24,14 @@ export class EnvironmentTextureLoader extends Loader {
 
             texture.dispose();
 
+            this.increment();
+
             if (callback) {
                 callback(renderTargetCube.texture);
             }
         });
+
+        this.total++;
     }
 
     destroy() {

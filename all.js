@@ -48,6 +48,8 @@ export { ColorMaterial } from './src/materials/ColorMaterial.js';
 export { BasicMaterial } from './src/materials/BasicMaterial.js';
 export { CopyMaterial } from './src/materials/CopyMaterial.js';
 export { FXAAMaterial } from './src/materials/FXAAMaterial.js';
+export { FilmGrainMaterial } from './src/materials/FilmGrainMaterial.js';
+export { FilmGrainFXAAMaterial } from './src/materials/FilmGrainFXAAMaterial.js';
 export { BlurDirectionX, BlurDirectionY, BlurMaterial } from './src/materials/BlurMaterial.js';
 export { LuminosityMaterial } from './src/materials/LuminosityMaterial.js';
 export { UnrealBloomBlurMaterial } from './src/materials/UnrealBloomBlurMaterial.js';

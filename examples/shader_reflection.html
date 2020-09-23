@@ -13,7 +13,7 @@
 <body>
     <div id="root"></div>
     <script type="module">
-        import { ACESFilmicToneMapping, AmbientLight, BloomCompositeMaterial, BlurDirectionX, BlurDirectionY, BoxGeometry, Color, DirectionalLight, EnvironmentTextureLoader, Events, FilmGrainFXAAMaterial, Fog, Group, HemisphereLight, Mesh, MeshStandardMaterial, NoBlending, NormalMaterial, OrbitControls, OrthographicCamera, PerspectiveCamera, PlaneBufferGeometry, RawShaderMaterial, Reflector, RepeatWrapping, SVGLoader, Scene, Stage, TextureLoader, Uniform, UnrealBloomBlurMaterial, Vector2, Vector3, WebGLRenderTarget, WebGLRenderer, Wobble, getFullscreenTriangle, mix, radians, range, ticker } from '../build/alien.js';
+        import { ACESFilmicToneMapping, AmbientLight, BloomCompositeMaterial, BlurDirectionX, BlurDirectionY, Color, DirectionalLight, Events, FXAAMaterial, Fog, Group, HemisphereLight, Mesh, MeshStandardMaterial, NoBlending, OrthographicCamera, PerspectiveCamera, PlaneBufferGeometry, RawShaderMaterial, Reflector, RepeatWrapping, SVGLoader, Scene, Stage, TextureLoader, Uniform, UnrealBloomBlurMaterial, Vector2, Vector3, WebGLRenderTarget, WebGLRenderer, getFullscreenTriangle, mix, radians, range, ticker } from '../build/alien.js';
 
         import rgbshift from '../src/shaders/modules/rgbshift/rgbshift.glsl.js';
         import blendAlpha from '../src/shaders/modules/blending/alpha.glsl.js';
@@ -97,60 +97,11 @@
             }
 
             async initMesh() {
-                // const { camera, getEnvironmentTexture, getSVG, getTexture, scene } = WorldController;
                 const { camera, getSVG, getTexture, scene } = WorldController;
 
                 // Floor
-                // this.geometry = new BoxGeometry(100, 0.1, 100);
-
-                // // 2nd set of UV's for aoMap and lightMap
-                // this.geometry.faceVertexUvs[1] = this.geometry.faceVertexUvs[0];
-
-                // // Textures
-                // // const map = getTexture('assets/textures/uv.jpg');
-                // const map = getTexture('assets/textures/pbr/pitted_metal_basecolor.jpg');
-                // map.wrapS = RepeatWrapping;
-                // map.wrapT = RepeatWrapping;
-                // map.repeat.set(8, 8);
-
-                // const normalMap = getTexture('assets/textures/pbr/pitted_metal_normal.jpg');
-                // normalMap.wrapS = RepeatWrapping;
-                // normalMap.wrapT = RepeatWrapping;
-                // normalMap.repeat.set(8, 8);
-
-                // // https://occlusion-roughness-metalness.glitch.me/
-                // const ormMap = getTexture('assets/textures/pbr/pitted_metal_orm.jpg');
-                // ormMap.wrapS = RepeatWrapping;
-                // ormMap.wrapT = RepeatWrapping;
-                // ormMap.repeat.set(8, 8);
-
-                // const envMap = await getEnvironmentTexture('assets/textures/env.jpg');
-
-                // // Materials
-                // this.material = new MeshStandardMaterial({
-                //     color: new Color(1, 1, 1),
-                //     roughness: 1,
-                //     metalness: 1,
-                //     map,
-                //     aoMap: ormMap,
-                //     aoMapIntensity: 1,
-                //     roughnessMap: ormMap,
-                //     metalnessMap: ormMap,
-                //     normalMap,
-                //     normalScale: new Vector2(1, 1),
-                //     envMap,
-                //     envMapIntensity: 0.2
-                // });
-
-                // const floor = new Mesh(this.geometry, this.material);
-                // floor.position.set(0, -1.6, 0);
-
-                // this.add(floor);
-
-
                 this.geometry = new PlaneBufferGeometry(110, 110);
 
-                // const map = getTexture('assets/textures/uv.jpg');
                 const map = getTexture('assets/textures/pbr/polished_concrete_basecolor.jpg');
                 map.wrapS = RepeatWrapping;
                 map.wrapT = RepeatWrapping;
@@ -158,21 +109,13 @@
 
                 const { fog } = scene;
 
-                const reflector = new Reflector(this.geometry, {
-                    // color: 'red',
-                    // blurIterations: 0,
+                this.mesh = new Reflector(this.geometry, {
                     map,
                     fog,
                     dithering: true
                 });
-                reflector.rotation.x = -Math.PI / 2;
-                reflector.position.y = -1.6;
-
-                this.add(reflector);
-
-                // Test object
-                this.mesh = new Mesh(new BoxGeometry(1, 1, 1), new NormalMaterial());
-                this.mesh.position.z = -4;
+                this.mesh.rotation.x = -Math.PI / 2;
+                this.mesh.position.y = -1.6;
 
                 this.add(this.mesh);
 
@@ -212,16 +155,6 @@
              * Public methods
              */
 
-            update = time => {
-                if (!this.visible) {
-                    return;
-                }
-
-                this.mesh.position.y = Math.sin(time * 0.002) * 0.3;
-                this.mesh.rotation.y += 0.01;
-                this.mesh.rotation.x += 0.004;
-            };
-
             animateIn = () => {
                 this.visible = true;
             };
@@ -235,7 +168,6 @@
                 this.scene = scene;
                 this.camera = camera;
 
-                this.grainEffect = 0.15;
                 this.bloomStrength = 0.3;
                 this.bloomRadius = 0.75;
                 this.enabled = true;
@@ -244,7 +176,7 @@
             }
 
             static initRenderer() {
-                const { resolution, screenTriangle, time } = WorldController;
+                const { resolution, screenTriangle } = WorldController;
 
                 // Fullscreen triangle
                 this.screenScene = new Scene();
@@ -279,10 +211,8 @@
                 this.renderTarget.depthBuffer = true;
 
                 // FXAA material
-                this.fxaaMaterial = new FilmGrainFXAAMaterial();
-                this.fxaaMaterial.uniforms.uIntensity.value = this.grainEffect;
+                this.fxaaMaterial = new FXAAMaterial();
                 this.fxaaMaterial.uniforms.uResolution = resolution;
-                this.fxaaMaterial.uniforms.uTime = time;
 
                 // Gaussian blur materials
                 this.blurMaterials = [];
@@ -414,10 +344,6 @@
         class CameraController {
             static init(camera) {
                 this.camera = camera;
-                this.group = new Group();
-                this.innerGroup = new Group();
-                this.innerGroup.add(this.camera);
-                this.group.add(this.innerGroup);
 
                 this.pos = new Vector2();
                 this.last = new Vector2();
@@ -434,10 +360,6 @@
                 this.rotateAngle = radians(10);
                 this.lerpSpeed = 0.02;
                 this.animatedIn = false;
-
-                this.wobble = new Wobble(this.innerGroup.position);
-                this.wobble.amplitude.set(1, 1, 0.8);
-                // this.wobble.lerpSpeed = 0.07;
 
                 this.addListeners();
             }
@@ -482,7 +404,7 @@
                 this.camera.updateProjectionMatrix();
             };
 
-            static update = time => {
+            static update = () => {
                 if (!this.animatedIn) {
                     return;
                 }
@@ -493,11 +415,6 @@
 
                 this.camera.position.lerp(this.target, this.lerpSpeed);
                 this.camera.lookAt(this.lookAt);
-
-                const rotateStrength = range(Math.abs(this.delta.x) / Stage.width, 0, 0.02, 0, 1, true);
-                this.group.rotation.z += (this.rotateAngle * rotateStrength * Math.sign(this.delta.x) - this.group.rotation.z) * this.lerpSpeed;
-
-                this.wobble.update(time);
             };
 
             static animateIn = () => {
@@ -510,7 +427,6 @@
                 this.initWorld();
                 this.initLights();
                 this.initLoaders();
-                // this.initControls();
             }
 
             static initWorld() {
@@ -555,14 +471,7 @@
 
             static initLoaders() {
                 this.textureLoader = new TextureLoader();
-                this.environmentLoader = new EnvironmentTextureLoader(this.renderer);
                 this.svgLoader = new SVGLoader();
-            }
-
-            static initControls() {
-                this.controls = new OrbitControls(this.camera, this.renderer.domElement);
-                this.controls.enableDamping = true;
-                // this.controls.enableZoom = false;
             }
 
             /**
@@ -580,13 +489,9 @@
             static update = (time, delta, frame) => {
                 this.time.value = time;
                 this.frame.value = frame;
-
-                // this.controls.update();
             };
 
             static getTexture = path => this.textureLoader.load(path);
-
-            static getEnvironmentTexture = path => this.environmentLoader.loadAsync(path);
 
             static getSVG = path => this.svgLoader.loadAsync(path);
         }
@@ -602,7 +507,6 @@
 
                 await Promise.all([
                     WorldController.textureLoader.ready(),
-                    // WorldController.environmentLoader.ready(),
                     this.view.ready()
                 ]);
 
@@ -646,10 +550,7 @@
 
             static onUpdate = (time, delta, frame) => {
                 WorldController.update(time, delta, frame);
-                CameraController.update(time);
-
-                this.view.update(time);
-
+                CameraController.update();
                 RenderManager.update(time, delta, frame);
             };
         }

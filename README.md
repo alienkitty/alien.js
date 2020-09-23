@@ -266,7 +266,8 @@ src
 │   │   │
 │   │   ├── Reflector.js
 │   │   ├── SpherizeImage.js
-│   │   └── Utils3D.js
+│   │   ├── Utils3D.js
+│   │   └── Wobble.js
 │   │
 │   ├── Cluster.js
 │   ├── Component.js

@@ -38,6 +38,7 @@ export { Sound } from './src/utils/audio/Sound.js';
 
 // 3D
 export * from './src/utils/world/Utils3D.js';
+export { Wobble } from './src/utils/world/Wobble.js';
 export { Reflector } from './src/utils/world/Reflector.js';
 export { SpherizeImage } from './src/utils/world/SpherizeImage.js';
 export { WebAudio3D } from './src/utils/audio/WebAudio3D.js';
@@ -66,5 +67,8 @@ export { ChromaticAberrationMaterial } from './src/materials/ChromaticAberration
 // Dependencies
 export * from 'gsap';
 export * from 'three';
-export * from 'three/examples/jsm/loaders/OBJLoader.js';
-export * from 'three/examples/jsm/controls/OrbitControls.js';
+export { ImprovedNoise } from 'three/examples/jsm/math/ImprovedNoise.js';
+export { SimplexNoise } from 'three/examples/jsm/math/SimplexNoise.js';
+export { OBJLoader } from 'three/examples/jsm/loaders/OBJLoader.js';
+export { SVGLoader } from 'three/examples/jsm/loaders/SVGLoader.js';
+export { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';

@@ -2,14 +2,14 @@
  * @author pschroen / https://ufo.ai/
  */
 
-import { Object3D, Quaternion, Vector3 } from 'three';
+import { Group, Quaternion, Vector3 } from 'three';
 
 import { clamp, guid, range } from '../Utils.js';
 
 import { WebAudio } from './WebAudio.js';
 import { WebAudioParam } from './WebAudioParam.js';
 
-export class Sound3D extends Object3D {
+export class Sound3D extends Group {
     constructor(camera, id, buffer) {
         super();
 
@@ -26,8 +26,8 @@ export class Sound3D extends Object3D {
         this.context = WebAudio.context;
 
         if (camera) {
-            this.worldCamera = camera;
-            this.worldCameraPosition = new Vector3();
+            this.camera = camera;
+            this.cameraWorldPosition = new Vector3();
             this.worldPosition = new Vector3();
 
             this.audioDistance = 1;
@@ -40,7 +40,7 @@ export class Sound3D extends Object3D {
             this.gain = new WebAudioParam(this, 'output', 'gain', 1);
 
             if (this.context.createStereoPanner) {
-                this.worldPositionScreenSpace = new Vector3();
+                this.screenSpacePosition = new Vector3();
 
                 this.stereo = this.context.createStereoPanner();
                 this.stereo.connect(this.output);
@@ -87,16 +87,20 @@ export class Sound3D extends Object3D {
             return;
         }
 
-        if (this.worldCamera) {
-            this.worldCameraPosition.setFromMatrixPosition(this.worldCamera.matrixWorld);
+        if (this.camera) {
+            this.cameraWorldPosition.setFromMatrixPosition(this.camera.matrixWorld);
             this.worldPosition.setFromMatrixPosition(this.matrixWorld);
 
-            this.gain.value = 1 - range(this.worldCameraPosition.distanceTo(this.worldPosition) - this.audioDistance, this.audioNearDistance, this.audioFarDistance, 0, 1, true);
+            this.gain.value = 1 - range(this.cameraWorldPosition.distanceTo(this.worldPosition) - this.audioDistance, this.audioNearDistance, this.audioFarDistance, 0, 1, true);
 
             if (this.stereo) {
-                this.worldPositionScreenSpace.copy(this.worldPosition).project(this.worldCamera);
+                this.screenSpacePosition.copy(this.worldPosition).project(this.camera);
 
-                this.stereoPan.value = clamp(this.worldPositionScreenSpace.x, -1, 1);
+                if (isNaN(this.screenSpacePosition.x)) {
+                    this.stereoPan.value = 0;
+                } else {
+                    this.stereoPan.value = clamp(this.screenSpacePosition.x, -1, 1);
+                }
             }
         } else {
             this.matrixWorld.decompose(this.worldPosition, this.worldQuaternion, this.worldScale);

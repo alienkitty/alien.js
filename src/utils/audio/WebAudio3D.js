@@ -2,12 +2,12 @@
  * @author pschroen / https://ufo.ai/
  */
 
-import { Object3D, Quaternion, Vector3 } from 'three';
+import { Group, Quaternion, Vector3 } from 'three';
 
 import { WebAudio } from './WebAudio.js';
 import { WebAudioParam } from './WebAudioParam.js';
 
-export class WebAudio3D extends Object3D {
+export class WebAudio3D extends Group {
     constructor() {
         super();
 

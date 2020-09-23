@@ -53,6 +53,10 @@ export class Sound {
         }
 
         this.context.resume().then(this.ready).then(() => {
+            if (!this.output) {
+                return;
+            }
+
             this.output.gain.setValueAtTime(this.gain.value, this.context.currentTime);
 
             if (this.stereo) {
@@ -85,7 +89,7 @@ export class Sound {
     stop() {
         if (this.element) {
             this.element.pause();
-        } else {
+        } else if (this.source) {
             this.source.stop();
         }
 
@@ -96,12 +100,12 @@ export class Sound {
         if (this.element) {
             this.element.pause();
             this.element.src = '';
-        } else {
+            this.source.disconnect();
+        } else if (this.source) {
             this.source.stop();
             this.source.buffer = null;
+            this.source.disconnect();
         }
-
-        this.source.disconnect();
 
         for (const prop in this) {
             this[prop] = null;

@@ -13,10 +13,9 @@
 <body>
     <div id="root"></div>
     <script type="module">
-        import { ACESFilmicToneMapping, AmbientLight, BloomCompositeMaterial, BlurDirectionX, BlurDirectionY, BoxBufferGeometry, BufferAttribute, BufferGeometry, Color, DirectionalLight, Events, FilmGrainFXAAMaterial, Group, HemisphereLight, MathUtils, Mesh, MeshStandardMaterial, NoBlending, OrthographicCamera, PlaneBufferGeometry, RawShaderMaterial, Scene, Stage, Uniform, UnrealBloomBlurMaterial, Vector2, WebGLRenderTarget, WebGLRenderer, getFullscreenTriangle, mix, ticker } from '../build/alien.js';
+        import { ACESFilmicToneMapping, AmbientLight, BloomCompositeMaterial, BlurDirectionX, BlurDirectionY, BoxBufferGeometry, BufferAttribute, BufferGeometry, Color, DirectionalLight, Events, FilmGrainFXAAMaterial, Group, HemisphereLight, LuminosityMaterial, MathUtils, Mesh, MeshStandardMaterial, NoBlending, OrthographicCamera, PlaneBufferGeometry, RawShaderMaterial, Scene, Stage, Uniform, UnrealBloomBlurMaterial, Vector2, WebGLRenderTarget, WebGLRenderer, getFullscreenTriangle, mix, ticker } from '../build/alien.js';
 
         import rgbshift from '../src/shaders/modules/rgbshift/rgbshift.glsl.js';
-        import blendAlpha from '../src/shaders/modules/blending/alpha.glsl.js';
 
         const vertexCompositeShader = /* glsl */`
             attribute vec2 uv;
@@ -34,33 +33,21 @@
         const fragmentCompositeShader = /* glsl */`
             precision highp float;
 
-            uniform sampler2D tBackground;
             uniform sampler2D tScene;
             uniform sampler2D tBloom;
-            uniform float uMinBright;
-            uniform float uBlurBright;
             uniform float uDistortion;
 
             varying vec2 vUv;
 
             ${rgbshift}
-            ${blendAlpha}
 
             void main() {
-                vec4 base = texture2D(tBackground, vUv);
-                vec4 blend = texture2D(tScene, vUv);
-
-                gl_FragColor = blendAlpha(base, blend, 1.0);
+                gl_FragColor = texture2D(tScene, vUv);
 
                 float angle = length(vUv - vec2(0.5));
                 float amount = uDistortion + 0.0002;
 
-                vec3 bloom = getRGB(tBloom, vUv, angle, amount).rgb;
-                bloom.x = max(0.0, bloom.x - uMinBright);
-                bloom.y = max(0.0, bloom.y - uMinBright);
-                bloom.z = max(0.0, bloom.z - uMinBright);
-
-                gl_FragColor.rgb += bloom * uBlurBright;
+                gl_FragColor.rgb += getRGB(tBloom, vUv, angle, amount).rgb;
             }
         `;
 
@@ -68,11 +55,8 @@
             constructor() {
                 super({
                     uniforms: {
-                        tBackground: new Uniform(null),
                         tScene: new Uniform(null),
                         tBloom: new Uniform(null),
-                        uMinBright: new Uniform(0),
-                        uBlurBright: new Uniform(0.6),
                         uDistortion: new Uniform(0.00125)
                     },
                     vertexShader: vertexCompositeShader,
@@ -147,6 +131,7 @@
                 this.camera = camera;
 
                 this.grainEffect = 0.15;
+                this.luminosityThreshold = 0.1;
                 this.bloomStrength = 0.3;
                 this.bloomRadius = 0.75;
                 this.enabled = true;
@@ -165,35 +150,36 @@
                 this.screen.frustumCulled = false;
                 this.screenScene.add(this.screen);
 
-                // Background scene
-                this.backgroundScene = new Scene();
-                this.backgroundScene.background = new Color(Config.BG_COLOR);
-
                 // Render targets
-                this.renderTarget = new WebGLRenderTarget(1, 1, {
+                this.renderTargetA = new WebGLRenderTarget(1, 1, {
                     anisotropy: 0,
                     depthBuffer: false
                 });
 
-                this.renderTargetA = this.renderTarget.clone();
-                this.renderTargetB = this.renderTarget.clone();
+                this.renderTargetB = this.renderTargetA.clone();
 
                 this.renderTargetsHorizontal = [];
                 this.renderTargetsVertical = [];
                 this.nMips = 5;
 
+                this.renderTargetBright = this.renderTargetA.clone();
+
                 for (let i = 0, l = this.nMips; i < l; i++) {
-                    this.renderTargetsHorizontal.push(this.renderTarget.clone());
-                    this.renderTargetsVertical.push(this.renderTarget.clone());
+                    this.renderTargetsHorizontal.push(this.renderTargetA.clone());
+                    this.renderTargetsVertical.push(this.renderTargetA.clone());
                 }
 
-                this.renderTarget.depthBuffer = true;
+                this.renderTargetA.depthBuffer = true;
 
                 // FXAA material
                 this.fxaaMaterial = new FilmGrainFXAAMaterial();
                 this.fxaaMaterial.uniforms.uIntensity.value = this.grainEffect;
                 this.fxaaMaterial.uniforms.uResolution = resolution;
                 this.fxaaMaterial.uniforms.uTime = time;
+
+                // Luminosity high pass material
+                this.luminosityMaterial = new LuminosityMaterial();
+                this.luminosityMaterial.uniforms.uLuminosityThreshold.value = this.luminosityThreshold;
 
                 // Gaussian blur materials
                 this.blurMaterials = [];
@@ -236,12 +222,13 @@
                 width = Math.round(width * dpr);
                 height = Math.round(height * dpr);
 
-                this.renderTarget.setSize(width, height);
                 this.renderTargetA.setSize(width, height);
                 this.renderTargetB.setSize(width, height);
 
                 width = Math.round(width / 2);
                 height = Math.round(height / 2);
+
+                this.renderTargetBright.setSize(width, height);
 
                 for (let i = 0, l = this.nMips; i < l; i++) {
                     this.renderTargetsHorizontal[i].setSize(width, height);
@@ -268,28 +255,30 @@
                 const screenScene = this.screenScene;
                 const screenCamera = this.screenCamera;
 
-                const renderTarget = this.renderTarget;
                 const renderTargetA = this.renderTargetA;
                 const renderTargetB = this.renderTargetB;
+                const renderTargetBright = this.renderTargetBright;
                 const renderTargetsHorizontal = this.renderTargetsHorizontal;
                 const renderTargetsVertical = this.renderTargetsVertical;
 
-                // Background pass
-                renderer.setRenderTarget(renderTargetA);
-                renderer.render(this.backgroundScene, camera);
-
                 // Scene pass
-                renderer.setRenderTarget(renderTarget);
+                renderer.setRenderTarget(renderTargetA);
                 renderer.render(scene, camera);
 
                 // FXAA pass
-                this.fxaaMaterial.uniforms.tMap.value = renderTarget.texture;
+                this.fxaaMaterial.uniforms.tMap.value = renderTargetA.texture;
                 this.screen.material = this.fxaaMaterial;
                 renderer.setRenderTarget(renderTargetB);
                 renderer.render(screenScene, screenCamera);
 
+                // Extract bright areas
+                this.luminosityMaterial.uniforms.tMap.value = renderTargetB.texture;
+                this.screen.material = this.luminosityMaterial;
+                renderer.setRenderTarget(renderTargetBright);
+                renderer.render(screenScene, screenCamera);
+
                 // Blur all the mips progressively
-                let inputRenderTarget = renderTargetB;
+                let inputRenderTarget = renderTargetBright;
 
                 for (let i = 0, l = this.nMips; i < l; i++) {
                     this.screen.material = this.blurMaterials[i];
@@ -313,7 +302,6 @@
                 renderer.render(screenScene, screenCamera);
 
                 // Composite pass (render to screen)
-                this.compositeMaterial.uniforms.tBackground.value = renderTargetA.texture;
                 this.compositeMaterial.uniforms.tScene.value = renderTargetB.texture;
                 this.compositeMaterial.uniforms.tBloom.value = renderTargetsHorizontal[0].texture;
                 this.screen.material = this.compositeMaterial;
@@ -331,8 +319,7 @@
             static initWorld() {
                 this.renderer = new WebGLRenderer({
                     powerPreference: 'high-performance',
-                    stencil: false,
-                    depth: false
+                    stencil: false
                 });
                 this.element = this.renderer.domElement;
 
@@ -342,6 +329,7 @@
 
                 // 2D scene
                 this.scene = new Scene();
+                this.scene.background = new Color(Config.BG_COLOR);
                 this.camera = new OrthographicCamera(-1, 1, 1, -1, 0, 1000);
                 this.camera.position.set(500, 500, 500);
                 this.camera.lookAt(this.scene.position);

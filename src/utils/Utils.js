@@ -34,6 +34,7 @@ export function step(edge, value) {
 
 export function smoothStep(min, max, value) {
     const x = Math.max(0, Math.min(1, (value - min) / (max - min)));
+
     return x * x * (3 - 2 * x);
 }
 
@@ -42,7 +43,7 @@ export function fract(value) {
 }
 
 export function lerp(target, value, alpha) {
-    return value + ((target - value) * alpha);
+    return value + (target - value) * alpha;
 }
 
 export function mod(value, n) {

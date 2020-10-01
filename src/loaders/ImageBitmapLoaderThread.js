@@ -2,10 +2,10 @@
  * @author pschroen / https://ufo.ai/
  */
 
-import { absolute } from '../utils/Utils.js';
-
 import { Thread } from '../utils/Thread.js';
 import { Assets } from './Assets.js';
+
+import { absolute } from '../utils/Utils.js';
 
 export class ImageBitmapLoaderThread {
     static init() {

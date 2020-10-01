@@ -1,11 +1,4 @@
-import {
-    Mesh,
-    OrthographicCamera,
-    Scene,
-    Uniform,
-    Vector2,
-    WebGLRenderer
-} from 'three';
+import { Mesh, OrthographicCamera, Scene, Uniform, Vector2, WebGLRenderer } from 'three';
 
 import { getFullscreenTriangle } from 'alien.js';
 

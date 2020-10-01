@@ -2,14 +2,7 @@
  * @author pschroen / https://ufo.ai/
  */
 
-import {
-    LinearFilter,
-    MathUtils,
-    RGBAFormat,
-    RGBFormat,
-    Texture,
-    sRGBEncoding
-} from 'three';
+import { LinearFilter, MathUtils, RGBAFormat, RGBFormat, Texture, sRGBEncoding } from 'three';
 
 import { Device } from '../../config/Device.js';
 import { Thread } from '../../utils/Thread.js';

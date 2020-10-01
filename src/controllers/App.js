@@ -1,17 +1,25 @@
 // import { Events } from '../config/Events.js';
-import { Interface } from '../utils/Interface.js';
+// import { Assets } from '../loaders/Assets.js';
+// import { WebAudio } from '../utils/audio/WebAudio.js';
+// import { AudioController } from './audio/AudioController.js';
+// import { WorldController } from './world/WorldController.js';
+// import { CameraController } from './world/CameraController.js';
+// import { RenderManager } from './world/RenderManager.js';
 import { Stage } from './Stage.js';
-import { AlienKitty } from '../views/AlienKitty.js';
+// import { SceneView } from '../views/SceneView.js';
+import { LandingView } from '../views/LandingView.js';
+
+// import { ticker } from '../utils/Tween.js';
 
 export class App {
     static async init(loader) {
         this.loader = loader;
 
-        this.initStage();
-        this.initWrapper();
+        // this.initWorld();
         this.initViews();
+        // this.initControllers();
 
-        this.addListeners();
+        // this.addListeners();
         // this.onResize();
 
         await this.loader.ready();
@@ -20,56 +28,57 @@ export class App {
         // AudioController.init();
     }
 
-    static initStage() {
-        Stage.css({
-            transformStyle: 'preserve-3d',
-            perspective: 2000
-        });
-    }
-
-    static initWrapper() {
-        this.wrapper = new Interface('.wrapper');
-        this.wrapper.css({
-            width: '100%',
-            height: '100%',
-            transformStyle: 'preserve-3d',
-            z: -300
-        });
-        Stage.add(this.wrapper);
-    }
+    /*static initWorld() {
+        WorldController.init();
+        Stage.add(WorldController.element);
+    }*/
 
     static initViews() {
-        this.alienkitty = new AlienKitty();
-        this.alienkitty.css({
-            left: '50%',
-            top: '50%',
-            marginLeft: -90 / 2,
-            marginTop: -86 / 2
-        });
-        this.wrapper.add(this.alienkitty);
+        // this.sceneView = new SceneView();
+        // WorldController.scene.add(this.sceneView);
+
+        this.landingView = new LandingView();
+        Stage.add(this.landingView);
+    }
+
+    /*static initControllers() {
+        const { renderer, scene, camera } = WorldController;
+
+        CameraController.init(camera);
+        RenderManager.init(renderer, scene, camera);
     }
 
     static addListeners() {
-        // Stage.events.on(Events.RESIZE, this.onResize);
-        // ticker.add(this.onUpdate);
-    }
+        Stage.events.on(Events.RESIZE, this.onResize);
+        ticker.add(this.onUpdate);
+    }*/
 
     /**
      * Event handlers
      */
 
-    // static onResize = () => {
-    // };
+    /*static onResize = () => {
+        const { width, height, dpr } = Stage;
 
-    // static onUpdate = (time, delta, frame) => {
-    // };
+        WorldController.resize(width, height, dpr);
+        CameraController.resize(width, height);
+        RenderManager.resize(width, height, dpr);
+    };
+
+    static onUpdate = (time, delta, frame) => {
+        WorldController.update(time, delta, frame);
+        CameraController.update(time);
+
+        this.sceneView.update(time);
+
+        RenderManager.update(time, delta, frame);
+    };*/
 
     /**
      * Public methods
      */
 
     static start = async () => {
-        this.wrapper.tween({ z: 0 }, 7000, 'easeOutCubic');
-        this.alienkitty.animateIn();
+        this.landingView.animateIn();
     };
 }

@@ -21,9 +21,9 @@ import {
     WebGLRenderTarget
 } from 'three';
 
-import { getFullscreenTriangle } from './Utils3D.js';
-
 import { FastGaussianBlurMaterial } from '../../materials/FastGaussianBlurMaterial.js';
+
+import { getFullscreenTriangle } from './Utils3D.js';
 
 import vertexShader from '../../shaders/ReflectorMaterial.vert.js';
 import fragmentShader from '../../shaders/ReflectorMaterial.frag.js';

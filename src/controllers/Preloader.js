@@ -5,11 +5,12 @@ import { Assets } from '../loaders/Assets.js';
 import { MultiLoader } from '../loaders/MultiLoader.js';
 import { FontLoader } from '../loaders/FontLoader.js';
 import { AssetLoader } from '../loaders/AssetLoader.js';
+// import { WebAudio } from '../utils/audio/WebAudio.js';
 import { Stage } from './Stage.js';
 import { PreloaderView } from '../views/PreloaderView.js';
 
 export class Preloader {
-    static init() {
+    static async init() {
         // if (!Device.webgl) {
         //     return location.href = 'fallback.html';
         // }

@@ -27,7 +27,7 @@
 
 Alien.js is a design pattern and project structure for building [SPA](https://en.wikipedia.org/wiki/Single-page_application) websites with ES modules and [GSAP](https://greensock.com/).
 
-The idea is to keep it simple and build websites more like a framework, which is why [Rollup](http://rollupjs.org/) is used instead for bundling.
+The idea is to keep it simple, with minimal abstraction, and to build websites more like a framework, which is why [Rollup](https://rollupjs.org/) is used instead for bundling.
 
 In its design, everything is an ES module, all user interfaces and components follow the same class structure, making it easy to copy-paste from examples and between projects.
 
@@ -192,6 +192,7 @@ src
 │   │   ├── CameraController.js
 │   │   ├── InputManager.js
 │   │   ├── RenderManager.js
+│   │   ├── SceneController.js
 │   │   └── WorldController.js
 │   │
 │   ├── App.js
@@ -201,6 +202,7 @@ src
 ├── data
 │   │
 │   ├── Data.js
+│   ├── Geo.js
 │   └── Socket.js
 │
 ├── lib
@@ -281,7 +283,9 @@ src
 │
 ├── views
 │   │
-│   └── PreloaderView.js
+│   ├── LandingView.js
+│   ├── PreloaderView.js
+│   └── SceneView.js
 │
 └── main.js
 ```

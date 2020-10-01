@@ -26,11 +26,8 @@ export class HeaderInfo extends Interface {
         this.text.css({
             position: 'relative',
             cssFloat: 'left',
-            fontFamily: '"Roboto", sans-serif',
-            fontWeight: '600',
-            fontSize: 12,
             lineHeight: 15,
-            letterSpacing: 12 * 0.1,
+            letterSpacing: 1,
             whiteSpace: 'nowrap'
         });
         this.text.text(this.fps);

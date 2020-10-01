@@ -13,10 +13,9 @@
 <body>
     <div id="root"></div>
     <script type="module">
-        import { ACESFilmicToneMapping, AmbientLight, BloomCompositeMaterial, BlurDirectionX, BlurDirectionY, Color, DirectionalLight, Events, FXAAMaterial, Fog, Group, HemisphereLight, Mesh, MeshStandardMaterial, NoBlending, OrthographicCamera, PerspectiveCamera, PlaneBufferGeometry, RawShaderMaterial, Reflector, RepeatWrapping, SVGLoader, Scene, Stage, TextureLoader, Uniform, UnrealBloomBlurMaterial, Vector2, Vector3, WebGLRenderTarget, WebGLRenderer, Wobble, getFullscreenTriangle, mix, radians, range, ticker } from '../build/alien.js';
+        import { ACESFilmicToneMapping, BloomCompositeMaterial, BlurDirectionX, BlurDirectionY, Color, DirectionalLight, Events, FXAAMaterial, Fog, Group, HemisphereLight, LuminosityMaterial, Mesh, MeshStandardMaterial, NoBlending, OrthographicCamera, PerspectiveCamera, PlaneBufferGeometry, RawShaderMaterial, Reflector, RepeatWrapping, SVGLoader, Scene, Stage, TextureLoader, Uniform, UnrealBloomBlurMaterial, Vector2, Vector3, WebGLRenderTarget, WebGLRenderer, Wobble, getFullscreenTriangle, mix, radians, range, ticker } from '../build/alien.js';
 
         import rgbshift from '../src/shaders/modules/rgbshift/rgbshift.glsl.js';
-        import blendAlpha from '../src/shaders/modules/blending/alpha.glsl.js';
 
         const vertexCompositeShader = /* glsl */`
             attribute vec2 uv;
@@ -34,33 +33,21 @@
         const fragmentCompositeShader = /* glsl */`
             precision highp float;
 
-            uniform sampler2D tBackground;
             uniform sampler2D tScene;
             uniform sampler2D tBloom;
-            uniform float uMinBright;
-            uniform float uBlurBright;
             uniform float uDistortion;
 
             varying vec2 vUv;
 
             ${rgbshift}
-            ${blendAlpha}
 
             void main() {
-                vec4 base = texture2D(tBackground, vUv);
-                vec4 blend = texture2D(tScene, vUv);
-
-                gl_FragColor = blendAlpha(base, blend, 1.0);
+                gl_FragColor = texture2D(tScene, vUv);
 
                 float angle = length(vUv - vec2(0.5));
                 float amount = uDistortion + 0.0002;
 
-                vec3 bloom = getRGB(tBloom, vUv, angle, amount).rgb;
-                bloom.x = max(0.0, bloom.x - uMinBright);
-                bloom.y = max(0.0, bloom.y - uMinBright);
-                bloom.z = max(0.0, bloom.z - uMinBright);
-
-                gl_FragColor.rgb += bloom * uBlurBright;
+                gl_FragColor.rgb += getRGB(tBloom, vUv, angle, amount).rgb;
             }
         `;
 
@@ -68,11 +55,8 @@
             constructor() {
                 super({
                     uniforms: {
-                        tBackground: new Uniform(null),
                         tScene: new Uniform(null),
                         tBloom: new Uniform(null),
-                        uMinBright: new Uniform(0),
-                        uBlurBright: new Uniform(0.6),
                         uDistortion: new Uniform(0.00125)
                     },
                     vertexShader: vertexCompositeShader,
@@ -89,37 +73,14 @@
             static UI_COLOR = 'rgba(255, 255, 255, 0.94)';
         }
 
-        class SceneView extends Group {
+        class Triangle extends Group {
             constructor() {
                 super();
-
-                this.visible = false;
             }
 
             async initMesh() {
-                const { camera, getSVG, getTexture, scene } = WorldController;
+                const { camera, getSVG } = WorldController;
 
-                // Floor
-                this.geometry = new PlaneBufferGeometry(110, 110);
-
-                const map = getTexture('assets/textures/pbr/polished_concrete_basecolor.jpg');
-                map.wrapS = RepeatWrapping;
-                map.wrapT = RepeatWrapping;
-                map.repeat.set(8, 8);
-
-                const { fog } = scene;
-
-                this.mesh = new Reflector(this.geometry, {
-                    map,
-                    fog,
-                    dithering: true
-                });
-                this.mesh.rotation.x = -Math.PI / 2;
-                this.mesh.position.y = -1.6;
-
-                this.add(this.mesh);
-
-                // SVG triangle
                 const data = await getSVG('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg"><path stroke-width="0.3" d="M3 0L0 5h6z"/></svg>');
                 const paths = data.paths;
 
@@ -150,6 +111,58 @@
 
                 this.add(group);
             }
+        }
+
+        class Floor extends Group {
+            constructor() {
+                super();
+
+                this.initMesh();
+            }
+
+            initMesh() {
+                const { getTexture, scene } = WorldController;
+
+                this.geometry = new PlaneBufferGeometry(110, 110);
+
+                const map = getTexture('assets/textures/pbr/polished_concrete_basecolor.jpg');
+                map.wrapS = RepeatWrapping;
+                map.wrapT = RepeatWrapping;
+                map.repeat.set(8, 8);
+
+                const { fog } = scene;
+
+                this.mesh = new Reflector(this.geometry, {
+                    width: 512,
+                    height: 640,
+                    map,
+                    fog,
+                    dithering: true
+                });
+                this.mesh.rotation.x = -Math.PI / 2;
+                this.mesh.position.y = -1.6;
+                this.mesh.renderOrder = -1;
+
+                this.add(this.mesh);
+            }
+        }
+
+        class SceneView extends Group {
+            constructor() {
+                super();
+
+                this.visible = false;
+
+                this.initViews();
+            }
+
+            initViews() {
+                this.floor = new Floor();
+                this.add(this.floor);
+
+                this.triangle = new Triangle();
+                this.add(this.triangle);
+            }
 
             /**
              * Public methods
@@ -159,7 +172,7 @@
                 this.visible = true;
             };
 
-            ready = () => this.initMesh();
+            ready = () => this.triangle.initMesh();
         }
 
         class RenderManager {
@@ -168,6 +181,7 @@
                 this.scene = scene;
                 this.camera = camera;
 
+                this.luminosityThreshold = 0.1;
                 this.bloomStrength = 0.3;
                 this.bloomRadius = 0.75;
                 this.enabled = true;
@@ -186,33 +200,34 @@
                 this.screen.frustumCulled = false;
                 this.screenScene.add(this.screen);
 
-                // Background scene
-                this.backgroundScene = new Scene();
-                this.backgroundScene.background = new Color(Config.BG_COLOR);
-
                 // Render targets
-                this.renderTarget = new WebGLRenderTarget(1, 1, {
+                this.renderTargetA = new WebGLRenderTarget(1, 1, {
                     anisotropy: 0,
                     depthBuffer: false
                 });
 
-                this.renderTargetA = this.renderTarget.clone();
-                this.renderTargetB = this.renderTarget.clone();
+                this.renderTargetB = this.renderTargetA.clone();
 
                 this.renderTargetsHorizontal = [];
                 this.renderTargetsVertical = [];
                 this.nMips = 5;
 
+                this.renderTargetBright = this.renderTargetA.clone();
+
                 for (let i = 0, l = this.nMips; i < l; i++) {
-                    this.renderTargetsHorizontal.push(this.renderTarget.clone());
-                    this.renderTargetsVertical.push(this.renderTarget.clone());
+                    this.renderTargetsHorizontal.push(this.renderTargetA.clone());
+                    this.renderTargetsVertical.push(this.renderTargetA.clone());
                 }
 
-                this.renderTarget.depthBuffer = true;
+                this.renderTargetA.depthBuffer = true;
 
                 // FXAA material
                 this.fxaaMaterial = new FXAAMaterial();
                 this.fxaaMaterial.uniforms.uResolution = resolution;
+
+                // Luminosity high pass material
+                this.luminosityMaterial = new LuminosityMaterial();
+                this.luminosityMaterial.uniforms.uLuminosityThreshold.value = this.luminosityThreshold;
 
                 // Gaussian blur materials
                 this.blurMaterials = [];
@@ -255,12 +270,13 @@
                 width = Math.round(width * dpr);
                 height = Math.round(height * dpr);
 
-                this.renderTarget.setSize(width, height);
                 this.renderTargetA.setSize(width, height);
                 this.renderTargetB.setSize(width, height);
 
                 width = Math.round(width / 2);
                 height = Math.round(height / 2);
+
+                this.renderTargetBright.setSize(width, height);
 
                 for (let i = 0, l = this.nMips; i < l; i++) {
                     this.renderTargetsHorizontal[i].setSize(width, height);
@@ -287,28 +303,30 @@
                 const screenScene = this.screenScene;
                 const screenCamera = this.screenCamera;
 
-                const renderTarget = this.renderTarget;
                 const renderTargetA = this.renderTargetA;
                 const renderTargetB = this.renderTargetB;
+                const renderTargetBright = this.renderTargetBright;
                 const renderTargetsHorizontal = this.renderTargetsHorizontal;
                 const renderTargetsVertical = this.renderTargetsVertical;
 
-                // Background pass
-                renderer.setRenderTarget(renderTargetA);
-                renderer.render(this.backgroundScene, camera);
-
                 // Scene pass
-                renderer.setRenderTarget(renderTarget);
+                renderer.setRenderTarget(renderTargetA);
                 renderer.render(scene, camera);
 
                 // FXAA pass
-                this.fxaaMaterial.uniforms.tMap.value = renderTarget.texture;
+                this.fxaaMaterial.uniforms.tMap.value = renderTargetA.texture;
                 this.screen.material = this.fxaaMaterial;
                 renderer.setRenderTarget(renderTargetB);
                 renderer.render(screenScene, screenCamera);
 
+                // Extract bright areas
+                this.luminosityMaterial.uniforms.tMap.value = renderTargetB.texture;
+                this.screen.material = this.luminosityMaterial;
+                renderer.setRenderTarget(renderTargetBright);
+                renderer.render(screenScene, screenCamera);
+
                 // Blur all the mips progressively
-                let inputRenderTarget = renderTargetB;
+                let inputRenderTarget = renderTargetBright;
 
                 for (let i = 0, l = this.nMips; i < l; i++) {
                     this.screen.material = this.blurMaterials[i];
@@ -332,7 +350,6 @@
                 renderer.render(screenScene, screenCamera);
 
                 // Composite pass (render to screen)
-                this.compositeMaterial.uniforms.tBackground.value = renderTargetA.texture;
                 this.compositeMaterial.uniforms.tScene.value = renderTargetB.texture;
                 this.compositeMaterial.uniforms.tBloom.value = renderTargetsHorizontal[0].texture;
                 this.screen.material = this.compositeMaterial;
@@ -344,10 +361,22 @@
         class CameraController {
             static init(camera) {
                 this.camera = camera;
+
+                // Motion control
                 this.group = new Group();
-                this.innerGroup = new Group();
-                this.innerGroup.add(this.camera);
-                this.group.add(this.innerGroup);
+                this.rotateGroup = new Group();
+                this.wobbleGroup = new Group();
+                this.rotateGroup.add(this.wobbleGroup);
+                this.group.add(this.rotateGroup);
+
+                // Start position
+                this.group.matrixAutoUpdate = false;
+                this.rotateGroup.matrixAutoUpdate = false;
+                this.wobbleGroup.matrixAutoUpdate = false;
+                this.group.position.copy(this.camera.position);
+
+                // Flip direction
+                this.rotateGroup.rotation.y = Math.PI;
 
                 this.pos = new Vector2();
                 this.last = new Vector2();
@@ -359,14 +388,15 @@
                 this.origin = new Vector3();
                 this.target = new Vector3();
                 this.targetXY = new Vector2(5, 1);
-                this.origin.copy(this.camera.position);
+                this.origin.copy(this.group.position);
 
+                this.rotation = 0;
                 this.rotateAngle = radians(10);
                 this.lerpSpeed = 0.02;
+                this.lerpSpeed2 = 0.07;
                 this.animatedIn = false;
 
-                this.wobble = new Wobble(this.innerGroup.position);
-                this.wobble.amplitude.set(1, 1, 0.8);
+                this.wobble = new Wobble(this.wobbleGroup.position);
 
                 this.addListeners();
             }
@@ -398,8 +428,6 @@
                 }
 
                 this.pos.copy(event);
-                this.delta.subVectors(this.pos, this.last);
-                this.last.copy(this.pos);
             };
 
             /**
@@ -416,17 +444,28 @@
                     return;
                 }
 
+                this.delta.subVectors(this.pos, this.last);
+                this.last.copy(this.pos);
+
                 this.target.x = this.origin.x + this.targetXY.x * range(this.pos.x, 0, Stage.width, -1, 1, true);
                 this.target.y = this.origin.y + this.targetXY.y * range(this.pos.y, 0, Stage.height, -1, 1, true);
                 this.target.z = this.origin.z;
 
-                this.camera.position.lerp(this.target, this.lerpSpeed);
-                this.camera.lookAt(this.lookAt);
+                this.group.position.lerp(this.target, this.lerpSpeed);
+                this.group.lookAt(this.lookAt);
 
                 const rotateStrength = range(Math.abs(this.delta.x) / Stage.width, 0, 0.02, 0, 1, true);
-                this.group.rotation.z += (this.rotateAngle * rotateStrength * Math.sign(this.delta.x) - this.group.rotation.z) * this.lerpSpeed;
+                this.rotation += (this.rotateAngle * rotateStrength * Math.sign(this.delta.x) - this.rotation) * this.lerpSpeed;
+                this.rotateGroup.rotation.z += (this.rotation - this.rotateGroup.rotation.z) * this.lerpSpeed2;
 
                 this.wobble.update(time);
+
+                // Update camera
+                this.group.updateMatrix();
+                this.rotateGroup.updateMatrix();
+                this.wobbleGroup.updateMatrix();
+                this.group.updateMatrixWorld();
+                this.wobbleGroup.matrixWorld.decompose(this.camera.position, this.camera.quaternion, this.camera.scale);
             };
 
             static animateIn = () => {
@@ -444,8 +483,7 @@
             static initWorld() {
                 this.renderer = new WebGLRenderer({
                     powerPreference: 'high-performance',
-                    stencil: false,
-                    depth: false
+                    stencil: false
                 });
                 this.element = this.renderer.domElement;
 
@@ -455,6 +493,7 @@
 
                 // 3D scene
                 this.scene = new Scene();
+                this.scene.background = new Color(Config.BG_COLOR);
                 this.scene.fog = new Fog(Config.BG_COLOR, 1, 100);
                 this.camera = new PerspectiveCamera(30);
                 this.camera.near = 0.5;
@@ -472,12 +511,10 @@
             }
 
             static initLights() {
-                this.scene.add(new AmbientLight(0xffffff, 0.2));
-
                 this.scene.add(new HemisphereLight(0x606060, 0x404040));
 
-                const light = new DirectionalLight(0xffffff, 0.4);
-                light.position.set(0.6, 0.5, 1);
+                const light = new DirectionalLight(0xffffff);
+                light.position.set(1, 1, 1);
                 this.scene.add(light);
             }
 

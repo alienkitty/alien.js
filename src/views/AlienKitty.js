@@ -1,6 +1,6 @@
-import { headsTails, random } from '../utils/Utils.js';
-
 import { Interface } from '../utils/Interface.js';
+
+import { headsTails, random } from '../utils/Utils.js';
 
 export class AlienKitty extends Interface {
     constructor() {

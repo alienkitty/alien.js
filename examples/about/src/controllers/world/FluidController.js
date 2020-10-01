@@ -1,8 +1,4 @@
-import {
-    HalfFloatType,
-    Vector2,
-    WebGLRenderTarget
-} from 'three';
+import { HalfFloatType, Vector2, WebGLRenderTarget } from 'three';
 
 import { Stage } from 'alien.js';
 
@@ -25,6 +21,7 @@ export class FluidController {
         this.pointer = {};
         this.width = 1;
         this.height = 1;
+        this.lerpSpeed = 0.07;
         this.animatedIn = false;
 
         this.initRenderer();
@@ -198,7 +195,7 @@ export class FluidController {
 
         Object.keys(this.pointer).forEach((id, i) => {
             if (id !== 'main') {
-                this.pointer[id].pos.lerp(this.pointer[id].target, 0.07);
+                this.pointer[id].pos.lerp(this.pointer[id].target, this.lerpSpeed);
                 this.pointer[id].tracker.css({ left: Math.round(this.pointer[id].pos.x), top: Math.round(this.pointer[id].pos.y) });
 
                 if (!this.pointer[id].tracker.animatedIn) {

@@ -2,10 +2,11 @@ import { AssetLoader, Assets, Device, FontLoader, MultiLoader, Stage } from 'ali
 
 import { Config } from '../config/Config.js';
 import { Events } from '../config/Events.js';
+import { Data } from '../data/Data.js';
 import { PreloaderView } from '../views/PreloaderView.js';
 
 export class Preloader {
-    static init() {
+    static async init() {
         if (!Device.webgl) {
             return location.href = 'fallback.html';
         }
@@ -19,6 +20,9 @@ export class Preloader {
         };
 
         Assets.cache = true;
+
+        Data.init();
+        Data.Socket.init();
 
         this.initViews();
         this.initLoader();

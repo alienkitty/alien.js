@@ -2,9 +2,9 @@
  * @author pschroen / https://ufo.ai/
  */
 
-import { clearTween, delayedCall, tween } from './Tween.js';
-
 import { EventEmitter } from './EventEmitter.js';
+
+import { clearTween, delayedCall, tween } from './Tween.js';
 
 export class Component {
     constructor() {

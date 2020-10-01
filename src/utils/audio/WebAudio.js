@@ -2,12 +2,12 @@
  * @author pschroen / https://ufo.ai/
  */
 
-import { tween } from '../Tween.js';
-import { basename } from '../Utils.js';
-
 import { Assets } from '../../loaders/Assets.js';
 import { WebAudioParam } from './WebAudioParam.js';
 import { Sound } from './Sound.js';
+
+import { tween } from '../Tween.js';
+import { basename } from '../Utils.js';
 
 var AudioContext;
 

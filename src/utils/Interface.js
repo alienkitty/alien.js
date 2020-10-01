@@ -2,10 +2,10 @@
  * @author pschroen / https://ufo.ai/
  */
 
-import { clearTween, delayedCall, getProperty, quickSetter, tween } from './Tween.js';
-
 import { Assets } from '../loaders/Assets.js';
 import { EventEmitter } from './EventEmitter.js';
+
+import { clearTween, delayedCall, getProperty, quickSetter, tween } from './Tween.js';
 
 export class Interface {
     constructor(name, type = 'div') {

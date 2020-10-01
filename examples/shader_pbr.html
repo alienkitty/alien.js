@@ -13,9 +13,7 @@
 <body>
     <div id="root"></div>
     <script type="module">
-        import { ACESFilmicToneMapping, AmbientLight, BloomCompositeMaterial, BlurDirectionX, BlurDirectionY, BoxGeometry, Color, DirectionalLight, EnvironmentTextureLoader, Events, FXAAMaterial, Group, HemisphereLight, ImageBitmapLoaderThread, Mesh, MeshStandardMaterial, NoBlending, OrbitControls, OrthographicCamera, PerspectiveCamera, RawShaderMaterial, Scene, SphericalCubeTextureLoader, Stage, TextureLoader, Thread, Uniform, UnrealBloomBlurMaterial, Vector2, WebGLRenderTarget, WebGLRenderer, getFullscreenTriangle, mix, ticker } from '../build/alien.js';
-
-        import blendAlpha from '../src/shaders/modules/blending/alpha.glsl.js';
+        import { ACESFilmicToneMapping, AmbientLight, BloomCompositeMaterial, BlurDirectionX, BlurDirectionY, BoxGeometry, Color, DirectionalLight, EnvironmentTextureLoader, Events, FXAAMaterial, Group, HemisphereLight, ImageBitmapLoaderThread, LuminosityMaterial, Mesh, MeshStandardMaterial, NoBlending, OrbitControls, OrthographicCamera, PerspectiveCamera, RawShaderMaterial, Scene, SphericalCubeTextureLoader, Stage, TextureLoader, Thread, Uniform, UnrealBloomBlurMaterial, Vector2, WebGLRenderTarget, WebGLRenderer, getFullscreenTriangle, mix, ticker } from '../build/alien.js';
 
         const vertexCompositeShader = /* glsl */`
             attribute vec2 uv;
@@ -33,28 +31,15 @@
         const fragmentCompositeShader = /* glsl */`
             precision highp float;
 
-            uniform sampler2D tBackground;
             uniform sampler2D tScene;
             uniform sampler2D tBloom;
-            uniform float uMinBright;
-            uniform float uBlurBright;
 
             varying vec2 vUv;
 
-            ${blendAlpha}
-
             void main() {
-                vec4 base = texture2D(tBackground, vUv);
-                vec4 blend = texture2D(tScene, vUv);
+                gl_FragColor = texture2D(tScene, vUv);
 
-                gl_FragColor = blendAlpha(base, blend, 1.0);
-
-                vec3 bloom = texture2D(tBloom, vUv).rgb;
-                bloom.x = max(0.0, bloom.x - uMinBright);
-                bloom.y = max(0.0, bloom.y - uMinBright);
-                bloom.z = max(0.0, bloom.z - uMinBright);
-
-                gl_FragColor.rgb += bloom * uBlurBright;
+                gl_FragColor.rgb += texture2D(tBloom, vUv).rgb;
             }
         `;
 
@@ -62,11 +47,8 @@
             constructor() {
                 super({
                     uniforms: {
-                        tBackground: new Uniform(null),
                         tScene: new Uniform(null),
-                        tBloom: new Uniform(null),
-                        uMinBright: new Uniform(0),
-                        uBlurBright: new Uniform(0.6)
+                        tBloom: new Uniform(null)
                     },
                     vertexShader: vertexCompositeShader,
                     fragmentShader: fragmentCompositeShader,
@@ -86,12 +68,10 @@
             constructor() {
                 super();
 
-                this.initMesh();
+                this.visible = false;
             }
 
-            async initMesh() {
-                const { getEnvironmentTexture, getSphericalCubeTextures } = WorldController;
-
+            initGeometry() {
                 // Spherical cube geometry
                 this.geometry = new BoxGeometry(1, 1, 1, 32, 32, 32);
 
@@ -104,6 +84,16 @@
 
                 // 2nd set of UV's for aoMap and lightMap
                 this.geometry.faceVertexUvs[1] = this.geometry.faceVertexUvs[0];
+            }
+
+            async initEnvironmentTexture() {
+                const { getEnvironmentTexture } = WorldController;
+
+                this.envMap = await getEnvironmentTexture('assets/textures/env.jpg');
+            }
+
+            initMesh1() {
+                const { getSphericalCubeTextures } = WorldController;
 
                 // Textures
                 const map = getSphericalCubeTextures('assets/textures/pbr/pitted_metal_basecolor.jpg');
@@ -112,13 +102,11 @@
                 // https://occlusion-roughness-metalness.glitch.me/
                 const ormMap = getSphericalCubeTextures('assets/textures/pbr/pitted_metal_orm.jpg');
 
-                const envMap = await getEnvironmentTexture('assets/textures/env.jpg');
-
                 // Materials
-                this.material = [];
+                const material = [];
 
                 for (let i = 0; i < 6; i++) {
-                    this.material[i] = new MeshStandardMaterial({
+                    material[i] = new MeshStandardMaterial({
                         color: new Color(1, 1, 1),
                         roughness: 1,
                         metalness: 1,
@@ -129,19 +117,115 @@
                         metalnessMap: ormMap[i],
                         normalMap: normalMap[i],
                         normalScale: new Vector2(1, 1),
-                        envMap,
+                        envMap: this.envMap,
                         envMapIntensity: 0.5,
                         transparent: true
                     });
                 }
 
-                this.mesh = new Mesh(this.geometry, this.material);
+                const mesh = new Mesh(this.geometry, material);
+                mesh.position.x = -2.5;
 
                 // Flip horizontally
-                this.mesh.scale.x = -1;
+                mesh.scale.x = -1;
 
-                this.add(this.mesh);
+                this.add(mesh);
             }
+
+            initMesh2() {
+                const { getSphericalCubeTextures } = WorldController;
+
+                // Textures
+                const map = getSphericalCubeTextures('assets/textures/pbr/pitted_metal_basecolor.jpg');
+                const normalMap = getSphericalCubeTextures('assets/textures/pbr/pitted_metal_normal.jpg');
+
+                // https://occlusion-roughness-metalness.glitch.me/
+                const ormMap = getSphericalCubeTextures('assets/textures/pbr/pitted_metal_orm.jpg');
+
+                // Materials
+                const material = [];
+
+                for (let i = 0; i < 6; i++) {
+                    material[i] = new MeshStandardMaterial({
+                        color: Config.BG_COLOR,
+                        roughness: 1,
+                        metalness: 1,
+                        map: map[i],
+                        aoMap: ormMap[i],
+                        aoMapIntensity: 1,
+                        roughnessMap: ormMap[i],
+                        metalnessMap: ormMap[i],
+                        normalMap: normalMap[i],
+                        normalScale: new Vector2(1, 1),
+                        envMap: this.envMap,
+                        envMapIntensity: 0.5,
+                        transparent: true
+                    });
+                }
+
+                const mesh = new Mesh(this.geometry, material);
+
+                // Flip horizontally
+                mesh.scale.x = -1;
+
+                this.add(mesh);
+            }
+
+            initMesh3() {
+                const { getSphericalCubeTextures } = WorldController;
+
+                // Textures
+                const map = getSphericalCubeTextures('assets/textures/pbr/polished_concrete_basecolor.jpg');
+                const normalMap = getSphericalCubeTextures('assets/textures/pbr/polished_concrete_normal.jpg');
+
+                // https://occlusion-roughness-metalness.glitch.me/
+                const ormMap = getSphericalCubeTextures('assets/textures/pbr/polished_concrete_orm.jpg');
+
+                // Materials
+                const material = [];
+
+                for (let i = 0; i < 6; i++) {
+                    material[i] = new MeshStandardMaterial({
+                        color: new Color(1, 1, 1),
+                        roughness: 1,
+                        metalness: 1,
+                        map: map[i],
+                        aoMap: ormMap[i],
+                        aoMapIntensity: 1,
+                        roughnessMap: ormMap[i],
+                        metalnessMap: ormMap[i],
+                        normalMap: normalMap[i],
+                        normalScale: new Vector2(1, 1),
+                        envMap: this.envMap,
+                        envMapIntensity: 0.5,
+                        transparent: true
+                    });
+                }
+
+                const mesh = new Mesh(this.geometry, material);
+                mesh.position.x = 2.5;
+
+                // Flip horizontally
+                mesh.scale.x = -1;
+
+                this.add(mesh);
+            }
+
+            /**
+             * Public methods
+             */
+
+            animateIn = () => {
+                this.visible = true;
+            };
+
+            ready = async () => {
+                this.initGeometry();
+                await this.initEnvironmentTexture();
+                this.initMesh1();
+                this.initMesh2();
+                this.initMesh3();
+            };
         }
 
         class RenderManager {
@@ -150,6 +234,7 @@
                 this.scene = scene;
                 this.camera = camera;
 
+                this.luminosityThreshold = 0.1;
                 this.bloomStrength = 0.3;
                 this.bloomRadius = 0.75;
                 this.enabled = true;
@@ -168,33 +253,34 @@
                 this.screen.frustumCulled = false;
                 this.screenScene.add(this.screen);
 
-                // Background scene
-                this.backgroundScene = new Scene();
-                this.backgroundScene.background = new Color(Config.BG_COLOR);
-
                 // Render targets
-                this.renderTarget = new WebGLRenderTarget(1, 1, {
+                this.renderTargetA = new WebGLRenderTarget(1, 1, {
                     anisotropy: 0,
                     depthBuffer: false
                 });
 
-                this.renderTargetA = this.renderTarget.clone();
-                this.renderTargetB = this.renderTarget.clone();
+                this.renderTargetB = this.renderTargetA.clone();
 
                 this.renderTargetsHorizontal = [];
                 this.renderTargetsVertical = [];
                 this.nMips = 5;
 
+                this.renderTargetBright = this.renderTargetA.clone();
+
                 for (let i = 0, l = this.nMips; i < l; i++) {
-                    this.renderTargetsHorizontal.push(this.renderTarget.clone());
-                    this.renderTargetsVertical.push(this.renderTarget.clone());
+                    this.renderTargetsHorizontal.push(this.renderTargetA.clone());
+                    this.renderTargetsVertical.push(this.renderTargetA.clone());
                 }
 
-                this.renderTarget.depthBuffer = true;
+                this.renderTargetA.depthBuffer = true;
 
                 // FXAA material
                 this.fxaaMaterial = new FXAAMaterial();
                 this.fxaaMaterial.uniforms.uResolution = resolution;
+
+                // Luminosity high pass material
+                this.luminosityMaterial = new LuminosityMaterial();
+                this.luminosityMaterial.uniforms.uLuminosityThreshold.value = this.luminosityThreshold;
 
                 // Gaussian blur materials
                 this.blurMaterials = [];
@@ -237,12 +323,13 @@
                 width = Math.round(width * dpr);
                 height = Math.round(height * dpr);
 
-                this.renderTarget.setSize(width, height);
                 this.renderTargetA.setSize(width, height);
                 this.renderTargetB.setSize(width, height);
 
                 width = Math.round(width / 2);
                 height = Math.round(height / 2);
+
+                this.renderTargetBright.setSize(width, height);
 
                 for (let i = 0, l = this.nMips; i < l; i++) {
                     this.renderTargetsHorizontal[i].setSize(width, height);
@@ -269,28 +356,30 @@
                 const screenScene = this.screenScene;
                 const screenCamera = this.screenCamera;
 
-                const renderTarget = this.renderTarget;
                 const renderTargetA = this.renderTargetA;
                 const renderTargetB = this.renderTargetB;
+                const renderTargetBright = this.renderTargetBright;
                 const renderTargetsHorizontal = this.renderTargetsHorizontal;
                 const renderTargetsVertical = this.renderTargetsVertical;
 
-                // Background pass
-                renderer.setRenderTarget(renderTargetA);
-                renderer.render(this.backgroundScene, camera);
-
                 // Scene pass
-                renderer.setRenderTarget(renderTarget);
+                renderer.setRenderTarget(renderTargetA);
                 renderer.render(scene, camera);
 
                 // FXAA pass
-                this.fxaaMaterial.uniforms.tMap.value = renderTarget.texture;
+                this.fxaaMaterial.uniforms.tMap.value = renderTargetA.texture;
                 this.screen.material = this.fxaaMaterial;
                 renderer.setRenderTarget(renderTargetB);
                 renderer.render(screenScene, screenCamera);
 
+                // Extract bright areas
+                this.luminosityMaterial.uniforms.tMap.value = renderTargetB.texture;
+                this.screen.material = this.luminosityMaterial;
+                renderer.setRenderTarget(renderTargetBright);
+                renderer.render(screenScene, screenCamera);
+
                 // Blur all the mips progressively
-                let inputRenderTarget = renderTargetB;
+                let inputRenderTarget = renderTargetBright;
 
                 for (let i = 0, l = this.nMips; i < l; i++) {
                     this.screen.material = this.blurMaterials[i];
@@ -314,7 +403,6 @@
                 renderer.render(screenScene, screenCamera);
 
                 // Composite pass (render to screen)
-                this.compositeMaterial.uniforms.tBackground.value = renderTargetA.texture;
                 this.compositeMaterial.uniforms.tScene.value = renderTargetB.texture;
                 this.compositeMaterial.uniforms.tBloom.value = renderTargetsHorizontal[0].texture;
                 this.screen.material = this.compositeMaterial;
@@ -334,8 +422,7 @@
             static initWorld() {
                 this.renderer = new WebGLRenderer({
                     powerPreference: 'high-performance',
-                    stencil: false,
-                    depth: false
+                    stencil: false
                 });
                 this.element = this.renderer.domElement;
 
@@ -345,6 +432,7 @@
 
                 // 3D scene
                 this.scene = new Scene();
+                this.scene.background = new Color(Config.BG_COLOR);
                 this.camera = new PerspectiveCamera(30);
                 this.camera.near = 0.5;
                 this.camera.far = 50;
@@ -425,6 +513,9 @@
 
                 this.addListeners();
                 this.onResize();
+
+                await this.view.ready();
+                this.view.animateIn();
             }
 
             static initThread() {

@@ -1,17 +1,17 @@
 html, body, #root {
-    margin: 0;
-    padding: 0;
     width: 100%;
     height: 100%;
     overflow: hidden;
 }
 
 body {
+    margin: 0;
     position: fixed;
     font-family: 'Roboto Mono', monospace;
     font-weight: 400;
     font-size: 11px;
     line-height: 1.7;
+    letter-spacing: 0.03em;
     background: #000;
     color: rgba(255, 255, 255, 0.94);
 }
@@ -38,15 +38,11 @@ a, a:hover, a:focus {
     color: rgba(255, 255, 255, 0.94);
 }
 
-.title .number {
-    font-size: 110%;
-}
-
-.link, .info {
-    -webkit-font-smoothing: antialiased;
-}
-
 ::selection {
     background: #fff;
     color: #000;
+}
+
+.preloader {
+    z-index: 100;
 }

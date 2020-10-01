@@ -13,7 +13,7 @@
 <body>
     <div id="root"></div>
     <script type="module">
-        import { AssetLoader, Assets, Color, CylinderBufferGeometry, DirectionalLight, Events, Fog, Group, HemisphereLight, MathUtils, Mesh, MeshStandardMaterial, Object3D, PerspectiveCamera, PointLight, Scene, Sound3D, SphereBufferGeometry, Stage, Thread, Uniform, Vector2, Vector3, WebAudio, WebGLRenderer, clamp, delayedCall, getFrustum, gsap, range, updateRoot, wait } from '../build/alien.js';
+        import { AssetLoader, Assets, Color, CylinderBufferGeometry, DirectionalLight, Events, Fog, Group, HemisphereLight, MathUtils, Mesh, MeshStandardMaterial, PerspectiveCamera, PointLight, Scene, Sound3D, SphereBufferGeometry, Stage, Thread, Uniform, Vector2, Vector3, WebAudio, WebGLRenderer, clamp, delayedCall, getFrustum, gsap, range, updateRoot, wait } from '../build/alien.js';
 
         import { World } from 'https://unpkg.com/oimo/build/oimo.module.js';
 
@@ -26,7 +26,7 @@
             ];
         }
 
-        class RodPhysicsThread {
+        class ScenePhysicsThread {
             constructor() {
                 this.bodies = [];
                 this.force = new Vector3();
@@ -36,6 +36,8 @@
                 // Mallet initial position
                 this.target.set(0.24, 0.32);
                 this.pos.copy(this.target);
+
+                this.lerpSpeed = 0.25;
 
                 this.addListeners();
             }
@@ -102,7 +104,7 @@
                 const mallet = this.bodies[1];
 
                 // Mallet position
-                this.pos.lerp(this.target, 0.25);
+                this.pos.lerp(this.target, this.lerpSpeed);
 
                 const malletX = this.pos.x * (this.width * 0.5);
                 const malletY = this.pos.y * (this.height * 0.5);
@@ -116,17 +118,17 @@
                 const contact = this.world.getContact(mallet, wand);
 
                 if (contact && !contact.close) {
-                    this.force.x += (wand.linearVelocity.x * wand.mass) - (mallet.linearVelocity.x * mallet.mass);
-                    this.force.y += (wand.linearVelocity.y * wand.mass) - (mallet.linearVelocity.y * mallet.mass);
-                    this.force.z += (wand.linearVelocity.z * wand.mass) - (mallet.linearVelocity.z * mallet.mass);
+                    this.force.x = (wand.linearVelocity.x * wand.mass) - (mallet.linearVelocity.x * mallet.mass);
+                    this.force.y = (wand.linearVelocity.y * wand.mass) - (mallet.linearVelocity.y * mallet.mass);
+                    this.force.z = (wand.linearVelocity.z * wand.mass) - (mallet.linearVelocity.z * mallet.mass);
 
                     this.force.multiplyScalar(0.5);
 
-                    if (this.force.length() < 0.1) {
-                        this.force.set(0, 0, 0);
-                    }
+                    const force = this.force.length();
 
-                    postMessage({ event: 'contact', message: { force: this.force.toArray() } });
+                    if (force > 0.1) {
+                        postMessage({ event: 'contact', message: { force } });
+                    }
                 }
             };
 
@@ -138,9 +140,9 @@
             };
         }
 
-        class RodPhysics {
-            constructor(rod) {
-                this.rod = rod;
+        class ScenePhysics {
+            constructor(view) {
+                this.view = view;
                 this.meshes = [];
                 this.shapes = [];
                 this.promise = new Promise(resolve => this.resolve = resolve);
@@ -152,7 +154,7 @@
             }
 
             initBuffer() {
-                const { wand, mallet } = this.rod;
+                const { wand, mallet } = this.view;
 
                 this.meshes.push(wand);
                 this.shapes.push(this.createShapeObject('wand', 'cylinder', wand.size, wand.position, wand.rotation, true));
@@ -169,7 +171,7 @@
                         ['../build/alien.js', 'Vector2', 'Vector3'],
                         ['https://unpkg.com/oimo/build/oimo.module.js', 'World']
                     ],
-                    controller: [RodPhysicsThread, 'init', 'resize', 'update']
+                    controller: [ScenePhysicsThread, 'init', 'resize', 'update']
                 });
 
                 this.thread.init({ shapes: this.shapes });
@@ -182,8 +184,8 @@
                 object.type = type;
                 object.pos = [position.x, position.y, position.z];
                 object.rot = [MathUtils.radToDeg(rotation.x), MathUtils.radToDeg(rotation.y), MathUtils.radToDeg(rotation.z)];
-                object.move = true;
-                object.noSleep = true;
+                object.move = move;
+                object.noSleep = move;
 
                 if (type === 'box') {
                     object.size = [size.x, size.y, size.z];
@@ -198,7 +200,7 @@
                 }
 
                 const config = [
-                    2, // The density of the shape.
+                    3, // The density of the shape.
                     0, // The coefficient of friction of the shape.
                     0, // The coefficient of restitution of the shape.
                     1, // The bits of the collision groups to which the shape belongs.
@@ -231,7 +233,21 @@
 
             onUpdate = ({ buffer }) => {
                 this.buffer = buffer;
+            };
 
+            onContact = ({ force }) => {
+                AudioController.trigger('gong', force);
+            };
+
+            /**
+             * Public methods
+             */
+
+            resize = (width, height) => {
+                this.thread.resize({ width, height });
+            };
+
+            update = () => {
                 let index = 0;
 
                 this.meshes.forEach((mesh, i) => {
@@ -244,26 +260,6 @@
                 });
             };
 
-            onContact = ({ force }) => {
-                force = (new Vector3()).fromArray(force).length();
-
-                if (force > 0) {
-                    AudioController.trigger('gong', force);
-                }
-            };
-
-            /**
-             * Public methods
-             */
-
-            resize = (width, height) => {
-                this.thread.resize({ width, height });
-            };
-
-            update = () => {
-                this.thread.update();
-            };
-
             send = (event, message = {}) => {
                 this.thread.send(event, message);
             };
@@ -271,7 +267,7 @@
             ready = () => this.promise;
         }
 
-        class Mallet extends Object3D {
+        class Mallet extends Group {
             constructor() {
                 super();
 
@@ -300,7 +296,7 @@
             }
         }
 
-        class Wand extends Object3D {
+        class Wand extends Group {
             constructor() {
                 super();
 
@@ -328,7 +324,7 @@
             }
         }
 
-        class Rod extends Group {
+        class SceneView extends Group {
             constructor() {
                 super();
 
@@ -346,9 +342,9 @@
             }
         }
 
-        class RodController {
-            static init(rod) {
-                this.rod = rod;
+        class SceneController {
+            static init(view) {
+                this.view = view;
 
                 this.initPhysics();
 
@@ -356,7 +352,7 @@
             }
 
             static initPhysics() {
-                this.physics = new RodPhysics(this.rod);
+                this.physics = new ScenePhysics(this.view);
             }
 
             static addListeners() {
@@ -373,7 +369,7 @@
             static onTouchStart = e => {
                 e.preventDefault();
 
-                if (!this.rod.visible) {
+                if (!this.view.visible) {
                     return;
                 }
 
@@ -381,7 +377,7 @@
             };
 
             static onTouchMove = e => {
-                if (!this.rod.visible) {
+                if (!this.view.visible) {
                     return;
                 }
 
@@ -406,8 +402,7 @@
                 this.width = width;
                 this.height = height;
 
-                const frustum = WorldController.getFrustum(this.rod.mallet.position.z);
-
+                const frustum = WorldController.getFrustum(this.view.mallet.position.z);
                 this.physics.resize(frustum.width, frustum.height);
             };
 
@@ -423,15 +418,15 @@
             };
 
             static animateIn = () => {
-                this.rod.visible = true;
+                this.view.visible = true;
             };
 
             static ready = () => this.physics.ready();
         }
 
         class AudioController {
-            static init(rod) {
-                this.rod = rod;
+            static init(view) {
+                this.view = view;
 
                 this.addListeners();
             }
@@ -473,8 +468,8 @@
                 switch (event) {
                     case 'gong': {
                         const gong = new Sound3D(WorldController.camera, 'gong');
-                        gong.position.copy(this.rod.mallet.position);
-                        gong.quaternion.copy(this.rod.mallet.quaternion);
+                        gong.position.copy(this.view.mallet.position);
+                        gong.quaternion.copy(this.view.mallet.quaternion);
                         gong.updateMatrixWorld();
 
                         const strength = range(params[0], 0, 1000, 0, 1, true);
@@ -526,8 +521,7 @@
             static initWorld() {
                 this.renderer = new WebGLRenderer({
                     powerPreference: 'high-performance',
-                    stencil: false,
-                    depth: false
+                    stencil: false
                 });
                 this.element = this.renderer.domElement;
 
@@ -594,11 +588,11 @@
                 this.addListeners();
                 this.onResize();
 
-                await RodController.ready();
+                await SceneController.ready();
                 requestAnimationFrame(this.step);
 
                 await wait(250);
-                RodController.animateIn();
+                SceneController.animateIn();
             }
 
             static initWorld() {
@@ -607,14 +601,14 @@
             }
 
             static initViews() {
-                this.rod = new Rod();
-                WorldController.scene.add(this.rod);
+                this.view = new SceneView();
+                WorldController.scene.add(this.view);
             }
 
             static initControllers() {
                 const { renderer, scene, camera } = WorldController;
 
-                RodController.init(this.rod);
+                SceneController.init(this.view);
                 RenderManager.init(renderer, scene, camera);
             }
 
@@ -624,7 +618,7 @@
 
             static addListeners() {
                 Stage.events.on(Events.RESIZE, this.onResize);
-                RodController.physics.thread.on('update', this.onUpdate);
+                SceneController.physics.thread.on('update', this.onUpdate);
                 this.loader.events.on(Events.COMPLETE, this.onComplete);
 
                 // Unhooks the GSAP ticker
@@ -639,7 +633,7 @@
                 const { width, height, dpr } = Stage;
 
                 WorldController.resize(width, height, dpr);
-                RodController.resize(width, height);
+                SceneController.resize(width, height);
                 RenderManager.resize(width, height, dpr);
             };
 
@@ -651,11 +645,11 @@
                 this.loader = this.loader.destroy();
 
                 WebAudio.init(Assets.filter(path => /sounds/.test(path)));
-                AudioController.init(this.rod);
+                AudioController.init(this.view);
             };
 
             static step = time => {
-                RodController.update();
+                SceneController.physics.thread.update();
 
                 updateRoot(time);
 
@@ -663,7 +657,10 @@
                 this.last = time;
                 this.frame++;
 
+                time *= 0.001; // Convert to seconds
+
                 WorldController.update(time, this.delta, this.frame);
+                SceneController.update();
                 RenderManager.update(time, this.delta, this.frame);
             };
         }

@@ -2,11 +2,11 @@
  * @author pschroen / https://ufo.ai/
  */
 
-import { absolute, getConstructorName, guid } from './Utils.js';
-
 import { Assets } from '../loaders/Assets.js';
 import { EventEmitter } from './EventEmitter.js';
 import { Cluster } from './Cluster.js';
+
+import { absolute, getConstructorName, guid } from './Utils.js';
 
 export class Thread extends EventEmitter {
     static count = navigator.hardwareConcurrency || 4;

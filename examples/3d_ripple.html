@@ -78,7 +78,7 @@
             };
         }
 
-        class Ripple extends Group {
+        class SceneView extends Group {
             constructor() {
                 super();
 
@@ -265,14 +265,17 @@
             ready = () => this.initImages();
         }
 
-        class RippleController {
-            static init(ripple) {
-                this.ripple = ripple;
+        class SceneController {
+            static init(view) {
+                this.view = view;
+
                 this.pos = new Vector2();
                 this.last = new Vector2();
                 this.delta = new Vector2();
                 this.pos.set(Stage.width / 2, Stage.height / 2);
                 this.last.copy(this.pos);
+
+                this.timeout = false;
 
                 this.addListeners();
                 this.constantWaving();
@@ -305,7 +308,7 @@
             };
 
             static onTouchMove = e => {
-                if (!this.ripple.visible) {
+                if (!this.view.visible) {
                     return;
                 }
 
@@ -326,7 +329,7 @@
                 if (!this.timeout) {
                     this.timeout = true;
 
-                    this.ripple.wave(this.delta.x > 0 ? 1 : -1);
+                    this.view.wave(this.delta.x > 0 ? 1 : -1);
 
                     delayedCall(2500, () => {
                         this.timeout = false;
@@ -339,17 +342,17 @@
              */
 
             static resize = () => {
-                this.ripple.resize();
+                this.view.resize();
             };
 
             static update = () => {
-                if (this.ripple.needsUpdate) {
-                    this.ripple.update();
+                if (this.view.needsUpdate) {
+                    this.view.update();
                 }
             };
 
             static constantWaving = () => {
-                this.ripple.wave(1);
+                this.view.wave(1);
 
                 this.constant = delayedCall(1000 * Math.random() + 1000, this.constantWaving);
             };
@@ -390,8 +393,7 @@
             static initWorld() {
                 this.renderer = new WebGLRenderer({
                     powerPreference: 'high-performance',
-                    stencil: false,
-                    depth: false
+                    stencil: false
                 });
                 this.element = this.renderer.domElement;
 
@@ -450,8 +452,8 @@
                 this.addListeners();
                 this.onResize();
 
-                await this.ripple.ready();
-                this.ripple.animateIn();
+                await this.view.ready();
+                this.view.animateIn();
             }
 
             static initWorld() {
@@ -460,14 +462,14 @@
             }
 
             static initViews() {
-                this.ripple = new Ripple();
-                WorldController.scene.add(this.ripple);
+                this.view = new SceneView();
+                WorldController.scene.add(this.view);
             }
 
             static initControllers() {
                 const { renderer, scene, camera } = WorldController;
 
-                RippleController.init(this.ripple);
+                SceneController.init(this.view);
                 RenderManager.init(renderer, scene, camera);
             }
 
@@ -484,13 +486,13 @@
                 const { width, height, dpr } = Stage;
 
                 WorldController.resize(width, height, dpr);
-                RippleController.resize();
+                SceneController.resize();
                 RenderManager.resize(width, height, dpr);
             };
 
             static onUpdate = (time, delta, frame) => {
                 WorldController.update(time, delta, frame);
-                RippleController.update();
+                SceneController.update();
                 RenderManager.update(time, delta, frame);
             };
         }

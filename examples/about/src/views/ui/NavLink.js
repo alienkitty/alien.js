@@ -20,9 +20,6 @@ export class NavLink extends Interface {
         this.css({
             padding: 10,
             cssFloat: 'left',
-            fontFamily: '"Roboto", sans-serif',
-            fontWeight: '500',
-            fontSize: 14,
             lineHeight: 15,
             whiteSpace: 'nowrap',
             pointerEvents: 'auto'

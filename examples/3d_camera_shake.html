@@ -1,0 +1,867 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+    <title>Alien.js — 3D Camera Shake</title>
+
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto+Mono">
+    <link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+    <div id="root"></div>
+    <script type="module">
+        import { AssetLoader, Assets, Color, CylinderBufferGeometry, DirectionalLight, Events, Fog, Group, HemisphereLight, MathUtils, Mesh, MeshStandardMaterial, OrbitControls, PerspectiveCamera, PlaneBufferGeometry, PointLight, Reflector, RepeatWrapping, Scene, Sound3D, SphereBufferGeometry, Stage, TextureLoader, Thread, Uniform, Vector2, Vector3, WebAudio, WebGLRenderer, Wobble, clamp, clearTween, delayedCall, getFrustum, gsap, radians, range, tween, updateRoot, wait } from '../build/alien.js';
+
+        import { World } from 'https://unpkg.com/oimo/build/oimo.module.js';
+
+        class Config {
+            static BG_COLOR = '#0e0e0e';
+            static UI_COLOR = 'rgba(255, 255, 255, 0.94)';
+
+            static ASSETS = [
+                'assets/sounds/gong.mp3'
+            ];
+        }
+
+        class ScenePhysicsThread {
+            constructor() {
+                this.bodies = [];
+                this.force = new Vector3();
+                this.pos = new Vector2();
+                this.target = new Vector2();
+
+                // Mallet initial position
+                this.target.set(0.24, 0.32);
+                this.pos.copy(this.target);
+
+                this.timeout = false;
+                this.lerpSpeed = 0.25;
+
+                this.addListeners();
+            }
+
+            addListeners() {
+                addEventListener('message', this.onMessage);
+            }
+
+            /**
+             * Event handlers
+             */
+
+            onMessage = ({ data }) => {
+                this[data.message.fn].call(this, data.message);
+            };
+
+            /**
+             * Public methods
+             */
+
+            init = ({ shapes }) => {
+                this.world = new World();
+                this.world.gravity = new Vector3(0, -98, 0); // More realistic gravity
+
+                shapes.forEach(shape => this.bodies.push(this.world.add(shape)));
+
+                const wand = this.bodies[1];
+
+                // Wand joint
+                this.world.add({ type: 'joint', body1: 'paddle', body2: 'wand', pos1: [0, 0, 0], pos2: [0, wand.shapes.halfHeight, 0] });
+
+                this.buffer = new Float32Array(shapes.length * 8);
+
+                postMessage({ event: 'ready' });
+            };
+
+            resize = ({ width, height }) => {
+                this.width = width;
+                this.height = height;
+            };
+
+            update = () => {
+                this.world.step();
+
+                let index = 0;
+
+                this.bodies.forEach((body, i) => {
+                    index = i * 8;
+
+                    if (body.sleeping) {
+                        this.buffer[index + 7] = 1;
+                    } else {
+                        this.buffer[index + 7] = 0;
+                        body.getPosition().toArray(this.buffer, index);
+                        body.getQuaternion().toArray(this.buffer, index + 3);
+                    }
+                });
+
+                const floor = this.bodies[0];
+                const wand = this.bodies[1];
+                const mallet = this.bodies[2];
+
+                // Mallet position
+                this.pos.lerp(this.target, this.lerpSpeed);
+
+                const malletX = this.pos.x * (this.width * 0.5);
+                const malletY = this.pos.y * (this.height * 0.5);
+                const malletZ = mallet.position.z;
+
+                mallet.setPosition(new Vector3(malletX, malletY, malletZ));
+
+                postMessage({ event: 'update', message: { buffer: this.buffer } });
+
+                // Contact test
+                const contact = this.world.getContact(wand, floor);
+
+                if (contact && !this.timeout) {
+                    this.force.x = (floor.linearVelocity.x * floor.mass) - (wand.linearVelocity.x * wand.mass);
+                    this.force.y = (floor.linearVelocity.y * floor.mass) - (wand.linearVelocity.y * wand.mass);
+                    this.force.z = (floor.linearVelocity.z * floor.mass) - (wand.linearVelocity.z * wand.mass);
+
+                    this.force.multiplyScalar(0.5);
+
+                    const force = this.force.length();
+
+                    if (force > 150 || !contact.close) {
+                        this.timeout = true;
+
+                        postMessage({ event: 'contact', message: { force } });
+
+                        delayedCall(250, () => {
+                            this.timeout = false;
+                        });
+                    }
+                }
+            };
+
+            motion = ({ x, y }) => {
+                this.target.set(
+                    x * 2 - 1,
+                    y * -2 + 1
+                );
+            };
+        }
+
+        class ScenePhysics {
+            constructor(view) {
+                this.view = view;
+                this.meshes = [];
+                this.shapes = [];
+                this.promise = new Promise(resolve => this.resolve = resolve);
+
+                this.initBuffer();
+                this.initEngine();
+
+                this.addListeners();
+            }
+
+            initBuffer() {
+                const { floor, wand, mallet } = this.view;
+
+                this.meshes.push(floor);
+                this.shapes.push(this.createShapeObject('floor', 'box', floor.size, floor.position, floor.rotation));
+
+                this.meshes.push(wand);
+                this.shapes.push(this.createShapeObject('wand', 'cylinder', wand.size, wand.position, wand.rotation, true));
+
+                this.meshes.push(mallet);
+                this.shapes.push(this.createShapeObject('paddle', 'sphere', mallet.size, mallet.position, mallet.rotation, true, true));
+
+                this.buffer = new Float32Array(this.shapes.length * 8);
+            }
+
+            initEngine() {
+                this.thread = new Thread({
+                    imports: [
+                        ['../build/alien.js', 'Vector2', 'Vector3', 'delayedCall'],
+                        ['https://unpkg.com/oimo/build/oimo.module.js', 'World']
+                    ],
+                    controller: [ScenePhysicsThread, 'init', 'resize', 'update']
+                });
+
+                this.thread.init({ shapes: this.shapes });
+            }
+
+            createShapeObject(name, type, size, position, rotation, move, paddle) {
+                const object = {};
+
+                object.name = name;
+                object.type = type;
+                object.pos = [position.x, position.y, position.z];
+                object.rot = [MathUtils.radToDeg(rotation.x), MathUtils.radToDeg(rotation.y), MathUtils.radToDeg(rotation.z)];
+                object.move = move;
+                object.noSleep = move;
+
+                if (type === 'box') {
+                    object.size = [size.x, size.y, size.z];
+                }
+
+                if (type === 'sphere') {
+                    object.size = [size.x];
+                }
+
+                if (type === 'cylinder') {
+                    object.size = [size.x, size.z];
+                }
+
+                const config = [
+                    20, // The density of the shape.
+                    0, // The coefficient of friction of the shape.
+                    0, // The coefficient of restitution of the shape.
+                    1, // The bits of the collision groups to which the shape belongs.
+                    0xffffffff // The bits of the collision groups with which the shape collides.
+                ];
+
+                if (paddle) {
+                    config[0] = 100;
+                    object.kinematic = true;
+                }
+
+                object.config = config;
+
+                return object;
+            }
+
+            addListeners() {
+                this.thread.on('ready', this.onReady);
+                this.thread.on('update', this.onUpdate);
+                this.thread.on('contact', this.onContact);
+            }
+
+            /**
+             * Event handlers
+             */
+
+            onReady = () => {
+                this.resolve();
+            };
+
+            onUpdate = ({ buffer }) => {
+                this.buffer = buffer;
+            };
+
+            onContact = ({ force }) => {
+                AudioController.trigger('gong', force);
+                CameraController.shake(force);
+            };
+
+            /**
+             * Public methods
+             */
+
+            resize = (width, height) => {
+                this.thread.resize({ width, height });
+            };
+
+            update = () => {
+                let index = 0;
+
+                this.meshes.forEach((mesh, i) => {
+                    index = i * 8;
+
+                    if (this.buffer[index + 7] !== 1) {
+                        mesh.position.fromArray(this.buffer, index);
+                        mesh.quaternion.fromArray(this.buffer, index + 3);
+                    }
+                });
+            };
+
+            send = (event, message = {}) => {
+                this.thread.send(event, message);
+            };
+
+            ready = () => this.promise;
+        }
+
+        class Mallet extends Group {
+            constructor() {
+                super();
+
+                this.initMesh();
+                this.initLight();
+            }
+
+            initMesh() {
+                this.size = new Vector3(0.5, 0.5, 0.5);
+                this.geometry = new SphereBufferGeometry(0.5, 24, 24);
+
+                this.material = new MeshStandardMaterial({
+                    emissive: 0xffffff
+                });
+
+                this.mesh = new Mesh(this.geometry, this.material);
+
+                this.add(this.mesh);
+            }
+
+            initLight() {
+                this.light = new PointLight(0xffffff, 0.2);
+                this.add(this.light);
+            }
+        }
+
+        class Wand extends Group {
+            constructor() {
+                super();
+
+                this.initMesh();
+            }
+
+            initMesh() {
+                this.size = new Vector3(0.75, 0.75, 3);
+                this.geometry = new CylinderBufferGeometry(0.75, 0.75, 3, 50);
+
+                // this.material = new MeshStandardMaterial({
+                //     color: Config.BG_COLOR,
+                //     roughness: 0.3,
+                //     metalness: 1,
+                //     dithering: true
+                // });
+                this.material = new MeshStandardMaterial({
+                    emissive: 0xffffff
+                });
+
+                this.mesh = new Mesh(this.geometry, this.material);
+
+                this.add(this.mesh);
+            }
+        }
+
+        class Floor extends Group {
+            constructor() {
+                super();
+
+                this.initMesh();
+            }
+
+            initMesh() {
+                const { getTexture, scene } = WorldController;
+
+                this.size = new Vector3(1000, 3, 1000);
+                this.geometry = new PlaneBufferGeometry(1000, 1000);
+
+                // const map = getTexture('assets/textures/uv.jpg');
+                const map = getTexture('assets/textures/pbr/polished_concrete_basecolor.jpg');
+                map.wrapS = RepeatWrapping;
+                map.wrapT = RepeatWrapping;
+                map.repeat.set(8, 8);
+
+                // const { fog } = scene;
+
+                this.mesh = new Reflector(this.geometry, {
+                    // color: 0xffffff,
+                    width: 512,
+                    height: 768,
+                    map,
+                    // fog,
+                    // dithering: true
+                });
+                this.mesh.rotation.x = -Math.PI / 2;
+                this.mesh.position.y = this.size.y / 2;
+                this.mesh.renderOrder = -1;
+
+                this.position.y = -4.5;
+
+                this.add(this.mesh);
+            }
+        }
+
+        class SceneView extends Group {
+            constructor() {
+                super();
+
+                this.visible = false;
+
+                this.initViews();
+            }
+
+            initViews() {
+                this.floor = new Floor();
+                this.add(this.floor);
+
+                this.wand = new Wand();
+                this.add(this.wand);
+
+                this.mallet = new Mallet();
+                this.add(this.mallet);
+            }
+        }
+
+        class SceneController {
+            static init(view) {
+                this.view = view;
+
+                this.initPhysics();
+
+                this.addListeners();
+            }
+
+            static initPhysics() {
+                this.physics = new ScenePhysics(this.view);
+            }
+
+            static addListeners() {
+                Stage.element.addEventListener('touchstart', this.onTouchStart);
+                Stage.element.addEventListener('mousedown', this.onTouchStart);
+                window.addEventListener('touchmove', this.onTouchMove);
+                window.addEventListener('mousemove', this.onTouchMove);
+            }
+
+            /**
+             * Event handlers
+             */
+
+            static onTouchStart = e => {
+                e.preventDefault();
+
+                if (!this.view.visible) {
+                    return;
+                }
+
+                this.onTouchMove(e);
+            };
+
+            static onTouchMove = e => {
+                if (!this.view.visible) {
+                    return;
+                }
+
+                const event = {};
+
+                if (e.changedTouches && e.changedTouches.length) {
+                    event.x = e.changedTouches[0].pageX;
+                    event.y = e.changedTouches[0].pageY;
+                } else {
+                    event.x = e.clientX;
+                    event.y = e.clientY;
+                }
+
+                this.send(event);
+            };
+
+            /**
+             * Public methods
+             */
+
+            static resize = (width, height) => {
+                this.width = width;
+                this.height = height;
+
+                const frustum = WorldController.getFrustum(this.view.mallet.position.z);
+                this.physics.resize(frustum.width, frustum.height);
+            };
+
+            static update = () => {
+                this.physics.update();
+            };
+
+            static send = e => {
+                this.physics.send('motion', {
+                    x: e.x / this.width,
+                    y: e.y / this.height
+                });
+            };
+
+            static animateIn = () => {
+                this.view.visible = true;
+            };
+
+            static ready = () => this.physics.ready();
+        }
+
+        class AudioController {
+            static init(view) {
+                this.view = view;
+
+                this.addListeners();
+            }
+
+            static addListeners() {
+                Stage.events.on(Events.VISIBILITY, this.onVisibility);
+                Stage.element.addEventListener('touchstart', this.onTouchStart);
+                Stage.element.addEventListener('mousedown', this.onTouchStart);
+            }
+
+            /**
+             * Event handlers
+             */
+
+            static onVisibility = () => {
+                if (document.hidden) {
+                    WebAudio.mute();
+                } else {
+                    WebAudio.unmute();
+                }
+            };
+
+            static onTouchStart = () => {
+                Stage.element.removeEventListener('touchstart', this.onTouchStart);
+                Stage.element.removeEventListener('mousedown', this.onTouchStart);
+
+                this.trigger('gong', 500);
+            };
+
+            /**
+             * Public methods
+             */
+
+            static trigger = (event, ...params) => {
+                if (!WebAudio.context) {
+                    return;
+                }
+
+                switch (event) {
+                    case 'gong': {
+                        const gong = new Sound3D(WorldController.camera, 'gong');
+                        gong.position.copy(this.view.wand.position);
+                        gong.quaternion.copy(this.view.wand.quaternion);
+                        gong.updateMatrixWorld();
+
+                        const strength = range(params[0], 0, 1000, 0, 1, true);
+                        gong.sound.gain.alpha = strength * 0.5;
+                        gong.sound.playbackRate.alpha = clamp(0.8 + strength * 0.4, 0.8, 1.2);
+                        gong.sound.play();
+
+                        delayedCall(6000, () => {
+                            gong.destroy();
+                        });
+                        break;
+                    }
+                }
+            };
+        }
+
+        class RenderManager {
+            static init(renderer, scene, camera) {
+                this.renderer = renderer;
+                this.scene = scene;
+                this.camera = camera;
+
+                this.initRenderer();
+            }
+
+            static initRenderer() {
+            }
+
+            /**
+             * Public methods
+             */
+
+            static resize = (width, height, dpr) => {
+                this.renderer.setPixelRatio(dpr);
+                this.renderer.setSize(width, height);
+            };
+
+            static update = () => {
+                this.renderer.render(this.scene, this.camera);
+            };
+        }
+
+        class CameraController {
+            static init(camera) {
+                this.camera = camera;
+
+                // Motion control
+                this.group = new Group();
+                this.rotateGroup = new Group();
+                this.group.add(this.rotateGroup);
+
+                // Start position
+                this.group.matrixAutoUpdate = false;
+                this.rotateGroup.matrixAutoUpdate = false;
+                this.group.position.copy(this.camera.position);
+
+                // Flip direction
+                this.rotateGroup.rotation.y = Math.PI;
+
+                this.pos = new Vector2();
+                this.last = new Vector2();
+                this.delta = new Vector2();
+                this.pos.set(Stage.width / 2, Stage.height / 2);
+                this.last.copy(this.pos);
+
+                this.lookAt = new Vector3(0, 0, -2);
+                this.origin = new Vector3();
+                this.target = new Vector3();
+                this.targetXY = new Vector2(18.75, 1);
+                this.origin.copy(this.group.position);
+
+                this.rotation = 0;
+                this.rotateAngle = radians(40);
+                this.multiplier = 0;
+                this.lerpSpeed = 0.02;
+                this.lerpSpeed2 = 0.07;
+                this.animatedIn = false;
+
+                this.wobble = new Wobble();
+                this.wobble.amplitude.set(15, 15, 15);
+                this.wobble.frequency.set(15, 15, 15);
+
+                this.addListeners();
+            }
+
+            static addListeners() {
+                window.addEventListener('touchstart', this.onTouchStart);
+                window.addEventListener('mousedown', this.onTouchStart);
+                window.addEventListener('touchmove', this.onTouchMove);
+                window.addEventListener('mousemove', this.onTouchMove);
+            }
+
+            /**
+             * Event handlers
+             */
+
+            static onTouchStart = e => {
+                this.onTouchMove(e);
+            };
+
+            static onTouchMove = e => {
+                const event = {};
+
+                if (e.changedTouches && e.changedTouches.length) {
+                    event.x = e.changedTouches[0].pageX;
+                    event.y = e.changedTouches[0].pageY;
+                } else {
+                    event.x = e.clientX;
+                    event.y = e.clientY;
+                }
+
+                this.pos.copy(event);
+            };
+
+            /**
+             * Public methods
+             */
+
+            static resize = (width, height) => {
+                this.camera.aspect = width / height;
+                this.camera.updateProjectionMatrix();
+            };
+
+            static update = time => {
+                if (!this.animatedIn) {
+                    return;
+                }
+
+                this.delta.subVectors(this.pos, this.last);
+                this.last.copy(this.pos);
+
+                const directionX = range(this.pos.x, 0, Stage.width, -1, 1, true);
+                const directionY = range(this.pos.y, 0, Stage.height, -1, 1, true);
+
+                this.target.x = this.origin.x + this.wobble.target.x * this.multiplier + this.targetXY.x * directionX;
+                this.target.y = this.origin.y + this.wobble.target.y * this.multiplier + this.targetXY.y * directionY;
+                this.target.z = this.origin.z + this.wobble.target.z * this.multiplier;
+
+                this.group.position.lerp(this.target, this.lerpSpeed);
+                this.group.lookAt(this.lookAt);
+
+                const rotateStrength = range(Math.abs(this.delta.x) / Stage.width, 0, 0.02, 0, 1, true) * this.multiplier;
+                this.rotation += (this.rotateAngle * rotateStrength * directionX - this.rotation) * this.lerpSpeed;
+                this.rotateGroup.rotation.z += (this.rotation - this.rotateGroup.rotation.z) * this.lerpSpeed2;
+
+                this.wobble.update(time);
+
+                // Update camera
+                this.group.updateMatrix();
+                this.rotateGroup.updateMatrix();
+                this.group.updateMatrixWorld();
+                this.rotateGroup.matrixWorld.decompose(this.camera.position, this.camera.quaternion, this.camera.scale);
+            };
+
+            static animateIn = () => {
+                this.animatedIn = true;
+            };
+
+            static shake = force => {
+                const strength = range(force, 0, 1000, 0, 1, true);
+
+                clearTween(this);
+
+                tween(this, { multiplier: strength }, 50, 'easeOutExpo', () => {
+                    tween(this, { multiplier: 0 }, 300, 'easeInExpo');
+                });
+            };
+        }
+
+        class WorldController {
+            static init() {
+                this.initWorld();
+                this.initLights();
+                this.initLoaders();
+                // this.initControls();
+            }
+
+            static initWorld() {
+                this.renderer = new WebGLRenderer({
+                    powerPreference: 'high-performance',
+                    stencil: false
+                });
+                this.element = this.renderer.domElement;
+
+                // 3D scene
+                this.scene = new Scene();
+                this.scene.background = new Color(Config.BG_COLOR);
+                this.scene.fog = new Fog(Config.BG_COLOR, 1, 62.5);
+                this.camera = new PerspectiveCamera(30);
+                this.camera.near = 0.1;
+                this.camera.far = 1000;
+                this.camera.position.z = 37.5;
+
+                // Global uniforms
+                this.resolution = new Uniform(new Vector2());
+                this.aspect = new Uniform(1);
+                this.time = new Uniform(0);
+                this.frame = new Uniform(0);
+            }
+
+            static initLights() {
+                this.scene.add(new HemisphereLight(0x606060, 0x404040));
+
+                const light = new DirectionalLight(0xffffff);
+                light.position.set(1, 1, 1);
+                this.scene.add(light);
+            }
+
+            static initLoaders() {
+                this.textureLoader = new TextureLoader();
+            }
+
+            static initControls() {
+                this.controls = new OrbitControls(this.camera, this.renderer.domElement);
+                this.controls.enableDamping = true;
+                // this.controls.enableZoom = false;
+            }
+
+            /**
+             * Public methods
+             */
+
+            static resize = (width, height, dpr) => {
+                width = Math.round(width * dpr);
+                height = Math.round(height * dpr);
+
+                this.resolution.value.set(width, height);
+                this.aspect.value = width / height;
+            };
+
+            static update = (time, delta, frame) => {
+                this.time.value = time;
+                this.frame.value = frame;
+
+                // this.controls.update();
+            };
+
+            static getFrustum = offsetZ => getFrustum(this.camera, offsetZ);
+
+            static getTexture = path => this.textureLoader.load(path);
+        }
+
+        class App {
+            static async init() {
+                Assets.cache = true;
+
+                this.last = performance.now();
+                this.delta = 0;
+                this.frame = 0;
+
+                this.initWorld();
+                this.initViews();
+                this.initControllers();
+                this.initLoader();
+
+                this.addListeners();
+                this.onResize();
+
+                await Promise.all([
+                    WorldController.textureLoader.ready(),
+                    SceneController.ready()
+                ]);
+
+                requestAnimationFrame(this.step);
+
+                await wait(250);
+
+                CameraController.animateIn();
+                SceneController.animateIn();
+            }
+
+            static initWorld() {
+                WorldController.init();
+                Stage.add(WorldController.element);
+            }
+
+            static initViews() {
+                this.view = new SceneView();
+                WorldController.scene.add(this.view);
+            }
+
+            static initControllers() {
+                const { renderer, scene, camera } = WorldController;
+
+                CameraController.init(camera, this.view);
+                SceneController.init(this.view);
+                RenderManager.init(renderer, scene, camera);
+            }
+
+            static initLoader() {
+                this.loader = new AssetLoader(Config.ASSETS);
+            }
+
+            static addListeners() {
+                Stage.events.on(Events.RESIZE, this.onResize);
+                SceneController.physics.thread.on('update', this.onUpdate);
+                this.loader.events.on(Events.COMPLETE, this.onComplete);
+
+                // Unhooks the GSAP ticker
+                gsap.ticker.remove(gsap.updateRoot);
+            }
+
+            /**
+             * Event handlers
+             */
+
+            static onResize = () => {
+                const { width, height, dpr } = Stage;
+
+                WorldController.resize(width, height, dpr);
+                CameraController.resize(width, height);
+                SceneController.resize(width, height);
+                RenderManager.resize(width, height, dpr);
+            };
+
+            static onUpdate = () => {
+                requestAnimationFrame(this.step);
+            };
+
+            static onComplete = async () => {
+                this.loader = this.loader.destroy();
+
+                WebAudio.init(Assets.filter(path => /sounds/.test(path)));
+                AudioController.init(this.view);
+            };
+
+            static step = time => {
+                SceneController.physics.thread.update();
+
+                updateRoot(time);
+
+                this.delta = time - this.last;
+                this.last = time;
+                this.frame++;
+
+                time *= 0.001; // Convert to seconds
+
+                WorldController.update(time, this.delta, this.frame);
+                CameraController.update(time);
+                SceneController.update();
+                RenderManager.update(time, this.delta, this.frame);
+            };
+        }
+
+        App.init();
+    </script>
+</body>
+</html>

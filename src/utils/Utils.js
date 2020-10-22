@@ -88,6 +88,16 @@ export function absolute(path) {
     return location.protocol + '//' + location.hostname + port + location.pathname.replace(/\/[^/]*$/, '/') + path;
 }
 
+export function queryString(key) {
+    const str = decodeURI(location.search.replace(new RegExp('^(?:.*[&\\?]' + encodeURI(key).replace(/[.+*]/g, '\\$&') + '(?:\\=([^&]*))?)?.*$', 'i'), '$1'));
+
+    if (!str.length || str === '0' || str === 'false') {
+        return false;
+    }
+
+    return str;
+}
+
 export function getConstructorName(obj) {
     const code = typeof obj !== 'function' ? obj.constructor.toString() : obj.toString();
 

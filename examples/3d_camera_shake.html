@@ -13,7 +13,7 @@
 <body>
     <div id="root"></div>
     <script type="module">
-        import { AssetLoader, Assets, Color, CylinderBufferGeometry, DirectionalLight, Events, Fog, Group, HemisphereLight, MathUtils, Mesh, MeshStandardMaterial, OrbitControls, PerspectiveCamera, PlaneBufferGeometry, PointLight, Reflector, RepeatWrapping, Scene, Sound3D, SphereBufferGeometry, Stage, TextureLoader, Thread, Uniform, Vector2, Vector3, WebAudio, WebGLRenderer, Wobble, clamp, clearTween, delayedCall, getFrustum, gsap, radians, range, tween, updateRoot, wait } from '../build/alien.js';
+        import { AssetLoader, Assets, Color, CylinderBufferGeometry, DirectionalLight, Events, Fog, Group, HemisphereLight, MathUtils, Mesh, MeshStandardMaterial, PerspectiveCamera, PlaneBufferGeometry, PointLight, Reflector, RepeatWrapping, Scene, Sound3D, SphereBufferGeometry, Stage, TextureLoader, Thread, Uniform, Vector2, Vector3, WebAudio, WebGLRenderer, Wobble, clamp, clearTween, delayedCall, getFrustum, gsap, radians, range, tween, updateRoot, wait } from '../build/alien.js';
 
         import { World } from 'https://unpkg.com/oimo/build/oimo.module.js';
 
@@ -313,12 +313,6 @@
                 this.size = new Vector3(0.75, 0.75, 3);
                 this.geometry = new CylinderBufferGeometry(0.75, 0.75, 3, 50);
 
-                // this.material = new MeshStandardMaterial({
-                //     color: Config.BG_COLOR,
-                //     roughness: 0.3,
-                //     metalness: 1,
-                //     dithering: true
-                // });
                 this.material = new MeshStandardMaterial({
                     emissive: 0xffffff
                 });
@@ -337,26 +331,20 @@
             }
 
             initMesh() {
-                const { getTexture, scene } = WorldController;
+                const { getTexture } = WorldController;
 
                 this.size = new Vector3(1000, 3, 1000);
                 this.geometry = new PlaneBufferGeometry(1000, 1000);
 
-                // const map = getTexture('assets/textures/uv.jpg');
                 const map = getTexture('assets/textures/pbr/polished_concrete_basecolor.jpg');
                 map.wrapS = RepeatWrapping;
                 map.wrapT = RepeatWrapping;
                 map.repeat.set(8, 8);
 
-                // const { fog } = scene;
-
                 this.mesh = new Reflector(this.geometry, {
-                    // color: 0xffffff,
                     width: 512,
                     height: 768,
-                    map,
-                    // fog,
-                    // dithering: true
+                    map
                 });
                 this.mesh.rotation.x = -Math.PI / 2;
                 this.mesh.position.y = this.size.y / 2;
@@ -691,7 +679,6 @@
                 this.initWorld();
                 this.initLights();
                 this.initLoaders();
-                // this.initControls();
             }
 
             static initWorld() {
@@ -729,12 +716,6 @@
                 this.textureLoader = new TextureLoader();
             }
 
-            static initControls() {
-                this.controls = new OrbitControls(this.camera, this.renderer.domElement);
-                this.controls.enableDamping = true;
-                // this.controls.enableZoom = false;
-            }
-
             /**
              * Public methods
              */
@@ -750,8 +731,6 @@
             static update = (time, delta, frame) => {
                 this.time.value = time;
                 this.frame.value = frame;
-
-                // this.controls.update();
             };
 
             static getFrustum = offsetZ => getFrustum(this.camera, offsetZ);

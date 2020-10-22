@@ -6,8 +6,10 @@ import vertexShader from '../shaders/PoissonDiscBlurPass.vert.js';
 import fragmentShader from '../shaders/PoissonDiscBlurPass.frag.js';
 
 export class PoissonDiscBlurMaterial extends RawShaderMaterial {
-    constructor() {
-        const texture = new TextureLoader().load('assets/textures/blue_noise.png');
+    constructor({
+        blueNoisePath = 'assets/textures/blue_noise.png'
+    } = {}) {
+        const texture = new TextureLoader().load(blueNoisePath);
         texture.wrapS = RepeatWrapping;
         texture.wrapT = RepeatWrapping;
         texture.magFilter = NearestFilter;

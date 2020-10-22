@@ -6,8 +6,10 @@ import vertexShader from '../shaders/BloomCompositePass.vert.js';
 import fragmentShader from '../shaders/BloomCompositePass.frag.js';
 
 export class BloomCompositeMaterial extends RawShaderMaterial {
-    constructor(nMips) {
-        const texture = new TextureLoader().load('assets/textures/blue_noise.png');
+    constructor(nMips, {
+        blueNoisePath = 'assets/textures/blue_noise.png'
+    } = {}) {
+        const texture = new TextureLoader().load(blueNoisePath);
         texture.wrapS = RepeatWrapping;
         texture.wrapT = RepeatWrapping;
         texture.magFilter = NearestFilter;

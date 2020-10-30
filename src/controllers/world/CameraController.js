@@ -21,8 +21,8 @@ export class CameraController {
     }
 
     static addListeners() {
-        window.addEventListener('touchstart', this.onTouchStart);
-        window.addEventListener('mousedown', this.onTouchStart);
+        Stage.element.addEventListener('touchstart', this.onTouchStart);
+        Stage.element.addEventListener('mousedown', this.onTouchStart);
         window.addEventListener('touchmove', this.onTouchMove);
         window.addEventListener('mousemove', this.onTouchMove);
     }
@@ -32,6 +32,8 @@ export class CameraController {
      */
 
     static onTouchStart = e => {
+        e.preventDefault();
+
         this.onTouchMove(e);
     };
 
@@ -42,8 +44,8 @@ export class CameraController {
             event.x = e.changedTouches[0].pageX;
             event.y = e.changedTouches[0].pageY;
         } else {
-            event.x = e.clientX;
-            event.y = e.clientY;
+            event.x = e.pageX;
+            event.y = e.pageY;
         }
 
         this.mouse.copy(event);

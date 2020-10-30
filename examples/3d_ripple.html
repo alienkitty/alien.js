@@ -203,9 +203,11 @@
              */
 
             resize = () => {
-                this.grid.resize(Stage.width, Stage.height, Stage.dpr);
-                this.resizeCanvas('displace', Stage.width, Stage.height, Stage.dpr);
-                this.resizeCanvas('ripple', 256, 256, Stage.dpr);
+                const { width, height, dpr } = Stage;
+
+                this.grid.resize(width, height, dpr);
+                this.resizeCanvas('displace', width, height, dpr);
+                this.resizeCanvas('ripple', 256, 256, dpr);
 
                 this.texture.grid.needsUpdate = true;
 
@@ -216,7 +218,7 @@
                     this.update();
                 }
 
-                if (Stage.width < Stage.height) {
+                if (width < height) {
                     this.multiplier = 0.5;
                 } else {
                     this.multiplier = 1;
@@ -257,12 +259,6 @@
 
                 this.needsUpdate = true;
             };
-
-            animateIn = () => {
-                this.visible = true;
-            };
-
-            ready = () => this.initImages();
         }
 
         class SceneController {
@@ -318,8 +314,8 @@
                     event.x = e.changedTouches[0].pageX;
                     event.y = e.changedTouches[0].pageY;
                 } else {
-                    event.x = e.clientX;
-                    event.y = e.clientY;
+                    event.x = e.pageX;
+                    event.y = e.pageY;
                 }
 
                 this.pos.copy(event);
@@ -356,6 +352,12 @@
 
                 this.constant = delayedCall(1000 * Math.random() + 1000, this.constantWaving);
             };
+
+            static animateIn = () => {
+                this.view.visible = true;
+            };
+
+            static ready = () => this.view.initImages();
         }
 
         class RenderManager {
@@ -452,8 +454,8 @@
                 this.addListeners();
                 this.onResize();
 
-                await this.view.ready();
-                this.view.animateIn();
+                await SceneController.ready();
+                SceneController.animateIn();
             }
 
             static initWorld() {

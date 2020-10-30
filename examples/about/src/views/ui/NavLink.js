@@ -41,7 +41,7 @@ export class NavLink extends Interface {
             this.letters.push(letter);
         });
 
-        /*const split = this.copy.split(' ');
+        /* const split = this.copy.split(' ');
         split.forEach((str, i) => {
             if (i < split.length - 1) {
                 str += '&nbsp';
@@ -52,7 +52,7 @@ export class NavLink extends Interface {
             this.add(word);
 
             this.words.push(word);
-        });*/
+        }); */
     }
 
     addListeners() {

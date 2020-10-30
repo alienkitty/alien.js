@@ -26,22 +26,24 @@ export class App {
 
         // WebAudio.init(Assets.filter(path => /sounds/.test(path)));
         // AudioController.init();
+
+        // await WorldController.textureLoader.ready();
     }
 
-    /*static initWorld() {
+    /* static initWorld() {
         WorldController.init();
         Stage.add(WorldController.element);
-    }*/
+    } */
 
     static initViews() {
-        // this.sceneView = new SceneView();
-        // WorldController.scene.add(this.sceneView);
+        // this.scene = new SceneView();
+        // WorldController.scene.add(this.scene);
 
-        this.landingView = new LandingView();
-        Stage.add(this.landingView);
+        this.landing = new LandingView();
+        Stage.add(this.landing);
     }
 
-    /*static initControllers() {
+    /* static initControllers() {
         const { renderer, scene, camera } = WorldController;
 
         CameraController.init(camera);
@@ -51,13 +53,13 @@ export class App {
     static addListeners() {
         Stage.events.on(Events.RESIZE, this.onResize);
         ticker.add(this.onUpdate);
-    }*/
+    } */
 
     /**
      * Event handlers
      */
 
-    /*static onResize = () => {
+    /* static onResize = () => {
         const { width, height, dpr } = Stage;
 
         WorldController.resize(width, height, dpr);
@@ -69,16 +71,16 @@ export class App {
         WorldController.update(time, delta, frame);
         CameraController.update(time);
 
-        this.sceneView.update(time);
+        this.scene.update(time);
 
         RenderManager.update(time, delta, frame);
-    };*/
+    }; */
 
     /**
      * Public methods
      */
 
     static start = async () => {
-        this.landingView.animateIn();
+        this.landing.animateIn();
     };
 }

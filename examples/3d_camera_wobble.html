@@ -13,7 +13,7 @@
 <body>
     <div id="root"></div>
     <script type="module">
-        import { ACESFilmicToneMapping, BloomCompositeMaterial, BlurDirectionX, BlurDirectionY, Color, DirectionalLight, Events, FXAAMaterial, Fog, Group, HemisphereLight, LuminosityMaterial, Mesh, MeshStandardMaterial, NoBlending, OrthographicCamera, PerspectiveCamera, PlaneBufferGeometry, RawShaderMaterial, Reflector, RepeatWrapping, SVGLoader, Scene, Stage, TextureLoader, Uniform, UnrealBloomBlurMaterial, Vector2, Vector3, WebGLRenderTarget, WebGLRenderer, Wobble, getFullscreenTriangle, mix, radians, range, ticker } from '../build/alien.js';
+        import { ACESFilmicToneMapping, BloomCompositeMaterial, BlurDirectionX, BlurDirectionY, Color, DirectionalLight, Events, FXAAMaterial, Fog, Group, HemisphereLight, LuminosityMaterial, Mesh, MeshStandardMaterial, NoBlending, OrthographicCamera, PerspectiveCamera, PlaneBufferGeometry, RGBFormat, RawShaderMaterial, Reflector, RepeatWrapping, SVGLoader, Scene, Stage, TextureLoader, Uniform, UnrealBloomBlurMaterial, Vector2, Vector3, WebGLRenderTarget, WebGLRenderer, Wobble, getFullscreenTriangle, mix, radians, range, ticker } from '../build/alien.js';
 
         import rgbshift from '../src/shaders/modules/rgbshift/rgbshift.glsl.js';
 
@@ -139,9 +139,8 @@
                     fog,
                     dithering: true
                 });
-                this.mesh.rotation.x = -Math.PI / 2;
                 this.mesh.position.y = -1.6;
-                this.mesh.renderOrder = -1;
+                this.mesh.rotation.x = -Math.PI / 2;
 
                 this.add(this.mesh);
             }
@@ -202,6 +201,7 @@
 
                 // Render targets
                 this.renderTargetA = new WebGLRenderTarget(1, 1, {
+                    format: RGBFormat,
                     anisotropy: 0,
                     depthBuffer: false
                 });
@@ -402,8 +402,8 @@
             }
 
             static addListeners() {
-                window.addEventListener('touchstart', this.onTouchStart);
-                window.addEventListener('mousedown', this.onTouchStart);
+                Stage.element.addEventListener('touchstart', this.onTouchStart);
+                Stage.element.addEventListener('mousedown', this.onTouchStart);
                 window.addEventListener('touchmove', this.onTouchMove);
                 window.addEventListener('mousemove', this.onTouchMove);
             }
@@ -413,6 +413,8 @@
              */
 
             static onTouchStart = e => {
+                e.preventDefault();
+
                 this.onTouchMove(e);
             };
 
@@ -423,8 +425,8 @@
                     event.x = e.changedTouches[0].pageX;
                     event.y = e.changedTouches[0].pageY;
                 } else {
-                    event.x = e.clientX;
-                    event.y = e.clientY;
+                    event.x = e.pageX;
+                    event.y = e.pageY;
                 }
 
                 this.pos.copy(event);

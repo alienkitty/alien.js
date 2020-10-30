@@ -6,13 +6,14 @@
 
 import {
     Color,
-    MathUtils,
     Matrix3,
     Matrix4,
     Mesh,
     OrthographicCamera,
     PerspectiveCamera,
     Plane,
+    RGBAFormat,
+    RGBFormat,
     RawShaderMaterial,
     Scene,
     Uniform,
@@ -61,17 +62,20 @@ export class Reflector extends Mesh {
 
         // Render targets
         this.renderTarget = new WebGLRenderTarget(width, height, {
+            format: RGBFormat,
+            anisotropy: 0,
             depthBuffer: false
         });
 
-        this.renderTargetA = this.renderTarget.clone();
-        this.renderTargetB = this.renderTarget.clone();
+        this.renderTargetRead = this.renderTarget.clone();
+        this.renderTargetWrite = this.renderTarget.clone();
 
+        this.renderTarget.texture.format = RGBAFormat;
+        this.renderTarget.texture.anisotropy = 1;
         this.renderTarget.depthBuffer = true;
 
-        if (!MathUtils.isPowerOfTwo(width) || !MathUtils.isPowerOfTwo(height)) {
-            this.renderTarget.texture.generateMipmaps = false;
-        }
+        // Uniform containing render target textures
+        this.uniform = new Uniform(this.renderTargetRead.texture);
 
         // Reflection material
         const parameters = {
@@ -79,7 +83,7 @@ export class Reflector extends Mesh {
             },
             uniforms: {
                 tMap: new Uniform(null),
-                tReflection: new Uniform(this.blurIterations > 0 ? this.renderTargetA.texture : this.renderTarget.texture),
+                tReflection: this.blurIterations > 0 ? this.uniform : new Uniform(this.renderTarget.texture),
                 uMapTransform: new Uniform(new Matrix3()),
                 uMatrix: new Uniform(this.textureMatrix),
                 uColor: new Uniform(color instanceof Color ? color : new Color(color))
@@ -235,7 +239,7 @@ export class Reflector extends Mesh {
             if (i === 0) {
                 this.blurMaterial.uniforms.tMap.value = this.renderTarget.texture;
             } else {
-                this.blurMaterial.uniforms.tMap.value = this.renderTargetA.texture;
+                this.blurMaterial.uniforms.tMap.value = this.renderTargetRead.texture;
             }
 
             const radius = (blurIterations - i - 1) * 0.5;
@@ -244,7 +248,7 @@ export class Reflector extends Mesh {
                 i % 2 === 0 ? 0 : radius
             );
 
-            renderer.setRenderTarget(this.renderTargetB);
+            renderer.setRenderTarget(this.renderTargetWrite);
 
             if (renderer.autoClear === false) {
                 renderer.clear();
@@ -253,9 +257,11 @@ export class Reflector extends Mesh {
             renderer.render(this.screenScene, this.screenCamera);
 
             // Swap render targets
-            const temp = this.renderTargetA;
-            this.renderTargetA = this.renderTargetB;
-            this.renderTargetB = temp;
+            const temp = this.renderTargetRead;
+            this.renderTargetRead = this.renderTargetWrite;
+            this.renderTargetWrite = temp;
+
+            this.uniform.value = this.renderTargetRead.texture;
         }
 
         renderer.xr.enabled = currentXrEnabled;
@@ -267,8 +273,8 @@ export class Reflector extends Mesh {
     }
 
     destroy() {
-        this.renderTargetB.dispose();
-        this.renderTargetA.dispose();
+        this.renderTargetWrite.dispose();
+        this.renderTargetRead.dispose();
         this.renderTarget.dispose();
         this.blurMaterial.dispose();
         this.material.dispose();

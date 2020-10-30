@@ -46,7 +46,6 @@ export class SpherizeImage {
         this.scene.add(this.screen);
 
         this.output = new WebGLRenderTarget(1, 1, {
-            anisotropy: 0,
             depthBuffer: false
         });
     }

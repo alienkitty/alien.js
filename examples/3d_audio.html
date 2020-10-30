@@ -13,7 +13,7 @@
 <body>
     <div id="root"></div>
     <script type="module">
-        import { AssetLoader, Assets, Color, DirectionalLight, Events, Fog, Group, HemisphereLight, MathUtils, Mesh, MeshStandardMaterial, PerspectiveCamera, PointLight, Scene, Sound3D, SphereBufferGeometry, Stage, Thread, Uniform, Vector2, Vector3, WebAudio, WebAudio3D, WebGLRenderer, clamp, delayedCall, getFrustum, gsap, range, updateRoot, wait } from '../build/alien.js';
+        import { AssetLoader, Assets, Color, DirectionalLight, Events, Fog, Group, HemisphereLight, MathUtils, Mesh, MeshStandardMaterial, PerspectiveCamera, PointLight, Scene, Sound3D, SphereBufferGeometry, Stage, Thread, Uniform, Vector2, Vector3, WebAudio, WebAudio3D, WebGLRenderer, clamp, delayedCall, getFrustum, gsap, range, wait } from '../build/alien.js';
 
         import { World } from 'https://unpkg.com/oimo/build/oimo.module.js';
 
@@ -126,13 +126,9 @@
                     this.force.y = (ball.linearVelocity.y * ball.mass) - (mallet.linearVelocity.y * mallet.mass);
                     this.force.z = (ball.linearVelocity.z * ball.mass) - (mallet.linearVelocity.z * mallet.mass);
 
-                    this.force.multiplyScalar(0.5);
-
                     const force = this.force.length();
 
-                    if (force > 0.1) {
-                        postMessage({ event: 'contact', message: { force } });
-                    }
+                    postMessage({ event: 'contact', message: { force } });
                 }
             };
 
@@ -161,10 +157,10 @@
                 const { ball, mallet } = this.view;
 
                 this.meshes.push(ball);
-                this.shapes.push(this.createShapeObject('ball', 'sphere', ball.size, ball.position, ball.rotation, true));
+                this.shapes.push(this.createShapeObject('ball', 'sphere', ball.position, ball.rotation, ball.size, true));
 
                 this.meshes.push(mallet);
-                this.shapes.push(this.createShapeObject('paddle', 'sphere', mallet.size, mallet.position, mallet.rotation, true, true));
+                this.shapes.push(this.createShapeObject('paddle', 'sphere', mallet.position, mallet.rotation, mallet.size, true, true));
 
                 this.buffer = new Float32Array(this.shapes.length * 8);
             }
@@ -181,7 +177,7 @@
                 this.thread.init({ shapes: this.shapes });
             }
 
-            createShapeObject(name, type, size, position, rotation, move, paddle) {
+            createShapeObject(name, type, position, rotation, size, move, paddle) {
                 const object = {};
 
                 object.name = name;
@@ -371,10 +367,6 @@
             static onTouchStart = e => {
                 e.preventDefault();
 
-                if (!this.view.visible) {
-                    return;
-                }
-
                 this.onTouchMove(e);
             };
 
@@ -389,8 +381,8 @@
                     event.x = e.changedTouches[0].pageX;
                     event.y = e.changedTouches[0].pageY;
                 } else {
-                    event.x = e.clientX;
-                    event.y = e.clientY;
+                    event.x = e.pageX;
+                    event.y = e.pageY;
                 }
 
                 this.send(event);
@@ -587,6 +579,7 @@
 
                 this.last = performance.now();
                 this.delta = 0;
+                this.time = 0;
                 this.frame = 0;
 
                 this.initWorld();
@@ -598,7 +591,7 @@
                 this.onResize();
 
                 await SceneController.ready();
-                requestAnimationFrame(this.step);
+                requestAnimationFrame(this.onStep);
 
                 await wait(250);
                 SceneController.animateIn();
@@ -647,7 +640,22 @@
             };
 
             static onUpdate = () => {
-                requestAnimationFrame(this.step);
+                gsap.updateRoot(this.time);
+
+                WorldController.update(this.time, this.delta, this.frame);
+                SceneController.update();
+                RenderManager.update(this.time, this.delta, this.frame);
+
+                requestAnimationFrame(this.onStep);
+            };
+
+            static onStep = time => {
+                this.delta = time - this.last;
+                this.last = time;
+                this.time = time * 0.001;
+                this.frame++;
+
+                SceneController.physics.thread.update();
             };
 
             static onComplete = async () => {
@@ -655,22 +663,6 @@
 
                 WebAudio.init(Assets.filter(path => /sounds/.test(path)));
                 AudioController.init(this.view);
-            };
-
-            static step = time => {
-                SceneController.physics.thread.update();
-
-                updateRoot(time);
-
-                this.delta = time - this.last;
-                this.last = time;
-                this.frame++;
-
-                time *= 0.001; // Convert to seconds
-
-                WorldController.update(time, this.delta, this.frame);
-                SceneController.update();
-                RenderManager.update(time, this.delta, this.frame);
             };
         }
 

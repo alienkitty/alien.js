@@ -1,4 +1,4 @@
-import { AdditiveBlending, Mesh, NoBlending, OrthographicCamera, Scene, Vector2, WebGLRenderTarget } from 'three';
+import { AdditiveBlending, Mesh, NoBlending, OrthographicCamera, RGBFormat, Scene, Vector2, WebGLRenderTarget } from 'three';
 
 import { WorldController } from './WorldController.js';
 import { FXAAMaterial } from '../../materials/FXAAMaterial.js';
@@ -38,6 +38,7 @@ export class RenderManager {
 
         // Render targets
         this.renderTargetA = new WebGLRenderTarget(1, 1, {
+            format: RGBFormat,
             anisotropy: 0,
             depthBuffer: false
         });

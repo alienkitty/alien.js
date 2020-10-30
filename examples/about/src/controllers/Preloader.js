@@ -24,13 +24,13 @@ export class Preloader {
         Data.init();
         Data.Socket.init();
 
-        this.initViews();
+        this.initView();
         this.initLoader();
 
         this.addListeners();
     }
 
-    static initViews() {
+    static initView() {
         this.view = new PreloaderView();
         Stage.add(this.view);
     }

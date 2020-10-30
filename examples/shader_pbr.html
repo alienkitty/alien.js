@@ -13,7 +13,7 @@
 <body>
     <div id="root"></div>
     <script type="module">
-        import { ACESFilmicToneMapping, AmbientLight, BloomCompositeMaterial, BlurDirectionX, BlurDirectionY, BoxGeometry, Color, DirectionalLight, EnvironmentTextureLoader, Events, FXAAMaterial, Group, HemisphereLight, ImageBitmapLoaderThread, LuminosityMaterial, Mesh, MeshStandardMaterial, NoBlending, OrbitControls, OrthographicCamera, PerspectiveCamera, RawShaderMaterial, Scene, SphericalCubeTextureLoader, Stage, TextureLoader, Thread, Uniform, UnrealBloomBlurMaterial, Vector2, WebGLRenderTarget, WebGLRenderer, getFullscreenTriangle, mix, ticker } from '../build/alien.js';
+        import { ACESFilmicToneMapping, AmbientLight, BloomCompositeMaterial, BlurDirectionX, BlurDirectionY, BoxGeometry, Color, DirectionalLight, EnvironmentTextureLoader, Events, FXAAMaterial, Group, HemisphereLight, ImageBitmapLoaderThread, LuminosityMaterial, Mesh, MeshStandardMaterial, NoBlending, OrbitControls, OrthographicCamera, PerspectiveCamera, RGBFormat, RawShaderMaterial, Scene, SphericalCubeTextureLoader, Stage, TextureLoader, Thread, Uniform, UnrealBloomBlurMaterial, Vector2, WebGLRenderTarget, WebGLRenderer, getFullscreenTriangle, mix, ticker } from '../build/alien.js';
 
         const vertexCompositeShader = /* glsl */`
             attribute vec2 uv;
@@ -255,6 +255,7 @@
 
                 // Render targets
                 this.renderTargetA = new WebGLRenderTarget(1, 1, {
+                    format: RGBFormat,
                     anisotropy: 0,
                     depthBuffer: false
                 });

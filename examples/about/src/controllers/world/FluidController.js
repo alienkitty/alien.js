@@ -19,8 +19,6 @@ export class FluidController {
         this.trackers = trackers;
 
         this.pointer = {};
-        this.width = 1;
-        this.height = 1;
         this.lerpSpeed = 0.07;
         this.animatedIn = false;
 
@@ -32,13 +30,13 @@ export class FluidController {
 
     static initRenderer() {
         // Render targets
-        this.renderTargetA = new WebGLRenderTarget(this.width, this.height, {
+        this.renderTargetRead = new WebGLRenderTarget(1, 1, {
             type: HalfFloatType,
             anisotropy: 0,
             depthBuffer: false
         });
 
-        this.renderTargetB = this.renderTargetA.clone();
+        this.renderTargetWrite = this.renderTargetRead.clone();
 
         // Fluid materials
         this.passMaterial = new FluidPassMaterial();
@@ -59,8 +57,6 @@ export class FluidController {
         this.pointer.main.pos = new Vector2();
         this.pointer.main.last = new Vector2();
         this.pointer.main.delta = new Vector2();
-        this.pointer.main.pos.set(this.width / 2, this.height / 2);
-        this.pointer.main.last.copy(this.pointer.main.pos);
     }
 
     static addListeners() {
@@ -129,8 +125,8 @@ export class FluidController {
             event.x = e.changedTouches[0].pageX;
             event.y = e.changedTouches[0].pageY;
         } else {
-            event.x = e.clientX;
-            event.y = e.clientY;
+            event.x = e.pageX;
+            event.y = e.pageY;
         }
 
         this.pointer.main.isMove = true;
@@ -181,10 +177,10 @@ export class FluidController {
         this.width = width;
         this.height = height;
 
-        this.renderTargetA.setSize(width * dpr, height * dpr);
-        this.renderTargetB.setSize(width * dpr, height * dpr);
+        this.renderTargetRead.setSize(width * dpr, height * dpr);
+        this.renderTargetWrite.setSize(width * dpr, height * dpr);
 
-        this.pointer.main.pos.set(this.width / 2, this.height / 2);
+        this.pointer.main.pos.set(width / 2, height / 2);
         this.pointer.main.last.copy(this.pointer.main.pos);
     };
 
@@ -216,20 +212,20 @@ export class FluidController {
             AudioController.update(id, this.pointer[id].pos.x, this.pointer[id].pos.y);
         });
 
-        this.passMaterial.uniforms.tMap.value = this.renderTargetA.texture;
+        this.passMaterial.uniforms.tMap.value = this.renderTargetRead.texture;
         this.screen.material = this.passMaterial;
-        this.renderer.setRenderTarget(this.renderTargetB);
+        this.renderer.setRenderTarget(this.renderTargetWrite);
         this.renderer.render(this.scene, this.camera);
 
-        this.viewMaterial.uniforms.tMap.value = this.renderTargetB.texture;
+        this.viewMaterial.uniforms.tMap.value = this.renderTargetWrite.texture;
         this.screen.material = this.viewMaterial;
         this.renderer.setRenderTarget(null);
         this.renderer.render(this.scene, this.camera);
 
         // Swap render targets
-        const temp = this.renderTargetA;
-        this.renderTargetA = this.renderTargetB;
-        this.renderTargetB = temp;
+        const temp = this.renderTargetRead;
+        this.renderTargetRead = this.renderTargetWrite;
+        this.renderTargetWrite = temp;
     };
 
     static send = e => {

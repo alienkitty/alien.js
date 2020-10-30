@@ -25,13 +25,13 @@ export class Preloader {
 
         // Assets.cache = true;
 
-        this.initViews();
+        this.initView();
         this.initLoader();
 
         this.addListeners();
     }
 
-    static initViews() {
+    static initView() {
         this.view = new PreloaderView();
         Stage.add(this.view);
     }
@@ -63,15 +63,15 @@ export class Preloader {
     static addListeners() {
         this.loader.events.on(Events.PROGRESS, this.view.onProgress);
         this.view.events.on(Events.COMPLETE, this.onComplete);
-        document.addEventListener('touchstart', this.onTouchStart);
-        document.addEventListener('mousedown', this.onTouchStart);
+        Stage.element.addEventListener('touchstart', this.onTouchStart);
+        Stage.element.addEventListener('mousedown', this.onTouchStart);
     }
 
     static removeListeners() {
         this.loader.events.off(Events.PROGRESS, this.view.onProgress);
         this.view.events.off(Events.COMPLETE, this.onComplete);
-        document.removeEventListener('touchstart', this.onTouchStart);
-        document.removeEventListener('mousedown', this.onTouchStart);
+        Stage.element.removeEventListener('touchstart', this.onTouchStart);
+        Stage.element.removeEventListener('mousedown', this.onTouchStart);
     }
 
     /**
@@ -90,8 +90,8 @@ export class Preloader {
     };
 
     static onTouchStart = () => {
-        document.removeEventListener('touchstart', this.onTouchStart);
-        document.removeEventListener('mousedown', this.onTouchStart);
+        Stage.element.removeEventListener('touchstart', this.onTouchStart);
+        Stage.element.removeEventListener('mousedown', this.onTouchStart);
 
         // WebAudio.resume();
     };

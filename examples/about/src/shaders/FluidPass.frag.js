@@ -57,6 +57,7 @@ void main() {
     for (int i = 0; i < NUM_POINTERS; i++) {
         if (uStrength[i].x == 0.0 && uStrength[i].y == 0.0) continue;
 
+        // Add iterations between the last and current mouse position, smoothing-out the mouse trail
         vec2 pos = uLast[i].xy;
         float iterations = clamp((length(uVelocity[i]) / 40.0) * MAX_ITERATIONS, 1.0, MAX_ITERATIONS);
 

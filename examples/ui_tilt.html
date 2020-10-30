@@ -20,6 +20,16 @@
                 this.x = 0;
                 this.y = 0;
 
+                this.last = {
+                    x: 0,
+                    y: 0
+                };
+
+                this.delta = {
+                    x: 0,
+                    y: 0
+                };
+
                 this.normal = {
                     x: 0,
                     y: 0
@@ -38,8 +48,8 @@
                 this.addListeners();
 
                 this.onUpdate({
-                    clientX: window.innerWidth / 2,
-                    clientY: window.innerHeight / 2
+                    pageX: window.innerWidth / 2,
+                    pageY: window.innerHeight / 2
                 });
             }
 
@@ -50,12 +60,16 @@
             }
 
             /**
-             * Event handlers
-             */
+            * Event handlers
+            */
 
-            static onUpdate = ({ clientX, clientY }) => {
-                this.x = clientX;
-                this.y = clientY;
+            static onUpdate = ({ pageX, pageY }) => {
+                this.x = pageX;
+                this.y = pageY;
+                this.delta.x = this.x - this.last.x;
+                this.delta.y = this.y - this.last.y;
+                this.last.x = this.x;
+                this.last.y = this.y;
                 this.normal.x = this.x / window.innerWidth;
                 this.normal.y = this.y / window.innerHeight;
                 this.tilt.x = this.normal.x * 2 - 1;

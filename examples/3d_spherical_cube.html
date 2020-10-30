@@ -13,7 +13,7 @@
 <body>
     <div id="root"></div>
     <script type="module">
-        import { BoxGeometry, Color, Events, FXAAMaterial, Group, Mesh, MeshBasicMaterial, OrbitControls, OrthographicCamera, PerspectiveCamera, Scene, SphericalCubeTextureLoader, Stage, TextureLoader, Uniform, Vector2, WebGLRenderTarget, WebGLRenderer, getFullscreenTriangle, ticker } from '../build/alien.js';
+        import { BoxGeometry, Color, Events, FXAAMaterial, Group, Mesh, MeshBasicMaterial, OrbitControls, OrthographicCamera, PerspectiveCamera, RGBFormat, Scene, SphericalCubeTextureLoader, Stage, TextureLoader, Uniform, Vector2, WebGLRenderTarget, WebGLRenderer, getFullscreenTriangle, ticker } from '../build/alien.js';
 
         class Config {
             static BG_COLOR = '#0e0e0e';
@@ -85,6 +85,7 @@
 
                 // Render targets
                 this.renderTarget = new WebGLRenderTarget(1, 1, {
+                    format: RGBFormat,
                     anisotropy: 0
                 });
 

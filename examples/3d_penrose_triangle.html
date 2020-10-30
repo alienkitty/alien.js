@@ -13,7 +13,7 @@
 <body>
     <div id="root"></div>
     <script type="module">
-        import { ACESFilmicToneMapping, AmbientLight, BloomCompositeMaterial, BlurDirectionX, BlurDirectionY, BoxBufferGeometry, BufferAttribute, BufferGeometry, Color, DirectionalLight, Events, FXAAMaterial, Group, HemisphereLight, LuminosityMaterial, MathUtils, Mesh, MeshStandardMaterial, NoBlending, OrthographicCamera, PlaneBufferGeometry, RawShaderMaterial, Scene, Stage, Uniform, UnrealBloomBlurMaterial, Vector2, WebGLRenderTarget, WebGLRenderer, getFullscreenTriangle, mix, ticker } from '../build/alien.js';
+        import { ACESFilmicToneMapping, AmbientLight, BloomCompositeMaterial, BlurDirectionX, BlurDirectionY, BoxBufferGeometry, BufferAttribute, BufferGeometry, Color, DirectionalLight, Events, FXAAMaterial, Group, HemisphereLight, LuminosityMaterial, MathUtils, Mesh, MeshStandardMaterial, NoBlending, OrthographicCamera, PlaneBufferGeometry, RGBFormat, RawShaderMaterial, Scene, Stage, Uniform, UnrealBloomBlurMaterial, Vector2, WebGLRenderTarget, WebGLRenderer, getFullscreenTriangle, mix, ticker } from '../build/alien.js';
 
         import rgbshift from '../src/shaders/modules/rgbshift/rgbshift.glsl.js';
 
@@ -151,6 +151,7 @@
 
                 // Render targets
                 this.renderTargetA = new WebGLRenderTarget(1, 1, {
+                    format: RGBFormat,
                     anisotropy: 0,
                     depthBuffer: false
                 });

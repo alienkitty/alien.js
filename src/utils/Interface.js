@@ -157,14 +157,14 @@ export class Interface {
         return timeout;
     }
 
-    clearTimeout(callback) {
+    clearTimeout(timeout) {
         if (!this.timeouts) {
             return;
         }
 
-        clearTween(callback);
+        clearTween(timeout);
 
-        const index = this.timeouts.indexOf(callback);
+        const index = this.timeouts.indexOf(timeout);
 
         if (~index) {
             this.timeouts.splice(index, 1);

@@ -3,6 +3,8 @@ import { ACESFilmicToneMapping, Color, PerspectiveCamera, Scene, Uniform, Vector
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 
 import { Config } from '../../config/Config.js';
+import { TextureLoader } from '../../loaders/world/TextureLoader.js';
+// import { Interface } from '../../utils/Interface.js';
 
 import { getFullscreenTriangle } from '../../utils/world/Utils3D.js';
 
@@ -10,7 +12,7 @@ export class WorldController {
     static init() {
         this.initWorld();
         // this.initLights();
-        // this.initLoaders();
+        this.initLoaders();
         // this.initControls();
     }
 
@@ -20,6 +22,7 @@ export class WorldController {
             stencil: false
         });
         this.element = this.renderer.domElement;
+        // this.element = new Interface(this.renderer.domElement);
 
         // Tone mapping
         this.renderer.toneMapping = ACESFilmicToneMapping;
@@ -47,6 +50,7 @@ export class WorldController {
     }
 
     static initLoaders() {
+        this.textureLoader = new TextureLoader();
     }
 
     static initControls() {
@@ -76,4 +80,6 @@ export class WorldController {
             this.controls.update();
         }
     };
+
+    static getTexture = path => this.textureLoader.load(path);
 }

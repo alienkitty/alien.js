@@ -13,7 +13,7 @@
 <body>
     <div id="root"></div>
     <script type="module">
-        import { ACESFilmicToneMapping, AmbientLight, BloomCompositeMaterial, BlurDirectionX, BlurDirectionY, BoxGeometry, BufferAttribute, BufferGeometry, ChromaticAberrationMaterial, Color, DepthTexture, DirectionalLight, EnvironmentTextureLoader, Events, FXAAMaterial, Group, HemisphereLight, ImageBitmapLoaderThread, LuminosityMaterial, MathUtils, Mesh, MeshStandardMaterial, NoBlending, OrbitControls, OrthographicCamera, PerspectiveCamera, Points, RawShaderMaterial, Scene, SphericalCubeTextureLoader, Stage, TextureLoader, Thread, Uniform, UnrealBloomBlurMaterial, Vector2, WebGLRenderTarget, WebGLRenderer, getFullscreenTriangle, mix, ticker } from '../build/alien.js';
+        import { ACESFilmicToneMapping, AmbientLight, BloomCompositeMaterial, BlurDirectionX, BlurDirectionY, BoxGeometry, BufferAttribute, BufferGeometry, ChromaticAberrationMaterial, Color, DepthTexture, DirectionalLight, EnvironmentTextureLoader, Events, FXAAMaterial, Group, HemisphereLight, ImageBitmapLoaderThread, LuminosityMaterial, MathUtils, Mesh, MeshStandardMaterial, NoBlending, OrbitControls, OrthographicCamera, PerspectiveCamera, Points, RGBFormat, RawShaderMaterial, Scene, SphericalCubeTextureLoader, Stage, TextureLoader, Thread, Uniform, UnrealBloomBlurMaterial, Vector2, WebGLRenderTarget, WebGLRenderer, getFullscreenTriangle, mix, ticker } from '../build/alien.js';
 
         import simplex3d from '../src/shaders/modules/noise/simplex3d.glsl.js';
         import depth from '../src/shaders/modules/depth/depth.glsl.js';
@@ -57,6 +57,8 @@
         const fragmentDustShader = /* glsl */`
             precision highp float;
 
+            #include <packing>
+
             uniform sampler2D tMap;
             uniform sampler2D tDepth;
             uniform float uAlpha;
@@ -74,18 +76,18 @@
                 float a = (sceneDepth + extraMargin - particleDepth) * 120.0;
                 if (a <= 0.0) return 0.0;
                 if (a >= 1.0) return 1.0;
+
                 if (a < 0.5) a = 2.0 * a * a;
                 else a = -2.0 * pow(a - 1.0, 2.0) + 1.0;
+
                 return a;
             }
 
             void main() {
                 vec4 tex = texture2D(tMap, vec2(gl_PointCoord.x, 1.0 - gl_PointCoord.y));
-
                 vec2 uv = gl_FragCoord.xy / uResolution;
-                float particleDepth = getLinearDepth(gl_FragCoord.z, uCameraNear, uCameraFar);
-                float sceneDepth = texture2D(tDepth, uv).x;
-                sceneDepth = getLinearDepth(sceneDepth, uCameraNear, uCameraFar);
+                float particleDepth = getDepth(gl_FragCoord.z, uCameraNear, uCameraFar);
+                float sceneDepth = getDepth(tDepth, uv, uCameraNear, uCameraFar);
                 float alphaScale = fadeEdge(particleDepth, sceneDepth);
                 tex.a *= alphaScale;
                 tex.a *= vFade;
@@ -285,6 +287,7 @@
 
                 // Render targets
                 this.renderTargetA = new WebGLRenderTarget(1, 1, {
+                    format: RGBFormat,
                     anisotropy: 0,
                     depthBuffer: false
                 });

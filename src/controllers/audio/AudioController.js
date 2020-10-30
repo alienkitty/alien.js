@@ -40,7 +40,7 @@ export class AudioController {
      * Public methods
      */
 
-    /*static trigger = (event, ...params) => {
+    /* static trigger = (event, ...params) => {
         if (!WebAudio.context) {
             return;
         }
@@ -64,5 +64,5 @@ export class AudioController {
 
     static unmute = () => {
         this.trigger('sound_on');
-    };*/
+    }; */
 }

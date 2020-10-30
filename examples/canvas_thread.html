@@ -65,7 +65,7 @@
             update = () => {
                 const pixels = new ImageData(this.params.tileSize, this.params.tileSize);
 
-                for (let i = 0; i < pixels.data.length; i += 4) {
+                for (let i = 0, l = pixels.data.length; i < l; i += 4) {
                     const rand = 255 * Math.random();
 
                     pixels.data[i] = this.params.monochrome ? rand : 255 * Math.random();
@@ -76,8 +76,8 @@
 
                 this.tileContext.putImageData(pixels, 0, 0);
 
-                for (let x = 0; x < this.width; x++) {
-                    for (let y = 0; y < this.height; y++) {
+                for (let x = 0, xl = this.width; x < xl; x++) {
+                    for (let y = 0, yl = this.height; y < yl; y++) {
                         this.context.drawImage(this.tile, x * this.params.tileSize - (y % 2 === 0 ? this.params.tileSize / 2 : 0), y * this.params.tileSize, this.params.tileSize, this.params.tileSize);
                     }
                 }

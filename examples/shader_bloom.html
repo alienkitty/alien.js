@@ -13,14 +13,14 @@
 <body>
     <div id="root"></div>
     <script type="module">
-        import { BlurDirectionX, BlurDirectionY, BlurMaterial, Color, DirectionalLight, Events, FXAAMaterial, Group, HemisphereLight, Mesh, MeshStandardMaterial, NoBlending, OrthographicCamera, PerspectiveCamera, RawShaderMaterial, Scene, SphereBufferGeometry, Stage, Uniform, Vector2, WebGLRenderTarget, WebGLRenderer, getFullscreenTriangle, ticker } from '../build/alien.js';
+        import { BlurDirectionX, BlurDirectionY, BlurMaterial, Color, DirectionalLight, Events, FXAAMaterial, Group, HemisphereLight, Mesh, MeshStandardMaterial, NoBlending, OrthographicCamera, PerspectiveCamera, RGBAFormat, RGBFormat, RawShaderMaterial, Scene, SphereBufferGeometry, Stage, Uniform, Vector2, WebGLRenderTarget, WebGLRenderer, getFullscreenTriangle, ticker } from '../build/alien.js';
 
         import periodic3d from '../src/shaders/modules/noise/periodic3d.glsl.js';
 
         // Based on https://github.com/spite/perlin-experiments
 
         const vertexShaderChunk = /* glsl */`
-            float f = 0.05 * pnoise(vec3(2.0 * normal + time), vec3(10.0, 10.0, 10.0));
+            float f = 0.05 * pnoise(vec3(2.0 * normal + time), vec3(10.0));
             vec3 transformed = position + f * normal;
         `;
 
@@ -151,6 +151,7 @@
 
                 // Render targets
                 this.renderTarget = new WebGLRenderTarget(1, 1, {
+                    format: RGBFormat,
                     anisotropy: 0,
                     depthBuffer: false
                 });
@@ -161,7 +162,10 @@
                 this.renderTargetBlurA = this.renderTarget.clone();
                 this.renderTargetBlurB = this.renderTarget.clone();
 
+                this.renderTarget.texture.format = RGBAFormat;
                 this.renderTarget.depthBuffer = true;
+
+                this.renderTargetB.texture.format = RGBAFormat;
 
                 // FXAA material
                 this.fxaaMaterial = new FXAAMaterial();

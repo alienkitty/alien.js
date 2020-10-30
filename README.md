@@ -358,9 +358,11 @@ npm run dev
 npm run build
 ```
 
-## Changelog
+## Resources
 
-* [Releases](https://github.com/pschroen/alien.js/releases)
+* [The Wiki](https://github.com/pschroen/alien.js/wiki)
+* [Tween](https://github.com/pschroen/alien.js/wiki/Tween)
+* [Changelog](https://github.com/pschroen/alien.js/releases)
 
 ## See also
 

@@ -141,6 +141,22 @@ export class Logo {
 }
 ```
 
+## Class hierarchy
+
+```
+Preloader
+    \
+     '--- PreloaderView
+      \
+       '- App
+              \
+               '----- World ---.
+                \               \
+                 '--- Views -----.
+                  \               \
+                   '- Controllers -.
+```
+
 ## Project structure
 
 ```

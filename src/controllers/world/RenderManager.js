@@ -1,4 +1,4 @@
-import { AdditiveBlending, Mesh, NoBlending, OrthographicCamera, RGBFormat, Scene, Vector2, WebGLRenderTarget } from 'three';
+import { Mesh, OrthographicCamera, RGBFormat, Scene, Vector2, WebGLRenderTarget } from 'three';
 
 import { WorldController } from './WorldController.js';
 import { FXAAMaterial } from '../../materials/FXAAMaterial.js';
@@ -6,7 +6,7 @@ import { LuminosityMaterial } from '../../materials/LuminosityMaterial.js';
 import { UnrealBloomBlurMaterial } from '../../materials/UnrealBloomBlurMaterial.js';
 import { BloomCompositeMaterial } from '../../materials/BloomCompositeMaterial.js';
 import { BlurDirectionX, BlurDirectionY } from '../../materials/BlurMaterial.js';
-import { CopyMaterial } from '../../materials/CopyMaterial.js';
+import { SceneCompositeMaterial } from '../../materials/SceneCompositeMaterial.js';
 
 import { mix } from '../../utils/Utils.js';
 
@@ -25,8 +25,6 @@ export class RenderManager {
 
     static initRenderer() {
         const { resolution, screenTriangle } = WorldController;
-
-        this.renderer.autoClear = false;
 
         // Fullscreen triangle
         this.screenScene = new Scene();
@@ -92,8 +90,8 @@ export class RenderManager {
         this.bloomCompositeMaterial.uniforms.tBlur5.value = this.renderTargetsVertical[4].texture;
         this.bloomCompositeMaterial.uniforms.uBloomFactors.value = bloomFactors;
 
-        // Copy material
-        this.copyMaterial = new CopyMaterial();
+        // Composite material
+        this.compositeMaterial = new SceneCompositeMaterial();
     }
 
     /**
@@ -142,29 +140,18 @@ export class RenderManager {
 
         // Scene pass
         renderer.setRenderTarget(renderTargetA);
-        renderer.clear();
         renderer.render(scene, camera);
 
         // FXAA pass
         this.fxaaMaterial.uniforms.tMap.value = renderTargetA.texture;
         this.screen.material = this.fxaaMaterial;
         renderer.setRenderTarget(renderTargetB);
-        renderer.clear();
-        renderer.render(screenScene, screenCamera);
-
-        // Render to screen
-        this.copyMaterial.uniforms.tMap.value = renderTargetB.texture;
-        this.copyMaterial.blending = NoBlending;
-        this.screen.material = this.copyMaterial;
-        renderer.setRenderTarget(null);
-        renderer.clear();
         renderer.render(screenScene, screenCamera);
 
         // Extract bright areas
         this.luminosityMaterial.uniforms.tMap.value = renderTargetB.texture;
         this.screen.material = this.luminosityMaterial;
         renderer.setRenderTarget(renderTargetBright);
-        renderer.clear();
         renderer.render(screenScene, screenCamera);
 
         // Blur all the mips progressively
@@ -176,13 +163,11 @@ export class RenderManager {
             this.blurMaterials[i].uniforms.tMap.value = inputRenderTarget.texture;
             this.blurMaterials[i].uniforms.uDirection.value = BlurDirectionX;
             renderer.setRenderTarget(renderTargetsHorizontal[i]);
-            renderer.clear();
             renderer.render(screenScene, screenCamera);
 
             this.blurMaterials[i].uniforms.tMap.value = this.renderTargetsHorizontal[i].texture;
             this.blurMaterials[i].uniforms.uDirection.value = BlurDirectionY;
             renderer.setRenderTarget(renderTargetsVertical[i]);
-            renderer.clear();
             renderer.render(screenScene, screenCamera);
 
             inputRenderTarget = renderTargetsVertical[i];
@@ -191,13 +176,12 @@ export class RenderManager {
         // Composite all the mips
         this.screen.material = this.bloomCompositeMaterial;
         renderer.setRenderTarget(renderTargetsHorizontal[0]);
-        renderer.clear();
         renderer.render(screenScene, screenCamera);
 
-        // Render to screen (blend it additively)
-        this.copyMaterial.uniforms.tMap.value = renderTargetsHorizontal[0].texture;
-        this.copyMaterial.blending = AdditiveBlending;
-        this.screen.material = this.copyMaterial;
+        // Composite pass (render to screen)
+        this.compositeMaterial.uniforms.tScene.value = renderTargetB.texture;
+        this.compositeMaterial.uniforms.tBloom.value = renderTargetsHorizontal[0].texture;
+        this.screen.material = this.compositeMaterial;
         renderer.setRenderTarget(null);
         renderer.render(screenScene, screenCamera);
     };

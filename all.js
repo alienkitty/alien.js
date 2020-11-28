@@ -58,6 +58,7 @@ export { LuminosityMaterial } from './src/materials/LuminosityMaterial.js';
 export { UnrealBloomBlurMaterial } from './src/materials/UnrealBloomBlurMaterial.js';
 export { UnrealBloomCompositeMaterial } from './src/materials/UnrealBloomCompositeMaterial.js';
 export { BloomCompositeMaterial } from './src/materials/BloomCompositeMaterial.js';
+export { SceneCompositeMaterial } from './src/materials/SceneCompositeMaterial.js';
 export { PoissonDiscBlurMaterial } from './src/materials/PoissonDiscBlurMaterial.js';
 export { CameraMotionBlurMaterial } from './src/materials/CameraMotionBlurMaterial.js';
 export { BokehBlurMaterial1 } from './src/materials/BokehBlurMaterial1.js';

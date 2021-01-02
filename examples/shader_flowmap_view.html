@@ -13,7 +13,7 @@
 <body>
     <div id="root"></div>
     <script type="module">
-        import { ACESFilmicToneMapping, AdditiveBlending, BloomCompositeMaterial, BlurDirectionX, BlurDirectionY, Color, DirectionalLight, Events, FXAAMaterial, Flowmap, Fog, Group, HemisphereLight, LuminosityMaterial, Mesh, MeshStandardMaterial, NoBlending, NormalMaterial, OrbitControls, OrthographicCamera, PerspectiveCamera, PlaneBufferGeometry, RGBFormat, RawShaderMaterial, Reflector, RepeatWrapping, SVGLoader, Scene, Stage, TextureLoader, Uniform, UnrealBloomBlurMaterial, Vector2, Vector3, WebGLRenderTarget, WebGLRenderer, getFrustum, getFullscreenTriangle, mix, range, ticker } from '../build/alien.js';
+        import { ACESFilmicToneMapping, AdditiveBlending, BloomCompositeMaterial, BlurDirectionX, BlurDirectionY, Color, DirectionalLight, Events, FXAAMaterial, Flowmap, Fog, Group, HemisphereLight, LuminosityMaterial, Mesh, MeshStandardMaterial, NoBlending, OrthographicCamera, PerspectiveCamera, PlaneBufferGeometry, RGBFormat, RawShaderMaterial, Reflector, RepeatWrapping, SVGLoader, Scene, Stage, TextureLoader, Uniform, UnrealBloomBlurMaterial, Vector2, Vector3, WebGLRenderTarget, WebGLRenderer, getFrustum, getFullscreenTriangle, mix, range, ticker } from '../build/alien.js';
 
         import rgbshift from '../src/shaders/modules/rgbshift/rgbshift.glsl.js';
 
@@ -213,18 +213,14 @@
             }
 
             initMesh() {
-                // const { camera, getTexture } = WorldController;
                 const { camera, quad } = WorldController;
 
-                // this.geometry = new PlaneBufferGeometry(8, 6);
                 this.geometry = quad;
 
                 this.material = new FlowMaterial();
-                // this.material.uniforms.tMap.value = getTexture('assets/textures/uv.jpg');
                 this.material.uniforms.tMap.value = this.renderTarget.texture;
                 this.material.uniforms.tFlow = this.flowmap.uniform;
 
-                // this.mesh = new Mesh(this.geometry, new NormalMaterial());
                 this.mesh = new Mesh(this.geometry, this.material);
                 this.mesh.position.set(0, 1.4, -11);
                 this.mesh.scale.set(this.width, this.height, 1);
@@ -293,7 +289,6 @@
             initMesh() {
                 const { getTexture, quad, scene } = WorldController;
 
-                // this.geometry = new PlaneBufferGeometry(110, 110);
                 this.geometry = quad;
 
                 const map = getTexture('assets/textures/pbr/polished_concrete_basecolor.jpg');
@@ -735,7 +730,6 @@
                 this.initWorld();
                 this.initLights();
                 this.initLoaders();
-                // this.initControls();
             }
 
             static initWorld() {
@@ -782,12 +776,6 @@
                 this.svgLoader = new SVGLoader();
             }
 
-            static initControls() {
-                this.controls = new OrbitControls(this.camera, this.renderer.domElement);
-                this.controls.enableDamping = true;
-                // this.controls.enableZoom = false;
-            }
-
             /**
              * Public methods
              */
@@ -803,8 +791,6 @@
             static update = (time, delta, frame) => {
                 this.time.value = time;
                 this.frame.value = frame;
-
-                // this.controls.update();
             };
 
             static getTexture = path => this.textureLoader.load(path);

@@ -13,7 +13,7 @@
 <body>
     <div id="root"></div>
     <script type="module">
-        import { ACESFilmicToneMapping, BloomCompositeMaterial, BlurDirectionX, BlurDirectionY, Color, DirectionalLight, Events, FXAAMaterial, FlowMaterial, Flowmap, Fog, Group, HemisphereLight, LuminosityMaterial, Mesh, MeshStandardMaterial, NoBlending, OrthographicCamera, PerspectiveCamera, PlaneBufferGeometry, RGBFormat, RawShaderMaterial, Reflector, RepeatWrapping, SVGLoader, Scene, Stage, TextureLoader, Uniform, UnrealBloomBlurMaterial, Vector2, Vector3, WebGLRenderTarget, WebGLRenderer, getFullscreenTriangle, mix, range, ticker } from '../build/alien.js';
+        import { ACESFilmicToneMapping, BloomCompositeMaterial, BlurDirectionX, BlurDirectionY, Color, DirectionalLight, Events, FXAAMaterial, Flowmap, Fog, Group, HemisphereLight, LuminosityMaterial, Mesh, MeshStandardMaterial, NoBlending, OrthographicCamera, PerspectiveCamera, PlaneBufferGeometry, RGBFormat, RawShaderMaterial, Reflector, RepeatWrapping, SVGLoader, Scene, Stage, TextureLoader, Uniform, UnrealBloomBlurMaterial, Vector2, Vector3, WebGLRenderTarget, WebGLRenderer, getFullscreenTriangle, mix, range, ticker } from '../build/alien.js';
 
         import rgbshift from '../src/shaders/modules/rgbshift/rgbshift.glsl.js';
 
@@ -35,6 +35,7 @@
 
             uniform sampler2D tScene;
             uniform sampler2D tBloom;
+            uniform sampler2D tFlow;
             uniform float uDistortion;
 
             varying vec2 vUv;
@@ -42,12 +43,20 @@
             ${rgbshift}
 
             void main() {
-                gl_FragColor = texture2D(tScene, vUv);
+                // R and G values are velocity in the X and Y direction
+                // B value is the velocity length
+                vec3 flow = texture2D(tFlow, vUv).rgb;
+
+                // Use flow to adjust the UV lookup of a texture
+                vec2 uv = vUv;
+                uv += flow.rg * 0.05;
+
+                gl_FragColor = texture2D(tScene, uv);
 
                 float angle = length(vUv - vec2(0.5));
                 float amount = uDistortion + 0.0002;
 
-                gl_FragColor.rgb += getRGB(tBloom, vUv, angle, amount).rgb;
+                gl_FragColor.rgb += getRGB(tBloom, uv, angle, amount).rgb;
             }
         `;
 
@@ -57,6 +66,7 @@
                     uniforms: {
                         tScene: new Uniform(null),
                         tBloom: new Uniform(null),
+                        tFlow: new Uniform(null),
                         uDistortion: new Uniform(0.00125)
                     },
                     vertexShader: vertexCompositeShader,
@@ -243,10 +253,6 @@
                 });
                 this.flowmap.material.uniforms.uAspect = aspect;
 
-                // Flow material
-                this.flowMaterial = new FlowMaterial();
-                this.flowMaterial.uniforms.tFlow = this.flowmap.uniform;
-
                 // FXAA material
                 this.fxaaMaterial = new FXAAMaterial();
                 this.fxaaMaterial.uniforms.uResolution = resolution;
@@ -283,6 +289,7 @@
 
                 // Composite material
                 this.compositeMaterial = new CompositeMaterial();
+                this.compositeMaterial.uniforms.tFlow = this.flowmap.uniform;
             }
 
             static addListeners() {
@@ -415,20 +422,14 @@
                 renderer.setRenderTarget(renderTargetA);
                 renderer.render(scene, camera);
 
-                // Flow pass
-                this.flowMaterial.uniforms.tMap.value = renderTargetA.texture;
-                this.screen.material = this.flowMaterial;
+                // FXAA pass
+                this.fxaaMaterial.uniforms.tMap.value = renderTargetA.texture;
+                this.screen.material = this.fxaaMaterial;
                 renderer.setRenderTarget(renderTargetB);
                 renderer.render(screenScene, screenCamera);
 
-                // FXAA pass
-                this.fxaaMaterial.uniforms.tMap.value = renderTargetB.texture;
-                this.screen.material = this.fxaaMaterial;
-                renderer.setRenderTarget(renderTargetA);
-                renderer.render(screenScene, screenCamera);
-
                 // Extract bright areas
-                this.luminosityMaterial.uniforms.tMap.value = renderTargetA.texture;
+                this.luminosityMaterial.uniforms.tMap.value = renderTargetB.texture;
                 this.screen.material = this.luminosityMaterial;
                 renderer.setRenderTarget(renderTargetBright);
                 renderer.render(screenScene, screenCamera);
@@ -458,7 +459,7 @@
                 renderer.render(screenScene, screenCamera);
 
                 // Composite pass (render to screen)
-                this.compositeMaterial.uniforms.tScene.value = renderTargetA.texture;
+                this.compositeMaterial.uniforms.tScene.value = renderTargetB.texture;
                 this.compositeMaterial.uniforms.tBloom.value = renderTargetsHorizontal[0].texture;
                 this.screen.material = this.compositeMaterial;
                 renderer.setRenderTarget(null);

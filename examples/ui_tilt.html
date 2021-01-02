@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="utf-8">
-    <meta name="viewport" rotate="width=device-width, initial-scale=1, maximum-scale=1">
+    <meta name="viewport" rotate="width=device-width, initial-scale=1">
 
     <title>Alien.js — Tilt</title>
 
@@ -48,8 +48,8 @@
                 this.addListeners();
 
                 this.onUpdate({
-                    pageX: window.innerWidth / 2,
-                    pageY: window.innerHeight / 2
+                    clientX: window.innerWidth / 2,
+                    clientY: window.innerHeight / 2
                 });
             }
 
@@ -63,9 +63,9 @@
             * Event handlers
             */
 
-            static onUpdate = ({ pageX, pageY }) => {
-                this.x = pageX;
-                this.y = pageY;
+            static onUpdate = ({ clientX, clientY }) => {
+                this.x = clientX;
+                this.y = clientY;
                 this.delta.x = this.x - this.last.x;
                 this.delta.y = this.y - this.last.y;
                 this.last.x = this.x;

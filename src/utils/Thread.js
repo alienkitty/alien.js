@@ -12,6 +12,14 @@ export class Thread extends EventEmitter {
     static count = navigator.hardwareConcurrency || 4;
     static params = {};
 
+    static upload(...objects) {
+        if (!this.chunks) {
+            this.chunks = [];
+        }
+
+        objects.forEach(object => this.chunks.push(object));
+    }
+
     static shared(params) {
         if (!this.threads) {
             this.params = params || {};
@@ -20,14 +28,6 @@ export class Thread extends EventEmitter {
         }
 
         return !params ? this.threads.get() : this.threads;
-    }
-
-    static upload(...objects) {
-        if (!this.chunks) {
-            this.chunks = [];
-        }
-
-        objects.forEach(object => this.chunks.push(getConstructorName(object), object));
     }
 
     constructor({
@@ -41,9 +41,9 @@ export class Thread extends EventEmitter {
         const code = [];
 
         imports.forEach(bundle => {
-            const [path, ...named] = bundle;
+            const [path, ...names] = bundle;
 
-            code.push(`import { ${named.join(', ')} } from '${absolute(Assets.getPath(path))}';`);
+            code.push(`import { ${names.join(', ')} } from '${absolute(Assets.getPath(path))}';`);
         });
 
         if (classes.length) {
@@ -51,24 +51,22 @@ export class Thread extends EventEmitter {
         }
 
         if (controller.length) {
-            controller.forEach(object => {
-                if (typeof object === 'string') {
-                    this.createMethod(object);
-                } else {
-                    code.push(`${object.toString()}\n\nnew ${getConstructorName(object)}();`);
-                }
-            });
+            const [object, ...methods] = controller;
+
+            methods.forEach(name => this.createMethod(name));
+
+            code.push(`${object.toString()}\n\nnew ${getConstructorName(object)}();`);
         } else {
             code.push('addEventListener(\'message\', ({ data }) => self[data.message.fn].call(self, data.message));');
-
-            chunks.forEach(object => {
-                if (typeof object === 'string') {
-                    this.createMethod(object);
-                } else {
-                    code.push(`self.${getConstructorName(object)}=${object.toString()};`);
-                }
-            });
         }
+
+        chunks.forEach(object => {
+            const name = getConstructorName(object);
+
+            this.createMethod(name);
+
+            code.push(`self.${name}=${object.toString()};`);
+        });
 
         this.worker = new Worker(URL.createObjectURL(new Blob([code.join('\n\n')], { type: 'text/javascript' })), { type: 'module' });
 

@@ -6,13 +6,14 @@ export class SceneView extends Group {
     constructor() {
         super();
 
+        this.visible = false;
+        this.position.z = -4;
+
         this.initMesh();
     }
 
     initMesh() {
         this.mesh = new Mesh(new BoxBufferGeometry(1, 1, 1), new NormalMaterial());
-        this.mesh.position.z = -4;
-
         this.add(this.mesh);
     }
 
@@ -23,5 +24,12 @@ export class SceneView extends Group {
     update = () => {
         this.mesh.rotation.x += 0.01;
         this.mesh.rotation.y += 0.02;
+    };
+
+    animateIn = () => {
+        this.visible = true;
+    };
+
+    ready = async () => {
     };
 }

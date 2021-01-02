@@ -23,21 +23,11 @@ export class ImageBitmapLoader extends Loader {
 
         const cached = Assets.get(path);
 
-        if (cached) {
-            this.total++;
-
-            this.increment();
-
-            if (callback) {
-                callback(cached);
-            }
-
-            return;
-        }
-
         let promise;
 
-        if (Thread.threads) {
+        if (cached) {
+            promise = Promise.resolve(cached);
+        } else if (Thread.threads) {
             promise = ImageBitmapLoaderThread.load(path, Assets.options, this.options);
         } else {
             promise = fetch(path, Assets.options).then(response => {

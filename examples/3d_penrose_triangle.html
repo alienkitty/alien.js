@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
 
     <title>Alien.js — Penrose Triangle</title>
 
@@ -13,7 +13,7 @@
 <body>
     <div id="root"></div>
     <script type="module">
-        import { ACESFilmicToneMapping, AmbientLight, BloomCompositeMaterial, BlurDirectionX, BlurDirectionY, BoxBufferGeometry, BufferAttribute, BufferGeometry, Color, DirectionalLight, Events, FXAAMaterial, Group, HemisphereLight, LuminosityMaterial, MathUtils, Mesh, MeshStandardMaterial, NoBlending, OrthographicCamera, PlaneBufferGeometry, RGBFormat, RawShaderMaterial, Scene, Stage, Uniform, UnrealBloomBlurMaterial, Vector2, WebGLRenderTarget, WebGLRenderer, getFullscreenTriangle, mix, ticker } from '../build/alien.js';
+        import { ACESFilmicToneMapping, AmbientLight, BloomCompositeMaterial, BlurDirectionX, BlurDirectionY, BoxBufferGeometry, BufferAttribute, BufferGeometry, Color, DirectionalLight, Events, FXAAMaterial, Group, HemisphereLight, LuminosityMaterial, MathUtils, Mesh, MeshStandardMaterial, NoBlending, OrthographicCamera, PlaneBufferGeometry, RGBFormat, RawShaderMaterial, Scene, Stage, Uniform, UnrealBloomBlurMaterial, Vector2, WebGL1Renderer, WebGLRenderTarget, getFullscreenTriangle, mix, ticker } from '../build/alien.js';
 
         import rgbshift from '../src/shaders/modules/rgbshift/rgbshift.glsl.js';
 
@@ -120,7 +120,7 @@
                 this.add(topTriMesh);
 
                 // Centre
-                this.position.set(0, -62.5, 0);
+                this.position.y = -62.5;
             }
         }
 
@@ -315,7 +315,7 @@
             }
 
             static initWorld() {
-                this.renderer = new WebGLRenderer({
+                this.renderer = new WebGL1Renderer({
                     powerPreference: 'high-performance',
                     stencil: false
                 });

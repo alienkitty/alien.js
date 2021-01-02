@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
 
     <title>Alien.js — Post-processing Unreal Bloom</title>
 
@@ -13,7 +13,7 @@
 <body>
     <div id="root"></div>
     <script type="module">
-        import { BlurDirectionX, BlurDirectionY, Color, DirectionalLight, Events, FXAAMaterial, Group, HemisphereLight, LuminosityMaterial, Mesh, MeshStandardMaterial, OrthographicCamera, PerspectiveCamera, RGBFormat, Scene, SceneCompositeMaterial, SphereBufferGeometry, Stage, Uniform, UnrealBloomBlurMaterial, UnrealBloomCompositeMaterial, Vector2, Vector3, WebGLRenderTarget, WebGLRenderer, getFullscreenTriangle, ticker } from '../build/alien.js';
+        import { BlurDirectionX, BlurDirectionY, Color, DirectionalLight, Events, FXAAMaterial, Group, HemisphereLight, LuminosityMaterial, Mesh, MeshStandardMaterial, OrthographicCamera, PerspectiveCamera, RGBFormat, Scene, SceneCompositeMaterial, SphereBufferGeometry, Stage, Uniform, UnrealBloomBlurMaterial, UnrealBloomCompositeMaterial, Vector2, Vector3, WebGL1Renderer, WebGLRenderTarget, getFullscreenTriangle, ticker } from '../build/alien.js';
 
         import periodic3d from '../src/shaders/modules/noise/periodic3d.glsl.js';
 
@@ -54,7 +54,6 @@
                 };
 
                 this.mesh = new Mesh(this.geometry, this.material);
-
                 this.add(this.mesh);
             }
         }
@@ -257,7 +256,7 @@
             }
 
             static initWorld() {
-                this.renderer = new WebGLRenderer({
+                this.renderer = new WebGL1Renderer({
                     powerPreference: 'high-performance',
                     stencil: false
                 });

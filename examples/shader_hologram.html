@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
 
     <title>Alien.js — Shader Hologram</title>
 
@@ -13,7 +13,7 @@
 <body>
     <div id="root"></div>
     <script type="module">
-        import { ACESFilmicToneMapping, AmbientLight, BloomCompositeMaterial, BlurDirectionX, BlurDirectionY, BlurMaterial, BoxGeometry, Color, DirectionalLight, EnvironmentTextureLoader, Events, FXAAMaterial, Group, HemisphereLight, ImageBitmapLoaderThread, LuminosityMaterial, Mesh, MeshBasicMaterial, MeshStandardMaterial, NoBlending, OrbitControls, OrthographicCamera, PerspectiveCamera, RGBAFormat, RGBFormat, RawShaderMaterial, Scene, SceneCompositeMaterial, SphericalCubeTextureLoader, Stage, TextureLoader, Thread, Uniform, UnrealBloomBlurMaterial, Vector2, VideoGlitchMaterial, WebGLRenderTarget, WebGLRenderer, getFullscreenTriangle, mix, ticker } from '../build/alien.js';
+        import { ACESFilmicToneMapping, AmbientLight, BloomCompositeMaterial, BlurDirectionX, BlurDirectionY, BlurMaterial, BoxGeometry, Color, Device, DirectionalLight, EnvironmentTextureLoader, Events, FXAAMaterial, Group, HemisphereLight, ImageBitmapLoaderThread, LuminosityMaterial, Mesh, MeshBasicMaterial, MeshStandardMaterial, NoBlending, OrbitControls, OrthographicCamera, PerspectiveCamera, RGBAFormat, RGBFormat, RawShaderMaterial, Scene, SceneCompositeMaterial, SphericalCubeTextureLoader, Stage, TextureLoader, Thread, Uniform, UnrealBloomBlurMaterial, Vector2, VideoGlitchMaterial, WebGL1Renderer, WebGLRenderTarget, getFullscreenTriangle, mix, ticker } from '../build/alien.js';
 
         import blendAlpha from '../src/shaders/modules/blending/alpha.glsl.js';
         import blendScreen from '../src/shaders/modules/blending/screen.glsl.js';
@@ -86,7 +86,7 @@
             static BG_COLOR = '#0e0e0e';
             static UI_COLOR = 'rgba(255, 255, 255, 0.94)';
             static LIGHT_COLOR = 0x0099ff;
-            static ERROR_COLOR = 0xff0011;
+            static ERROR_COLOR = 0xff0000;
         }
 
         class Layer {
@@ -118,9 +118,9 @@
             }
 
             async initEnvironmentTexture() {
-                const { getEnvironmentTexture } = WorldController;
+                const { loadEnvironmentTexture } = WorldController;
 
-                this.envMap = await getEnvironmentTexture('assets/textures/env.jpg');
+                this.envMap = await loadEnvironmentTexture('assets/textures/env.jpg');
             }
 
             initMesh1() {
@@ -609,7 +609,7 @@
             }
 
             static initWorld() {
-                this.renderer = new WebGLRenderer({
+                this.renderer = new WebGL1Renderer({
                     powerPreference: 'high-performance',
                     stencil: false
                 });
@@ -700,12 +700,15 @@
 
             static getSphericalCubeTextures = path => this.spherizeLoader.load(path);
 
-            static getEnvironmentTexture = path => this.environmentLoader.loadAsync(path);
+            static loadEnvironmentTexture = path => this.environmentLoader.loadAsync(path);
         }
 
         class App {
             static async init() {
-                this.initThread();
+                if (Device.agent.includes('chrome')) {
+                    this.initThread();
+                }
+
                 this.initWorld();
                 this.initViews();
                 this.initControllers();

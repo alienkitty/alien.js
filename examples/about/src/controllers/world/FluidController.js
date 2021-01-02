@@ -20,7 +20,7 @@ export class FluidController {
 
         this.pointer = {};
         this.lerpSpeed = 0.07;
-        this.animatedIn = false;
+        this.enabled = false;
 
         this.initRenderer();
         this.initPointers();
@@ -54,7 +54,7 @@ export class FluidController {
         this.pointer.main = {};
         this.pointer.main.isMove = false;
         this.pointer.main.isDown = false;
-        this.pointer.main.pos = new Vector2();
+        this.pointer.main.mouse = new Vector2();
         this.pointer.main.last = new Vector2();
         this.pointer.main.delta = new Vector2();
     }
@@ -66,7 +66,6 @@ export class FluidController {
         window.addEventListener('touchmove', this.onTouchMove);
         window.addEventListener('mousemove', this.onTouchMove);
         window.addEventListener('touchend', this.onTouchEnd);
-        window.addEventListener('touchcancel', this.onTouchEnd);
         window.addEventListener('mouseup', this.onTouchEnd);
         Data.Socket.on('motion', this.onMotion);
     }
@@ -105,7 +104,7 @@ export class FluidController {
     static onTouchStart = e => {
         e.preventDefault();
 
-        if (!this.animatedIn) {
+        if (!this.enabled) {
             return;
         }
 
@@ -115,28 +114,28 @@ export class FluidController {
     };
 
     static onTouchMove = e => {
-        if (!this.animatedIn) {
+        if (!this.enabled) {
             return;
         }
 
         const event = {};
 
         if (e.changedTouches && e.changedTouches.length) {
-            event.x = e.changedTouches[0].pageX;
-            event.y = e.changedTouches[0].pageY;
+            event.x = e.changedTouches[0].clientX;
+            event.y = e.changedTouches[0].clientY;
         } else {
-            event.x = e.pageX;
-            event.y = e.pageY;
+            event.x = e.clientX;
+            event.y = e.clientY;
         }
 
         this.pointer.main.isMove = true;
-        this.pointer.main.pos.copy(event);
+        this.pointer.main.mouse.copy(event);
 
         this.send(event);
     };
 
     static onTouchEnd = e => {
-        if (!this.animatedIn) {
+        if (!this.enabled) {
             return;
         }
 
@@ -153,15 +152,15 @@ export class FluidController {
 
             this.pointer[e.id] = {};
             this.pointer[e.id].isDown = false;
-            this.pointer[e.id].pos = new Vector2();
+            this.pointer[e.id].mouse = new Vector2();
             this.pointer[e.id].last = new Vector2();
             this.pointer[e.id].delta = new Vector2();
             this.pointer[e.id].target = new Vector2();
             this.pointer[e.id].target.set(e.x * this.width, e.y * this.height);
-            this.pointer[e.id].pos.copy(this.pointer[e.id].target);
-            this.pointer[e.id].last.copy(this.pointer[e.id].pos);
+            this.pointer[e.id].mouse.copy(this.pointer[e.id].target);
+            this.pointer[e.id].last.copy(this.pointer[e.id].mouse);
             this.pointer[e.id].tracker = this.trackers.add(new Tracker());
-            this.pointer[e.id].tracker.css({ left: Math.round(this.pointer[e.id].pos.x), top: Math.round(this.pointer[e.id].pos.y) });
+            this.pointer[e.id].tracker.css({ left: Math.round(this.pointer[e.id].mouse.x), top: Math.round(this.pointer[e.id].mouse.y) });
             this.pointer[e.id].tracker.setData(Data.getUser(e.id));
         }
 
@@ -180,36 +179,36 @@ export class FluidController {
         this.renderTargetRead.setSize(width * dpr, height * dpr);
         this.renderTargetWrite.setSize(width * dpr, height * dpr);
 
-        this.pointer.main.pos.set(width / 2, height / 2);
-        this.pointer.main.last.copy(this.pointer.main.pos);
+        this.pointer.main.mouse.set(width / 2, height / 2);
+        this.pointer.main.last.copy(this.pointer.main.mouse);
     };
 
     static update = () => {
-        if (!this.animatedIn) {
+        if (!this.enabled) {
             return;
         }
 
         Object.keys(this.pointer).forEach((id, i) => {
             if (id !== 'main') {
-                this.pointer[id].pos.lerp(this.pointer[id].target, this.lerpSpeed);
-                this.pointer[id].tracker.css({ left: Math.round(this.pointer[id].pos.x), top: Math.round(this.pointer[id].pos.y) });
+                this.pointer[id].mouse.lerp(this.pointer[id].target, this.lerpSpeed);
+                this.pointer[id].tracker.css({ left: Math.round(this.pointer[id].mouse.x), top: Math.round(this.pointer[id].mouse.y) });
 
                 if (!this.pointer[id].tracker.animatedIn) {
                     this.pointer[id].tracker.animateIn();
                 }
             }
 
-            this.pointer[id].delta.subVectors(this.pointer[id].pos, this.pointer[id].last);
-            this.pointer[id].last.copy(this.pointer[id].pos);
+            this.pointer[id].delta.subVectors(this.pointer[id].mouse, this.pointer[id].last);
+            this.pointer[id].last.copy(this.pointer[id].mouse);
 
             const distance = Math.min(10, this.pointer[id].delta.length()) / 10;
 
             this.passMaterial.uniforms.uLast.value[i].copy(this.passMaterial.uniforms.uMouse.value[i]);
-            this.passMaterial.uniforms.uMouse.value[i].set(this.pointer[id].pos.x / this.width, (this.height - this.pointer[id].pos.y) / this.height);
+            this.passMaterial.uniforms.uMouse.value[i].set(this.pointer[id].mouse.x / this.width, (this.height - this.pointer[id].mouse.y) / this.height);
             this.passMaterial.uniforms.uVelocity.value[i].copy(this.pointer[id].delta);
             this.passMaterial.uniforms.uStrength.value[i].set((id === 'main' && !this.pointer[id].isMove) || this.pointer[id].isDown ? 50 : 50 * distance, 50 * distance);
 
-            AudioController.update(id, this.pointer[id].pos.x, this.pointer[id].pos.y);
+            AudioController.update(id, this.pointer[id].mouse.x, this.pointer[id].mouse.y);
         });
 
         this.passMaterial.uniforms.tMap.value = this.renderTargetRead.texture;
@@ -237,6 +236,6 @@ export class FluidController {
     };
 
     static animateIn = () => {
-        this.animatedIn = true;
+        this.enabled = true;
     };
 }

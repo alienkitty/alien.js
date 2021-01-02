@@ -15,7 +15,8 @@ export class TextureLoader extends Loader {
         super(assets, callback);
 
         this.defaultOptions = {
-            imageOrientation: 'flipY'
+            imageOrientation: 'flipY',
+            premultiplyAlpha: 'none'
         };
 
         this.options = this.defaultOptions;
@@ -26,23 +27,14 @@ export class TextureLoader extends Loader {
 
         const cached = Assets.get(path);
 
-        if (cached) {
-            this.total++;
-
-            this.increment();
-
-            if (callback) {
-                callback(cached);
-            }
-
-            return;
-        }
-
         const texture = new Texture();
+        texture.encoding = sRGBEncoding;
 
         let promise;
 
-        if (Device.agent.includes('chrome')) {
+        if (cached) {
+            promise = Promise.resolve(cached);
+        } else if (Device.agent.includes('chrome')) {
             if (Thread.threads) {
                 promise = ImageBitmapLoaderThread.load(path, Assets.options, this.options);
             } else {
@@ -63,7 +55,6 @@ export class TextureLoader extends Loader {
 
             texture.image = image;
             texture.format = /jpe?g/.test(path) ? RGBFormat : RGBAFormat;
-            texture.encoding = sRGBEncoding;
 
             if (!MathUtils.isPowerOfTwo(image.width) || !MathUtils.isPowerOfTwo(image.height)) {
                 texture.minFilter = LinearFilter;

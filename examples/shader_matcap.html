@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
 
     <title>Alien.js — Matcap</title>
 
@@ -13,7 +13,7 @@
 <body>
     <div id="root"></div>
     <script type="module">
-        import { Color, Events, FXAAMaterial, Group, Mesh, MeshMatcapMaterial, OrthographicCamera, PerspectiveCamera, RGBFormat, Scene, SphereBufferGeometry, Stage, TextureLoader, Uniform, Vector2, WebGLRenderTarget, WebGLRenderer, getFullscreenTriangle, ticker } from '../build/alien.js';
+        import { Color, Events, FXAAMaterial, Group, Mesh, MeshMatcapMaterial, OrthographicCamera, PerspectiveCamera, RGBFormat, Scene, SphereBufferGeometry, Stage, TextureLoader, Uniform, Vector2, WebGL1Renderer, WebGLRenderTarget, getFullscreenTriangle, ticker } from '../build/alien.js';
 
         import periodic3d from '../src/shaders/modules/noise/periodic3d.glsl.js';
 
@@ -37,12 +37,13 @@
             }
 
             initMesh() {
-                const { time } = WorldController;
+                const { getTexture, time } = WorldController;
 
                 this.geometry = new SphereBufferGeometry(1, 80, 80);
 
                 this.material = new MeshMatcapMaterial({
-                    matcap: new TextureLoader().load('assets/textures/matcaps/040full.jpg')
+                    matcap: getTexture('assets/textures/matcaps/040full.jpg'),
+                    dithering: true
                 });
 
                 // https://threejs.org/examples/#webgl_materials_modified
@@ -54,7 +55,6 @@
                 };
 
                 this.mesh = new Mesh(this.geometry, this.material);
-
                 this.add(this.mesh);
             }
         }
@@ -137,10 +137,11 @@
         class WorldController {
             static init() {
                 this.initWorld();
+                this.initLoaders();
             }
 
             static initWorld() {
-                this.renderer = new WebGLRenderer({
+                this.renderer = new WebGL1Renderer({
                     powerPreference: 'high-performance',
                     stencil: false
                 });
@@ -164,6 +165,10 @@
                 this.frame = new Uniform(0);
             }
 
+            static initLoaders() {
+                this.textureLoader = new TextureLoader();
+            }
+
             /**
              * Public methods
              */
@@ -183,6 +188,8 @@
                 this.time.value = time;
                 this.frame.value = frame;
             };
+
+            static getTexture = path => this.textureLoader.load(path);
         }
 
         class App {

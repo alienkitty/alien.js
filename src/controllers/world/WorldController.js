@@ -1,4 +1,4 @@
-import { ACESFilmicToneMapping, Color, PerspectiveCamera, Scene, Uniform, Vector2, WebGLRenderer } from 'three';
+import { ACESFilmicToneMapping, Color, PerspectiveCamera, Scene, Uniform, Vector2, WebGL1Renderer } from 'three';
 
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 
@@ -6,20 +6,22 @@ import { Config } from '../../config/Config.js';
 import { TextureLoader } from '../../loaders/world/TextureLoader.js';
 // import { Interface } from '../../utils/Interface.js';
 
-import { getFullscreenTriangle } from '../../utils/world/Utils3D.js';
+import { getFrustum, getFullscreenTriangle } from '../../utils/world/Utils3D.js';
 
 export class WorldController {
     static init() {
         this.initWorld();
-        // this.initLights();
+        this.initLights();
         this.initLoaders();
         // this.initControls();
     }
 
     static initWorld() {
-        this.renderer = new WebGLRenderer({
+        this.renderer = new WebGL1Renderer({
             powerPreference: 'high-performance',
-            stencil: false
+            stencil: false,
+            // antialias: true,
+            // alpha: true
         });
         this.element = this.renderer.domElement;
         // this.element = new Interface(this.renderer.domElement);
@@ -82,4 +84,6 @@ export class WorldController {
     };
 
     static getTexture = path => this.textureLoader.load(path);
+
+    static getFrustum = offsetZ => getFrustum(this.camera, offsetZ);
 }

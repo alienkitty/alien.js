@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
 
     <title>Alien.js — Soft Particles</title>
 
@@ -13,7 +13,7 @@
 <body>
     <div id="root"></div>
     <script type="module">
-        import { ACESFilmicToneMapping, AmbientLight, BloomCompositeMaterial, BlurDirectionX, BlurDirectionY, BoxGeometry, BufferAttribute, BufferGeometry, Color, DepthTexture, DirectionalLight, EnvironmentTextureLoader, Events, FXAAMaterial, Group, HemisphereLight, ImageBitmapLoaderThread, LuminosityMaterial, MathUtils, Mesh, MeshStandardMaterial, NoBlending, OrbitControls, OrthographicCamera, PerspectiveCamera, Points, RGBFormat, RawShaderMaterial, Scene, SphericalCubeTextureLoader, Stage, TextureLoader, Thread, Uniform, UnrealBloomBlurMaterial, Vector2, WebGLRenderTarget, WebGLRenderer, getFullscreenTriangle, mix, ticker } from '../build/alien.js';
+        import { ACESFilmicToneMapping, AmbientLight, BloomCompositeMaterial, BlurDirectionX, BlurDirectionY, BoxGeometry, BufferAttribute, BufferGeometry, Color, DepthTexture, Device, DirectionalLight, EnvironmentTextureLoader, Events, FXAAMaterial, Group, HemisphereLight, ImageBitmapLoaderThread, LuminosityMaterial, MathUtils, Mesh, MeshStandardMaterial, NoBlending, OrbitControls, OrthographicCamera, PerspectiveCamera, Points, RGBAFormat, RGBFormat, RawShaderMaterial, Scene, SphericalCubeTextureLoader, Stage, TextureLoader, Thread, Uniform, UnrealBloomBlurMaterial, Vector2, WebGL1Renderer, WebGLRenderTarget, getFullscreenTriangle, mix, ticker } from '../build/alien.js';
 
         import simplex3d from '../src/shaders/modules/noise/simplex3d.glsl.js';
         import depth from '../src/shaders/modules/depth/depth.glsl.js';
@@ -28,7 +28,7 @@
             uniform mat4 modelMatrix;
             uniform vec3 cameraPosition;
 
-            uniform float uSize;
+            uniform float uScale;
             uniform float uCameraNear;
             uniform float uCameraFar;
             uniform float uTime;
@@ -43,12 +43,16 @@
                 p.y += snoise(position.yyz + uTime * 0.02);
                 p.z += snoise(position.zxy + uTime * 0.02);
 
-                gl_Position = projectionMatrix * modelViewMatrix * vec4(p, 1.0);
-                gl_PointSize = uSize * 100.0 / -(modelViewMatrix * vec4(p, 1.0)).z;
+                vec4 mvPosition = modelViewMatrix * vec4(p, 1.0);
+
+                gl_PointSize = uScale * (150.0 / -mvPosition.z);
+
+                gl_Position = projectionMatrix * mvPosition;
 
                 vec3 pos = (modelMatrix * vec4(p, 1.0)).xyz;
                 float linearDepth = 1.0 / (uCameraFar - uCameraNear);
                 float linearPos = length(cameraPosition - pos) * linearDepth;
+
                 vFade = 1.0 - linearPos * 0.75;
                 vFade *= smoothstep(0.09, 0.13, linearPos);
             }
@@ -97,6 +101,8 @@
             }
         `;
 
+        import blendAlpha from '../src/shaders/modules/blending/alpha.glsl.js';
+
         const vertexCompositeShader = /* glsl */`
             attribute vec2 uv;
             attribute vec3 position;
@@ -114,17 +120,20 @@
             precision highp float;
 
             uniform sampler2D tScene;
-            uniform sampler2D tBloom;
             uniform sampler2D tDust;
+            uniform sampler2D tBloom;
 
             varying vec2 vUv;
 
+            ${blendAlpha}
+
             void main() {
-                gl_FragColor = texture2D(tScene, vUv);
+                vec4 base = texture2D(tScene, vUv);
+                vec4 blend = texture2D(tDust, vUv);
+
+                gl_FragColor = blendAlpha(base, blend, 1.0);
 
                 gl_FragColor.rgb += texture2D(tBloom, vUv).rgb;
-
-                gl_FragColor.rgb += texture2D(tDust, vUv).rgb;
             }
         `;
 
@@ -133,8 +142,8 @@
                 super({
                     uniforms: {
                         tScene: new Uniform(null),
-                        tBloom: new Uniform(null),
-                        tDust: new Uniform(null)
+                        tDust: new Uniform(null),
+                        tBloom: new Uniform(null)
                     },
                     vertexShader: vertexCompositeShader,
                     fragmentShader: fragmentCompositeShader,
@@ -151,10 +160,10 @@
         }
 
         class Dust extends Group {
-            constructor(nParticles) {
+            constructor(numParticles) {
                 super();
 
-                this.nParticles = nParticles;
+                this.numParticles = numParticles;
 
                 this.initPoints();
             }
@@ -164,7 +173,7 @@
 
                 const vertices = [];
 
-                for (let i = 0; i < this.nParticles; i++) {
+                for (let i = 0; i < this.numParticles; i++) {
                     vertices[i * 3 + 0] = MathUtils.randFloatSpread(camera.far);
                     vertices[i * 3 + 1] = MathUtils.randFloatSpread(camera.far);
                     vertices[i * 3 + 2] = MathUtils.randFloatSpread(camera.far);
@@ -177,7 +186,7 @@
                     uniforms: {
                         tMap: new Uniform(getTexture('assets/textures/particle.png')),
                         tDepth: new Uniform(null),
-                        uSize: new Uniform(1),
+                        uScale: new Uniform(1),
                         uAlpha: new Uniform(1),
                         uCameraNear: new Uniform(camera.near),
                         uCameraFar: new Uniform(camera.far),
@@ -192,7 +201,6 @@
                 });
 
                 this.points = new Points(this.geometry, this.material);
-
                 this.add(this.points);
             }
         }
@@ -205,7 +213,7 @@
             }
 
             async initMesh() {
-                const { getEnvironmentTexture, getSphericalCubeTextures } = WorldController;
+                const { loadEnvironmentTexture, getSphericalCubeTextures } = WorldController;
 
                 // Spherical cube geometry
                 this.geometry = new BoxGeometry(1, 1, 1, 32, 32, 32);
@@ -227,7 +235,7 @@
                 // https://occlusion-roughness-metalness.glitch.me/
                 const ormMap = getSphericalCubeTextures('assets/textures/pbr/pitted_metal_orm.jpg');
 
-                const envMap = await getEnvironmentTexture('assets/textures/env.jpg');
+                const envMap = await loadEnvironmentTexture('assets/textures/env.jpg');
 
                 // Materials
                 this.material = [];
@@ -308,6 +316,8 @@
 
                 this.renderTargetA.depthBuffer = true;
                 this.renderTargetA.depthTexture = new DepthTexture();
+
+                this.renderTargetC.texture.format = RGBAFormat;
 
                 // FXAA material
                 this.fxaaMaterial = new FXAAMaterial();
@@ -451,8 +461,8 @@
 
                 // Composite pass (render to screen)
                 this.compositeMaterial.uniforms.tScene.value = renderTargetB.texture;
-                this.compositeMaterial.uniforms.tBloom.value = renderTargetsHorizontal[0].texture;
                 this.compositeMaterial.uniforms.tDust.value = renderTargetC.texture;
+                this.compositeMaterial.uniforms.tBloom.value = renderTargetsHorizontal[0].texture;
                 this.screen.material = this.compositeMaterial;
                 renderer.setRenderTarget(null);
                 renderer.render(screenScene, screenCamera);
@@ -468,7 +478,7 @@
             }
 
             static initWorld() {
-                this.renderer = new WebGLRenderer({
+                this.renderer = new WebGL1Renderer({
                     powerPreference: 'high-performance',
                     stencil: false
                 });
@@ -549,12 +559,15 @@
 
             static getSphericalCubeTextures = path => this.spherizeLoader.load(path);
 
-            static getEnvironmentTexture = path => this.environmentLoader.loadAsync(path);
+            static loadEnvironmentTexture = path => this.environmentLoader.loadAsync(path);
         }
 
         class App {
             static async init() {
-                this.initThread();
+                if (Device.agent.includes('chrome')) {
+                    this.initThread();
+                }
+
                 this.initWorld();
                 this.initViews();
                 this.initControllers();

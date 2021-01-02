@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
 
     <title>Alien.js — 3D Ripple</title>
 
@@ -13,7 +13,7 @@
 <body>
     <div id="root"></div>
     <script type="module">
-        import { Assets, Color, DirectionalLight, Events, Group, HemisphereLight, Interface, LinearFilter, Mesh, MeshStandardMaterial, PerspectiveCamera, PlaneBufferGeometry, Scene, Stage, Texture, Uniform, Vector2, WebGLRenderer, clearTween, delayedCall, getFrustum, ticker } from '../build/alien.js';
+        import { Assets, Color, DirectionalLight, Events, Group, HemisphereLight, Interface, LinearFilter, Mesh, MeshStandardMaterial, PerspectiveCamera, PlaneBufferGeometry, Scene, Stage, Texture, Uniform, Vector2, WebGL1Renderer, clearTween, delayedCall, getFrustum, ticker } from '../build/alien.js';
 
         class Config {
             static BG_COLOR = '#0e0e0e';
@@ -43,17 +43,17 @@
                 this.context.fillStyle = this.grid.fillStyle;
                 this.context.strokeStyle = this.grid.strokeStyle;
 
-                this.context.fillRect(0, 0, this.element.width, this.element.height);
+                this.context.fillRect(0, 0, this.width, this.height);
                 this.context.beginPath();
 
-                for (let x = 0; x < this.element.width; x += this.element.width / 10) {
+                for (let x = 0; x < this.width; x += this.width / 10) {
                     this.context.moveTo(x, 0);
-                    this.context.lineTo(x, this.element.height);
+                    this.context.lineTo(x, this.height);
                 }
 
-                for (let y = 0; y < this.element.height; y += this.element.height / 10) {
+                for (let y = 0; y < this.height; y += this.height / 10) {
                     this.context.moveTo(0, y);
-                    this.context.lineTo(this.element.width, y);
+                    this.context.lineTo(this.width, y);
                 }
 
                 this.context.stroke();
@@ -64,6 +64,9 @@
             */
 
             resize = (width, height, dpr) => {
+                this.width = width;
+                this.height = height;
+
                 this.element.width = Math.round(width * dpr);
                 this.element.height = Math.round(height * dpr);
                 this.context.scale(dpr, dpr);
@@ -72,7 +75,7 @@
             };
 
             update = () => {
-                this.context.clearRect(0, 0, this.element.width, this.element.height);
+                this.context.clearRect(0, 0, this.width, this.height);
 
                 this.drawGrid();
             };
@@ -154,7 +157,6 @@
             resizeCanvas(name, width, height, dpr) {
                 this.canvas[name].width = Math.round(width * dpr);
                 this.canvas[name].height = Math.round(height * dpr);
-                this.context[name].scale(dpr, dpr);
             }
 
             updateRipples() {
@@ -265,11 +267,11 @@
             static init(view) {
                 this.view = view;
 
-                this.pos = new Vector2();
+                this.mouse = new Vector2();
                 this.last = new Vector2();
                 this.delta = new Vector2();
-                this.pos.set(Stage.width / 2, Stage.height / 2);
-                this.last.copy(this.pos);
+                this.mouse.set(Stage.width / 2, Stage.height / 2);
+                this.last.copy(this.mouse);
 
                 this.timeout = false;
 
@@ -311,16 +313,16 @@
                 const event = {};
 
                 if (e.changedTouches && e.changedTouches.length) {
-                    event.x = e.changedTouches[0].pageX;
-                    event.y = e.changedTouches[0].pageY;
+                    event.x = e.changedTouches[0].clientX;
+                    event.y = e.changedTouches[0].clientY;
                 } else {
-                    event.x = e.pageX;
-                    event.y = e.pageY;
+                    event.x = e.clientX;
+                    event.y = e.clientY;
                 }
 
-                this.pos.copy(event);
-                this.delta.subVectors(this.pos, this.last);
-                this.last.copy(this.pos);
+                this.mouse.copy(event);
+                this.delta.subVectors(this.mouse, this.last);
+                this.last.copy(this.mouse);
 
                 if (!this.timeout) {
                     this.timeout = true;
@@ -393,7 +395,7 @@
             }
 
             static initWorld() {
-                this.renderer = new WebGLRenderer({
+                this.renderer = new WebGL1Renderer({
                     powerPreference: 'high-performance',
                     stencil: false
                 });

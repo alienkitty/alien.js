@@ -21,21 +21,11 @@ export class AssetLoader extends Loader {
 
         const cached = Assets.get(path);
 
-        if (cached) {
-            this.total++;
-
-            this.increment();
-
-            if (callback) {
-                callback(cached);
-            }
-
-            return;
-        }
-
         let promise;
 
-        if (/\.(jpe?g|png|gif|svg)$/.test(path)) {
+        if (cached) {
+            promise = Promise.resolve(cached);
+        } else if (/\.(jpe?g|png|gif|svg)$/.test(path)) {
             promise = Assets.loadImage(path);
         } else {
             promise = fetch(path, Assets.options).then(response => {

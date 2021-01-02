@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
 
     <title>Alien.js — Shader Noise</title>
 
@@ -13,7 +13,7 @@
 <body>
     <div id="root"></div>
     <script type="module">
-        import { Events, Mesh, NoBlending, OrthographicCamera, RawShaderMaterial, Scene, Stage, Uniform, Vector2, WebGLRenderer, getFullscreenTriangle, ticker } from '../build/alien.js';
+        import { Events, Mesh, NoBlending, OrthographicCamera, RawShaderMaterial, Scene, Stage, Uniform, Vector2, WebGL1Renderer, getFullscreenTriangle, ticker } from '../build/alien.js';
 
         import simplex2d from '../src/shaders/modules/noise/simplex2d.glsl.js';
 
@@ -126,7 +126,7 @@
             }
 
             static initWorld() {
-                this.renderer = new WebGLRenderer({
+                this.renderer = new WebGL1Renderer({
                     powerPreference: 'high-performance',
                     stencil: false
                 });

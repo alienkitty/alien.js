@@ -23,8 +23,6 @@
 
 <br>
 
-[Examples](https://alien.js.org/)
-
 Alien.js is a design pattern and project structure for building [SPA](https://en.wikipedia.org/wiki/Single-page_application) websites with ES modules and [GSAP](https://greensock.com/).
 
 The idea is to keep it simple, with minimal abstraction, and to build websites more like a framework, which is why [Rollup](https://rollupjs.org/) is used instead for bundling.
@@ -32,6 +30,61 @@ The idea is to keep it simple, with minimal abstraction, and to build websites m
 In its design, everything is an ES module, all user interfaces and components follow the same class structure, making it easy to copy-paste from examples and between projects.
 
 *Note this design pattern intentionally does not use underscores or private fields, in favour of cleaner code.*
+
+### Examples
+
+#### ui
+
+[logo](https://alien.js.org/examples/ui_logo.html)  
+[logo](https://alien.js.org/examples/ui_logo_interface.html) (interface)  
+[tilt](https://alien.js.org/examples/ui_tilt.html)  
+[ufo](https://ufo.ai/)  
+
+#### 3d
+
+[ripple](https://alien.js.org/examples/3d_ripple.html)  
+[physics](https://alien.js.org/examples/3d_physics_thread.html)  
+[audio](https://alien.js.org/examples/3d_audio.html)  
+[audio](https://alien.js.org/examples/3d_audio_fast.html) (fast)  
+[spherical cube](https://alien.js.org/examples/3d_spherical_cube.html)  
+[penrose triangle](https://alien.js.org/examples/3d_penrose_triangle.html)  
+[camera wobble](https://alien.js.org/examples/3d_camera_wobble.html)  
+[camera shake](https://alien.js.org/examples/3d_camera_shake.html)  
+
+#### shader
+
+[noise](https://alien.js.org/examples/shader_noise.html)  
+[fxaa](https://alien.js.org/examples/shader_fxaa.html)  
+[blur](https://alien.js.org/examples/shader_blur.html) (Gaussian blur)  
+[blur](https://alien.js.org/examples/shader_poisson_disc_blur.html) (Poisson disc blur)  
+[blur](https://alien.js.org/examples/shader_bokeh_blur.html) (Bokeh blur)  
+[bloom](https://alien.js.org/examples/shader_bloom.html)  
+[bloom](https://alien.js.org/examples/shader_unreal_bloom.html) (Unreal bloom)  
+[bloom](https://alien.js.org/examples/shader_bloom_dither.html) (Unreal bloom with dither)  
+[matcap](https://alien.js.org/examples/shader_matcap.html)  
+[pbr](https://alien.js.org/examples/shader_pbr.html)  
+[soft particles](https://alien.js.org/examples/shader_soft_particles.html)  
+[dof](https://alien.js.org/examples/shader_dof_fake.html) (fake with Bokeh blur)  
+[chromatic aberration](https://alien.js.org/examples/shader_chromatic_aberration.html)  
+[film grain](https://alien.js.org/examples/shader_film_grain.html)  
+[reflection](https://alien.js.org/examples/shader_reflection.html) (with fast Gaussian blur)  
+[flowmap](https://alien.js.org/examples/shader_flowmap.html)  
+[flowmap](https://alien.js.org/examples/shader_flowmap_rgbshift.html) (RGB shift)  
+[flowmap](https://alien.js.org/examples/shader_flowmap_view.html) (view)  
+[depth](https://alien.js.org/examples/shader_depth.html) (fragment depth with dither)  
+[hologram](https://alien.js.org/examples/shader_hologram.html)  
+[alienkitty](https://alienkitty.com/) (flowmap with RGB shift)  
+
+#### thread
+
+[canvas](https://alien.js.org/examples/canvas_thread.html) (noise)  
+[physics](https://alien.js.org/examples/3d_physics_thread.html)  
+[audio](https://alien.js.org/examples/3d_audio.html)  
+[audio](https://alien.js.org/examples/3d_audio_fast.html) (fast)  
+[camera shake](https://alien.js.org/examples/3d_camera_shake.html)  
+[pbr](https://alien.js.org/examples/shader_pbr.html) (texture loader thread)  
+
+<br>
 
 ## Class structure
 
@@ -343,12 +396,12 @@ Clone this repository template and install its dependencies:
 ```sh
 git clone https://github.com/pschroen/alien.js
 cd alien.js
-npm install
+npm i
 
 # or
 npx degit pschroen/alien.js my-app
 cd my-app
-npm install
+npm i
 ```
 
 ```sh
@@ -357,6 +410,25 @@ npm run dev
 
 # Build for production
 npm run build
+```
+
+## With three.js
+
+Uncomment all the lines in `App.js` and install `three`:
+
+```sh
+npm i && npm i three
+npm run dev
+```
+
+## With examples
+
+```sh
+npm i && npm i three
+cd examples
+npm i
+npm run build
+npm start
 ```
 
 ## Resources

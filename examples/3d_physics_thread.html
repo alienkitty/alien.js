@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
 
     <title>Alien.js — 3D Physics Thread</title>
 
@@ -13,7 +13,7 @@
 <body>
     <div id="root"></div>
     <script type="module">
-        import { AssetLoader, Assets, Color, CylinderBufferGeometry, DirectionalLight, Events, Fog, Group, HemisphereLight, MathUtils, Mesh, MeshStandardMaterial, PerspectiveCamera, PointLight, Scene, Sound3D, SphereBufferGeometry, Stage, Thread, Uniform, Vector2, Vector3, WebAudio, WebGLRenderer, clamp, delayedCall, getFrustum, gsap, range, wait } from '../build/alien.js';
+        import { AssetLoader, Assets, Color, CylinderBufferGeometry, Device, DirectionalLight, EventEmitter, Events, Fog, Group, HemisphereLight, MathUtils, Mesh, MeshStandardMaterial, PerspectiveCamera, PointLight, Scene, Sound3D, SphereBufferGeometry, Stage, Thread, Uniform, Vector2, Vector3, WebAudio, WebGL1Renderer, clamp, delayedCall, getFrustum, gsap, range, ticker } from '../build/alien.js';
 
         import { World } from 'https://unpkg.com/oimo/build/oimo.module.js';
 
@@ -26,43 +26,27 @@
             ];
         }
 
-        class ScenePhysicsThread {
-            constructor() {
+        class ScenePhysics extends EventEmitter {
+            constructor(shapes) {
+                super();
+
+                this.shapes = shapes;
+
                 this.bodies = [];
                 this.force = new Vector3();
-                this.pos = new Vector2();
+                this.mouse = new Vector2();
                 this.target = new Vector2();
-
-                // Mallet initial position
-                this.target.set(0.24, 0.32);
-                this.pos.copy(this.target);
-
+                this.malletPosition = new Vector3();
                 this.lerpSpeed = 0.25;
 
-                this.addListeners();
+                this.initWorld();
             }
 
-            addListeners() {
-                addEventListener('message', this.onMessage);
-            }
-
-            /**
-             * Event handlers
-             */
-
-            onMessage = ({ data }) => {
-                this[data.message.fn].call(this, data.message);
-            };
-
-            /**
-             * Public methods
-             */
-
-            init = ({ shapes }) => {
+            initWorld() {
                 this.world = new World();
                 this.world.gravity = new Vector3(); // Zero-G
 
-                shapes.forEach(shape => this.bodies.push(this.world.add(shape)));
+                this.shapes.forEach(shape => this.bodies.push(this.world.add(shape)));
 
                 const wand = this.bodies[0];
 
@@ -73,12 +57,14 @@
                 // Wand initial motion
                 wand.angularVelocity.set(0.6, 0.15, 0.15);
 
-                this.buffer = new Float32Array(shapes.length * 8);
+                this.buffer = new Float32Array(this.shapes.length * 8);
+            }
 
-                postMessage({ event: 'ready' });
-            };
+            /**
+             * Public methods
+             */
 
-            resize = ({ width, height }) => {
+            resize = (width, height) => {
                 this.width = width;
                 this.height = height;
             };
@@ -100,31 +86,31 @@
                     }
                 });
 
+                this.emit('update', { buffer: this.buffer });
+
                 const wand = this.bodies[0];
                 const mallet = this.bodies[1];
 
                 // Mallet position
-                this.pos.lerp(this.target, this.lerpSpeed);
+                this.mouse.lerp(this.target, this.lerpSpeed);
 
-                const malletX = this.pos.x * (this.width * 0.5);
-                const malletY = this.pos.y * (this.height * 0.5);
-                const malletZ = mallet.position.z;
+                this.malletPosition.x = this.mouse.x * (this.width * 0.5);
+                this.malletPosition.y = this.mouse.y * (this.height * 0.5);
+                this.malletPosition.z = mallet.position.z;
 
-                mallet.setPosition(new Vector3(malletX, malletY, malletZ));
-
-                postMessage({ event: 'update', message: { buffer: this.buffer } });
+                mallet.setPosition(this.malletPosition);
 
                 // Contact test
                 const contact = this.world.getContact(mallet, wand);
 
                 if (contact && !contact.close) {
-                    this.force.x = (wand.linearVelocity.x * wand.mass) - (mallet.linearVelocity.x * mallet.mass);
-                    this.force.y = (wand.linearVelocity.y * wand.mass) - (mallet.linearVelocity.y * mallet.mass);
-                    this.force.z = (wand.linearVelocity.z * wand.mass) - (mallet.linearVelocity.z * mallet.mass);
+                    this.force.x += (wand.linearVelocity.x * wand.mass) - (mallet.linearVelocity.x * mallet.mass);
+                    this.force.y += (wand.linearVelocity.y * wand.mass) - (mallet.linearVelocity.y * mallet.mass);
+                    this.force.z += (wand.linearVelocity.z * wand.mass) - (mallet.linearVelocity.z * mallet.mass);
 
-                    const force = this.force.length();
+                    this.force.multiplyScalar(0.5);
 
-                    postMessage({ event: 'contact', message: { force } });
+                    this.emit('contact', { force: this.force.length() });
                 }
             };
 
@@ -136,7 +122,57 @@
             };
         }
 
-        class ScenePhysics {
+        class ScenePhysicsThread {
+            constructor() {
+                this.addListeners();
+            }
+
+            addListeners() {
+                addEventListener('message', this.onMessage);
+            }
+
+            /**
+             * Event handlers
+             */
+
+            onMessage = ({ data }) => {
+                this[data.message.fn].call(this, data.message);
+            };
+
+            onUpdate = ({ buffer }) => {
+                postMessage({ event: 'update', message: { buffer } });
+            };
+
+            onContact = ({ force }) => {
+                postMessage({ event: 'contact', message: { force } });
+            };
+
+            /**
+             * Public methods
+             */
+
+            init = ({ shapes }) => {
+                this.physics = new ScenePhysics(shapes);
+                this.physics.on('update', this.onUpdate);
+                this.physics.on('contact', this.onContact);
+
+                postMessage({ event: 'ready' });
+            };
+
+            resize = ({ width, height }) => {
+                this.physics.resize(width, height);
+            };
+
+            update = () => {
+                this.physics.update();
+            };
+
+            motion = e => {
+                this.physics.motion(e);
+            };
+        }
+
+        class ScenePhysicsController {
             constructor(view) {
                 this.view = view;
                 this.meshes = [];
@@ -162,15 +198,20 @@
             }
 
             initEngine() {
-                this.thread = new Thread({
-                    imports: [
-                        ['../build/alien.js', 'Vector2', 'Vector3'],
-                        ['https://unpkg.com/oimo/build/oimo.module.js', 'World']
-                    ],
-                    controller: [ScenePhysicsThread, 'init', 'resize', 'update']
-                });
+                if (Device.agent.includes('chrome')) {
+                    this.thread = new Thread({
+                        imports: [
+                            ['../build/alien.js', 'EventEmitter', 'Vector2', 'Vector3'],
+                            ['https://unpkg.com/oimo/build/oimo.module.js', 'World']
+                        ],
+                        classes: [ScenePhysics],
+                        controller: [ScenePhysicsThread, 'init', 'resize', 'update']
+                    });
 
-                this.thread.init({ shapes: this.shapes });
+                    this.thread.init({ shapes: this.shapes });
+                } else {
+                    this.physics = new ScenePhysics(this.shapes);
+                }
             }
 
             createShapeObject(name, type, position, rotation, size, move, paddle) {
@@ -214,9 +255,16 @@
             }
 
             addListeners() {
-                this.thread.on('ready', this.onReady);
-                this.thread.on('update', this.onUpdate);
-                this.thread.on('contact', this.onContact);
+                if (this.thread) {
+                    this.thread.on('ready', this.onReady);
+                    this.thread.on('update', this.onUpdate);
+                    this.thread.on('contact', this.onContact);
+                } else {
+                    this.physics.on('update', this.onUpdate);
+                    this.physics.on('contact', this.onContact);
+
+                    this.resolve();
+                }
             }
 
             /**
@@ -240,10 +288,18 @@
              */
 
             resize = (width, height) => {
-                this.thread.resize({ width, height });
+                if (this.thread) {
+                    this.thread.resize({ width, height });
+                } else {
+                    this.physics.resize(width, height);
+                }
             };
 
             update = () => {
+                if (this.physics) {
+                    this.physics.update();
+                }
+
                 let index = 0;
 
                 this.meshes.forEach((mesh, i) => {
@@ -257,7 +313,11 @@
             };
 
             send = (event, message = {}) => {
-                this.thread.send(event, message);
+                if (this.thread) {
+                    this.thread.send(event, message);
+                } else {
+                    this.physics[event].call(this.physics, message);
+                }
             };
 
             ready = () => this.promise;
@@ -266,6 +326,8 @@
         class Mallet extends Group {
             constructor() {
                 super();
+
+                this.position.z = 6.25;
 
                 this.initMesh();
                 this.initLight();
@@ -280,9 +342,6 @@
                 });
 
                 this.mesh = new Mesh(this.geometry, this.material);
-
-                this.position.set(0, 0, 6.25);
-
                 this.add(this.mesh);
             }
 
@@ -295,6 +354,10 @@
         class Wand extends Group {
             constructor() {
                 super();
+
+                this.rotation.x = MathUtils.degToRad(40);
+                this.rotation.y = MathUtils.degToRad(-45);
+                this.rotation.z = MathUtils.degToRad(100);
 
                 this.initMesh();
             }
@@ -311,11 +374,6 @@
                 });
 
                 this.mesh = new Mesh(this.geometry, this.material);
-
-                this.rotation.x = MathUtils.degToRad(40);
-                this.rotation.y = MathUtils.degToRad(-45);
-                this.rotation.z = MathUtils.degToRad(100);
-
                 this.add(this.mesh);
             }
         }
@@ -348,7 +406,7 @@
             }
 
             static initPhysics() {
-                this.physics = new ScenePhysics(this.view);
+                this.physics = new ScenePhysicsController(this.view);
             }
 
             static addListeners() {
@@ -376,11 +434,11 @@
                 const event = {};
 
                 if (e.changedTouches && e.changedTouches.length) {
-                    event.x = e.changedTouches[0].pageX;
-                    event.y = e.changedTouches[0].pageY;
+                    event.x = e.changedTouches[0].clientX;
+                    event.y = e.changedTouches[0].clientY;
                 } else {
-                    event.x = e.pageX;
-                    event.y = e.pageY;
+                    event.x = e.clientX;
+                    event.y = e.clientY;
                 }
 
                 this.send(event);
@@ -511,7 +569,7 @@
             }
 
             static initWorld() {
-                this.renderer = new WebGLRenderer({
+                this.renderer = new WebGL1Renderer({
                     powerPreference: 'high-performance',
                     stencil: false
                 });
@@ -582,9 +640,6 @@
                 this.onResize();
 
                 await SceneController.ready();
-                requestAnimationFrame(this.onStep);
-
-                await wait(250);
                 SceneController.animateIn();
             }
 
@@ -611,11 +666,23 @@
 
             static addListeners() {
                 Stage.events.on(Events.RESIZE, this.onResize);
-                SceneController.physics.thread.on('update', this.onUpdate);
-                this.loader.events.on(Events.COMPLETE, this.onComplete);
 
-                // Unhooks the GSAP ticker
-                gsap.ticker.remove(gsap.updateRoot);
+                if (SceneController.physics.thread) {
+                    // Unhooks the GSAP ticker
+                    gsap.ticker.remove(gsap.updateRoot);
+
+                    SceneController.physics.thread.on('update', () => {
+                        gsap.updateRoot(this.time);
+                        this.onUpdate(this.time, this.delta, this.frame);
+                        requestAnimationFrame(this.onStep);
+                    });
+
+                    requestAnimationFrame(this.onStep);
+                } else {
+                    ticker.add(this.onUpdate);
+                }
+
+                this.loader.events.on(Events.COMPLETE, this.onComplete);
             }
 
             /**
@@ -630,14 +697,10 @@
                 RenderManager.resize(width, height, dpr);
             };
 
-            static onUpdate = () => {
-                gsap.updateRoot(this.time);
-
-                WorldController.update(this.time, this.delta, this.frame);
+            static onUpdate = (time, delta, frame) => {
+                WorldController.update(time, delta, frame);
                 SceneController.update();
-                RenderManager.update(this.time, this.delta, this.frame);
-
-                requestAnimationFrame(this.onStep);
+                RenderManager.update(time, delta, frame);
             };
 
             static onStep = time => {

@@ -4,6 +4,8 @@
 // import { AudioController } from './audio/AudioController.js';
 // import { WorldController } from './world/WorldController.js';
 // import { CameraController } from './world/CameraController.js';
+// import { SceneController } from './world/SceneController.js';
+// import { InputManager } from './world/InputManager.js';
 // import { RenderManager } from './world/RenderManager.js';
 import { Stage } from './Stage.js';
 // import { SceneView } from '../views/SceneView.js';
@@ -27,7 +29,10 @@ export class App {
         // WebAudio.init(Assets.filter(path => /sounds/.test(path)));
         // AudioController.init();
 
-        // await WorldController.textureLoader.ready();
+        // await Promise.all([
+        //     WorldController.textureLoader.ready(),
+        //     SceneController.ready()
+        // ]);
     }
 
     /* static initWorld() {
@@ -36,8 +41,8 @@ export class App {
     } */
 
     static initViews() {
-        // this.scene = new SceneView();
-        // WorldController.scene.add(this.scene);
+        // this.view = new SceneView();
+        // WorldController.scene.add(this.view);
 
         this.landing = new LandingView();
         Stage.add(this.landing);
@@ -47,6 +52,8 @@ export class App {
         const { renderer, scene, camera } = WorldController;
 
         CameraController.init(camera);
+        InputManager.init(camera);
+        SceneController.init(this.view);
         RenderManager.init(renderer, scene, camera);
     }
 
@@ -64,15 +71,15 @@ export class App {
 
         WorldController.resize(width, height, dpr);
         CameraController.resize(width, height);
+        SceneController.resize();
         RenderManager.resize(width, height, dpr);
     };
 
     static onUpdate = (time, delta, frame) => {
         WorldController.update(time, delta, frame);
         CameraController.update(time);
-
-        this.scene.update(time);
-
+        SceneController.update();
+        InputManager.update();
         RenderManager.update(time, delta, frame);
     }; */
 
@@ -81,6 +88,8 @@ export class App {
      */
 
     static start = async () => {
+        // CameraController.animateIn();
+        // SceneController.animateIn();
         this.landing.animateIn();
     };
 }

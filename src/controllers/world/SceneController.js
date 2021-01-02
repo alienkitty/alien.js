@@ -1,20 +1,13 @@
-import { Vector2, Vector3 } from 'three';
+import { Vector2 } from 'three';
 
+import { WorldController } from './WorldController.js';
 import { Stage } from '../Stage.js';
 
-export class CameraController {
-    static init(camera) {
-        this.camera = camera;
+export class SceneController {
+    static init(view) {
+        this.view = view;
 
         this.mouse = new Vector2();
-        this.lookAt = new Vector3();
-        this.origin = new Vector3();
-        this.target = new Vector3();
-        this.targetXY = new Vector2(8, 4);
-        this.origin.copy(this.camera.position);
-
-        this.lerpSpeed = 0.07;
-        this.enabled = false;
 
         this.addListeners();
     }
@@ -37,6 +30,10 @@ export class CameraController {
     };
 
     static onTouchMove = e => {
+        if (!this.view.visible) {
+            return;
+        }
+
         const event = {};
 
         if (e.changedTouches && e.changedTouches.length) {
@@ -55,25 +52,21 @@ export class CameraController {
      * Public methods
      */
 
-    static resize = (width, height) => {
-        this.camera.aspect = width / height;
-        this.camera.updateProjectionMatrix();
+    static resize = () => {
+        // const frustum = WorldController.getFrustum(this.view.mallet.position.z);
+        const frustum = WorldController.getFrustum();
+
+        this.width = frustum.width;
+        this.height = frustum.height;
     };
 
     static update = () => {
-        if (!this.enabled) {
-            return;
-        }
-
-        this.target.x = this.origin.x + this.targetXY.x * this.mouse.x;
-        this.target.y = this.origin.y + this.targetXY.y * this.mouse.y;
-        this.target.z = this.origin.z;
-
-        this.camera.position.lerp(this.target, this.lerpSpeed);
-        this.camera.lookAt(this.lookAt);
+        this.view.update();
     };
 
     static animateIn = () => {
-        this.enabled = true;
+        this.view.animateIn();
     };
+
+    static ready = () => this.view.ready();
 }

@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
 
     <title>Alien.js — Shader Flowmap View</title>
 
@@ -13,7 +13,7 @@
 <body>
     <div id="root"></div>
     <script type="module">
-        import { ACESFilmicToneMapping, AdditiveBlending, BloomCompositeMaterial, BlurDirectionX, BlurDirectionY, Color, DirectionalLight, Events, FXAAMaterial, Flowmap, Fog, Group, HemisphereLight, LuminosityMaterial, Mesh, MeshStandardMaterial, NoBlending, OrthographicCamera, PerspectiveCamera, PlaneBufferGeometry, RGBFormat, RawShaderMaterial, Reflector, RepeatWrapping, SVGLoader, Scene, Stage, TextureLoader, Uniform, UnrealBloomBlurMaterial, Vector2, Vector3, WebGLRenderTarget, WebGLRenderer, getFrustum, getFullscreenTriangle, mix, range, ticker } from '../build/alien.js';
+        import { ACESFilmicToneMapping, AdditiveBlending, BloomCompositeMaterial, BlurDirectionX, BlurDirectionY, Color, DirectionalLight, Events, FXAAMaterial, Flowmap, Fog, Group, HemisphereLight, LuminosityMaterial, Mesh, MeshStandardMaterial, NoBlending, OrthographicCamera, PerspectiveCamera, PlaneBufferGeometry, RGBFormat, RawShaderMaterial, Reflector, RepeatWrapping, SVGLoader, Scene, Stage, TextureLoader, Uniform, UnrealBloomBlurMaterial, Vector2, Vector3, WebGL1Renderer, WebGLRenderTarget, getFrustum, getFullscreenTriangle, mix, range, ticker } from '../build/alien.js';
 
         import rgbshift from '../src/shaders/modules/rgbshift/rgbshift.glsl.js';
 
@@ -141,9 +141,9 @@
             }
 
             async initMesh() {
-                const { getSVG } = WorldController;
+                const { loadSVG } = WorldController;
 
-                const data = await getSVG('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg"><path stroke-width="0.3" d="M3 0L0 5h6z"/></svg>');
+                const data = await loadSVG('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg"><path stroke-width="0.3" d="M3 0L0 5h6z"/></svg>');
                 const paths = data.paths;
 
                 const group = new Group();
@@ -372,26 +372,26 @@
                 const event = {};
 
                 if (e.changedTouches && e.changedTouches.length) {
-                    event.x = e.changedTouches[0].pageX;
-                    event.y = e.changedTouches[0].pageY;
+                    event.x = e.changedTouches[0].clientX;
+                    event.y = e.changedTouches[0].clientY;
                 } else {
-                    event.x = e.pageX;
-                    event.y = e.pageY;
+                    event.x = e.clientX;
+                    event.y = e.clientY;
                 }
 
                 // Adjust for triangle screen space
-                const widthHalf = this.width / 2;
-                const heightHalf = this.height / 2;
+                const halfWidth = this.width / 2;
+                const halfHeight = this.height / 2;
                 const triangleWidth = Math.round(this.width * this.view.triangle.widthResolutionScale);
                 const triangleHeight = Math.round(this.height * this.view.triangle.heightResolutionScale);
-                const triangleWidthHalf = triangleWidth / 2;
-                const triangleHeightHalf = triangleHeight / 2;
+                const triangleHalfWidth = triangleWidth / 2;
+                const triangleHalfHeight = triangleHeight / 2;
 
                 this.triangleWorldPosition.setFromMatrixPosition(this.view.triangle.mesh.matrixWorld);
                 this.screenSpacePosition.copy(this.triangleWorldPosition).project(this.camera);
 
-                this.screenSpacePosition.x = (this.screenSpacePosition.x * widthHalf) + widthHalf - triangleWidthHalf;
-                this.screenSpacePosition.y = -(this.screenSpacePosition.y * heightHalf) + heightHalf - triangleHeightHalf;
+                this.screenSpacePosition.x = (this.screenSpacePosition.x * halfWidth) + halfWidth - triangleHalfWidth;
+                this.screenSpacePosition.y = -(this.screenSpacePosition.y * halfHeight) + halfHeight - triangleHalfHeight;
 
                 // Get mouse value in 0 to 1 range, with Y flipped
                 this.mouse.set(
@@ -402,13 +402,13 @@
                 // Calculate velocity
                 if (!this.lastTime) {
                     this.lastTime = performance.now();
-                    this.lastMouse.set(event.x, event.y);
+                    this.lastMouse.copy(event);
                 }
 
                 const deltaX = event.x - this.lastMouse.x;
                 const deltaY = event.y - this.lastMouse.y;
 
-                this.lastMouse.set(event.x, event.y);
+                this.lastMouse.copy(event);
 
                 const time = performance.now();
 
@@ -646,12 +646,7 @@
             static init(camera) {
                 this.camera = camera;
 
-                this.pos = new Vector2();
-                this.last = new Vector2();
-                this.delta = new Vector2();
-                this.pos.set(Stage.width / 2, Stage.height / 2);
-                this.last.copy(this.pos);
-
+                this.mouse = new Vector2();
                 this.lookAt = new Vector3(0, 0, -2);
                 this.origin = new Vector3();
                 this.target = new Vector3();
@@ -659,7 +654,7 @@
                 this.origin.copy(this.camera.position);
 
                 this.lerpSpeed = 0.02;
-                this.animatedIn = false;
+                this.enabled = false;
 
                 this.addListeners();
             }
@@ -685,14 +680,15 @@
                 const event = {};
 
                 if (e.changedTouches && e.changedTouches.length) {
-                    event.x = e.changedTouches[0].pageX;
-                    event.y = e.changedTouches[0].pageY;
+                    event.x = e.changedTouches[0].clientX;
+                    event.y = e.changedTouches[0].clientY;
                 } else {
-                    event.x = e.pageX;
-                    event.y = e.pageY;
+                    event.x = e.clientX;
+                    event.y = e.clientY;
                 }
 
-                this.pos.copy(event);
+                this.mouse.x = (event.x / Stage.width) * 2 - 1;
+                this.mouse.y = -(event.y / Stage.height) * 2 + 1;
             };
 
             /**
@@ -705,15 +701,12 @@
             };
 
             static update = () => {
-                if (!this.animatedIn) {
+                if (!this.enabled) {
                     return;
                 }
 
-                this.delta.subVectors(this.pos, this.last);
-                this.last.copy(this.pos);
-
-                this.target.x = this.origin.x + this.targetXY.x * range(this.pos.x, 0, Stage.width, -1, 1, true);
-                this.target.y = this.origin.y + this.targetXY.y * range(this.pos.y, 0, Stage.height, -1, 1, true);
+                this.target.x = this.origin.x + this.targetXY.x * this.mouse.x;
+                this.target.y = this.origin.y + this.targetXY.y * this.mouse.y;
                 this.target.z = this.origin.z;
 
                 this.camera.position.lerp(this.target, this.lerpSpeed);
@@ -721,7 +714,7 @@
             };
 
             static animateIn = () => {
-                this.animatedIn = true;
+                this.enabled = true;
             };
         }
 
@@ -733,7 +726,7 @@
             }
 
             static initWorld() {
-                this.renderer = new WebGLRenderer({
+                this.renderer = new WebGL1Renderer({
                     powerPreference: 'high-performance',
                     stencil: false
                 });
@@ -795,7 +788,7 @@
 
             static getTexture = path => this.textureLoader.load(path);
 
-            static getSVG = path => this.svgLoader.loadAsync(path);
+            static loadSVG = path => this.svgLoader.loadAsync(path);
 
             static getFrustum = offsetZ => getFrustum(this.camera, offsetZ);
         }

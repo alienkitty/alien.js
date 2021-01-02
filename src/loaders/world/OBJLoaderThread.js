@@ -20,7 +20,7 @@ export class OBJLoaderThread {
                 object => {
                     const vertices = object.children[0].geometry.getAttribute('position').array;
 
-                    postMessage({ id, message: vertices }, [vertices.buffer]);
+                    postMessage({ id, message: vertices });
                 },
                 null,
                 error => {

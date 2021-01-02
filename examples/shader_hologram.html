@@ -13,7 +13,7 @@
 <body>
     <div id="root"></div>
     <script type="module">
-        import { ACESFilmicToneMapping, AmbientLight, BloomCompositeMaterial, BlurDirectionX, BlurDirectionY, BlurMaterial, BoxGeometry, Color, DepthMaskMaterial, DepthTexture, DirectionalLight, EnvironmentTextureLoader, Events, FXAAMaterial, Group, HemisphereLight, ImageBitmapLoaderThread, LuminosityMaterial, Mesh, MeshBasicMaterial, MeshStandardMaterial, NoBlending, OrbitControls, OrthographicCamera, PerspectiveCamera, RGBAFormat, RGBFormat, RawShaderMaterial, Scene, SceneCompositeMaterial, SphericalCubeTextureLoader, Stage, TextureLoader, Thread, Uniform, UnrealBloomBlurMaterial, Vector2, VideoGlitchMaterial, WebGLRenderTarget, WebGLRenderer, getFullscreenTriangle, mix, ticker } from '../build/alien.js';
+        import { ACESFilmicToneMapping, AmbientLight, BloomCompositeMaterial, BlurDirectionX, BlurDirectionY, BlurMaterial, BoxGeometry, Color, DirectionalLight, EnvironmentTextureLoader, Events, FXAAMaterial, Group, HemisphereLight, ImageBitmapLoaderThread, LuminosityMaterial, Mesh, MeshBasicMaterial, MeshStandardMaterial, NoBlending, OrbitControls, OrthographicCamera, PerspectiveCamera, RGBAFormat, RGBFormat, RawShaderMaterial, Scene, SceneCompositeMaterial, SphericalCubeTextureLoader, Stage, TextureLoader, Thread, Uniform, UnrealBloomBlurMaterial, Vector2, VideoGlitchMaterial, WebGLRenderTarget, WebGLRenderer, getFullscreenTriangle, mix, ticker } from '../build/alien.js';
 
         import blendAlpha from '../src/shaders/modules/blending/alpha.glsl.js';
         import blendScreen from '../src/shaders/modules/blending/screen.glsl.js';
@@ -353,10 +353,8 @@
 
                 this.renderTarget.texture.format = RGBAFormat;
                 this.renderTarget.depthBuffer = true;
-                this.renderTarget.depthTexture = new DepthTexture();
 
                 this.renderTargetHologram.depthBuffer = true;
-                this.renderTargetHologram.depthTexture = new DepthTexture();
 
                 this.renderTargetBlurA.depthBuffer = true;
 
@@ -369,10 +367,6 @@
                 this.videoGlitchMaterial.uniforms.uTime = time;
 
                 // Mask materials
-                this.depthMaskMaterial = new DepthMaskMaterial();
-                this.depthMaskMaterial.uniforms.tDepth1.value = this.renderTarget.depthTexture;
-                this.depthMaskMaterial.uniforms.tDepth2.value = this.renderTargetHologram.depthTexture;
-
                 this.blackoutMaterial = new MeshBasicMaterial({ color: 0x000000 });
 
                 // FXAA material
@@ -511,12 +505,6 @@
                 renderer.setRenderTarget(renderTargetB);
                 renderer.clear();
                 renderer.render(screenScene, screenCamera);
-
-                // this.depthMaskMaterial.uniforms.tMap.value = renderTargetC.texture;
-                // this.screen.material = this.depthMaskMaterial;
-                // renderer.setRenderTarget(renderTargetB);
-                // renderer.clear();
-                // renderer.render(screenScene, screenCamera);
 
                 // Occlusion layer
                 camera.layers.set(Layer.DEFAULT);

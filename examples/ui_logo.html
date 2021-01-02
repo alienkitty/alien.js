@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <title>Alien.js — Logo</title>
+
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto+Mono">
+    <link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+    <div id="root"></div>
+    <script type="module">import gsap from"https://unpkg.com/gsap/index.js";class Logo{constructor(){this.onResize=()=>{window.innerWidth<window.innerHeight?gsap.set(this.element,{top:30,left:30,width:40,height:40}):gsap.set(this.element,{top:50,left:50,width:64,height:64})},this.onHover=({type:e})=>{"mouseenter"===e?gsap.to(this.element,{opacity:.6,duration:.3,ease:"power2.out"}):gsap.to(this.element,{opacity:1,duration:.3,ease:"power2.out"})},this.onClick=()=>{open("https://alien.js.org/")},this.animateIn=()=>{gsap.to(this.element,{opacity:1,duration:.6,ease:"sine.inOut"})},this.destroy=()=>(this.element.parentNode.removeChild(this.element),this.removeListeners(),this.element=null,this.image=null,null),this.element,this.image,this.initHTML(),this.addListeners(),this.onResize()}initHTML(){this.element=document.createElement("div"),this.element.classList.add("logo"),gsap.set(this.element,{top:50,left:50,width:64,height:64,cursor:"pointer",opacity:0}),this.image=document.createElement("img"),this.image.src="assets/images/alienkitty.svg",gsap.set(this.image,{position:"relative",width:"100%"}),this.element.appendChild(this.image)}addListeners(){window.addEventListener("resize",this.onResize),window.addEventListener("orientationchange",this.onResize),this.element.addEventListener("mouseenter",this.onHover),this.element.addEventListener("mouseleave",this.onHover),this.element.addEventListener("click",this.onClick)}removeListeners(){window.removeEventListener("resize",this.onResize),window.removeEventListener("orientationchange",this.onResize),this.element.removeEventListener("mouseenter",this.onHover),this.element.removeEventListener("mouseleave",this.onHover),this.element.removeEventListener("click",this.onClick)}}class App{static async init(){this.element,this.initHTML(),this.initViews(),this.addListeners()}static initHTML(){this.element=document.getElementById("root")}static initViews(){this.logo=new Logo,this.element.appendChild(this.logo.element)}static addListeners(){window.addEventListener("load",this.onLoad)}}App.onLoad=()=>{App.logo.animateIn()},App.init();</script>
+</body>
+</html>

@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="description" content="Future web pattern.">
     <meta name="keywords" content="alien, alienjs, javascript, html5, css3, animation, svg, canvas, webgl, threejs, webaudio, es6, ecmascript6">
 
@@ -20,7 +20,7 @@
     <meta name="twitter:creator" content="@pschroen">
 
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto+Mono&family=Roboto:wght@500&family=Ropa+Sans">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto+Mono">
     <link rel="stylesheet" href="assets/css/style.css">
     <link rel="preload" as="script" href="assets/js/loader.js" crossorigin>
     <link rel="preload" as="script" href="assets/js/main.js" crossorigin>
@@ -42,8 +42,12 @@
 
         Preloader.init();
     </script>
-    <script nomodule>
-        window.location = 'unsupported.html';
+    <script>
+        try {
+            eval('(async () => {try {await import(\'foo\');} catch (e) {}})();');
+        } catch (e) {
+            location.href = 'unsupported.html';
+        }
     </script>
 </body>
 </html>

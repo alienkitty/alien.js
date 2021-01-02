@@ -39,6 +39,7 @@ export { Sound } from './src/utils/audio/Sound.js';
 // 3D
 export * from './src/utils/world/Utils3D.js';
 export { Wobble } from './src/utils/world/Wobble.js';
+export { Flowmap } from './src/utils/world/Flowmap.js';
 export { Reflector } from './src/utils/world/Reflector.js';
 export { SpherizeImage } from './src/utils/world/SpherizeImage.js';
 export { WebAudio3D } from './src/utils/audio/WebAudio3D.js';
@@ -48,6 +49,7 @@ export { Sound3D } from './src/utils/audio/Sound3D.js';
 export { NormalMaterial } from './src/materials/NormalMaterial.js';
 export { ColorMaterial } from './src/materials/ColorMaterial.js';
 export { BasicMaterial } from './src/materials/BasicMaterial.js';
+export { FlowMaterial } from './src/materials/FlowMaterial.js';
 export { CopyMaterial } from './src/materials/CopyMaterial.js';
 export { FXAAMaterial } from './src/materials/FXAAMaterial.js';
 export { BadTVMaterial } from './src/materials/BadTVMaterial.js';

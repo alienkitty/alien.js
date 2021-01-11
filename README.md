@@ -48,6 +48,7 @@ In its design, everything is an ES module, all user interfaces and components fo
 [audio](https://alien.js.org/examples/3d_audio_fast.html) (fast)  
 [spherical cube](https://alien.js.org/examples/3d_spherical_cube.html)  
 [penrose triangle](https://alien.js.org/examples/3d_penrose_triangle.html)  
+[polyhedron](https://alien.js.org/examples/3d_polyhedron.html) (orbit camera, [debug](https://alien.js.org/examples/3d_polyhedron.html?debug))  
 [camera wobble](https://alien.js.org/examples/3d_camera_wobble.html)  
 [camera shake](https://alien.js.org/examples/3d_camera_shake.html)  
 
@@ -81,6 +82,7 @@ In its design, everything is an ES module, all user interfaces and components fo
 [physics](https://alien.js.org/examples/3d_physics_thread.html)  
 [audio](https://alien.js.org/examples/3d_audio.html)  
 [audio](https://alien.js.org/examples/3d_audio_fast.html) (fast)  
+[polyhedron](https://alien.js.org/examples/3d_polyhedron.html) (OBJ loader thread)  
 [camera shake](https://alien.js.org/examples/3d_camera_shake.html)  
 [pbr](https://alien.js.org/examples/shader_pbr.html) (texture loader thread)  
 

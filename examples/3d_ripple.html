@@ -13,7 +13,7 @@
 <body>
     <div id="root"></div>
     <script type="module">
-        import { Assets, Color, DirectionalLight, Events, Group, HemisphereLight, Interface, LinearFilter, Mesh, MeshStandardMaterial, PerspectiveCamera, PlaneBufferGeometry, Scene, Stage, Texture, Uniform, Vector2, WebGL1Renderer, clearTween, delayedCall, getFrustum, ticker } from '../build/alien.js';
+        import { Assets, Color, DirectionalLight, Events, Group, Interface, LinearFilter, Mesh, MeshStandardMaterial, PerspectiveCamera, PlaneBufferGeometry, Scene, Stage, Texture, Uniform, Vector2, WebGL1Renderer, clearTween, delayedCall, getFrustum, ticker } from '../build/alien.js';
 
         class Config {
             static BG_COLOR = '#0e0e0e';
@@ -417,8 +417,6 @@
             }
 
             static initLights() {
-                this.scene.add(new HemisphereLight(0x606060, 0x404040));
-
                 const light = new DirectionalLight(0xffffff);
                 light.position.set(1, 1, 1);
                 this.scene.add(light);

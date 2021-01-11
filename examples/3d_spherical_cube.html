@@ -156,7 +156,7 @@
                 this.camera = new PerspectiveCamera(30);
                 this.camera.near = 0.1;
                 this.camera.far = 1000;
-                this.camera.position.z = 10;
+                this.camera.position.z = 6;
 
                 // Global geometries
                 this.screenTriangle = getFullscreenTriangle();
@@ -192,6 +192,12 @@
 
                 this.resolution.value.set(width, height);
                 this.aspect.value = width / height;
+
+                if (width < height) {
+                    this.camera.position.z = 10;
+                } else {
+                    this.camera.position.z = 6;
+                }
             };
 
             static update = (time, delta, frame) => {

@@ -393,7 +393,7 @@
                 this.camera = new PerspectiveCamera(30);
                 this.camera.near = 0.5;
                 this.camera.far = 50;
-                this.camera.position.z = 10;
+                this.camera.position.z = 6;
 
                 // Global geometries
                 this.screenTriangle = getFullscreenTriangle();
@@ -420,7 +420,7 @@
 
                 this.spherizeLoader = new SphericalCubeTextureLoader(this.renderer, true);
                 this.spherizeLoader.setOptions({
-                    size: 256
+                    size: 512
                 });
 
                 this.environmentLoader = new EnvironmentTextureLoader(this.renderer);
@@ -445,6 +445,12 @@
 
                 this.resolution.value.set(width, height);
                 this.aspect.value = width / height;
+
+                if (width < height) {
+                    this.camera.position.z = 10;
+                } else {
+                    this.camera.position.z = 6;
+                }
             };
 
             static update = (time, delta, frame) => {

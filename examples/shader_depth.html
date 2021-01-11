@@ -15,6 +15,11 @@
     <script type="module">
         import { Color, Events, FXAAMaterial, Group, Mesh, OrbitControls, OrthographicCamera, PerspectiveCamera, RGBFormat, RawShaderMaterial, Scene, SphereBufferGeometry, Stage, Uniform, Vector2, WebGL1Renderer, WebGLRenderTarget, getFullscreenTriangle, ticker } from '../build/alien.js';
 
+        class Config {
+            static BG_COLOR = '#0e0e0e';
+            static UI_COLOR = 'rgba(255, 255, 255, 0.94)';
+        }
+
         import periodic3d from '../src/shaders/modules/noise/periodic3d.glsl.js';
         import dither from '../src/shaders/modules/dither/dither.glsl.js';
 
@@ -63,11 +68,6 @@
                     fragmentShader
                 });
             }
-        }
-
-        class Config {
-            static BG_COLOR = '#0e0e0e';
-            static UI_COLOR = 'rgba(255, 255, 255, 0.94)';
         }
 
         class SceneView extends Group {
@@ -177,7 +177,7 @@
                 this.camera = new PerspectiveCamera(30);
                 this.camera.near = 0.5;
                 this.camera.far = 50;
-                this.camera.position.z = 10;
+                this.camera.position.z = 6;
 
                 // Global geometries
                 this.screenTriangle = getFullscreenTriangle();
@@ -207,6 +207,12 @@
 
                 this.resolution.value.set(width, height);
                 this.aspect.value = width / height;
+
+                if (width < height) {
+                    this.camera.position.z = 10;
+                } else {
+                    this.camera.position.z = 6;
+                }
             };
 
             static update = (time, delta, frame) => {

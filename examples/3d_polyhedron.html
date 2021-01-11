@@ -15,6 +15,12 @@
     <script type="module">
         import { ACESFilmicToneMapping, AmbientLight, BloomCompositeMaterial, BlurDirectionX, BlurDirectionY, BufferAttribute, BufferGeometry, Color, Device, DirectionalLight, Events, FXAAMaterial, Group, HemisphereLight, LuminosityMaterial, Mesh, MeshBasicMaterial, MeshStandardMaterial, NoBlending, OBJLoader, OBJLoaderThread, OrthographicCamera, PerspectiveCamera, PointLight, RGBFormat, RawShaderMaterial, Scene, SphereBufferGeometry, Stage, TextureLoader, Thread, Uniform, UnrealBloomBlurMaterial, Vector2, Vector3, WebGL1Renderer, WebGLRenderTarget, getFrustum, getFullscreenTriangle, mix, ticker } from '../build/alien.js';
 
+        class Config {
+            static BG_COLOR = '#0e0e0e';
+            static UI_COLOR = 'rgba(255, 255, 255, 0.94)';
+            static DEBUG = location.search === '?debug';
+        }
+
         import rgbshift from '../src/shaders/modules/rgbshift/rgbshift.glsl.js';
 
         const vertexCompositeShader = /* glsl */`
@@ -68,12 +74,6 @@
             }
         }
 
-        class Config {
-            static BG_COLOR = '#0e0e0e';
-            static UI_COLOR = 'rgba(255, 255, 255, 0.94)';
-            static DEBUG = location.search === '?debug';
-        }
-
         class MouseLight extends Group {
             constructor() {
                 super();
@@ -105,7 +105,7 @@
             }
         }
 
-        // Geometry from https://github.com/levskaya/polyhedronisme
+        // Geometry from http://levskaya.github.io/polyhedronisme/
 
         class Polyhedron extends Group {
             constructor() {
@@ -458,10 +458,12 @@
 
                 // Start position
                 this.lookAt = new Vector3();
+                this.origin = new Vector3();
                 this.group.position.copy(this.lookAt);
                 this.group.updateMatrix();
                 this.group.updateMatrixWorld();
                 this.innerGroup.position.copy(this.group.worldToLocal(new Vector3().copy(this.camera.position)));
+                this.origin.copy(this.innerGroup.position);
 
                 this.rotation = 0.0002;
                 this.lerpSpeed = 0.05;
@@ -515,10 +517,14 @@
                 this.halfHeight = height / 2;
 
                 if (width < height) {
+                    this.innerGroup.position.z = this.origin.z + 4;
                     this.multiplier = 2;
                 } else {
+                    this.innerGroup.position.copy(this.origin);
                     this.multiplier = 1;
                 }
+
+                this.updateCamera();
             };
 
             static update = () => {
@@ -571,7 +577,7 @@
                 this.camera = new PerspectiveCamera(30);
                 this.camera.near = 0.5;
                 this.camera.far = 50;
-                this.camera.position.z = 10;
+                this.camera.position.z = 6;
 
                 // Global geometries
                 this.screenTriangle = getFullscreenTriangle();

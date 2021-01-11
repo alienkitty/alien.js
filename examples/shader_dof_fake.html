@@ -13,7 +13,13 @@
 <body>
     <div id="root"></div>
     <script type="module">
-        import { ACESFilmicToneMapping, AmbientLight, BloomCompositeMaterial, BlurDirectionX, BlurDirectionY, BoxGeometry, BufferAttribute, BufferGeometry, Color, CopyMaterial, DepthTexture, Device, DirectionalLight, EnvironmentTextureLoader, Events, FXAAMaterial, Group, HemisphereLight, ImageBitmapLoaderThread, LuminosityMaterial, MathUtils, Mesh, MeshStandardMaterial, NoBlending, OrbitControls, OrthographicCamera, PerspectiveCamera, Points, RGBAFormat, RGBFormat, RawShaderMaterial, Scene, SphericalCubeTextureLoader, Stage, TextureLoader, Thread, Uniform, UnrealBloomBlurMaterial, Vector2, WebGL1Renderer, WebGLRenderTarget, getFullscreenTriangle, mix, ticker } from '../build/alien.js';
+        import { ACESFilmicToneMapping, AmbientLight, BloomCompositeMaterial, BlurDirectionX, BlurDirectionY, BoxGeometry, BufferAttribute, BufferGeometry, Color, CopyMaterial, DepthTexture, Device, DirectionalLight, EnvironmentTextureLoader, Events, FXAAMaterial, Group, HemisphereLight, ImageBitmapLoaderThread, LuminosityMaterial, MathUtils, Mesh, MeshStandardMaterial, NoBlending, OrbitControls, OrthographicCamera, PerspectiveCamera, Points, RGBFormat, RawShaderMaterial, Scene, SceneCompositeMaterial, SphericalCubeTextureLoader, Stage, TextureLoader, Thread, Uniform, UnrealBloomBlurMaterial, Vector2, WebGL1Renderer, WebGLRenderTarget, getFullscreenTriangle, mix, ticker } from '../build/alien.js';
+
+        class Config {
+            static BG_COLOR = '#0e0e0e';
+            static UI_COLOR = 'rgba(255, 255, 255, 0.94)';
+            static DEBUG = location.search === '?debug';
+        }
 
         // Based on https://www.shadertoy.com/view/4lVfDt by battlebottle
 
@@ -183,7 +189,7 @@
                         tMap: new Uniform(null),
                         uPower: new Uniform(3),
                         uAmount: new Uniform(1),
-                        uDebug: new Uniform(0),
+                        uDebug: new Uniform(Config.DEBUG ? 1 : 0),
                         uResolution: new Uniform(new Vector2())
                     },
                     vertexShader: vertexBokehBlur2Shader,
@@ -280,64 +286,6 @@
                 gl_FragColor = tex;
             }
         `;
-
-        import blendAlpha from '../src/shaders/modules/blending/alpha.glsl.js';
-
-        const vertexCompositeShader = /* glsl */`
-            attribute vec2 uv;
-            attribute vec3 position;
-
-            varying vec2 vUv;
-
-            void main() {
-                vUv = uv;
-
-                gl_Position = vec4(position, 1.0);
-            }
-        `;
-
-        const fragmentCompositeShader = /* glsl */`
-            precision highp float;
-
-            uniform sampler2D tScene;
-            uniform sampler2D tDust;
-            uniform sampler2D tBloom;
-
-            varying vec2 vUv;
-
-            ${blendAlpha}
-
-            void main() {
-                vec4 base = texture2D(tScene, vUv);
-                vec4 blend = texture2D(tDust, vUv);
-
-                gl_FragColor = blendAlpha(base, blend, 1.0);
-
-                gl_FragColor.rgb += texture2D(tBloom, vUv).rgb;
-            }
-        `;
-
-        class CompositeMaterial extends RawShaderMaterial {
-            constructor() {
-                super({
-                    uniforms: {
-                        tScene: new Uniform(null),
-                        tDust: new Uniform(null),
-                        tBloom: new Uniform(null)
-                    },
-                    vertexShader: vertexCompositeShader,
-                    fragmentShader: fragmentCompositeShader,
-                    blending: NoBlending,
-                    depthWrite: false,
-                    depthTest: false
-                });
-            }
-        }
-
-        class Config {
-            static BG_COLOR = '#0e0e0e';
-            static UI_COLOR = 'rgba(255, 255, 255, 0.94)';
-        }
 
         class Dust extends Group {
             constructor(numParticles) {
@@ -465,6 +413,8 @@
             static initRenderer() {
                 const { resolution, screenTriangle } = WorldController;
 
+                this.renderer.autoClear = false;
+
                 // Fullscreen triangle
                 this.screenScene = new Scene();
                 this.screenCamera = new OrthographicCamera(-1, 1, 1, -1, 0, 1);
@@ -481,10 +431,6 @@
                 });
 
                 this.renderTargetB = this.renderTargetA.clone();
-                this.renderTargetC = this.renderTargetA.clone();
-                this.renderTargetD = this.renderTargetA.clone();
-                this.renderTargetBlurA = this.renderTargetA.clone();
-                this.renderTargetBlurB = this.renderTargetA.clone();
 
                 this.renderTargetsHorizontal = [];
                 this.renderTargetsVertical = [];
@@ -499,8 +445,6 @@
 
                 this.renderTargetA.depthBuffer = true;
                 this.renderTargetA.depthTexture = new DepthTexture();
-
-                this.renderTargetC.texture.format = RGBAFormat;
 
                 // FXAA material
                 this.fxaaMaterial = new FXAAMaterial();
@@ -543,7 +487,7 @@
                 this.dust.material.uniforms.tDepth.value = this.renderTargetA.depthTexture;
 
                 // Composite material
-                this.compositeMaterial = new CompositeMaterial();
+                this.compositeMaterial = new SceneCompositeMaterial();
 
                 // Bokeh blur materials
                 this.bokehBlurMaterial1 = new BokehBlurMaterial1();
@@ -569,10 +513,6 @@
 
                 this.renderTargetA.setSize(width, height);
                 this.renderTargetB.setSize(width, height);
-                this.renderTargetC.setSize(width, height);
-                this.renderTargetD.setSize(width, height);
-                this.renderTargetBlurA.setSize(width, height);
-                this.renderTargetBlurB.setSize(width, height);
 
                 width = Math.round(width / 2);
                 height = Math.round(height / 2);
@@ -597,6 +537,7 @@
 
                 if (!this.enabled) {
                     renderer.setRenderTarget(null);
+                    renderer.clear();
                     renderer.render(scene, camera);
                     return;
                 }
@@ -606,28 +547,27 @@
 
                 const renderTargetA = this.renderTargetA;
                 const renderTargetB = this.renderTargetB;
-                const renderTargetC = this.renderTargetC;
-                const renderTargetD = this.renderTargetD;
-                const renderTargetBlurA = this.renderTargetBlurA;
-                const renderTargetBlurB = this.renderTargetBlurB;
                 const renderTargetBright = this.renderTargetBright;
                 const renderTargetsHorizontal = this.renderTargetsHorizontal;
                 const renderTargetsVertical = this.renderTargetsVertical;
 
                 // Scene pass
                 renderer.setRenderTarget(renderTargetA);
+                renderer.clear();
                 renderer.render(scene, camera);
 
                 // FXAA pass
                 this.fxaaMaterial.uniforms.tMap.value = renderTargetA.texture;
                 this.screen.material = this.fxaaMaterial;
                 renderer.setRenderTarget(renderTargetB);
+                renderer.clear();
                 renderer.render(screenScene, screenCamera);
 
                 // Extract bright areas
                 this.luminosityMaterial.uniforms.tMap.value = renderTargetB.texture;
                 this.screen.material = this.luminosityMaterial;
                 renderer.setRenderTarget(renderTargetBright);
+                renderer.clear();
                 renderer.render(screenScene, screenCamera);
 
                 // Blur all the mips progressively
@@ -639,11 +579,13 @@
                     this.blurMaterials[i].uniforms.tMap.value = inputRenderTarget.texture;
                     this.blurMaterials[i].uniforms.uDirection.value = BlurDirectionX;
                     renderer.setRenderTarget(renderTargetsHorizontal[i]);
+                    renderer.clear();
                     renderer.render(screenScene, screenCamera);
 
                     this.blurMaterials[i].uniforms.tMap.value = this.renderTargetsHorizontal[i].texture;
                     this.blurMaterials[i].uniforms.uDirection.value = BlurDirectionY;
                     renderer.setRenderTarget(renderTargetsVertical[i]);
+                    renderer.clear();
                     renderer.render(screenScene, screenCamera);
 
                     inputRenderTarget = renderTargetsVertical[i];
@@ -652,37 +594,39 @@
                 // Composite all the mips
                 this.screen.material = this.bloomCompositeMaterial;
                 renderer.setRenderTarget(renderTargetsHorizontal[0]);
+                renderer.clear();
                 renderer.render(screenScene, screenCamera);
 
                 // Dust scene
-                renderer.setRenderTarget(renderTargetC);
+                renderer.setRenderTarget(renderTargetB);
                 renderer.render(this.dustScene, camera);
 
                 // Composite pass
                 this.compositeMaterial.uniforms.tScene.value = renderTargetB.texture;
-                this.compositeMaterial.uniforms.tDust.value = renderTargetC.texture;
                 this.compositeMaterial.uniforms.tBloom.value = renderTargetsHorizontal[0].texture;
                 this.screen.material = this.compositeMaterial;
-                renderer.setRenderTarget(renderTargetD);
-                renderer.render(screenScene, screenCamera);
-
-                // Bokeh blur pass
-                this.bokehBlurMaterial1.uniforms.tMap.value = renderTargetD.texture;
-                this.screen.material = this.bokehBlurMaterial1;
-                renderer.setRenderTarget(renderTargetBlurA);
+                renderer.setRenderTarget(renderTargetA);
                 renderer.clear();
                 renderer.render(screenScene, screenCamera);
 
-                this.bokehBlurMaterial2.uniforms.tMap.value = renderTargetBlurA.texture;
+                // Two pass Bokeh blur
+                this.bokehBlurMaterial1.uniforms.tMap.value = renderTargetA.texture;
+                this.screen.material = this.bokehBlurMaterial1;
+                renderer.setRenderTarget(renderTargetB);
+                renderer.clear();
+                renderer.render(screenScene, screenCamera);
+
+                this.bokehBlurMaterial2.uniforms.tMap.value = renderTargetB.texture;
                 this.screen.material = this.bokehBlurMaterial2;
-                renderer.setRenderTarget(renderTargetBlurB);
+                renderer.setRenderTarget(renderTargetA);
                 renderer.clear();
                 renderer.render(screenScene, screenCamera);
 
                 // Copy pass (render to screen)
-                this.copyMaterial.uniforms.tMap.value = renderTargetBlurB.texture;
+                this.copyMaterial.uniforms.tMap.value = renderTargetA.texture;
                 this.screen.material = this.copyMaterial;
                 renderer.setRenderTarget(null);
+                renderer.clear();
                 renderer.render(screenScene, screenCamera);
             };
         }
@@ -712,7 +656,7 @@
                 this.camera = new PerspectiveCamera(30);
                 this.camera.near = 0.5;
                 this.camera.far = 50;
-                this.camera.position.z = 10;
+                this.camera.position.z = 6;
 
                 // Global geometries
                 this.screenTriangle = getFullscreenTriangle();
@@ -739,7 +683,7 @@
 
                 this.spherizeLoader = new SphericalCubeTextureLoader(this.renderer, true);
                 this.spherizeLoader.setOptions({
-                    size: 256
+                    size: 512
                 });
 
                 this.environmentLoader = new EnvironmentTextureLoader(this.renderer);
@@ -764,6 +708,12 @@
 
                 this.resolution.value.set(width, height);
                 this.aspect.value = width / height;
+
+                if (width < height) {
+                    this.camera.position.z = 10;
+                } else {
+                    this.camera.position.z = 6;
+                }
             };
 
             static update = (time, delta, frame) => {

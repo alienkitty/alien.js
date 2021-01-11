@@ -65,7 +65,7 @@ In its design, everything is an ES module, all user interfaces and components fo
 [matcap](https://alien.js.org/examples/shader_matcap.html)  
 [pbr](https://alien.js.org/examples/shader_pbr.html)  
 [soft particles](https://alien.js.org/examples/shader_soft_particles.html)  
-[dof](https://alien.js.org/examples/shader_dof_fake.html) (fake with Bokeh blur)  
+[dof](https://alien.js.org/examples/shader_dof_fake.html) (fake with Bokeh blur, [debug](https://alien.js.org/examples/shader_dof_fake.html?debug))  
 [chromatic aberration](https://alien.js.org/examples/shader_chromatic_aberration.html)  
 [film grain](https://alien.js.org/examples/shader_film_grain.html)  
 [reflection](https://alien.js.org/examples/shader_reflection.html) (with fast Gaussian blur)  

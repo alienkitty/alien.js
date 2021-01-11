@@ -15,6 +15,11 @@
     <script type="module">
         import { BloomCompositeMaterial, BlurDirectionX, BlurDirectionY, Color, DirectionalLight, Events, FXAAMaterial, Group, HemisphereLight, LuminosityMaterial, Mesh, MeshStandardMaterial, OrthographicCamera, PerspectiveCamera, RGBFormat, Scene, SceneCompositeMaterial, SphereBufferGeometry, Stage, Uniform, UnrealBloomBlurMaterial, Vector2, WebGL1Renderer, WebGLRenderTarget, getFullscreenTriangle, mix, ticker } from '../build/alien.js';
 
+        class Config {
+            static BG_COLOR = '#0e0e0e';
+            static UI_COLOR = 'rgba(255, 255, 255, 0.94)';
+        }
+
         import periodic3d from '../src/shaders/modules/noise/periodic3d.glsl.js';
 
         // Based on https://github.com/spite/perlin-experiments
@@ -23,11 +28,6 @@
             float f = 0.05 * pnoise(vec3(2.0 * normal + time), vec3(10.0));
             vec3 transformed = position + f * normal;
         `;
-
-        class Config {
-            static BG_COLOR = '#0e0e0e';
-            static UI_COLOR = 'rgba(255, 255, 255, 0.94)';
-        }
 
         class SceneView extends Group {
             constructor() {
@@ -263,7 +263,7 @@
                 this.camera = new PerspectiveCamera(30);
                 this.camera.near = 0.5;
                 this.camera.far = 50;
-                this.camera.position.z = 10;
+                this.camera.position.z = 6;
 
                 // Global geometries
                 this.screenTriangle = getFullscreenTriangle();
@@ -278,7 +278,7 @@
             static initLights() {
                 this.scene.add(new HemisphereLight(0x606060, 0x404040));
 
-                const light = new DirectionalLight(0xffffff, 0.4);
+                const light = new DirectionalLight(0xffffff, 0.35);
                 light.position.set(1, 1, 1);
                 this.scene.add(light);
             }
@@ -296,6 +296,12 @@
 
                 this.resolution.value.set(width, height);
                 this.aspect.value = width / height;
+
+                if (width < height) {
+                    this.camera.position.z = 10;
+                } else {
+                    this.camera.position.z = 6;
+                }
             };
 
             static update = (time, delta, frame) => {

@@ -295,6 +295,8 @@ src
 │   │   ├── OBJLoaderThread.js
 │   │   ├── SphericalCubeTextureLoader.js
 │   │   ├── SpherizeTextureLoader.js
+│   │   ├── TextGeometryLoader.js
+│   │   ├── TextGeometryLoaderThread.js
 │   │   └── TextureLoader.js
 │   │
 │   ├── AssetLoader.js
@@ -338,6 +340,7 @@ src
 │   │   ├── Flowmap.js
 │   │   ├── Reflector.js
 │   │   ├── SpherizeImage.js
+│   │   ├── TextGeometry.js
 │   │   ├── Utils3D.js
 │   │   └── Wobble.js
 │   │

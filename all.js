@@ -18,6 +18,8 @@ export { TextureLoader } from './src/loaders/world/TextureLoader.js';
 export { SpherizeTextureLoader } from './src/loaders/world/SpherizeTextureLoader.js';
 export { SphericalCubeTextureLoader } from './src/loaders/world/SphericalCubeTextureLoader.js';
 export { EnvironmentTextureLoader } from './src/loaders/world/EnvironmentTextureLoader.js';
+export { TextGeometryLoader } from './src/loaders/world/TextGeometryLoader.js';
+export { TextGeometryLoaderThread } from './src/loaders/world/TextGeometryLoaderThread.js';
 export { OBJLoaderThread } from './src/loaders/world/OBJLoaderThread.js';
 
 // Utils
@@ -42,6 +44,7 @@ export { Wobble } from './src/utils/world/Wobble.js';
 export { Flowmap } from './src/utils/world/Flowmap.js';
 export { Reflector } from './src/utils/world/Reflector.js';
 export { SpherizeImage } from './src/utils/world/SpherizeImage.js';
+export { TextGeometry } from './src/utils/world/TextGeometry.js';
 export { WebAudio3D } from './src/utils/audio/WebAudio3D.js';
 export { Sound3D } from './src/utils/audio/Sound3D.js';
 
@@ -70,6 +73,7 @@ export { BokehBlurMaterial2 } from './src/materials/BokehBlurMaterial2.js';
 export { ChromaticAberrationMaterial } from './src/materials/ChromaticAberrationMaterial.js';
 export { VideoGlitchMaterial } from './src/materials/VideoGlitchMaterial.js';
 export { DepthMaskMaterial } from './src/materials/DepthMaskMaterial.js';
+export { TextMaterial } from './src/materials/TextMaterial.js';
 
 // Dependencies
 export * from 'gsap';

@@ -74,7 +74,8 @@ In its design, everything is an ES module, all user interfaces and components fo
 [flowmap](https://alien.js.org/examples/shader_flowmap_view.html) (view)  
 [depth](https://alien.js.org/examples/shader_depth.html) (fragment depth with dither)  
 [hologram](https://alien.js.org/examples/shader_hologram.html)  
-[alienkitty](https://alienkitty.com/) (flowmap with RGB shift)  
+[text](https://alien.js.org/examples/shader_text.html) (MSDF text)  
+[alienkitty](https://alienkitty.com/) (flowmap with RGB shift, MSDF text)  
 
 #### thread
 

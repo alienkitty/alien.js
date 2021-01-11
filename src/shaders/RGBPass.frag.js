@@ -4,17 +4,14 @@ export default /* glsl */`
 precision highp float;
 
 uniform sampler2D tMap;
-uniform float uDistortion;
-uniform float uTime;
+uniform float uAngle;
+uniform float uAmount;
 
 varying vec2 vUv;
 
 ${rgbshift}
 
 void main() {
-    float angle = length(vUv - vec2(0.5));
-    float amount = uDistortion * cos(uTime) + 0.0002;
-
-    gl_FragColor = getRGB(tMap, vUv, angle, amount);
+    gl_FragColor = getRGB(tMap, vUv, uAngle, uAmount);
 }
 `;

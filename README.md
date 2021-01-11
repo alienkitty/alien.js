@@ -446,7 +446,7 @@ npm start
 ## See also
 
 * [OGL](https://github.com/oframe/ogl)
-* [three.js](https://github.com/mrdoob/three.js)
+* [Three.js](https://github.com/mrdoob/three.js)
 * [Post Processing](https://github.com/vanruesc/postprocessing)
 * [Oimo.js](https://github.com/lo-th/Oimo.js)
 * Bruno Simon's [Folio 2019](https://github.com/brunosimon/folio-2019).
@@ -457,5 +457,6 @@ npm start
 * Jaume Sanchez Elias' [Codevember 2016](https://github.com/spite/codevember-2016).
 * Jaume Sanchez Elias' [Wagner](https://github.com/spite/Wagner).
 * Evan Wallace's [WebGL Filter](https://github.com/evanw/webgl-filter).
+* Felix Turner's [Intro to Pixel Shaders in Three.js](https://www.airtightinteractive.com/2013/02/intro-to-pixel-shaders-in-three-js/).
 * Active Theory's [Finding Love Shaders](https://github.com/activetheory/Finding-Love-Shaders).
 * Inspired by [Active Theory](https://github.com/activetheory)'s class structure and code style.

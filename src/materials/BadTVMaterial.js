@@ -8,9 +8,10 @@ export class BadTVMaterial extends RawShaderMaterial {
         super({
             uniforms: {
                 tMap: new Uniform(null),
-                uDistortion: new Uniform(0),
-                uDistortion2: new Uniform(0),
-                uRollSpeed: new Uniform(0),
+                uDistortion: new Uniform(3),
+                uDistortion2: new Uniform(5),
+                uSpeed: new Uniform(0.2),
+                uRollSpeed: new Uniform(0.1),
                 uTime: new Uniform(0)
             },
             vertexShader,

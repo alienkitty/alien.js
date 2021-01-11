@@ -8,8 +8,8 @@ export class RGBMaterial extends RawShaderMaterial {
         super({
             uniforms: {
                 tMap: new Uniform(null),
-                uDistortion: new Uniform(0),
-                uTime: new Uniform(0)
+                uAngle: new Uniform(0),
+                uAmount: new Uniform(0.005)
             },
             vertexShader,
             fragmentShader,

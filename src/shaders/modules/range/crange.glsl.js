@@ -4,7 +4,7 @@ export default /* glsl */`
 ${range}
 
 float crange(float oldValue, float oldMin, float oldMax, float newMin, float newMax) {
-    return clamp(range(oldValue, oldMin, oldMax, newMin, newMax), min(newMax, newMin), max(newMin, newMax));
+    return clamp(range(oldValue, oldMin, oldMax, newMin, newMax), newMin, newMax);
 }
 
 vec2 crange(vec2 oldValue, vec2 oldMin, vec2 oldMax, vec2 newMin, vec2 newMax) {

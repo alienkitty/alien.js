@@ -15,10 +15,10 @@ export function clamp(value, min, max) {
 }
 
 export function range(value, oldMin, oldMax, newMin, newMax, clamped) {
-    const newValue = (value - oldMin) * (newMax - newMin) / (oldMax - oldMin) + newMin;
+    const newValue = ((value - oldMin) * (newMax - newMin)) / (oldMax - oldMin) + newMin;
 
     if (clamped) {
-        return clamp(newValue, newMin, newMax);
+        return clamp(newValue, Math.min(newMin, newMax), Math.max(newMin, newMax));
     }
 
     return newValue;

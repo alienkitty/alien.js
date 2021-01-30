@@ -37,6 +37,7 @@
                 this.mouse = new Vector2();
                 this.target = new Vector2();
                 this.malletPosition = new Vector3();
+                this.timeout = false;
                 this.lerpSpeed = 0.25;
 
                 this.initWorld();
@@ -103,14 +104,24 @@
                 // Contact test
                 const contact = this.world.getContact(mallet, wand);
 
-                if (contact && !contact.close) {
+                if (contact && !this.timeout) {
                     this.force.x += (wand.linearVelocity.x * wand.mass) - (mallet.linearVelocity.x * mallet.mass);
                     this.force.y += (wand.linearVelocity.y * wand.mass) - (mallet.linearVelocity.y * mallet.mass);
                     this.force.z += (wand.linearVelocity.z * wand.mass) - (mallet.linearVelocity.z * mallet.mass);
 
                     this.force.multiplyScalar(0.5);
 
-                    this.emit('contact', { force: this.force.length() });
+                    const force = this.force.length();
+
+                    if (force > 150 || !contact.close) {
+                        this.timeout = true;
+
+                        this.emit('contact', { force });
+
+                        delayedCall(250, () => {
+                            this.timeout = false;
+                        });
+                    }
                 }
             };
 
@@ -201,7 +212,7 @@
                 if (Device.agent.includes('chrome')) {
                     this.thread = new Thread({
                         imports: [
-                            ['../build/alien.js', 'EventEmitter', 'Vector2', 'Vector3'],
+                            ['../build/alien.js', 'EventEmitter', 'Vector2', 'Vector3', 'delayedCall'],
                             ['https://unpkg.com/oimo/build/oimo.module.js', 'World']
                         ],
                         classes: [ScenePhysics],
@@ -237,7 +248,7 @@
                 }
 
                 const config = [
-                    3, // The density of the shape.
+                    4, // The density of the shape.
                     0, // The coefficient of friction of the shape.
                     0, // The coefficient of restitution of the shape.
                     1, // The bits of the collision groups to which the shape belongs.

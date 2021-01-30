@@ -102,9 +102,9 @@
                 const contact = this.world.getContact(wand, floor);
 
                 if (contact && !this.timeout) {
-                    this.force.x += (floor.linearVelocity.x * floor.mass) - (mallet.linearVelocity.x * mallet.mass);
-                    this.force.y += (floor.linearVelocity.y * floor.mass) - (mallet.linearVelocity.y * mallet.mass);
-                    this.force.z += (floor.linearVelocity.z * floor.mass) - (mallet.linearVelocity.z * mallet.mass);
+                    this.force.x += (floor.linearVelocity.x * floor.mass) - (wand.linearVelocity.x * wand.mass);
+                    this.force.y += (floor.linearVelocity.y * floor.mass) - (wand.linearVelocity.y * wand.mass);
+                    this.force.z += (floor.linearVelocity.z * floor.mass) - (wand.linearVelocity.z * wand.mass);
 
                     this.force.multiplyScalar(0.5);
 

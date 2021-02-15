@@ -13,7 +13,7 @@
 <body>
     <div id="root"></div>
     <script type="module">
-        import { ACESFilmicToneMapping, AdditiveBlending, BloomCompositeMaterial, BlurDirectionX, BlurDirectionY, Color, DirectionalLight, Events, FXAAMaterial, Flowmap, Fog, Group, HemisphereLight, LuminosityMaterial, Mesh, MeshStandardMaterial, NoBlending, OrthographicCamera, PerspectiveCamera, PlaneBufferGeometry, RGBFormat, RawShaderMaterial, Reflector, RepeatWrapping, SVGLoader, Scene, Stage, TextureLoader, Uniform, UnrealBloomBlurMaterial, Vector2, Vector3, WebGL1Renderer, WebGLRenderTarget, getFrustum, getFullscreenTriangle, mix, range, ticker } from '../build/alien.js';
+        import { ACESFilmicToneMapping, AdditiveBlending, BloomCompositeMaterial, BlurDirectionX, BlurDirectionY, Color, DirectionalLight, Events, FXAAMaterial, Flowmap, Fog, Group, HemisphereLight, LuminosityMaterial, Mesh, MeshStandardMaterial, NoBlending, OrthographicCamera, PerspectiveCamera, PlaneGeometry, RGBFormat, RawShaderMaterial, Reflector, RepeatWrapping, SVGLoader, Scene, Stage, TextureLoader, Uniform, UnrealBloomBlurMaterial, Vector2, Vector3, WebGL1Renderer, WebGLRenderTarget, getFrustum, getFullscreenTriangle, mix, range, ticker } from '../build/alien.js';
 
         class Config {
             static BG_COLOR = '#0e0e0e';
@@ -215,18 +215,18 @@
             initMesh() {
                 const { camera, quad } = WorldController;
 
-                this.geometry = quad;
+                const material = new FlowMaterial();
+                material.uniforms.tMap.value = this.renderTarget.texture;
+                material.uniforms.tFlow = this.flowmap.uniform;
 
-                this.material = new FlowMaterial();
-                this.material.uniforms.tMap.value = this.renderTarget.texture;
-                this.material.uniforms.tFlow = this.flowmap.uniform;
+                const mesh = new Mesh(quad, material);
+                mesh.position.set(0, 1.4, -11);
+                mesh.scale.set(this.width, this.height, 1);
+                mesh.lookAt(camera.position);
 
-                this.mesh = new Mesh(this.geometry, this.material);
-                this.mesh.position.set(0, 1.4, -11);
-                this.mesh.scale.set(this.width, this.height, 1);
-                this.mesh.lookAt(camera.position);
+                this.add(mesh);
 
-                this.add(this.mesh);
+                this.mesh = mesh;
             }
 
             initViews() {
@@ -289,8 +289,6 @@
             initMesh() {
                 const { getTexture, quad, scene } = WorldController;
 
-                this.geometry = quad;
-
                 const map = getTexture('assets/textures/pbr/polished_concrete_basecolor.jpg');
                 map.wrapS = RepeatWrapping;
                 map.wrapT = RepeatWrapping;
@@ -298,18 +296,19 @@
 
                 const { fog } = scene;
 
-                this.mesh = new Reflector(this.geometry, {
+                const mesh = new Reflector(quad, {
                     width: 512,
                     height: 640,
                     map,
                     fog,
                     dithering: true
                 });
-                this.mesh.position.y = -1.6;
-                this.mesh.rotation.x = -Math.PI / 2;
-                this.mesh.scale.set(110, 110, 1);
+                mesh.position.y = -1.6;
+                mesh.rotation.x = -Math.PI / 2;
+                mesh.scale.set(110, 110, 1);
+                mesh.renderOrder = -1;
 
-                this.add(this.mesh);
+                this.add(mesh);
             }
         }
 
@@ -754,7 +753,7 @@
                 this.camera.position.z = 10;
 
                 // Global geometries
-                this.quad = new PlaneBufferGeometry(1, 1);
+                this.quad = new PlaneGeometry(1, 1);
                 this.screenTriangle = getFullscreenTriangle();
 
                 // Global uniforms

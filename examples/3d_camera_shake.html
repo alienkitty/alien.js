@@ -13,7 +13,7 @@
 <body>
     <div id="root"></div>
     <script type="module">
-        import { AssetLoader, Assets, Color, CylinderBufferGeometry, Device, DirectionalLight, EventEmitter, Events, Fog, Group, HemisphereLight, MathUtils, Mesh, MeshStandardMaterial, PerspectiveCamera, PlaneBufferGeometry, PointLight, Reflector, RepeatWrapping, Scene, Sound3D, SphereBufferGeometry, Stage, TextureLoader, Thread, Uniform, Vector2, Vector3, WebAudio, WebGL1Renderer, Wobble, clamp, clearTween, delayedCall, getFrustum, gsap, radians, range, ticker, tween } from '../build/alien.js';
+        import { AssetLoader, Assets, Color, CylinderGeometry, Device, DirectionalLight, EventEmitter, Events, Fog, Group, HemisphereLight, MathUtils, Mesh, MeshStandardMaterial, PerspectiveCamera, PlaneGeometry, PointLight, Reflector, RepeatWrapping, Scene, Sound3D, SphereGeometry, Stage, TextureLoader, Thread, Uniform, Vector2, Vector3, WebAudio, WebGL1Renderer, Wobble, clamp, clearTween, delayedCall, getFrustum, gsap, radians, range, ticker, tween } from '../build/alien.js';
 
         import { World } from 'https://unpkg.com/oimo/build/oimo.module.js';
 
@@ -345,19 +345,20 @@
 
             initMesh() {
                 this.size = new Vector3(0.5, 0.5, 0.5);
-                this.geometry = new SphereBufferGeometry(0.5, 24, 24);
 
-                this.material = new MeshStandardMaterial({
+                const geometry = new SphereGeometry(0.5, 24, 24);
+
+                const material = new MeshStandardMaterial({
                     emissive: 0xffffff
                 });
 
-                this.mesh = new Mesh(this.geometry, this.material);
-                this.add(this.mesh);
+                const mesh = new Mesh(geometry, material);
+                this.add(mesh);
             }
 
             initLight() {
-                this.light = new PointLight(0xffffff, 0.2);
-                this.add(this.light);
+                const light = new PointLight(0xffffff, 0.2);
+                this.add(light);
             }
         }
 
@@ -370,14 +371,15 @@
 
             initMesh() {
                 this.size = new Vector3(0.75, 0.75, 3);
-                this.geometry = new CylinderBufferGeometry(0.75, 0.75, 3, 50);
 
-                this.material = new MeshStandardMaterial({
+                const geometry = new CylinderGeometry(0.75, 0.75, 3, 50);
+
+                const material = new MeshStandardMaterial({
                     emissive: 0xffffff
                 });
 
-                this.mesh = new Mesh(this.geometry, this.material);
-                this.add(this.mesh);
+                const mesh = new Mesh(geometry, material);
+                this.add(mesh);
             }
         }
 
@@ -394,20 +396,22 @@
                 const { getTexture } = WorldController;
 
                 this.size = new Vector3(1000, 3, 1000);
-                this.geometry = new PlaneBufferGeometry(1000, 1000);
+
+                const geometry = new PlaneGeometry(1000, 1000);
 
                 const map = getTexture('assets/textures/pbr/polished_concrete_basecolor.jpg');
                 map.wrapS = RepeatWrapping;
                 map.wrapT = RepeatWrapping;
                 map.repeat.set(8, 8);
 
-                this.mesh = new Reflector(this.geometry, {
+                const mesh = new Reflector(geometry, {
                     map
                 });
-                this.mesh.position.y = this.size.y / 2;
-                this.mesh.rotation.x = -Math.PI / 2;
+                mesh.position.y = this.size.y / 2;
+                mesh.rotation.x = -Math.PI / 2;
+                mesh.renderOrder = -1;
 
-                this.add(this.mesh);
+                this.add(mesh);
             }
         }
 

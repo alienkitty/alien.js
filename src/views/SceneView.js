@@ -1,4 +1,4 @@
-import { BoxBufferGeometry, Group, Mesh } from 'three';
+import { BoxGeometry, Group, Mesh } from 'three';
 
 import { NormalMaterial } from '../materials/NormalMaterial.js';
 
@@ -13,7 +13,7 @@ export class SceneView extends Group {
     }
 
     initMesh() {
-        this.mesh = new Mesh(new BoxBufferGeometry(1, 1, 1), new NormalMaterial());
+        this.mesh = new Mesh(new BoxGeometry(1, 1, 1), new NormalMaterial());
         this.add(this.mesh);
     }
 

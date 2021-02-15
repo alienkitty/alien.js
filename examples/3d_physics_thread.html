@@ -13,7 +13,7 @@
 <body>
     <div id="root"></div>
     <script type="module">
-        import { AssetLoader, Assets, Color, CylinderBufferGeometry, Device, DirectionalLight, EventEmitter, Events, Fog, Group, HemisphereLight, MathUtils, Mesh, MeshStandardMaterial, PerspectiveCamera, PointLight, Scene, Sound3D, SphereBufferGeometry, Stage, Thread, Uniform, Vector2, Vector3, WebAudio, WebGL1Renderer, clamp, delayedCall, getFrustum, gsap, range, ticker } from '../build/alien.js';
+        import { AssetLoader, Assets, Color, CylinderGeometry, Device, DirectionalLight, EventEmitter, Events, Fog, Group, HemisphereLight, MathUtils, Mesh, MeshStandardMaterial, PerspectiveCamera, PointLight, Scene, Sound3D, SphereGeometry, Stage, Thread, Uniform, Vector2, Vector3, WebAudio, WebGL1Renderer, clamp, delayedCall, getFrustum, gsap, range, ticker } from '../build/alien.js';
 
         import { World } from 'https://unpkg.com/oimo/build/oimo.module.js';
 
@@ -346,19 +346,20 @@
 
             initMesh() {
                 this.size = new Vector3(0.5, 0.5, 0.5);
-                this.geometry = new SphereBufferGeometry(0.5, 24, 24);
 
-                this.material = new MeshStandardMaterial({
+                const geometry = new SphereGeometry(0.5, 24, 24);
+
+                const material = new MeshStandardMaterial({
                     emissive: 0xffffff
                 });
 
-                this.mesh = new Mesh(this.geometry, this.material);
-                this.add(this.mesh);
+                const mesh = new Mesh(geometry, material);
+                this.add(mesh);
             }
 
             initLight() {
-                this.light = new PointLight(0xffffff, 0.2);
-                this.add(this.light);
+                const light = new PointLight(0xffffff, 0.2);
+                this.add(light);
             }
         }
 
@@ -375,17 +376,18 @@
 
             initMesh() {
                 this.size = new Vector3(0.75, 0.75, 25);
-                this.geometry = new CylinderBufferGeometry(0.75, 0.75, 25, 50);
 
-                this.material = new MeshStandardMaterial({
+                const geometry = new CylinderGeometry(0.75, 0.75, 25, 50);
+
+                const material = new MeshStandardMaterial({
                     color: Config.BG_COLOR,
                     roughness: 0.3,
                     metalness: 1,
                     dithering: true
                 });
 
-                this.mesh = new Mesh(this.geometry, this.material);
-                this.add(this.mesh);
+                const mesh = new Mesh(geometry, material);
+                this.add(mesh);
             }
         }
 

@@ -13,7 +13,7 @@
 <body>
     <div id="root"></div>
     <script type="module">
-        import { ACESFilmicToneMapping, BloomCompositeMaterial, BlurDirectionX, BlurDirectionY, BufferAttribute, BufferGeometry, Color, DirectionalLight, Events, FXAAMaterial, Fog, Group, HemisphereLight, LinearFilter, LuminosityMaterial, Mesh, NoBlending, OrthographicCamera, PerspectiveCamera, PlaneBufferGeometry, RGBFormat, RawShaderMaterial, Reflector, RepeatWrapping, Scene, Stage, TextGeometry, TextGeometryLoader, TextMaterial, TextureLoader, Uniform, UnrealBloomBlurMaterial, Vector2, Vector3, WebGL1Renderer, WebGLRenderTarget, getFullscreenTriangle, mix, ticker } from '../build/alien.js';
+        import { ACESFilmicToneMapping, BloomCompositeMaterial, BlurDirectionX, BlurDirectionY, BufferAttribute, BufferGeometry, Color, DirectionalLight, Events, FXAAMaterial, Fog, Group, HemisphereLight, LinearFilter, LuminosityMaterial, Mesh, NoBlending, OrthographicCamera, PerspectiveCamera, PlaneGeometry, RGBFormat, RawShaderMaterial, Reflector, RepeatWrapping, Scene, Stage, TextGeometry, TextGeometryLoader, TextMaterial, TextureLoader, Uniform, UnrealBloomBlurMaterial, Vector2, Vector3, WebGL1Renderer, WebGLRenderTarget, getFullscreenTriangle, mix, ticker } from '../build/alien.js';
 
         class Config {
             static BG_COLOR = '#0e0e0e';
@@ -92,14 +92,14 @@
                 texture.minFilter = LinearFilter;
                 texture.generateMipmaps = false;
 
-                this.material = new TextMaterial({
+                const material = new TextMaterial({
                     texture
                 });
-                this.material.uniforms.uAlpha.value = 0.94;
+                material.uniforms.uAlpha.value = 0.94;
 
                 const font = await (await fetch('assets/fonts/Roboto-Bold.json')).json();
 
-                this.text = new TextGeometry({
+                const text = new TextGeometry({
                     font,
                     text: this.fps.toString(),
                     width: 4,
@@ -109,14 +109,17 @@
                     lineHeight: 1.1,
                 });
 
-                this.geometry = new BufferGeometry();
+                const geometry = new BufferGeometry();
 
-                this.mesh = new Mesh(this.geometry, this.material);
-                this.mesh.frustumCulled = false;
-                this.mesh.position.set(0, 1.4, -11);
-                this.mesh.lookAt(camera.position);
+                const mesh = new Mesh(geometry, material);
+                mesh.frustumCulled = false;
+                mesh.position.set(0, 1.4, -11);
+                mesh.lookAt(camera.position);
 
-                this.add(this.mesh);
+                this.add(mesh);
+
+                this.text = text;
+                this.geometry = geometry;
 
                 this.update();
             }
@@ -155,7 +158,7 @@
             initMesh() {
                 const { getTexture, scene } = WorldController;
 
-                this.geometry = new PlaneBufferGeometry(110, 110);
+                const geometry = new PlaneGeometry(110, 110);
 
                 const map = getTexture('assets/textures/pbr/polished_concrete_basecolor.jpg');
                 map.wrapS = RepeatWrapping;
@@ -164,15 +167,16 @@
 
                 const { fog } = scene;
 
-                this.mesh = new Reflector(this.geometry, {
+                const mesh = new Reflector(geometry, {
                     map,
                     fog,
                     dithering: true
                 });
-                this.mesh.position.y = -1.6;
-                this.mesh.rotation.x = -Math.PI / 2;
+                mesh.position.y = -1.6;
+                mesh.rotation.x = -Math.PI / 2;
+                mesh.renderOrder = -1;
 
-                this.add(this.mesh);
+                this.add(mesh);
             }
         }
 

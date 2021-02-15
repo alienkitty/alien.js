@@ -13,7 +13,7 @@
 <body>
     <div id="root"></div>
     <script type="module">
-        import { ACESFilmicToneMapping, AmbientLight, BloomCompositeMaterial, BlurDirectionX, BlurDirectionY, BoxGeometry, BufferAttribute, BufferGeometry, Color, DepthTexture, Device, DirectionalLight, EnvironmentTextureLoader, Events, FXAAMaterial, Group, HemisphereLight, ImageBitmapLoaderThread, LuminosityMaterial, MathUtils, Mesh, MeshStandardMaterial, OrbitControls, OrthographicCamera, PerspectiveCamera, Points, RGBFormat, RawShaderMaterial, Scene, SceneCompositeMaterial, SphericalCubeTextureLoader, Stage, TextureLoader, Thread, Uniform, UnrealBloomBlurMaterial, Vector2, WebGL1Renderer, WebGLRenderTarget, getFullscreenTriangle, mix, ticker } from '../build/alien.js';
+        import { ACESFilmicToneMapping, AmbientLight, BloomCompositeMaterial, BlurDirectionX, BlurDirectionY, BoxGeometry, BufferAttribute, BufferGeometry, Color, DepthTexture, Device, DirectionalLight, EnvironmentTextureLoader, Events, FXAAMaterial, Group, HemisphereLight, ImageBitmapLoaderThread, LuminosityMaterial, MathUtils, Mesh, MeshStandardMaterial, OrbitControls, OrthographicCamera, PerspectiveCamera, Points, RGBFormat, RawShaderMaterial, Scene, SceneCompositeMaterial, SphericalCubeTextureLoader, Stage, TextureLoader, Thread, Uniform, UnrealBloomBlurMaterial, Vector2, Vector3, WebGL1Renderer, WebGLRenderTarget, getFullscreenTriangle, mix, ticker } from '../build/alien.js';
 
         class Config {
             static BG_COLOR = '#0e0e0e';
@@ -126,10 +126,10 @@
                     vertices[i * 3 + 2] = MathUtils.randFloatSpread(camera.far);
                 }
 
-                this.geometry = new BufferGeometry();
-                this.geometry.setAttribute('position', new BufferAttribute(new Float32Array(vertices), 3));
+                const geometry = new BufferGeometry();
+                geometry.setAttribute('position', new BufferAttribute(new Float32Array(vertices), 3));
 
-                this.material = new RawShaderMaterial({
+                const material = new RawShaderMaterial({
                     uniforms: {
                         tMap: new Uniform(getTexture('assets/textures/particle.png')),
                         tDepth: new Uniform(null),
@@ -147,8 +147,10 @@
                     depthTest: false
                 });
 
-                this.points = new Points(this.geometry, this.material);
-                this.add(this.points);
+                const points = new Points(geometry, material);
+                this.add(points);
+
+                this.material = material;
             }
         }
 
@@ -163,17 +165,21 @@
                 const { loadEnvironmentTexture, getSphericalCubeTextures } = WorldController;
 
                 // Spherical cube geometry
-                this.geometry = new BoxGeometry(1, 1, 1, 32, 32, 32);
+                const geometry = new BoxGeometry(1, 1, 1, 32, 32, 32);
+                const vertices = geometry.attributes.position;
+                const normals = geometry.attributes.normal;
+                const radius = 1;
 
-                for (const i in this.geometry.vertices) {
-                    const vertex = this.geometry.vertices[i];
-                    vertex.setLength(1);
+                for (let i = 0; i < vertices.count; i++) {
+                    const v = new Vector3().fromArray(vertices.array, i * 3);
+                    v.normalize();
+                    normals.setXYZ(i, v.x, v.y, v.z);
+                    v.setLength(radius);
+                    vertices.setXYZ(i, v.x, v.y, v.z);
                 }
 
-                this.geometry.computeVertexNormals();
-
                 // 2nd set of UV's for aoMap and lightMap
-                this.geometry.faceVertexUvs[1] = this.geometry.faceVertexUvs[0];
+                geometry.attributes.uv2 = geometry.attributes.uv;
 
                 // Textures
                 const map = getSphericalCubeTextures('assets/textures/pbr/pitted_metal_basecolor.jpg');
@@ -185,10 +191,10 @@
                 const envMap = await loadEnvironmentTexture('assets/textures/env.jpg');
 
                 // Materials
-                this.material = [];
+                const material = [];
 
                 for (let i = 0; i < 6; i++) {
-                    this.material[i] = new MeshStandardMaterial({
+                    material[i] = new MeshStandardMaterial({
                         color: Config.BG_COLOR,
                         roughness: 1,
                         metalness: 1,
@@ -205,12 +211,12 @@
                     });
                 }
 
-                this.mesh = new Mesh(this.geometry, this.material);
+                const mesh = new Mesh(geometry, material);
 
                 // Flip horizontally
-                this.mesh.scale.x = -1;
+                mesh.scale.x = -1;
 
-                this.add(this.mesh);
+                this.add(mesh);
             }
         }
 

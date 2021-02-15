@@ -13,7 +13,7 @@
 <body>
     <div id="root"></div>
     <script type="module">
-        import { Color, Events, FXAAMaterial, Group, Mesh, OrbitControls, OrthographicCamera, PerspectiveCamera, RGBFormat, RawShaderMaterial, Scene, SphereBufferGeometry, Stage, Uniform, Vector2, WebGL1Renderer, WebGLRenderTarget, getFullscreenTriangle, ticker } from '../build/alien.js';
+        import { Color, Events, FXAAMaterial, Group, Mesh, OrbitControls, OrthographicCamera, PerspectiveCamera, RGBFormat, RawShaderMaterial, Scene, SphereGeometry, Stage, Uniform, Vector2, WebGL1Renderer, WebGLRenderTarget, getFullscreenTriangle, ticker } from '../build/alien.js';
 
         class Config {
             static BG_COLOR = '#0e0e0e';
@@ -78,7 +78,7 @@
             }
 
             initMesh() {
-                this.mesh = new Mesh(new SphereBufferGeometry(1, 80, 80), new DepthMaterial());
+                this.mesh = new Mesh(new SphereGeometry(1, 80, 80), new DepthMaterial());
                 this.add(this.mesh);
             }
         }

@@ -13,7 +13,7 @@
 <body>
     <div id="root"></div>
     <script type="module">
-        import { BlurDirectionX, BlurDirectionY, Color, DirectionalLight, Events, FXAAMaterial, Group, HemisphereLight, LuminosityMaterial, Mesh, MeshStandardMaterial, OrthographicCamera, PerspectiveCamera, RGBFormat, Scene, SceneCompositeMaterial, SphereBufferGeometry, Stage, Uniform, UnrealBloomBlurMaterial, UnrealBloomCompositeMaterial, Vector2, Vector3, WebGL1Renderer, WebGLRenderTarget, getFullscreenTriangle, ticker } from '../build/alien.js';
+        import { BlurDirectionX, BlurDirectionY, Color, DirectionalLight, Events, FXAAMaterial, Group, HemisphereLight, LuminosityMaterial, Mesh, MeshStandardMaterial, OrthographicCamera, PerspectiveCamera, RGBFormat, Scene, SceneCompositeMaterial, SphereGeometry, Stage, Uniform, UnrealBloomBlurMaterial, UnrealBloomCompositeMaterial, Vector2, Vector3, WebGL1Renderer, WebGLRenderTarget, getFullscreenTriangle, ticker } from '../build/alien.js';
 
         class Config {
             static BG_COLOR = '#0e0e0e';
@@ -39,22 +39,22 @@
             initMesh() {
                 const { time } = WorldController;
 
-                this.geometry = new SphereBufferGeometry(1, 80, 80);
+                const geometry = new SphereGeometry(1, 80, 80);
 
-                this.material = new MeshStandardMaterial({
+                const material = new MeshStandardMaterial({
                     roughness: 0
                 });
 
                 // https://threejs.org/examples/#webgl_materials_modified
-                this.material.onBeforeCompile = shader => {
+                material.onBeforeCompile = shader => {
                     shader.uniforms.time = time;
 
                     shader.vertexShader = 'uniform float time;\n' + periodic3d + shader.vertexShader;
                     shader.vertexShader = shader.vertexShader.replace('#include <begin_vertex>', vertexShaderChunk);
                 };
 
-                this.mesh = new Mesh(this.geometry, this.material);
-                this.add(this.mesh);
+                const mesh = new Mesh(geometry, material);
+                this.add(mesh);
             }
         }
 

@@ -13,7 +13,7 @@
 <body>
     <div id="root"></div>
     <script type="module">
-        import { ACESFilmicToneMapping, AmbientLight, BloomCompositeMaterial, BlurDirectionX, BlurDirectionY, BufferAttribute, BufferGeometry, Color, Device, DirectionalLight, Events, FXAAMaterial, Group, HemisphereLight, LuminosityMaterial, Mesh, MeshBasicMaterial, MeshStandardMaterial, NoBlending, OBJLoader, OBJLoaderThread, OrthographicCamera, PerspectiveCamera, PointLight, RGBFormat, RawShaderMaterial, Scene, SphereBufferGeometry, Stage, TextureLoader, Thread, Uniform, UnrealBloomBlurMaterial, Vector2, Vector3, WebGL1Renderer, WebGLRenderTarget, getFrustum, getFullscreenTriangle, mix, ticker } from '../build/alien.js';
+        import { ACESFilmicToneMapping, AmbientLight, BloomCompositeMaterial, BlurDirectionX, BlurDirectionY, BufferAttribute, BufferGeometry, Color, Device, DirectionalLight, Events, FXAAMaterial, Group, HemisphereLight, LuminosityMaterial, Mesh, MeshBasicMaterial, MeshStandardMaterial, NoBlending, OBJLoader, OBJLoaderThread, OrthographicCamera, PerspectiveCamera, PointLight, RGBFormat, RawShaderMaterial, Scene, SphereGeometry, Stage, TextureLoader, Thread, Uniform, UnrealBloomBlurMaterial, Vector2, Vector3, WebGL1Renderer, WebGLRenderTarget, getFrustum, getFullscreenTriangle, mix, ticker } from '../build/alien.js';
 
         class Config {
             static BG_COLOR = '#0e0e0e';
@@ -88,20 +88,20 @@
             }
 
             initDebug() {
-                this.geometry = new SphereBufferGeometry(0.125, 1, 1);
+                const geometry = new SphereGeometry(0.125, 1, 1);
 
-                this.material = new MeshBasicMaterial({
+                const material = new MeshBasicMaterial({
                     color: 0xff0000,
                     wireframe: true
                 });
 
-                this.mesh = new Mesh(this.geometry, this.material);
-                this.add(this.mesh);
+                const mesh = new Mesh(geometry, material);
+                this.add(mesh);
             }
 
             initLight() {
-                this.light = new PointLight(0xffffff, 0.2);
-                this.add(this.light);
+                const light = new PointLight(0xffffff, 0.2);
+                this.add(light);
             }
         }
 

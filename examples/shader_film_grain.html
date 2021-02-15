@@ -13,7 +13,7 @@
 <body>
     <div id="root"></div>
     <script type="module">
-        import { ACESFilmicToneMapping, AmbientLight, BloomCompositeMaterial, BlurDirectionX, BlurDirectionY, BoxBufferGeometry, BufferAttribute, BufferGeometry, Color, DirectionalLight, Events, FilmGrainFXAAMaterial, Group, HemisphereLight, LuminosityMaterial, MathUtils, Mesh, MeshStandardMaterial, NoBlending, OrthographicCamera, PlaneBufferGeometry, RGBFormat, RawShaderMaterial, Scene, Stage, Uniform, UnrealBloomBlurMaterial, Vector2, WebGL1Renderer, WebGLRenderTarget, getFullscreenTriangle, mix, ticker } from '../build/alien.js';
+        import { ACESFilmicToneMapping, AmbientLight, BloomCompositeMaterial, BlurDirectionX, BlurDirectionY, BoxGeometry, BufferAttribute, BufferGeometry, Color, DirectionalLight, Events, FilmGrainFXAAMaterial, Group, HemisphereLight, LuminosityMaterial, MathUtils, Mesh, MeshStandardMaterial, NoBlending, OrthographicCamera, PlaneGeometry, RGBFormat, RawShaderMaterial, Scene, Stage, Uniform, UnrealBloomBlurMaterial, Vector2, WebGL1Renderer, WebGLRenderTarget, getFullscreenTriangle, mix, ticker } from '../build/alien.js';
 
         class Config {
             static BG_COLOR = '#0e0e0e';
@@ -88,21 +88,21 @@
                 });
 
                 // Penrose triangle geometry
-                const bottomBox = new BoxBufferGeometry(50, 50, 300);
+                const bottomBox = new BoxGeometry(50, 50, 300);
                 const bottomMesh = new Mesh(bottomBox, this.material);
                 this.add(bottomMesh);
 
-                const upBox = new BoxBufferGeometry(50, 250, 50);
+                const upBox = new BoxGeometry(50, 250, 50);
                 const upMesh = new Mesh(upBox, this.material);
                 upMesh.position.set(0, 150, 125);
                 this.add(upMesh);
 
-                const topBox = new BoxBufferGeometry(150, 50, 50);
+                const topBox = new BoxGeometry(150, 50, 50);
                 const topMesh = new Mesh(topBox, this.material);
                 topMesh.position.set(100, 250, 125);
                 this.add(topMesh);
 
-                const topPlane = new PlaneBufferGeometry(50, 50, 32);
+                const topPlane = new PlaneGeometry(50, 50, 32);
                 const topPlaneMesh = new Mesh(topPlane, this.material);
                 topPlaneMesh.position.set(200, 275, 125);
                 topPlaneMesh.rotation.x = MathUtils.degToRad(-90);

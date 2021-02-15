@@ -13,7 +13,7 @@
 <body>
     <div id="root"></div>
     <script type="module">
-        import { BoxGeometry, Color, Events, FXAAMaterial, Group, Mesh, MeshBasicMaterial, OrbitControls, OrthographicCamera, PerspectiveCamera, RGBFormat, Scene, SphericalCubeTextureLoader, Stage, TextureLoader, Uniform, Vector2, WebGL1Renderer, WebGLRenderTarget, getFullscreenTriangle, ticker } from '../build/alien.js';
+        import { BoxGeometry, Color, Events, FXAAMaterial, Group, Mesh, MeshBasicMaterial, OrbitControls, OrthographicCamera, PerspectiveCamera, RGBFormat, Scene, SphericalCubeTextureLoader, Stage, TextureLoader, Uniform, Vector2, Vector3, WebGL1Renderer, WebGLRenderTarget, getFullscreenTriangle, ticker } from '../build/alien.js';
 
         class Config {
             static BG_COLOR = '#0e0e0e';
@@ -31,33 +31,37 @@
                 const { getSphericalCubeTextures } = WorldController;
 
                 // Spherical cube geometry
-                this.geometry = new BoxGeometry(1, 1, 1, 32, 32, 32);
+                const geometry = new BoxGeometry(1, 1, 1, 32, 32, 32);
+                const vertices = geometry.attributes.position;
+                const normals = geometry.attributes.normal;
+                const radius = 1;
 
-                for (const i in this.geometry.vertices) {
-                    const vertex = this.geometry.vertices[i];
-                    vertex.setLength(1);
+                for (let i = 0; i < vertices.count; i++) {
+                    const v = new Vector3().fromArray(vertices.array, i * 3);
+                    v.normalize();
+                    normals.setXYZ(i, v.x, v.y, v.z);
+                    v.setLength(radius);
+                    vertices.setXYZ(i, v.x, v.y, v.z);
                 }
-
-                this.geometry.computeVertexNormals();
 
                 // Textures
                 const map = getSphericalCubeTextures('assets/textures/uv.jpg');
 
                 // Materials
-                this.material = [];
+                const material = [];
 
                 for (let i = 0; i < 6; i++) {
-                    this.material[i] = new MeshBasicMaterial({
+                    material[i] = new MeshBasicMaterial({
                         map: map[i]
                     });
                 }
 
-                this.mesh = new Mesh(this.geometry, this.material);
+                const mesh = new Mesh(geometry, material);
 
                 // Flip horizontally
-                this.mesh.scale.x = -1;
+                mesh.scale.x = -1;
 
-                this.add(this.mesh);
+                this.add(mesh);
             }
         }
 

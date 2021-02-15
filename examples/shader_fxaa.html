@@ -13,7 +13,7 @@
 <body>
     <div id="root"></div>
     <script type="module">
-        import { Color, DirectionalLight, Events, FXAAMaterial, Group, HemisphereLight, Mesh, MeshStandardMaterial, OrthographicCamera, PerspectiveCamera, RGBFormat, Scene, SphereBufferGeometry, Stage, Uniform, Vector2, WebGL1Renderer, WebGLRenderTarget, getFullscreenTriangle, ticker } from '../build/alien.js';
+        import { Color, DirectionalLight, Events, FXAAMaterial, Group, HemisphereLight, Mesh, MeshStandardMaterial, OrthographicCamera, PerspectiveCamera, RGBFormat, Scene, SphereGeometry, Stage, Uniform, Vector2, WebGL1Renderer, WebGLRenderTarget, getFullscreenTriangle, ticker } from '../build/alien.js';
 
         class Config {
             static BG_COLOR = '#0e0e0e';
@@ -39,22 +39,22 @@
             initMesh() {
                 const { time } = WorldController;
 
-                this.geometry = new SphereBufferGeometry(1, 80, 80);
+                const geometry = new SphereGeometry(1, 80, 80);
 
-                this.material = new MeshStandardMaterial({
+                const material = new MeshStandardMaterial({
                     roughness: 0
                 });
 
                 // https://threejs.org/examples/#webgl_materials_modified
-                this.material.onBeforeCompile = shader => {
+                material.onBeforeCompile = shader => {
                     shader.uniforms.time = time;
 
                     shader.vertexShader = 'uniform float time;\n' + periodic3d + shader.vertexShader;
                     shader.vertexShader = shader.vertexShader.replace('#include <begin_vertex>', vertexShaderChunk);
                 };
 
-                this.mesh = new Mesh(this.geometry, this.material);
-                this.add(this.mesh);
+                const mesh = new Mesh(geometry, material);
+                this.add(mesh);
             }
         }
 

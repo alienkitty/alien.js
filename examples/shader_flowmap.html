@@ -13,7 +13,7 @@
 <body>
     <div id="root"></div>
     <script type="module">
-        import { ACESFilmicToneMapping, BloomCompositeMaterial, BlurDirectionX, BlurDirectionY, Color, DirectionalLight, Events, FXAAMaterial, Flowmap, Fog, Group, HemisphereLight, LuminosityMaterial, Mesh, MeshStandardMaterial, NoBlending, OrthographicCamera, PerspectiveCamera, PlaneBufferGeometry, RGBFormat, RawShaderMaterial, Reflector, RepeatWrapping, SVGLoader, Scene, Stage, TextureLoader, Uniform, UnrealBloomBlurMaterial, Vector2, Vector3, WebGL1Renderer, WebGLRenderTarget, getFullscreenTriangle, mix, ticker } from '../build/alien.js';
+        import { ACESFilmicToneMapping, BloomCompositeMaterial, BlurDirectionX, BlurDirectionY, Color, DirectionalLight, Events, FXAAMaterial, Flowmap, Fog, Group, HemisphereLight, LuminosityMaterial, Mesh, MeshStandardMaterial, NoBlending, OrthographicCamera, PerspectiveCamera, PlaneGeometry, RGBFormat, RawShaderMaterial, Reflector, RepeatWrapping, SVGLoader, Scene, Stage, TextureLoader, Uniform, UnrealBloomBlurMaterial, Vector2, Vector3, WebGL1Renderer, WebGLRenderTarget, getFullscreenTriangle, mix, ticker } from '../build/alien.js';
 
         class Config {
             static BG_COLOR = '#0e0e0e';
@@ -133,7 +133,7 @@
             initMesh() {
                 const { getTexture, scene } = WorldController;
 
-                this.geometry = new PlaneBufferGeometry(110, 110);
+                const geometry = new PlaneGeometry(110, 110);
 
                 const map = getTexture('assets/textures/pbr/polished_concrete_basecolor.jpg');
                 map.wrapS = RepeatWrapping;
@@ -142,18 +142,18 @@
 
                 const { fog } = scene;
 
-                this.mesh = new Reflector(this.geometry, {
+                const mesh = new Reflector(geometry, {
                     width: 512,
                     height: 640,
                     map,
                     fog,
                     dithering: true
                 });
-                this.mesh.rotation.x = -Math.PI / 2;
-                this.mesh.position.y = -1.6;
-                this.mesh.renderOrder = -1;
+                mesh.rotation.x = -Math.PI / 2;
+                mesh.position.y = -1.6;
+                mesh.renderOrder = -1;
 
-                this.add(this.mesh);
+                this.add(mesh);
             }
         }
 

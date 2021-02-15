@@ -13,7 +13,7 @@
 <body>
     <div id="root"></div>
     <script type="module">
-        import { ACESFilmicToneMapping, AmbientLight, BloomCompositeMaterial, BlurDirectionX, BlurDirectionY, BoxGeometry, BufferAttribute, BufferGeometry, Color, DepthTexture, Device, DirectionalLight, EnvironmentTextureLoader, Events, FXAAMaterial, Group, HemisphereLight, ImageBitmapLoaderThread, LuminosityMaterial, MathUtils, Mesh, MeshStandardMaterial, OrbitControls, OrthographicCamera, PerspectiveCamera, Points, RGBFormat, RawShaderMaterial, Scene, SceneCompositeMaterial, SphericalCubeTextureLoader, Stage, TextureLoader, Thread, Uniform, UnrealBloomBlurMaterial, Vector2, Vector3, WebGL1Renderer, WebGLRenderTarget, getFullscreenTriangle, mix, ticker } from '../build/alien.js';
+        import { ACESFilmicToneMapping, AmbientLight, BloomCompositeMaterial, BlurDirectionX, BlurDirectionY, BufferAttribute, BufferGeometry, Color, DepthTexture, Device, DirectionalLight, EnvironmentTextureLoader, Events, FXAAMaterial, Group, HemisphereLight, ImageBitmapLoaderThread, LuminosityMaterial, MathUtils, Mesh, MeshStandardMaterial, OrbitControls, OrthographicCamera, PerspectiveCamera, Points, RGBFormat, RawShaderMaterial, Scene, SceneCompositeMaterial, SphericalCubeTextureLoader, Stage, TextureLoader, Thread, Uniform, UnrealBloomBlurMaterial, Vector2, WebGL1Renderer, WebGLRenderTarget, getFullscreenTriangle, getSphericalCube, mix, ticker } from '../build/alien.js';
 
         class Config {
             static BG_COLOR = '#0e0e0e';
@@ -165,18 +165,7 @@
                 const { loadEnvironmentTexture, getSphericalCubeTextures } = WorldController;
 
                 // Spherical cube geometry
-                const geometry = new BoxGeometry(1, 1, 1, 32, 32, 32);
-                const vertices = geometry.attributes.position;
-                const normals = geometry.attributes.normal;
-                const radius = 1;
-
-                for (let i = 0; i < vertices.count; i++) {
-                    const v = new Vector3().fromArray(vertices.array, i * 3);
-                    v.normalize();
-                    normals.setXYZ(i, v.x, v.y, v.z);
-                    v.setLength(radius);
-                    vertices.setXYZ(i, v.x, v.y, v.z);
-                }
+                const geometry = getSphericalCube(1, 32);
 
                 // 2nd set of UV's for aoMap and lightMap
                 geometry.attributes.uv2 = geometry.attributes.uv;

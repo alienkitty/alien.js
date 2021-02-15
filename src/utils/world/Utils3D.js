@@ -2,7 +2,7 @@
  * @author pschroen / https://ufo.ai/
  */
 
-import { BufferAttribute, BufferGeometry, MathUtils } from 'three';
+import { BoxGeometry, BufferAttribute, BufferGeometry, MathUtils, Vector3 } from 'three';
 
 export function getFullscreenTriangle() {
     const geometry = new BufferGeometry();
@@ -11,6 +11,22 @@ export function getFullscreenTriangle() {
 
     geometry.setAttribute('position', new BufferAttribute(vertices, 2));
     geometry.setAttribute('uv', new BufferAttribute(uvs, 2));
+
+    return geometry;
+}
+
+export function getSphericalCube(radius, segments) {
+    const geometry = new BoxGeometry(radius, radius, radius, segments, segments, segments);
+    const vertices = geometry.attributes.position;
+    const normals = geometry.attributes.normal;
+
+    for (let i = 0; i < vertices.count; i++) {
+        const v = new Vector3().fromArray(vertices.array, i * 3);
+        v.normalize();
+        normals.setXYZ(i, v.x, v.y, v.z);
+        v.setLength(radius);
+        vertices.setXYZ(i, v.x, v.y, v.z);
+    }
 
     return geometry;
 }

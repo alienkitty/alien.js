@@ -47,19 +47,17 @@ export class LinkedList {
 
         if (this.nodes.length === 1) {
             this.empty();
+        } else if (node === this.first) {
+            this.first = node.next;
+            this.last.next = this.first;
+            this.first.prev = this.last;
+        } else if (node === this.last) {
+            this.last = node.prev;
+            this.last.next = this.first;
+            this.first.prev = this.last;
         } else {
-            if (node === this.first) {
-                this.first = node.next;
-                this.last.next = this.first;
-                this.first.prev = this.last;
-            } else if (node === this.last) {
-                this.last = node.prev;
-                this.last.next = this.first;
-                this.first.prev = this.last;
-            } else {
-                node.prev.next = node.next;
-                node.next.prev = node.prev;
-            }
+            node.prev.next = node.next;
+            node.next.prev = node.prev;
         }
 
         this.nodes.splice(index, 1);

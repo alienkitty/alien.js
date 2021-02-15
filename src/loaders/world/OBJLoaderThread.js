@@ -11,9 +11,9 @@ import { absolute } from '../../utils/Utils.js';
 
 export class OBJLoaderThread {
     static init() {
-        Thread.upload(loadGeometry);
+        Thread.upload(loadOBJGeometry);
 
-        function loadGeometry({ path, id }) {
+        function loadOBJGeometry({ path, id }) {
             const loader = new OBJLoader();
             loader.load(
                 path,
@@ -39,6 +39,6 @@ export class OBJLoaderThread {
     static load(path) {
         path = absolute(Assets.getPath(path));
 
-        return Thread.shared().loadGeometry({ path });
+        return Thread.shared().loadOBJGeometry({ path });
     }
 }

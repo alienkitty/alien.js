@@ -10,9 +10,9 @@ import { absolute } from '../../utils/Utils.js';
 
 export class TextGeometryLoaderThread {
     static init() {
-        Thread.upload(loadGeometry);
+        Thread.upload(loadTextGeometry);
 
-        function loadGeometry({ path, init, params, id }) {
+        function loadTextGeometry({ path, init, params, id }) {
             fetch(path, init).then(response => {
                 return response.json();
             }).then(font => {
@@ -34,6 +34,6 @@ export class TextGeometryLoaderThread {
     static load(path, init, params) {
         path = absolute(Assets.getPath(path));
 
-        return Thread.shared().loadGeometry({ path, init, params });
+        return Thread.shared().loadTextGeometry({ path, init, params });
     }
 }

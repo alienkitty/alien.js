@@ -35,7 +35,7 @@ export class TextGeometry {
 
     parseFont() {
         this.glyphs = {};
-        this.font.chars.forEach((d) => (this.glyphs[d.char] = d));
+        this.font.chars.forEach(d => this.glyphs[d.char] = d);
     }
 
     createGeometry() {
@@ -54,7 +54,7 @@ export class TextGeometry {
             position: new Float32Array(numChars * 4 * 3),
             uv: new Float32Array(numChars * 4 * 2),
             id: new Float32Array(numChars * 4),
-            index: new Uint16Array(numChars * 6),
+            index: new Uint16Array(numChars * 6)
         };
 
         // Set values for buffers that don't require calculation
@@ -78,7 +78,7 @@ export class TextGeometry {
         function newLine() {
             const line = {
                 width: 0,
-                glyphs: [],
+                glyphs: []
             };
             lines.push(line);
             wordCursor = cursor;

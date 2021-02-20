@@ -13,7 +13,7 @@
 <body>
     <div id="root"></div>
     <script type="module">
-        import { ACESFilmicToneMapping, AmbientLight, BloomCompositeMaterial, BlurDirectionX, BlurDirectionY, BufferAttribute, BufferGeometry, Color, Device, DirectionalLight, Events, FXAAMaterial, Group, HemisphereLight, LuminosityMaterial, Mesh, MeshBasicMaterial, MeshStandardMaterial, NoBlending, OBJLoader, OBJLoaderThread, OrthographicCamera, PerspectiveCamera, PointLight, RGBFormat, RawShaderMaterial, Scene, SphereGeometry, Stage, TextureLoader, Thread, Uniform, UnrealBloomBlurMaterial, Vector2, Vector3, WebGL1Renderer, WebGLRenderTarget, getFrustum, getFullscreenTriangle, mix, ticker } from '../build/alien.js';
+        import { ACESFilmicToneMapping, AmbientLight, BloomCompositeMaterial, BlurDirectionX, BlurDirectionY, BufferAttribute, BufferGeometry, Color, Device, DirectionalLight, EnvironmentTextureLoader, Events, FXAAMaterial, Group, HemisphereLight, ImageBitmapLoaderThread, LuminosityMaterial, Mesh, MeshBasicMaterial, MeshStandardMaterial, NoBlending, OBJLoader, OBJLoaderThread, OrthographicCamera, PerspectiveCamera, PointLight, RGBFormat, RawShaderMaterial, Scene, SphereGeometry, Stage, TextureLoader, Thread, Uniform, UnrealBloomBlurMaterial, Vector2, Vector3, WebGL1Renderer, WebGLRenderTarget, getFrustum, getFullscreenTriangle, mix, radians, ticker, tween } from '../build/alien.js';
 
         class Config {
             static BG_COLOR = '#0e0e0e';
@@ -117,12 +117,20 @@
                 this.geometry.setAttribute('position', new BufferAttribute(vertices, 3));
             };
 
-            initMaterial = () => {
+            initMaterial = async () => {
+                const { loadEnvironmentTexture, getTexture } = WorldController;
+
+                const map = getTexture('assets/textures/pbr/pitted_metal_basecolor.jpg');
+                const envMap = await loadEnvironmentTexture('assets/textures/env.jpg');
+
                 this.material = new MeshStandardMaterial({
                     roughness: 0.3,
                     metalness: 0.9,
                     flatShading: true,
-                    dithering: true
+                    map,
+                    envMap,
+                    envMapIntensity: 0.5,
+                    transparent: true
                 });
             };
 
@@ -469,6 +477,7 @@
                 this.lerpSpeed = 0.05;
                 this.multiplier = 1;
                 this.enabled = false;
+                this.prevent = true;
 
                 this.addListeners();
             }
@@ -491,6 +500,8 @@
             };
 
             static onTouchMove = e => {
+                if (this.prevent) return;
+
                 const event = {};
 
                 if (e.changedTouches && e.changedTouches.length) {
@@ -503,6 +514,9 @@
 
                 this.mouse.x = (event.x - this.halfWidth);
                 this.mouse.y = (event.y - this.halfHeight);
+
+                this.target.x = radians(-360) + (1 - this.mouse.x) * this.rotation * this.multiplier;
+                this.target.y = (1 - this.mouse.y) * this.rotation * this.multiplier;
             };
 
             /**
@@ -532,9 +546,6 @@
                     return;
                 }
 
-                this.target.x = (1 - this.mouse.x) * this.rotation * this.multiplier;
-                this.target.y = (1 - this.mouse.y) * this.rotation * this.multiplier;
-
                 this.group.rotation.x += (this.target.y - this.group.rotation.x) * this.lerpSpeed;
                 this.group.rotation.y += (this.target.x - this.group.rotation.y) * this.lerpSpeed;
 
@@ -550,6 +561,11 @@
 
             static animateIn = () => {
                 this.enabled = true;
+                this.prevent = true;
+
+                tween(this.target, { x: radians(-360) }, 4200, 'easeInOutQuart', () => {
+                    this.prevent = false;
+                });
             };
         }
 
@@ -601,6 +617,8 @@
 
             static initLoaders() {
                 this.textureLoader = new TextureLoader();
+
+                this.environmentLoader = new EnvironmentTextureLoader(this.renderer);
             }
 
             /**
@@ -623,6 +641,8 @@
             static getTexture = path => this.textureLoader.load(path);
 
             static getFrustum = offsetZ => getFrustum(this.camera, offsetZ);
+
+            static loadEnvironmentTexture = path => this.environmentLoader.loadAsync(path);
         }
 
         class App {
@@ -645,6 +665,7 @@
             }
 
             static initThread() {
+                ImageBitmapLoaderThread.init();
                 OBJLoaderThread.init();
 
                 Thread.shared({

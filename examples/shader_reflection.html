@@ -6,7 +6,7 @@
 
     <title>Alien.js — Shader Reflection</title>
 
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="preconnect" href="https://fonts.gstatic.com">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto+Mono">
     <link rel="stylesheet" href="assets/css/style.css">
 </head>
@@ -120,12 +120,12 @@
                 this.initMesh();
             }
 
-            initMesh() {
-                const { getTexture, scene } = WorldController;
+            async initMesh() {
+                const { loadTexture, scene } = WorldController;
 
                 const geometry = new PlaneGeometry(110, 110);
 
-                const map = getTexture('assets/textures/pbr/polished_concrete_basecolor.jpg');
+                const map = await loadTexture('assets/textures/pbr/polished_concrete_basecolor.jpg');
                 map.wrapS = RepeatWrapping;
                 map.wrapT = RepeatWrapping;
                 map.repeat.set(8, 8);
@@ -510,7 +510,9 @@
                 this.frame.value = frame;
             };
 
-            static getTexture = path => this.textureLoader.load(path);
+            static getTexture = (path, callback) => this.textureLoader.load(path, callback);
+
+            static loadTexture = path => this.textureLoader.loadAsync(path);
 
             static loadSVG = path => this.svgLoader.loadAsync(path);
         }

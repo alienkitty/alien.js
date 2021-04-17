@@ -27,64 +27,75 @@ export class TextureLoader extends Loader {
 
         const cached = Assets.get(path);
 
-        const texture = new Texture();
-        texture.encoding = sRGBEncoding;
-
+        let texture;
         let promise;
 
-        if (cached) {
-            promise = Promise.resolve(cached);
-        } else if (Device.agent.includes('chrome')) {
-            if (Thread.threads) {
-                promise = ImageBitmapLoaderThread.load(path, Assets.options, this.options);
-            } else {
-                promise = fetch(path, Assets.options).then(response => {
-                    return response.blob();
-                }).then(blob => {
-                    return createImageBitmap(blob, this.options);
-                });
-            }
-        } else {
-            promise = Assets.loadImage(path);
-        }
-
-        promise.then(image => {
-            if (image.error) {
-                throw new Error(image.error);
-            }
-
-            texture.image = image;
-            texture.format = /jpe?g/.test(path) ? RGBFormat : RGBAFormat;
-
-            if (!MathUtils.isPowerOfTwo(image.width) || !MathUtils.isPowerOfTwo(image.height)) {
-                texture.minFilter = LinearFilter;
-                texture.generateMipmaps = false;
-            }
-
-            texture.needsUpdate = true;
-
-            texture.onUpdate = () => {
-                if (image.close) {
-                    image.close();
-                }
-
-                texture.onUpdate = null;
-            };
-
-            Assets.add(path, texture);
+        if (cached && cached.isTexture) {
+            texture = cached;
 
             this.increment();
 
             if (callback) {
                 callback(texture);
             }
-        }).catch(event => {
-            this.increment();
+        } else {
+            texture = new Texture();
 
-            if (callback) {
-                callback(event);
+            if (cached) {
+                promise = Promise.resolve(cached);
+            } else if (Device.agent.includes('chrome')) {
+                if (Thread.threads) {
+                    promise = ImageBitmapLoaderThread.load(path, Assets.options, this.options);
+                } else {
+                    promise = fetch(path, Assets.options).then(response => {
+                        return response.blob();
+                    }).then(blob => {
+                        return createImageBitmap(blob, this.options);
+                    });
+                }
+            } else {
+                promise = Assets.loadImage(path);
             }
-        });
+
+            promise.then(image => {
+                if (image.error) {
+                    throw new Error(image.error);
+                }
+
+                texture.image = image;
+                texture.format = /jpe?g/.test(path) ? RGBFormat : RGBAFormat;
+                texture.encoding = sRGBEncoding;
+
+                if (!MathUtils.isPowerOfTwo(image.width) || !MathUtils.isPowerOfTwo(image.height)) {
+                    texture.minFilter = LinearFilter;
+                    texture.generateMipmaps = false;
+                }
+
+                texture.needsUpdate = true;
+
+                texture.onUpdate = () => {
+                    if (image.close) {
+                        image.close();
+                    }
+
+                    texture.onUpdate = null;
+                };
+
+                Assets.add(path, texture);
+
+                this.increment();
+
+                if (callback) {
+                    callback(texture);
+                }
+            }).catch(event => {
+                this.increment();
+
+                if (callback) {
+                    callback(event);
+                }
+            });
+        }
 
         this.total++;
 

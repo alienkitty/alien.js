@@ -6,7 +6,7 @@
 
     <title>Alien.js — Matcap</title>
 
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="preconnect" href="https://fonts.gstatic.com">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto+Mono">
     <link rel="stylesheet" href="assets/css/style.css">
 </head>
@@ -36,17 +36,20 @@
                 this.initMesh();
             }
 
-            initMesh() {
-                const { getTexture, time } = WorldController;
+            async initMesh() {
+                const { loadTexture, time } = WorldController;
 
                 const geometry = new SphereGeometry(1, 80, 80);
 
+                const matcap = await loadTexture('assets/textures/matcaps/040full.jpg');
+
                 const material = new MeshMatcapMaterial({
-                    matcap: getTexture('assets/textures/matcaps/040full.jpg'),
+                    matcap,
                     dithering: true
                 });
 
                 // https://threejs.org/examples/#webgl_materials_modified
+
                 material.onBeforeCompile = shader => {
                     shader.uniforms.time = time;
 
@@ -195,7 +198,9 @@
                 this.frame.value = frame;
             };
 
-            static getTexture = path => this.textureLoader.load(path);
+            static getTexture = (path, callback) => this.textureLoader.load(path, callback);
+
+            static loadTexture = path => this.textureLoader.loadAsync(path);
         }
 
         class App {

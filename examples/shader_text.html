@@ -6,7 +6,7 @@
 
     <title>Alien.js — Shader Text</title>
 
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="preconnect" href="https://fonts.gstatic.com">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto+Mono">
     <link rel="stylesheet" href="assets/css/style.css">
 </head>
@@ -75,6 +75,20 @@
 
         // Based on https://oframe.github.io/ogl/examples/?src=msdf-text.html by gordonnl
 
+        /*
+
+        Instructions to generate required MSDF assets
+
+        1) Install `msdf-bmfont`:
+        https://github.com/soimy/msdf-bmfont-xml
+
+        2) Using a .ttf font file, run the following command:
+        `msdf-bmfont -f json -m 512,512 -d 2 --pot --smart-size Roboto-Bold.ttf`
+
+        3) Outputs a .png bitmap spritesheet and a .json with character parameters.
+
+        */
+
         class Text extends Group {
             constructor() {
                 super();
@@ -86,15 +100,13 @@
             }
 
             async initMesh() {
-                const { camera, getTexture } = WorldController;
+                const { loadTexture, camera } = WorldController;
 
-                const texture = getTexture('assets/fonts/Roboto-Bold.png');
-                texture.minFilter = LinearFilter;
-                texture.generateMipmaps = false;
+                const map = await loadTexture('assets/fonts/Roboto-Bold.png');
+                map.minFilter = LinearFilter;
+                map.generateMipmaps = false;
 
-                const material = new TextMaterial({
-                    texture
-                });
+                const material = new TextMaterial({ map });
                 material.uniforms.uAlpha.value = 0.94;
 
                 const font = await (await fetch('assets/fonts/Roboto-Bold.json')).json();
@@ -155,12 +167,12 @@
                 this.initMesh();
             }
 
-            initMesh() {
-                const { getTexture, scene } = WorldController;
+            async initMesh() {
+                const { loadTexture, scene } = WorldController;
 
                 const geometry = new PlaneGeometry(110, 110);
 
-                const map = getTexture('assets/textures/pbr/polished_concrete_basecolor.jpg');
+                const map = await loadTexture('assets/textures/pbr/polished_concrete_basecolor.jpg');
                 map.wrapS = RepeatWrapping;
                 map.wrapT = RepeatWrapping;
                 map.repeat.set(8, 8);
@@ -543,7 +555,9 @@
                 this.frame.value = frame;
             };
 
-            static getTexture = path => this.textureLoader.load(path);
+            static getTexture = (path, callback) => this.textureLoader.load(path, callback);
+
+            static loadTexture = path => this.textureLoader.loadAsync(path);
 
             static getTextGeometry = (path, options = {}, callback) => {
                 this.textGeometryLoader.setOptions(options);

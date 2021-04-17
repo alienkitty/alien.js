@@ -24,8 +24,12 @@ export class Component {
             child.parent = this;
         }
 
-        if (child.group && this.group && this.group.add) {
-            this.group.add(child.group);
+        if (this.group && this.group.isObject3D) {
+            if (child.group && child.group.isObject3D) {
+                this.group.add(child.group);
+            } else if (child.isObject3D) {
+                this.group.add(child);
+            }
         }
 
         return child;
@@ -36,8 +40,12 @@ export class Component {
             return;
         }
 
-        if (child.group && this.group && this.group.remove) {
-            this.group.remove(child.group);
+        if (this.group && this.group.isObject3D) {
+            if (child.group && child.group.isObject3D) {
+                this.group.remove(child.group);
+            } else if (child.isObject3D) {
+                this.group.remove(child);
+            }
         }
 
         const index = this.children.indexOf(child);

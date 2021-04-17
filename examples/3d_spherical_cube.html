@@ -6,7 +6,7 @@
 
     <title>Alien.js — Spherical Cube</title>
 
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="preconnect" href="https://fonts.gstatic.com">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto+Mono">
     <link rel="stylesheet" href="assets/css/style.css">
 </head>
@@ -200,9 +200,13 @@
                 this.controls.update();
             };
 
-            static getTexture = path => this.textureLoader.load(path);
+            static getTexture = (path, callback) => this.textureLoader.load(path, callback);
 
-            static getSphericalCubeTextures = path => this.spherizeLoader.load(path);
+            static loadTexture = path => this.textureLoader.loadAsync(path);
+
+            static getSphericalCubeTextures = (path, callback) => this.spherizeLoader.load(path, callback);
+
+            static loadSphericalCubeTextures = path => this.spherizeLoader.loadAsync(path);
         }
 
         class App {

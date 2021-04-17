@@ -14,10 +14,10 @@ export function clamp(value, min, max) {
     return Math.max(min, Math.min(max, value));
 }
 
-export function range(value, oldMin, oldMax, newMin, newMax, clamped) {
+export function range(value, oldMin, oldMax, newMin, newMax, isClamp) {
     const newValue = ((value - oldMin) * (newMax - newMin)) / (oldMax - oldMin) + newMin;
 
-    if (clamped) {
+    if (isClamp) {
         return clamp(newValue, Math.min(newMin, newMax), Math.max(newMin, newMax));
     }
 
@@ -98,16 +98,10 @@ export function queryString(key) {
     return str;
 }
 
-export function getConstructorName(obj) {
-    const code = typeof obj !== 'function' ? obj.constructor.toString() : obj.toString();
+export function getConstructor(obj) {
+    const isInstance = typeof obj !== 'function';
+    const code = isInstance ? obj.constructor.toString() : obj.toString();
+    const name = code.match(/(?:class|function)\s([^\s{(]+)/)[1];
 
-    return code.match(/(?:class|function)\s([^\s{(]+)/)[1];
-}
-
-export function createElementFromHTML(str) {
-    const div = document.createElement('div');
-
-    div.innerHTML = str.trim();
-
-    return div.firstChild;
+    return { name, code, isInstance };
 }

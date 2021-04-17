@@ -33,12 +33,7 @@ export class TextGeometryLoader extends Loader {
 
                 const { buffers, numLines, width, height } = new TextGeometry(this.options);
 
-                return {
-                    buffers,
-                    numLines,
-                    width,
-                    height
-                };
+                return { buffers, numLines, width, height };
             });
         }
 
@@ -56,10 +51,7 @@ export class TextGeometryLoader extends Loader {
             this.increment();
 
             if (callback) {
-                callback({
-                    text,
-                    geometry
-                });
+                callback({ text, geometry });
             }
         }).catch(event => {
             this.increment();

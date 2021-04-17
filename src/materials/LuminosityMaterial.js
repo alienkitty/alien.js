@@ -1,4 +1,4 @@
-import { Color, NoBlending, RawShaderMaterial, Uniform } from 'three';
+import { NoBlending, RawShaderMaterial, Uniform } from 'three';
 
 import vertexShader from '../shaders/LuminosityPass.vert.js';
 import fragmentShader from '../shaders/LuminosityPass.frag.js';
@@ -9,9 +9,7 @@ export class LuminosityMaterial extends RawShaderMaterial {
             uniforms: {
                 tMap: new Uniform(null),
                 uLuminosityThreshold: new Uniform(1),
-                uSmoothWidth: new Uniform(1),
-                uDefaultColor: new Uniform(new Color(0x000000)),
-                uDefaultOpacity: new Uniform(0)
+                uLuminositySmoothing: new Uniform(1)
             },
             vertexShader,
             fragmentShader,

@@ -1,4 +1,4 @@
-import { ACESFilmicToneMapping, Color, PerspectiveCamera, Scene, Uniform, Vector2, WebGL1Renderer } from 'three';
+import { ACESFilmicToneMapping, Color, PerspectiveCamera, Scene, Uniform, Vector2, WebGLRenderer } from 'three';
 
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 
@@ -17,7 +17,7 @@ export class WorldController {
     }
 
     static initWorld() {
-        this.renderer = new WebGL1Renderer({
+        this.renderer = new WebGLRenderer({
             powerPreference: 'high-performance',
             stencil: false,
             // antialias: true,
@@ -83,7 +83,9 @@ export class WorldController {
         }
     };
 
-    static getTexture = path => this.textureLoader.load(path);
+    static getTexture = (path, callback) => this.textureLoader.load(path, callback);
+
+    static loadTexture = path => this.textureLoader.loadAsync(path);
 
     static getFrustum = offsetZ => getFrustum(this.camera, offsetZ);
 }

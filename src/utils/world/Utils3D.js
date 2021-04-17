@@ -17,8 +17,8 @@ export function getFullscreenTriangle() {
 
 export function getSphericalCube(radius, segments) {
     const geometry = new BoxGeometry(radius, radius, radius, segments, segments, segments);
-    const vertices = geometry.attributes.position;
-    const normals = geometry.attributes.normal;
+    const vertices = geometry.getAttribute('position');
+    const normals = geometry.getAttribute('normal');
 
     for (let i = 0; i < vertices.count; i++) {
         const v = new Vector3().fromArray(vertices.array, i * 3);

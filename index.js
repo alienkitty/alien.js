@@ -18,9 +18,10 @@ export { TextureLoader } from './src/loaders/world/TextureLoader.js';
 export { SpherizeTextureLoader } from './src/loaders/world/SpherizeTextureLoader.js';
 export { SphericalCubeTextureLoader } from './src/loaders/world/SphericalCubeTextureLoader.js';
 export { EnvironmentTextureLoader } from './src/loaders/world/EnvironmentTextureLoader.js';
+export { BufferGeometryLoader } from './src/loaders/world/BufferGeometryLoader.js';
+export { BufferGeometryLoaderThread } from './src/loaders/world/BufferGeometryLoaderThread.js';
 export { TextGeometryLoader } from './src/loaders/world/TextGeometryLoader.js';
 export { TextGeometryLoaderThread } from './src/loaders/world/TextGeometryLoaderThread.js';
-export { OBJLoaderThread } from './src/loaders/world/OBJLoaderThread.js';
 
 // Utils
 export * from './src/utils/Tween.js';

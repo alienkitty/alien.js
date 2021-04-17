@@ -30,6 +30,6 @@ export class SceneView extends Group {
         this.visible = true;
     };
 
-    ready = async () => {
+    ready = () => {
     };
 }

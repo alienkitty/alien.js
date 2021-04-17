@@ -6,14 +6,14 @@
 
     <title>Alien.js — Polyhedron</title>
 
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="preconnect" href="https://fonts.gstatic.com">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto+Mono">
     <link rel="stylesheet" href="assets/css/style.css">
 </head>
 <body>
     <div id="root"></div>
     <script type="module">
-        import { ACESFilmicToneMapping, AmbientLight, BloomCompositeMaterial, BlurDirectionX, BlurDirectionY, BufferAttribute, BufferGeometry, Color, Device, DirectionalLight, EnvironmentTextureLoader, Events, FXAAMaterial, Group, HemisphereLight, ImageBitmapLoaderThread, LuminosityMaterial, Mesh, MeshBasicMaterial, MeshStandardMaterial, NoBlending, OBJLoader, OBJLoaderThread, OrthographicCamera, PerspectiveCamera, PointLight, RGBFormat, RawShaderMaterial, Scene, SphereGeometry, Stage, TextureLoader, Thread, Uniform, UnrealBloomBlurMaterial, Vector2, Vector3, WebGL1Renderer, WebGLRenderTarget, getFrustum, getFullscreenTriangle, mix, radians, ticker, tween } from '../build/alien.js';
+        import { ACESFilmicToneMapping, AmbientLight, BloomCompositeMaterial, BlurDirectionX, BlurDirectionY, BufferGeometryLoader, BufferGeometryLoaderThread, Color, Device, DirectionalLight, EnvironmentTextureLoader, Events, FXAAMaterial, Group, HemisphereLight, ImageBitmapLoaderThread, LuminosityMaterial, Mesh, MeshBasicMaterial, MeshStandardMaterial, NoBlending, OrthographicCamera, PerspectiveCamera, PointLight, RGBFormat, RawShaderMaterial, RepeatWrapping, Scene, SphereGeometry, Stage, TextureLoader, Thread, Uniform, UnrealBloomBlurMaterial, Vector2, Vector3, WebGL1Renderer, WebGLRenderTarget, getFrustum, getFullscreenTriangle, mix, radians, ticker, tween } from '../build/alien.js';
 
         class Config {
             static BG_COLOR = '#0e0e0e';
@@ -105,60 +105,103 @@
             }
         }
 
-        // Geometry from http://levskaya.github.io/polyhedronisme/
+        // Geometry from https://levskaya.github.io/polyhedronisme/
+
+        /*
+
+        Instructions to export buffer geometry from Cinema 4D
+
+        1) Apply the "Set UVW from Projection" Material Tag to each of the objects you would like to export.
+
+        2) From the Objects File menu, export each object as an OBJ file.
+
+        3) Open the three.js editor, create a new scene and import one OBJ file:
+        https://threejs.org/editor/
+
+        4) Click the plus sign (+) next to your object and select the first child object.
+
+        5) Finally, re-export the object again with "Export Geometry".
+
+        6) Outputs a .json with the required position, normal and uv attributes.
+
+        7) Repeat steps 3 to 5 for each of your objects.
+
+        */
 
         class Polyhedron extends Group {
             constructor() {
                 super();
             }
 
-            initGeometry = vertices => {
-                this.geometry = new BufferGeometry();
-                this.geometry.setAttribute('position', new BufferAttribute(vertices, 3));
-            };
+            async initGeometry() {
+                const { loadBufferGeometry } = WorldController;
 
-            initMaterial = async () => {
-                const { loadEnvironmentTexture, getTexture } = WorldController;
+                const geometry = await loadBufferGeometry('assets/geometry/polyhedronisme-C2dakD.json');
 
-                const map = getTexture('assets/textures/pbr/pitted_metal_basecolor.jpg');
-                const envMap = await loadEnvironmentTexture('assets/textures/env.jpg');
+                // 2nd set of UV's for aoMap and lightMap
+                geometry.attributes.uv2 = geometry.attributes.uv;
 
+                this.geometry = geometry;
+            }
+
+            async initMaterial() {
+                const { loadTexture, loadEnvironmentTexture } = WorldController;
+
+                // Textures
+                const [map, normalMap, ormMap, envMap] = await Promise.all([
+                    // loadTexture('assets/textures/uv.jpg'),
+                    loadTexture('assets/textures/pbr/pitted_metal_basecolor.jpg'),
+                    loadTexture('assets/textures/pbr/pitted_metal_normal.jpg'),
+                    // https://occlusion-roughness-metalness.glitch.me/
+                    loadTexture('assets/textures/pbr/pitted_metal_orm.jpg'),
+                    loadEnvironmentTexture('assets/textures/env.jpg')
+                ]);
+
+                map.wrapS = RepeatWrapping;
+                map.wrapT = RepeatWrapping;
+                map.repeat.set(2, 1);
+
+                normalMap.wrapS = RepeatWrapping;
+                normalMap.wrapT = RepeatWrapping;
+                normalMap.repeat.set(2, 1);
+
+                ormMap.wrapS = RepeatWrapping;
+                ormMap.wrapT = RepeatWrapping;
+                ormMap.repeat.set(2, 1);
+
+                // this.material = new MeshBasicMaterial({ map });
                 this.material = new MeshStandardMaterial({
                     roughness: 0.3,
                     metalness: 0.9,
-                    flatShading: true,
                     map,
+                    aoMap: ormMap,
+                    aoMapIntensity: 1,
+                    roughnessMap: ormMap,
+                    metalnessMap: ormMap,
+                    normalMap,
+                    normalScale: new Vector2(1, 1),
                     envMap,
                     envMapIntensity: 0.5,
-                    transparent: true
+                    flatShading: true
                 });
-            };
+            }
 
-            initMesh = () => {
+            initMesh() {
                 this.mesh = new Mesh(this.geometry, this.material);
                 this.add(this.mesh);
-            };
+            }
 
             /**
              * Public methods
              */
 
-            ready = () => {
-                const path = 'assets/geometry/polyhedronisme-C2dakD.obj';
+            ready = async () => {
+                await Promise.all([
+                    this.initGeometry(),
+                    this.initMaterial()
+                ]);
 
-                let promise;
-
-                if (Device.agent.includes('chrome')) {
-                    promise = OBJLoaderThread.load(path);
-                } else {
-                    promise = new OBJLoader().loadAsync(path).then(object => {
-                        return object.children[0].geometry.getAttribute('position').array;
-                    });
-                }
-
-                promise.then(this.initGeometry).then(this.initMaterial).then(this.initMesh);
-
-                return promise;
+                this.initMesh();
             };
         }
 
@@ -617,8 +660,8 @@
 
             static initLoaders() {
                 this.textureLoader = new TextureLoader();
-
                 this.environmentLoader = new EnvironmentTextureLoader(this.renderer);
+                this.bufferGeometryLoader = new BufferGeometryLoader();
             }
 
             /**
@@ -638,11 +681,19 @@
                 this.frame.value = frame;
             };
 
-            static getTexture = path => this.textureLoader.load(path);
+            static getTexture = (path, callback) => this.textureLoader.load(path, callback);
 
-            static getFrustum = offsetZ => getFrustum(this.camera, offsetZ);
+            static loadTexture = path => this.textureLoader.loadAsync(path);
+
+            static getEnvironmentTexture = (path, callback) => this.environmentLoader.load(path, callback);
 
             static loadEnvironmentTexture = path => this.environmentLoader.loadAsync(path);
+
+            static getBufferGeometry = (path, callback) => this.bufferGeometryLoader.load(path, callback);
+
+            static loadBufferGeometry = path => this.bufferGeometryLoader.loadAsync(path);
+
+            static getFrustum = offsetZ => getFrustum(this.camera, offsetZ);
         }
 
         class App {
@@ -666,13 +717,9 @@
 
             static initThread() {
                 ImageBitmapLoaderThread.init();
-                OBJLoaderThread.init();
+                BufferGeometryLoaderThread.init();
 
-                Thread.shared({
-                    imports: [
-                        ['../build/alien.js', 'OBJLoader']
-                    ]
-                });
+                Thread.shared();
             }
 
             static initWorld() {

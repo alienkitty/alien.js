@@ -6,7 +6,7 @@
 
     <title>Alien.js — Post-processing Unreal Bloom</title>
 
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="preconnect" href="https://fonts.gstatic.com">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto+Mono">
     <link rel="stylesheet" href="assets/css/style.css">
 </head>
@@ -46,6 +46,7 @@
                 });
 
                 // https://threejs.org/examples/#webgl_materials_modified
+
                 material.onBeforeCompile = shader => {
                     shader.uniforms.time = time;
 

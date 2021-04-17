@@ -5,12 +5,12 @@ import fragmentShader from '../shaders/TextMaterial.frag.js';
 
 export class TextMaterial extends RawShaderMaterial {
     constructor({
-        texture,
+        map,
         color
     } = {}) {
         super({
             uniforms: {
-                tMap: new Uniform(texture),
+                tMap: new Uniform(map),
                 uColor: new Uniform(color instanceof Color ? color : new Color(color)),
                 uAlpha: new Uniform(1)
             },

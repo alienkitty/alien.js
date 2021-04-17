@@ -4,10 +4,10 @@ import vertexShader from '../shaders/BasicMaterial.vert.js';
 import fragmentShader from '../shaders/BasicMaterial.frag.js';
 
 export class BasicMaterial extends RawShaderMaterial {
-    constructor(texture) {
+    constructor(map) {
         super({
             uniforms: {
-                tMap: new Uniform(texture),
+                tMap: new Uniform(map),
                 uAlpha: new Uniform(1)
             },
             vertexShader,

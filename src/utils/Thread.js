@@ -6,24 +6,24 @@ import { Assets } from '../loaders/Assets.js';
 import { EventEmitter } from './EventEmitter.js';
 import { Cluster } from './Cluster.js';
 
-import { absolute, getConstructorName, guid } from './Utils.js';
+import { absolute, getConstructor, guid } from './Utils.js';
 
 export class Thread extends EventEmitter {
     static count = navigator.hardwareConcurrency || 4;
     static params = {};
 
     static upload(...objects) {
-        if (!this.chunks) {
-            this.chunks = [];
+        if (!this.handlers) {
+            this.handlers = [];
         }
 
-        objects.forEach(object => this.chunks.push(object));
+        objects.forEach(object => this.handlers.push(object));
     }
 
     static shared(params) {
         if (!this.threads) {
             this.params = params || {};
-            this.params.chunks = this.chunks;
+            this.params.handlers = this.handlers;
             this.threads = new Cluster(Thread, this.count);
         }
 
@@ -34,41 +34,42 @@ export class Thread extends EventEmitter {
         imports = [],
         classes = [],
         controller = [],
-        chunks = []
+        handlers = []
     } = Thread.params) {
         super();
 
-        const code = [];
+        const array = [];
 
         imports.forEach(bundle => {
             const [path, ...names] = bundle;
 
-            code.push(`import { ${names.join(', ')} } from '${absolute(Assets.getPath(path))}';`);
+            array.push(`import { ${names.join(', ')} } from '${absolute(Assets.getPath(path))}';`);
         });
 
         if (classes.length) {
-            code.push(classes.map(object => object.toString()).join('\n\n'));
+            array.push(classes.map(object => object.toString()).join('\n\n'));
         }
 
         if (controller.length) {
-            const [object, ...methods] = controller;
+            const [object, ...handlers] = controller;
+            const { name, code } = getConstructor(object);
 
-            methods.forEach(name => this.createMethod(name));
+            array.push(`${code}\n\nnew ${name}();`);
 
-            code.push(`${object.toString()}\n\nnew ${getConstructorName(object)}();`);
+            handlers.forEach(name => this.createMethod(name));
         } else {
-            code.push('addEventListener(\'message\', ({ data }) => self[data.message.fn].call(self, data.message));');
+            array.push('addEventListener(\'message\', ({ data }) => self[data.message.fn].call(self, data.message));');
         }
 
-        chunks.forEach(object => {
-            const name = getConstructorName(object);
+        handlers.forEach(object => {
+            const { name, code } = getConstructor(object);
 
             this.createMethod(name);
 
-            code.push(`self.${name}=${object.toString()};`);
+            array.push(`self.${name}=${code};`);
         });
 
-        this.worker = new Worker(URL.createObjectURL(new Blob([code.join('\n\n')], { type: 'text/javascript' })), { type: 'module' });
+        this.worker = new Worker(URL.createObjectURL(new Blob([array.join('\n\n')], { type: 'text/javascript' })), { type: 'module' });
 
         this.addListeners();
     }

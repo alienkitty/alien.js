@@ -10,7 +10,7 @@ import { Stage } from './Stage.js';
 import { PreloaderView } from '../views/PreloaderView.js';
 
 export class Preloader {
-    static async init() {
+    static init() {
         // if (!Device.webgl) {
         //     return location.href = 'fallback.html';
         // }

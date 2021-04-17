@@ -87,7 +87,7 @@ export class App {
      * Public methods
      */
 
-    static start = async () => {
+    static start = () => {
         // CameraController.animateIn();
         // SceneController.animateIn();
         this.landing.animateIn();

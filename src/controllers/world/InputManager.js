@@ -79,14 +79,12 @@ export class InputManager {
 
             if (!this.hover) {
                 this.hover = object;
-                this.hover.onHover({ type: 'over' });
-                Stage.css({ cursor: 'pointer' });
             } else if (this.hover !== object) {
                 this.hover.onHover({ type: 'out' });
                 this.hover = object;
-                this.hover.onHover({ type: 'over' });
-                Stage.css({ cursor: 'pointer' });
             }
+            this.hover.onHover({ type: 'over' });
+            Stage.css({ cursor: 'pointer' });
         } else if (this.hover) {
             this.hover.onHover({ type: 'out' });
             this.hover = null;

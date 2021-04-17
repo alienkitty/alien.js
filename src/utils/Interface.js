@@ -240,6 +240,18 @@ export class Interface {
         return this.css(style);
     }
 
+    svg(path) {
+        path = Assets.getPath(path);
+
+        const promise = fetch(path, Assets.options).then(response => {
+            return response.text();
+        }).then(str => {
+            this.html(str);
+        });
+
+        return promise;
+    }
+
     destroy() {
         if (!this.children) {
             return;

@@ -21,14 +21,6 @@ export class Device {
 
         const result = !!gl;
 
-        if (gl) {
-            const loseContext = gl.getExtension('WEBGL_lose_context');
-
-            if (loseContext) {
-                loseContext.loseContext();
-            }
-        }
-
         gl = null;
         canvas = null;
 

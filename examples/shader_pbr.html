@@ -6,7 +6,7 @@
 
     <title>Alien.js — Physically Based Rendering</title>
 
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="preconnect" href="https://fonts.gstatic.com">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto+Mono">
     <link rel="stylesheet" href="assets/css/style.css">
 </head>
@@ -28,7 +28,6 @@
             }
 
             initGeometry() {
-                // Spherical cube geometry
                 const geometry = getSphericalCube(1, 32);
 
                 // 2nd set of UV's for aoMap and lightMap
@@ -43,15 +42,17 @@
                 this.envMap = await loadEnvironmentTexture('assets/textures/env.jpg');
             }
 
-            initMesh1() {
-                const { getSphericalCubeTextures } = WorldController;
+            async initMesh1() {
+                const { loadSphericalCubeTextures } = WorldController;
 
                 // Textures
-                const map = getSphericalCubeTextures('assets/textures/pbr/pitted_metal_basecolor.jpg');
-                const normalMap = getSphericalCubeTextures('assets/textures/pbr/pitted_metal_normal.jpg');
-
-                // https://occlusion-roughness-metalness.glitch.me/
-                const ormMap = getSphericalCubeTextures('assets/textures/pbr/pitted_metal_orm.jpg');
+                const [map, normalMap, ormMap] = await Promise.all([
+                    // loadSphericalCubeTextures('assets/textures/uv.jpg'),
+                    loadSphericalCubeTextures('assets/textures/pbr/pitted_metal_basecolor.jpg'),
+                    loadSphericalCubeTextures('assets/textures/pbr/pitted_metal_normal.jpg'),
+                    // https://occlusion-roughness-metalness.glitch.me/
+                    loadSphericalCubeTextures('assets/textures/pbr/pitted_metal_orm.jpg')
+                ]);
 
                 // Materials
                 const material = [];
@@ -69,8 +70,7 @@
                         normalMap: normalMap[i],
                         normalScale: new Vector2(1, 1),
                         envMap: this.envMap,
-                        envMapIntensity: 0.5,
-                        transparent: true
+                        envMapIntensity: 0.5
                     });
                 }
 
@@ -83,15 +83,17 @@
                 this.add(mesh);
             }
 
-            initMesh2() {
-                const { getSphericalCubeTextures } = WorldController;
+            async initMesh2() {
+                const { loadSphericalCubeTextures } = WorldController;
 
                 // Textures
-                const map = getSphericalCubeTextures('assets/textures/pbr/pitted_metal_basecolor.jpg');
-                const normalMap = getSphericalCubeTextures('assets/textures/pbr/pitted_metal_normal.jpg');
-
-                // https://occlusion-roughness-metalness.glitch.me/
-                const ormMap = getSphericalCubeTextures('assets/textures/pbr/pitted_metal_orm.jpg');
+                const [map, normalMap, ormMap] = await Promise.all([
+                    // loadSphericalCubeTextures('assets/textures/uv.jpg'),
+                    loadSphericalCubeTextures('assets/textures/pbr/pitted_metal_basecolor.jpg'),
+                    loadSphericalCubeTextures('assets/textures/pbr/pitted_metal_normal.jpg'),
+                    // https://occlusion-roughness-metalness.glitch.me/
+                    loadSphericalCubeTextures('assets/textures/pbr/pitted_metal_orm.jpg')
+                ]);
 
                 // Materials
                 const material = [];
@@ -109,8 +111,7 @@
                         normalMap: normalMap[i],
                         normalScale: new Vector2(1, 1),
                         envMap: this.envMap,
-                        envMapIntensity: 0.5,
-                        transparent: true
+                        envMapIntensity: 0.5
                     });
                 }
 
@@ -122,15 +123,17 @@
                 this.add(mesh);
             }
 
-            initMesh3() {
-                const { getSphericalCubeTextures } = WorldController;
+            async initMesh3() {
+                const { loadSphericalCubeTextures } = WorldController;
 
                 // Textures
-                const map = getSphericalCubeTextures('assets/textures/pbr/polished_concrete_basecolor.jpg');
-                const normalMap = getSphericalCubeTextures('assets/textures/pbr/polished_concrete_normal.jpg');
-
-                // https://occlusion-roughness-metalness.glitch.me/
-                const ormMap = getSphericalCubeTextures('assets/textures/pbr/polished_concrete_orm.jpg');
+                const [map, normalMap, ormMap] = await Promise.all([
+                    // loadSphericalCubeTextures('assets/textures/uv.jpg'),
+                    loadSphericalCubeTextures('assets/textures/pbr/polished_concrete_basecolor.jpg'),
+                    loadSphericalCubeTextures('assets/textures/pbr/polished_concrete_normal.jpg'),
+                    // https://occlusion-roughness-metalness.glitch.me/
+                    loadSphericalCubeTextures('assets/textures/pbr/polished_concrete_orm.jpg')
+                ]);
 
                 // Materials
                 const material = [];
@@ -148,8 +151,7 @@
                         normalMap: normalMap[i],
                         normalScale: new Vector2(1, 1),
                         envMap: this.envMap,
-                        envMapIntensity: 0.5,
-                        transparent: true
+                        envMapIntensity: 0.5
                     });
                 }
 
@@ -455,11 +457,17 @@
                 this.controls.update();
             };
 
-            static getTexture = path => this.textureLoader.load(path);
+            static getTexture = (path, callback) => this.textureLoader.load(path, callback);
 
-            static getSphericalCubeTextures = path => this.spherizeLoader.load(path);
+            static loadTexture = path => this.textureLoader.loadAsync(path);
+
+            static getEnvironmentTexture = (path, callback) => this.environmentLoader.load(path, callback);
 
             static loadEnvironmentTexture = path => this.environmentLoader.loadAsync(path);
+
+            static getSphericalCubeTextures = (path, callback) => this.spherizeLoader.load(path, callback);
+
+            static loadSphericalCubeTextures = path => this.spherizeLoader.loadAsync(path);
         }
 
         class App {

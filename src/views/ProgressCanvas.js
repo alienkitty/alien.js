@@ -105,6 +105,8 @@ export class ProgressCanvas extends Interface {
     destroy = () => {
         this.removeListeners();
 
+        clearTween(this);
+
         return super.destroy();
     };
 }

@@ -6,7 +6,7 @@
 
     <title>Alien.js — 3D Ripple</title>
 
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="preconnect" href="https://fonts.gstatic.com">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto+Mono">
     <link rel="stylesheet" href="assets/css/style.css">
 </head>
@@ -118,7 +118,6 @@
                     // map: this.texture.displace,
                     displacementMap: this.texture.displace,
                     displacementScale: 0.3,
-                    transparent: true,
                     depthWrite: false,
                     depthTest: false,
                     // wireframe: true
@@ -442,7 +441,7 @@
                 this.frame.value = frame;
             };
 
-            static getFrustum = () => getFrustum(this.camera);
+            static getFrustum = offsetZ => getFrustum(this.camera, offsetZ);
         }
 
         class App {

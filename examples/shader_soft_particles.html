@@ -6,14 +6,14 @@
 
     <title>Alien.js — Soft Particles</title>
 
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="preconnect" href="https://fonts.gstatic.com">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto+Mono">
     <link rel="stylesheet" href="assets/css/style.css">
 </head>
 <body>
     <div id="root"></div>
     <script type="module">
-        import { ACESFilmicToneMapping, AmbientLight, BloomCompositeMaterial, BlurDirectionX, BlurDirectionY, BufferAttribute, BufferGeometry, Color, DepthTexture, Device, DirectionalLight, EnvironmentTextureLoader, Events, FXAAMaterial, Group, HemisphereLight, ImageBitmapLoaderThread, LuminosityMaterial, MathUtils, Mesh, MeshStandardMaterial, OrbitControls, OrthographicCamera, PerspectiveCamera, Points, RGBFormat, RawShaderMaterial, Scene, SceneCompositeMaterial, SphericalCubeTextureLoader, Stage, TextureLoader, Thread, Uniform, UnrealBloomBlurMaterial, Vector2, WebGL1Renderer, WebGLRenderTarget, getFullscreenTriangle, getSphericalCube, mix, ticker } from '../build/alien.js';
+        import { ACESFilmicToneMapping, AdditiveBlending, AmbientLight, BloomCompositeMaterial, BlurDirectionX, BlurDirectionY, BufferAttribute, BufferGeometry, Color, DepthTexture, Device, DirectionalLight, EnvironmentTextureLoader, Events, FXAAMaterial, Group, HemisphereLight, ImageBitmapLoaderThread, LuminosityMaterial, MathUtils, Mesh, MeshStandardMaterial, OrbitControls, OrthographicCamera, PerspectiveCamera, Points, RGBFormat, RawShaderMaterial, Scene, SceneCompositeMaterial, SphericalCubeTextureLoader, Stage, TextureLoader, Thread, Uniform, UnrealBloomBlurMaterial, Vector2, WebGL1Renderer, WebGLRenderTarget, getFullscreenTriangle, getSphericalCube, mix, ticker } from '../build/alien.js';
 
         class Config {
             static BG_COLOR = '#0e0e0e';
@@ -51,7 +51,6 @@
                 vec4 mvPosition = modelViewMatrix * vec4(p, 1.0);
 
                 gl_PointSize = uScale * (150.0 / -mvPosition.z);
-
                 gl_Position = projectionMatrix * mvPosition;
 
                 vec3 pos = (modelMatrix * vec4(p, 1.0)).xyz;
@@ -133,7 +132,7 @@
                     uniforms: {
                         tMap: new Uniform(getTexture('assets/textures/particle.png')),
                         tDepth: new Uniform(null),
-                        uScale: new Uniform(1),
+                        uScale: new Uniform(Stage.dpr / 2),
                         uAlpha: new Uniform(1),
                         uCameraNear: new Uniform(camera.near),
                         uCameraFar: new Uniform(camera.far),
@@ -143,6 +142,7 @@
                     vertexShader: vertexDustShader,
                     fragmentShader: fragmentDustShader,
                     transparent: true,
+                    blending: AdditiveBlending,
                     depthWrite: false,
                     depthTest: false
                 });
@@ -162,7 +162,7 @@
             }
 
             async initMesh() {
-                const { loadEnvironmentTexture, getSphericalCubeTextures } = WorldController;
+                const { loadSphericalCubeTextures, loadEnvironmentTexture } = WorldController;
 
                 // Spherical cube geometry
                 const geometry = getSphericalCube(1, 32);
@@ -171,13 +171,14 @@
                 geometry.attributes.uv2 = geometry.attributes.uv;
 
                 // Textures
-                const map = getSphericalCubeTextures('assets/textures/pbr/pitted_metal_basecolor.jpg');
-                const normalMap = getSphericalCubeTextures('assets/textures/pbr/pitted_metal_normal.jpg');
-
-                // https://occlusion-roughness-metalness.glitch.me/
-                const ormMap = getSphericalCubeTextures('assets/textures/pbr/pitted_metal_orm.jpg');
-
-                const envMap = await loadEnvironmentTexture('assets/textures/env.jpg');
+                const [map, normalMap, ormMap, envMap] = await Promise.all([
+                    // loadSphericalCubeTextures('assets/textures/uv.jpg'),
+                    loadSphericalCubeTextures('assets/textures/pbr/pitted_metal_basecolor.jpg'),
+                    loadSphericalCubeTextures('assets/textures/pbr/pitted_metal_normal.jpg'),
+                    // https://occlusion-roughness-metalness.glitch.me/
+                    loadSphericalCubeTextures('assets/textures/pbr/pitted_metal_orm.jpg'),
+                    loadEnvironmentTexture('assets/textures/env.jpg')
+                ]);
 
                 // Materials
                 const material = [];
@@ -195,8 +196,7 @@
                         normalMap: normalMap[i],
                         normalScale: new Vector2(1, 1),
                         envMap,
-                        envMapIntensity: 0.5,
-                        transparent: true
+                        envMapIntensity: 0.5
                     });
                 }
 
@@ -507,11 +507,17 @@
                 this.controls.update();
             };
 
-            static getTexture = path => this.textureLoader.load(path);
+            static getTexture = (path, callback) => this.textureLoader.load(path, callback);
 
-            static getSphericalCubeTextures = path => this.spherizeLoader.load(path);
+            static loadTexture = path => this.textureLoader.loadAsync(path);
+
+            static getEnvironmentTexture = (path, callback) => this.environmentLoader.load(path, callback);
 
             static loadEnvironmentTexture = path => this.environmentLoader.loadAsync(path);
+
+            static getSphericalCubeTextures = (path, callback) => this.spherizeLoader.load(path, callback);
+
+            static loadSphericalCubeTextures = path => this.spherizeLoader.loadAsync(path);
         }
 
         class App {

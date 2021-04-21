@@ -37,6 +37,11 @@ In its design, everything is an ES module, all user interfaces and components fo
 
 [logo](https://alien.js.org/examples/ui_logo.html)  
 [logo](https://alien.js.org/examples/ui_logo_interface.html) (interface)  
+[progress](https://alien.js.org/examples/ui_progress_canvas.html) (canvas)  
+[progress](https://alien.js.org/examples/ui_progress.html) (svg)  
+[progress indeterminate](https://alien.js.org/examples/ui_progress_indeterminate.html) (svg)  
+[close](https://alien.js.org/examples/ui_close.html) (svg)  
+[magnetic](https://alien.js.org/examples/ui_magnetic.html) (component, svg)  
 [tilt](https://alien.js.org/examples/ui_tilt.html)  
 [ufo](https://ufo.ai/)  
 

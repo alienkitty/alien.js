@@ -8,7 +8,7 @@ import { EventEmitter } from './EventEmitter.js';
 import { clearTween, delayedCall, getProperty, quickSetter, tween } from './Tween.js';
 
 export class Interface {
-    constructor(name, type = 'div') {
+    constructor(name, type = 'div', qualifiedName) {
         this.events = new EventEmitter();
         this.children = [];
         this.timeouts = [];
@@ -18,7 +18,12 @@ export class Interface {
         } else {
             this.name = name;
             this.type = type;
-            this.element = document.createElement(type);
+
+            if (type === 'svg') {
+                this.element = document.createElementNS('http://www.w3.org/2000/svg', qualifiedName || 'svg');
+            } else {
+                this.element = document.createElement(type);
+            }
 
             if (typeof name === 'string') {
                 if (name.charAt(0) === '.') {
@@ -231,7 +236,7 @@ export class Interface {
         path = Assets.getPath(path);
 
         const style = {
-            backgroundImage: 'url(' + path + ')',
+            backgroundImage: `url(${path})`,
             backgroundSize,
             backgroundPosition,
             backgroundRepeat
@@ -240,7 +245,21 @@ export class Interface {
         return this.css(style);
     }
 
-    svg(path) {
+    line(progress) {
+        const length = this.element.getTotalLength();
+        const dash = length * (progress || this.progress);
+        const gap = length - dash;
+        const dashoffset = -length * (this.start + this.offset);
+
+        const style = {
+            strokeDasharray: `${dash},${gap}`,
+            strokeDashoffset: dashoffset
+        };
+
+        return this.css(style);
+    }
+
+    load(path) {
         path = Assets.getPath(path);
 
         const promise = fetch(path, Assets.options).then(response => {

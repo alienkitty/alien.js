@@ -52,9 +52,15 @@ export class ProgressCanvas extends Interface {
             this.needsUpdate = false;
 
             if (this.progress >= 1) {
-                this.complete();
+                this.onComplete();
             }
         });
+    };
+
+    onComplete = () => {
+        this.removeListeners();
+
+        this.events.emit(Events.COMPLETE);
     };
 
     /**
@@ -62,7 +68,6 @@ export class ProgressCanvas extends Interface {
      */
 
     resize = () => {
-        // const dpr = Stage.dpr;
         const dpr = 2;
 
         this.element.width = Math.round(this.width * dpr);
@@ -83,12 +88,6 @@ export class ProgressCanvas extends Interface {
         this.context.arc(this.x, this.y, this.radius, this.startAngle, this.startAngle + radians(360 * this.progress));
         this.context.stroke();
     };
-
-    complete() {
-        this.removeListeners();
-
-        this.events.emit(Events.COMPLETE);
-    }
 
     animateIn = () => {
         this.addListeners();

@@ -1,5 +1,6 @@
 import { Vector2, Vector3 } from 'three';
 
+import { Config } from '../../config/Config.js';
 import { Stage } from '../Stage.js';
 
 export class CameraController {
@@ -16,7 +17,9 @@ export class CameraController {
         this.lerpSpeed = 0.07;
         this.enabled = false;
 
-        this.addListeners();
+        if (!Config.ORBIT) {
+            this.addListeners();
+        }
     }
 
     static addListeners() {
@@ -74,6 +77,10 @@ export class CameraController {
     };
 
     static animateIn = () => {
+        if (Config.ORBIT) {
+            return;
+        }
+
         this.enabled = true;
     };
 }

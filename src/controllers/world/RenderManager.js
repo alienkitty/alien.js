@@ -75,6 +75,19 @@ export class RenderManager {
         }
 
         // Bloom composite material
+        this.bloomCompositeMaterial = new BloomCompositeMaterial(this.nMips);
+        this.bloomCompositeMaterial.uniforms.tBlur1.value = this.renderTargetsVertical[0].texture;
+        this.bloomCompositeMaterial.uniforms.tBlur2.value = this.renderTargetsVertical[1].texture;
+        this.bloomCompositeMaterial.uniforms.tBlur3.value = this.renderTargetsVertical[2].texture;
+        this.bloomCompositeMaterial.uniforms.tBlur4.value = this.renderTargetsVertical[3].texture;
+        this.bloomCompositeMaterial.uniforms.tBlur5.value = this.renderTargetsVertical[4].texture;
+        this.bloomCompositeMaterial.uniforms.uBloomFactors.value = this.bloomFactors();
+
+        // Composite material
+        this.compositeMaterial = new SceneCompositeMaterial();
+    }
+
+    static bloomFactors() {
         const bloomFactors = [1.0, 0.8, 0.6, 0.4, 0.2];
 
         for (let i = 0, l = this.nMips; i < l; i++) {
@@ -82,16 +95,7 @@ export class RenderManager {
             bloomFactors[i] = this.bloomStrength * mix(factor, 1.2 - factor, this.bloomRadius);
         }
 
-        this.bloomCompositeMaterial = new BloomCompositeMaterial(this.nMips);
-        this.bloomCompositeMaterial.uniforms.tBlur1.value = this.renderTargetsVertical[0].texture;
-        this.bloomCompositeMaterial.uniforms.tBlur2.value = this.renderTargetsVertical[1].texture;
-        this.bloomCompositeMaterial.uniforms.tBlur3.value = this.renderTargetsVertical[2].texture;
-        this.bloomCompositeMaterial.uniforms.tBlur4.value = this.renderTargetsVertical[3].texture;
-        this.bloomCompositeMaterial.uniforms.tBlur5.value = this.renderTargetsVertical[4].texture;
-        this.bloomCompositeMaterial.uniforms.uBloomFactors.value = bloomFactors;
-
-        // Composite material
-        this.compositeMaterial = new SceneCompositeMaterial();
+        return bloomFactors;
     }
 
     /**

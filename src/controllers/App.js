@@ -1,3 +1,4 @@
+// import { Config } from '../config/Config.js';
 // import { Events } from '../config/Events.js';
 // import { Assets } from '../loaders/Assets.js';
 // import { WebAudio } from '../utils/audio/WebAudio.js';
@@ -10,6 +11,11 @@
 import { Stage } from './Stage.js';
 // import { SceneView } from '../views/SceneView.js';
 import { LandingView } from '../views/LandingView.js';
+// import { UIL } from '../utils/gui/UIL.js';
+// import { WorldUIL } from '../gui/WorldUIL.js';
+// import { CameraUIL } from '../gui/CameraUIL.js';
+// import { RenderUIL } from '../gui/RenderUIL.js';
+// import { MeshStandardMaterialUIL } from '../gui/MeshStandardMaterialUIL.js';
 
 // import { ticker } from '../utils/Tween.js';
 
@@ -33,7 +39,18 @@ export class App {
             WorldController.textureLoader.ready(),
             WorldController.environmentLoader.ready(),
             SceneController.ready()
-        ]); */
+        ]);
+
+        if (Config.GUI) {
+            UIL.init();
+
+            await UIL.ready();
+
+            WorldUIL.init();
+            MeshStandardMaterialUIL.init('Cube', this.view);
+            RenderUIL.init();
+            CameraUIL.init();
+        } */
     }
 
     /* static initWorld() {
@@ -82,6 +99,10 @@ export class App {
         SceneController.update();
         InputManager.update();
         RenderManager.update(time, delta, frame);
+
+        if (Config.GUI) {
+            UIL.update();
+        }
     }; */
 
     /**

@@ -14,7 +14,8 @@ export class LandingView extends Interface {
             width: '100%',
             height: '100%',
             transformStyle: 'preserve-3d',
-            perspective: 2000
+            perspective: 2000,
+            pointerEvents: 'none'
         });
 
         this.wrapper = new Interface('.wrapper');

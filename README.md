@@ -238,7 +238,8 @@ public
 │   ├── js
 │   │   │
 │   │   ├── loader.js
-│   │   └── main.js
+│   │   ├── main.js
+│   │   └── uil.js
 │   │
 │   ├── meta
 │   │   │
@@ -282,9 +283,16 @@ src
 │   ├── Geo.js
 │   └── Socket.js
 │
+├── gui
+│   │
+│   ├── CameraUIL.js
+│   ├── RenderUIL.js
+│   └── WorldUIL.js
+│
 ├── lib
 │   │
-│   └── CustomEase.js
+│   ├── CustomEase.js
+│   └── uil.module.js
 │
 ├── partials
 │   │
@@ -424,14 +432,23 @@ npm run dev
 npm run build
 ```
 
-## With three.js
+## With three.js and UIL
 
-Uncomment all the lines in `App.js` and install `three`:
+Uncomment all the lines in `App.js`, install `three` and download the [uil](https://github.com/lo-th/uil) ES module:
 
 ```sh
 npm i && npm i three
+mkdir src/lib
+curl -L https://raw.githubusercontent.com/lo-th/uil/gh-pages/build/uil.module.js --output src/lib/uil.module.js
 npm run dev
 ```
+
+UIL is loaded dynamically and not part of the main bundle.
+
+[localhost:8080/](http://127.0.0.1:8080/) (without uil)  
+[localhost:8080/?ui](http://127.0.0.1:8080/?ui) (with uil)  
+[localhost:8080/?ui&orbit](http://127.0.0.1:8080/?ui&orbit) (with uil and orbit controls)  
+[localhost:8080/?orbit](http://127.0.0.1:8080/?orbit) (just orbit controls)
 
 ## With examples
 
@@ -455,6 +472,7 @@ npm start
 * [Three.js](https://github.com/mrdoob/three.js)
 * [Post Processing](https://github.com/vanruesc/postprocessing)
 * [Oimo.js](https://github.com/lo-th/Oimo.js)
+* [uil](https://github.com/lo-th/uil)
 * Bruno Simon's [Folio 2019](https://github.com/brunosimon/folio-2019).
 * Pierfrancesco Soffritti's [Doodles](https://github.com/PierfrancescoSoffritti/doodles).
 * Jaume Sanchez Elias' [Experiments with Perlin noise](https://github.com/spite/perlin-experiments).

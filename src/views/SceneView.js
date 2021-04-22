@@ -1,6 +1,4 @@
-import { BoxGeometry, Group, Mesh } from 'three';
-
-import { NormalMaterial } from '../materials/NormalMaterial.js';
+import { BoxGeometry, Group, Mesh, MeshStandardMaterial } from 'three';
 
 export class SceneView extends Group {
     constructor() {
@@ -13,7 +11,15 @@ export class SceneView extends Group {
     }
 
     initMesh() {
-        this.mesh = new Mesh(new BoxGeometry(1, 1, 1), new NormalMaterial());
+        this.geometry = new BoxGeometry(1, 1, 1);
+
+        this.material = new MeshStandardMaterial({
+            roughness: 0.3,
+            metalness: 0.9,
+            flatShading: true
+        });
+
+        this.mesh = new Mesh(this.geometry, this.material);
         this.add(this.mesh);
     }
 
@@ -22,8 +28,8 @@ export class SceneView extends Group {
      */
 
     update = () => {
-        this.mesh.rotation.x += 0.01;
-        this.mesh.rotation.y += 0.02;
+        this.mesh.rotation.x -= 0.01;
+        this.mesh.rotation.y -= 0.005;
     };
 
     animateIn = () => {

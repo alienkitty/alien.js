@@ -29,10 +29,11 @@ export class App {
         // WebAudio.init(Assets.filter(path => /sounds/.test(path)));
         // AudioController.init();
 
-        // await Promise.all([
-        //     WorldController.textureLoader.ready(),
-        //     SceneController.ready()
-        // ]);
+        /* await Promise.all([
+            WorldController.textureLoader.ready(),
+            WorldController.environmentLoader.ready(),
+            SceneController.ready()
+        ]); */
     }
 
     /* static initWorld() {

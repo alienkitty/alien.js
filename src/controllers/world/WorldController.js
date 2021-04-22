@@ -4,6 +4,8 @@ import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 
 import { Config } from '../../config/Config.js';
 import { TextureLoader } from '../../loaders/world/TextureLoader.js';
+import { EnvironmentTextureLoader } from '../../loaders/world/EnvironmentTextureLoader.js';
+import { BufferGeometryLoader } from '../../loaders/world/BufferGeometryLoader.js';
 // import { Interface } from '../../utils/Interface.js';
 
 import { getFrustum, getFullscreenTriangle } from '../../utils/world/Utils3D.js';
@@ -13,7 +15,6 @@ export class WorldController {
         this.initWorld();
         this.initLights();
         this.initLoaders();
-        // this.initControls();
     }
 
     static initWorld() {
@@ -53,6 +54,8 @@ export class WorldController {
 
     static initLoaders() {
         this.textureLoader = new TextureLoader();
+        this.environmentLoader = new EnvironmentTextureLoader(this.renderer);
+        this.bufferGeometryLoader = new BufferGeometryLoader();
     }
 
     static initControls() {
@@ -86,6 +89,14 @@ export class WorldController {
     static getTexture = (path, callback) => this.textureLoader.load(path, callback);
 
     static loadTexture = path => this.textureLoader.loadAsync(path);
+
+    static getEnvironmentTexture = (path, callback) => this.environmentLoader.load(path, callback);
+
+    static loadEnvironmentTexture = path => this.environmentLoader.loadAsync(path);
+
+    static getBufferGeometry = (path, callback) => this.bufferGeometryLoader.load(path, callback);
+
+    static loadBufferGeometry = path => this.bufferGeometryLoader.loadAsync(path);
 
     static getFrustum = offsetZ => getFrustum(this.camera, offsetZ);
 }

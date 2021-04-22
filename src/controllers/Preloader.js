@@ -50,14 +50,13 @@ export class Preloader {
         this.loader = new MultiLoader();
         this.loader.load(new FontLoader(['Roboto Mono']));
         this.loader.load(new AssetLoader(assets));
-        this.loader.add(30);
+        this.loader.add(1);
 
         const { App } = await import('./App.js');
-        this.loader.trigger(30);
-
         this.app = App;
 
-        await this.app.init(this.loader);
+        await this.app.init(this.loader.loaders[1]);
+        this.loader.trigger(1);
     }
 
     static addListeners() {

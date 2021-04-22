@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <title>Alien.js — Magnetic</title>
+
+    <link rel="preconnect" href="https://fonts.gstatic.com">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto+Mono">
+    <link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+    <div id="root"></div>
+    <script type="module">import{Component,Events,Interface,Stage,clearTween,ticker,tween}from"../build/alien.js";class Config{}Config.BG_COLOR="#0e0e0e",Config.UI_COLOR="rgba(255, 255, 255, 0.94)";class Magnetic extends Component{constructor(e,{threshold:t=30}={}){super(),this.onUpdate=e=>{const t={};e.changedTouches&&e.changedTouches.length?(t.x=e.changedTouches[0].clientX,t.y=e.changedTouches[0].clientY):(t.x=e.clientX,t.y=e.clientY);const s=this.object.bounds(),i=t.x-(s.left+s.width/2),h=t.y-(s.top+s.height/2);Math.sqrt(i*i+h*h)<(s.width+s.height)/2+this.threshold?(this.object.tween({x:.5*i,y:.5*h,rotation:.05*i,skewX:.125*i,skewY:0,scale:1.1},500,"easeOutCubic"),this.hoveredIn||this.events.emit(Events.HOVER,{type:"over"}),this.hoveredIn=!0):this.hoveredIn&&(this.object.tween({x:0,y:0,rotation:0,skewX:0,skewY:0,scale:1,spring:1.2,damping:.4},1e3,"easeOutElastic"),this.events.emit(Events.HOVER,{type:"out"}),this.hoveredIn=!1)},this.enable=()=>{this.addListeners()},this.disable=()=>{this.removeListeners()},this.destroy=()=>(this.disable(),super.destroy()),this.object=e,this.threshold=t,this.hoveredIn=!1,this.initHTML(),this.enable()}initHTML(){this.object.css({willChange:"transform"})}addListeners(){window.addEventListener("mousemove",this.onUpdate)}removeListeners(){window.removeEventListener("mousemove",this.onUpdate)}}class Progress extends Interface{constructor(){super(null,"svg"),this.onUpdate=()=>{this.needsUpdate&&this.update()},this.onProgress=({progress:e})=>{clearTween(this),this.needsUpdate=!0,tween(this,{progress:e},500,"easeOutCubic",()=>{this.needsUpdate=!1,this.progress>=1&&this.onComplete()})},this.onComplete=()=>{this.removeListeners(),this.events.emit(Events.COMPLETE)},this.update=()=>{this.circle.line(this.progress)},this.animateOut=e=>{this.tween({scale:.9,opacity:0},400,"easeInCubic",e)},this.destroy=()=>(this.removeListeners(),clearTween(this),super.destroy());this.width=90,this.height=90,this.x=45,this.y=45,this.radius=36,this.progress=0,this.needsUpdate=!1,this.initSVG(),this.addListeners()}initSVG(){this.attr({width:this.width,height:this.height}),this.circle=new Interface(null,"svg","circle"),this.circle.attr({cx:this.x,cy:this.y,r:this.radius}),this.circle.css({fill:"none",stroke:Config.UI_COLOR,strokeWidth:1.5}),this.circle.start=0,this.circle.offset=-.25,this.add(this.circle)}addListeners(){ticker.add(this.onUpdate)}removeListeners(){ticker.remove(this.onUpdate)}}class App{static init(){this.initView(),this.addListeners()}static initView(){this.view=new Progress,this.view.css({left:"50%",top:"50%",marginLeft:-this.view.width/2,marginTop:-this.view.height/2,cursor:"pointer"}),Stage.add(this.view),this.magnet=new Magnetic(this.view),this.view.add(this.magnet),this.view.onProgress({progress:1})}static addListeners(){this.view.element.addEventListener("click",this.onClick)}}App.onClick=()=>{App.view.element.removeEventListener("click",App.onClick),App.view.animateOut(()=>{App.view=App.view.destroy()})},App.init();</script>
+</body>
+</html>

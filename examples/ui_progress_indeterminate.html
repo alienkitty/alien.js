@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <title>Alien.js — Progress Indeterminate</title>
+
+    <link rel="preconnect" href="https://fonts.gstatic.com">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto+Mono">
+    <link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+    <div id="root"></div>
+    <script type="module">import{Interface,Stage,clearTween,ticker,tween}from"../build/alien.js";class Config{}Config.BG_COLOR="#0e0e0e",Config.UI_COLOR="rgba(255, 255, 255, 0.94)";class ProgressIndeterminate extends Interface{constructor(){super(null,"svg"),this.onUpdate=()=>{this.needsUpdate&&this.update()},this.update=()=>{this.circle.line()},this.animateIn=()=>{this.animatedIn=!0,this.needsUpdate=!0,this.addListeners();const start=()=>{tween(this.circle,{progress:1},1e3,"easeOutCubic",()=>{tween(this.circle,{start:1},1e3,"easeInOutCubic",()=>{this.circle.start=0,this.delayedCall(500,()=>{this.animatedIn?start():(this.removeListeners(),this.needsUpdate=!1)})},()=>{this.circle.progress=1-this.circle.start})})};start()},this.animateOut=()=>{this.animatedIn=!1},this.destroy=()=>(this.removeListeners(),clearTween(this.circle),super.destroy());this.width=90,this.height=90,this.x=45,this.y=45,this.radius=36,this.needsUpdate=!1,this.animatedIn=!1,this.initSVG()}initSVG(){this.attr({width:this.width,height:this.height}),this.circle=new Interface(null,"svg","circle"),this.circle.attr({cx:this.x,cy:this.y,r:this.radius}),this.circle.css({fill:"none",stroke:Config.UI_COLOR,strokeWidth:1.5}),this.circle.start=0,this.circle.offset=-.25,this.circle.progress=0,this.add(this.circle)}addListeners(){ticker.add(this.onUpdate)}removeListeners(){ticker.remove(this.onUpdate)}}class App{static init(){this.initView(),this.addListeners()}static initView(){this.view=new ProgressIndeterminate,this.view.css({left:"50%",top:"50%",marginLeft:-this.view.width/2,marginTop:-this.view.height/2,cursor:"pointer"}),Stage.add(this.view),this.view.animateIn()}static addListeners(){this.view.element.addEventListener("click",this.onClick)}}App.onClick=()=>{App.view.needsUpdate?App.view.animateOut():App.view.animateIn()},App.init();</script>
+</body>
+</html>

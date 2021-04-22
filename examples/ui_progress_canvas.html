@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <title>Alien.js — Progress</title>
+
+    <link rel="preconnect" href="https://fonts.gstatic.com">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto+Mono">
+    <link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+    <div id="root"></div>
+    <script type="module">import{Events,Interface,Stage,clearTween,radians,ticker,tween}from"../build/alien.js";class Config{}Config.BG_COLOR="#0e0e0e",Config.UI_COLOR="rgba(255, 255, 255, 0.94)";class ProgressCanvas extends Interface{constructor(){super(null,"canvas"),this.onUpdate=()=>{this.needsUpdate&&this.update()},this.onProgress=({progress:t})=>{clearTween(this),this.needsUpdate=!0,tween(this,{progress:t},500,"easeOutCubic",()=>{this.needsUpdate=!1,this.progress>=1&&this.onComplete()})},this.onComplete=()=>{this.removeListeners(),this.events.emit(Events.COMPLETE)},this.resize=()=>{this.element.width=Math.round(2*this.width),this.element.height=Math.round(2*this.height),this.element.style.width=this.width+"px",this.element.style.height=this.height+"px",this.context.scale(2,2),this.context.lineWidth=1.5,this.context.strokeStyle=Config.UI_COLOR,this.update()},this.update=()=>{this.context.clearRect(0,0,this.element.width,this.element.height),this.context.beginPath(),this.context.arc(this.x,this.y,this.radius,this.startAngle,this.startAngle+radians(360*this.progress)),this.context.stroke()},this.animateOut=t=>{this.tween({scale:.9,opacity:0},400,"easeInCubic",t)},this.destroy=()=>(this.removeListeners(),clearTween(this),super.destroy());this.width=90,this.height=90,this.x=45,this.y=45,this.radius=36,this.startAngle=radians(-90),this.progress=0,this.needsUpdate=!1,this.initCanvas(),this.addListeners(),this.resize()}initCanvas(){this.context=this.element.getContext("2d")}addListeners(){ticker.add(this.onUpdate)}removeListeners(){ticker.remove(this.onUpdate)}}class App{static init(){this.initView(),this.addListeners()}static initView(){this.view=new ProgressCanvas,this.view.css({left:"50%",top:"50%",marginLeft:-this.view.width/2,marginTop:-this.view.height/2,cursor:"pointer"}),Stage.add(this.view),this.view.onProgress({progress:1})}static addListeners(){this.view.element.addEventListener("click",this.onClick)}}App.onClick=()=>{App.view.element.removeEventListener("click",App.onClick),App.view.animateOut(()=>{App.view=App.view.destroy()})},App.init();</script>
+</body>
+</html>

@@ -20,6 +20,3 @@ export class BlurMaterial extends RawShaderMaterial {
         });
     }
 }
-
-export const BlurDirectionX = new Vector2(1, 0);
-export const BlurDirectionY = new Vector2(0, 1);

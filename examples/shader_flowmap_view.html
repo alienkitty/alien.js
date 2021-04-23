@@ -13,7 +13,7 @@
 <body>
     <div id="root"></div>
     <script type="module">
-        import { ACESFilmicToneMapping, AdditiveBlending, BloomCompositeMaterial, BlurDirectionX, BlurDirectionY, Color, DirectionalLight, Events, FXAAMaterial, Flowmap, Fog, Group, HemisphereLight, LuminosityMaterial, Mesh, MeshStandardMaterial, NoBlending, OrthographicCamera, PerspectiveCamera, PlaneGeometry, RGBFormat, RawShaderMaterial, Reflector, RepeatWrapping, SVGLoader, Scene, Stage, TextureLoader, Uniform, UnrealBloomBlurMaterial, Vector2, Vector3, WebGL1Renderer, WebGLRenderTarget, getFrustum, getFullscreenTriangle, mix, range, ticker } from '../build/alien.js';
+        import { ACESFilmicToneMapping, AdditiveBlending, BloomCompositeMaterial, Color, DirectionalLight, Events, FXAAMaterial, Flowmap, Fog, Group, HemisphereLight, LuminosityMaterial, Mesh, MeshStandardMaterial, NoBlending, OrthographicCamera, PerspectiveCamera, PlaneGeometry, RGBFormat, RawShaderMaterial, Reflector, RepeatWrapping, SVGLoader, Scene, Stage, TextureLoader, Uniform, UnrealBloomBlurMaterial, Vector2, Vector3, WebGL1Renderer, WebGLRenderTarget, getFrustum, getFullscreenTriangle, mix, range, ticker } from '../build/alien.js';
 
         class Config {
             static BG_COLOR = '#0e0e0e';
@@ -456,6 +456,9 @@
             static ready = () => this.view.triangle.ready();
         }
 
+        const BlurDirectionX = new Vector2(1, 0);
+        const BlurDirectionY = new Vector2(0, 1);
+
         class RenderManager {
             static init(renderer, scene, camera) {
                 this.renderer = renderer;
@@ -703,7 +706,7 @@
                     this.camera.position.z = 10;
                 }
 
-                this.origin.copy(this.camera.position);
+                this.origin.z = this.camera.position.z;
             };
 
             static update = () => {

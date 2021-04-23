@@ -13,11 +13,13 @@
 <body>
     <div id="root"></div>
     <script type="module">
-        import { BlurDirectionX, BlurDirectionY, Color, DirectionalLight, Events, FXAAMaterial, Group, HemisphereLight, LuminosityMaterial, Mesh, MeshStandardMaterial, OrthographicCamera, PerspectiveCamera, RGBFormat, Scene, SceneCompositeMaterial, SphereGeometry, Stage, Uniform, UnrealBloomBlurMaterial, UnrealBloomCompositeMaterial, Vector2, Vector3, WebGL1Renderer, WebGLRenderTarget, getFullscreenTriangle, ticker } from '../build/alien.js';
+        import { Color, DirectionalLight, Events, FXAAMaterial, Group, HemisphereLight, LuminosityMaterial, Mesh, MeshStandardMaterial, OrthographicCamera, PerspectiveCamera, RGBFormat, Scene, SceneCompositeMaterial, SphereGeometry, Stage, Uniform, UnrealBloomBlurMaterial, UnrealBloomCompositeMaterial, Vector2, Vector3, WebGL1Renderer, WebGLRenderTarget, getFullscreenTriangle, ticker } from '../build/alien.js';
 
         class Config {
             static BG_COLOR = '#0e0e0e';
             static UI_COLOR = 'rgba(255, 255, 255, 0.94)';
+
+            static BREAKPOINT = 1000;
         }
 
         import periodic3d from '../src/shaders/modules/noise/periodic3d.glsl.js';
@@ -60,6 +62,9 @@
         }
 
         // Based on {@link module:three/examples/jsm/postprocessing/UnrealBloomPass.js} by spidersharma and bhouston
+
+        const BlurDirectionX = new Vector2(1, 0);
+        const BlurDirectionY = new Vector2(0, 1);
 
         class RenderManager {
             static init(renderer, scene, camera) {
@@ -269,7 +274,7 @@
                 this.camera = new PerspectiveCamera(30);
                 this.camera.near = 0.5;
                 this.camera.far = 50;
-                this.camera.position.z = 6;
+                this.camera.position.z = 8;
 
                 // Global geometries
                 this.screenTriangle = getFullscreenTriangle();
@@ -297,17 +302,19 @@
                 this.camera.aspect = width / height;
                 this.camera.updateProjectionMatrix();
 
+                if (width < height) {
+                    this.camera.position.z = 10;
+                } else if (width < Config.BREAKPOINT) {
+                    this.camera.position.z = 6;
+                } else {
+                    this.camera.position.z = 8;
+                }
+
                 width = Math.round(width * dpr);
                 height = Math.round(height * dpr);
 
                 this.resolution.value.set(width, height);
                 this.aspect.value = width / height;
-
-                if (width < height) {
-                    this.camera.position.z = 10;
-                } else {
-                    this.camera.position.z = 6;
-                }
             };
 
             static update = (time, delta, frame) => {

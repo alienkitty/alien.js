@@ -13,11 +13,14 @@
 <body>
     <div id="root"></div>
     <script type="module">
-        import { ACESFilmicToneMapping, AdditiveBlending, AmbientLight, BloomCompositeMaterial, BlurDirectionX, BlurDirectionY, BufferAttribute, BufferGeometry, Color, CopyMaterial, DepthTexture, Device, DirectionalLight, EnvironmentTextureLoader, Events, FXAAMaterial, Group, HemisphereLight, ImageBitmapLoaderThread, LuminosityMaterial, MathUtils, Mesh, MeshStandardMaterial, NoBlending, OrbitControls, OrthographicCamera, PerspectiveCamera, Points, RGBFormat, RawShaderMaterial, Scene, SceneCompositeMaterial, SphericalCubeTextureLoader, Stage, TextureLoader, Thread, Uniform, UnrealBloomBlurMaterial, Vector2, WebGL1Renderer, WebGLRenderTarget, getFullscreenTriangle, getSphericalCube, mix, ticker } from '../build/alien.js';
+        import { ACESFilmicToneMapping, AdditiveBlending, AmbientLight, BloomCompositeMaterial, BufferAttribute, BufferGeometry, Color, CopyMaterial, DepthTexture, Device, DirectionalLight, EnvironmentTextureLoader, Events, FXAAMaterial, Group, HemisphereLight, ImageBitmapLoaderThread, LuminosityMaterial, MathUtils, Mesh, MeshStandardMaterial, NoBlending, OrbitControls, OrthographicCamera, PerspectiveCamera, Points, RGBFormat, RawShaderMaterial, Scene, SceneCompositeMaterial, SphericalCubeTextureLoader, Stage, TextureLoader, Thread, Uniform, UnrealBloomBlurMaterial, Vector2, WebGL1Renderer, WebGLRenderTarget, getFullscreenTriangle, getSphericalCube, mix, ticker } from '../build/alien.js';
 
         class Config {
             static BG_COLOR = '#0e0e0e';
             static UI_COLOR = 'rgba(255, 255, 255, 0.94)';
+
+            static BREAKPOINT = 1000;
+
             static DEBUG = location.search === '?debug';
         }
 
@@ -390,6 +393,9 @@
             }
         }
 
+        const BlurDirectionX = new Vector2(1, 0);
+        const BlurDirectionY = new Vector2(0, 1);
+
         class RenderManager {
             static init(renderer, scene, camera, dust) {
                 this.renderer = renderer;
@@ -651,7 +657,7 @@
                 this.camera = new PerspectiveCamera(30);
                 this.camera.near = 0.5;
                 this.camera.far = 50;
-                this.camera.position.z = 6;
+                this.camera.position.z = 8;
 
                 // Global geometries
                 this.screenTriangle = getFullscreenTriangle();
@@ -677,9 +683,7 @@
                 this.textureLoader = new TextureLoader();
 
                 this.spherizeLoader = new SphericalCubeTextureLoader(this.renderer, true);
-                this.spherizeLoader.setOptions({
-                    size: 512
-                });
+                this.spherizeLoader.setOptions({ size: 512 });
 
                 this.environmentLoader = new EnvironmentTextureLoader(this.renderer);
             }
@@ -698,17 +702,19 @@
                 this.camera.aspect = width / height;
                 this.camera.updateProjectionMatrix();
 
+                if (width < height) {
+                    this.camera.position.z = 10;
+                } else if (width < Config.BREAKPOINT) {
+                    this.camera.position.z = 6;
+                } else {
+                    this.camera.position.z = 8;
+                }
+
                 width = Math.round(width * dpr);
                 height = Math.round(height * dpr);
 
                 this.resolution.value.set(width, height);
                 this.aspect.value = width / height;
-
-                if (width < height) {
-                    this.camera.position.z = 10;
-                } else {
-                    this.camera.position.z = 6;
-                }
             };
 
             static update = (time, delta, frame) => {

@@ -51,20 +51,10 @@
              * Event handlers
              */
 
-            onUpdate = e => {
-                const event = {};
-
-                if (e.changedTouches && e.changedTouches.length) {
-                    event.x = e.changedTouches[0].clientX;
-                    event.y = e.changedTouches[0].clientY;
-                } else {
-                    event.x = e.clientX;
-                    event.y = e.clientY;
-                }
-
+            onUpdate = ({ clientX, clientY }) => {
                 const bounds = this.object.bounds();
-                const x = event.x - (bounds.left + bounds.width / 2);
-                const y = event.y - (bounds.top + bounds.height / 2);
+                const x = clientX - (bounds.left + bounds.width / 2);
+                const y = clientY - (bounds.top + bounds.height / 2);
                 const distance = Math.sqrt(x * x + y * y);
 
                 if (distance < (bounds.width + bounds.height) / 2 + this.threshold) {

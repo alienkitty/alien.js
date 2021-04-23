@@ -604,29 +604,28 @@
             static init(camera) {
                 this.camera = camera;
 
-                // Motion control
-                this.group = new Group();
-                this.rotateGroup = new Group();
-                this.group.add(this.rotateGroup);
-
-                // Start position
-                this.group.matrixAutoUpdate = false;
-                this.rotateGroup.matrixAutoUpdate = false;
-                this.group.position.copy(this.camera.position);
-
-                // Flip direction
-                this.rotateGroup.rotation.y = Math.PI;
-
                 this.mouse = new Vector2();
                 this.last = new Vector2();
                 this.delta = new Vector2();
                 this.mouse.set(Stage.width / 2, Stage.height / 2);
                 this.last.copy(this.mouse);
 
+                // Motion control
+                this.group = new Group();
+                this.rotateGroup = new Group();
+                this.group.add(this.rotateGroup);
+                this.group.matrixAutoUpdate = false;
+                this.rotateGroup.matrixAutoUpdate = false;
+
+                // Flip direction
+                this.rotateGroup.rotation.y = Math.PI;
+
+                // Start position
                 this.lookAt = new Vector3(0, 0, -2);
                 this.origin = new Vector3();
                 this.target = new Vector3();
                 this.targetXY = new Vector2(18.75, 1);
+                this.group.position.copy(this.camera.position);
                 this.origin.copy(this.group.position);
 
                 this.rotation = 0;
@@ -637,8 +636,8 @@
                 this.enabled = false;
 
                 this.wobble = new Wobble();
-                this.wobble.amplitude.set(15, 15, 15);
-                this.wobble.frequency.set(15, 15, 15);
+                this.wobble.amplitude.multiplyScalar(15);
+                this.wobble.frequency.multiplyScalar(15);
 
                 this.addListeners();
             }

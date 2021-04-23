@@ -5,10 +5,12 @@ import { FXAAMaterial } from '../../materials/FXAAMaterial.js';
 import { LuminosityMaterial } from '../../materials/LuminosityMaterial.js';
 import { UnrealBloomBlurMaterial } from '../../materials/UnrealBloomBlurMaterial.js';
 import { BloomCompositeMaterial } from '../../materials/BloomCompositeMaterial.js';
-import { BlurDirectionX, BlurDirectionY } from '../../materials/BlurMaterial.js';
 import { SceneCompositeMaterial } from '../../materials/SceneCompositeMaterial.js';
 
 import { mix } from '../../utils/Utils.js';
+
+const BlurDirectionX = new Vector2(1, 0);
+const BlurDirectionY = new Vector2(0, 1);
 
 export class RenderManager {
     static init(renderer, scene, camera) {

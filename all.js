@@ -60,7 +60,7 @@ export { BadTVMaterial } from './src/materials/BadTVMaterial.js';
 export { RGBMaterial } from './src/materials/RGBMaterial.js';
 export { FilmGrainMaterial } from './src/materials/FilmGrainMaterial.js';
 export { FilmGrainFXAAMaterial } from './src/materials/FilmGrainFXAAMaterial.js';
-export { BlurDirectionX, BlurDirectionY, BlurMaterial } from './src/materials/BlurMaterial.js';
+export { BlurMaterial } from './src/materials/BlurMaterial.js';
 export { FastGaussianBlurMaterial } from './src/materials/FastGaussianBlurMaterial.js';
 export { LuminosityMaterial } from './src/materials/LuminosityMaterial.js';
 export { UnrealBloomBlurMaterial } from './src/materials/UnrealBloomBlurMaterial.js';

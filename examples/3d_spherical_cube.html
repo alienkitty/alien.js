@@ -18,6 +18,8 @@
         class Config {
             static BG_COLOR = '#0e0e0e';
             static UI_COLOR = 'rgba(255, 255, 255, 0.94)';
+
+            static BREAKPOINT = 1000;
         }
 
         class SceneView extends Group {
@@ -147,9 +149,9 @@
                 this.scene = new Scene();
                 this.scene.background = new Color(Config.BG_COLOR);
                 this.camera = new PerspectiveCamera(30);
-                this.camera.near = 0.1;
-                this.camera.far = 1000;
-                this.camera.position.z = 6;
+                this.camera.near = 0.5;
+                this.camera.far = 50;
+                this.camera.position.z = 8;
 
                 // Global geometries
                 this.screenTriangle = getFullscreenTriangle();
@@ -180,17 +182,19 @@
                 this.camera.aspect = width / height;
                 this.camera.updateProjectionMatrix();
 
+                if (width < height) {
+                    this.camera.position.z = 10;
+                } else if (width < Config.BREAKPOINT) {
+                    this.camera.position.z = 6;
+                } else {
+                    this.camera.position.z = 8;
+                }
+
                 width = Math.round(width * dpr);
                 height = Math.round(height * dpr);
 
                 this.resolution.value.set(width, height);
                 this.aspect.value = width / height;
-
-                if (width < height) {
-                    this.camera.position.z = 10;
-                } else {
-                    this.camera.position.z = 6;
-                }
             };
 
             static update = (time, delta, frame) => {

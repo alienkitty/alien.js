@@ -13,7 +13,7 @@
 <body>
     <div id="root"></div>
     <script type="module">
-        import { ACESFilmicToneMapping, BloomCompositeMaterial, BlurDirectionX, BlurDirectionY, Color, DirectionalLight, Events, FXAAMaterial, Fog, Group, HemisphereLight, LuminosityMaterial, Mesh, MeshStandardMaterial, NoBlending, OrthographicCamera, PerspectiveCamera, PlaneGeometry, RGBFormat, RawShaderMaterial, Reflector, RepeatWrapping, SVGLoader, Scene, Stage, TextureLoader, Uniform, UnrealBloomBlurMaterial, Vector2, Vector3, WebGL1Renderer, WebGLRenderTarget, Wobble, getFullscreenTriangle, mix, radians, range, ticker } from '../build/alien.js';
+        import { ACESFilmicToneMapping, BloomCompositeMaterial, Color, DirectionalLight, Events, FXAAMaterial, Fog, Group, HemisphereLight, LuminosityMaterial, Mesh, MeshStandardMaterial, NoBlending, OrthographicCamera, PerspectiveCamera, PlaneGeometry, RGBFormat, RawShaderMaterial, Reflector, RepeatWrapping, SVGLoader, Scene, Stage, TextureLoader, Uniform, UnrealBloomBlurMaterial, Vector2, Vector3, WebGL1Renderer, WebGLRenderTarget, Wobble, getFullscreenTriangle, mix, radians, range, ticker } from '../build/alien.js';
 
         class Config {
             static BG_COLOR = '#0e0e0e';
@@ -174,6 +174,9 @@
 
             ready = () => this.triangle.initMesh();
         }
+
+        const BlurDirectionX = new Vector2(1, 0);
+        const BlurDirectionY = new Vector2(0, 1);
 
         class RenderManager {
             static init(renderer, scene, camera) {
@@ -363,32 +366,31 @@
             static init(camera) {
                 this.camera = camera;
 
-                // Motion control
-                this.group = new Group();
-                this.rotateGroup = new Group();
-                this.wobbleGroup = new Group();
-                this.rotateGroup.add(this.wobbleGroup);
-                this.group.add(this.rotateGroup);
-
-                // Start position
-                this.group.matrixAutoUpdate = false;
-                this.rotateGroup.matrixAutoUpdate = false;
-                this.wobbleGroup.matrixAutoUpdate = false;
-                this.group.position.copy(this.camera.position);
-
-                // Flip direction
-                this.rotateGroup.rotation.y = Math.PI;
-
                 this.mouse = new Vector2();
                 this.last = new Vector2();
                 this.delta = new Vector2();
                 this.mouse.set(Stage.width / 2, Stage.height / 2);
                 this.last.copy(this.mouse);
 
+                // Motion control
+                this.group = new Group();
+                this.rotateGroup = new Group();
+                this.innerGroup = new Group();
+                this.rotateGroup.add(this.innerGroup);
+                this.group.add(this.rotateGroup);
+                this.group.matrixAutoUpdate = false;
+                this.rotateGroup.matrixAutoUpdate = false;
+                this.innerGroup.matrixAutoUpdate = false;
+
+                // Flip direction
+                this.rotateGroup.rotation.y = Math.PI;
+
+                // Start position
                 this.lookAt = new Vector3(0, 0, -2);
                 this.origin = new Vector3();
                 this.target = new Vector3();
                 this.targetXY = new Vector2(5, 1);
+                this.group.position.copy(this.camera.position);
                 this.origin.copy(this.group.position);
 
                 this.rotation = 0;
@@ -397,7 +399,7 @@
                 this.lerpSpeed2 = 0.07;
                 this.enabled = false;
 
-                this.wobble = new Wobble(this.wobbleGroup.position);
+                this.wobble = new Wobble(this.innerGroup.position);
 
                 this.addListeners();
             }
@@ -440,6 +442,15 @@
             static resize = (width, height) => {
                 this.camera.aspect = width / height;
                 this.camera.updateProjectionMatrix();
+
+                if (width < height) {
+                    this.camera.position.z = 14;
+                } else {
+                    this.camera.position.z = 10;
+                }
+
+                this.group.position.z = this.camera.position.z;
+                this.origin.z = this.group.position.z;
             };
 
             static update = time => {
@@ -469,9 +480,9 @@
             static updateCamera = () => {
                 this.group.updateMatrix();
                 this.rotateGroup.updateMatrix();
-                this.wobbleGroup.updateMatrix();
+                this.innerGroup.updateMatrix();
                 this.group.updateMatrixWorld();
-                this.wobbleGroup.matrixWorld.decompose(this.camera.position, this.camera.quaternion, this.camera.scale);
+                this.innerGroup.matrixWorld.decompose(this.camera.position, this.camera.quaternion, this.camera.scale);
             };
 
             static animateIn = () => {

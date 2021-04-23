@@ -23,7 +23,7 @@
 
 <br>
 
-Alien.js is a design pattern and project structure for building [SPA](https://en.wikipedia.org/wiki/Single-page_application) websites with ES modules and [GSAP](https://greensock.com/).
+Alien.js is a design pattern for building [SPA](https://en.wikipedia.org/wiki/Single-page_application) websites with ES modules and [GSAP](https://greensock.com/).
 
 The idea is to keep it simple, with minimal abstraction, and to build websites more like a framework, which is why [Rollup](https://rollupjs.org/) is used instead for bundling.
 
@@ -202,213 +202,6 @@ export class Logo {
 }
 ```
 
-## Class hierarchy
-
-```
-Preloader
-    \
-     '--- PreloaderView
-      \
-       '- App
-              \
-               '----- World ---.
-                \               \
-                 '--- Views -----.
-                  \               \
-                   '- Controllers -.
-```
-
-## Project structure
-
-```
-public
-│
-├── assets
-│   │
-│   ├── css
-│   │   │
-│   │   └── style.css
-│   │
-│   ├── data
-│   │   │
-│   │   └── data.json
-│   │
-│   ├── images
-│   │
-│   ├── js
-│   │   │
-│   │   ├── loader.js
-│   │   ├── main.js
-│   │   └── uil.js
-│   │
-│   ├── meta
-│   │   │
-│   │   └── share.png
-│   │
-│   └── textures
-│
-├── favicon.ico
-└── index.html
-
-src
-│
-├── config
-│   │
-│   ├── Config.js
-│   ├── Device.js
-│   ├── Events.js
-│   └── Global.js
-│
-├── controllers
-│   │
-│   ├── audio
-│   │   │
-│   │   └── AudioController.js
-│   │
-│   ├── world
-│   │   │
-│   │   ├── CameraController.js
-│   │   ├── InputManager.js
-│   │   ├── RenderManager.js
-│   │   ├── SceneController.js
-│   │   └── WorldController.js
-│   │
-│   ├── App.js
-│   ├── Preloader.js
-│   └── Stage.js
-│
-├── data
-│   │
-│   ├── Data.js
-│   ├── Geo.js
-│   └── Socket.js
-│
-├── gui
-│   │
-│   ├── CameraUIL.js
-│   ├── RenderUIL.js
-│   └── WorldUIL.js
-│
-├── lib
-│   │
-│   ├── CustomEase.js
-│   └── uil.module.js
-│
-├── partials
-│   │
-│   ├── icons
-│   │   │
-│   │   ├── arrow.svg.js
-│   │   └── close.svg.js
-│   │
-│   └── Icons.js
-│
-├── loaders
-│   │
-│   ├── world
-│   │   │
-│   │   ├── BufferGeometryLoader.js
-│   │   ├── BufferGeometryLoaderThread.js
-│   │   ├── EnvironmentTextureLoader.js
-│   │   ├── SphericalCubeTextureLoader.js
-│   │   ├── SpherizeTextureLoader.js
-│   │   ├── TextGeometryLoader.js
-│   │   ├── TextGeometryLoaderThread.js
-│   │   └── TextureLoader.js
-│   │
-│   ├── AssetLoader.js
-│   ├── Assets.js
-│   ├── FontLoader.js
-│   ├── ImageBitmapLoader.js
-│   ├── ImageBitmapLoaderThread.js
-│   ├── Loader.js
-│   └── MultiLoader.js
-│
-├── materials
-│   │
-│   ├── BasicMaterial.js
-│   └── FXAAMaterial.js
-│
-├── shaders
-│   │
-│   ├── modules
-│   │   │
-│   │   └── noise
-│   │      │
-│   │      └── simplex2d.glsl.js
-│   │
-│   ├── BasicMaterial.frag.js
-│   ├── BasicMaterial.vert.js
-│   ├── FXAAPass.frag.js
-│   └── FXAAPass.vert.js
-│
-├── utils
-│   │
-│   ├── audio
-│   │   │
-│   │   ├── Sound.js
-│   │   ├── Sound3D.js
-│   │   ├── WebAudio.js
-│   │   ├── WebAudio3D.js
-│   │   └── WebAudioParam.js
-│   │
-│   ├── world
-│   │   │
-│   │   ├── Flowmap.js
-│   │   ├── Reflector.js
-│   │   ├── SpherizeImage.js
-│   │   ├── TextGeometry.js
-│   │   ├── Utils3D.js
-│   │   └── Wobble.js
-│   │
-│   ├── Cluster.js
-│   ├── Component.js
-│   ├── EventEmitter.js
-│   ├── Interface.js
-│   ├── LinkedList.js
-│   ├── ObjectPool.js
-│   ├── Thread.js
-│   ├── Tween.js
-│   └── Utils.js
-│
-├── views
-│   │
-│   ├── LandingView.js
-│   ├── PreloaderView.js
-│   └── SceneView.js
-│
-└── main.js
-```
-
-## Code-splitting
-
-```
-public
-│
-└── assets
-    │
-    └── js
-        │
-        ├── loader.js (~90kb with GSAP)
-        └── main.js (~700kb with three.js)
-```
-
-## Multithreading
-
-```
-App (main thread)
-│
-└── Thread (instance thread)
-    │
-    ├── shared (navigator.hardwareConcurrency)
-    │
-    └── events
-        │
-        ├── on
-        ├── off
-        └── send
-```
-
 ## Getting started
 
 Clone this repository template and install its dependencies:
@@ -463,24 +256,12 @@ npm start
 ## Resources
 
 * [The Wiki](https://github.com/pschroen/alien.js/wiki)
+* [Example project structure](https://github.com/pschroen/alien.js/wiki/Project-structure)
 * [Tween](https://github.com/pschroen/alien.js/wiki/Tween)
 * [Changelog](https://github.com/pschroen/alien.js/releases)
 
 ## See also
 
-* [OGL](https://github.com/oframe/ogl)
 * [Three.js](https://github.com/mrdoob/three.js)
 * [Post Processing](https://github.com/vanruesc/postprocessing)
-* [Oimo.js](https://github.com/lo-th/Oimo.js)
-* [uil](https://github.com/lo-th/uil)
-* Bruno Simon's [Folio 2019](https://github.com/brunosimon/folio-2019).
-* Pierfrancesco Soffritti's [Doodles](https://github.com/PierfrancescoSoffritti/doodles).
-* Jaume Sanchez Elias' [Experiments with Perlin noise](https://github.com/spite/perlin-experiments).
-* Jaume Sanchez Elias' [WebVR Physics](https://github.com/spite/WebVR-Physics).
-* Jaume Sanchez Elias' [Codevember 2017](https://github.com/spite/codevember-2017).
-* Jaume Sanchez Elias' [Codevember 2016](https://github.com/spite/codevember-2016).
-* Jaume Sanchez Elias' [Wagner](https://github.com/spite/Wagner).
-* Evan Wallace's [WebGL Filter](https://github.com/evanw/webgl-filter).
-* Felix Turner's [Intro to Pixel Shaders in Three.js](https://www.airtightinteractive.com/2013/02/intro-to-pixel-shaders-in-three-js/).
-* Active Theory's [Finding Love Shaders](https://github.com/activetheory/Finding-Love-Shaders).
-* Inspired by [Active Theory](https://github.com/activetheory)'s class structure and code style.
+* [OGL](https://github.com/oframe/ogl)

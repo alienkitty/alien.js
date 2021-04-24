@@ -1,4 +1,4 @@
-// From https://gamedev.net/forums/topic/645131-color-saturation-in-glsl/5075530/
+// From https://gamedev.net/forums/topic/645131-color-saturation-in-glsl/
 
 export default /* glsl */`
 vec3 desaturate(vec3 color, float amount) {

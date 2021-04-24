@@ -55,7 +55,7 @@ export class Loader {
     }
 
     ready() {
-        return !this.total ? Promise.resolve() : this.promise;
+        return this.total ? this.promise : Promise.resolve();
     }
 
     destroy() {

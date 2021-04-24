@@ -18,11 +18,7 @@ export default {
       browser: true
     }),
     production && babel({
-      compact: false,
-      presets: [],
-      plugins: [
-        ['@babel/plugin-proposal-class-properties', { loose: true }]
-      ]
+      presets: []
     }),
     production && terser({
       output: {

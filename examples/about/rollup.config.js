@@ -9,7 +9,7 @@ export default {
   output: {
     dir: 'public/assets/js',
     entryFileNames: 'loader.js',
-    chunkFileNames: 'main.js',
+    chunkFileNames: ({ name }) => name === 'App' ? 'main.js' : `${name.replace('.module', '')}.js`,
     format: 'es',
     minifyInternalExports: false
   },
@@ -18,11 +18,7 @@ export default {
       browser: true
     }),
     production && babel({
-      compact: false,
-      presets: [],
-      plugins: [
-        ['@babel/plugin-proposal-class-properties', { loose: true }]
-      ]
+      presets: []
     }),
     production && terser({
       output: {

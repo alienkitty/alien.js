@@ -1,22 +1,27 @@
 {
   "name": "alien-examples",
   "version": "1.0.0",
-  "author": "Patrick Schroen",
+  "author": "pschroen",
   "private": true,
   "eslintConfig": {
+    "parserOptions": {
+      "babelOptions": {
+        "configFile": "../babel.config.json"
+      }
+    },
     "plugins": [
       "html"
     ]
   },
   "scripts": {
     "build": "rollup -c",
-    "start": "http-server -c-1 ../",
-    "lint": "eslint *.html"
+    "start": "servez -p 8080 ../",
+    "lint": "eslint about/src *.html"
   },
   "devDependencies": {
-    "eslint": "^7.3.1",
-    "eslint-plugin-html": "^6.0.2",
-    "http-server": "^0.12.3",
-    "rollup": "^2.18.0"
+    "eslint": "^7.25.0",
+    "eslint-plugin-html": "^6.1.2",
+    "rollup": "^2.45.2",
+    "servez": "^1.11.0"
   }
 }

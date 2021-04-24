@@ -94,7 +94,7 @@ In its design, everything is an ES module, all user interfaces and components fo
 
 <br>
 
-## Class structure
+### Class structure
 
 ```js
 import gsap from 'gsap';
@@ -202,7 +202,7 @@ export class Logo {
 }
 ```
 
-## Getting started
+### Getting started
 
 Clone this repository template and install its dependencies:
 
@@ -225,7 +225,7 @@ npm run dev
 npm run build
 ```
 
-## With three.js and UIL
+### With three.js and UIL
 
 Uncomment all the lines in `App.js`, install `three` and download the [uil](https://github.com/lo-th/uil) ES module:
 
@@ -238,12 +238,12 @@ npm run dev
 
 UIL is loaded dynamically and not part of the main bundle.
 
-[localhost:8080/](http://127.0.0.1:8080/) (without uil)  
-[localhost:8080/?ui](http://127.0.0.1:8080/?ui) (with uil)  
-[localhost:8080/?ui&orbit](http://127.0.0.1:8080/?ui&orbit) (with uil and orbit controls)  
-[localhost:8080/?orbit](http://127.0.0.1:8080/?orbit) (just orbit controls)
+[localhost:8080/](http://localhost:8080/) (without uil)  
+[localhost:8080/?ui](http://localhost:8080/?ui) (with uil)  
+[localhost:8080/?ui&orbit](http://localhost:8080/?ui&orbit) (with uil and orbit controls)  
+[localhost:8080/?orbit](http://localhost:8080/?orbit) (just orbit controls)
 
-## With examples
+### With examples
 
 ```sh
 npm i && npm i three
@@ -253,14 +253,14 @@ npm run build
 npm start
 ```
 
-## Resources
+### Resources
 
 * [The Wiki](https://github.com/pschroen/alien.js/wiki)
 * [Example project structure](https://github.com/pschroen/alien.js/wiki/Project-structure)
 * [Tween](https://github.com/pschroen/alien.js/wiki/Tween)
 * [Changelog](https://github.com/pschroen/alien.js/releases)
 
-## See also
+### See also
 
 * [Three.js](https://github.com/mrdoob/three.js)
 * [Post Processing](https://github.com/vanruesc/postprocessing)

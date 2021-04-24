@@ -17,7 +17,7 @@
     "@babel/eslint-parser": "^7.13.14",
     "@babel/plugin-proposal-class-properties": "^7.13.0",
     "@rollup/plugin-node-resolve": "^11.2.1",
-    "alien.js": "^0.18.0",
+    "alien.js": "^0.19.0",
     "concurrently": "^6.0.2",
     "eslint": "^7.25.0",
     "rollup": "^2.45.2",

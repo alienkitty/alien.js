@@ -35,7 +35,6 @@ export class Header extends Interface {
 
         this.info = new HeaderInfo();
         this.info.css({
-            right: 0,
             x: -10,
             opacity: 0
         });

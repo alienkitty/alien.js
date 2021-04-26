@@ -16,8 +16,8 @@ export class HeaderInfo extends Interface {
     initHTML() {
         this.css({
             position: 'relative',
-            padding: 10,
-            cssFloat: 'right'
+            cssFloat: 'right',
+            padding: 10
         });
     }
 

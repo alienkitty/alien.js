@@ -2,7 +2,7 @@
  * @author pschroen / https://ufo.ai/
  */
 
-import { BoxGeometry, BufferAttribute, BufferGeometry, MathUtils, Vector3 } from 'three';
+import { Box2, BoxGeometry, BufferAttribute, BufferGeometry, MathUtils, Vector3 } from 'three';
 
 export function getFullscreenTriangle() {
     const geometry = new BufferGeometry();
@@ -29,6 +29,23 @@ export function getSphericalCube(radius, segments) {
     }
 
     return geometry;
+}
+
+export function getScreenSpaceBox(mesh, camera) {
+    const vertices = mesh.geometry.getAttribute('position');
+    const worldPosition = new Vector3();
+    const screenSpacePosition = new Vector3();
+    const min = new Vector3(1, 1, 1);
+    const max = new Vector3(-1, -1, -1);
+
+    for (let i = 0; i < vertices.count; i++) {
+        worldPosition.fromArray(vertices.array, i * 3).applyMatrix4(mesh.matrixWorld);
+        screenSpacePosition.copy(worldPosition).project(camera);
+        min.min(screenSpacePosition);
+        max.max(screenSpacePosition);
+    }
+
+    return new Box2(min, max);
 }
 
 export function getFrustum(camera, offsetZ = 0) {

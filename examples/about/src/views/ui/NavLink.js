@@ -18,8 +18,8 @@ export class NavLink extends Interface {
 
     initHTML() {
         this.css({
-            padding: 10,
             cssFloat: 'left',
+            padding: 10,
             lineHeight: 15,
             whiteSpace: 'nowrap',
             pointerEvents: 'auto'

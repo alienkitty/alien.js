@@ -600,6 +600,7 @@
                 this.camera.near = 0.1;
                 this.camera.far = 1000;
                 this.camera.position.z = 37.5;
+                this.camera.lookAt(this.scene.position);
 
                 // Global uniforms
                 this.resolution = new Uniform(new Vector2());

@@ -26,6 +26,7 @@ export class App {
         // this.initWorld();
         this.initViews();
         // this.initControllers();
+        // this.initGUI();
 
         // this.addListeners();
         // this.onResize();
@@ -39,18 +40,7 @@ export class App {
             WorldController.textureLoader.ready(),
             WorldController.environmentLoader.ready(),
             SceneController.ready()
-        ]);
-
-        if (Config.GUI) {
-            UIL.init();
-
-            await UIL.ready();
-
-            WorldUIL.init();
-            MeshStandardMaterialUIL.init('Cube', this.view);
-            RenderUIL.init();
-            CameraUIL.init();
-        } */
+        ]); */
     }
 
     /* static initWorld() {
@@ -75,9 +65,29 @@ export class App {
         RenderManager.init(renderer, scene, camera);
     }
 
+    static async initGUI() {
+        if (!Config.GUI) {
+            return;
+        }
+
+        UIL.init();
+
+        await UIL.ready();
+
+        WorldUIL.init();
+        MeshStandardMaterialUIL.init('Cube', this.view);
+        RenderUIL.init();
+        CameraUIL.init();
+    }
+
     static addListeners() {
         Stage.events.on(Events.RESIZE, this.onResize);
         ticker.add(this.onUpdate);
+    }
+
+    static removeListeners() {
+        Stage.events.off(Events.RESIZE, this.onResize);
+        ticker.remove(this.onUpdate);
     } */
 
     /**
@@ -97,7 +107,7 @@ export class App {
         WorldController.update(time, delta, frame);
         CameraController.update(time);
         SceneController.update();
-        InputManager.update();
+        InputManager.update(time);
         RenderManager.update(time, delta, frame);
 
         if (Config.GUI) {

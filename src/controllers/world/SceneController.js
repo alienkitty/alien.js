@@ -19,6 +19,13 @@ export class SceneController {
         window.addEventListener('mousemove', this.onTouchMove);
     }
 
+    static removeListeners() {
+        Stage.element.removeEventListener('touchstart', this.onTouchStart);
+        Stage.element.removeEventListener('mousedown', this.onTouchStart);
+        window.removeEventListener('touchmove', this.onTouchMove);
+        window.removeEventListener('mousemove', this.onTouchMove);
+    }
+
     /**
      * Event handlers
      */

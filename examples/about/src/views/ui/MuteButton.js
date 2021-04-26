@@ -41,10 +41,10 @@ export class MuteButton extends Interface {
         this.canvas.css({
             left: '50%',
             top: '50%',
-            marginLeft: -this.width / 2,
-            marginTop: -this.height / 2,
             width: this.width,
-            height: this.height
+            height: this.height,
+            marginLeft: -this.width / 2,
+            marginTop: -this.height / 2
         });
         this.context = this.canvas.element.getContext('2d');
 

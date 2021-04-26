@@ -13,20 +13,34 @@ export class CameraController {
         this.target = new Vector3();
         this.targetXY = new Vector2(8, 4);
         this.origin.copy(this.camera.position);
+        this.camera.lookAt(this.lookAt);
 
         this.lerpSpeed = 0.07;
         this.enabled = false;
 
-        if (!Config.ORBIT) {
-            this.addListeners();
-        }
+        this.addListeners();
     }
 
     static addListeners() {
+        if (Config.ORBIT) {
+            return;
+        }
+
         Stage.element.addEventListener('touchstart', this.onTouchStart);
         Stage.element.addEventListener('mousedown', this.onTouchStart);
         window.addEventListener('touchmove', this.onTouchMove);
         window.addEventListener('mousemove', this.onTouchMove);
+    }
+
+    static removeListeners() {
+        if (Config.ORBIT) {
+            return;
+        }
+
+        Stage.element.removeEventListener('touchstart', this.onTouchStart);
+        Stage.element.removeEventListener('mousedown', this.onTouchStart);
+        window.removeEventListener('touchmove', this.onTouchMove);
+        window.removeEventListener('mousemove', this.onTouchMove);
     }
 
     /**

@@ -2,7 +2,7 @@
  * @author pschroen / https://ufo.ai/
  */
 
-import { Interface } from '../../utils/Interface.js';
+import { Interface } from '../Interface.js';
 
 export class UIL {
     static count = 0;
@@ -37,7 +37,7 @@ export class UIL {
         Tools.setText(11, '#f2f2f2', '"Roboto Mono", monospace');
 
         this.gui = new Gui({
-            css: 'top: 0; right: 0; z-index: 2000; background: #202124; -webkit-font-smoothing: initial;',
+            css: 'top: 0; right: 0; z-index: 2000; background: #202124; letter-spacing: normal; -webkit-font-smoothing: initial;',
             w: 300,
             h: 26,
             p: 52,

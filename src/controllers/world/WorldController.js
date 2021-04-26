@@ -15,10 +15,7 @@ export class WorldController {
         this.initWorld();
         this.initLights();
         this.initLoaders();
-
-        if (Config.ORBIT) {
-            this.initControls();
-        }
+        this.initControls();
     }
 
     static initWorld() {
@@ -42,6 +39,7 @@ export class WorldController {
         this.camera.near = 0.1;
         this.camera.far = 1000;
         this.camera.position.z = 6;
+        this.camera.lookAt(this.scene.position);
 
         // Global geometries
         this.screenTriangle = getFullscreenTriangle();
@@ -70,6 +68,10 @@ export class WorldController {
     }
 
     static initControls() {
+        if (!Config.ORBIT) {
+            return;
+        }
+
         this.controls = new OrbitControls(this.camera, this.renderer.domElement);
         this.controls.enableDamping = true;
         // this.controls.enableZoom = false;

@@ -16,6 +16,9 @@ export class InputManager {
         this.click = null;
         this.lastTime = null;
         this.lastMouse = new Vector2();
+
+        this.raycastInterval = 0.1; // 10 frames per second
+        this.lastRaycast = 0;
         this.enabled = true;
 
         this.addListeners();
@@ -28,6 +31,15 @@ export class InputManager {
         window.addEventListener('mousemove', this.onTouchMove);
         window.addEventListener('touchend', this.onTouchEnd);
         window.addEventListener('mouseup', this.onTouchEnd);
+    }
+
+    static removeListeners() {
+        Stage.element.removeEventListener('touchstart', this.onTouchStart);
+        Stage.element.removeEventListener('mousedown', this.onTouchStart);
+        window.removeEventListener('touchmove', this.onTouchMove);
+        window.removeEventListener('mousemove', this.onTouchMove);
+        window.removeEventListener('touchend', this.onTouchEnd);
+        window.removeEventListener('mouseup', this.onTouchEnd);
     }
 
     /**
@@ -79,12 +91,14 @@ export class InputManager {
 
             if (!this.hover) {
                 this.hover = object;
+                this.hover.onHover({ type: 'over' });
+                Stage.css({ cursor: 'pointer' });
             } else if (this.hover !== object) {
                 this.hover.onHover({ type: 'out' });
                 this.hover = object;
+                this.hover.onHover({ type: 'over' });
+                Stage.css({ cursor: 'pointer' });
             }
-            this.hover.onHover({ type: 'over' });
-            Stage.css({ cursor: 'pointer' });
         } else if (this.hover) {
             this.hover.onHover({ type: 'out' });
             this.hover = null;
@@ -93,27 +107,19 @@ export class InputManager {
     };
 
     static onTouchEnd = e => {
-        if (!this.enabled) {
+        if (!this.enabled || !this.click) {
             return;
         }
 
         this.onTouchMove(e);
 
-        if (this.click) {
-            if (performance.now() - this.lastTime > 750 || this.delta.subVectors(this.mouse, this.lastMouse).length() > 50) {
-                this.click = null;
-                return;
-            }
-
-            if (this.click === this.hover) {
-                this.click.onClick();
-            }
+        if (performance.now() - this.lastTime > 750 || this.delta.subVectors(this.mouse, this.lastMouse).length() > 50) {
+            this.click = null;
+            return;
         }
 
-        if (this.hover) {
-            this.hover.onHover({ type: 'out' });
-            this.hover = null;
-            Stage.css({ clearProps: 'cursor' });
+        if (this.click === this.hover) {
+            this.click.onClick();
         }
 
         this.click = null;
@@ -123,12 +129,11 @@ export class InputManager {
      * Public methods
      */
 
-    static update = () => {
-        if (Device.mobile) {
-            return;
+    static update = time => {
+        if (!Device.mobile && time - this.lastRaycast > this.raycastInterval) {
+            this.onTouchMove();
+            this.lastRaycast = time;
         }
-
-        this.onTouchMove();
     };
 
     static add = object => {

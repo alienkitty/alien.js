@@ -10,10 +10,7 @@ export class TrackerText extends Interface {
     initHTML() {
         this.css({
             left: 20,
-            top: '50%',
-            marginTop: -9,
-            width: 145,
-            height: 11
+            top: -3
         });
 
         this.text = new Interface('.text');

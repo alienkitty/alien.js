@@ -169,6 +169,22 @@ export function getEase(ease, {
 }
 
 /**
+ * Returns the easing function for the specified common name.
+ *
+ * See the gsap.parseEase() documentation for usage examples.
+ * https://greensock.com/docs/v3/GSAP/gsap.parseEase()
+ *
+ * @export
+ * @param {string} ease Ease string.
+ * @returns {function}
+ * @example
+ * fn = parseEase('easeOutQuad');
+ */
+export function parseEase(ease) {
+    return gsap.parseEase(getEase(ease));
+}
+
+/**
  * Defers a function by the specified time.
  *
  * @export

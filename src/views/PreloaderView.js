@@ -15,6 +15,7 @@ export class PreloaderView extends Interface {
 
     initHTML() {
         this.css({
+            position: 'fixed',
             left: 0,
             top: 0,
             width: '100%',

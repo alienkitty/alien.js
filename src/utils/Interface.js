@@ -249,11 +249,11 @@ export class Interface {
         const length = this.element.getTotalLength();
         const dash = length * (progress || this.progress);
         const gap = length - dash;
-        const dashoffset = -length * (this.start + this.offset);
+        const offset = -length * (this.start + this.offset);
 
         const style = {
             strokeDasharray: `${dash},${gap}`,
-            strokeDashoffset: dashoffset
+            strokeDashoffset: offset
         };
 
         return this.css(style);

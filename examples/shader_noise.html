@@ -135,6 +135,7 @@
                 // 2D scene
                 this.scene = new Scene();
                 this.camera = new OrthographicCamera(-1, 1, 1, -1, 0, 1);
+                this.camera.lookAt(this.scene.position);
 
                 // Global geometries
                 this.screenTriangle = getFullscreenTriangle();

@@ -436,6 +436,8 @@
                 this.initLights();
                 this.initLoaders();
                 this.initControls();
+
+                this.addListeners();
             }
 
             static initWorld() {
@@ -492,6 +494,18 @@
                 this.controls.enableDamping = true;
                 this.controls.enableZoom = false;
             }
+
+            static addListeners() {
+                this.renderer.domElement.addEventListener('touchstart', this.onTouchStart);
+            }
+
+            /**
+             * Event handlers
+             */
+
+            static onTouchStart = e => {
+                e.preventDefault();
+            };
 
             /**
              * Public methods

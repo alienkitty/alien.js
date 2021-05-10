@@ -346,23 +346,19 @@
             }
 
             static addListeners() {
-                Stage.element.addEventListener('touchstart', this.onTouchStart);
-                Stage.element.addEventListener('mousedown', this.onTouchStart);
-                window.addEventListener('touchmove', this.onTouchMove);
-                window.addEventListener('mousemove', this.onTouchMove);
+                Stage.element.addEventListener('pointerdown', this.onPointerDown);
+                window.addEventListener('pointermove', this.onPointerMove);
             }
 
             /**
              * Event handlers
              */
 
-            static onTouchStart = e => {
-                e.preventDefault();
-
-                this.onTouchMove(e);
+            static onPointerDown = e => {
+                this.onPointerMove(e);
             };
 
-            static onTouchMove = e => {
+            static onPointerMove = e => {
                 if (!this.view.visible) {
                     return;
                 }
@@ -661,23 +657,19 @@
             }
 
             static addListeners() {
-                Stage.element.addEventListener('touchstart', this.onTouchStart);
-                Stage.element.addEventListener('mousedown', this.onTouchStart);
-                window.addEventListener('touchmove', this.onTouchMove);
-                window.addEventListener('mousemove', this.onTouchMove);
+                Stage.element.addEventListener('pointerdown', this.onPointerDown);
+                window.addEventListener('pointermove', this.onPointerMove);
             }
 
             /**
              * Event handlers
              */
 
-            static onTouchStart = e => {
-                e.preventDefault();
-
-                this.onTouchMove(e);
+            static onPointerDown = e => {
+                this.onPointerMove(e);
             };
 
-            static onTouchMove = e => {
+            static onPointerMove = e => {
                 const event = {};
 
                 if (e.changedTouches && e.changedTouches.length) {
@@ -732,6 +724,8 @@
                 this.initWorld();
                 this.initLights();
                 this.initLoaders();
+
+                this.addListeners();
             }
 
             static initWorld() {
@@ -778,6 +772,18 @@
                 this.textureLoader = new TextureLoader();
                 this.svgLoader = new SVGLoader();
             }
+
+            static addListeners() {
+                this.renderer.domElement.addEventListener('touchstart', this.onTouchStart);
+            }
+
+            /**
+             * Event handlers
+             */
+
+            static onTouchStart = e => {
+                e.preventDefault();
+            };
 
             /**
              * Public methods

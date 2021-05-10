@@ -160,6 +160,8 @@
             static init() {
                 this.initWorld();
                 this.initLights();
+
+                this.addListeners();
             }
 
             static initWorld() {
@@ -195,6 +197,18 @@
                 light.position.set(1, 1, 1);
                 this.scene.add(light);
             }
+
+            static addListeners() {
+                this.renderer.domElement.addEventListener('touchstart', this.onTouchStart);
+            }
+
+            /**
+             * Event handlers
+             */
+
+            static onTouchStart = e => {
+                e.preventDefault();
+            };
 
             /**
              * Public methods

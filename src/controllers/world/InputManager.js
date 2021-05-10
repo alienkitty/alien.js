@@ -25,35 +25,27 @@ export class InputManager {
     }
 
     static addListeners() {
-        Stage.element.addEventListener('touchstart', this.onTouchStart);
-        Stage.element.addEventListener('mousedown', this.onTouchStart);
-        window.addEventListener('touchmove', this.onTouchMove);
-        window.addEventListener('mousemove', this.onTouchMove);
-        window.addEventListener('touchend', this.onTouchEnd);
-        window.addEventListener('mouseup', this.onTouchEnd);
+        Stage.element.addEventListener('pointerdown', this.onPointerDown);
+        window.addEventListener('pointermove', this.onPointerMove);
+        window.addEventListener('pointerup', this.onPointerUp);
     }
 
     static removeListeners() {
-        Stage.element.removeEventListener('touchstart', this.onTouchStart);
-        Stage.element.removeEventListener('mousedown', this.onTouchStart);
-        window.removeEventListener('touchmove', this.onTouchMove);
-        window.removeEventListener('mousemove', this.onTouchMove);
-        window.removeEventListener('touchend', this.onTouchEnd);
-        window.removeEventListener('mouseup', this.onTouchEnd);
+        Stage.element.removeEventListener('pointerdown', this.onPointerDown);
+        window.removeEventListener('pointermove', this.onPointerMove);
+        window.removeEventListener('pointerup', this.onPointerUp);
     }
 
     /**
      * Event handlers
      */
 
-    static onTouchStart = e => {
-        e.preventDefault();
-
+    static onPointerDown = e => {
         if (!this.enabled) {
             return;
         }
 
-        this.onTouchMove(e);
+        this.onPointerMove(e);
 
         if (this.hover) {
             this.click = this.hover;
@@ -62,7 +54,7 @@ export class InputManager {
         }
     };
 
-    static onTouchMove = e => {
+    static onPointerMove = e => {
         if (!this.enabled) {
             return;
         }
@@ -106,12 +98,12 @@ export class InputManager {
         }
     };
 
-    static onTouchEnd = e => {
+    static onPointerUp = e => {
         if (!this.enabled || !this.click) {
             return;
         }
 
-        this.onTouchMove(e);
+        this.onPointerMove(e);
 
         if (performance.now() - this.lastTime > 750 || this.delta.subVectors(this.mouse, this.lastMouse).length() > 50) {
             this.click = null;
@@ -131,7 +123,7 @@ export class InputManager {
 
     static update = time => {
         if (!Device.mobile && time - this.lastRaycast > this.raycastInterval) {
-            this.onTouchMove();
+            this.onPointerMove();
             this.lastRaycast = time;
         }
     };

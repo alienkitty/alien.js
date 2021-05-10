@@ -5,6 +5,8 @@ import { getFullscreenTriangle } from 'alien.js';
 export class WorldController {
     static init() {
         this.initWorld();
+
+        this.addListeners();
     }
 
     static initWorld() {
@@ -33,6 +35,18 @@ export class WorldController {
         this.time = new Uniform(0);
         this.frame = new Uniform(0);
     }
+
+    static addListeners() {
+        this.renderer.domElement.addEventListener('touchstart', this.onTouchStart);
+    }
+
+    /**
+     * Event handlers
+     */
+
+    static onTouchStart = e => {
+        e.preventDefault();
+    };
 
     /**
      * Public methods

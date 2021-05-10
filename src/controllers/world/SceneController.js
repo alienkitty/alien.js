@@ -13,30 +13,24 @@ export class SceneController {
     }
 
     static addListeners() {
-        Stage.element.addEventListener('touchstart', this.onTouchStart);
-        Stage.element.addEventListener('mousedown', this.onTouchStart);
-        window.addEventListener('touchmove', this.onTouchMove);
-        window.addEventListener('mousemove', this.onTouchMove);
+        Stage.element.addEventListener('pointerdown', this.onPointerDown);
+        window.addEventListener('pointermove', this.onPointerMove);
     }
 
     static removeListeners() {
-        Stage.element.removeEventListener('touchstart', this.onTouchStart);
-        Stage.element.removeEventListener('mousedown', this.onTouchStart);
-        window.removeEventListener('touchmove', this.onTouchMove);
-        window.removeEventListener('mousemove', this.onTouchMove);
+        Stage.element.removeEventListener('pointerdown', this.onPointerDown);
+        window.removeEventListener('pointermove', this.onPointerMove);
     }
 
     /**
      * Event handlers
      */
 
-    static onTouchStart = e => {
-        e.preventDefault();
-
-        this.onTouchMove(e);
+    static onPointerDown = e => {
+        this.onPointerMove(e);
     };
 
-    static onTouchMove = e => {
+    static onPointerMove = e => {
         if (!this.view.visible) {
             return;
         }

@@ -62,15 +62,13 @@ export class Preloader {
     static addListeners() {
         this.loader.events.on(Events.PROGRESS, this.view.onProgress);
         this.view.events.on(Events.COMPLETE, this.onComplete);
-        Stage.element.addEventListener('touchstart', this.onTouchStart);
-        Stage.element.addEventListener('mousedown', this.onTouchStart);
+        Stage.element.addEventListener('pointerdown', this.onPointerDown);
     }
 
     static removeListeners() {
         this.loader.events.off(Events.PROGRESS, this.view.onProgress);
         this.view.events.off(Events.COMPLETE, this.onComplete);
-        Stage.element.removeEventListener('touchstart', this.onTouchStart);
-        Stage.element.removeEventListener('mousedown', this.onTouchStart);
+        Stage.element.removeEventListener('pointerdown', this.onPointerDown);
     }
 
     /**
@@ -88,9 +86,8 @@ export class Preloader {
         this.app.start();
     };
 
-    static onTouchStart = () => {
-        Stage.element.removeEventListener('touchstart', this.onTouchStart);
-        Stage.element.removeEventListener('mousedown', this.onTouchStart);
+    static onPointerDown = () => {
+        Stage.element.removeEventListener('pointerdown', this.onPointerDown);
 
         // WebAudio.resume();
     };

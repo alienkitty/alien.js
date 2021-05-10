@@ -61,12 +61,9 @@ export class FluidController {
 
     static addListeners() {
         Stage.events.on(Events.UPDATE, this.onUsers);
-        Stage.element.addEventListener('touchstart', this.onTouchStart);
-        Stage.element.addEventListener('mousedown', this.onTouchStart);
-        window.addEventListener('touchmove', this.onTouchMove);
-        window.addEventListener('mousemove', this.onTouchMove);
-        window.addEventListener('touchend', this.onTouchEnd);
-        window.addEventListener('mouseup', this.onTouchEnd);
+        Stage.element.addEventListener('pointerdown', this.onPointerDown);
+        window.addEventListener('pointermove', this.onPointerMove);
+        window.addEventListener('pointerup', this.onPointerUp);
         Data.Socket.on('motion', this.onMotion);
     }
 
@@ -101,19 +98,17 @@ export class FluidController {
         });
     };
 
-    static onTouchStart = e => {
-        e.preventDefault();
-
+    static onPointerDown = e => {
         if (!this.enabled) {
             return;
         }
 
         this.pointer.main.isDown = true;
 
-        this.onTouchMove(e);
+        this.onPointerMove(e);
     };
 
-    static onTouchMove = e => {
+    static onPointerMove = e => {
         if (!this.enabled) {
             return;
         }
@@ -134,14 +129,14 @@ export class FluidController {
         this.send(event);
     };
 
-    static onTouchEnd = e => {
+    static onPointerUp = e => {
         if (!this.enabled) {
             return;
         }
 
         this.pointer.main.isDown = false;
 
-        this.onTouchMove(e);
+        this.onPointerMove(e);
     };
 
     static onMotion = e => {

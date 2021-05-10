@@ -24,8 +24,7 @@ export class AudioController {
 
     static addListeners() {
         Stage.events.on(Events.VISIBILITY, this.onVisibility);
-        Stage.element.addEventListener('touchstart', this.onTouchStart);
-        Stage.element.addEventListener('mousedown', this.onTouchStart);
+        Stage.element.addEventListener('pointerdown', this.onPointerDown);
     }
 
     static getMouseSpeed(id, normalX, normalY) {
@@ -68,9 +67,8 @@ export class AudioController {
         }
     };
 
-    static onTouchStart = () => {
-        Stage.element.removeEventListener('touchstart', this.onTouchStart);
-        Stage.element.removeEventListener('mousedown', this.onTouchStart);
+    static onPointerDown = () => {
+        Stage.element.removeEventListener('pointerdown', this.onPointerDown);
 
         this.trigger('bass_drum');
     };

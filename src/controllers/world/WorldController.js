@@ -16,6 +16,8 @@ export class WorldController {
         this.initLights();
         this.initLoaders();
         this.initControls();
+
+        this.addListeners();
     }
 
     static initWorld() {
@@ -77,6 +79,18 @@ export class WorldController {
         // this.controls.enableZoom = false;
         // this.controls.enabled = false;
     }
+
+    static addListeners() {
+        this.renderer.domElement.addEventListener('touchstart', this.onTouchStart);
+    }
+
+    /**
+     * Event handlers
+     */
+
+    static onTouchStart = e => {
+        e.preventDefault();
+    };
 
     /**
      * Public methods

@@ -56,14 +56,12 @@ export class NavLink extends Interface {
     }
 
     addListeners() {
-        this.element.addEventListener('touchstart', this.onTouchStart);
         this.element.addEventListener('mouseenter', this.onHover);
         this.element.addEventListener('mouseleave', this.onHover);
         this.element.addEventListener('click', this.onClick);
     }
 
     removeListeners() {
-        this.element.removeEventListener('touchstart', this.onTouchStart);
         this.element.removeEventListener('mouseenter', this.onHover);
         this.element.removeEventListener('mouseleave', this.onHover);
         this.element.removeEventListener('click', this.onClick);
@@ -72,10 +70,6 @@ export class NavLink extends Interface {
     /**
      * Event handlers
      */
-
-    onTouchStart = e => {
-        e.stopPropagation();
-    };
 
     onHover = ({ type }) => {
         if (type === 'mouseenter') {

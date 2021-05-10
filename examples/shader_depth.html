@@ -164,6 +164,8 @@
             static init() {
                 this.initWorld();
                 this.initControls();
+
+                this.addListeners();
             }
 
             static initWorld() {
@@ -196,6 +198,18 @@
                 this.controls = new OrbitControls(this.camera, this.renderer.domElement);
                 this.controls.enableDamping = true;
             }
+
+            static addListeners() {
+                this.renderer.domElement.addEventListener('touchstart', this.onTouchStart);
+            }
+
+            /**
+             * Event handlers
+             */
+
+            static onTouchStart = e => {
+                e.preventDefault();
+            };
 
             /**
              * Public methods

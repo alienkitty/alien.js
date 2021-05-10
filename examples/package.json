@@ -3,24 +3,11 @@
   "version": "1.0.0",
   "author": "pschroen",
   "private": true,
-  "eslintConfig": {
-    "parserOptions": {
-      "babelOptions": {
-        "configFile": "../babel.config.json"
-      }
-    },
-    "plugins": [
-      "html"
-    ]
-  },
   "scripts": {
     "build": "rollup -c",
-    "start": "servez -p 8080 ../",
-    "lint": "eslint about/src *.html"
+    "start": "servez -p 8080 ../"
   },
   "devDependencies": {
-    "eslint": "^7.25.0",
-    "eslint-plugin-html": "^6.1.2",
     "rollup": "^2.45.2",
     "servez": "^1.11.0"
   }

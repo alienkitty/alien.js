@@ -1,8 +1,8 @@
 .DS_Store
+.babelrc.json
 .eslintignore
 .eslintrc.json
 .travis.yml
-babel.config.json
 build
 examples
 public

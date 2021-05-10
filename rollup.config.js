@@ -1,5 +1,5 @@
 import resolve from '@rollup/plugin-node-resolve';
-import { babel, terser, timestamp } from 'rollup-plugin-bundleutils';
+import { terser, timestamp } from 'rollup-plugin-bundleutils';
 
 const production = !process.env.ROLLUP_WATCH;
 
@@ -16,9 +16,6 @@ export default {
   plugins: [
     resolve({
       browser: true
-    }),
-    production && babel({
-      presets: []
     }),
     production && terser({
       output: {

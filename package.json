@@ -27,18 +27,14 @@
     "build": "rollup -c",
     "dev": "concurrently --names \"ROLLUP,HTTP\" -c \"bgBlue.bold,bgGreen.bold\" \"rollup -c -w -m inline\" \"servez -p 8080 public\"",
     "start": "servez -p 8080 public",
-    "lint": "eslint src",
-    "travis": "npm run lint && npm run build"
+    "travis": "npm run build"
   },
   "dependencies": {
     "gsap": "^3.6.1"
   },
   "devDependencies": {
-    "@babel/eslint-parser": "^7.13.14",
-    "@babel/plugin-proposal-class-properties": "^7.13.0",
     "@rollup/plugin-node-resolve": "^11.2.1",
     "concurrently": "^6.0.2",
-    "eslint": "^7.25.0",
     "rollup": "^2.45.2",
     "rollup-plugin-bundleutils": "^1.2.3",
     "servez": "^1.11.0"

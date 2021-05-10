@@ -253,6 +253,15 @@ npm run build
 npm start
 ```
 
+### With ESLint
+
+```sh
+npm i -D eslint eslint-plugin-html @babel/eslint-parser
+npx eslint src
+npx eslint examples/*.html
+npx eslint examples/about/src
+```
+
 ### Resources
 
 * [The Wiki](https://github.com/pschroen/alien.js/wiki)

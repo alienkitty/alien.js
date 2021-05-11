@@ -16,7 +16,8 @@ export class TextureLoader extends Loader {
 
         this.defaultOptions = {
             imageOrientation: 'flipY',
-            premultiplyAlpha: 'none'
+            premultiplyAlpha: 'none',
+            preserveData: false
         };
 
         this.options = this.defaultOptions;
@@ -44,13 +45,18 @@ export class TextureLoader extends Loader {
             if (cached) {
                 promise = Promise.resolve(cached);
             } else if (Device.agent.includes('chrome')) {
+                const params = {
+                    imageOrientation: this.options.imageOrientation,
+                    premultiplyAlpha: this.options.premultiplyAlpha
+                };
+
                 if (Thread.threads) {
-                    promise = ImageBitmapLoaderThread.load(path, Assets.options, this.options);
+                    promise = ImageBitmapLoaderThread.load(path, Assets.options, params);
                 } else {
                     promise = fetch(path, Assets.options).then(response => {
                         return response.blob();
                     }).then(blob => {
-                        return createImageBitmap(blob, this.options);
+                        return createImageBitmap(blob, params);
                     });
                 }
             } else {
@@ -74,7 +80,7 @@ export class TextureLoader extends Loader {
                 texture.needsUpdate = true;
 
                 texture.onUpdate = () => {
-                    if (image.close) {
+                    if (image.close && !this.options.preserveData) {
                         image.close();
                     }
 

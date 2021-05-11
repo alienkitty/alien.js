@@ -122,9 +122,9 @@
                 const vertices = [];
 
                 for (let i = 0; i < this.numParticles; i++) {
-                    vertices[i * 3 + 0] = MathUtils.randFloatSpread(camera.far);
-                    vertices[i * 3 + 1] = MathUtils.randFloatSpread(camera.far);
-                    vertices[i * 3 + 2] = MathUtils.randFloatSpread(camera.far);
+                    vertices[i * 3 + 0] = MathUtils.randFloatSpread(camera.far / 2);
+                    vertices[i * 3 + 1] = MathUtils.randFloatSpread(camera.far / 2);
+                    vertices[i * 3 + 2] = MathUtils.randFloatSpread(camera.far / 2);
                 }
 
                 const geometry = new BufferGeometry();
@@ -579,7 +579,7 @@
                 this.view = new SceneView();
                 WorldController.scene.add(this.view);
 
-                this.dust = new Dust(4000);
+                this.dust = new Dust(2000);
             }
 
             static initControllers() {

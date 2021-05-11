@@ -11,8 +11,8 @@ export class BufferGeometryLoaderThread {
     static init() {
         Thread.upload(loadBufferGeometry);
 
-        function loadBufferGeometry({ path, init, id }) {
-            fetch(path, init).then(response => {
+        function loadBufferGeometry({ path, options, id }) {
+            fetch(path, options).then(response => {
                 return response.json();
             }).then(({ data }) => {
                 const buffers = {
@@ -32,9 +32,9 @@ export class BufferGeometryLoaderThread {
         }
     }
 
-    static load(path, init) {
+    static load(path, options) {
         path = absolute(Assets.getPath(path));
 
-        return Thread.shared().loadBufferGeometry({ path, init });
+        return Thread.shared().loadBufferGeometry({ path, options });
     }
 }

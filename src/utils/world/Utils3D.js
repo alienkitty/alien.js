@@ -49,9 +49,17 @@ export function getScreenSpaceBox(mesh, camera) {
 }
 
 export function getFrustum(camera, offsetZ = 0) {
+    const distance = camera.position.z - offsetZ;
     const fov = MathUtils.degToRad(camera.fov);
-    const height = 2 * Math.tan(fov / 2) * (camera.position.z - offsetZ);
+    const height = 2 * Math.tan(fov / 2) * distance;
     const width = height * camera.aspect;
 
     return { width, height };
+}
+
+export function getFrustumFromHeight(camera, height, offsetZ = 0) {
+    const distance = camera.position.z - offsetZ;
+    const fov = MathUtils.radToDeg(2 * Math.atan(height / (2 * distance)));
+
+    return fov;
 }

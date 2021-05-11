@@ -12,8 +12,8 @@ export class TextGeometryLoaderThread {
     static init() {
         Thread.upload(loadTextGeometry);
 
-        function loadTextGeometry({ path, init, params, id }) {
-            fetch(path, init).then(response => {
+        function loadTextGeometry({ path, options, params, id }) {
+            fetch(path, options).then(response => {
                 return response.json();
             }).then(font => {
                 params.font = font;
@@ -31,9 +31,9 @@ export class TextGeometryLoaderThread {
         }
     }
 
-    static load(path, init, params) {
+    static load(path, options, params) {
         path = absolute(Assets.getPath(path));
 
-        return Thread.shared().loadTextGeometry({ path, init, params });
+        return Thread.shared().loadTextGeometry({ path, options, params });
     }
 }

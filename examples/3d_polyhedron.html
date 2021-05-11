@@ -535,7 +535,9 @@
             };
 
             static onPointerMove = e => {
-                if (this.prevent) return;
+                if (this.prevent) {
+                    return;
+                }
 
                 const event = {};
 
@@ -599,7 +601,6 @@
 
             static animateIn = () => {
                 this.enabled = true;
-                this.prevent = true;
 
                 tween(this.target, { x: radians(-360) }, 4200, 'easeInOutQuart', () => {
                     this.prevent = false;

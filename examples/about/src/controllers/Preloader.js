@@ -39,7 +39,7 @@ export class Preloader {
         this.view.animateIn();
 
         this.loader = new MultiLoader();
-        this.loader.load(new FontLoader(['Roboto Mono', 'Roboto', 'Ropa Sans']));
+        this.loader.load(new FontLoader(['Roboto Mono']));
         this.loader.load(new AssetLoader(Config.ASSETS));
         this.loader.add(1);
 

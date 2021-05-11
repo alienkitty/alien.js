@@ -19,6 +19,7 @@ export class RenderManager {
         this.camera = camera;
 
         this.luminosityThreshold = 0.1;
+        this.luminositySmoothing = 1;
         this.bloomStrength = 0.3;
         this.bloomRadius = 0.75;
 
@@ -65,6 +66,7 @@ export class RenderManager {
         // Luminosity high pass material
         this.luminosityMaterial = new LuminosityMaterial();
         this.luminosityMaterial.uniforms.uLuminosityThreshold.value = this.luminosityThreshold;
+        this.luminosityMaterial.uniforms.uLuminositySmoothing.value = this.luminositySmoothing;
 
         // Gaussian blur materials
         this.blurMaterials = [];

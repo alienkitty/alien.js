@@ -18,6 +18,8 @@
         class Config {
             static BG_COLOR = '#0e0e0e';
             static UI_COLOR = 'rgba(255, 255, 255, 0.94)';
+
+            static BREAKPOINT = 1000;
         }
 
         import rgbshift from '../src/shaders/modules/rgbshift/rgbshift.glsl.js';
@@ -381,6 +383,13 @@
                 this.camera.right = width / 2;
                 this.camera.top = height / 2;
                 this.camera.bottom = -height / 2;
+
+                if (width < Config.BREAKPOINT) {
+                    this.camera.zoom = 0.8;
+                } else {
+                    this.camera.zoom = 1;
+                }
+
                 this.camera.updateProjectionMatrix();
 
                 width = Math.round(width * dpr);

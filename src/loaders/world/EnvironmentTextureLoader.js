@@ -8,10 +8,11 @@ import { TextureLoader } from './TextureLoader.js';
 import { Loader } from '../Loader.js';
 
 export class EnvironmentTextureLoader extends Loader {
-    constructor(renderer) {
+    constructor(renderer, options = {}) {
         super();
 
         this.textureLoader = new TextureLoader();
+        this.textureLoader.setOptions(options);
 
         // Generates an environment diffuse texture
         this.pmremGenerator = new PMREMGenerator(renderer);

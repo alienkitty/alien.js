@@ -11,8 +11,8 @@ export class ImageBitmapLoaderThread {
     static init() {
         Thread.upload(loadImage);
 
-        function loadImage({ path, init, params, id }) {
-            fetch(path, init).then(response => {
+        function loadImage({ path, options, params, id }) {
+            fetch(path, options).then(response => {
                 return response.blob();
             }).then(blob => {
                 return createImageBitmap(blob, params);
@@ -28,9 +28,9 @@ export class ImageBitmapLoaderThread {
         }
     }
 
-    static load(path, init, params) {
+    static load(path, options, params) {
         path = absolute(Assets.getPath(path));
 
-        return Thread.shared().loadImage({ path, init, params });
+        return Thread.shared().loadImage({ path, options, params });
     }
 }

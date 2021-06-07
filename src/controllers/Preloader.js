@@ -5,15 +5,15 @@ import { Assets } from '../loaders/Assets.js';
 import { MultiLoader } from '../loaders/MultiLoader.js';
 import { FontLoader } from '../loaders/FontLoader.js';
 import { AssetLoader } from '../loaders/AssetLoader.js';
-// import { WebAudio } from '../utils/audio/WebAudio.js';
+import { WebAudio } from '../utils/audio/WebAudio.js';
 import { Stage } from './Stage.js';
 import { PreloaderView } from '../views/PreloaderView.js';
 
 export class Preloader {
     static init() {
-        // if (!Device.webgl) {
-        //     return location.href = 'fallback.html';
-        // }
+        if (!Device.webgl) {
+            return location.href = 'fallback.html';
+        }
 
         Assets.path = Config.CDN;
         Assets.crossOrigin = 'anonymous';
@@ -23,7 +23,7 @@ export class Preloader {
             // credentials: 'include'
         };
 
-        // Assets.cache = true;
+        Assets.cache = true;
 
         this.initView();
         this.initLoader();
@@ -89,6 +89,6 @@ export class Preloader {
     static onPointerDown = () => {
         Stage.element.removeEventListener('pointerdown', this.onPointerDown);
 
-        // WebAudio.resume();
+        WebAudio.resume();
     };
 }

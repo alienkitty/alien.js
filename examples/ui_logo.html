@@ -13,12 +13,11 @@
 <body>
     <div id="root"></div>
     <script type="module">
-        import gsap from 'https://unpkg.com/gsap/index.js';
+        import { Events, Interface, Stage } from '../build/alien.js';
 
-        class Logo {
+        class Logo extends Interface {
             constructor() {
-                this.element;
-                this.image;
+                super('.logo');
 
                 this.initHTML();
 
@@ -27,37 +26,33 @@
             }
 
             initHTML() {
-                this.element = document.createElement('div');
-                this.element.classList.add('logo');
-                gsap.set(this.element, {
-                    top: 50,
+                this.css({
                     left: 50,
+                    top: 50,
                     width: 64,
                     height: 64,
                     cursor: 'pointer',
                     opacity: 0
                 });
 
-                this.image = document.createElement('img');
-                this.image.src = 'assets/images/alienkitty.svg';
-                gsap.set(this.image, {
+                this.image = new Interface(null, 'img');
+                this.image.attr({ src: 'assets/images/alienkitty.svg' });
+                this.image.css({
                     position: 'relative',
                     width: '100%'
                 });
-                this.element.appendChild(this.image);
+                this.add(this.image);
             }
 
             addListeners() {
-                window.addEventListener('resize', this.onResize);
-                window.addEventListener('orientationchange', this.onResize);
+                Stage.events.on(Events.RESIZE, this.onResize);
                 this.element.addEventListener('mouseenter', this.onHover);
                 this.element.addEventListener('mouseleave', this.onHover);
                 this.element.addEventListener('click', this.onClick);
             }
 
             removeListeners() {
-                window.removeEventListener('resize', this.onResize);
-                window.removeEventListener('orientationchange', this.onResize);
+                Stage.events.off(Events.RESIZE, this.onResize);
                 this.element.removeEventListener('mouseenter', this.onHover);
                 this.element.removeEventListener('mouseleave', this.onHover);
                 this.element.removeEventListener('click', this.onClick);
@@ -68,17 +63,17 @@
              */
 
             onResize = () => {
-                if (window.innerWidth < window.innerHeight) {
-                    gsap.set(this.element, {
-                        top: 30,
+                if (Stage.width < Stage.height) {
+                    this.css({
                         left: 30,
+                        top: 30,
                         width: 40,
                         height: 40
                     });
                 } else {
-                    gsap.set(this.element, {
-                        top: 50,
+                    this.css({
                         left: 50,
+                        top: 50,
                         width: 64,
                         height: 64
                     });
@@ -86,15 +81,18 @@
             };
 
             onHover = ({ type }) => {
+                this.clearTween();
+
                 if (type === 'mouseenter') {
-                    gsap.to(this.element, { opacity: 0.6, duration: 0.3, ease: 'power2.out' });
+                    this.tween({ opacity: 0.6 }, 300, 'easeOutCubic');
                 } else {
-                    gsap.to(this.element, { opacity: 1, duration: 0.3, ease: 'power2.out' });
+                    this.tween({ opacity: 1 }, 300, 'easeOutCubic');
                 }
             };
 
             onClick = () => {
-                open('https://alien.js.org/');
+                // open('https://alien.js.org/');
+                Stage.setPath('/');
             };
 
             /**
@@ -102,38 +100,26 @@
              */
 
             animateIn = () => {
-                gsap.to(this.element, { opacity: 1, duration: 0.6, ease: 'sine.inOut' });
+                this.tween({ opacity: 1 }, 600, 'easeInOutSine');
             };
 
             destroy = () => {
-                this.element.parentNode.removeChild(this.element);
-
                 this.removeListeners();
 
-                this.element = null;
-                this.image = null;
-
-                return null;
+                return super.destroy();
             };
         }
 
         class App {
             static async init() {
-                this.element;
-
-                this.initHTML();
                 this.initViews();
 
                 this.addListeners();
             }
 
-            static initHTML() {
-                this.element = document.getElementById('root');
-            }
-
             static initViews() {
                 this.logo = new Logo();
-                this.element.appendChild(this.logo.element);
+                Stage.add(this.logo);
             }
 
             static addListeners() {

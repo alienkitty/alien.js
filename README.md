@@ -23,9 +23,9 @@
 
 <br>
 
-Alien.js is a design pattern for building [SPA](https://en.wikipedia.org/wiki/Single-page_application) websites with ES modules and [GSAP](https://greensock.com/).
+Alien.js is a design pattern for building [single-page applications](https://en.wikipedia.org/wiki/Single-page_application) with ES modules and [three.js](https://threejs.org/).
 
-The idea is to keep it simple, with minimal abstraction, and to build websites more like a framework, which is why [Rollup](https://rollupjs.org/) is used instead for bundling.
+The idea is to keep it simple, with minimal abstraction, and to build websites more like a framework, which is why [rollup.js](https://rollupjs.org/) is used instead for bundling.
 
 In its design, everything is an ES module, all user interfaces and components follow the same class structure, making it easy to copy-paste from examples and between projects.
 
@@ -35,15 +35,14 @@ In its design, everything is an ES module, all user interfaces and components fo
 
 #### ui
 
-[logo](https://alien.js.org/examples/ui_logo.html)  
-[logo](https://alien.js.org/examples/ui_logo_interface.html) (interface)  
+[logo](https://alien.js.org/examples/ui_logo.html) (interface)  
 [progress](https://alien.js.org/examples/ui_progress_canvas.html) (canvas)  
 [progress](https://alien.js.org/examples/ui_progress.html) (svg)  
 [progress indeterminate](https://alien.js.org/examples/ui_progress_indeterminate.html) (svg)  
 [close](https://alien.js.org/examples/ui_close.html) (svg)  
 [magnetic](https://alien.js.org/examples/ui_magnetic.html) (component, svg)  
 [tilt](https://alien.js.org/examples/ui_tilt.html)  
-[ufo](https://ufo.ai/)  
+[ufo](https://ufo.ai/) (2d scene, smooth scroll with skew effect)  
 
 #### 3d
 
@@ -80,7 +79,7 @@ In its design, everything is an ES module, all user interfaces and components fo
 [depth](https://alien.js.org/examples/shader_depth.html) (fragment depth with dither)  
 [hologram](https://alien.js.org/examples/shader_hologram.html)  
 [text](https://alien.js.org/examples/shader_text.html) (MSDF text)  
-[alienkitty](https://alienkitty.com/) (flowmap with RGB shift, MSDF text)  
+[alienkitty](https://alienkitty.com/) (2d scene, flowmap with RGB shift, MSDF text)  
 
 #### thread
 
@@ -97,12 +96,13 @@ In its design, everything is an ES module, all user interfaces and components fo
 ### Class structure
 
 ```js
-import gsap from 'gsap';
+import { Events } from '../config/Events.js';
+import { Interface } from '../utils/Interface.js';
+import { Stage } from '../controllers/Stage.js';
 
-export class Logo {
+class Logo extends Interface {
     constructor() {
-        this.element;
-        this.image;
+        super('.logo');
 
         this.initHTML();
 
@@ -111,37 +111,33 @@ export class Logo {
     }
 
     initHTML() {
-        this.element = document.createElement('div');
-        this.element.classList.add('logo');
-        gsap.set(this.element, {
-            top: 50,
+        this.css({
             left: 50,
+            top: 50,
             width: 64,
             height: 64,
             cursor: 'pointer',
             opacity: 0
         });
 
-        this.image = document.createElement('img');
-        this.image.src = 'assets/images/alienkitty.svg';
-        gsap.set(this.image, {
+        this.image = new Interface(null, 'img');
+        this.image.attr({ src: 'assets/images/alienkitty.svg' });
+        this.image.css({
             position: 'relative',
             width: '100%'
         });
-        this.element.appendChild(this.image);
+        this.add(this.image);
     }
 
     addListeners() {
-        window.addEventListener('resize', this.onResize);
-        window.addEventListener('orientationchange', this.onResize);
+        Stage.events.on(Events.RESIZE, this.onResize);
         this.element.addEventListener('mouseenter', this.onHover);
         this.element.addEventListener('mouseleave', this.onHover);
         this.element.addEventListener('click', this.onClick);
     }
 
     removeListeners() {
-        window.removeEventListener('resize', this.onResize);
-        window.removeEventListener('orientationchange', this.onResize);
+        Stage.events.off(Events.RESIZE, this.onResize);
         this.element.removeEventListener('mouseenter', this.onHover);
         this.element.removeEventListener('mouseleave', this.onHover);
         this.element.removeEventListener('click', this.onClick);
@@ -152,17 +148,17 @@ export class Logo {
      */
 
     onResize = () => {
-        if (window.innerWidth < window.innerHeight) {
-            gsap.set(this.element, {
-                top: 30,
+        if (Stage.width < Stage.height) {
+            this.css({
                 left: 30,
+                top: 30,
                 width: 40,
                 height: 40
             });
         } else {
-            gsap.set(this.element, {
-                top: 50,
+            this.css({
                 left: 50,
+                top: 50,
                 width: 64,
                 height: 64
             });
@@ -170,15 +166,18 @@ export class Logo {
     };
 
     onHover = ({ type }) => {
+        this.clearTween();
+
         if (type === 'mouseenter') {
-            gsap.to(this.element, { opacity: 0.6, duration: 0.3, ease: 'power2.out' });
+            this.tween({ opacity: 0.6 }, 300, 'easeOutCubic');
         } else {
-            gsap.to(this.element, { opacity: 1, duration: 0.3, ease: 'power2.out' });
+            this.tween({ opacity: 1 }, 300, 'easeOutCubic');
         }
     };
 
     onClick = () => {
-        open('https://alien.js.org/');
+        // open('https://alien.js.org/');
+        Stage.setPath('/');
     };
 
     /**
@@ -186,18 +185,13 @@ export class Logo {
      */
 
     animateIn = () => {
-        gsap.to(this.element, { opacity: 1, duration: 0.6, ease: 'sine.inOut' });
+        this.tween({ opacity: 1 }, 600, 'easeInOutSine');
     };
 
     destroy = () => {
-        this.element.parentNode.removeChild(this.element);
-
         this.removeListeners();
 
-        this.element = null;
-        this.image = null;
-
-        return null;
+        return super.destroy();
     };
 }
 ```
@@ -225,12 +219,12 @@ npm run dev
 npm run build
 ```
 
-### With three.js and UIL
+### With UIL
 
-Uncomment all the lines in `App.js`, install `three` and download the [uil](https://github.com/lo-th/uil) ES module:
+Uncomment all the lines in `App.js`, and download the [uil](https://github.com/lo-th/uil) ES module:
 
 ```sh
-npm i && npm i three
+npm i
 mkdir src/lib
 curl -L https://raw.githubusercontent.com/lo-th/uil/gh-pages/build/uil.module.js --output src/lib/uil.module.js
 npm run dev
@@ -246,7 +240,7 @@ UIL is loaded dynamically and not part of the main bundle.
 ### With examples
 
 ```sh
-npm i && npm i three
+npm i
 cd examples
 npm i
 npm run build

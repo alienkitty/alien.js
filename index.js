@@ -23,8 +23,13 @@ export { BufferGeometryLoaderThread } from './src/loaders/world/BufferGeometryLo
 export { TextGeometryLoader } from './src/loaders/world/TextGeometryLoader.js';
 export { TextGeometryLoaderThread } from './src/loaders/world/TextGeometryLoaderThread.js';
 
+// Tween
+export * from './src/tween/Ticker.js';
+export * from './src/tween/BezierEasing.js';
+export { Easing } from './src/tween/Easing.js';
+export * from './src/tween/Tween.js';
+
 // Utils
-export * from './src/utils/Tween.js';
 export * from './src/utils/Utils.js';
 export { EventEmitter } from './src/utils/EventEmitter.js';
 export { Interface } from './src/utils/Interface.js';

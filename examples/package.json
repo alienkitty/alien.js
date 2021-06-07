@@ -1,7 +1,6 @@
 {
   "name": "alien-examples",
   "version": "1.0.0",
-  "author": "pschroen",
   "private": true,
   "scripts": {
     "build": "rollup -c",

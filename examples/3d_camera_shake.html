@@ -13,7 +13,7 @@
 <body>
     <div id="root"></div>
     <script type="module">
-        import { AssetLoader, Assets, Color, CylinderGeometry, Device, DirectionalLight, EventEmitter, Events, Fog, Group, HemisphereLight, MathUtils, Mesh, MeshStandardMaterial, PerspectiveCamera, PlaneGeometry, PointLight, Reflector, RepeatWrapping, Scene, Sound3D, SphereGeometry, Stage, TextureLoader, Thread, Uniform, Vector2, Vector3, WebAudio, WebGL1Renderer, Wobble, clamp, clearTween, delayedCall, getFrustum, gsap, radians, range, ticker, tween } from '../build/alien.js';
+        import { AssetLoader, Assets, Color, CylinderGeometry, Device, DirectionalLight, EventEmitter, Events, Fog, Group, HemisphereLight, MathUtils, Mesh, MeshStandardMaterial, PerspectiveCamera, PlaneGeometry, PointLight, Reflector, RepeatWrapping, Scene, Sound3D, SphereGeometry, Stage, TextureLoader, Thread, Uniform, Vector2, Vector3, WebAudio, WebGL1Renderer, Wobble, clamp, clearTween, delayedCall, getFrustum, radians, range, ticker, tween } from '../build/alien.js';
 
         import { World } from 'https://unpkg.com/oimo/build/oimo.module.js';
 
@@ -136,6 +136,8 @@
             }
 
             addListeners() {
+                ticker.stop();
+
                 addEventListener('message', this.onMessage);
             }
 
@@ -171,8 +173,10 @@
                 this.physics.resize(width, height);
             };
 
-            update = () => {
+            update = ({ time }) => {
                 this.physics.update();
+
+                ticker.onTick(time);
             };
 
             motion = e => {
@@ -212,7 +216,7 @@
                 if (Device.agent.includes('chrome')) {
                     this.thread = new Thread({
                         imports: [
-                            ['../build/alien.js', 'EventEmitter', 'Vector2', 'Vector3', 'delayedCall'],
+                            ['../build/alien.js', 'EventEmitter', 'Vector2', 'Vector3', 'delayedCall', 'ticker'],
                             ['https://unpkg.com/oimo/build/oimo.module.js', 'World']
                         ],
                         classes: [ScenePhysics],
@@ -806,10 +810,7 @@
             static async init() {
                 Assets.cache = true;
 
-                this.last = performance.now();
-                this.delta = 0;
                 this.time = 0;
-                this.frame = 0;
 
                 this.initWorld();
                 this.initViews();
@@ -851,29 +852,31 @@
             }
 
             static addListeners() {
-                Stage.events.on(Events.RESIZE, this.onResize);
-
                 if (SceneController.physics.thread) {
-                    // Unhooks the GSAP ticker
-                    gsap.ticker.remove(gsap.updateRoot);
+                    ticker.stop();
 
                     SceneController.physics.thread.on('update', () => {
-                        gsap.updateRoot(this.time);
-                        this.onUpdate(this.time, this.delta, this.frame);
-                        requestAnimationFrame(this.onStep);
+                        ticker.onTick(this.time);
+                        requestAnimationFrame(this.onTick);
                     });
 
-                    requestAnimationFrame(this.onStep);
-                } else {
-                    ticker.add(this.onUpdate);
+                    requestAnimationFrame(this.onTick);
                 }
 
+                Stage.events.on(Events.RESIZE, this.onResize);
+                ticker.add(this.onUpdate);
                 this.loader.events.on(Events.COMPLETE, this.onComplete);
             }
 
             /**
              * Event handlers
              */
+
+            static onTick = time => {
+                this.time = time;
+
+                SceneController.physics.thread.update({ time });
+            };
 
             static onResize = () => {
                 const { width, height, dpr } = Stage;
@@ -889,15 +892,6 @@
                 CameraController.update(time);
                 SceneController.update();
                 RenderManager.update(time, delta, frame);
-            };
-
-            static onStep = time => {
-                this.delta = time - this.last;
-                this.last = time;
-                this.time = time * 0.001;
-                this.frame++;
-
-                SceneController.physics.thread.update();
             };
 
             static onComplete = async () => {

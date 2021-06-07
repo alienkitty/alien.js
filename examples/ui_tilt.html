@@ -92,7 +92,7 @@
             initHTML() {
                 this.css({
                     position: 'relative',
-                    width: 400,
+                    width: 320,
                     margin: '30px auto 0 auto',
                     fontSize: 16,
                     lineHeight: 24,
@@ -101,7 +101,7 @@
             }
 
             initText() {
-                const text = 'A design pattern for building SPA websites with ES modules and GSAP.';
+                const text = 'A design pattern for building single-page applications with ES modules and three.js.';
                 const split = text.split(' ');
 
                 split.forEach((str, i) => {
@@ -295,7 +295,6 @@
                 this.copy.animateIn(2500);
                 this.logo.animateIn(3000);
                 this.rotate.tween({ z: 0 }, 7000, 'easeOutCubic');
-                // this.rotate.tween({ z: 0, spring: 0.9, damping: 0.1 }, 2000, 'easeOutElastic');
             };
         }
 

@@ -121,8 +121,7 @@
             };
 
             start = ({ fps }) => {
-                ticker.fps(fps);
-                ticker.add(this.onUpdate);
+                ticker.add(this.onUpdate, fps);
             };
 
             stop = () => {
@@ -180,8 +179,7 @@
                 if (this.thread) {
                     this.thread.start({ fps: 20 });
                 } else {
-                    ticker.fps(20);
-                    ticker.add(this.onUpdate);
+                    ticker.add(this.onUpdate, 20);
                 }
             };
 

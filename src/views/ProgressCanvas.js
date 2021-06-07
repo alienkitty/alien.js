@@ -2,7 +2,8 @@ import { Config } from '../config/Config.js';
 import { Events } from '../config/Events.js';
 import { Interface } from '../utils/Interface.js';
 
-import { clearTween, ticker, tween } from '../utils/Tween.js';
+import { ticker } from '../tween/Ticker.js';
+import { clearTween, tween } from '../tween/Tween.js';
 import { radians } from '../utils/Utils.js';
 
 export class ProgressCanvas extends Interface {

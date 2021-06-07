@@ -52,13 +52,13 @@
              */
 
             onUpdate = ({ clientX, clientY }) => {
-                const bounds = this.object.bounds();
+                const bounds = this.object.element.getBoundingClientRect();
                 const x = clientX - (bounds.left + bounds.width / 2);
                 const y = clientY - (bounds.top + bounds.height / 2);
                 const distance = Math.sqrt(x * x + y * y);
 
                 if (distance < (bounds.width + bounds.height) / 2 + this.threshold) {
-                    this.object.tween({ x: x * 0.5, y: y * 0.5, rotation: x * 0.05, skewX: x * 0.125, skewY: 0, scale: 1.1 }, 500, 'easeOutCubic');
+                    this.object.tween({ x: x * 0.5, y: y * 0.5, skewX: x * 0.125, skewY: 0, rotation: x * 0.05, scale: 1.1 }, 500, 'easeOutCubic');
 
                     if (!this.hoveredIn) {
                         this.events.emit(Events.HOVER, { type: 'over' });
@@ -66,7 +66,7 @@
 
                     this.hoveredIn = true;
                 } else if (this.hoveredIn) {
-                    this.object.tween({ x: 0, y: 0, rotation: 0, skewX: 0, skewY: 0, scale: 1, spring: 1.2, damping: 0.4 }, 1000, 'easeOutElastic');
+                    this.object.tween({ x: 0, y: 0, skewX: 0, skewY: 0, rotation: 0, scale: 1, spring: 1.2, damping: 0.4 }, 1000, 'easeOutElastic');
                     this.events.emit(Events.HOVER, { type: 'out' });
                     this.hoveredIn = false;
                 }

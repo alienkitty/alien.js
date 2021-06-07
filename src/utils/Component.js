@@ -4,7 +4,7 @@
 
 import { EventEmitter } from './EventEmitter.js';
 
-import { clearTween, delayedCall, tween } from './Tween.js';
+import { clearTween, delayedCall, tween } from '../tween/Tween.js';
 
 export class Component {
     constructor() {
@@ -55,8 +55,8 @@ export class Component {
         }
     }
 
-    tween(props, time, ease, delay, complete, update) {
-        return tween(this, props, time, ease, delay, complete, update);
+    tween(props, duration, ease, delay, complete, update) {
+        return tween(this, props, duration, ease, delay, complete, update);
     }
 
     clearTween() {
@@ -65,15 +65,17 @@ export class Component {
         return this;
     }
 
-    delayedCall(time, callback, ...params) {
+    delayedCall(duration, complete) {
         if (!this.timeouts) {
             return;
         }
 
-        const timeout = delayedCall(time, () => {
-            this.clearTimeout(timeout);
+        const timeout = delayedCall(duration, () => {
+            this.clearTimeout(timeout, true);
 
-            callback(...params);
+            if (complete) {
+                complete();
+            }
         });
 
         this.timeouts.push(timeout);
@@ -81,12 +83,14 @@ export class Component {
         return timeout;
     }
 
-    clearTimeout(timeout) {
+    clearTimeout(timeout, isStopped) {
         if (!this.timeouts) {
             return;
         }
 
-        clearTween(timeout);
+        if (!isStopped) {
+            clearTween(timeout);
+        }
 
         const index = this.timeouts.indexOf(timeout);
 
@@ -103,8 +107,6 @@ export class Component {
         for (let i = this.timeouts.length - 1; i >= 0; i--) {
             this.clearTimeout(this.timeouts[i]);
         }
-
-        this.timeouts.length = 0;
     }
 
     destroy() {

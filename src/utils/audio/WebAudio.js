@@ -6,7 +6,7 @@ import { Assets } from '../../loaders/Assets.js';
 import { WebAudioParam } from './WebAudioParam.js';
 import { Sound } from './Sound.js';
 
-import { tween } from '../Tween.js';
+import { tween } from '../../tween/Tween.js';
 import { basename } from '../Utils.js';
 
 var AudioContext;
@@ -147,7 +147,7 @@ export class WebAudio {
         return sound;
     }
 
-    static fadeInAndPlay(id, volume, loop, time, ease, delay = 0, complete, update) {
+    static fadeInAndPlay(id, volume, loop, duration, ease, delay = 0, complete, update) {
         if (!this.context) {
             return;
         }
@@ -167,14 +167,14 @@ export class WebAudio {
             this.trigger(id);
 
             sound.ready().then(() => {
-                tween(sound.gain, { value: volume }, time, ease, delay, complete, update);
+                tween(sound.gain, { value: volume }, duration, ease, delay, complete, update);
             });
         }
 
         return sound;
     }
 
-    static fadeOutAndStop(id, time, ease, delay = 0, complete, update) {
+    static fadeOutAndStop(id, duration, ease, delay = 0, complete, update) {
         if (!this.context) {
             return;
         }
@@ -189,7 +189,7 @@ export class WebAudio {
 
         if (sound) {
             sound.ready().then(() => {
-                tween(sound.gain, { value: 0 }, time, ease, delay, () => {
+                tween(sound.gain, { value: 0 }, duration, ease, delay, () => {
                     if (!sound.stopping) {
                         return;
                     }

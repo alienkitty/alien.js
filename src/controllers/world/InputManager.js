@@ -94,7 +94,7 @@ export class InputManager {
         } else if (this.hover) {
             this.hover.onHover({ type: 'out' });
             this.hover = null;
-            Stage.css({ clearProps: 'cursor' });
+            Stage.css({ cursor: '' });
         }
     };
 
@@ -137,7 +137,7 @@ export class InputManager {
         if (object === this.hover) {
             this.hover.onHover({ type: 'out' });
             this.hover = null;
-            Stage.css({ clearProps: 'cursor' });
+            Stage.css({ cursor: '' });
         }
 
         const index = this.meshes.indexOf(object.hitMesh);

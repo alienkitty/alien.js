@@ -264,6 +264,7 @@ export class Reflector extends Mesh {
             this.uniform.value = this.renderTargetRead.texture;
         }
 
+        // Restore renderer settings
         renderer.xr.enabled = currentXrEnabled;
         renderer.shadowMap.autoUpdate = currentShadowAutoUpdate;
 

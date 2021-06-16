@@ -1,3 +1,5 @@
+// Based on https://github.com/activetheory
+
 import range from './range.glsl.js';
 
 export default /* glsl */`

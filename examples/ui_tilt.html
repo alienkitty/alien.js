@@ -12,6 +12,320 @@
 </head>
 <body>
     <div id="root"></div>
-    <script type="module">import{Interface,Stage,ticker}from"../build/alien.js";class Mouse{static init(){this.x=0,this.y=0,this.last={x:0,y:0},this.delta={x:0,y:0},this.normal={x:0,y:0},this.tilt={x:0,y:0},this.inverseNormal={x:0,y:0},this.addListeners(),this.onUpdate({clientX:window.innerWidth/2,clientY:window.innerHeight/2})}static addListeners(){window.addEventListener("mousedown",this.onUpdate),window.addEventListener("mousemove",this.onUpdate),window.addEventListener("mouseup",this.onUpdate)}}Mouse.onUpdate=({clientX:t,clientY:e})=>{Mouse.x=t,Mouse.y=e,Mouse.delta.x=Mouse.x-Mouse.last.x,Mouse.delta.y=Mouse.y-Mouse.last.y,Mouse.last.x=Mouse.x,Mouse.last.y=Mouse.y,Mouse.normal.x=Mouse.x/window.innerWidth,Mouse.normal.y=Mouse.y/window.innerHeight,Mouse.tilt.x=2*Mouse.normal.x-1,Mouse.tilt.y=1-2*Mouse.normal.y,Mouse.inverseNormal.x=Mouse.normal.x,Mouse.inverseNormal.y=1-Mouse.normal.y};class Copy extends Interface{constructor(){super(".copy"),this.animateIn=(t=0)=>{this.words.forEach((e,i)=>{e.css({y:10,opacity:0}).tween({y:0,opacity:1},4e3,"easeOutQuint",t+40*i)})},this.words=[],this.initHTML(),this.initText()}initHTML(){this.css({position:"relative",width:400,margin:"30px auto 0 auto",fontSize:16,lineHeight:24,letterSpacing:"0.02em"})}initText(){const t="A design pattern for building SPA websites with ES modules and GSAP.".split(" ");t.forEach((e,i)=>{i<t.length-1&&(e+="&nbsp");const s=new Interface(null,"span");s.html(e),this.add(s),this.words.push(s)})}}class Title extends Interface{constructor(){super(".title"),this.animateIn=(t=0)=>{this.letters.forEach((e,i)=>{e.css({z:-100,opacity:0}).tween({z:100-50*i,opacity:1},4e3,"easeOutBack",t+200*i)})},this.letters=[],this.initHTML(),this.initText()}initHTML(){this.css({position:"relative",fontSize:100,lineHeight:100,letterSpacing:"-0.16em"})}initText(){const t="Alien.js".split(".");t.forEach((e,i)=>{const s=new Interface(null,"span");if(s.html(e),this.add(s),this.letters.push(s),i<t.length-1){const t=new Interface(null,"span");t.html("."),this.add(t),this.letters.push(t)}})}}class Logo extends Interface{constructor(){super(".logo"),this.animateIn=(t=0)=>{this.css({opacity:0}).tween({opacity:1},4e3,"easeInOutSine",t)},this.initHTML()}initHTML(){this.css({position:"relative",left:"50%",width:64,height:64,marginLeft:-32,z:-50}),this.bg("assets/images/alienkitty.svg")}}class UI extends Interface{constructor(){super(".ui"),this.onUpdate=()=>{this.mouse.x+=(Mouse.tilt.x-this.mouse.x)*this.lerpSpeed,this.mouse.y+=(Mouse.tilt.y-this.mouse.y)*this.lerpSpeed,this.rotate.css({rotationX:20*this.mouse.y,rotationY:15*this.mouse.x})},this.animateIn=()=>{this.visible(),this.title.animateIn(),this.copy.animateIn(2500),this.logo.animateIn(3e3),this.rotate.tween({z:0},7e3,"easeOutCubic")},this.mouse={x:Mouse.tilt.x,y:Mouse.tilt.y},this.lerpSpeed=.04,this.initHTML(),this.initViews(),this.addListeners()}initHTML(){this.invisible(),this.css({left:0,top:0,width:"100%",height:"100%",transformStyle:"preserve-3d",perspective:2e3,pointerEvents:"none"}),this.rotate=new Interface(".rotate"),this.rotate.css({left:"50%",top:"50%",width:900,height:300,marginLeft:-450,marginTop:-150,textAlign:"center",transformStyle:"preserve-3d",z:-300}),this.add(this.rotate)}initViews(){this.logo=new Logo,this.rotate.add(this.logo),this.title=new Title,this.rotate.add(this.title),this.copy=new Copy,this.rotate.add(this.copy)}addListeners(){ticker.add(this.onUpdate)}}class App{static async init(){Mouse.init(),this.initViews(),this.addListeners()}static initViews(){this.ui=new UI,Stage.add(this.ui)}static addListeners(){window.addEventListener("load",this.onLoad)}}App.onLoad=()=>{App.ui.animateIn()},App.init();</script>
+    <script type="module">
+        import { Interface, Stage, ticker } from '../build/alien.js';
+
+        class Mouse {
+            static init() {
+                this.x = 0;
+                this.y = 0;
+
+                this.last = {
+                    x: 0,
+                    y: 0
+                };
+
+                this.delta = {
+                    x: 0,
+                    y: 0
+                };
+
+                this.normal = {
+                    x: 0,
+                    y: 0
+                };
+
+                this.tilt = {
+                    x: 0,
+                    y: 0
+                };
+
+                this.inverseNormal = {
+                    x: 0,
+                    y: 0
+                };
+
+                this.addListeners();
+
+                this.onUpdate({
+                    clientX: Stage.width / 2,
+                    clientY: Stage.height / 2
+                });
+            }
+
+            static addListeners() {
+                window.addEventListener('pointerdown', this.onUpdate);
+                window.addEventListener('pointermove', this.onUpdate);
+                window.addEventListener('pointerup', this.onUpdate);
+            }
+
+            /**
+             * Event handlers
+             */
+
+            static onUpdate = ({ clientX, clientY }) => {
+                this.x = clientX;
+                this.y = clientY;
+                this.delta.x = this.x - this.last.x;
+                this.delta.y = this.y - this.last.y;
+                this.last.x = this.x;
+                this.last.y = this.y;
+                this.normal.x = this.x / Stage.width;
+                this.normal.y = this.y / Stage.height;
+                this.tilt.x = this.normal.x * 2 - 1;
+                this.tilt.y = 1 - this.normal.y * 2;
+                this.inverseNormal.x = this.normal.x;
+                this.inverseNormal.y = 1 - this.normal.y;
+            };
+        }
+
+        class Copy extends Interface {
+            constructor() {
+                super('.copy');
+
+                this.words = [];
+
+                this.initHTML();
+                this.initText();
+            }
+
+            initHTML() {
+                this.css({
+                    position: 'relative',
+                    width: 320,
+                    margin: '30px auto 0 auto',
+                    fontSize: 16,
+                    lineHeight: 24,
+                    letterSpacing: '0.02em'
+                });
+            }
+
+            initText() {
+                const text = 'A design pattern for building single-page applications with ES modules and three.js.';
+                const split = text.split(' ');
+
+                split.forEach((str, i) => {
+                    if (i < split.length - 1) {
+                        str += '&nbsp';
+                    }
+
+                    const word = new Interface(null, 'span');
+                    word.html(str);
+                    this.add(word);
+
+                    this.words.push(word);
+                });
+            }
+
+            /**
+             * Public methods
+             */
+
+            animateIn = (delay = 0) => {
+                this.words.forEach((word, i) => {
+                    word.css({ y: 10, opacity: 0 })
+                        .tween({ y: 0, opacity: 1 }, 4000, 'easeOutQuint', delay + i * 40);
+                });
+            };
+        }
+
+        class Title extends Interface {
+            constructor() {
+                super('.title');
+
+                this.letters = [];
+
+                this.initHTML();
+                this.initText();
+            }
+
+            initHTML() {
+                const size = 100;
+
+                this.css({
+                    position: 'relative',
+                    fontSize: size,
+                    lineHeight: size,
+                    letterSpacing: '-0.16em'
+                });
+            }
+
+            initText() {
+                const text = 'Alien.js';
+                const split = text.split('.');
+
+                split.forEach((str, i) => {
+                    const letter = new Interface(null, 'span');
+                    letter.html(str);
+                    this.add(letter);
+
+                    this.letters.push(letter);
+
+                    if (i < split.length - 1) {
+                        const letter = new Interface(null, 'span');
+                        letter.html('.');
+                        this.add(letter);
+
+                        this.letters.push(letter);
+                    }
+                });
+            }
+
+            /**
+             * Public methods
+             */
+
+            animateIn = (delay = 0) => {
+                this.letters.forEach((letter, i) => {
+                    letter.css({ z: -100, opacity: 0 })
+                        .tween({ z: 100 - i * 50, opacity: 1 }, 4000, 'easeOutBack', delay + i * 200);
+                });
+            };
+        }
+
+        class Logo extends Interface {
+            constructor() {
+                super('.logo');
+
+                this.initHTML();
+            }
+
+            initHTML() {
+                this.css({
+                    position: 'relative',
+                    left: '50%',
+                    width: 64,
+                    height: 64,
+                    marginLeft: -64 / 2,
+                    z: -50
+                });
+                this.bg('assets/images/alienkitty.svg');
+            }
+
+            /**
+             * Public methods
+             */
+
+            animateIn = (delay = 0) => {
+                this.css({ opacity: 0 }).tween({ opacity: 1 }, 4000, 'easeInOutSine', delay);
+            };
+        }
+
+        class UI extends Interface {
+            constructor() {
+                super('.ui');
+
+                // this.mouse = new Vector2(Mouse.tilt.x, Mouse.tilt.y);
+                this.mouse = {
+                    x: Mouse.tilt.x,
+                    y: Mouse.tilt.y
+                };
+
+                this.lerpSpeed = 0.04;
+
+                this.initHTML();
+                this.initViews();
+
+                this.addListeners();
+            }
+
+            initHTML() {
+                this.invisible();
+                this.css({
+                    left: 0,
+                    top: 0,
+                    width: '100%',
+                    height: '100%',
+                    transformStyle: 'preserve-3d',
+                    perspective: 2000,
+                    pointerEvents: 'none'
+                });
+
+                this.rotate = new Interface('.rotate');
+                this.rotate.css({
+                    left: '50%',
+                    top: '50%',
+                    width: 900,
+                    height: 300,
+                    marginLeft: -900 / 2,
+                    marginTop: -300 / 2,
+                    textAlign: 'center',
+                    transformStyle: 'preserve-3d',
+                    z: -300
+                });
+                this.add(this.rotate);
+            }
+
+            initViews() {
+                this.logo = new Logo();
+                this.rotate.add(this.logo);
+
+                this.title = new Title();
+                this.rotate.add(this.title);
+
+                this.copy = new Copy();
+                this.rotate.add(this.copy);
+            }
+
+            addListeners() {
+                ticker.add(this.onUpdate);
+            }
+
+            /**
+             * Event handlers
+             */
+
+            onUpdate = () => {
+                // this.mouse.lerp(Mouse.tilt, this.lerpSpeed);
+                this.mouse.x += (Mouse.tilt.x - this.mouse.x) * this.lerpSpeed;
+                this.mouse.y += (Mouse.tilt.y - this.mouse.y) * this.lerpSpeed;
+                this.rotate.css({
+                    rotationX: this.mouse.y * 20,
+                    rotationY: this.mouse.x * 15
+                });
+            };
+
+            /**
+             * Public methods
+             */
+
+            animateIn = () => {
+                this.visible();
+                this.title.animateIn();
+                this.copy.animateIn(2500);
+                this.logo.animateIn(3000);
+                this.rotate.tween({ z: 0 }, 7000, 'easeOutCubic');
+            };
+        }
+
+        class App {
+            static async init() {
+                Mouse.init();
+
+                this.initViews();
+
+                this.addListeners();
+            }
+
+            static initViews() {
+                this.ui = new UI();
+                Stage.add(this.ui);
+            }
+
+            static addListeners() {
+                window.addEventListener('load', this.onLoad);
+            }
+
+            /**
+             * Event handlers
+             */
+
+            static onLoad = () => {
+                this.ui.animateIn();
+            };
+        }
+
+        App.init();
+    </script>
 </body>
 </html>

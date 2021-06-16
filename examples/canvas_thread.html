@@ -12,6 +12,228 @@
 </head>
 <body>
     <div id="root"></div>
-    <script type="module">import{Device,Events,Stage,Thread,ticker}from"../build/alien.js";class CanvasNoise{constructor(t){this.resize=(t,s,i)=>{this.canvas.width=Math.round(t*i),this.canvas.height=Math.round(s*i),this.tile.width=Math.round(this.params.tileSize*i),this.tile.height=Math.round(this.params.tileSize*i),this.width=this.canvas.width/this.tile.width+1,this.height=this.canvas.height/this.tile.height,this.update()},this.update=()=>{const t=new ImageData(this.tile.width,this.tile.height);for(let s=0,i=t.data.length;s<i;s+=4){const i=255*Math.random();t.data[s]=this.params.monochrome?i:255*Math.random(),t.data[s+1]=this.params.monochrome?i:255*Math.random(),t.data[s+2]=this.params.monochrome?i:255*Math.random(),t.data[s+3]=255}this.tileContext.putImageData(t,0,0);for(let t=0,s=this.width;t<s;t++)for(let s=0,i=this.height;s<i;s++)this.context.drawImage(this.tile,t*this.tile.width-(s%2==0?this.tile.width/2:0),s*this.tile.height,this.tile.width,this.tile.height)},this.params=t,this.initParameters(),this.initCanvas()}initParameters(){this.params=Object.assign({width:1,height:1,tileSize:250,monochrome:!0},this.params)}initCanvas(){this.canvas=this.params.canvas,this.canvas.width=this.params.width,this.canvas.height=this.params.height,this.context=this.canvas.getContext("2d"),this.tile="undefined"==typeof window?new OffscreenCanvas(this.params.tileSize,this.params.tileSize):document.createElement("canvas"),this.tile.width=this.params.tileSize,this.tile.height=this.params.tileSize,this.tileContext=this.tile.getContext("2d")}}class CanvasNoiseThread{constructor(){this.onMessage=({data:t})=>{this[t.message.fn].call(this,t.message)},this.onUpdate=()=>{this.noise.update()},this.init=({params:t})=>{this.noise=new CanvasNoise(t)},this.resize=({width:t,height:s,dpr:i})=>{this.noise.resize(t,s,i)},this.start=({fps:t})=>{ticker.fps(t),ticker.add(this.onUpdate)},this.stop=()=>{ticker.remove(this.onUpdate)},this.addListeners()}addListeners(){addEventListener("message",this.onMessage)}}class CanvasNoiseController{static init(t){this.params=t,this.initThread()}static initThread(){Device.agent.includes("chrome")?(this.thread=new Thread({imports:[["../build/alien.js","ticker"]],classes:[CanvasNoise],controller:[CanvasNoiseThread,"init","resize","update","start","stop"]}),this.element=this.params.canvas,this.params.canvas=this.element.transferControlToOffscreen(),this.thread.init({params:this.params,buffer:[this.params.canvas]})):this.noise=new CanvasNoise(this.params)}}CanvasNoiseController.onUpdate=()=>{CanvasNoiseController.noise.update()},CanvasNoiseController.resize=(t,s,i)=>{CanvasNoiseController.thread?CanvasNoiseController.thread.resize({width:t,height:s,dpr:i}):CanvasNoiseController.noise.resize(t,s,i)},CanvasNoiseController.start=()=>{CanvasNoiseController.thread?CanvasNoiseController.thread.start({fps:20}):(ticker.fps(20),ticker.add(CanvasNoiseController.onUpdate))},CanvasNoiseController.stop=()=>{CanvasNoiseController.thread?CanvasNoiseController.thread.stop():ticker.remove(CanvasNoiseController.onUpdate)};class App{static async init(){this.initCanvas(),this.initControllers(),this.addListeners(),this.onResize()}static initCanvas(){this.canvas=document.createElement("canvas"),Stage.add(this.canvas)}static initControllers(){CanvasNoiseController.init({canvas:this.canvas})}static addListeners(){Stage.events.on(Events.RESIZE,this.onResize),window.addEventListener("load",this.onLoad)}}App.onResize=()=>{const{width:t,height:s,dpr:i}=Stage;App.canvas.style.width=t+"px",App.canvas.style.height=s+"px",CanvasNoiseController.resize(t,s,i)},App.onLoad=()=>{CanvasNoiseController.start()},App.init();</script>
+    <script type="module">
+        import { Device, Events, Stage, Thread, ticker } from '../build/alien.js';
+
+        // Based on https://codepen.io/zepha/pen/VpXvBJ
+
+        class CanvasNoise {
+            constructor(params) {
+                this.params = params;
+
+                this.initParameters();
+                this.initCanvas();
+            }
+
+            initParameters() {
+                const defaults = {
+                    width: 1,
+                    height: 1,
+                    tileSize: 250,
+                    monochrome: true
+                };
+
+                this.params = Object.assign(defaults, this.params);
+            }
+
+            initCanvas() {
+                this.canvas = this.params.canvas;
+                this.canvas.width = this.params.width;
+                this.canvas.height = this.params.height;
+                this.context = this.canvas.getContext('2d');
+
+                this.tile = typeof window === 'undefined' ? new OffscreenCanvas(this.params.tileSize, this.params.tileSize) : document.createElement('canvas');
+                this.tile.width = this.params.tileSize;
+                this.tile.height = this.params.tileSize;
+                this.tileContext = this.tile.getContext('2d');
+            }
+
+            /**
+             * Public methods
+             */
+
+            resize = (width, height, dpr) => {
+                this.canvas.width = Math.round(width * dpr);
+                this.canvas.height = Math.round(height * dpr);
+
+                this.tile.width = Math.round(this.params.tileSize * dpr);
+                this.tile.height = Math.round(this.params.tileSize * dpr);
+
+                this.width = this.canvas.width / this.tile.width + 1; // One extra tile for row offset
+                this.height = this.canvas.height / this.tile.height;
+
+                this.update();
+            };
+
+            update = () => {
+                const pixels = new ImageData(this.tile.width, this.tile.height);
+
+                for (let i = 0, l = pixels.data.length; i < l; i += 4) {
+                    const rand = 255 * Math.random();
+
+                    pixels.data[i] = this.params.monochrome ? rand : 255 * Math.random();
+                    pixels.data[i + 1] = this.params.monochrome ? rand : 255 * Math.random();
+                    pixels.data[i + 2] = this.params.monochrome ? rand : 255 * Math.random();
+                    pixels.data[i + 3] = 255;
+                }
+
+                this.tileContext.putImageData(pixels, 0, 0);
+
+                for (let x = 0, xl = this.width; x < xl; x++) {
+                    for (let y = 0, yl = this.height; y < yl; y++) {
+                        this.context.drawImage(this.tile, x * this.tile.width - (y % 2 === 0 ? this.tile.width / 2 : 0), y * this.tile.height, this.tile.width, this.tile.height);
+                    }
+                }
+            };
+        }
+
+        class CanvasNoiseThread {
+            constructor() {
+                this.addListeners();
+            }
+
+            addListeners() {
+                addEventListener('message', this.onMessage);
+            }
+
+            /**
+             * Event handlers
+             */
+
+            onMessage = ({ data }) => {
+                this[data.message.fn].call(this, data.message);
+            };
+
+            onUpdate = () => {
+                this.noise.update();
+            };
+
+            /**
+             * Public methods
+             */
+
+            init = ({ params }) => {
+                this.noise = new CanvasNoise(params);
+            };
+
+            resize = ({ width, height, dpr }) => {
+                this.noise.resize(width, height, dpr);
+            };
+
+            start = ({ fps }) => {
+                ticker.add(this.onUpdate, fps);
+            };
+
+            stop = () => {
+                ticker.remove(this.onUpdate);
+            };
+        }
+
+        class CanvasNoiseController {
+            static init(params) {
+                this.params = params;
+
+                this.initThread();
+            }
+
+            static initThread() {
+                if (Device.agent.includes('chrome')) {
+                    this.thread = new Thread({
+                        imports: [
+                            ['../build/alien.js', 'ticker']
+                        ],
+                        classes: [CanvasNoise],
+                        controller: [CanvasNoiseThread, 'init', 'resize', 'update', 'start', 'stop']
+                    });
+
+                    this.element = this.params.canvas;
+                    this.params.canvas = this.element.transferControlToOffscreen();
+
+                    this.thread.init({ params: this.params, buffer: [this.params.canvas] });
+                } else {
+                    this.noise = new CanvasNoise(this.params);
+                }
+            }
+
+            /**
+             * Event handlers
+             */
+
+            static onUpdate = () => {
+                this.noise.update();
+            };
+
+            /**
+             * Public methods
+             */
+
+            static resize = (width, height, dpr) => {
+                if (this.thread) {
+                    this.thread.resize({ width, height, dpr });
+                } else {
+                    this.noise.resize(width, height, dpr);
+                }
+            };
+
+            static start = () => {
+                if (this.thread) {
+                    this.thread.start({ fps: 20 });
+                } else {
+                    ticker.add(this.onUpdate, 20);
+                }
+            };
+
+            static stop = () => {
+                if (this.thread) {
+                    this.thread.stop();
+                } else {
+                    ticker.remove(this.onUpdate);
+                }
+            };
+        }
+
+        class App {
+            static async init() {
+                this.initCanvas();
+                this.initControllers();
+
+                this.addListeners();
+                this.onResize();
+            }
+
+            static initCanvas() {
+                this.canvas = document.createElement('canvas');
+                Stage.add(this.canvas);
+            }
+
+            static initControllers() {
+                CanvasNoiseController.init({ canvas: this.canvas });
+            }
+
+            static addListeners() {
+                Stage.events.on(Events.RESIZE, this.onResize);
+                window.addEventListener('load', this.onLoad);
+            }
+
+            /**
+             * Event handlers
+             */
+
+            static onResize = () => {
+                const { width, height, dpr } = Stage;
+
+                this.canvas.style.width = width + 'px';
+                this.canvas.style.height = height + 'px';
+
+                CanvasNoiseController.resize(width, height, dpr);
+            };
+
+            static onLoad = () => {
+                CanvasNoiseController.start();
+            };
+        }
+
+        App.init();
+    </script>
 </body>
 </html>

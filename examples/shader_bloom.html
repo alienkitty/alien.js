@@ -12,6 +12,381 @@
 </head>
 <body>
     <div id="root"></div>
-    <script type="module">import{BlurMaterial,Color,DirectionalLight,Events,FXAAMaterial,Group,HemisphereLight,Mesh,MeshStandardMaterial,NoBlending,OrthographicCamera,PerspectiveCamera,RGBFormat,RawShaderMaterial,Scene,SphereGeometry,Stage,Uniform,Vector2,WebGL1Renderer,WebGLRenderTarget,getFullscreenTriangle,ticker}from"../build/alien.js";class Config{}Config.BG_COLOR="#0e0e0e",Config.UI_COLOR="rgba(255, 255, 255, 0.94)",Config.BREAKPOINT=1e3;import periodic3d from"../src/shaders/modules/noise/periodic3d.glsl.js";const vertexShaderChunk="\n            float f = 0.05 * pnoise(vec3(2.0 * normal + time), vec3(10.0));\n            vec3 transformed = position + f * normal;\n        ",vertexCompositeShader="\n            attribute vec2 uv;\n            attribute vec3 position;\n\n            varying vec2 vUv;\n\n            void main() {\n                vUv = uv;\n\n                gl_Position = vec4(position, 1.0);\n            }\n        ",fragmentCompositeShader="\n            precision highp float;\n\n            uniform sampler2D tScene;\n            uniform sampler2D tBloom;\n            uniform float uMinBright;\n            uniform float uBlurBright;\n\n            varying vec2 vUv;\n\n            void main() {\n                gl_FragColor = texture2D(tScene, vUv);\n\n                vec3 bloom = texture2D(tBloom, vUv).rgb;\n                bloom.x = max(0.0, bloom.x - uMinBright);\n                bloom.y = max(0.0, bloom.y - uMinBright);\n                bloom.z = max(0.0, bloom.z - uMinBright);\n\n                gl_FragColor.rgb += bloom * uBlurBright;\n            }\n        ";class CompositeMaterial extends RawShaderMaterial{constructor(){super({uniforms:{tScene:new Uniform(null),tBloom:new Uniform(null),uMinBright:new Uniform(.1247),uBlurBright:new Uniform(.4166)},vertexShader:vertexCompositeShader,fragmentShader:fragmentCompositeShader,blending:NoBlending,depthWrite:!1,depthTest:!1})}}class SceneView extends Group{constructor(){super(),this.initMesh()}initMesh(){const{time:e}=WorldController,r=new SphereGeometry(1,80,80),n=new MeshStandardMaterial({roughness:0});n.onBeforeCompile=r=>{r.uniforms.time=e,r.vertexShader="uniform float time;\n"+periodic3d+r.vertexShader,r.vertexShader=r.vertexShader.replace("#include <begin_vertex>",vertexShaderChunk)};const t=new Mesh(r,n);this.add(t)}}const BlurDirectionX=new Vector2(1,0),BlurDirectionY=new Vector2(0,1);class RenderManager{static init(e,r,n){this.renderer=e,this.scene=r,this.camera=n,this.blurResolutionScale=.25,this.blurFactor=6,this.enabled=!0,this.initRenderer()}static initRenderer(){const{resolution:e,screenTriangle:r}=WorldController;this.renderer.autoClear=!1,this.screenScene=new Scene,this.screenCamera=new OrthographicCamera(-1,1,1,-1,0,1),this.screen=new Mesh(r),this.screen.frustumCulled=!1,this.screenScene.add(this.screen),this.backgroundScene=new Scene,this.backgroundScene.background=new Color(Config.BG_COLOR),this.renderTargetA=new WebGLRenderTarget(1,1,{format:RGBFormat,anisotropy:0,depthBuffer:!1}),this.renderTargetB=this.renderTargetA.clone(),this.renderTargetBlurA=this.renderTargetA.clone(),this.renderTargetBlurB=this.renderTargetA.clone(),this.renderTargetA.depthBuffer=!0,this.fxaaMaterial=new FXAAMaterial,this.fxaaMaterial.uniforms.uResolution=e,this.hBlurMaterial=new BlurMaterial(BlurDirectionX),this.hBlurMaterial.uniforms.uResolution=e,this.vBlurMaterial=new BlurMaterial(BlurDirectionY),this.vBlurMaterial.uniforms.uResolution=e,this.compositeMaterial=new CompositeMaterial}}RenderManager.resize=(e,r,n)=>{RenderManager.renderer.setPixelRatio(n),RenderManager.renderer.setSize(e,r),e=Math.round(e*n),r=Math.round(r*n),RenderManager.renderTargetA.setSize(e,r),RenderManager.renderTargetB.setSize(e,r),e=Math.round(e*RenderManager.blurResolutionScale),r=Math.round(r*RenderManager.blurResolutionScale),RenderManager.renderTargetBlurA.setSize(e,r),RenderManager.renderTargetBlurB.setSize(e,r)},RenderManager.update=()=>{const e=RenderManager.renderer,r=RenderManager.scene,n=RenderManager.camera;if(!RenderManager.enabled)return e.setRenderTarget(null),e.clear(),void e.render(r,n);const t=RenderManager.blurFactor,a=RenderManager.screenScene,i=RenderManager.screenCamera,o=RenderManager.renderTargetA,l=RenderManager.renderTargetB,s=RenderManager.renderTargetBlurA,d=RenderManager.renderTargetBlurB;e.setRenderTarget(o),e.clear(),e.render(RenderManager.backgroundScene,n),e.setRenderTarget(o),e.render(r,n),RenderManager.fxaaMaterial.uniforms.tMap.value=o.texture,RenderManager.screen.material=RenderManager.fxaaMaterial,e.setRenderTarget(l),e.clear(),e.render(a,i),RenderManager.hBlurMaterial.uniforms.uBluriness.value=t,RenderManager.hBlurMaterial.uniforms.tMap.value=l.texture,RenderManager.screen.material=RenderManager.hBlurMaterial,e.setRenderTarget(s),e.clear(),e.render(a,i),RenderManager.vBlurMaterial.uniforms.uBluriness.value=t,RenderManager.vBlurMaterial.uniforms.tMap.value=s.texture,RenderManager.screen.material=RenderManager.vBlurMaterial,e.setRenderTarget(d),e.clear(),e.render(a,i),RenderManager.compositeMaterial.uniforms.tScene.value=l.texture,RenderManager.compositeMaterial.uniforms.tBloom.value=d.texture,RenderManager.screen.material=RenderManager.compositeMaterial,e.setRenderTarget(null),e.clear(),e.render(a,i)};class WorldController{static init(){this.initWorld(),this.initLights()}static initWorld(){this.renderer=new WebGL1Renderer({powerPreference:"high-performance",stencil:!1}),this.element=this.renderer.domElement,this.scene=new Scene,this.camera=new PerspectiveCamera(30),this.camera.near=.5,this.camera.far=50,this.camera.position.z=8,this.screenTriangle=getFullscreenTriangle(),this.resolution=new Uniform(new Vector2),this.aspect=new Uniform(1),this.time=new Uniform(0),this.frame=new Uniform(0)}static initLights(){this.scene.add(new HemisphereLight(6316128,4210752));const e=new DirectionalLight(16777215,.4);e.position.set(1,1,1),this.scene.add(e)}}WorldController.resize=(e,r,n)=>{WorldController.camera.aspect=e/r,WorldController.camera.updateProjectionMatrix(),e<r?WorldController.camera.position.z=10:e<Config.BREAKPOINT?WorldController.camera.position.z=6:WorldController.camera.position.z=8,e=Math.round(e*n),r=Math.round(r*n),WorldController.resolution.value.set(e,r),WorldController.aspect.value=e/r},WorldController.update=(e,r,n)=>{WorldController.time.value=e,WorldController.frame.value=n};class App{static async init(){this.initWorld(),this.initViews(),this.initControllers(),this.addListeners(),this.onResize()}static initWorld(){WorldController.init(),Stage.add(WorldController.element)}static initViews(){this.view=new SceneView,WorldController.scene.add(this.view)}static initControllers(){const{renderer:e,scene:r,camera:n}=WorldController;RenderManager.init(e,r,n)}static addListeners(){Stage.events.on(Events.RESIZE,this.onResize),ticker.add(this.onUpdate)}}App.onResize=()=>{const{width:e,height:r,dpr:n}=Stage;WorldController.resize(e,r,n),RenderManager.resize(e,r,n)},App.onUpdate=(e,r,n)=>{WorldController.update(e,r,n),RenderManager.update(e,r,n)},App.init();</script>
+    <script type="module">
+        import { BlurMaterial, Color, DirectionalLight, Events, FXAAMaterial, Group, HemisphereLight, Mesh, MeshStandardMaterial, NoBlending, OrthographicCamera, PerspectiveCamera, RGBFormat, RawShaderMaterial, Scene, SphereGeometry, Stage, Uniform, Vector2, WebGL1Renderer, WebGLRenderTarget, getFullscreenTriangle, ticker } from '../build/alien.js';
+
+        class Config {
+            static BG_COLOR = '#0e0e0e';
+            static UI_COLOR = 'rgba(255, 255, 255, 0.94)';
+
+            static BREAKPOINT = 1000;
+        }
+
+        import periodic3d from '../src/shaders/modules/noise/periodic3d.glsl.js';
+
+        // Based on https://github.com/spite/perlin-experiments
+
+        const vertexShaderChunk = /* glsl */`
+            float f = 0.05 * pnoise(vec3(2.0 * normal + time), vec3(10.0));
+            vec3 transformed = position + f * normal;
+        `;
+
+        const vertexCompositeShader = /* glsl */`
+            attribute vec2 uv;
+            attribute vec3 position;
+
+            varying vec2 vUv;
+
+            void main() {
+                vUv = uv;
+
+                gl_Position = vec4(position, 1.0);
+            }
+        `;
+
+        const fragmentCompositeShader = /* glsl */`
+            precision highp float;
+
+            uniform sampler2D tScene;
+            uniform sampler2D tBloom;
+            uniform float uMinBright;
+            uniform float uBlurBright;
+
+            varying vec2 vUv;
+
+            void main() {
+                gl_FragColor = texture2D(tScene, vUv);
+
+                vec3 bloom = texture2D(tBloom, vUv).rgb;
+                bloom.x = max(0.0, bloom.x - uMinBright);
+                bloom.y = max(0.0, bloom.y - uMinBright);
+                bloom.z = max(0.0, bloom.z - uMinBright);
+
+                gl_FragColor.rgb += bloom * uBlurBright;
+            }
+        `;
+
+        class CompositeMaterial extends RawShaderMaterial {
+            constructor() {
+                super({
+                    uniforms: {
+                        tScene: new Uniform(null),
+                        tBloom: new Uniform(null),
+                        uMinBright: new Uniform(0.1247),
+                        uBlurBright: new Uniform(0.4166)
+                    },
+                    vertexShader: vertexCompositeShader,
+                    fragmentShader: fragmentCompositeShader,
+                    blending: NoBlending,
+                    depthWrite: false,
+                    depthTest: false
+                });
+            }
+        }
+
+        class SceneView extends Group {
+            constructor() {
+                super();
+
+                this.initMesh();
+            }
+
+            initMesh() {
+                const { time } = WorldController;
+
+                const geometry = new SphereGeometry(1, 80, 80);
+
+                const material = new MeshStandardMaterial({
+                    roughness: 0
+                });
+
+                // https://threejs.org/examples/#webgl_materials_modified
+
+                material.onBeforeCompile = shader => {
+                    shader.uniforms.time = time;
+
+                    shader.vertexShader = 'uniform float time;\n' + periodic3d + shader.vertexShader;
+                    shader.vertexShader = shader.vertexShader.replace('#include <begin_vertex>', vertexShaderChunk);
+                };
+
+                const mesh = new Mesh(geometry, material);
+                this.add(mesh);
+            }
+        }
+
+        const BlurDirectionX = new Vector2(1, 0);
+        const BlurDirectionY = new Vector2(0, 1);
+
+        class RenderManager {
+            static init(renderer, scene, camera) {
+                this.renderer = renderer;
+                this.scene = scene;
+                this.camera = camera;
+
+                this.blurResolutionScale = 0.25;
+                this.blurFactor = 6;
+                this.enabled = true;
+
+                this.initRenderer();
+            }
+
+            static initRenderer() {
+                const { screenTriangle, resolution } = WorldController;
+
+                this.renderer.autoClear = false;
+
+                // Fullscreen triangle
+                this.screenScene = new Scene();
+                this.screenCamera = new OrthographicCamera(-1, 1, 1, -1, 0, 1);
+
+                this.screen = new Mesh(screenTriangle);
+                this.screen.frustumCulled = false;
+                this.screenScene.add(this.screen);
+
+                // Background scene
+                this.backgroundScene = new Scene();
+                this.backgroundScene.background = new Color(Config.BG_COLOR);
+
+                // Render targets
+                this.renderTargetA = new WebGLRenderTarget(1, 1, {
+                    format: RGBFormat,
+                    depthBuffer: false
+                });
+
+                this.renderTargetB = this.renderTargetA.clone();
+                this.renderTargetBlurA = this.renderTargetA.clone();
+                this.renderTargetBlurB = this.renderTargetA.clone();
+
+                this.renderTargetA.depthBuffer = true;
+
+                // FXAA material
+                this.fxaaMaterial = new FXAAMaterial();
+                this.fxaaMaterial.uniforms.uResolution = resolution;
+
+                // Gaussian blur materials
+                this.hBlurMaterial = new BlurMaterial(BlurDirectionX);
+                this.hBlurMaterial.uniforms.uBluriness.value = this.blurFactor;
+                this.hBlurMaterial.uniforms.uResolution = resolution;
+
+                this.vBlurMaterial = new BlurMaterial(BlurDirectionY);
+                this.vBlurMaterial.uniforms.uBluriness.value = this.blurFactor;
+                this.vBlurMaterial.uniforms.uResolution = resolution;
+
+                // Composite material
+                this.compositeMaterial = new CompositeMaterial();
+            }
+
+            /**
+             * Public methods
+             */
+
+            static resize = (width, height, dpr) => {
+                this.renderer.setPixelRatio(dpr);
+                this.renderer.setSize(width, height);
+
+                width = Math.round(width * dpr);
+                height = Math.round(height * dpr);
+
+                this.renderTargetA.setSize(width, height);
+                this.renderTargetB.setSize(width, height);
+
+                width = Math.round(width * this.blurResolutionScale);
+                height = Math.round(height * this.blurResolutionScale);
+
+                this.renderTargetBlurA.setSize(width, height);
+                this.renderTargetBlurB.setSize(width, height);
+            };
+
+            static update = () => {
+                const renderer = this.renderer;
+                const scene = this.scene;
+                const camera = this.camera;
+
+                if (!this.enabled) {
+                    renderer.setRenderTarget(null);
+                    renderer.clear();
+                    renderer.render(scene, camera);
+                    return;
+                }
+
+                const screenScene = this.screenScene;
+                const screenCamera = this.screenCamera;
+
+                const renderTargetA = this.renderTargetA;
+                const renderTargetB = this.renderTargetB;
+                const renderTargetBlurA = this.renderTargetBlurA;
+                const renderTargetBlurB = this.renderTargetBlurB;
+
+                // Background pass
+                renderer.setRenderTarget(renderTargetA);
+                renderer.clear();
+                renderer.render(this.backgroundScene, camera);
+
+                // Scene pass
+                renderer.setRenderTarget(renderTargetA);
+                renderer.render(scene, camera);
+
+                // FXAA pass
+                this.fxaaMaterial.uniforms.tMap.value = renderTargetA.texture;
+                this.screen.material = this.fxaaMaterial;
+                renderer.setRenderTarget(renderTargetB);
+                renderer.clear();
+                renderer.render(screenScene, screenCamera);
+
+                // Two pass Gaussian blur
+                this.hBlurMaterial.uniforms.tMap.value = renderTargetB.texture;
+                this.screen.material = this.hBlurMaterial;
+                renderer.setRenderTarget(renderTargetBlurA);
+                renderer.clear();
+                renderer.render(screenScene, screenCamera);
+
+                this.vBlurMaterial.uniforms.tMap.value = renderTargetBlurA.texture;
+                this.screen.material = this.vBlurMaterial;
+                renderer.setRenderTarget(renderTargetBlurB);
+                renderer.clear();
+                renderer.render(screenScene, screenCamera);
+
+                // Composite pass (render to screen)
+                this.compositeMaterial.uniforms.tScene.value = renderTargetB.texture;
+                this.compositeMaterial.uniforms.tBloom.value = renderTargetBlurB.texture;
+                this.screen.material = this.compositeMaterial;
+                renderer.setRenderTarget(null);
+                renderer.clear();
+                renderer.render(screenScene, screenCamera);
+            };
+        }
+
+        class WorldController {
+            static init() {
+                this.initWorld();
+                this.initLights();
+
+                this.addListeners();
+            }
+
+            static initWorld() {
+                this.renderer = new WebGL1Renderer({
+                    powerPreference: 'high-performance',
+                    stencil: false
+                });
+                this.element = this.renderer.domElement;
+
+                // 3D scene
+                this.scene = new Scene();
+                this.camera = new PerspectiveCamera(30);
+                this.camera.near = 0.5;
+                this.camera.far = 50;
+                this.camera.position.z = 8;
+                this.camera.lookAt(this.scene.position);
+
+                // Global geometries
+                this.screenTriangle = getFullscreenTriangle();
+
+                // Global uniforms
+                this.resolution = new Uniform(new Vector2());
+                this.aspect = new Uniform(1);
+                this.time = new Uniform(0);
+                this.frame = new Uniform(0);
+            }
+
+            static initLights() {
+                this.scene.add(new HemisphereLight(0x606060, 0x404040));
+
+                const light = new DirectionalLight(0xffffff, 0.4);
+                light.position.set(1, 1, 1);
+                this.scene.add(light);
+            }
+
+            static addListeners() {
+                this.renderer.domElement.addEventListener('touchstart', this.onTouchStart);
+            }
+
+            /**
+             * Event handlers
+             */
+
+            static onTouchStart = e => {
+                e.preventDefault();
+            };
+
+            /**
+             * Public methods
+             */
+
+            static resize = (width, height, dpr) => {
+                this.camera.aspect = width / height;
+                this.camera.updateProjectionMatrix();
+
+                if (width < height) {
+                    this.camera.position.z = 10;
+                } else if (width < Config.BREAKPOINT) {
+                    this.camera.position.z = 6;
+                } else {
+                    this.camera.position.z = 8;
+                }
+
+                width = Math.round(width * dpr);
+                height = Math.round(height * dpr);
+
+                this.resolution.value.set(width, height);
+                this.aspect.value = width / height;
+            };
+
+            static update = (time, delta, frame) => {
+                this.time.value = time;
+                this.frame.value = frame;
+            };
+        }
+
+        class App {
+            static async init() {
+                this.initWorld();
+                this.initViews();
+                this.initControllers();
+
+                this.addListeners();
+                this.onResize();
+            }
+
+            static initWorld() {
+                WorldController.init();
+                Stage.add(WorldController.element);
+            }
+
+            static initViews() {
+                this.view = new SceneView();
+                WorldController.scene.add(this.view);
+            }
+
+            static initControllers() {
+                const { renderer, scene, camera } = WorldController;
+
+                RenderManager.init(renderer, scene, camera);
+            }
+
+            static addListeners() {
+                Stage.events.on(Events.RESIZE, this.onResize);
+                ticker.add(this.onUpdate);
+            }
+
+            /**
+             * Event handlers
+             */
+
+            static onResize = () => {
+                const { width, height, dpr } = Stage;
+
+                WorldController.resize(width, height, dpr);
+                RenderManager.resize(width, height, dpr);
+            };
+
+            static onUpdate = (time, delta, frame) => {
+                WorldController.update(time, delta, frame);
+                RenderManager.update(time, delta, frame);
+            };
+        }
+
+        App.init();
+    </script>
 </body>
 </html>

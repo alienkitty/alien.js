@@ -12,6 +12,261 @@
 </head>
 <body>
     <div id="root"></div>
-    <script type="module">import{Color,DirectionalLight,Events,FXAAMaterial,Group,HemisphereLight,Mesh,MeshStandardMaterial,OrthographicCamera,PerspectiveCamera,RGBFormat,Scene,SphereGeometry,Stage,Uniform,Vector2,WebGL1Renderer,WebGLRenderTarget,getFullscreenTriangle,ticker}from"../build/alien.js";class Config{}Config.BG_COLOR="#0e0e0e",Config.UI_COLOR="rgba(255, 255, 255, 0.94)",Config.BREAKPOINT=1e3;import periodic3d from"../src/shaders/modules/noise/periodic3d.glsl.js";const vertexShaderChunk="\n            float f = 0.05 * pnoise(vec3(2.0 * normal + time), vec3(10.0));\n            vec3 transformed = position + f * normal;\n        ";class SceneView extends Group{constructor(){super(),this.initMesh()}initMesh(){const{time:e}=WorldController,r=new SphereGeometry(1,80,80),t=new MeshStandardMaterial({roughness:0});t.onBeforeCompile=r=>{r.uniforms.time=e,r.vertexShader="uniform float time;\n"+periodic3d+r.vertexShader,r.vertexShader=r.vertexShader.replace("#include <begin_vertex>",vertexShaderChunk)};const n=new Mesh(r,t);this.add(n)}}class RenderManager{static init(e,r,t){this.renderer=e,this.scene=r,this.camera=t,this.enabled=!0,this.initRenderer()}static initRenderer(){const{resolution:e,screenTriangle:r}=WorldController;this.screenScene=new Scene,this.screenCamera=new OrthographicCamera(-1,1,1,-1,0,1),this.screen=new Mesh(r),this.screen.frustumCulled=!1,this.screenScene.add(this.screen),this.renderTarget=new WebGLRenderTarget(1,1,{format:RGBFormat,anisotropy:0}),this.fxaaMaterial=new FXAAMaterial,this.fxaaMaterial.uniforms.tMap.value=this.renderTarget.texture,this.fxaaMaterial.uniforms.uResolution=e,this.screen.material=this.fxaaMaterial}}RenderManager.resize=(e,r,t)=>{RenderManager.renderer.setPixelRatio(t),RenderManager.renderer.setSize(e,r),e=Math.round(e*t),r=Math.round(r*t),RenderManager.renderTarget.setSize(e,r)},RenderManager.update=()=>{const e=RenderManager.renderer,r=RenderManager.scene,t=RenderManager.camera;if(!RenderManager.enabled)return e.setRenderTarget(null),void e.render(r,t);const n=RenderManager.screenScene,i=RenderManager.screenCamera,a=RenderManager.renderTarget;e.setRenderTarget(a),e.render(r,t),e.setRenderTarget(null),e.render(n,i)};class WorldController{static init(){this.initWorld(),this.initLights()}static initWorld(){this.renderer=new WebGL1Renderer({powerPreference:"high-performance",stencil:!1}),this.element=this.renderer.domElement,this.scene=new Scene,this.scene.background=new Color(Config.BG_COLOR),this.camera=new PerspectiveCamera(30),this.camera.near=.5,this.camera.far=50,this.camera.position.z=8,this.screenTriangle=getFullscreenTriangle(),this.resolution=new Uniform(new Vector2),this.aspect=new Uniform(1),this.time=new Uniform(0),this.frame=new Uniform(0)}static initLights(){this.scene.add(new HemisphereLight(6316128,4210752));const e=new DirectionalLight(16777215,.6);e.position.set(1,1,1),this.scene.add(e)}}WorldController.resize=(e,r,t)=>{WorldController.camera.aspect=e/r,WorldController.camera.updateProjectionMatrix(),e<r?WorldController.camera.position.z=10:e<Config.BREAKPOINT?WorldController.camera.position.z=6:WorldController.camera.position.z=8,e=Math.round(e*t),r=Math.round(r*t),WorldController.resolution.value.set(e,r),WorldController.aspect.value=e/r},WorldController.update=(e,r,t)=>{WorldController.time.value=e,WorldController.frame.value=t};class App{static async init(){this.initWorld(),this.initViews(),this.initControllers(),this.addListeners(),this.onResize()}static initWorld(){WorldController.init(),Stage.add(WorldController.element)}static initViews(){this.view=new SceneView,WorldController.scene.add(this.view)}static initControllers(){const{renderer:e,scene:r,camera:t}=WorldController;RenderManager.init(e,r,t)}static addListeners(){Stage.events.on(Events.RESIZE,this.onResize),ticker.add(this.onUpdate)}}App.onResize=()=>{const{width:e,height:r,dpr:t}=Stage;WorldController.resize(e,r,t),RenderManager.resize(e,r,t)},App.onUpdate=(e,r,t)=>{WorldController.update(e,r,t),RenderManager.update(e,r,t)},App.init();</script>
+    <script type="module">
+        import { Color, DirectionalLight, Events, FXAAMaterial, Group, HemisphereLight, Mesh, MeshStandardMaterial, OrthographicCamera, PerspectiveCamera, RGBFormat, Scene, SphereGeometry, Stage, Uniform, Vector2, WebGL1Renderer, WebGLRenderTarget, getFullscreenTriangle, ticker } from '../build/alien.js';
+
+        class Config {
+            static BG_COLOR = '#0e0e0e';
+            static UI_COLOR = 'rgba(255, 255, 255, 0.94)';
+
+            static BREAKPOINT = 1000;
+        }
+
+        import periodic3d from '../src/shaders/modules/noise/periodic3d.glsl.js';
+
+        // Based on https://github.com/spite/perlin-experiments
+
+        const vertexShaderChunk = /* glsl */`
+            float f = 0.05 * pnoise(vec3(2.0 * normal + time), vec3(10.0));
+            vec3 transformed = position + f * normal;
+        `;
+
+        class SceneView extends Group {
+            constructor() {
+                super();
+
+                this.initMesh();
+            }
+
+            initMesh() {
+                const { time } = WorldController;
+
+                const geometry = new SphereGeometry(1, 80, 80);
+
+                const material = new MeshStandardMaterial({
+                    roughness: 0
+                });
+
+                // https://threejs.org/examples/#webgl_materials_modified
+
+                material.onBeforeCompile = shader => {
+                    shader.uniforms.time = time;
+
+                    shader.vertexShader = 'uniform float time;\n' + periodic3d + shader.vertexShader;
+                    shader.vertexShader = shader.vertexShader.replace('#include <begin_vertex>', vertexShaderChunk);
+                };
+
+                const mesh = new Mesh(geometry, material);
+                this.add(mesh);
+            }
+        }
+
+        class RenderManager {
+            static init(renderer, scene, camera) {
+                this.renderer = renderer;
+                this.scene = scene;
+                this.camera = camera;
+
+                this.enabled = true;
+
+                this.initRenderer();
+            }
+
+            static initRenderer() {
+                const { screenTriangle, resolution } = WorldController;
+
+                // Fullscreen triangle
+                this.screenScene = new Scene();
+                this.screenCamera = new OrthographicCamera(-1, 1, 1, -1, 0, 1);
+
+                this.screen = new Mesh(screenTriangle);
+                this.screen.frustumCulled = false;
+                this.screenScene.add(this.screen);
+
+                // Render targets
+                this.renderTarget = new WebGLRenderTarget(1, 1, {
+                    format: RGBFormat
+                });
+
+                // FXAA material
+                this.fxaaMaterial = new FXAAMaterial();
+                this.fxaaMaterial.uniforms.tMap.value = this.renderTarget.texture;
+                this.fxaaMaterial.uniforms.uResolution = resolution;
+                this.screen.material = this.fxaaMaterial;
+            }
+
+            /**
+             * Public methods
+             */
+
+            static resize = (width, height, dpr) => {
+                this.renderer.setPixelRatio(dpr);
+                this.renderer.setSize(width, height);
+
+                width = Math.round(width * dpr);
+                height = Math.round(height * dpr);
+
+                this.renderTarget.setSize(width, height);
+            };
+
+            static update = () => {
+                const renderer = this.renderer;
+                const scene = this.scene;
+                const camera = this.camera;
+
+                if (!this.enabled) {
+                    renderer.setRenderTarget(null);
+                    renderer.render(scene, camera);
+                    return;
+                }
+
+                const screenScene = this.screenScene;
+                const screenCamera = this.screenCamera;
+
+                const renderTarget = this.renderTarget;
+
+                // Scene pass
+                renderer.setRenderTarget(renderTarget);
+                renderer.render(scene, camera);
+
+                // FXAA pass (render to screen)
+                renderer.setRenderTarget(null);
+                renderer.render(screenScene, screenCamera);
+            };
+        }
+
+        class WorldController {
+            static init() {
+                this.initWorld();
+                this.initLights();
+
+                this.addListeners();
+            }
+
+            static initWorld() {
+                this.renderer = new WebGL1Renderer({
+                    powerPreference: 'high-performance',
+                    stencil: false
+                });
+                this.element = this.renderer.domElement;
+
+                // 3D scene
+                this.scene = new Scene();
+                this.scene.background = new Color(Config.BG_COLOR);
+                this.camera = new PerspectiveCamera(30);
+                this.camera.near = 0.5;
+                this.camera.far = 50;
+                this.camera.position.z = 8;
+                this.camera.lookAt(this.scene.position);
+
+                // Global geometries
+                this.screenTriangle = getFullscreenTriangle();
+
+                // Global uniforms
+                this.resolution = new Uniform(new Vector2());
+                this.aspect = new Uniform(1);
+                this.time = new Uniform(0);
+                this.frame = new Uniform(0);
+            }
+
+            static initLights() {
+                this.scene.add(new HemisphereLight(0x606060, 0x404040));
+
+                const light = new DirectionalLight(0xffffff, 0.6);
+                light.position.set(1, 1, 1);
+                this.scene.add(light);
+            }
+
+            static addListeners() {
+                this.renderer.domElement.addEventListener('touchstart', this.onTouchStart);
+            }
+
+            /**
+             * Event handlers
+             */
+
+            static onTouchStart = e => {
+                e.preventDefault();
+            };
+
+            /**
+             * Public methods
+             */
+
+            static resize = (width, height, dpr) => {
+                this.camera.aspect = width / height;
+                this.camera.updateProjectionMatrix();
+
+                if (width < height) {
+                    this.camera.position.z = 10;
+                } else if (width < Config.BREAKPOINT) {
+                    this.camera.position.z = 6;
+                } else {
+                    this.camera.position.z = 8;
+                }
+
+                width = Math.round(width * dpr);
+                height = Math.round(height * dpr);
+
+                this.resolution.value.set(width, height);
+                this.aspect.value = width / height;
+            };
+
+            static update = (time, delta, frame) => {
+                this.time.value = time;
+                this.frame.value = frame;
+            };
+        }
+
+        class App {
+            static async init() {
+                this.initWorld();
+                this.initViews();
+                this.initControllers();
+
+                this.addListeners();
+                this.onResize();
+            }
+
+            static initWorld() {
+                WorldController.init();
+                Stage.add(WorldController.element);
+            }
+
+            static initViews() {
+                this.view = new SceneView();
+                WorldController.scene.add(this.view);
+            }
+
+            static initControllers() {
+                const { renderer, scene, camera } = WorldController;
+
+                RenderManager.init(renderer, scene, camera);
+            }
+
+            static addListeners() {
+                Stage.events.on(Events.RESIZE, this.onResize);
+                ticker.add(this.onUpdate);
+            }
+
+            /**
+             * Event handlers
+             */
+
+            static onResize = () => {
+                const { width, height, dpr } = Stage;
+
+                WorldController.resize(width, height, dpr);
+                RenderManager.resize(width, height, dpr);
+            };
+
+            static onUpdate = (time, delta, frame) => {
+                WorldController.update(time, delta, frame);
+                RenderManager.update(time, delta, frame);
+            };
+        }
+
+        App.init();
+    </script>
 </body>
 </html>

@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
-    <title>Alien.js — Polyhedron</title>
+    <title>Alien.js — CubeCamera Rainbow</title>
 
     <link rel="preconnect" href="https://fonts.gstatic.com">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto+Mono">
@@ -13,18 +13,32 @@
 <body>
     <div id="root"></div>
     <script type="module">
-        import { ACESFilmicToneMapping, AmbientLight, BloomCompositeMaterial, BufferGeometryLoader, BufferGeometryLoaderThread, Color, Device, DirectionalLight, EnvironmentTextureLoader, Events, FXAAMaterial, Group, HemisphereLight, ImageBitmapLoaderThread, LuminosityMaterial, MathUtils, Mesh, MeshBasicMaterial, MeshStandardMaterial, NoBlending, OrthographicCamera, PerspectiveCamera, PointLight, RGBFormat, RawShaderMaterial, RepeatWrapping, Scene, SphereGeometry, Stage, TextureLoader, Thread, Uniform, UnrealBloomBlurMaterial, Vector2, Vector3, WebGL1Renderer, WebGLRenderTarget, getFrustum, getFullscreenTriangle, mix, radians, ticker, tween } from '../build/alien.js';
+        import { ACESFilmicToneMapping, AdditiveBlending, BackSide, BlurMaterial, Color, CubeCamera, Device, Events, FilmGrainFXAAMaterial, Group, IcosahedronGeometry, ImageBitmapLoaderThread, LinearMipmapLinearFilter, MathUtils, Mesh, MeshBasicMaterial, MultiplyOperation, NoBlending, OrthographicCamera, PerspectiveCamera, RGBFormat, RawShaderMaterial, Scene, Sprite, SpriteMaterial, Stage, TextureLoader, Thread, Uniform, Vector2, Vector3, WebGL1Renderer, WebGLCubeRenderTarget, WebGLRenderTarget, Wobble, getFullscreenTriangle, getSphericalCube, radians, ticker, tween } from '../build/alien.js';
 
         class Config {
-            static BG_COLOR = '#0e0e0e';
+            static BG_COLOR = '#030627';
             static UI_COLOR = 'rgba(255, 255, 255, 0.94)';
+
+            static COLOR = new Color(this.BG_COLOR);
+            static LIGHT_COLOR = new Color(0xff8dfc);
+            static PARTICLE_COLOR = new Color(0x8080ff);
 
             static BREAKPOINT = 1000;
 
             static DEBUG = location.search === '?debug';
         }
 
+        import hsv2rgbSmooth from '../src/shaders/modules/hsv/hsv2rgbSmooth.glsl.js';
+        import rgb2hsv from '../src/shaders/modules/hsv/rgb2hsv.glsl.js';
+
+        // Based on https://github.com/yuichiroharai/glsl-y-hsv
+
+        import noise from '../src/shaders/modules/noise/noise.glsl.js';
         import rgbshift from '../src/shaders/modules/rgbshift/rgbshift.glsl.js';
+        import blendOverlay from '../src/shaders/modules/blending/overlay.glsl.js';
+        import blendSoftLight from '../src/shaders/modules/blending/soft-light.glsl.js';
+
+        // Based on https://github.com/spite/codevember-2016
 
         const vertexCompositeShader = /* glsl */`
             attribute vec2 uv;
@@ -44,29 +58,113 @@
 
             uniform sampler2D tScene;
             uniform sampler2D tBloom;
+            uniform sampler2D tLensDirt;
             uniform float uDistortion;
+            uniform float uMinBright;
+            uniform float uBlurBright;
+            uniform vec3 uLightColor;
+            uniform vec3 uColor;
+            uniform float uDebug;
+            uniform float uHue;
+            uniform vec2 uResolution;
+            uniform float uTime;
 
             varying vec2 vUv;
 
+            ${hsv2rgbSmooth}
+            ${rgb2hsv}
+            ${noise}
             ${rgbshift}
+            ${blendOverlay}
+            ${blendSoftLight}
 
             void main() {
-                gl_FragColor = texture2D(tScene, vUv);
+                float center = length(vUv - 0.5);
 
-                float angle = length(vUv - 0.5);
-                float amount = 0.0002 + uDistortion;
+                vec3 rgb = uColor;
+                vec3 hsv = rgb2hsv(rgb);
+                hsv.x += vUv.x + uHue;
 
-                gl_FragColor.rgb += getRGB(tBloom, vUv, angle, amount).rgb;
+                rgb = hsv2rgbSmooth(hsv);
+
+                // Linear gradient
+                vec4 color = vec4(mix(rgb, vec3(0.0), smoothstep(0.0, 0.6, vUv.y)), 1.0);
+
+                color += getRGB(tScene, vUv, 0.1, 0.001 * uDistortion);
+
+                vec4 bloom = texture2D(tBloom, vUv);
+                bloom.x = max(0.0, bloom.x - uMinBright);
+                bloom.y = max(0.0, bloom.y - uMinBright);
+                bloom.z = max(0.0, bloom.z - uMinBright);
+
+                color.rgb += bloom.rgb * uBlurBright;
+
+                // Blend overlay noise lighting
+                float noise = noise(vUv + uTime * 0.06);
+                float amount = smoothstep(0.2, 0.7, center) * noise;
+
+                if (uDebug == 1.0) {
+                    color += vec4(vec3(1.0, 0.0, 0.0), 1.0) * amount;
+                } else {
+                    color = blendOverlay(color, vec4(uLightColor, 1.0), amount);
+                }
+
+                // Blend overlay vignette
+                float vignette = 1.0 - center * 1.2;
+
+                vec4 base = color;
+                vec4 blend = vec4(vec3(vignette), 1.0);
+
+                color = blendOverlay(base, blend, 1.0);
+
+                // Blend soft light with background color
+                base = color;
+                blend = vec4(rgb, 1.0);
+
+                color = blendSoftLight(base, blend, 0.8);
+
+                // Dirt lens texture
+                vec2 vUv2 = vUv;
+
+                float aspectRatio2 = 1.0;
+                float aspectRatio = uResolution.x / uResolution.y;
+
+                if (aspectRatio2 > aspectRatio) {
+                    float widthRatio = aspectRatio / aspectRatio2;
+                    vUv2.x = vUv.x * widthRatio;
+                    vUv2.x += 0.5 * (1.0 - widthRatio);
+                    vUv2.y = vUv.y;
+                } else {
+                    float heightRatio = aspectRatio2 / aspectRatio;
+                    vUv2.x = vUv.x;
+                    vUv2.y = vUv.y * heightRatio;
+                    vUv2.y += 0.5 * (1.0 - heightRatio);
+                }
+
+                color += smoothstep(0.0, 0.4, bloom) * texture2D(tLensDirt, vUv2);
+
+                gl_FragColor = color;
             }
         `;
 
         class CompositeMaterial extends RawShaderMaterial {
             constructor() {
+                const { getTexture } = WorldController;
+
                 super({
                     uniforms: {
                         tScene: new Uniform(null),
                         tBloom: new Uniform(null),
-                        uDistortion: new Uniform(0.00125)
+                        tLensDirt: new Uniform(getTexture('assets/textures/lens_dirt.jpg')),
+                        uDistortion: new Uniform(0.2),
+                        uMinBright: new Uniform(0.07),
+                        uBlurBright: new Uniform(0.4166),
+                        uLightColor: new Uniform(Config.LIGHT_COLOR),
+                        uColor: new Uniform(Config.COLOR),
+                        uDebug: new Uniform(Config.DEBUG ? 1 : 0),
+                        uHue: new Uniform(0),
+                        uResolution: new Uniform(new Vector2()),
+                        uTime: new Uniform(0)
                     },
                     vertexShader: vertexCompositeShader,
                     fragmentShader: fragmentCompositeShader,
@@ -77,137 +175,146 @@
             }
         }
 
-        class MouseLight extends Group {
+        class Sphere extends Group {
             constructor() {
                 super();
 
-                this.position.z = 2;
-
-                if (Config.DEBUG) {
-                    this.initDebug();
-                }
-
-                this.initLight();
+                this.initMesh();
             }
 
-            initDebug() {
-                const geometry = new SphereGeometry(0.125, 1, 1);
+            initMesh() {
+                const { cubeRenderTarget } = WorldController;
 
+                // Spherical cube geometry
+                const geometry = getSphericalCube(1, 32);
+
+                // Chrome material
                 const material = new MeshBasicMaterial({
-                    color: 0xff0000,
-                    wireframe: true
+                    envMap: cubeRenderTarget.texture,
+                    combine: MultiplyOperation,
+                    reflectivity: 1
                 });
 
                 const mesh = new Mesh(geometry, material);
                 this.add(mesh);
             }
-
-            initLight() {
-                const light = new PointLight(0xffffff, 0.2);
-                this.add(light);
-            }
         }
 
-        // Geometry from https://levskaya.github.io/polyhedronisme/
+        const fragmentShaderChunk = /* glsl */`
+            vec2 position = (gl_FragCoord.xy / resolution);
 
-        /*
+            vec3 hsv = rgb2hsv(diffuseColor.rgb);
+            hsv.x += position.x + hue;
 
-        Instructions to export buffer geometry from Cinema 4D
+            outgoingLight = hsv2rgbSmooth(hsv);
+        `;
 
-        1) Apply the "Set UVW from Projection" Material Tag to each of the objects you would like to export.
-
-        2) From the Objects File menu, export each object as an OBJ file.
-
-        3) Open the three.js editor, create a new scene and import one OBJ file:
-        https://threejs.org/editor/
-
-        4) Click the plus sign (+) next to your object and select the first child object.
-
-        5) From the Settings tab, change "Export Precision" to 3.
-
-        6) Finally, re-export the object again with "Export Geometry".
-
-        7) Outputs a .json with the required position, normal and uv attributes.
-
-        8) Repeat for each of your objects.
-
-        */
-
-        class Polyhedron extends Group {
-            constructor() {
+        class Stars extends Group {
+            constructor(numParticles) {
                 super();
+
+                this.numParticles = numParticles;
+
+                this.sprites = [];
+                this.nearScale = 0.3;
+
+                this.initSprites();
             }
 
-            async initGeometry() {
-                const { loadBufferGeometry } = WorldController;
+            initSprites() {
+                const { getTexture, hue, resolution, time } = WorldController;
 
-                const geometry = await loadBufferGeometry('assets/geometry/polyhedronisme-C2dakD.json');
-
-                // 2nd set of UV's for aoMap and lightMap
-                geometry.attributes.uv2 = geometry.attributes.uv;
-
-                this.geometry = geometry;
-            }
-
-            async initMaterial() {
-                const { loadTexture, loadEnvironmentTexture } = WorldController;
-
-                // Textures
-                const [map, normalMap, ormMap, envMap] = await Promise.all([
-                    // loadTexture('assets/textures/uv.jpg'),
-                    loadTexture('assets/textures/pbr/pitted_metal_basecolor.jpg'),
-                    loadTexture('assets/textures/pbr/pitted_metal_normal.jpg'),
-                    // https://occlusion-roughness-metalness.glitch.me/
-                    loadTexture('assets/textures/pbr/pitted_metal_orm.jpg'),
-                    loadEnvironmentTexture('assets/textures/env.jpg')
-                ]);
-
-                map.wrapS = RepeatWrapping;
-                map.wrapT = RepeatWrapping;
-                map.repeat.set(2, 1);
-
-                normalMap.wrapS = RepeatWrapping;
-                normalMap.wrapT = RepeatWrapping;
-                normalMap.repeat.set(2, 1);
-
-                ormMap.wrapS = RepeatWrapping;
-                ormMap.wrapT = RepeatWrapping;
-                ormMap.repeat.set(2, 1);
-
-                // this.material = new MeshBasicMaterial({ map });
-                this.material = new MeshStandardMaterial({
-                    roughness: 0.3,
-                    metalness: 0.9,
-                    map,
-                    aoMap: ormMap,
-                    aoMapIntensity: 1,
-                    roughnessMap: ormMap,
-                    metalnessMap: ormMap,
-                    normalMap,
-                    normalScale: new Vector2(1, 1),
-                    envMap,
-                    envMapIntensity: 0.5,
-                    flatShading: true
+                const material = new SpriteMaterial({
+                    map: getTexture('assets/textures/particle2.png'),
+                    color: Config.PARTICLE_COLOR,
+                    blending: AdditiveBlending,
+                    transparent: true,
+                    depthWrite: false
                 });
-            }
 
-            initMesh() {
-                this.mesh = new Mesh(this.geometry, this.material);
-                this.add(this.mesh);
+                // https://threejs.org/examples/#webgl_materials_modified
+
+                material.onBeforeCompile = shader => {
+                    shader.uniforms.hue = hue;
+                    shader.uniforms.resolution = resolution;
+                    shader.uniforms.time = time;
+
+                    shader.fragmentShader = 'uniform float hue;\nuniform vec2 resolution;\nuniform float time;\n' + hsv2rgbSmooth + rgb2hsv + shader.fragmentShader;
+                    shader.fragmentShader = shader.fragmentShader.replace('outgoingLight = diffuseColor.rgb;', fragmentShaderChunk);
+                };
+
+                for (let i = 0; i < this.numParticles; i++) {
+                    const distance = MathUtils.randFloat(10, 40);
+
+                    this.sprite = new Sprite(material);
+                    this.sprite.position.x = Math.random() * 2 - 1;
+                    this.sprite.position.y = Math.random() * 2 - 1;
+                    this.sprite.position.z = Math.random() * 2 - 1;
+                    this.sprite.position.normalize();
+                    this.sprite.position.multiplyScalar(distance);
+                    this.sprite.scale.set(0.3, 0.3, 1);
+
+                    this.sprite.random = Math.random();
+
+                    this.sprite.origin = new Vector3();
+                    this.sprite.near = new Vector3();
+                    this.sprite.origin.copy(this.sprite.position);
+                    this.sprite.near.copy(this.sprite.origin).multiplyScalar(this.nearScale);
+
+                    this.sprite.wobble = new Wobble(this.sprite.origin);
+                    this.sprite.wobble.scale = 0.3;
+
+                    this.add(this.sprite);
+                    this.sprites.push(this.sprite);
+                }
             }
 
             /**
              * Public methods
              */
 
-            ready = async () => {
-                await Promise.all([
-                    this.initGeometry(),
-                    this.initMaterial()
-                ]);
-
-                this.initMesh();
+            update = (time, near) => {
+                this.sprites.forEach(sprite => {
+                    if (near) {
+                        sprite.wobble.origin.copy(sprite.wobble.position);
+                        // sprite.wobble.update(sprite.random + time);
+                        sprite.wobble.update(time * sprite.random);
+                        sprite.position.copy(sprite.near.copy(sprite.origin).multiplyScalar(this.nearScale));
+                    } else {
+                        sprite.position.copy(sprite.origin);
+                    }
+                });
             };
+        }
+
+        class Space extends Group {
+            constructor() {
+                super();
+            }
+
+            async initMesh() {
+                const { loadTexture } = WorldController;
+
+                const geometry = new IcosahedronGeometry(40, 3);
+
+                const map = await loadTexture('assets/textures/space.jpg');
+
+                const material = new MeshBasicMaterial({
+                    map,
+                    side: BackSide,
+                    transparent: true,
+                    opacity: 0.05
+                });
+
+                const mesh = new Mesh(geometry, material);
+                this.add(mesh);
+            }
+
+            /**
+             * Public methods
+             */
+
+            ready = () => this.initMesh();
         }
 
         class SceneView extends Group {
@@ -216,82 +323,58 @@
 
                 this.visible = false;
 
+                this.initRenderer();
                 this.initViews();
             }
 
-            initViews() {
-                this.polyhedron = new Polyhedron();
-                this.add(this.polyhedron);
+            initRenderer() {
+                const { renderer, scene, cubeCamera } = WorldController;
 
-                this.light = new MouseLight();
-                this.add(this.light);
+                this.renderer = renderer;
+                this.scene = scene;
+                this.cubeCamera = cubeCamera;
+            }
+
+            initViews() {
+                this.space = new Space();
+                this.add(this.space);
+
+                this.stars = new Stars(2000);
+                this.add(this.stars);
+
+                this.sphere = new Sphere();
+                this.add(this.sphere);
             }
 
             /**
              * Public methods
              */
 
-            ready = () => this.polyhedron.ready();
+            update = time => {
+                this.sphere.visible = false;
+                this.stars.update(time, true);
+                this.cubeCamera.update(this.renderer, this.scene);
+                this.stars.update(time, false);
+                this.sphere.visible = true;
+            };
+
+            ready = () => this.space.ready();
         }
 
         class SceneController {
             static init(view) {
                 this.view = view;
-
-                this.mouse = new Vector2();
-                this.target = new Vector2();
-                this.lightPosition = new Vector3();
-                this.lerpSpeed = 0.25;
-
-                this.addListeners();
             }
-
-            static addListeners() {
-                Stage.element.addEventListener('pointerdown', this.onPointerDown);
-                window.addEventListener('pointermove', this.onPointerMove);
-                window.addEventListener('pointerup', this.onPointerUp);
-            }
-
-            /**
-             * Event handlers
-             */
-
-            static onPointerDown = e => {
-                this.onPointerMove(e);
-            };
-
-            static onPointerMove = ({ clientX, clientY }) => {
-                if (!this.view.visible) {
-                    return;
-                }
-
-                this.target.x = (clientX / Stage.width) * 2 - 1;
-                this.target.y = 1 - (clientY / Stage.height) * 2;
-            };
-
-            static onPointerUp = e => {
-                this.onPointerMove(e);
-            };
 
             /**
              * Public methods
              */
 
             static resize = () => {
-                const { width, height } = WorldController.getFrustum(this.view.light.position.z);
-
-                this.halfWidth = width / 2;
-                this.halfHeight = height / 2;
             };
 
-            static update = () => {
-                this.mouse.lerp(this.target, this.lerpSpeed);
-
-                this.lightPosition.x = this.mouse.x * this.halfWidth;
-                this.lightPosition.y = this.mouse.y * this.halfHeight;
-                this.lightPosition.z = this.view.light.position.z;
-
-                this.view.light.position.copy(this.lightPosition);
+            static update = time => {
+                this.view.update(time);
             };
 
             static animateIn = () => {
@@ -310,16 +393,16 @@
                 this.scene = scene;
                 this.camera = camera;
 
-                this.luminosityThreshold = 0.1;
-                this.bloomStrength = 0.3;
-                this.bloomRadius = 0.75;
+                this.grainEffect = 0.15;
+                this.blurResolutionScale = 0.25;
+                this.blurFactor = 6;
                 this.enabled = true;
 
                 this.initRenderer();
             }
 
             static initRenderer() {
-                const { screenTriangle, resolution } = WorldController;
+                const { screenTriangle, hue, resolution, time } = WorldController;
 
                 // Fullscreen triangle
                 this.screenScene = new Scene();
@@ -336,56 +419,31 @@
                 });
 
                 this.renderTargetB = this.renderTargetA.clone();
-
-                this.renderTargetsHorizontal = [];
-                this.renderTargetsVertical = [];
-                this.nMips = 5;
-
-                this.renderTargetBright = this.renderTargetA.clone();
-
-                for (let i = 0, l = this.nMips; i < l; i++) {
-                    this.renderTargetsHorizontal.push(this.renderTargetA.clone());
-                    this.renderTargetsVertical.push(this.renderTargetA.clone());
-                }
+                this.renderTargetBlurA = this.renderTargetA.clone();
+                this.renderTargetBlurB = this.renderTargetA.clone();
 
                 this.renderTargetA.depthBuffer = true;
 
                 // FXAA material
-                this.fxaaMaterial = new FXAAMaterial();
+                this.fxaaMaterial = new FilmGrainFXAAMaterial();
+                this.fxaaMaterial.uniforms.uIntensity.value = this.grainEffect;
                 this.fxaaMaterial.uniforms.uResolution = resolution;
-
-                // Luminosity high pass material
-                this.luminosityMaterial = new LuminosityMaterial();
-                this.luminosityMaterial.uniforms.uLuminosityThreshold.value = this.luminosityThreshold;
+                this.fxaaMaterial.uniforms.uTime = time;
 
                 // Gaussian blur materials
-                this.blurMaterials = [];
+                this.hBlurMaterial = new BlurMaterial(BlurDirectionX);
+                this.hBlurMaterial.uniforms.uBluriness.value = this.blurFactor;
+                this.hBlurMaterial.uniforms.uResolution = resolution;
 
-                const kernelSizeArray = [3, 5, 7, 9, 11];
-
-                for (let i = 0, l = this.nMips; i < l; i++) {
-                    this.blurMaterials.push(new UnrealBloomBlurMaterial(kernelSizeArray[i]));
-                    this.blurMaterials[i].uniforms.uResolution.value = new Vector2();
-                }
-
-                // Bloom composite material
-                const bloomFactors = [1.0, 0.8, 0.6, 0.4, 0.2];
-
-                for (let i = 0, l = this.nMips; i < l; i++) {
-                    const factor = bloomFactors[i];
-                    bloomFactors[i] = this.bloomStrength * mix(factor, 1.2 - factor, this.bloomRadius);
-                }
-
-                this.bloomCompositeMaterial = new BloomCompositeMaterial(this.nMips);
-                this.bloomCompositeMaterial.uniforms.tBlur1.value = this.renderTargetsVertical[0].texture;
-                this.bloomCompositeMaterial.uniforms.tBlur2.value = this.renderTargetsVertical[1].texture;
-                this.bloomCompositeMaterial.uniforms.tBlur3.value = this.renderTargetsVertical[2].texture;
-                this.bloomCompositeMaterial.uniforms.tBlur4.value = this.renderTargetsVertical[3].texture;
-                this.bloomCompositeMaterial.uniforms.tBlur5.value = this.renderTargetsVertical[4].texture;
-                this.bloomCompositeMaterial.uniforms.uBloomFactors.value = bloomFactors;
+                this.vBlurMaterial = new BlurMaterial(BlurDirectionY);
+                this.vBlurMaterial.uniforms.uBluriness.value = this.blurFactor;
+                this.vBlurMaterial.uniforms.uResolution = resolution;
 
                 // Composite material
                 this.compositeMaterial = new CompositeMaterial();
+                this.compositeMaterial.uniforms.uHue = hue;
+                this.compositeMaterial.uniforms.uResolution = resolution;
+                this.compositeMaterial.uniforms.uTime = time;
             }
 
             /**
@@ -402,20 +460,11 @@
                 this.renderTargetA.setSize(width, height);
                 this.renderTargetB.setSize(width, height);
 
-                width = MathUtils.floorPowerOfTwo(width) / 2;
-                height = MathUtils.floorPowerOfTwo(height) / 2;
+                width = Math.round(width * this.blurResolutionScale);
+                height = Math.round(height * this.blurResolutionScale);
 
-                this.renderTargetBright.setSize(width, height);
-
-                for (let i = 0, l = this.nMips; i < l; i++) {
-                    this.renderTargetsHorizontal[i].setSize(width, height);
-                    this.renderTargetsVertical[i].setSize(width, height);
-
-                    this.blurMaterials[i].uniforms.uResolution.value.set(width, height);
-
-                    width = width / 2;
-                    height = height / 2;
-                }
+                this.renderTargetBlurA.setSize(width, height);
+                this.renderTargetBlurB.setSize(width, height);
             };
 
             static update = () => {
@@ -434,9 +483,8 @@
 
                 const renderTargetA = this.renderTargetA;
                 const renderTargetB = this.renderTargetB;
-                const renderTargetBright = this.renderTargetBright;
-                const renderTargetsHorizontal = this.renderTargetsHorizontal;
-                const renderTargetsVertical = this.renderTargetsVertical;
+                const renderTargetBlurA = this.renderTargetBlurA;
+                const renderTargetBlurB = this.renderTargetBlurB;
 
                 // Scene pass
                 renderer.setRenderTarget(renderTargetA);
@@ -448,39 +496,20 @@
                 renderer.setRenderTarget(renderTargetB);
                 renderer.render(screenScene, screenCamera);
 
-                // Extract bright areas
-                this.luminosityMaterial.uniforms.tMap.value = renderTargetB.texture;
-                this.screen.material = this.luminosityMaterial;
-                renderer.setRenderTarget(renderTargetBright);
+                // Two pass Gaussian blur
+                this.hBlurMaterial.uniforms.tMap.value = renderTargetB.texture;
+                this.screen.material = this.hBlurMaterial;
+                renderer.setRenderTarget(renderTargetBlurA);
                 renderer.render(screenScene, screenCamera);
 
-                // Blur all the mips progressively
-                let inputRenderTarget = renderTargetBright;
-
-                for (let i = 0, l = this.nMips; i < l; i++) {
-                    this.screen.material = this.blurMaterials[i];
-
-                    this.blurMaterials[i].uniforms.tMap.value = inputRenderTarget.texture;
-                    this.blurMaterials[i].uniforms.uDirection.value = BlurDirectionX;
-                    renderer.setRenderTarget(renderTargetsHorizontal[i]);
-                    renderer.render(screenScene, screenCamera);
-
-                    this.blurMaterials[i].uniforms.tMap.value = this.renderTargetsHorizontal[i].texture;
-                    this.blurMaterials[i].uniforms.uDirection.value = BlurDirectionY;
-                    renderer.setRenderTarget(renderTargetsVertical[i]);
-                    renderer.render(screenScene, screenCamera);
-
-                    inputRenderTarget = renderTargetsVertical[i];
-                }
-
-                // Composite all the mips
-                this.screen.material = this.bloomCompositeMaterial;
-                renderer.setRenderTarget(renderTargetsHorizontal[0]);
+                this.vBlurMaterial.uniforms.tMap.value = renderTargetBlurA.texture;
+                this.screen.material = this.vBlurMaterial;
+                renderer.setRenderTarget(renderTargetBlurB);
                 renderer.render(screenScene, screenCamera);
 
                 // Composite pass (render to screen)
                 this.compositeMaterial.uniforms.tScene.value = renderTargetB.texture;
-                this.compositeMaterial.uniforms.tBloom.value = renderTargetsHorizontal[0].texture;
+                this.compositeMaterial.uniforms.tBloom.value = renderTargetBlurB.texture;
                 this.screen.material = this.compositeMaterial;
                 renderer.setRenderTarget(null);
                 renderer.render(screenScene, screenCamera);
@@ -597,6 +626,10 @@
 
         class WorldController {
             static init() {
+                this.color = {};
+
+                Config.COLOR.getHSL(this.color);
+
                 this.initWorld();
                 this.initLights();
                 this.initLoaders();
@@ -617,17 +650,30 @@
 
                 // 3D scene
                 this.scene = new Scene();
-                this.scene.background = new Color(Config.BG_COLOR);
+                this.scene.background = Config.COLOR;
                 this.camera = new PerspectiveCamera(30);
                 this.camera.near = 0.5;
                 this.camera.far = 50;
                 this.camera.position.z = 8;
+                this.camera.zoom = 0.8;
                 this.camera.lookAt(this.scene.position);
+
+                // Cube render target
+                this.cubeRenderTarget = new WebGLCubeRenderTarget(512, {
+                    format: RGBFormat,
+                    generateMipmaps: true,
+                    minFilter: LinearMipmapLinearFilter
+                });
+
+                // Cube camera
+                this.cubeCamera = new CubeCamera(this.camera.near, this.camera.far, this.cubeRenderTarget);
+                this.scene.add(this.cubeCamera);
 
                 // Global geometries
                 this.screenTriangle = getFullscreenTriangle();
 
                 // Global uniforms
+                this.hue = new Uniform(this.color.h);
                 this.resolution = new Uniform(new Vector2());
                 this.aspect = new Uniform(1);
                 this.time = new Uniform(0);
@@ -635,19 +681,10 @@
             }
 
             static initLights() {
-                this.scene.add(new AmbientLight(0xffffff, 0.2));
-
-                this.scene.add(new HemisphereLight(0x606060, 0x404040));
-
-                const light = new DirectionalLight(0xffffff, 0.4);
-                light.position.set(0.6, 0.5, 1);
-                this.scene.add(light);
             }
 
             static initLoaders() {
                 this.textureLoader = new TextureLoader();
-                this.environmentLoader = new EnvironmentTextureLoader(this.renderer);
-                this.bufferGeometryLoader = new BufferGeometryLoader();
             }
 
             static addListeners() {
@@ -675,6 +712,10 @@
             };
 
             static update = (time, delta, frame) => {
+                this.hue.value += 0.0005;
+
+                Config.COLOR.setHSL(this.hue.value, this.color.s, this.color.l);
+
                 this.time.value = time;
                 this.frame.value = frame;
             };
@@ -682,16 +723,6 @@
             static getTexture = (path, callback) => this.textureLoader.load(path, callback);
 
             static loadTexture = path => this.textureLoader.loadAsync(path);
-
-            static getEnvironmentTexture = (path, callback) => this.environmentLoader.load(path, callback);
-
-            static loadEnvironmentTexture = path => this.environmentLoader.loadAsync(path);
-
-            static getBufferGeometry = (path, callback) => this.bufferGeometryLoader.load(path, callback);
-
-            static loadBufferGeometry = path => this.bufferGeometryLoader.loadAsync(path);
-
-            static getFrustum = offsetZ => getFrustum(this.camera, offsetZ);
         }
 
         class App {
@@ -707,7 +738,10 @@
                 this.addListeners();
                 this.onResize();
 
-                await SceneController.ready();
+                await Promise.all([
+                    WorldController.textureLoader.ready(),
+                    SceneController.ready()
+                ]);
 
                 CameraController.animateIn();
                 SceneController.animateIn();
@@ -715,7 +749,6 @@
 
             static initThread() {
                 ImageBitmapLoaderThread.init();
-                BufferGeometryLoaderThread.init();
 
                 Thread.shared();
             }
@@ -759,7 +792,7 @@
             static onUpdate = (time, delta, frame) => {
                 WorldController.update(time, delta, frame);
                 CameraController.update(time);
-                SceneController.update();
+                SceneController.update(time);
                 RenderManager.update(time, delta, frame);
             };
         }

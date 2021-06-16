@@ -1,3 +1,5 @@
+// Based on https://github.com/activetheory
+
 export default /* glsl */`
 float range(float oldValue, float oldMin, float oldMax, float newMin, float newMax) {
     float oldRange = oldMax - oldMin;

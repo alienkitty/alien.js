@@ -13,7 +13,7 @@
 <body>
     <div id="root"></div>
     <script type="module">
-        import { Color, DirectionalLight, Events, FXAAMaterial, Group, HemisphereLight, Mesh, MeshStandardMaterial, OrthographicCamera, PerspectiveCamera, PoissonDiscBlurMaterial, RGBFormat, Scene, SphereGeometry, Stage, Uniform, Vector2, WebGL1Renderer, WebGLRenderTarget, getFullscreenTriangle, ticker } from '../build/alien.js';
+        import { Color, DirectionalLight, Events, FXAAMaterial, Group, HemisphereLight, LinearMipmapLinearFilter, MathUtils, Mesh, MeshStandardMaterial, OrthographicCamera, PerspectiveCamera, PoissonDiscBlurMaterial, RGBFormat, Scene, SphereGeometry, Stage, Uniform, Vector2, WebGL1Renderer, WebGLRenderTarget, getFullscreenTriangle, ticker } from '../build/alien.js';
 
         class Config {
             static BG_COLOR = '#0e0e0e';
@@ -67,14 +67,13 @@
                 this.scene = scene;
                 this.camera = camera;
 
-                this.blurFactor = 8;
                 this.enabled = true;
 
                 this.initRenderer();
             }
 
             static initRenderer() {
-                const { resolution, screenTriangle, time } = WorldController;
+                const { screenTriangle, resolution, time } = WorldController;
 
                 // Fullscreen triangle
                 this.screenScene = new Scene();
@@ -87,11 +86,12 @@
                 // Render targets
                 this.renderTargetA = new WebGLRenderTarget(1, 1, {
                     format: RGBFormat,
-                    anisotropy: 0,
                     depthBuffer: false
                 });
 
                 this.renderTargetB = this.renderTargetA.clone();
+                this.renderTargetB.texture.minFilter = LinearMipmapLinearFilter;
+                this.renderTargetB.texture.generateMipmaps = true;
 
                 this.renderTargetA.depthBuffer = true;
 
@@ -101,7 +101,6 @@
 
                 // Poisson-disc blur material
                 this.blurMaterial = new PoissonDiscBlurMaterial();
-                this.blurMaterial.uniforms.uRadius.value = this.blurFactor;
                 this.blurMaterial.uniforms.uResolution = resolution;
                 this.blurMaterial.uniforms.uTime = time;
             }
@@ -118,6 +117,10 @@
                 height = Math.round(height * dpr);
 
                 this.renderTargetA.setSize(width, height);
+
+                width = MathUtils.floorPowerOfTwo(width) / 2;
+                height = MathUtils.floorPowerOfTwo(height) / 2;
+
                 this.renderTargetB.setSize(width, height);
             };
 

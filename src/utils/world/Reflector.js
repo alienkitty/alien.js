@@ -63,7 +63,6 @@ export class Reflector extends Mesh {
         // Render targets
         this.renderTarget = new WebGLRenderTarget(width, height, {
             format: RGBFormat,
-            anisotropy: 0,
             depthBuffer: false
         });
 
@@ -71,7 +70,6 @@ export class Reflector extends Mesh {
         this.renderTargetWrite = this.renderTarget.clone();
 
         this.renderTarget.texture.format = RGBAFormat;
-        this.renderTarget.texture.anisotropy = 1;
         this.renderTarget.depthBuffer = true;
 
         // Uniform containing render target textures

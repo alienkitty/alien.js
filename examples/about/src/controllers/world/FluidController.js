@@ -32,7 +32,6 @@ export class FluidController {
         // Render targets
         this.renderTargetRead = new WebGLRenderTarget(1, 1, {
             type: HalfFloatType,
-            anisotropy: 0,
             depthBuffer: false
         });
 

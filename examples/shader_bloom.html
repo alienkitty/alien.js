@@ -131,7 +131,7 @@
             }
 
             static initRenderer() {
-                const { resolution, screenTriangle } = WorldController;
+                const { screenTriangle, resolution } = WorldController;
 
                 this.renderer.autoClear = false;
 
@@ -150,7 +150,6 @@
                 // Render targets
                 this.renderTargetA = new WebGLRenderTarget(1, 1, {
                     format: RGBFormat,
-                    anisotropy: 0,
                     depthBuffer: false
                 });
 
@@ -166,9 +165,11 @@
 
                 // Gaussian blur materials
                 this.hBlurMaterial = new BlurMaterial(BlurDirectionX);
+                this.hBlurMaterial.uniforms.uBluriness.value = this.blurFactor;
                 this.hBlurMaterial.uniforms.uResolution = resolution;
 
                 this.vBlurMaterial = new BlurMaterial(BlurDirectionY);
+                this.vBlurMaterial.uniforms.uBluriness.value = this.blurFactor;
                 this.vBlurMaterial.uniforms.uResolution = resolution;
 
                 // Composite material
@@ -208,8 +209,6 @@
                     return;
                 }
 
-                const blurFactor = this.blurFactor;
-
                 const screenScene = this.screenScene;
                 const screenCamera = this.screenCamera;
 
@@ -235,14 +234,12 @@
                 renderer.render(screenScene, screenCamera);
 
                 // Two pass Gaussian blur
-                this.hBlurMaterial.uniforms.uBluriness.value = blurFactor;
                 this.hBlurMaterial.uniforms.tMap.value = renderTargetB.texture;
                 this.screen.material = this.hBlurMaterial;
                 renderer.setRenderTarget(renderTargetBlurA);
                 renderer.clear();
                 renderer.render(screenScene, screenCamera);
 
-                this.vBlurMaterial.uniforms.uBluriness.value = blurFactor;
                 this.vBlurMaterial.uniforms.tMap.value = renderTargetBlurA.texture;
                 this.screen.material = this.vBlurMaterial;
                 renderer.setRenderTarget(renderTargetBlurB);

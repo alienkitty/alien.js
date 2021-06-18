@@ -35,7 +35,6 @@ export class Flowmap {
         // Render targets
         this.renderTargetRead = new WebGLRenderTarget(size, size, {
             type: HalfFloatType,
-            anisotropy: 0,
             depthBuffer: false
         });
 

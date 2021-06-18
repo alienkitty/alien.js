@@ -145,7 +145,7 @@
             }
 
             static initRenderer() {
-                const { resolution, screenTriangle, time } = WorldController;
+                const { screenTriangle, resolution, time } = WorldController;
 
                 // Fullscreen triangle
                 this.screenScene = new Scene();
@@ -158,7 +158,6 @@
                 // Render targets
                 this.renderTargetA = new WebGLRenderTarget(1, 1, {
                     format: RGBFormat,
-                    anisotropy: 0,
                     depthBuffer: false
                 });
 
@@ -231,8 +230,8 @@
                 this.renderTargetA.setSize(width, height);
                 this.renderTargetB.setSize(width, height);
 
-                width = Math.round(width / 2);
-                height = Math.round(height / 2);
+                width = MathUtils.floorPowerOfTwo(width) / 2;
+                height = MathUtils.floorPowerOfTwo(height) / 2;
 
                 this.renderTargetBright.setSize(width, height);
 
@@ -242,8 +241,8 @@
 
                     this.blurMaterials[i].uniforms.uResolution.value.set(width, height);
 
-                    width = Math.round(width / 2);
-                    height = Math.round(height / 2);
+                    width = width / 2;
+                    height = height / 2;
                 }
             };
 

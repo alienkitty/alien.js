@@ -73,7 +73,7 @@
             }
 
             static initRenderer() {
-                const { resolution, screenTriangle } = WorldController;
+                const { screenTriangle, resolution } = WorldController;
 
                 // Fullscreen triangle
                 this.screenScene = new Scene();
@@ -85,8 +85,7 @@
 
                 // Render targets
                 this.renderTarget = new WebGLRenderTarget(1, 1, {
-                    format: RGBFormat,
-                    anisotropy: 0
+                    format: RGBFormat
                 });
 
                 // FXAA material

@@ -1,4 +1,4 @@
-import { Mesh, OrthographicCamera, RGBFormat, Scene, Vector2, WebGLRenderTarget } from 'three';
+import { MathUtils, Mesh, OrthographicCamera, RGBFormat, Scene, Vector2, WebGLRenderTarget } from 'three';
 
 import { WorldController } from './WorldController.js';
 import { FXAAMaterial } from '../../materials/FXAAMaterial.js';
@@ -27,7 +27,7 @@ export class RenderManager {
     }
 
     static initRenderer() {
-        const { resolution, screenTriangle } = WorldController;
+        const { screenTriangle, resolution } = WorldController;
 
         // Fullscreen triangle
         this.screenScene = new Scene();
@@ -40,7 +40,6 @@ export class RenderManager {
         // Render targets
         this.renderTargetA = new WebGLRenderTarget(1, 1, {
             format: RGBFormat,
-            anisotropy: 0,
             depthBuffer: false
         });
 
@@ -116,8 +115,8 @@ export class RenderManager {
         this.renderTargetA.setSize(width, height);
         this.renderTargetB.setSize(width, height);
 
-        width = Math.round(width / 2);
-        height = Math.round(height / 2);
+        width = MathUtils.floorPowerOfTwo(width) / 2;
+        height = MathUtils.floorPowerOfTwo(height) / 2;
 
         this.renderTargetBright.setSize(width, height);
 
@@ -127,8 +126,8 @@ export class RenderManager {
 
             this.blurMaterials[i].uniforms.uResolution.value.set(width, height);
 
-            width = Math.round(width / 2);
-            height = Math.round(height / 2);
+            width = width / 2;
+            height = height / 2;
         }
     };
 

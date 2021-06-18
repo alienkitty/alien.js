@@ -54,6 +54,10 @@ export { TextGeometry } from './src/utils/world/TextGeometry.js';
 export { WebAudio3D } from './src/utils/audio/WebAudio3D.js';
 export { Sound3D } from './src/utils/audio/Sound3D.js';
 
+// Extras
+export { Smooth } from './src/utils/extras/Smooth.js';
+export { Magnetic } from './src/utils/extras/Magnetic.js';
+
 // Materials
 export { NormalMaterial } from './src/materials/NormalMaterial.js';
 export { ColorMaterial } from './src/materials/ColorMaterial.js';

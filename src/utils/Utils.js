@@ -42,7 +42,7 @@ export function fract(value) {
     return value - Math.floor(value);
 }
 
-export function lerp(target, value, alpha) {
+export function lerp(value, target, alpha) {
     return value + (target - value) * alpha;
 }
 

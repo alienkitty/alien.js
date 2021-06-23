@@ -53,6 +53,7 @@ In its design, everything is an ES module, all user interfaces and components fo
 [spherical cube](https://alien.js.org/examples/3d_spherical_cube.html)  
 [penrose triangle](https://alien.js.org/examples/3d_penrose_triangle.html)  
 [polyhedron](https://alien.js.org/examples/3d_polyhedron.html) (orbit camera, [debug](https://alien.js.org/examples/3d_polyhedron.html?debug))  
+[cubecamera](https://alien.js.org/examples/3d_cubecamera.html) (orbit camera, [debug](https://alien.js.org/examples/3d_cubecamera.html?debug))  
 [camera wobble](https://alien.js.org/examples/3d_camera_wobble.html)  
 [camera shake](https://alien.js.org/examples/3d_camera_shake.html)  
 

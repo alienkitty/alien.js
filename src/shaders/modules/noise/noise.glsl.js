@@ -5,7 +5,7 @@ import random from '../random/random.glsl.js';
 export default /* glsl */`
 ${random}
 
-float noise(in vec2 st) {
+float noise(vec2 st) {
     vec2 i = floor(st);
     vec2 f = fract(st);
 

@@ -54,12 +54,12 @@
 
                 // Use flow to adjust the UV lookup of a texture
                 vec2 uv = vUv;
-                uv += flow.rg * 0.05;
+                uv += flow.rg * -0.05;
 
                 gl_FragColor = texture2D(tScene, uv);
 
-                float angle = length(vUv - vec2(0.5));
-                float amount = uDistortion + 0.0002;
+                float angle = length(vUv - 0.5);
+                float amount = 0.0002 + uDistortion;
 
                 gl_FragColor.rgb += getRGB(tBloom, uv, angle, amount).rgb;
             }

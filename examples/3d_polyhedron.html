@@ -53,8 +53,8 @@
             void main() {
                 gl_FragColor = texture2D(tScene, vUv);
 
-                float angle = length(vUv - vec2(0.5));
-                float amount = uDistortion + 0.0002;
+                float angle = length(vUv - 0.5);
+                float amount = 0.0002 + uDistortion;
 
                 gl_FragColor.rgb += getRGB(tBloom, vUv, angle, amount).rgb;
             }

@@ -43,7 +43,7 @@
 
             ${simplex2d}
 
-            float fbm(in vec2 pos) {
+            float fbm(vec2 pos) {
                 float a = sin(uTime * uSpeed);
                 float b = cos(uTime * uSpeed);
                 mat2 m = mat2(-0.80, 0.36, -0.60, -0.48);

@@ -107,20 +107,15 @@ export class FluidController {
         this.onPointerMove(e);
     };
 
-    static onPointerMove = e => {
+    static onPointerMove = ({ clientX, clientY }) => {
         if (!this.enabled) {
             return;
         }
 
-        const event = {};
-
-        if (e.changedTouches && e.changedTouches.length) {
-            event.x = e.changedTouches[0].clientX;
-            event.y = e.changedTouches[0].clientY;
-        } else {
-            event.x = e.clientX;
-            event.y = e.clientY;
-        }
+        const event = {
+            x: clientX,
+            y: clientY
+        };
 
         this.pointer.main.isMove = true;
         this.pointer.main.mouse.copy(event);

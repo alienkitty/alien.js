@@ -190,7 +190,7 @@ export class TextGeometry {
                 let x = line.glyphs[i][1];
 
                 if (this.align === 'center') {
-                    x -= line.width * 0.5;
+                    x -= line.width / 2;
                 } else if (this.align === 'right') {
                     x -= line.width;
                 }

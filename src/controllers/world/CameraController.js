@@ -28,6 +28,7 @@ export class CameraController {
 
         Stage.element.addEventListener('pointerdown', this.onPointerDown);
         window.addEventListener('pointermove', this.onPointerMove);
+        window.addEventListener('pointerup', this.onPointerUp);
     }
 
     static removeListeners() {
@@ -37,6 +38,7 @@ export class CameraController {
 
         Stage.element.removeEventListener('pointerdown', this.onPointerDown);
         window.removeEventListener('pointermove', this.onPointerMove);
+        window.removeEventListener('pointerup', this.onPointerUp);
     }
 
     /**
@@ -47,19 +49,17 @@ export class CameraController {
         this.onPointerMove(e);
     };
 
-    static onPointerMove = e => {
-        const event = {};
-
-        if (e.changedTouches && e.changedTouches.length) {
-            event.x = e.changedTouches[0].clientX;
-            event.y = e.changedTouches[0].clientY;
-        } else {
-            event.x = e.clientX;
-            event.y = e.clientY;
+    static onPointerMove = ({ clientX, clientY }) => {
+        if (!this.enabled) {
+            return;
         }
 
-        this.mouse.x = (event.x / Stage.width) * 2 - 1;
-        this.mouse.y = -(event.y / Stage.height) * 2 + 1;
+        this.mouse.x = (clientX / Stage.width) * 2 - 1;
+        this.mouse.y = 1 - (clientY / Stage.height) * 2;
+    };
+
+    static onPointerUp = e => {
+        this.onPointerMove(e);
     };
 
     /**

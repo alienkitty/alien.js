@@ -26,24 +26,48 @@ export class Magnetic extends Component {
     }
 
     addListeners() {
-        window.addEventListener('pointermove', this.onUpdate);
+        window.addEventListener('pointerdown', this.onPointerDown);
+        window.addEventListener('pointermove', this.onPointerMove);
+        window.addEventListener('pointerup', this.onPointerUp);
     }
 
     removeListeners() {
-        window.removeEventListener('pointermove', this.onUpdate);
+        window.removeEventListener('pointerdown', this.onPointerDown);
+        window.removeEventListener('pointermove', this.onPointerMove);
+        window.removeEventListener('pointerup', this.onPointerUp);
     }
 
     /**
      * Event handlers
      */
 
-    onUpdate = ({ clientX, clientY }) => {
+    onPointerDown = e => {
+        this.onPointerMove(e);
+    };
+
+    onPointerMove = ({ clientX, clientY }) => {
         const bounds = this.object.element.getBoundingClientRect();
         const x = clientX - (bounds.left + bounds.width / 2);
         const y = clientY - (bounds.top + bounds.height / 2);
         const distance = Math.sqrt(x * x + y * y);
 
         if (distance < (bounds.width + bounds.height) / 2 + this.threshold) {
+            this.onHover({ type: 'over', x, y });
+        } else if (this.hoveredIn) {
+            this.onHover({ type: 'out' });
+        }
+    };
+
+    onPointerUp = e => {
+        this.onPointerMove(e);
+
+        this.onHover({ type: 'out' });
+    };
+
+    onHover = ({ type, x, y }) => {
+        this.object.clearTween();
+
+        if (type === 'over') {
             this.object.tween({
                 x: x * 0.8,
                 y: y * 0.8,
@@ -54,7 +78,7 @@ export class Magnetic extends Component {
             }, 500, 'easeOutCubic');
 
             this.hoveredIn = true;
-        } else if (this.hoveredIn) {
+        } else {
             this.object.tween({
                 x: 0,
                 y: 0,

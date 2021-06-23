@@ -48,8 +48,8 @@
                 this.addListeners();
 
                 this.onUpdate({
-                    clientX: window.innerWidth / 2,
-                    clientY: window.innerHeight / 2
+                    clientX: Stage.width / 2,
+                    clientY: Stage.height / 2
                 });
             }
 
@@ -70,8 +70,8 @@
                 this.delta.y = this.y - this.last.y;
                 this.last.x = this.x;
                 this.last.y = this.y;
-                this.normal.x = this.x / window.innerWidth;
-                this.normal.y = this.y / window.innerHeight;
+                this.normal.x = this.x / Stage.width;
+                this.normal.y = this.y / Stage.height;
                 this.tilt.x = this.normal.x * 2 - 1;
                 this.tilt.y = 1 - this.normal.y * 2;
                 this.inverseNormal.x = this.normal.x;

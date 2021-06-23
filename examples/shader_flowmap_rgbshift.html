@@ -102,9 +102,7 @@
                 for (let i = 0, l = paths.length; i < l; i++) {
                     const path = paths[i];
 
-                    const material = new MeshStandardMaterial({
-                        emissive: 0xffffff
-                    });
+                    const material = new MeshStandardMaterial({ emissive: 0xffffff });
 
                     for (let j = 0, jl = path.subPaths.length; j < jl; j++) {
                         const subPath = path.subPaths[j];
@@ -149,8 +147,8 @@
                     fog,
                     dithering: true
                 });
-                mesh.rotation.x = -Math.PI / 2;
                 mesh.position.y = -1.6;
+                mesh.rotation.x = -Math.PI / 2;
                 mesh.renderOrder = -1;
 
                 this.add(mesh);
@@ -297,6 +295,7 @@
             static addListeners() {
                 Stage.element.addEventListener('pointerdown', this.onPointerDown);
                 window.addEventListener('pointermove', this.onPointerMove);
+                window.addEventListener('pointerup', this.onPointerUp);
             }
 
             /**
@@ -307,21 +306,15 @@
                 this.onPointerMove(e);
             };
 
-            static onPointerMove = e => {
-                const event = {};
-
-                if (e.changedTouches && e.changedTouches.length) {
-                    event.x = e.changedTouches[0].clientX;
-                    event.y = e.changedTouches[0].clientY;
-                } else {
-                    event.x = e.clientX;
-                    event.y = e.clientY;
+            static onPointerMove = ({ clientX, clientY }) => {
+                if (!this.enabled) {
+                    return;
                 }
 
                 // Get mouse value in 0 to 1 range, with Y flipped
                 this.mouse.set(
-                    event.x / this.width,
-                    1 - event.y / this.height
+                    clientX / this.width,
+                    1 - clientY / this.height
                 );
 
                 // Calculate velocity
@@ -330,8 +323,8 @@
                     this.lastMouse.copy(event);
                 }
 
-                const deltaX = event.x - this.lastMouse.x;
-                const deltaY = event.y - this.lastMouse.y;
+                const deltaX = clientX - this.lastMouse.x;
+                const deltaY = clientY - this.lastMouse.y;
 
                 this.lastMouse.copy(event);
 
@@ -346,6 +339,10 @@
 
                 // Flag update to prevent hanging velocity values when not moving
                 this.velocity.needsUpdate = true;
+            };
+
+            static onPointerUp = e => {
+                this.onPointerMove(e);
             };
 
             /**
@@ -485,6 +482,7 @@
             static addListeners() {
                 Stage.element.addEventListener('pointerdown', this.onPointerDown);
                 window.addEventListener('pointermove', this.onPointerMove);
+                window.addEventListener('pointerup', this.onPointerUp);
             }
 
             /**
@@ -495,19 +493,17 @@
                 this.onPointerMove(e);
             };
 
-            static onPointerMove = e => {
-                const event = {};
-
-                if (e.changedTouches && e.changedTouches.length) {
-                    event.x = e.changedTouches[0].clientX;
-                    event.y = e.changedTouches[0].clientY;
-                } else {
-                    event.x = e.clientX;
-                    event.y = e.clientY;
+            static onPointerMove = ({ clientX, clientY }) => {
+                if (!this.enabled) {
+                    return;
                 }
 
-                this.mouse.x = (event.x / Stage.width) * 2 - 1;
-                this.mouse.y = -(event.y / Stage.height) * 2 + 1;
+                this.mouse.x = (clientX / Stage.width) * 2 - 1;
+                this.mouse.y = 1 - (clientY / Stage.height) * 2;
+            };
+
+            static onPointerUp = e => {
+                this.onPointerMove(e);
             };
 
             /**

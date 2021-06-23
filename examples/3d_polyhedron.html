@@ -231,10 +231,6 @@
              * Public methods
              */
 
-            animateIn = () => {
-                this.visible = true;
-            };
-
             ready = () => this.polyhedron.ready();
         }
 
@@ -253,6 +249,7 @@
             static addListeners() {
                 Stage.element.addEventListener('pointerdown', this.onPointerDown);
                 window.addEventListener('pointermove', this.onPointerMove);
+                window.addEventListener('pointerup', this.onPointerUp);
             }
 
             /**
@@ -263,23 +260,17 @@
                 this.onPointerMove(e);
             };
 
-            static onPointerMove = e => {
+            static onPointerMove = ({ clientX, clientY }) => {
                 if (!this.view.visible) {
                     return;
                 }
 
-                const event = {};
+                this.target.x = (clientX / Stage.width) * 2 - 1;
+                this.target.y = 1 - (clientY / Stage.height) * 2;
+            };
 
-                if (e.changedTouches && e.changedTouches.length) {
-                    event.x = e.changedTouches[0].clientX;
-                    event.y = e.changedTouches[0].clientY;
-                } else {
-                    event.x = e.clientX;
-                    event.y = e.clientY;
-                }
-
-                this.target.x = (event.x / Stage.width) * 2 - 1;
-                this.target.y = -(event.y / Stage.height) * 2 + 1;
+            static onPointerUp = e => {
+                this.onPointerMove(e);
             };
 
             /**
@@ -287,17 +278,17 @@
              */
 
             static resize = () => {
-                const frustum = WorldController.getFrustum(this.view.light.position.z);
+                const { width, height } = WorldController.getFrustum(this.view.light.position.z);
 
-                this.width = frustum.width;
-                this.height = frustum.height;
+                this.halfWidth = width / 2;
+                this.halfHeight = height / 2;
             };
 
             static update = () => {
                 this.mouse.lerp(this.target, this.lerpSpeed);
 
-                this.lightPosition.x = this.mouse.x * (this.width * 0.5);
-                this.lightPosition.y = this.mouse.y * (this.height * 0.5);
+                this.lightPosition.x = this.mouse.x * this.halfWidth;
+                this.lightPosition.y = this.mouse.y * this.halfHeight;
                 this.lightPosition.z = this.view.light.position.z;
 
                 this.view.light.position.copy(this.lightPosition);
@@ -525,6 +516,7 @@
             static addListeners() {
                 Stage.element.addEventListener('pointerdown', this.onPointerDown);
                 window.addEventListener('pointermove', this.onPointerMove);
+                window.addEventListener('pointerup', this.onPointerUp);
             }
 
             /**
@@ -535,26 +527,20 @@
                 this.onPointerMove(e);
             };
 
-            static onPointerMove = e => {
+            static onPointerMove = ({ clientX, clientY }) => {
                 if (this.prevent) {
                     return;
                 }
 
-                const event = {};
-
-                if (e.changedTouches && e.changedTouches.length) {
-                    event.x = e.changedTouches[0].clientX;
-                    event.y = e.changedTouches[0].clientY;
-                } else {
-                    event.x = e.clientX;
-                    event.y = e.clientY;
-                }
-
-                this.mouse.x = (event.x - this.halfWidth);
-                this.mouse.y = (event.y - this.halfHeight);
+                this.mouse.x = (clientX - this.halfWidth);
+                this.mouse.y = (clientY - this.halfHeight);
 
                 this.target.x = radians(-360) + (1 - this.mouse.x) * this.rotation * this.multiplier;
                 this.target.y = (1 - this.mouse.y) * this.rotation * this.multiplier;
+            };
+
+            static onPointerUp = e => {
+                this.onPointerMove(e);
             };
 
             /**

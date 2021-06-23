@@ -155,6 +155,8 @@
             static onClick = () => {
                 this.view.element.removeEventListener('click', this.onClick);
 
+                this.magnet.disable();
+
                 this.view.animateOut(() => {
                     this.view = this.view.destroy();
                 });

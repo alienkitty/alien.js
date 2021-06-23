@@ -282,6 +282,7 @@
                 Stage.events.on(Events.VISIBILITY, this.onVisibility);
                 Stage.element.addEventListener('pointerdown', this.onPointerDown);
                 window.addEventListener('pointermove', this.onPointerMove);
+                window.addEventListener('pointerup', this.onPointerUp);
             }
 
             /**
@@ -300,34 +301,28 @@
                 this.onPointerMove(e);
             };
 
-            static onPointerMove = e => {
+            static onPointerMove = ({ clientX, clientY }) => {
                 if (!this.view.visible) {
                     return;
                 }
 
-                const event = {};
-
-                if (e.changedTouches && e.changedTouches.length) {
-                    event.x = e.changedTouches[0].clientX;
-                    event.y = e.changedTouches[0].clientY;
-                } else {
-                    event.x = e.clientX;
-                    event.y = e.clientY;
-                }
-
-                this.mouse.copy(event);
+                this.mouse.set(clientX, clientY);
                 this.delta.subVectors(this.mouse, this.last);
                 this.last.copy(this.mouse);
 
                 if (!this.timeout) {
                     this.timeout = true;
 
-                    this.view.wave(this.delta.x > 0 ? 1 : -1);
+                    this.view.wave(Math.sign(this.delta.x));
 
                     delayedCall(2500, () => {
                         this.timeout = false;
                     });
                 }
+            };
+
+            static onPointerUp = e => {
+                this.onPointerMove(e);
             };
 
             /**

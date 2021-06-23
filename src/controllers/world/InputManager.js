@@ -60,18 +60,8 @@ export class InputManager {
         }
 
         if (e) {
-            const event = {};
-
-            if (e.changedTouches && e.changedTouches.length) {
-                event.x = e.changedTouches[0].clientX;
-                event.y = e.changedTouches[0].clientY;
-            } else {
-                event.x = e.clientX;
-                event.y = e.clientY;
-            }
-
-            this.mouse.x = (event.x / Stage.width) * 2 - 1;
-            this.mouse.y = -(event.y / Stage.height) * 2 + 1;
+            this.mouse.x = (e.clientX / Stage.width) * 2 - 1;
+            this.mouse.y = 1 - (e.clientY / Stage.height) * 2;
         }
 
         this.raycaster.setFromCamera(this.mouse, this.camera);

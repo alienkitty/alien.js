@@ -15,11 +15,13 @@ export class SceneController {
     static addListeners() {
         Stage.element.addEventListener('pointerdown', this.onPointerDown);
         window.addEventListener('pointermove', this.onPointerMove);
+        window.addEventListener('pointerup', this.onPointerUp);
     }
 
     static removeListeners() {
         Stage.element.removeEventListener('pointerdown', this.onPointerDown);
         window.removeEventListener('pointermove', this.onPointerMove);
+        window.removeEventListener('pointerup', this.onPointerUp);
     }
 
     /**
@@ -30,23 +32,17 @@ export class SceneController {
         this.onPointerMove(e);
     };
 
-    static onPointerMove = e => {
+    static onPointerMove = ({ clientX, clientY }) => {
         if (!this.view.visible) {
             return;
         }
 
-        const event = {};
+        this.mouse.x = (clientX / Stage.width) * 2 - 1;
+        this.mouse.y = 1 - (clientY / Stage.height) * 2;
+    };
 
-        if (e.changedTouches && e.changedTouches.length) {
-            event.x = e.changedTouches[0].clientX;
-            event.y = e.changedTouches[0].clientY;
-        } else {
-            event.x = e.clientX;
-            event.y = e.clientY;
-        }
-
-        this.mouse.x = (event.x / Stage.width) * 2 - 1;
-        this.mouse.y = -(event.y / Stage.height) * 2 + 1;
+    static onPointerUp = e => {
+        this.onPointerMove(e);
     };
 
     /**
@@ -54,11 +50,11 @@ export class SceneController {
      */
 
     static resize = () => {
-        // const frustum = WorldController.getFrustum(this.view.mallet.position.z);
-        const frustum = WorldController.getFrustum();
+        // const { width, height } = WorldController.getFrustum(this.view.light.position.z);
+        const { width, height } = WorldController.getFrustum();
 
-        this.width = frustum.width;
-        this.height = frustum.height;
+        this.width = width;
+        this.height = height;
     };
 
     static update = () => {

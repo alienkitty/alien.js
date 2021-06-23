@@ -70,8 +70,8 @@
              */
 
             resize = (width, height) => {
-                this.width = width;
-                this.height = height;
+                this.halfWidth = width / 2;
+                this.halfHeight = height / 2;
             };
 
             update = () => {
@@ -99,8 +99,8 @@
                 // Mallet position
                 this.mouse.lerp(this.target, this.lerpSpeed);
 
-                this.malletPosition.x = this.mouse.x * (this.width * 0.5);
-                this.malletPosition.y = this.mouse.y * (this.height * 0.5);
+                this.malletPosition.x = this.mouse.x * this.halfWidth;
+                this.malletPosition.y = this.mouse.y * this.halfHeight;
                 this.malletPosition.z = mallet.position.z;
 
                 mallet.setPosition(this.malletPosition);
@@ -132,7 +132,7 @@
             motion = ({ x, y }) => {
                 this.target.set(
                     x * 2 - 1,
-                    y * -2 + 1
+                    1 - y * 2
                 );
             };
         }
@@ -357,9 +357,7 @@
 
                 const geometry = new SphereGeometry(0.5, 24, 24);
 
-                const material = new MeshStandardMaterial({
-                    emissive: 0xffffff
-                });
+                const material = new MeshStandardMaterial({ emissive: 0xffffff });
 
                 const mesh = new Mesh(geometry, material);
                 this.add(mesh);
@@ -431,6 +429,7 @@
             static addListeners() {
                 Stage.element.addEventListener('pointerdown', this.onPointerDown);
                 window.addEventListener('pointermove', this.onPointerMove);
+                window.addEventListener('pointerup', this.onPointerUp);
             }
 
             /**
@@ -441,22 +440,19 @@
                 this.onPointerMove(e);
             };
 
-            static onPointerMove = e => {
+            static onPointerMove = ({ clientX, clientY }) => {
                 if (!this.view.visible) {
                     return;
                 }
 
-                const event = {};
+                this.send({
+                    x: clientX,
+                    y: clientY
+                });
+            };
 
-                if (e.changedTouches && e.changedTouches.length) {
-                    event.x = e.changedTouches[0].clientX;
-                    event.y = e.changedTouches[0].clientY;
-                } else {
-                    event.x = e.clientX;
-                    event.y = e.clientY;
-                }
-
-                this.send(event);
+            static onPointerUp = e => {
+                this.onPointerMove(e);
             };
 
             /**

@@ -9,7 +9,7 @@ export default {
   output: {
     dir: 'public/assets/js',
     entryFileNames: 'loader.js',
-    chunkFileNames: ({ name }) => name === 'App' ? 'main.js' : `${name.replace('.module', '')}.js`,
+    chunkFileNames: ({ name }) => name === 'App' ? 'app.js' : `${name.replace('.module', '')}.js`,
     format: 'es',
     minifyInternalExports: false
   },

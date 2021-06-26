@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "build": "rollup -c",
-    "start": "servez -p 8080 ../"
+    "start": "servez ../"
   },
   "devDependencies": {
     "rollup": "^2.45.2",

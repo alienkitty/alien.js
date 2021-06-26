@@ -5,8 +5,8 @@
   "private": true,
   "scripts": {
     "build": "rollup -c",
-    "dev": "concurrently --names \"ROLLUP,HTTP\" -c \"bgBlue.bold,bgGreen.bold\" \"rollup -c -w -m inline\" \"servez -p 8080 public\"",
-    "start": "servez -p 8080 public"
+    "dev": "concurrently --names \"ROLLUP,HTTP\" -c \"bgBlue.bold,bgGreen.bold\" \"rollup -c -w -m inline\" \"servez public\"",
+    "start": "servez public"
   },
   "dependencies": {
     "gsap": "^3.6.1",

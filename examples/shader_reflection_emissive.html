@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
-    <title>Alien.js — Shader Flowmap</title>
+    <title>Alien.js — Shader Reflection</title>
 
     <link rel="preconnect" href="https://fonts.gstatic.com">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto+Mono">
@@ -13,7 +13,7 @@
 <body>
     <div id="root"></div>
     <script type="module">
-        import { ACESFilmicToneMapping, BloomCompositeMaterial, Color, DirectionalLight, Events, FXAAMaterial, Flowmap, Fog, Group, HemisphereLight, LuminosityMaterial, MathUtils, Mesh, MeshStandardMaterial, NoBlending, OrthographicCamera, PerspectiveCamera, PlaneGeometry, RGBFormat, RawShaderMaterial, Reflector, RepeatWrapping, SVGLoader, Scene, Stage, TextureLoader, Uniform, UnrealBloomBlurMaterial, Vector2, Vector3, WebGL1Renderer, WebGLRenderTarget, getFullscreenTriangle, mix, ticker } from '../build/alien.js';
+        import { ACESFilmicToneMapping, BloomCompositeMaterial, Color, DirectionalLight, Events, FXAAMaterial, Fog, Group, HemisphereLight, LuminosityMaterial, MathUtils, Mesh, MeshStandardMaterial, NoBlending, OrthographicCamera, PerspectiveCamera, PlaneGeometry, RGBFormat, RawShaderMaterial, Reflector, RepeatWrapping, SVGLoader, Scene, Stage, TextureLoader, Uniform, UnrealBloomBlurMaterial, Vector2, Vector3, WebGL1Renderer, WebGLRenderTarget, getFullscreenTriangle, mix, ticker } from '../build/alien.js';
 
         class Config {
             static BG_COLOR = '#0e0e0e';
@@ -40,7 +40,6 @@
 
             uniform sampler2D tScene;
             uniform sampler2D tBloom;
-            uniform sampler2D tFlow;
             uniform float uDistortion;
 
             varying vec2 vUv;
@@ -48,20 +47,12 @@
             ${rgbshift}
 
             void main() {
-                // R and G values are velocity in the X and Y direction
-                // B value is the velocity length
-                vec3 flow = texture2D(tFlow, vUv).rgb;
-
-                // Use flow to adjust the UV lookup of a texture
-                vec2 uv = vUv;
-                uv += flow.rg * -0.05;
+                gl_FragColor = texture2D(tScene, vUv);
 
                 float angle = length(vUv - 0.5);
-                float amount = length(flow.rg) * 0.025;
+                float amount = 0.0002 + uDistortion;
 
-                gl_FragColor = getRGB(tScene, uv, angle, amount);
-
-                gl_FragColor.rgb += getRGB(tBloom, uv, angle, 0.0002 + uDistortion + amount).rgb;
+                gl_FragColor.rgb += getRGB(tBloom, vUv, angle, amount).rgb;
             }
         `;
 
@@ -71,7 +62,6 @@
                     uniforms: {
                         tScene: new Uniform(null),
                         tBloom: new Uniform(null),
-                        tFlow: new Uniform(null),
                         uDistortion: new Uniform(0.00125)
                     },
                     vertexShader: vertexCompositeShader,
@@ -82,6 +72,8 @@
                 });
             }
         }
+
+        // https://vimeo.com/69949278
 
         class Triangle extends Group {
             constructor() {
@@ -125,30 +117,115 @@
             constructor() {
                 super();
 
+                this.position.y = -1.6;
+                this.rotation.x = -Math.PI / 2;
+
+                this.initGeometry();
+                this.initReflector();
                 this.initMesh();
             }
 
-            initMesh() {
-                const { getTexture, scene } = WorldController;
-
+            initGeometry() {
                 const geometry = new PlaneGeometry(110, 110);
 
-                const map = getTexture('assets/textures/pbr/polished_concrete_basecolor.jpg');
+                // 2nd set of UV's for aoMap and lightMap
+                geometry.attributes.uv2 = geometry.attributes.uv;
+
+                this.geometry = geometry;
+            }
+
+            initReflector() {
+                this.reflector = new Reflector(this.geometry);
+                this.reflector.visible = false;
+
+                this.add(this.reflector);
+            }
+
+            async initMesh() {
+                const { loadTexture } = WorldController;
+
+                // Textures
+                const [map, normalMap, ormMap] = await Promise.all([
+                    // loadTexture('assets/textures/uv.jpg'),
+                    loadTexture('assets/textures/pbr/polished_concrete_basecolor.jpg'),
+                    loadTexture('assets/textures/pbr/polished_concrete_normal.jpg'),
+                    // https://occlusion-roughness-metalness.glitch.me/
+                    loadTexture('assets/textures/pbr/polished_concrete_orm.jpg')
+                ]);
+
                 map.wrapS = RepeatWrapping;
                 map.wrapT = RepeatWrapping;
                 map.repeat.set(8, 8);
 
-                const { fog } = scene;
+                normalMap.wrapS = RepeatWrapping;
+                normalMap.wrapT = RepeatWrapping;
+                normalMap.repeat.set(8, 8);
 
-                this.reflector = new Reflector(geometry, {
+                ormMap.wrapS = RepeatWrapping;
+                ormMap.wrapT = RepeatWrapping;
+                ormMap.repeat.set(8, 8);
+
+                const material = new MeshStandardMaterial({
+                    roughness: 0.35,
+                    metalness: 0.18,
                     map,
-                    fog,
-                    dithering: true
+                    aoMap: ormMap,
+                    aoMapIntensity: 1,
+                    roughnessMap: ormMap,
+                    metalnessMap: ormMap,
+                    normalMap,
+                    normalScale: new Vector2(3, 3)
                 });
-                this.reflector.position.y = -1.6;
-                this.reflector.rotation.x = -Math.PI / 2;
 
-                this.add(this.reflector);
+                material.onBeforeCompile = shader => {
+                    shader.uniforms.reflectMap = this.reflector.renderTargetUniform;
+                    shader.uniforms.textureMatrix = this.reflector.textureMatrixUniform;
+
+                    shader.vertexShader = shader.vertexShader.replace(
+                        '#include <clipping_planes_pars_vertex>',
+                        /* glsl */`
+                        #include <clipping_planes_pars_vertex>
+                        uniform mat4 textureMatrix;
+                        varying vec4 vCoord;
+                        `
+                    );
+
+                    shader.vertexShader = shader.vertexShader.replace(
+                        '#include <project_vertex>',
+                        /* glsl */`
+                        #include <project_vertex>
+                        vCoord = textureMatrix * vec4(transformed, 1.0);
+                        `
+                    );
+
+                    shader.fragmentShader = shader.fragmentShader.replace(
+                        'uniform float opacity;',
+                        /* glsl */`
+                        uniform float opacity;
+                        uniform sampler2D reflectMap;
+                        varying vec4 vCoord;
+                        `
+                    );
+
+                    shader.fragmentShader = shader.fragmentShader.replace(
+                        'vec3 totalEmissiveRadiance = emissive;',
+                        /* glsl */`
+                        vec3 totalEmissiveRadiance = emissive;
+                        totalEmissiveRadiance += texture2DProj(reflectMap, vCoord).rgb * 0.2;
+                        `
+                    );
+                };
+
+                const mesh = new Mesh(this.geometry, material);
+
+                mesh.onBeforeRender = (renderer, scene, camera) => {
+                    this.visible = false;
+                    this.reflector.onBeforeRender(renderer, scene, camera);
+                    this.reflector.visible = false;
+                    this.visible = true;
+                };
+
+                this.add(mesh);
             }
 
             /**
@@ -204,8 +281,6 @@
             static ready = () => this.view.triangle.initMesh();
         }
 
-        // Based on https://oframe.github.io/ogl/examples/?src=mouse-flowmap.html by gordonnl
-
         const BlurDirectionX = new Vector2(1, 0);
         const BlurDirectionY = new Vector2(0, 1);
 
@@ -215,29 +290,16 @@
                 this.scene = scene;
                 this.camera = camera;
 
-                this.width = 1;
-                this.height = 1;
-
-                // Flowmap
-                this.mouse = new Vector2(-1, -1);
-                this.velocity = new Vector2();
-                this.lastTime = null;
-                this.lastMouse = new Vector2();
-
-                // Bloom
                 this.luminosityThreshold = 0.1;
                 this.bloomStrength = 0.3;
                 this.bloomRadius = 0.75;
-
                 this.enabled = true;
 
                 this.initRenderer();
-
-                this.addListeners();
             }
 
             static initRenderer() {
-                const { screenTriangle, resolution, aspect } = WorldController;
+                const { screenTriangle, resolution } = WorldController;
 
                 // Fullscreen triangle
                 this.screenScene = new Scene();
@@ -267,12 +329,6 @@
                 }
 
                 this.renderTargetA.depthBuffer = true;
-
-                // Flowmap
-                this.flowmap = new Flowmap(this.renderer, {
-                    // dissipation: 0.3
-                });
-                this.flowmap.material.uniforms.uAspect = aspect;
 
                 // FXAA material
                 this.fxaaMaterial = new FXAAMaterial();
@@ -310,70 +366,13 @@
 
                 // Composite material
                 this.compositeMaterial = new CompositeMaterial();
-                this.compositeMaterial.uniforms.tFlow = this.flowmap.uniform;
             }
-
-            static addListeners() {
-                Stage.element.addEventListener('pointerdown', this.onPointerDown);
-                window.addEventListener('pointermove', this.onPointerMove);
-                window.addEventListener('pointerup', this.onPointerUp);
-            }
-
-            /**
-             * Event handlers
-             */
-
-            static onPointerDown = e => {
-                this.onPointerMove(e);
-            };
-
-            static onPointerMove = ({ clientX, clientY }) => {
-                if (!this.enabled) {
-                    return;
-                }
-
-                // Get mouse value in 0 to 1 range, with Y flipped
-                this.mouse.set(
-                    clientX / this.width,
-                    1 - clientY / this.height
-                );
-
-                // Calculate velocity
-                if (!this.lastTime) {
-                    this.lastTime = performance.now();
-                    this.lastMouse.copy(event);
-                }
-
-                const deltaX = clientX - this.lastMouse.x;
-                const deltaY = clientY - this.lastMouse.y;
-
-                this.lastMouse.copy(event);
-
-                const time = performance.now();
-
-                // Avoid dividing by 0
-                const delta = Math.max(14, time - this.lastTime);
-                this.lastTime = time;
-
-                this.velocity.x = deltaX / delta;
-                this.velocity.y = deltaY / delta;
-
-                // Flag update to prevent hanging velocity values when not moving
-                this.velocity.needsUpdate = true;
-            };
-
-            static onPointerUp = e => {
-                this.onPointerMove(e);
-            };
 
             /**
              * Public methods
              */
 
             static resize = (width, height, dpr) => {
-                this.width = width;
-                this.height = height;
-
                 this.renderer.setPixelRatio(dpr);
                 this.renderer.setSize(width, height);
 
@@ -418,21 +417,6 @@
                 const renderTargetBright = this.renderTargetBright;
                 const renderTargetsHorizontal = this.renderTargetsHorizontal;
                 const renderTargetsVertical = this.renderTargetsVertical;
-
-                // Reset velocity when mouse not moving
-                if (!this.velocity.needsUpdate) {
-                    this.mouse.set(-1, -1);
-                    this.velocity.set(0, 0);
-                    this.lastTime = null;
-                }
-                this.velocity.needsUpdate = false;
-
-                // Update flowmap inputs
-                this.flowmap.mouse.copy(this.mouse);
-
-                // Ease velocity input, slower when fading out
-                this.flowmap.velocity.lerp(this.velocity, this.velocity.length() ? 0.5 : 0.1);
-                this.flowmap.update();
 
                 // Scene pass
                 renderer.setRenderTarget(renderTargetA);

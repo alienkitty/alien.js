@@ -73,6 +73,8 @@
             }
         }
 
+        // https://vimeo.com/69949278
+
         class Triangle extends Group {
             constructor() {
                 super();
@@ -118,31 +120,39 @@
                 this.initMesh();
             }
 
-            async initMesh() {
-                const { loadTexture, scene } = WorldController;
+            initMesh() {
+                const { getTexture, scene } = WorldController;
 
                 const geometry = new PlaneGeometry(110, 110);
 
-                const map = await loadTexture('assets/textures/pbr/polished_concrete_basecolor.jpg');
+                const map = getTexture('assets/textures/pbr/polished_concrete_basecolor.jpg');
                 map.wrapS = RepeatWrapping;
                 map.wrapT = RepeatWrapping;
                 map.repeat.set(8, 8);
 
                 const { fog } = scene;
 
-                const mesh = new Reflector(geometry, {
-                    width: 512,
-                    height: 640,
+                this.reflector = new Reflector(geometry, {
                     map,
                     fog,
                     dithering: true
                 });
-                mesh.position.y = -1.6;
-                mesh.rotation.x = -Math.PI / 2;
-                mesh.renderOrder = -1;
+                this.reflector.position.y = -1.6;
+                this.reflector.rotation.x = -Math.PI / 2;
 
-                this.add(mesh);
+                this.add(this.reflector);
             }
+
+            /**
+             * Public methods
+             */
+
+            resize = (width, height) => {
+                width = MathUtils.floorPowerOfTwo(width) / 2;
+                height = 1024;
+
+                this.reflector.setSize(width, height);
+            };
         }
 
         class SceneView extends Group {
@@ -161,16 +171,29 @@
                 this.triangle = new Triangle();
                 this.add(this.triangle);
             }
+        }
+
+        class SceneController {
+            static init(view) {
+                this.view = view;
+            }
 
             /**
              * Public methods
              */
 
-            animateIn = () => {
-                this.visible = true;
+            static resize = (width, height) => {
+                this.view.floor.resize(width, height);
             };
 
-            ready = () => this.triangle.initMesh();
+            static update = () => {
+            };
+
+            static animateIn = () => {
+                this.view.visible = true;
+            };
+
+            static ready = () => this.view.triangle.initMesh();
         }
 
         const BlurDirectionX = new Vector2(1, 0);
@@ -538,11 +561,11 @@
 
                 await Promise.all([
                     WorldController.textureLoader.ready(),
-                    this.view.ready()
+                    SceneController.ready()
                 ]);
 
                 CameraController.animateIn();
-                this.view.animateIn();
+                SceneController.animateIn();
             }
 
             static initWorld() {
@@ -559,6 +582,7 @@
                 const { renderer, scene, camera } = WorldController;
 
                 CameraController.init(camera);
+                SceneController.init(this.view);
                 RenderManager.init(renderer, scene, camera);
             }
 
@@ -576,12 +600,14 @@
 
                 WorldController.resize(width, height, dpr);
                 CameraController.resize(width, height);
+                SceneController.resize(width, height, dpr);
                 RenderManager.resize(width, height, dpr);
             };
 
             static onUpdate = (time, delta, frame) => {
                 WorldController.update(time, delta, frame);
                 CameraController.update();
+                SceneController.update();
                 RenderManager.update(time, delta, frame);
             };
         }

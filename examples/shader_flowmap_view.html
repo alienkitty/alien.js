@@ -282,30 +282,38 @@
                 this.initMesh();
             }
 
-            async initMesh() {
-                const { loadTexture, scene, quad } = WorldController;
+            initMesh() {
+                const { getTexture, scene, quad } = WorldController;
 
-                const map = await loadTexture('assets/textures/pbr/polished_concrete_basecolor.jpg');
+                const map = getTexture('assets/textures/pbr/polished_concrete_basecolor.jpg');
                 map.wrapS = RepeatWrapping;
                 map.wrapT = RepeatWrapping;
                 map.repeat.set(8, 8);
 
                 const { fog } = scene;
 
-                const mesh = new Reflector(quad, {
-                    width: 512,
-                    height: 640,
+                this.reflector = new Reflector(quad, {
                     map,
                     fog,
                     dithering: true
                 });
-                mesh.position.y = -1.6;
-                mesh.rotation.x = -Math.PI / 2;
-                mesh.scale.set(110, 110, 1);
-                mesh.renderOrder = -1;
+                this.reflector.position.y = -1.6;
+                this.reflector.rotation.x = -Math.PI / 2;
+                this.reflector.scale.set(110, 110, 1);
 
-                this.add(mesh);
+                this.add(this.reflector);
             }
+
+            /**
+             * Public methods
+             */
+
+            resize = (width, height) => {
+                width = MathUtils.floorPowerOfTwo(width) / 2;
+                height = 1024;
+
+                this.reflector.setSize(width, height);
+            };
         }
 
         class SceneView extends Group {
@@ -417,6 +425,7 @@
                 this.width = width;
                 this.height = height;
 
+                this.view.floor.resize(width, height);
                 this.view.triangle.resize(width, height, dpr);
             };
 

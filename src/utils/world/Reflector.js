@@ -22,7 +22,7 @@ import {
     WebGLRenderTarget
 } from 'three';
 
-import { FastGaussianBlurMaterial } from '../../materials/FastGaussianBlurMaterial.js';
+import { ReflectorBlurMaterial } from '../../materials/ReflectorBlurMaterial.js';
 
 import { getFullscreenTriangle } from './Utils3D.js';
 
@@ -123,7 +123,7 @@ export class Reflector extends Mesh {
         this.material = new RawShaderMaterial(parameters);
 
         // Gaussian blur material
-        this.blurMaterial = new FastGaussianBlurMaterial();
+        this.blurMaterial = new ReflectorBlurMaterial();
         this.blurMaterial.uniforms.uResolution.value.set(width, height);
 
         // Fullscreen triangle

@@ -5,7 +5,7 @@ export default /* glsl */`
 precision highp float;
 
 uniform sampler2D tMap;
-uniform sampler2D tReflection;
+uniform sampler2D tReflect;
 uniform vec3 uColor;
 
 #ifdef USE_FOG
@@ -21,10 +21,10 @@ ${blendOverlay}
 ${dither}
 
 void main() {
-    vec4 base = texture2DProj(tReflection, vCoord);
-    vec4 blend = texture2D(tMap, vUv);
+    vec4 base = texture2D(tMap, vUv);
+    vec4 blend = texture2DProj(tReflect, vCoord);
 
-    gl_FragColor = vec4(mix(base.rgb * 0.2, base.rgb, blend.r), 1.0);
+    gl_FragColor = base * blend;
 
     base = gl_FragColor;
     blend = vec4(uColor, 1.0);

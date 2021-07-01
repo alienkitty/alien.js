@@ -60,6 +60,9 @@ export class Reflector extends Mesh {
         this.textureMatrix = new Matrix4();
         this.virtualCamera = new PerspectiveCamera();
 
+        // Uniform containing texture matrix
+        this.textureMatrixUniform = new Uniform(this.textureMatrix);
+
         // Render targets
         this.renderTarget = new WebGLRenderTarget(width, height, {
             format: RGBFormat,
@@ -73,7 +76,7 @@ export class Reflector extends Mesh {
         this.renderTarget.depthBuffer = true;
 
         // Uniform containing render target textures
-        this.uniform = new Uniform(this.renderTargetRead.texture);
+        this.renderTargetUniform = this.blurIterations > 0 ? new Uniform(this.renderTargetRead.texture) : new Uniform(this.renderTarget.texture);
 
         // Reflection material
         const parameters = {
@@ -81,9 +84,9 @@ export class Reflector extends Mesh {
             },
             uniforms: {
                 tMap: new Uniform(null),
-                tReflection: this.blurIterations > 0 ? this.uniform : new Uniform(this.renderTarget.texture),
+                tReflect: this.renderTargetUniform,
                 uMapTransform: new Uniform(new Matrix3()),
-                uMatrix: new Uniform(this.textureMatrix),
+                uMatrix: this.textureMatrixUniform,
                 uColor: new Uniform(color instanceof Color ? color : new Color(color))
             },
             vertexShader,
@@ -231,6 +234,7 @@ export class Reflector extends Mesh {
 
         renderer.render(scene, this.virtualCamera);
 
+        // Blur reflection
         const blurIterations = this.blurIterations;
 
         for (let i = 0; i < blurIterations; i++) {
@@ -259,7 +263,7 @@ export class Reflector extends Mesh {
             this.renderTargetRead = this.renderTargetWrite;
             this.renderTargetWrite = temp;
 
-            this.uniform.value = this.renderTargetRead.texture;
+            this.renderTargetUniform.value = this.renderTargetRead.texture;
         }
 
         // Restore renderer settings
@@ -269,6 +273,14 @@ export class Reflector extends Mesh {
         renderer.setRenderTarget(currentRenderTarget);
 
         this.visible = true;
+    }
+
+    setSize(width, height) {
+        this.renderTarget.setSize(width, height);
+        this.renderTargetRead.setSize(width, height);
+        this.renderTargetWrite.setSize(width, height);
+
+        this.blurMaterial.uniforms.uResolution.value.set(width, height);
     }
 
     destroy() {

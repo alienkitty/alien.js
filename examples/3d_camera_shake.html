@@ -392,25 +392,35 @@
                 this.initMesh();
             }
 
-            async initMesh() {
-                const { loadTexture } = WorldController;
+            initMesh() {
+                const { getTexture } = WorldController;
 
                 this.size = new Vector3(1000, 3, 1000);
 
                 const geometry = new PlaneGeometry(1000, 1000);
 
-                const map = await loadTexture('assets/textures/pbr/polished_concrete_basecolor.jpg');
+                const map = getTexture('assets/textures/pbr/polished_concrete_basecolor.jpg');
                 map.wrapS = RepeatWrapping;
                 map.wrapT = RepeatWrapping;
                 map.repeat.set(8, 8);
 
-                const mesh = new Reflector(geometry, { map });
-                mesh.position.y = this.size.y / 2;
-                mesh.rotation.x = -Math.PI / 2;
-                mesh.renderOrder = -1;
+                this.reflector = new Reflector(geometry, { map });
+                this.reflector.position.y = this.size.y / 2;
+                this.reflector.rotation.x = -Math.PI / 2;
 
-                this.add(mesh);
+                this.add(this.reflector);
             }
+
+            /**
+             * Public methods
+             */
+
+            resize = (width, height) => {
+                width = MathUtils.floorPowerOfTwo(width) / 2;
+                height = 640;
+
+                this.reflector.setSize(width, height);
+            };
         }
 
         class SceneView extends Group {
@@ -483,6 +493,8 @@
             static resize = (width, height) => {
                 this.width = width;
                 this.height = height;
+
+                this.view.floor.resize(width, height);
 
                 const frustum = WorldController.getFrustum(this.view.mallet.position.z);
                 this.physics.resize(frustum.width, frustum.height);

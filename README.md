@@ -75,6 +75,7 @@ In its design, everything is an ES module, all user interfaces and components fo
 [chromatic aberration](https://alien.js.org/examples/shader_chromatic_aberration.html)  
 [film grain](https://alien.js.org/examples/shader_film_grain.html)  
 [reflection](https://alien.js.org/examples/shader_reflection.html) (with fast Gaussian blur)  
+[reflection](https://alien.js.org/examples/shader_reflection_emissive.html) (standard physically based material)  
 [flowmap](https://alien.js.org/examples/shader_flowmap.html)  
 [flowmap](https://alien.js.org/examples/shader_flowmap_rgbshift.html) (RGB shift)  
 [flowmap](https://alien.js.org/examples/shader_flowmap_view.html) (view)  

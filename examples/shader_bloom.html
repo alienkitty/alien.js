@@ -22,15 +22,6 @@
             static BREAKPOINT = 1000;
         }
 
-        import periodic3d from '../src/shaders/modules/noise/periodic3d.glsl.js';
-
-        // Based on https://github.com/spite/perlin-experiments
-
-        const vertexShaderChunk = /* glsl */`
-            float f = 0.05 * pnoise(vec3(2.0 * normal + time), vec3(10.0));
-            vec3 transformed = position + f * normal;
-        `;
-
         const vertexCompositeShader = /* glsl */`
             attribute vec2 uv;
             attribute vec3 position;
@@ -84,6 +75,10 @@
             }
         }
 
+        import periodic3d from '../src/shaders/modules/noise/periodic3d.glsl.js';
+
+        // Based on https://github.com/spite/perlin-experiments
+
         class SceneView extends Group {
             constructor() {
                 super();
@@ -96,17 +91,30 @@
 
                 const geometry = new SphereGeometry(1, 80, 80);
 
-                const material = new MeshStandardMaterial({
-                    roughness: 0
-                });
+                const material = new MeshStandardMaterial({ roughness: 0 });
 
                 // https://threejs.org/examples/#webgl_materials_modified
 
                 material.onBeforeCompile = shader => {
                     shader.uniforms.time = time;
 
-                    shader.vertexShader = 'uniform float time;\n' + periodic3d + shader.vertexShader;
-                    shader.vertexShader = shader.vertexShader.replace('#include <begin_vertex>', vertexShaderChunk);
+                    shader.vertexShader = shader.vertexShader.replace(
+                        '#include <clipping_planes_pars_vertex>',
+                        /* glsl */`
+                        #include <clipping_planes_pars_vertex>
+                        uniform float time;
+
+                        ${periodic3d}
+                        `
+                    );
+
+                    shader.vertexShader = shader.vertexShader.replace(
+                        '#include <begin_vertex>',
+                        /* glsl */`
+                        float f = 0.05 * pnoise(vec3(2.0 * normal + time), vec3(10.0));
+                        vec3 transformed = position + f * normal;
+                        `
+                    );
                 };
 
                 const mesh = new Mesh(geometry, material);

@@ -200,15 +200,6 @@
             }
         }
 
-        const fragmentShaderChunk = /* glsl */`
-            vec2 position = (gl_FragCoord.xy / resolution);
-
-            vec3 hsv = rgb2hsv(diffuseColor.rgb);
-            hsv.x += position.x + hue;
-
-            outgoingLight = hsv2rgbSmooth(hsv);
-        `;
-
         class Stars extends Group {
             constructor(numParticles) {
                 super();
@@ -239,8 +230,30 @@
                     shader.uniforms.resolution = resolution;
                     shader.uniforms.time = time;
 
-                    shader.fragmentShader = 'uniform float hue;\nuniform vec2 resolution;\nuniform float time;\n' + hsv2rgbSmooth + rgb2hsv + shader.fragmentShader;
-                    shader.fragmentShader = shader.fragmentShader.replace('outgoingLight = diffuseColor.rgb;', fragmentShaderChunk);
+                    shader.fragmentShader = shader.fragmentShader.replace(
+                        'uniform float opacity;',
+                        /* glsl */`
+                        uniform float opacity;
+                        uniform float hue;
+                        uniform vec2 resolution;
+                        uniform float time;
+
+                        ${hsv2rgbSmooth}
+                        ${rgb2hsv}
+                        `
+                    );
+
+                    shader.fragmentShader = shader.fragmentShader.replace(
+                        'outgoingLight = diffuseColor.rgb;',
+                        /* glsl */`
+                        vec2 position = (gl_FragCoord.xy / resolution);
+
+                        vec3 hsv = rgb2hsv(diffuseColor.rgb);
+                        hsv.x += position.x + hue;
+
+                        outgoingLight = hsv2rgbSmooth(hsv);
+                        `
+                    );
                 };
 
                 for (let i = 0; i < this.numParticles; i++) {

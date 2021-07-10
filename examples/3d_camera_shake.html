@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
-    <title>Alien.js — 3D Camera Shake</title>
+    <title>3D Camera Shake — Alien.js</title>
 
     <link rel="preconnect" href="https://fonts.gstatic.com">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto+Mono">
@@ -36,7 +36,12 @@
                 this.force = new Vector3();
                 this.mouse = new Vector2();
                 this.target = new Vector2();
+
+                // Mallet initial position
                 this.malletPosition = new Vector3();
+                this.target.set(0, 0.38);
+                this.mouse.copy(this.target);
+
                 this.timeout = false;
                 this.lerpSpeed = 0.25;
 

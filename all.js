@@ -49,6 +49,7 @@ export * from './src/utils/world/Utils3D.js';
 export { Wobble } from './src/utils/world/Wobble.js';
 export { Flowmap } from './src/utils/world/Flowmap.js';
 export { Reflector } from './src/utils/world/Reflector.js';
+export { ReflectorObject } from './src/utils/world/ReflectorObject.js';
 export { SpherizeImage } from './src/utils/world/SpherizeImage.js';
 export { TextGeometry } from './src/utils/world/TextGeometry.js';
 export { WebAudio3D } from './src/utils/audio/WebAudio3D.js';

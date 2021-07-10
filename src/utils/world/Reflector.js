@@ -6,7 +6,6 @@
 
 import {
     Color,
-    Matrix3,
     Matrix4,
     Mesh,
     OrthographicCamera,
@@ -14,7 +13,6 @@ import {
     Plane,
     RGBAFormat,
     RGBFormat,
-    RawShaderMaterial,
     Scene,
     Uniform,
     Vector3,
@@ -22,12 +20,10 @@ import {
     WebGLRenderTarget
 } from 'three';
 
+import { ReflectorMaterial } from '../../materials/ReflectorMaterial.js';
 import { ReflectorBlurMaterial } from '../../materials/ReflectorBlurMaterial.js';
 
 import { getFullscreenTriangle } from './Utils3D.js';
-
-import vertexShader from '../../shaders/ReflectorMaterial.vert.js';
-import fragmentShader from '../../shaders/ReflectorMaterial.frag.js';
 
 export class Reflector extends Mesh {
     constructor(geometry, {
@@ -79,50 +75,11 @@ export class Reflector extends Mesh {
         this.renderTargetUniform = this.blurIterations > 0 ? new Uniform(this.renderTargetRead.texture) : new Uniform(this.renderTarget.texture);
 
         // Reflection material
-        const parameters = {
-            defines: {
-            },
-            uniforms: {
-                tMap: new Uniform(null),
-                tReflect: this.renderTargetUniform,
-                uMapTransform: new Uniform(new Matrix3()),
-                uMatrix: this.textureMatrixUniform,
-                uColor: new Uniform(color instanceof Color ? color : new Color(color))
-            },
-            vertexShader,
-            fragmentShader
-        };
+        this.material = new ReflectorMaterial({ color, map, fog, dithering });
+        this.material.uniforms.tReflect = this.renderTargetUniform;
+        this.material.uniforms.uMatrix = this.textureMatrixUniform;
 
-        if (map) {
-            map.updateMatrix();
-
-            parameters.uniforms = Object.assign(parameters.uniforms, {
-                tMap: new Uniform(map),
-                uMapTransform: new Uniform(map.matrix)
-            });
-        }
-
-        if (fog) {
-            parameters.defines = Object.assign(parameters.defines, {
-                USE_FOG: ''
-            });
-
-            parameters.uniforms = Object.assign(parameters.uniforms, {
-                uFogColor: new Uniform(fog.color),
-                uFogNear: new Uniform(fog.near),
-                uFogFar: new Uniform(fog.far)
-            });
-        }
-
-        if (dithering) {
-            parameters.defines = Object.assign(parameters.defines, {
-                DITHERING: ''
-            });
-        }
-
-        this.material = new RawShaderMaterial(parameters);
-
-        // Gaussian blur material
+        // Reflection blur material
         this.blurMaterial = new ReflectorBlurMaterial();
         this.blurMaterial.uniforms.uResolution.value.set(width, height);
 

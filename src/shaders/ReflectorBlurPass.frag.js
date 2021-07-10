@@ -12,6 +12,6 @@ varying vec2 vUv;
 ${blur13}
 
 void main() {
-    gl_FragColor = blur13(tMap, vUv, uResolution, uDirection * (1.0 - vUv.y));
+    gl_FragColor = blur13(tMap, vUv, uResolution, uDirection * smoothstep(0.5, 0.0, vUv.y));
 }
 `;

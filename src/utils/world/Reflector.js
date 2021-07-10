@@ -11,7 +11,6 @@ import {
     OrthographicCamera,
     PerspectiveCamera,
     Plane,
-    RGBAFormat,
     RGBFormat,
     Scene,
     Uniform,
@@ -68,7 +67,6 @@ export class Reflector extends Mesh {
         this.renderTargetRead = this.renderTarget.clone();
         this.renderTargetWrite = this.renderTarget.clone();
 
-        this.renderTarget.texture.format = RGBAFormat;
         this.renderTarget.depthBuffer = true;
 
         // Uniform containing render target textures

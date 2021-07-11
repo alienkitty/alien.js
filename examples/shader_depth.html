@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
-    <title>Alien.js — Shader Depth</title>
+    <title>Shader Depth — Alien.js</title>
 
     <link rel="preconnect" href="https://fonts.gstatic.com">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto+Mono">
@@ -52,9 +52,7 @@
             ${dither}
 
             void main() {
-                float depth = 1.0 - gl_FragCoord.z;
-
-                gl_FragColor = vec4(vec3(depth), 1.0);
+                gl_FragColor = vec4(vec3(gl_FragCoord.w), 1.0);
 
                 gl_FragColor.rgb = dither(gl_FragColor.rgb);
             }

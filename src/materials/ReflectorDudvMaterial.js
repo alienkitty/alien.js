@@ -1,56 +1,22 @@
-import { Color, Matrix3, Matrix4, RawShaderMaterial, Uniform } from 'three';
+import { Matrix4, RawShaderMaterial, Uniform } from 'three';
 
 import vertexShader from '../shaders/ReflectorDudvMaterial.vert.js';
 import fragmentShader from '../shaders/ReflectorDudvMaterial.frag.js';
 
 export class ReflectorDudvMaterial extends RawShaderMaterial {
-    constructor({
-        color = new Color(0x7F7F7F),
-        map = null,
-        fog = null,
-        dithering = false
-    } = {}) {
-        const parameters = {
-            defines: {
-            },
+    constructor(map) {
+        map.updateMatrix();
+
+        super({
             uniforms: {
-                tMap: new Uniform(null),
+                tMap: new Uniform(map),
                 tReflect: new Uniform(null),
-                uMapTransform: new Uniform(new Matrix3()),
-                uMatrix: new Uniform(new Matrix4()),
-                uColor: new Uniform(color instanceof Color ? color : new Color(color))
+                tReflectBlur: new Uniform(null),
+                uMapTransform: new Uniform(map.matrix),
+                uMatrix: new Uniform(new Matrix4())
             },
             vertexShader,
             fragmentShader
-        };
-
-        if (map) {
-            map.updateMatrix();
-
-            parameters.uniforms = Object.assign(parameters.uniforms, {
-                tMap: new Uniform(map),
-                uMapTransform: new Uniform(map.matrix)
-            });
-        }
-
-        if (fog) {
-            parameters.defines = Object.assign(parameters.defines, {
-                USE_FOG: ''
-            });
-
-            parameters.uniforms = Object.assign(parameters.uniforms, {
-                uFogColor: new Uniform(fog.color),
-                uFogNear: new Uniform(fog.near),
-                uFogFar: new Uniform(fog.far)
-            });
-        }
-
-        if (dithering) {
-            parameters.defines = Object.assign(parameters.defines, {
-                DITHERING: ''
-            });
-        }
-
-        super(parameters);
+        });
     }
 }

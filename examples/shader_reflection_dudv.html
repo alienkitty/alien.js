@@ -13,7 +13,7 @@
 <body>
     <div id="root"></div>
     <script type="module">
-        import { ACESFilmicToneMapping, BloomCompositeMaterial, Color, DirectionalLight, Events, FXAAMaterial, Fog, Group, HemisphereLight, LuminosityMaterial, MathUtils, Mesh, MeshStandardMaterial, NoBlending, OrthographicCamera, PerspectiveCamera, PlaneGeometry, RGBFormat, RawShaderMaterial, ReflectorDudvMaterial, ReflectorObject, RepeatWrapping, SVGLoader, Scene, Stage, TextureLoader, Uniform, UnrealBloomBlurMaterial, Vector2, Vector3, WebGL1Renderer, WebGLRenderTarget, getFullscreenTriangle, mix, ticker } from '../build/alien.js';
+        import { ACESFilmicToneMapping, BloomCompositeMaterial, Color, DirectionalLight, Events, FXAAMaterial, Group, HemisphereLight, LuminosityMaterial, MathUtils, Mesh, MeshStandardMaterial, NoBlending, OrthographicCamera, PerspectiveCamera, PlaneGeometry, RGBFormat, RawShaderMaterial, ReflectorDudvMaterial, ReflectorObject, RepeatWrapping, SVGLoader, Scene, Stage, TextureLoader, Uniform, UnrealBloomBlurMaterial, Vector2, Vector3, WebGL1Renderer, WebGLRenderTarget, getFullscreenTriangle, mix, ticker } from '../build/alien.js';
 
         class Config {
             static BG_COLOR = '#0e0e0e';
@@ -130,7 +130,7 @@
             }
 
             initMesh() {
-                const { scene, getTexture } = WorldController;
+                const { getTexture } = WorldController;
 
                 const geometry = new PlaneGeometry(110, 110);
 
@@ -139,14 +139,9 @@
                 map.wrapT = RepeatWrapping;
                 map.repeat.set(6, 6);
 
-                const { fog } = scene;
-
-                const material = new ReflectorDudvMaterial({
-                    map,
-                    fog,
-                    dithering: true
-                });
-                material.uniforms.tReflect = this.reflector.renderTargetUniform;
+                const material = new ReflectorDudvMaterial(map);
+                material.uniforms.tReflect = new Uniform(this.reflector.renderTarget.texture);
+                material.uniforms.tReflectBlur = this.reflector.renderTargetUniform;
                 material.uniforms.uMatrix = this.reflector.textureMatrixUniform;
 
                 const mesh = new Mesh(geometry, material);
@@ -492,7 +487,6 @@
                 // 3D scene
                 this.scene = new Scene();
                 this.scene.background = new Color(Config.BG_COLOR);
-                this.scene.fog = new Fog(Config.BG_COLOR, 1, 100);
                 this.camera = new PerspectiveCamera(30);
                 this.camera.near = 0.5;
                 this.camera.far = 50;

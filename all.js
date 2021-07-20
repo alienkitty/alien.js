@@ -63,6 +63,7 @@ export { Magnetic } from './src/utils/extras/Magnetic.js';
 export { NormalMaterial } from './src/materials/NormalMaterial.js';
 export { ColorMaterial } from './src/materials/ColorMaterial.js';
 export { BasicMaterial } from './src/materials/BasicMaterial.js';
+export { ShadowMaterial } from './src/materials/ShadowMaterial.js';
 export { FlowMaterial } from './src/materials/FlowMaterial.js';
 export { CopyMaterial } from './src/materials/CopyMaterial.js';
 export { FXAAMaterial } from './src/materials/FXAAMaterial.js';

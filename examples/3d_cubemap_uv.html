@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <title>Cubemap UV — Alien.js</title>
+
+    <link rel="preconnect" href="https://fonts.gstatic.com">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto+Mono">
+    <link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+    <div id="root"></div>
+    <script type="module">
+        import { BasicMaterial, BufferGeometryLoader, BufferGeometryLoaderThread, Color, Device, Events, FXAAMaterial, Group, ImageBitmapLoaderThread, Mesh, OrbitControls, OrthographicCamera, PerspectiveCamera, RGBFormat, Scene, Stage, TextureLoader, Thread, Uniform, Vector2, WebGL1Renderer, WebGLRenderTarget, getFullscreenTriangle, ticker } from '../build/alien.js';
+
+        class Config {
+            static BG_COLOR = '#0e0e0e';
+            static UI_COLOR = 'rgba(255, 255, 255, 0.94)';
+
+            static BREAKPOINT = 1000;
+        }
+
+        /*
+
+        Instructions to export buffer geometry from Cinema 4D
+
+        1) Select Model mode from the toolbar on the left and select the object you would like to export.
+
+        2) Load the UV grid texture from the assets directory into the Material pane.
+
+        3) Double-click on the UV grid Material and turn off Reflectance.
+
+        4) Drag the UV grid Material to your object.
+
+        5) Apply the "Set UVW from Projection" Material Tag, click the gear icon to change settings.
+
+        If "Set UVW from Projection" is greyed-out you need to "Make Editable".
+
+        6) We're going to export a local space object with the axis and coordinates at the centre of the object.
+
+        If you need to centre the axis, from the Mesh Axis menu, "Center Axis to".
+        And set the world space coordinates of the object to 0 by setting the "Position" to 0 cm.
+
+        7) The default size of objects in three.js is much smaller than the default in Cinema 4D.
+
+        If you need to reduce the size, for example, a default sized cube in Cinema 4D is 200 cm.
+        And units in three.js are normalized at 1 cm, so in this case you would set the "Size" to 2 cm.
+        Alternatively, you can set the "Scale" to 0.01.
+
+        8) From the Objects' File menu, export the selected object as an OBJ file, Default settings are fine.
+
+        9) Open the three.js editor, create a new scene and import the OBJ file:
+        https://threejs.org/editor/
+
+        10) Click the plus sign (+) next to your object and select the first child object.
+
+        11) Finally, re-export the object again with "Export Geometry".
+
+        12) Outputs a .json with the required position, normal and uv attributes.
+
+        13) Repeat for each of your objects.
+
+        */
+
+        class Cube extends Group {
+            constructor() {
+                super();
+            }
+
+            async initGeometry() {
+                const { loadBufferGeometry } = WorldController;
+
+                this.geometry = await loadBufferGeometry('assets/geometry/cube.json');
+            }
+
+            async initMaterial() {
+                const { anisotropy, loadTexture } = WorldController;
+
+                const map = await loadTexture('assets/textures/cubemap.jpg');
+                map.anisotropy = anisotropy;
+
+                this.material = new BasicMaterial(map);
+            }
+
+            initMesh() {
+                const mesh = new Mesh(this.geometry, this.material);
+                this.add(mesh);
+            }
+
+            /**
+             * Public methods
+             */
+
+            ready = async () => {
+                await Promise.all([
+                    this.initGeometry(),
+                    this.initMaterial()
+                ]);
+
+                this.initMesh();
+            };
+        }
+
+        class SceneView extends Group {
+            constructor() {
+                super();
+
+                this.visible = false;
+
+                this.initViews();
+            }
+
+            initViews() {
+                this.cube = new Cube();
+                this.add(this.cube);
+            }
+
+            /**
+             * Public methods
+             */
+
+            animateIn = () => {
+                this.visible = true;
+            };
+
+            ready = () => Promise.all([
+                this.cube.ready()
+            ]);
+        }
+
+        class RenderManager {
+            static init(renderer, scene, camera) {
+                this.renderer = renderer;
+                this.scene = scene;
+                this.camera = camera;
+
+                this.enabled = true;
+
+                this.initRenderer();
+            }
+
+            static initRenderer() {
+                const { screenTriangle, resolution } = WorldController;
+
+                // Fullscreen triangle
+                this.screenScene = new Scene();
+                this.screenCamera = new OrthographicCamera(-1, 1, 1, -1, 0, 1);
+
+                this.screen = new Mesh(screenTriangle);
+                this.screen.frustumCulled = false;
+                this.screenScene.add(this.screen);
+
+                // Render targets
+                this.renderTarget = new WebGLRenderTarget(1, 1, {
+                    format: RGBFormat
+                });
+
+                // FXAA material
+                this.fxaaMaterial = new FXAAMaterial();
+                this.fxaaMaterial.uniforms.tMap.value = this.renderTarget.texture;
+                this.fxaaMaterial.uniforms.uResolution = resolution;
+                this.screen.material = this.fxaaMaterial;
+            }
+
+            /**
+             * Public methods
+             */
+
+            static resize = (width, height, dpr) => {
+                this.renderer.setPixelRatio(dpr);
+                this.renderer.setSize(width, height);
+
+                width = Math.round(width * dpr);
+                height = Math.round(height * dpr);
+
+                this.renderTarget.setSize(width, height);
+            };
+
+            static update = () => {
+                const renderer = this.renderer;
+                const scene = this.scene;
+                const camera = this.camera;
+
+                if (!this.enabled) {
+                    renderer.setRenderTarget(null);
+                    renderer.render(scene, camera);
+                    return;
+                }
+
+                const screenScene = this.screenScene;
+                const screenCamera = this.screenCamera;
+
+                const renderTarget = this.renderTarget;
+
+                // Scene pass
+                renderer.setRenderTarget(renderTarget);
+                renderer.render(scene, camera);
+
+                // FXAA pass (render to screen)
+                renderer.setRenderTarget(null);
+                renderer.render(screenScene, screenCamera);
+            };
+        }
+
+        class WorldController {
+            static init() {
+                this.initWorld();
+                this.initLoaders();
+                this.initControls();
+
+                this.addListeners();
+            }
+
+            static initWorld() {
+                this.renderer = new WebGL1Renderer({
+                    powerPreference: 'high-performance',
+                    stencil: false
+                });
+                this.element = this.renderer.domElement;
+
+                // 3D scene
+                this.scene = new Scene();
+                this.scene.background = new Color(Config.BG_COLOR);
+                this.camera = new PerspectiveCamera(30);
+                this.camera.near = 0.5;
+                this.camera.far = 50;
+                this.camera.position.z = 8;
+                this.camera.lookAt(this.scene.position);
+
+                // Global geometries
+                this.screenTriangle = getFullscreenTriangle();
+
+                // Global uniforms
+                this.resolution = new Uniform(new Vector2());
+                this.aspect = new Uniform(1);
+                this.time = new Uniform(0);
+                this.frame = new Uniform(0);
+
+                // Global settings
+                this.anisotropy = this.renderer.capabilities.getMaxAnisotropy();
+            }
+
+            static initLoaders() {
+                this.textureLoader = new TextureLoader();
+                this.bufferGeometryLoader = new BufferGeometryLoader();
+            }
+
+            static initControls() {
+                this.controls = new OrbitControls(this.camera, this.renderer.domElement);
+                this.controls.enableDamping = true;
+                // this.controls.enableZoom = false;
+            }
+
+            static addListeners() {
+                this.renderer.domElement.addEventListener('touchstart', this.onTouchStart);
+            }
+
+            /**
+             * Event handlers
+             */
+
+            static onTouchStart = e => {
+                e.preventDefault();
+            };
+
+            /**
+             * Public methods
+             */
+
+            static resize = (width, height, dpr) => {
+                this.camera.aspect = width / height;
+                this.camera.updateProjectionMatrix();
+
+                if (width < height) {
+                    this.camera.position.z = 10;
+                } else if (width < Config.BREAKPOINT) {
+                    this.camera.position.z = 6;
+                } else {
+                    this.camera.position.z = 8;
+                }
+
+                width = Math.round(width * dpr);
+                height = Math.round(height * dpr);
+
+                this.resolution.value.set(width, height);
+                this.aspect.value = width / height;
+            };
+
+            static update = (time, delta, frame) => {
+                this.time.value = time;
+                this.frame.value = frame;
+
+                this.controls.update();
+            };
+
+            static getTexture = (path, callback) => this.textureLoader.load(path, callback);
+
+            static loadTexture = path => this.textureLoader.loadAsync(path);
+
+            static getBufferGeometry = (path, callback) => this.bufferGeometryLoader.load(path, callback);
+
+            static loadBufferGeometry = path => this.bufferGeometryLoader.loadAsync(path);
+        }
+
+        class App {
+            static async init() {
+                if (Device.agent.includes('chrome')) {
+                    this.initThread();
+                }
+
+                this.initWorld();
+                this.initViews();
+                this.initControllers();
+
+                this.addListeners();
+                this.onResize();
+
+                await this.view.ready();
+                this.view.animateIn();
+            }
+
+            static initThread() {
+                ImageBitmapLoaderThread.init();
+                BufferGeometryLoaderThread.init();
+
+                Thread.shared();
+            }
+
+            static initWorld() {
+                WorldController.init();
+                Stage.add(WorldController.element);
+            }
+
+            static initViews() {
+                this.view = new SceneView();
+                WorldController.scene.add(this.view);
+            }
+
+            static initControllers() {
+                const { renderer, scene, camera } = WorldController;
+
+                RenderManager.init(renderer, scene, camera);
+            }
+
+            static addListeners() {
+                Stage.events.on(Events.RESIZE, this.onResize);
+                ticker.add(this.onUpdate);
+            }
+
+            /**
+             * Event handlers
+             */
+
+            static onResize = () => {
+                const { width, height, dpr } = Stage;
+
+                WorldController.resize(width, height, dpr);
+                RenderManager.resize(width, height, dpr);
+            };
+
+            static onUpdate = (time, delta, frame) => {
+                WorldController.update(time, delta, frame);
+                RenderManager.update(time, delta, frame);
+            };
+        }
+
+        App.init();
+    </script>
+</body>
+</html>

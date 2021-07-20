@@ -51,12 +51,15 @@ In its design, everything is an ES module, all user interfaces and components fo
 [audio](https://alien.js.org/examples/3d_audio.html)  
 [audio](https://alien.js.org/examples/3d_audio_fast.html) (fast)  
 [spherical cube](https://alien.js.org/examples/3d_spherical_cube.html)  
+[cubemap uv](https://alien.js.org/examples/3d_cubemap_uv.html)  
+[spherical cube uv](https://alien.js.org/examples/3d_spherical_cube_uv.html)  
 [penrose triangle](https://alien.js.org/examples/3d_penrose_triangle.html)  
 [polyhedron](https://alien.js.org/examples/3d_polyhedron.html) (orbit camera, [debug](https://alien.js.org/examples/3d_polyhedron.html?debug))  
 [cubecamera](https://alien.js.org/examples/3d_cubecamera.html) (orbit camera, [debug](https://alien.js.org/examples/3d_cubecamera.html?debug))  
 [cubecamera rainbow](https://alien.js.org/examples/3d_cubecamera_rainbow.html) (orbit camera, [debug](https://alien.js.org/examples/3d_cubecamera_rainbow.html?debug))  
 [camera wobble](https://alien.js.org/examples/3d_camera_wobble.html)  
 [camera shake](https://alien.js.org/examples/3d_camera_shake.html)  
+[abstract cube](https://alien.js.org/examples/3d_abstract_cube.html)  
 
 #### shader
 
@@ -84,6 +87,12 @@ In its design, everything is an ES module, all user interfaces and components fo
 [depth](https://alien.js.org/examples/shader_depth.html) (fragment depth with dither)  
 [hologram](https://alien.js.org/examples/shader_hologram.html)  
 [text](https://alien.js.org/examples/shader_text.html) (MSDF text)  
+[baked cube](https://alien.js.org/examples/shader_baked_cube.html)  
+[baked cube](https://alien.js.org/examples/shader_baked_cube_dudv.html) (DuDv)  
+[baked abstract cube](https://alien.js.org/examples/shader_baked_abstract_cube.html)  
+[baked abstract cube](https://alien.js.org/examples/shader_baked_abstract_cube_dudv.html) (DuDv)  
+[baked spherical cube](https://alien.js.org/examples/shader_baked_spherical_cube.html)  
+[baked spherical cube](https://alien.js.org/examples/shader_baked_spherical_cube_dudv.html) (DuDv)  
 [alienkitty](https://alienkitty.com/) (2d scene, flowmap with RGB shift, MSDF text)  
 
 #### thread
@@ -94,6 +103,7 @@ In its design, everything is an ES module, all user interfaces and components fo
 [audio](https://alien.js.org/examples/3d_audio_fast.html) (fast)  
 [camera shake](https://alien.js.org/examples/3d_camera_shake.html)  
 [pbr](https://alien.js.org/examples/shader_pbr.html) (texture loader thread)  
+[cubemap uv](https://alien.js.org/examples/3d_cubemap_uv.html) (buffer geometry loader thread)  
 
 <br>
 

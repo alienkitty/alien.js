@@ -13,7 +13,7 @@
 <body>
     <div id="root"></div>
     <script type="module">
-        import { ACESFilmicToneMapping, AmbientLight, BloomCompositeMaterial, BufferGeometryLoader, BufferGeometryLoaderThread, Color, Device, DirectionalLight, EnvironmentTextureLoader, Events, FXAAMaterial, Group, HemisphereLight, ImageBitmapLoaderThread, LuminosityMaterial, MathUtils, Mesh, MeshBasicMaterial, MeshStandardMaterial, NoBlending, OrthographicCamera, PerspectiveCamera, PointLight, RGBFormat, RawShaderMaterial, RepeatWrapping, Scene, SphereGeometry, Stage, TextureLoader, Thread, Uniform, UnrealBloomBlurMaterial, Vector2, Vector3, WebGL1Renderer, WebGLRenderTarget, getFrustum, getFullscreenTriangle, mix, radians, ticker, tween } from '../build/alien.js';
+        import { ACESFilmicToneMapping, AmbientLight, BloomCompositeMaterial, Color, Device, DirectionalLight, EnvironmentTextureLoader, Events, FXAAMaterial, Group, HemisphereLight, IcosahedronGeometry, ImageBitmapLoaderThread, LuminosityMaterial, MathUtils, Mesh, MeshBasicMaterial, MeshStandardMaterial, NoBlending, OrthographicCamera, PerspectiveCamera, PointLight, RGBFormat, RawShaderMaterial, RepeatWrapping, Scene, SphereGeometry, Stage, TextureLoader, Thread, Uniform, UnrealBloomBlurMaterial, Vector2, Vector3, WebGL1Renderer, WebGLRenderTarget, getFrustum, getFullscreenTriangle, mix, radians, ticker, tween } from '../build/alien.js';
 
         class Config {
             static BG_COLOR = '#0e0e0e';
@@ -108,49 +108,18 @@
             }
         }
 
-        // Geometry from https://levskaya.github.io/polyhedronisme/
-
-        /*
-
-        Instructions to export buffer geometry from Cinema 4D
-
-        1) Apply the "Set UVW from Projection" Material Tag to each of the objects you would like to export.
-
-        2) From the Objects File menu, export each object as an OBJ file.
-
-        3) Open the three.js editor, create a new scene and import one OBJ file:
-        https://threejs.org/editor/
-
-        4) Click the plus sign (+) next to your object and select the first child object.
-
-        5) From the Settings tab, change "Export Precision" to 3.
-
-        6) Finally, re-export the object again with "Export Geometry".
-
-        7) Outputs a .json with the required position, normal and uv attributes.
-
-        8) Repeat for each of your objects.
-
-        */
-
         class Polyhedron extends Group {
             constructor() {
                 super();
             }
 
-            async initGeometry() {
-                const { loadBufferGeometry } = WorldController;
+            async initMesh() {
+                const { anisotropy, loadTexture, loadEnvironmentTexture } = WorldController;
 
-                const geometry = await loadBufferGeometry('assets/geometry/polyhedronisme-C2dakD.json');
+                const geometry = new IcosahedronGeometry(1, 2);
 
                 // 2nd set of UV's for aoMap and lightMap
                 geometry.attributes.uv2 = geometry.attributes.uv;
-
-                this.geometry = geometry;
-            }
-
-            async initMaterial() {
-                const { loadTexture, loadEnvironmentTexture } = WorldController;
 
                 // Textures
                 const [map, normalMap, ormMap, envMap] = await Promise.all([
@@ -162,20 +131,23 @@
                     loadEnvironmentTexture('assets/textures/env.jpg')
                 ]);
 
+                map.anisotropy = anisotropy;
                 map.wrapS = RepeatWrapping;
                 map.wrapT = RepeatWrapping;
                 map.repeat.set(2, 1);
 
+                normalMap.anisotropy = anisotropy;
                 normalMap.wrapS = RepeatWrapping;
                 normalMap.wrapT = RepeatWrapping;
                 normalMap.repeat.set(2, 1);
 
+                ormMap.anisotropy = anisotropy;
                 ormMap.wrapS = RepeatWrapping;
                 ormMap.wrapT = RepeatWrapping;
                 ormMap.repeat.set(2, 1);
 
-                // this.material = new MeshBasicMaterial({ map });
-                this.material = new MeshStandardMaterial({
+                // const material = new MeshBasicMaterial({ map });
+                const material = new MeshStandardMaterial({
                     roughness: 0.35,
                     metalness: 0.9,
                     map,
@@ -189,25 +161,10 @@
                     envMapIntensity: 0.5,
                     flatShading: true
                 });
+
+                const mesh = new Mesh(geometry, material);
+                this.add(mesh);
             }
-
-            initMesh() {
-                this.mesh = new Mesh(this.geometry, this.material);
-                this.add(this.mesh);
-            }
-
-            /**
-             * Public methods
-             */
-
-            ready = async () => {
-                await Promise.all([
-                    this.initGeometry(),
-                    this.initMaterial()
-                ]);
-
-                this.initMesh();
-            };
         }
 
         class SceneView extends Group {
@@ -226,12 +183,6 @@
                 this.light = new MouseLight();
                 this.add(this.light);
             }
-
-            /**
-             * Public methods
-             */
-
-            ready = () => this.polyhedron.ready();
         }
 
         class SceneController {
@@ -298,7 +249,7 @@
                 this.view.visible = true;
             };
 
-            static ready = () => this.view.ready();
+            static ready = () => this.view.polyhedron.initMesh();
         }
 
         const BlurDirectionX = new Vector2(1, 0);
@@ -632,6 +583,9 @@
                 this.aspect = new Uniform(1);
                 this.time = new Uniform(0);
                 this.frame = new Uniform(0);
+
+                // Global settings
+                this.anisotropy = this.renderer.capabilities.getMaxAnisotropy();
             }
 
             static initLights() {
@@ -647,7 +601,6 @@
             static initLoaders() {
                 this.textureLoader = new TextureLoader();
                 this.environmentLoader = new EnvironmentTextureLoader(this.renderer);
-                this.bufferGeometryLoader = new BufferGeometryLoader();
             }
 
             static addListeners() {
@@ -687,10 +640,6 @@
 
             static loadEnvironmentTexture = path => this.environmentLoader.loadAsync(path);
 
-            static getBufferGeometry = (path, callback) => this.bufferGeometryLoader.load(path, callback);
-
-            static loadBufferGeometry = path => this.bufferGeometryLoader.loadAsync(path);
-
             static getFrustum = offsetZ => getFrustum(this.camera, offsetZ);
         }
 
@@ -715,7 +664,6 @@
 
             static initThread() {
                 ImageBitmapLoaderThread.init();
-                BufferGeometryLoaderThread.init();
 
                 Thread.shared();
             }

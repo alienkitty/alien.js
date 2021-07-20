@@ -13,7 +13,7 @@
 <body>
     <div id="root"></div>
     <script type="module">
-        import { Color, Events, FXAAMaterial, Group, Mesh, MeshBasicMaterial, OrbitControls, OrthographicCamera, PerspectiveCamera, RGBFormat, Scene, SphericalCubeTextureLoader, Stage, TextureLoader, Uniform, Vector2, WebGL1Renderer, WebGLRenderTarget, getFullscreenTriangle, getSphericalCube, ticker } from '../build/alien.js';
+        import { BasicMaterial, Color, Events, FXAAMaterial, Group, Mesh, OrbitControls, OrthographicCamera, PerspectiveCamera, RGBFormat, Scene, SphericalCubeTextureLoader, Stage, TextureLoader, Uniform, Vector2, WebGL1Renderer, WebGLRenderTarget, getFullscreenTriangle, getSphericalCube, ticker } from '../build/alien.js';
 
         class Config {
             static BG_COLOR = '#0e0e0e';
@@ -29,8 +29,8 @@
                 this.initMesh();
             }
 
-            async initMesh() {
-                const { getSphericalCubeTextures } = WorldController;
+            initMesh() {
+                const { anisotropy, getSphericalCubeTextures } = WorldController;
 
                 // Spherical cube geometry
                 const geometry = getSphericalCube(1, 32);
@@ -42,9 +42,9 @@
                 const material = [];
 
                 for (let i = 0; i < 6; i++) {
-                    material[i] = new MeshBasicMaterial({
-                        map: map[i]
-                    });
+                    map[i].anisotropy = anisotropy;
+
+                    material[i] = new BasicMaterial(map[i]);
                 }
 
                 const mesh = new Mesh(geometry, material);
@@ -163,6 +163,9 @@
                 this.aspect = new Uniform(1);
                 this.time = new Uniform(0);
                 this.frame = new Uniform(0);
+
+                // Global settings
+                this.anisotropy = this.renderer.capabilities.getMaxAnisotropy();
             }
 
             static initLoaders() {
@@ -173,7 +176,7 @@
             static initControls() {
                 this.controls = new OrbitControls(this.camera, this.renderer.domElement);
                 this.controls.enableDamping = true;
-                this.controls.enableZoom = false;
+                // this.controls.enableZoom = false;
             }
 
             static addListeners() {

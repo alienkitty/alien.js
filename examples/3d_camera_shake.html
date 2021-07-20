@@ -348,13 +348,13 @@
             constructor() {
                 super();
 
+                this.size = new Vector3(0.5, 0.5, 0.5);
+
                 this.initMesh();
                 this.initLight();
             }
 
             initMesh() {
-                this.size = new Vector3(0.5, 0.5, 0.5);
-
                 const geometry = new SphereGeometry(0.5, 24, 24);
 
                 const material = new MeshStandardMaterial({ emissive: 0xffffff });
@@ -373,12 +373,12 @@
             constructor() {
                 super();
 
+                this.size = new Vector3(0.75, 0.75, 3);
+
                 this.initMesh();
             }
 
             initMesh() {
-                this.size = new Vector3(0.75, 0.75, 3);
-
                 const geometry = new CylinderGeometry(0.75, 0.75, 3, 50);
 
                 const material = new MeshStandardMaterial({ emissive: 0xffffff });
@@ -394,13 +394,13 @@
 
                 this.position.y = -4.5;
 
+                this.size = new Vector3(1000, 3, 1000);
+
                 this.initMesh();
             }
 
             initMesh() {
                 const { getTexture } = WorldController;
-
-                this.size = new Vector3(1000, 3, 1000);
 
                 const geometry = new PlaneGeometry(1000, 1000);
 

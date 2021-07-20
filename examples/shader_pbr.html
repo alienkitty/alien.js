@@ -45,7 +45,7 @@
             }
 
             async initMesh1() {
-                const { loadSphericalCubeTextures } = WorldController;
+                const { anisotropy, loadSphericalCubeTextures } = WorldController;
 
                 // Textures
                 const [map, normalMap, ormMap] = await Promise.all([
@@ -60,6 +60,10 @@
                 const material = [];
 
                 for (let i = 0; i < 6; i++) {
+                    map[i].anisotropy = anisotropy;
+                    normalMap[i].anisotropy = anisotropy;
+                    ormMap[i].anisotropy = anisotropy;
+
                     material[i] = new MeshStandardMaterial({
                         color: new Color(1, 1, 1),
                         roughness: 1,
@@ -86,7 +90,7 @@
             }
 
             async initMesh2() {
-                const { loadSphericalCubeTextures } = WorldController;
+                const { anisotropy, loadSphericalCubeTextures } = WorldController;
 
                 // Textures
                 const [map, normalMap, ormMap] = await Promise.all([
@@ -101,6 +105,10 @@
                 const material = [];
 
                 for (let i = 0; i < 6; i++) {
+                    map[i].anisotropy = anisotropy;
+                    normalMap[i].anisotropy = anisotropy;
+                    ormMap[i].anisotropy = anisotropy;
+
                     material[i] = new MeshStandardMaterial({
                         color: Config.BG_COLOR,
                         roughness: 1,
@@ -126,7 +134,7 @@
             }
 
             async initMesh3() {
-                const { loadSphericalCubeTextures } = WorldController;
+                const { anisotropy, loadSphericalCubeTextures } = WorldController;
 
                 // Textures
                 const [map, normalMap, ormMap] = await Promise.all([
@@ -141,6 +149,10 @@
                 const material = [];
 
                 for (let i = 0; i < 6; i++) {
+                    map[i].anisotropy = anisotropy;
+                    normalMap[i].anisotropy = anisotropy;
+                    ormMap[i].anisotropy = anisotropy;
+
                     material[i] = new MeshStandardMaterial({
                         color: new Color(1, 1, 1),
                         roughness: 1,
@@ -407,6 +419,9 @@
                 this.aspect = new Uniform(1);
                 this.time = new Uniform(0);
                 this.frame = new Uniform(0);
+
+                // Global settings
+                this.anisotropy = this.renderer.capabilities.getMaxAnisotropy();
             }
 
             static initLights() {

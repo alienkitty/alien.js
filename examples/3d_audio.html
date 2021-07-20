@@ -348,13 +348,13 @@
 
                 this.position.z = 6.25;
 
+                this.size = new Vector3(0.5, 0.5, 0.5);
+
                 this.initMesh();
                 this.initLight();
             }
 
             initMesh() {
-                this.size = new Vector3(0.5, 0.5, 0.5);
-
                 const geometry = new SphereGeometry(0.5, 24, 24);
 
                 const material = new MeshStandardMaterial({ emissive: 0xffffff });
@@ -375,12 +375,12 @@
 
                 this.position.x = Global.BALL_X;
 
+                this.size = new Vector3(1.25, 1.25, 1.25);
+
                 this.initMesh();
             }
 
             initMesh() {
-                this.size = new Vector3(1.25, 1.25, 1.25);
-
                 const geometry = new SphereGeometry(1.25, 32, 32);
 
                 const material = new MeshStandardMaterial({

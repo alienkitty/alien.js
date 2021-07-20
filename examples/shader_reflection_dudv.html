@@ -116,9 +116,6 @@
         class Floor extends Group {
             constructor() {
                 super();
-
-                this.initReflector();
-                this.initMesh();
             }
 
             initReflector() {
@@ -129,15 +126,15 @@
                 });
             }
 
-            initMesh() {
-                const { getTexture } = WorldController;
+            async initMesh() {
+                const { loadTexture } = WorldController;
 
                 const geometry = new PlaneGeometry(110, 110);
 
-                const map = getTexture('assets/textures/waterdudv.jpg');
+                const map = await loadTexture('assets/textures/waterdudv.jpg');
                 map.wrapS = RepeatWrapping;
                 map.wrapT = RepeatWrapping;
-                map.repeat.set(6, 6);
+                map.repeat.set(6, 3);
 
                 const material = new ReflectorDudvMaterial(map);
                 material.uniforms.tReflect = new Uniform(this.reflector.renderTarget.texture);
@@ -157,6 +154,16 @@
 
                 this.add(mesh);
             }
+
+            /**
+             * Public methods
+             */
+
+            ready = () => {
+                this.initReflector();
+
+                return this.initMesh();
+            };
         }
 
         class SceneView extends Group {
@@ -175,6 +182,15 @@
                 this.triangle = new Triangle();
                 this.add(this.triangle);
             }
+
+            /**
+             * Public methods
+             */
+
+            ready = () => Promise.all([
+                this.floor.ready(),
+                this.triangle.initMesh()
+            ]);
         }
 
         class SceneController {
@@ -196,7 +212,7 @@
                 this.view.visible = true;
             };
 
-            static ready = () => this.view.triangle.initMesh();
+            static ready = () => this.view.ready();
         }
 
         const BlurDirectionX = new Vector2(1, 0);
@@ -561,10 +577,7 @@
                 this.addListeners();
                 this.onResize();
 
-                await Promise.all([
-                    WorldController.textureLoader.ready(),
-                    SceneController.ready()
-                ]);
+                await SceneController.ready();
 
                 CameraController.animateIn();
                 SceneController.animateIn();
@@ -602,7 +615,7 @@
 
                 WorldController.resize(width, height, dpr);
                 CameraController.resize(width, height);
-                SceneController.resize(width, height, dpr);
+                SceneController.resize();
                 RenderManager.resize(width, height, dpr);
             };
 

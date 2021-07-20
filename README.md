@@ -92,7 +92,6 @@ In its design, everything is an ES module, all user interfaces and components fo
 [physics](https://alien.js.org/examples/3d_physics_thread.html)  
 [audio](https://alien.js.org/examples/3d_audio.html)  
 [audio](https://alien.js.org/examples/3d_audio_fast.html) (fast)  
-[polyhedron](https://alien.js.org/examples/3d_polyhedron.html) (buffer geometry loader thread)  
 [camera shake](https://alien.js.org/examples/3d_camera_shake.html)  
 [pbr](https://alien.js.org/examples/shader_pbr.html) (texture loader thread)  
 

@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
-    <title>Spherical Cube — Alien.js</title>
+    <title>Cubemap UV — Alien.js</title>
 
     <link rel="preconnect" href="https://fonts.gstatic.com">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto+Mono">
@@ -13,7 +13,7 @@
 <body>
     <div id="root"></div>
     <script type="module">
-        import { BasicMaterial, Color, Events, FXAAMaterial, Group, Mesh, OrbitControls, OrthographicCamera, PerspectiveCamera, RGBFormat, Scene, SphericalCubeTextureLoader, Stage, TextureLoader, Uniform, Vector2, WebGL1Renderer, WebGLRenderTarget, getFullscreenTriangle, getSphericalCube, ticker } from '../build/alien.js';
+        import { BasicMaterial, BufferGeometryLoader, BufferGeometryLoaderThread, Color, Device, Events, FXAAMaterial, Group, ImageBitmapLoaderThread, Mesh, OrbitControls, OrthographicCamera, PerspectiveCamera, RGBFormat, Scene, Stage, TextureLoader, Thread, Uniform, Vector2, WebGL1Renderer, WebGLRenderTarget, getFullscreenTriangle, ticker } from '../build/alien.js';
 
         class Config {
             static BG_COLOR = '#0e0e0e';
@@ -22,38 +22,112 @@
             static BREAKPOINT = 1000;
         }
 
+        /*
+
+        Instructions to export buffer geometry from Cinema 4D
+
+        1) Select Model mode from the toolbar on the left and select the object you would like to export.
+
+        2) Load the UV grid texture from the assets directory into the Material pane.
+
+        3) Double-click on the UV grid Material and turn off Reflectance.
+
+        4) Drag the UV grid Material to your object.
+
+        5) Apply the "Set UVW from Projection" Material Tag, click the gear icon to change settings.
+
+        If "Set UVW from Projection" is greyed-out you need to "Make Editable".
+
+        6) We're going to export a local space object with the axis and coordinates at the centre of the object.
+
+        If you need to centre the axis, from the Mesh Axis menu, "Center Axis to".
+        And set the world space coordinates of the object to 0 by setting the "Position" to 0 cm.
+
+        7) The default size of objects in three.js is much smaller than the default in Cinema 4D.
+
+        If you need to reduce the size, for example, a default sized cube in Cinema 4D is 200 cm.
+        And units in three.js are normalized at 1 cm, so in this case you would set the "Size" to 2 cm.
+        Alternatively, you can set the "Scale" to 0.01.
+
+        8) From the Objects' File menu, export the selected object as an OBJ file, Default settings are fine.
+
+        9) Open the three.js editor, create a new scene and import the OBJ file:
+        https://threejs.org/editor/
+
+        10) Click the plus sign (+) next to your object and select the first child object.
+
+        11) Finally, re-export the object again with "Export Geometry".
+
+        12) Outputs a .json with the required position, normal and uv attributes.
+
+        13) Repeat for each of your objects.
+
+        */
+
+        class Cube extends Group {
+            constructor() {
+                super();
+            }
+
+            async initGeometry() {
+                const { loadBufferGeometry } = WorldController;
+
+                this.geometry = await loadBufferGeometry('assets/geometry/cube.json');
+            }
+
+            async initMaterial() {
+                const { anisotropy, loadTexture } = WorldController;
+
+                const map = await loadTexture('assets/textures/cubemap.jpg');
+                map.anisotropy = anisotropy;
+
+                this.material = new BasicMaterial(map);
+            }
+
+            initMesh() {
+                const mesh = new Mesh(this.geometry, this.material);
+                this.add(mesh);
+            }
+
+            /**
+             * Public methods
+             */
+
+            ready = async () => {
+                await Promise.all([
+                    this.initGeometry(),
+                    this.initMaterial()
+                ]);
+
+                this.initMesh();
+            };
+        }
+
         class SceneView extends Group {
             constructor() {
                 super();
 
-                this.initMesh();
+                this.visible = false;
+
+                this.initViews();
             }
 
-            initMesh() {
-                const { anisotropy, getSphericalCubeTextures } = WorldController;
-
-                // Spherical cube geometry
-                const geometry = getSphericalCube(1, 32);
-
-                // Textures
-                const map = getSphericalCubeTextures('assets/textures/uv.jpg');
-
-                // Materials
-                const material = [];
-
-                for (let i = 0; i < 6; i++) {
-                    map[i].anisotropy = anisotropy;
-
-                    material[i] = new BasicMaterial(map[i]);
-                }
-
-                const mesh = new Mesh(geometry, material);
-
-                // Flip horizontally
-                mesh.scale.x = -1;
-
-                this.add(mesh);
+            initViews() {
+                this.cube = new Cube();
+                this.add(this.cube);
             }
+
+            /**
+             * Public methods
+             */
+
+            animateIn = () => {
+                this.visible = true;
+            };
+
+            ready = () => Promise.all([
+                this.cube.ready()
+            ]);
         }
 
         class RenderManager {
@@ -170,7 +244,7 @@
 
             static initLoaders() {
                 this.textureLoader = new TextureLoader();
-                this.spherizeLoader = new SphericalCubeTextureLoader(this.renderer, true);
+                this.bufferGeometryLoader = new BufferGeometryLoader();
             }
 
             static initControls() {
@@ -225,19 +299,33 @@
 
             static loadTexture = path => this.textureLoader.loadAsync(path);
 
-            static getSphericalCubeTextures = (path, callback) => this.spherizeLoader.load(path, callback);
+            static getBufferGeometry = (path, callback) => this.bufferGeometryLoader.load(path, callback);
 
-            static loadSphericalCubeTextures = path => this.spherizeLoader.loadAsync(path);
+            static loadBufferGeometry = path => this.bufferGeometryLoader.loadAsync(path);
         }
 
         class App {
             static async init() {
+                if (Device.agent.includes('chrome')) {
+                    this.initThread();
+                }
+
                 this.initWorld();
                 this.initViews();
                 this.initControllers();
 
                 this.addListeners();
                 this.onResize();
+
+                await this.view.ready();
+                this.view.animateIn();
+            }
+
+            static initThread() {
+                ImageBitmapLoaderThread.init();
+                BufferGeometryLoaderThread.init();
+
+                Thread.shared();
             }
 
             static initWorld() {

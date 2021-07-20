@@ -78,8 +78,11 @@
             }
 
             initMesh() {
-                this.mesh = new Mesh(new SphereGeometry(1, 80, 80), new DepthMaterial());
-                this.add(this.mesh);
+                const mesh = new Mesh(
+                    new SphereGeometry(1, 80, 80),
+                    new DepthMaterial()
+                );
+                this.add(mesh);
             }
         }
 

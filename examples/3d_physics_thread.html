@@ -344,13 +344,13 @@
 
                 this.position.z = 6.25;
 
+                this.size = new Vector3(0.5, 0.5, 0.5);
+
                 this.initMesh();
                 this.initLight();
             }
 
             initMesh() {
-                this.size = new Vector3(0.5, 0.5, 0.5);
-
                 const geometry = new SphereGeometry(0.5, 24, 24);
 
                 const material = new MeshStandardMaterial({ emissive: 0xffffff });
@@ -373,12 +373,12 @@
                 this.rotation.y = MathUtils.degToRad(-45);
                 this.rotation.z = MathUtils.degToRad(100);
 
+                this.size = new Vector3(0.75, 0.75, 25);
+
                 this.initMesh();
             }
 
             initMesh() {
-                this.size = new Vector3(0.75, 0.75, 25);
-
                 const geometry = new CylinderGeometry(0.75, 0.75, 25, 50);
 
                 const material = new MeshStandardMaterial({

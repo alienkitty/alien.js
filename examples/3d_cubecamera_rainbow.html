@@ -751,10 +751,7 @@
                 this.addListeners();
                 this.onResize();
 
-                await Promise.all([
-                    WorldController.textureLoader.ready(),
-                    SceneController.ready()
-                ]);
+                await SceneController.ready();
 
                 CameraController.animateIn();
                 SceneController.animateIn();

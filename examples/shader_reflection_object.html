@@ -125,12 +125,12 @@
                 this.reflector = new ReflectorObject();
             }
 
-            initMesh() {
-                const { scene, getTexture } = WorldController;
+            async initMesh() {
+                const { scene, loadTexture } = WorldController;
 
                 const geometry = new PlaneGeometry(110, 110);
 
-                const map = getTexture('assets/textures/pbr/polished_concrete_basecolor.jpg');
+                const map = await loadTexture('assets/textures/pbr/polished_concrete_basecolor.jpg');
                 map.wrapS = RepeatWrapping;
                 map.wrapT = RepeatWrapping;
                 map.repeat.set(16, 16);
@@ -616,7 +616,7 @@
 
                 WorldController.resize(width, height, dpr);
                 CameraController.resize(width, height);
-                SceneController.resize(width, height, dpr);
+                SceneController.resize(width, height);
                 RenderManager.resize(width, height, dpr);
             };
 

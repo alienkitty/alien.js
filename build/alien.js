@@ -35336,7 +35336,7 @@ var Geometries = /*#__PURE__*/Object.freeze({
  * }
  */
 
-class ShadowMaterial extends Material {
+class ShadowMaterial$1 extends Material {
 
 	constructor( parameters ) {
 
@@ -35363,7 +35363,7 @@ class ShadowMaterial extends Material {
 
 }
 
-ShadowMaterial.prototype.isShadowMaterial = true;
+ShadowMaterial$1.prototype.isShadowMaterial = true;
 
 class RawShaderMaterial extends ShaderMaterial {
 
@@ -36342,7 +36342,7 @@ LineDashedMaterial.prototype.isLineDashedMaterial = true;
 
 var Materials = /*#__PURE__*/Object.freeze({
 	__proto__: null,
-	ShadowMaterial: ShadowMaterial,
+	ShadowMaterial: ShadowMaterial$1,
 	SpriteMaterial: SpriteMaterial,
 	RawShaderMaterial: RawShaderMaterial,
 	ShaderMaterial: ShaderMaterial,
@@ -51599,7 +51599,7 @@ function getFrustumFromHeight(camera, height, offsetZ = 0) {
     return fov;
 }
 
-var vertexShader$t = /* glsl */`
+var vertexShader$u = /* glsl */`
 attribute vec2 uv;
 attribute vec3 position;
 
@@ -51717,7 +51717,7 @@ vec4 spherize(sampler2D image, vec2 uv) {
 }
 `;
 
-var fragmentShader$t = /* glsl */`
+var fragmentShader$u = /* glsl */`
 precision highp float;
 
 uniform sampler2D tMap;
@@ -51750,8 +51750,8 @@ class SpherizeImage {
                 tMap: new Uniform(null),
                 uDirection: new Uniform(direction)
             },
-            vertexShader: vertexShader$t,
-            fragmentShader: fragmentShader$t,
+            vertexShader: vertexShader$u,
+            fragmentShader: fragmentShader$u,
             blending: NoBlending,
             depthWrite: false,
             depthTest: false
@@ -53262,7 +53262,7 @@ class Wobble {
     }
 }
 
-var vertexShader$s = /* glsl */`
+var vertexShader$t = /* glsl */`
 attribute vec2 uv;
 attribute vec3 position;
 
@@ -53277,7 +53277,7 @@ void main() {
 
 // From https://oframe.github.io/ogl/examples/?src=mouse-flowmap.html by gordonnl
 
-var fragmentShader$s = /* glsl */`
+var fragmentShader$t = /* glsl */`
 precision highp float;
 
 uniform sampler2D tMap;
@@ -53350,8 +53350,8 @@ class Flowmap {
                 uMouse: new Uniform(this.mouse),
                 uVelocity: new Uniform(this.velocity)
             },
-            vertexShader: vertexShader$s,
-            fragmentShader: fragmentShader$s,
+            vertexShader: vertexShader$t,
+            fragmentShader: fragmentShader$t,
             depthTest: false
         });
 
@@ -53402,7 +53402,7 @@ class Flowmap {
     }
 }
 
-var vertexShader$r = /* glsl */`
+var vertexShader$s = /* glsl */`
 attribute vec2 uv;
 attribute vec3 position;
 
@@ -53469,7 +53469,7 @@ vec3 dither(vec3 color) {
 }
 `;
 
-var fragmentShader$r = /* glsl */`
+var fragmentShader$s = /* glsl */`
 precision highp float;
 
 uniform sampler2D tMap;
@@ -53529,8 +53529,8 @@ class ReflectorMaterial extends RawShaderMaterial {
                 uMatrix: new Uniform(new Matrix4()),
                 uColor: new Uniform(color instanceof Color ? color : new Color(color))
             },
-            vertexShader: vertexShader$r,
-            fragmentShader: fragmentShader$r
+            vertexShader: vertexShader$s,
+            fragmentShader: fragmentShader$s
         };
 
         if (map) {
@@ -53564,7 +53564,7 @@ class ReflectorMaterial extends RawShaderMaterial {
     }
 }
 
-var vertexShader$q = /* glsl */`
+var vertexShader$r = /* glsl */`
 attribute vec2 uv;
 attribute vec3 position;
 
@@ -53596,7 +53596,7 @@ vec4 blur13(sampler2D image, vec2 uv, vec2 resolution, vec2 direction) {
 }
 `;
 
-var fragmentShader$q = /* glsl */`
+var fragmentShader$r = /* glsl */`
 precision highp float;
 
 uniform sampler2D tMap;
@@ -53620,8 +53620,8 @@ class ReflectorBlurMaterial extends RawShaderMaterial {
                 uDirection: new Uniform(new Vector2(1, 0)),
                 uResolution: new Uniform(new Vector2())
             },
-            vertexShader: vertexShader$q,
-            fragmentShader: fragmentShader$q,
+            vertexShader: vertexShader$r,
+            fragmentShader: fragmentShader$r,
             blending: NoBlending,
             depthWrite: false,
             depthTest: false
@@ -54459,7 +54459,7 @@ class Magnetic extends Component {
     };
 }
 
-var vertexShader$p = /* glsl */`
+var vertexShader$q = /* glsl */`
 attribute vec3 position;
 attribute vec3 normal;
 
@@ -54476,7 +54476,7 @@ void main() {
 }
 `;
 
-var fragmentShader$p = /* glsl */`
+var fragmentShader$q = /* glsl */`
 precision highp float;
 
 varying vec3 vNormal;
@@ -54489,13 +54489,13 @@ void main() {
 class NormalMaterial extends RawShaderMaterial {
     constructor() {
         super({
-            vertexShader: vertexShader$p,
-            fragmentShader: fragmentShader$p
+            vertexShader: vertexShader$q,
+            fragmentShader: fragmentShader$q
         });
     }
 }
 
-var vertexShader$o = /* glsl */`
+var vertexShader$p = /* glsl */`
 attribute vec3 position;
 
 uniform mat4 modelViewMatrix;
@@ -54506,7 +54506,7 @@ void main() {
 }
 `;
 
-var fragmentShader$o = /* glsl */`
+var fragmentShader$p = /* glsl */`
 precision highp float;
 
 uniform vec3 uColor;
@@ -54522,8 +54522,52 @@ class ColorMaterial extends RawShaderMaterial {
             uniforms: {
                 uColor: new Uniform(color instanceof Color ? color : new Color(color))
             },
+            vertexShader: vertexShader$p,
+            fragmentShader: fragmentShader$p
+        });
+    }
+}
+
+var vertexShader$o = /* glsl */`
+attribute vec2 uv;
+attribute vec3 position;
+
+uniform mat4 modelViewMatrix;
+uniform mat4 projectionMatrix;
+
+varying vec2 vUv;
+
+void main() {
+    vUv = uv;
+
+    gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+}
+`;
+
+var fragmentShader$o = /* glsl */`
+precision highp float;
+
+uniform sampler2D tMap;
+uniform float uAlpha;
+
+varying vec2 vUv;
+
+void main() {
+    gl_FragColor = texture2D(tMap, vUv);
+    gl_FragColor.a *= uAlpha;
+}
+`;
+
+class BasicMaterial extends RawShaderMaterial {
+    constructor(map) {
+        super({
+            uniforms: {
+                tMap: new Uniform(map),
+                uAlpha: new Uniform(1)
+            },
             vertexShader: vertexShader$o,
-            fragmentShader: fragmentShader$o
+            fragmentShader: fragmentShader$o,
+            transparent: true
         });
     }
 }
@@ -54553,12 +54597,14 @@ uniform float uAlpha;
 varying vec2 vUv;
 
 void main() {
-    gl_FragColor = texture2D(tMap, vUv);
-    gl_FragColor.a *= uAlpha;
+    float shadow = texture2D(tMap, vUv).g;
+
+    gl_FragColor.rgb = vec3(0.0);
+    gl_FragColor.a = shadow * uAlpha;
 }
 `;
 
-class BasicMaterial extends RawShaderMaterial {
+class ShadowMaterial extends RawShaderMaterial {
     constructor(map) {
         super({
             uniforms: {
@@ -55972,99 +56018,44 @@ precision highp float;
 
 uniform sampler2D tMap;
 uniform sampler2D tReflect;
-uniform vec3 uColor;
-
-#ifdef USE_FOG
-    uniform vec3 uFogColor;
-    uniform float uFogNear;
-    uniform float uFogFar;
-#endif
+uniform sampler2D tReflectBlur;
 
 varying vec2 vUv;
 varying vec4 vCoord;
-
-${blendOverlay}
-${dither}
 
 void main() {
     vec2 reflectionUv = vCoord.xy / vCoord.w;
 
     vec4 dudv = texture2D(tMap, vUv);
     vec4 color = texture2D(tReflect, reflectionUv);
-    vec4 distortion = texture2D(tReflect, reflectionUv + dudv.rg / 256.0);
 
-    color = mix(color, distortion, dudv.g);
-    color = mix(color, distortion, dudv.r);
+    vec4 blur;
+
+    blur = texture2D(tReflectBlur, reflectionUv + dudv.rg / 256.0);
+    color = mix(color, blur, smoothstep(1.0, 0.1, dudv.g));
+
+    blur = texture2D(tReflectBlur, reflectionUv);
+    color = mix(color, blur, smoothstep(0.5, 1.0, dudv.r));
 
     gl_FragColor = color * mix(0.6, 0.75, dudv.g);
-
-    vec4 base = gl_FragColor;
-    vec4 blend = vec4(uColor, 1.0);
-
-    gl_FragColor = blendOverlay(base, blend, 1.0);
-
-    #ifdef USE_FOG
-        float fogDepth = gl_FragCoord.z / gl_FragCoord.w;
-        float fogFactor = smoothstep(uFogNear, uFogFar, fogDepth);
-
-        gl_FragColor.rgb = mix(gl_FragColor.rgb, uFogColor, fogFactor);
-    #endif
-
-    #ifdef DITHERING
-        gl_FragColor.rgb = dither(gl_FragColor.rgb);
-    #endif
 }
 `;
 
 class ReflectorDudvMaterial extends RawShaderMaterial {
-    constructor({
-        color = new Color(0x7F7F7F),
-        map = null,
-        fog = null,
-        dithering = false
-    } = {}) {
-        const parameters = {
-            defines: {
-            },
+    constructor(map) {
+        map.updateMatrix();
+
+        super({
             uniforms: {
-                tMap: new Uniform(null),
+                tMap: new Uniform(map),
                 tReflect: new Uniform(null),
-                uMapTransform: new Uniform(new Matrix3()),
-                uMatrix: new Uniform(new Matrix4()),
-                uColor: new Uniform(color instanceof Color ? color : new Color(color))
+                tReflectBlur: new Uniform(null),
+                uMapTransform: new Uniform(map.matrix),
+                uMatrix: new Uniform(new Matrix4())
             },
             vertexShader: vertexShader$4,
             fragmentShader: fragmentShader$4
-        };
-
-        if (map) {
-            map.updateMatrix();
-
-            parameters.uniforms = Object.assign(parameters.uniforms, {
-                tMap: new Uniform(map),
-                uMapTransform: new Uniform(map.matrix)
-            });
-        }
-
-        if (fog) {
-            parameters.defines = Object.assign(parameters.defines, {
-                USE_FOG: ''
-            });
-
-            parameters.uniforms = Object.assign(parameters.uniforms, {
-                uFogColor: new Uniform(fog.color),
-                uFogNear: new Uniform(fog.near),
-                uFogFar: new Uniform(fog.far)
-            });
-        }
-
-        if (dithering) {
-            parameters.defines = Object.assign(parameters.defines, {
-                DITHERING: ''
-            });
-        }
-
-        super(parameters);
+        });
     }
 }
 

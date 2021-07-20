@@ -22,6 +22,8 @@
 
         import rgbshift from '../src/shaders/modules/rgbshift/rgbshift.glsl.js';
 
+        // Based on https://oframe.github.io/ogl/examples/?src=mouse-flowmap.html by gordonnl
+
         const vertexCompositeShader = /* glsl */`
             attribute vec2 uv;
             attribute vec3 position;
@@ -203,8 +205,6 @@
 
             static ready = () => this.view.triangle.initMesh();
         }
-
-        // Based on https://oframe.github.io/ogl/examples/?src=mouse-flowmap.html by gordonnl
 
         const BlurDirectionX = new Vector2(1, 0);
         const BlurDirectionY = new Vector2(0, 1);
@@ -701,7 +701,7 @@
 
                 WorldController.resize(width, height, dpr);
                 CameraController.resize(width, height);
-                SceneController.resize(width, height, dpr);
+                SceneController.resize(width, height);
                 RenderManager.resize(width, height, dpr);
             };
 

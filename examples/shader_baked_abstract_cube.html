@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
-    <title>Spherical Cube — Alien.js</title>
+    <title>Shader Baked Shadow — Alien.js</title>
 
     <link rel="preconnect" href="https://fonts.gstatic.com">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto+Mono">
@@ -13,47 +13,128 @@
 <body>
     <div id="root"></div>
     <script type="module">
-        import { BasicMaterial, Color, Events, FXAAMaterial, Group, Mesh, OrbitControls, OrthographicCamera, PerspectiveCamera, RGBFormat, Scene, SphericalCubeTextureLoader, Stage, TextureLoader, Uniform, Vector2, WebGL1Renderer, WebGLRenderTarget, getFullscreenTriangle, getSphericalCube, ticker } from '../build/alien.js';
+        import { BasicMaterial, BufferGeometryLoader, BufferGeometryLoaderThread, Color, Device, DoubleSide, Events, FXAAMaterial, Group, ImageBitmapLoaderThread, Mesh, OrbitControls, OrthographicCamera, PerspectiveCamera, RGBFormat, Scene, ShadowMaterial, Stage, TextureLoader, Thread, Uniform, Vector2, WebGL1Renderer, WebGLRenderTarget, getFullscreenTriangle, ticker } from '../build/alien.js';
 
         class Config {
-            static BG_COLOR = '#0e0e0e';
+            static BG_COLOR = '#fff';
             static UI_COLOR = 'rgba(255, 255, 255, 0.94)';
 
             static BREAKPOINT = 1000;
+        }
+
+        class AbstractCube extends Group {
+            constructor() {
+                super();
+            }
+
+            async initGeometry() {
+                const { loadBufferGeometry } = WorldController;
+
+                this.geometry = await loadBufferGeometry('assets/geometry/abstract_cube.json');
+            }
+
+            async initMaterial() {
+                const { anisotropy, loadTexture } = WorldController;
+
+                // const map = await loadTexture('assets/textures/cubemap.jpg');
+                const map = await loadTexture('assets/textures/abstract_cube/abstract_cube_basecolor.jpg');
+                map.anisotropy = anisotropy;
+
+                this.material = new BasicMaterial(map);
+            }
+
+            initMesh() {
+                const mesh = new Mesh(this.geometry, this.material);
+                this.add(mesh);
+            }
+
+            /**
+             * Public methods
+             */
+
+            ready = async () => {
+                await Promise.all([
+                    this.initGeometry(),
+                    this.initMaterial()
+                ]);
+
+                this.initMesh();
+            };
+        }
+
+        // Based on https://oframe.github.io/ogl/examples/?src=skinning.html by gordonnl
+
+        class Floor extends Group {
+            constructor() {
+                super();
+            }
+
+            async initGeometry() {
+                const { loadBufferGeometry } = WorldController;
+
+                this.geometry = await loadBufferGeometry('assets/geometry/floor.json');
+            }
+
+            async initMaterial() {
+                const { anisotropy, loadTexture } = WorldController;
+
+                // const map = await loadTexture('assets/textures/uv.jpg');
+                const map = await loadTexture('assets/textures/abstract_cube/abstract_cube_shadow.jpg');
+                map.anisotropy = anisotropy;
+
+                this.material = new ShadowMaterial(map);
+                this.material.side = DoubleSide;
+            }
+
+            initMesh() {
+                const mesh = new Mesh(this.geometry, this.material);
+                mesh.position.y = -0.86;
+                this.add(mesh);
+            }
+
+            /**
+             * Public methods
+             */
+
+            ready = async () => {
+                await Promise.all([
+                    this.initGeometry(),
+                    this.initMaterial()
+                ]);
+
+                this.initMesh();
+            };
         }
 
         class SceneView extends Group {
             constructor() {
                 super();
 
-                this.initMesh();
+                this.visible = false;
+
+                this.initViews();
             }
 
-            initMesh() {
-                const { anisotropy, getSphericalCubeTextures } = WorldController;
+            initViews() {
+                this.floor = new Floor();
+                this.add(this.floor);
 
-                // Spherical cube geometry
-                const geometry = getSphericalCube(1, 32);
-
-                // Textures
-                const map = getSphericalCubeTextures('assets/textures/uv.jpg');
-
-                // Materials
-                const material = [];
-
-                for (let i = 0; i < 6; i++) {
-                    map[i].anisotropy = anisotropy;
-
-                    material[i] = new BasicMaterial(map[i]);
-                }
-
-                const mesh = new Mesh(geometry, material);
-
-                // Flip horizontally
-                mesh.scale.x = -1;
-
-                this.add(mesh);
+                this.abstractCube = new AbstractCube();
+                this.add(this.abstractCube);
             }
+
+            /**
+             * Public methods
+             */
+
+            animateIn = () => {
+                this.visible = true;
+            };
+
+            ready = () => Promise.all([
+                this.floor.ready(),
+                this.abstractCube.ready()
+            ]);
         }
 
         class RenderManager {
@@ -170,7 +251,7 @@
 
             static initLoaders() {
                 this.textureLoader = new TextureLoader();
-                this.spherizeLoader = new SphericalCubeTextureLoader(this.renderer, true);
+                this.bufferGeometryLoader = new BufferGeometryLoader();
             }
 
             static initControls() {
@@ -225,19 +306,33 @@
 
             static loadTexture = path => this.textureLoader.loadAsync(path);
 
-            static getSphericalCubeTextures = (path, callback) => this.spherizeLoader.load(path, callback);
+            static getBufferGeometry = (path, callback) => this.bufferGeometryLoader.load(path, callback);
 
-            static loadSphericalCubeTextures = path => this.spherizeLoader.loadAsync(path);
+            static loadBufferGeometry = path => this.bufferGeometryLoader.loadAsync(path);
         }
 
         class App {
             static async init() {
+                if (Device.agent.includes('chrome')) {
+                    this.initThread();
+                }
+
                 this.initWorld();
                 this.initViews();
                 this.initControllers();
 
                 this.addListeners();
                 this.onResize();
+
+                await this.view.ready();
+                this.view.animateIn();
+            }
+
+            static initThread() {
+                ImageBitmapLoaderThread.init();
+                BufferGeometryLoaderThread.init();
+
+                Thread.shared();
             }
 
             static initWorld() {

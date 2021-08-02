@@ -65,13 +65,12 @@
         class Floor extends Group {
             constructor() {
                 super();
+
+                this.initReflector();
             }
 
             initReflector() {
-                this.reflector = new ReflectorObject({
-                    width: 1024,
-                    height: 1024
-                });
+                this.reflector = new ReflectorObject();
             }
 
             async initMesh() {
@@ -107,11 +106,13 @@
              * Public methods
              */
 
-            ready = () => {
-                this.initReflector();
+            resize = (width, height) => {
+                height = 1024;
 
-                return this.initMesh();
+                this.reflector.setSize(width, height);
             };
+
+            ready = () => this.initMesh();
         }
 
         class SceneView extends Group {
@@ -135,14 +136,37 @@
              * Public methods
              */
 
-            animateIn = () => {
-                this.visible = true;
+            resize = (width, height) => {
+                this.floor.resize(width, height);
             };
 
             ready = () => Promise.all([
                 this.floor.ready(),
                 this.cube.ready()
             ]);
+        }
+
+        class SceneController {
+            static init(view) {
+                this.view = view;
+            }
+
+            /**
+             * Public methods
+             */
+
+            static resize = (width, height) => {
+                this.view.resize(width, height);
+            };
+
+            static update = () => {
+            };
+
+            static animateIn = () => {
+                this.view.visible = true;
+            };
+
+            static ready = () => this.view.ready();
         }
 
         class RenderManager {
@@ -332,8 +356,8 @@
                 this.addListeners();
                 this.onResize();
 
-                await this.view.ready();
-                this.view.animateIn();
+                await SceneController.ready();
+                SceneController.animateIn();
             }
 
             static initThread() {
@@ -356,6 +380,7 @@
             static initControllers() {
                 const { renderer, scene, camera } = WorldController;
 
+                SceneController.init(this.view);
                 RenderManager.init(renderer, scene, camera);
             }
 
@@ -372,11 +397,13 @@
                 const { width, height, dpr } = Stage;
 
                 WorldController.resize(width, height, dpr);
+                SceneController.resize(width, height);
                 RenderManager.resize(width, height, dpr);
             };
 
             static onUpdate = (time, delta, frame) => {
                 WorldController.update(time, delta, frame);
+                SceneController.update();
                 RenderManager.update(time, delta, frame);
             };
         }

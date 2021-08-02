@@ -128,21 +128,17 @@
             update = () => {
                 this.mesh.rotation.y -= 0.005;
             };
-
-            ready = () => this.initMesh();
         }
 
         class Floor extends Group {
             constructor() {
                 super();
+
+                this.initReflector();
             }
 
             initReflector() {
-                this.reflector = new ReflectorObject({
-                    width: 1024,
-                    height: 1024,
-                    blurIterations: 6
-                });
+                this.reflector = new ReflectorObject({ blurIterations: 6 });
             }
 
             async initMesh() {
@@ -178,10 +174,10 @@
              * Public methods
              */
 
-            ready = () => {
-                this.initReflector();
+            resize = (width, height) => {
+                height = 1024;
 
-                return this.initMesh();
+                this.reflector.setSize(width, height);
             };
         }
 
@@ -206,13 +202,17 @@
              * Public methods
              */
 
+            resize = (width, height) => {
+                this.floor.resize(width, height);
+            };
+
             update = () => {
                 this.abstractCube.update();
             };
 
             ready = () => Promise.all([
-                this.floor.ready(),
-                this.abstractCube.ready()
+                this.floor.initMesh(),
+                this.abstractCube.initMesh()
             ]);
         }
 
@@ -225,7 +225,8 @@
              * Public methods
              */
 
-            static resize = () => {
+            static resize = (width, height) => {
+                this.view.resize(width, height);
             };
 
             static update = () => {
@@ -652,7 +653,7 @@
 
                 WorldController.resize(width, height, dpr);
                 CameraController.resize(width, height);
-                SceneController.resize();
+                SceneController.resize(width, height);
                 RenderManager.resize(width, height, dpr);
             };
 

@@ -118,7 +118,6 @@
                 super();
 
                 this.initReflector();
-                this.initMesh();
             }
 
             initReflector() {
@@ -187,6 +186,19 @@
                 this.triangle = new Triangle();
                 this.add(this.triangle);
             }
+
+            /**
+             * Public methods
+             */
+
+            resize = (width, height) => {
+                this.floor.resize(width, height);
+            };
+
+            ready = () => Promise.all([
+                this.floor.initMesh(),
+                this.triangle.initMesh()
+            ]);
         }
 
         class SceneController {
@@ -199,7 +211,7 @@
              */
 
             static resize = (width, height) => {
-                this.view.floor.resize(width, height);
+                this.view.resize(width, height);
             };
 
             static update = () => {
@@ -209,7 +221,7 @@
                 this.view.visible = true;
             };
 
-            static ready = () => this.view.triangle.initMesh();
+            static ready = () => this.view.ready();
         }
 
         const BlurDirectionX = new Vector2(1, 0);

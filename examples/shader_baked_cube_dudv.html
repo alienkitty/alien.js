@@ -28,7 +28,12 @@
             async initGeometry() {
                 const { loadBufferGeometry } = WorldController;
 
-                this.geometry = await loadBufferGeometry('assets/geometry/cube.json');
+                const geometry = await loadBufferGeometry('assets/geometry/cube.json');
+
+                // Use 2nd set of UV's for cubemap row layout
+                geometry.attributes.uv = geometry.attributes.uv2;
+
+                this.geometry = geometry;
             }
 
             async initMaterial() {

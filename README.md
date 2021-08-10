@@ -60,6 +60,7 @@ In its design, everything is an ES module, all user interfaces and components fo
 [camera wobble](https://alien.js.org/examples/3d_camera_wobble.html)  
 [camera shake](https://alien.js.org/examples/3d_camera_shake.html)  
 [abstract cube](https://alien.js.org/examples/3d_abstract_cube.html)  
+[abstract cube](https://alien.js.org/examples/3d_abstract_cube_sss.html) (SSS, [debug](https://alien.js.org/examples/3d_abstract_cube_sss.html?debug))  
 
 #### shader
 
@@ -87,12 +88,16 @@ In its design, everything is an ES module, all user interfaces and components fo
 [depth](https://alien.js.org/examples/shader_depth.html) (fragment depth with dither)  
 [hologram](https://alien.js.org/examples/shader_hologram.html)  
 [text](https://alien.js.org/examples/shader_text.html) (MSDF text)  
+[subsurface scattering](https://alien.js.org/examples/shader_subsurface_scattering.html) (SSS, [debug](https://alien.js.org/examples/shader_subsurface_scattering.html?debug))  
 [baked cube](https://alien.js.org/examples/shader_baked_cube.html)  
 [baked cube](https://alien.js.org/examples/shader_baked_cube_dudv.html) (DuDv)  
+[baked cube](https://alien.js.org/examples/shader_baked_cube_sss.html) (SSS, [debug](https://alien.js.org/examples/shader_baked_cube_sss.html?debug))  
 [baked abstract cube](https://alien.js.org/examples/shader_baked_abstract_cube.html)  
 [baked abstract cube](https://alien.js.org/examples/shader_baked_abstract_cube_dudv.html) (DuDv)  
+[baked abstract cube](https://alien.js.org/examples/shader_baked_abstract_cube_sss.html) (SSS, [debug](https://alien.js.org/examples/shader_baked_abstract_cube_sss.html?debug))  
 [baked spherical cube](https://alien.js.org/examples/shader_baked_spherical_cube.html)  
 [baked spherical cube](https://alien.js.org/examples/shader_baked_spherical_cube_dudv.html) (DuDv)  
+[baked spherical cube](https://alien.js.org/examples/shader_baked_spherical_cube_sss.html) (SSS, [debug](https://alien.js.org/examples/shader_baked_spherical_cube_sss.html?debug))  
 [alienkitty](https://alienkitty.com/) (2d scene, flowmap with RGB shift, MSDF text)  
 
 #### thread

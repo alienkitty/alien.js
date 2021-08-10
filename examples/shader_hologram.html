@@ -21,8 +21,6 @@
 
             static LIGHT_COLOR = 0x0099ff;
             static ERROR_COLOR = 0xff0000;
-
-            static BREAKPOINT = 1000;
         }
 
         class Layer {
@@ -400,7 +398,7 @@
                 }
 
                 // Bloom composite material
-                const bloomFactors = [1.0, 0.8, 0.6, 0.4, 0.2];
+                const bloomFactors = [1, 0.8, 0.6, 0.4, 0.2];
 
                 for (let i = 0, l = this.nMips; i < l; i++) {
                     const factor = bloomFactors[i];
@@ -707,8 +705,6 @@
 
                 if (width < height) {
                     this.camera.position.z = 10;
-                } else if (width < Config.BREAKPOINT) {
-                    this.camera.position.z = 6;
                 } else {
                     this.camera.position.z = 8;
                 }

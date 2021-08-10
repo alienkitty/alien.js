@@ -19,8 +19,6 @@
             static BG_COLOR = '#0e0e0e';
             static UI_COLOR = 'rgba(255, 255, 255, 0.94)';
 
-            static BREAKPOINT = 1000;
-
             static DEBUG = location.search === '?debug';
         }
 
@@ -236,6 +234,10 @@
             };
 
             static update = () => {
+                if (!this.view.visible) {
+                    return;
+                }
+
                 this.mouse.lerp(this.target, this.lerpSpeed);
 
                 this.lightPosition.x = this.mouse.x * this.halfWidth;
@@ -320,7 +322,7 @@
                 }
 
                 // Bloom composite material
-                const bloomFactors = [1.0, 0.8, 0.6, 0.4, 0.2];
+                const bloomFactors = [1, 0.8, 0.6, 0.4, 0.2];
 
                 for (let i = 0, l = this.nMips; i < l; i++) {
                     const factor = bloomFactors[i];
@@ -507,9 +509,6 @@
 
                 if (width < height) {
                     this.camera.position.z = 10;
-                    this.multiplier = 2;
-                } else if (width < Config.BREAKPOINT) {
-                    this.camera.position.z = 6;
                     this.multiplier = 2;
                 } else {
                     this.camera.position.z = 8;

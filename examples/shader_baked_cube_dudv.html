@@ -18,8 +18,6 @@
         class Config {
             static BG_COLOR = '#fff';
             static UI_COLOR = 'rgba(255, 255, 255, 0.94)';
-
-            static BREAKPOINT = 1000;
         }
 
         class Cube extends Group {
@@ -314,8 +312,6 @@
 
                 if (width < height) {
                     this.camera.position.z = 10;
-                } else if (width < Config.BREAKPOINT) {
-                    this.camera.position.z = 6;
                 } else {
                     this.camera.position.z = 8;
                 }

@@ -23,8 +23,6 @@
             static LIGHT_COLOR = new Color(0xff8dfc);
             static PARTICLE_COLOR = new Color(0x8080ff);
 
-            static BREAKPOINT = 1000;
-
             static DEBUG = location.search === '?debug';
         }
 
@@ -223,23 +221,22 @@
                     depthWrite: false
                 });
 
-                // https://threejs.org/examples/#webgl_materials_modified
-
                 material.onBeforeCompile = shader => {
                     shader.uniforms.hue = hue;
                     shader.uniforms.resolution = resolution;
                     shader.uniforms.time = time;
 
                     shader.fragmentShader = shader.fragmentShader.replace(
-                        'uniform float opacity;',
+                        'void main() {',
                         /* glsl */`
-                        uniform float opacity;
                         uniform float hue;
                         uniform vec2 resolution;
                         uniform float time;
 
                         ${hsv2rgbSmooth}
                         ${rgb2hsv}
+
+                        void main() {
                         `
                     );
 
@@ -598,9 +595,6 @@
 
                 if (width < height) {
                     this.camera.position.z = 10;
-                    this.multiplier = 2;
-                } else if (width < Config.BREAKPOINT) {
-                    this.camera.position.z = 6;
                     this.multiplier = 2;
                 } else {
                     this.camera.position.z = 8;

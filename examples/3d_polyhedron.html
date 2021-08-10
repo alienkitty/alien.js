@@ -13,7 +13,7 @@
 <body>
     <div id="root"></div>
     <script type="module">
-        import { ACESFilmicToneMapping, AmbientLight, BloomCompositeMaterial, Color, Device, DirectionalLight, EnvironmentTextureLoader, Events, FXAAMaterial, Group, HemisphereLight, IcosahedronGeometry, ImageBitmapLoaderThread, LuminosityMaterial, MathUtils, Mesh, MeshBasicMaterial, MeshStandardMaterial, NoBlending, OrthographicCamera, PerspectiveCamera, PointLight, RGBFormat, RawShaderMaterial, RepeatWrapping, Scene, SphereGeometry, Stage, TextureLoader, Thread, Uniform, UnrealBloomBlurMaterial, Vector2, Vector3, WebGL1Renderer, WebGLRenderTarget, getFrustum, getFullscreenTriangle, mix, radians, ticker, tween } from '../build/alien.js';
+        import { ACESFilmicToneMapping, AmbientLight, BloomCompositeMaterial, BufferGeometryLoader, BufferGeometryLoaderThread, Color, Device, DirectionalLight, EnvironmentTextureLoader, Events, FXAAMaterial, Group, HemisphereLight, ImageBitmapLoaderThread, LuminosityMaterial, MathUtils, Mesh, MeshBasicMaterial, MeshStandardMaterial, NoBlending, OrthographicCamera, PerspectiveCamera, PointLight, RGBFormat, RawShaderMaterial, RepeatWrapping, Scene, SphereGeometry, Stage, TextureLoader, Thread, Uniform, UnrealBloomBlurMaterial, Vector2, Vector3, WebGL1Renderer, WebGLRenderTarget, getFrustum, getFullscreenTriangle, mix, radians, ticker, tween } from '../build/alien.js';
 
         class Config {
             static BG_COLOR = '#0e0e0e';
@@ -111,13 +111,19 @@
                 super();
             }
 
-            async initMesh() {
-                const { anisotropy, loadTexture, loadEnvironmentTexture } = WorldController;
+            async initGeometry() {
+                const { loadBufferGeometry } = WorldController;
 
-                const geometry = new IcosahedronGeometry(1, 2);
+                const geometry = await loadBufferGeometry('assets/geometry/polyhedron.json');
 
                 // 2nd set of UV's for aoMap and lightMap
                 geometry.attributes.uv2 = geometry.attributes.uv;
+
+                this.geometry = geometry;
+            }
+
+            async initMaterial() {
+                const { anisotropy, loadTexture, loadEnvironmentTexture } = WorldController;
 
                 // Textures
                 const [map, normalMap, ormMap, envMap] = await Promise.all([
@@ -147,7 +153,7 @@
                 // const material = new MeshBasicMaterial({ map });
                 const material = new MeshStandardMaterial({
                     roughness: 0.35,
-                    metalness: 0.9,
+                    metalness: 0.6,
                     map,
                     aoMap: ormMap,
                     aoMapIntensity: 1,
@@ -160,9 +166,26 @@
                     flatShading: true
                 });
 
-                const mesh = new Mesh(geometry, material);
-                this.add(mesh);
+                this.material = material;
             }
+
+            initMesh() {
+                this.mesh = new Mesh(this.geometry, this.material);
+                this.add(this.mesh);
+            }
+
+            /**
+             * Public methods
+             */
+
+            ready = async () => {
+                await Promise.all([
+                    this.initGeometry(),
+                    this.initMaterial()
+                ]);
+
+                this.initMesh();
+            };
         }
 
         class SceneView extends Group {
@@ -251,7 +274,7 @@
                 this.view.visible = true;
             };
 
-            static ready = () => this.view.polyhedron.initMesh();
+            static ready = () => this.view.polyhedron.ready();
         }
 
         const BlurDirectionX = new Vector2(1, 0);
@@ -600,6 +623,7 @@
             static initLoaders() {
                 this.textureLoader = new TextureLoader();
                 this.environmentLoader = new EnvironmentTextureLoader(this.renderer);
+                this.bufferGeometryLoader = new BufferGeometryLoader();
             }
 
             static addListeners() {
@@ -639,6 +663,10 @@
 
             static loadEnvironmentTexture = path => this.environmentLoader.loadAsync(path);
 
+            static getBufferGeometry = (path, callback) => this.bufferGeometryLoader.load(path, callback);
+
+            static loadBufferGeometry = path => this.bufferGeometryLoader.loadAsync(path);
+
             static getFrustum = offsetZ => getFrustum(this.camera, offsetZ);
         }
 
@@ -663,6 +691,7 @@
 
             static initThread() {
                 ImageBitmapLoaderThread.init();
+                BufferGeometryLoaderThread.init();
 
                 Thread.shared();
             }

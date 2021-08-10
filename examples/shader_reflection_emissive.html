@@ -174,7 +174,8 @@
                     roughnessMap: ormMap,
                     metalnessMap: ormMap,
                     normalMap,
-                    normalScale: new Vector2(3, 3)
+                    normalScale: new Vector2(3, 3),
+                    dithering: true
                 });
 
                 material.onBeforeCompile = shader => {
@@ -182,11 +183,12 @@
                     shader.uniforms.textureMatrix = this.reflector.textureMatrixUniform;
 
                     shader.vertexShader = shader.vertexShader.replace(
-                        '#include <clipping_planes_pars_vertex>',
+                        'void main() {',
                         /* glsl */`
-                        #include <clipping_planes_pars_vertex>
                         uniform mat4 textureMatrix;
                         varying vec4 vCoord;
+
+                        void main() {
                         `
                     );
 
@@ -199,11 +201,12 @@
                     );
 
                     shader.fragmentShader = shader.fragmentShader.replace(
-                        'uniform float opacity;',
+                        'void main() {',
                         /* glsl */`
-                        uniform float opacity;
                         uniform sampler2D reflectMap;
                         varying vec4 vCoord;
+
+                        void main() {
                         `
                     );
 
@@ -349,7 +352,7 @@
                 }
 
                 // Bloom composite material
-                const bloomFactors = [1.0, 0.8, 0.6, 0.4, 0.2];
+                const bloomFactors = [1, 0.8, 0.6, 0.4, 0.2];
 
                 for (let i = 0, l = this.nMips; i < l; i++) {
                     const factor = bloomFactors[i];

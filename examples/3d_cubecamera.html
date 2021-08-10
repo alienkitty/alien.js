@@ -22,8 +22,6 @@
             static LIGHT_COLOR = 0xff8dfc;
             static PARTICLE_COLOR = 0x8080ff;
 
-            static BREAKPOINT = 1000;
-
             static DEBUG = location.search === '?debug';
         }
 
@@ -548,9 +546,6 @@
 
                 if (width < height) {
                     this.camera.position.z = 10;
-                    this.multiplier = 2;
-                } else if (width < Config.BREAKPOINT) {
-                    this.camera.position.z = 6;
                     this.multiplier = 2;
                 } else {
                     this.camera.position.z = 8;

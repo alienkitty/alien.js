@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
-    <title>Shader Flowmap View — Alien.js</title>
+    <title>Shader Subsurface Scattering — Alien.js</title>
 
     <link rel="preconnect" href="https://fonts.gstatic.com">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto+Mono">
@@ -13,73 +13,16 @@
 <body>
     <div id="root"></div>
     <script type="module">
-        import { ACESFilmicToneMapping, AdditiveBlending, BloomCompositeMaterial, Color, DirectionalLight, Events, FXAAMaterial, Flowmap, Fog, Group, HemisphereLight, LuminosityMaterial, MathUtils, Mesh, MeshStandardMaterial, NoBlending, OrthographicCamera, PerspectiveCamera, PlaneGeometry, RGBFormat, RawShaderMaterial, Reflector, RepeatWrapping, SVGLoader, Scene, Stage, TextureLoader, Uniform, UnrealBloomBlurMaterial, Vector2, Vector3, WebGL1Renderer, WebGLRenderTarget, getFrustum, getFullscreenTriangle, mix, range, ticker } from '../build/alien.js';
+        import { ACESFilmicToneMapping, AmbientLight, BloomCompositeMaterial, BufferGeometryLoader, BufferGeometryLoaderThread, Color, Device, EnvironmentTextureLoader, Events, FXAAMaterial, Group, HemisphereLight, ImageBitmapLoaderThread, LuminosityMaterial, MathUtils, Mesh, MeshBasicMaterial, MeshStandardMaterial, NoBlending, OrthographicCamera, PerspectiveCamera, PointLight, RGBFormat, RawShaderMaterial, RepeatWrapping, Scene, ShaderChunk, SphereGeometry, Stage, TextureLoader, Thread, Uniform, UnrealBloomBlurMaterial, Vector2, Vector3, WebGL1Renderer, WebGLRenderTarget, getFrustum, getFullscreenTriangle, mix, radians, ticker, tween } from '../build/alien.js';
 
         class Config {
             static BG_COLOR = '#0e0e0e';
             static UI_COLOR = 'rgba(255, 255, 255, 0.94)';
+
+            static DEBUG = location.search === '?debug';
         }
 
         import rgbshift from '../src/shaders/modules/rgbshift/rgbshift.glsl.js';
-
-        // Based on https://oframe.github.io/ogl/examples/?src=mouse-flowmap.html by gordonnl
-
-        const vertexFlowShader = /* glsl */`
-            attribute vec2 uv;
-            attribute vec3 position;
-
-            uniform mat4 modelViewMatrix;
-            uniform mat4 projectionMatrix;
-
-            varying vec2 vUv;
-
-            void main() {
-                vUv = uv;
-
-                gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
-            }
-        `;
-
-        const fragmentFlowShader = /* glsl */`
-            precision highp float;
-
-            uniform sampler2D tMap;
-            uniform sampler2D tFlow;
-
-            varying vec2 vUv;
-
-            ${rgbshift}
-
-            void main() {
-                // R and G values are velocity in the X and Y direction
-                // B value is the velocity length
-                vec3 flow = texture2D(tFlow, vUv).rgb;
-
-                // Use flow to adjust the UV lookup of a texture
-                vec2 uv = vUv;
-                uv += flow.rg * -0.05;
-
-                float angle = length(vUv - 0.5);
-                float amount = length(flow.rg) * 0.025;
-
-                gl_FragColor = getRGB(tMap, uv, angle, amount);
-                gl_FragColor.a = 1.0;
-            }
-        `;
-
-        class FlowMaterial extends RawShaderMaterial {
-            constructor() {
-                super({
-                    uniforms: {
-                        tMap: new Uniform(null),
-                        tFlow: new Uniform(null)
-                    },
-                    vertexShader: vertexFlowShader,
-                    fragmentShader: fragmentFlowShader,
-                    blending: AdditiveBlending
-                });
-            }
-        }
 
         const vertexCompositeShader = /* glsl */`
             attribute vec2 uv;
@@ -132,187 +75,165 @@
             }
         }
 
-        class Triangle extends Group {
+        class MouseLight extends Group {
             constructor() {
                 super();
-            }
 
-            async initMesh() {
-                const { loadSVG } = WorldController;
+                this.position.z = -1.5;
 
-                const data = await loadSVG('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg"><path stroke-width="0.3" d="M3 0L0 5h6z"/></svg>');
-                const paths = data.paths;
-
-                const group = new Group();
-                group.scale.y *= -1;
-
-                for (let i = 0, l = paths.length; i < l; i++) {
-                    const path = paths[i];
-
-                    const material = new MeshStandardMaterial({ emissive: 0xffffff });
-
-                    for (let j = 0, jl = path.subPaths.length; j < jl; j++) {
-                        const subPath = path.subPaths[j];
-                        const geometry = SVGLoader.pointsToStroke(subPath.getPoints(), path.userData.style);
-
-                        if (geometry) {
-                            geometry.center();
-
-                            const mesh = new Mesh(geometry, material);
-                            group.add(mesh);
-                        }
-                    }
+                if (Config.DEBUG) {
+                    this.initDebug();
                 }
 
-                this.add(group);
-            }
-        }
-
-        class TriangleView extends Group {
-            constructor() {
-                super();
-
-                this.width = 8;
-                this.height = 6;
-                this.isLoaded = false;
-
-                this.initRenderer();
-                this.initMesh();
-                this.initViews();
+                this.initLight();
             }
 
-            initRenderer() {
-                const { renderer, aspect } = WorldController;
+            initDebug() {
+                const geometry = new SphereGeometry(0.125, 1, 1);
 
-                this.renderer = renderer;
-
-                // 2D scene
-                this.scene = new Scene();
-                this.camera = new OrthographicCamera();
-                this.camera.left = -this.width / 2;
-                this.camera.right = this.width / 2;
-                this.camera.top = this.height / 2;
-                this.camera.bottom = -this.height / 2;
-                this.camera.near = 0;
-                this.camera.far = 1;
-                this.camera.updateProjectionMatrix();
-
-                // Render targets
-                this.renderTarget = new WebGLRenderTarget(1, 1);
-
-                // Flowmap
-                this.flowmap = new Flowmap(this.renderer, {
-                    alpha: 0.25,
-                    // dissipation: 0.3
+                const material = new MeshBasicMaterial({
+                    color: 0xff0000,
+                    wireframe: true
                 });
-                this.flowmap.material.uniforms.uAspect = aspect;
-            }
 
-            initMesh() {
-                const { camera, quad } = WorldController;
-
-                const material = new FlowMaterial();
-                material.uniforms.tMap.value = this.renderTarget.texture;
-                material.uniforms.tFlow = this.flowmap.uniform;
-
-                const mesh = new Mesh(quad, material);
-                mesh.position.set(0, 1.4, -11);
-                mesh.scale.set(this.width, this.height, 1);
-                mesh.lookAt(camera.position);
-
+                const mesh = new Mesh(geometry, material);
                 this.add(mesh);
-
-                this.mesh = mesh;
             }
 
-            initViews() {
-                this.triangle = new Triangle();
-                this.triangle.frustumCulled = false;
-
-                // Reduce size to make room for flowmap dissipation
-                this.triangle.scale.multiplyScalar(0.8);
-
-                this.scene.add(this.triangle);
+            initLight() {
+                const light = new PointLight(0x7f4c00, 0.2);
+                this.add(light);
             }
-
-            /**
-             * Public methods
-             */
-
-            resize = (width, height, dpr) => {
-                const frustum = WorldController.getFrustum(this.mesh.position.z);
-
-                this.widthResolutionScale = this.width / frustum.width;
-                this.heightResolutionScale = this.height / frustum.height;
-
-                width = Math.round((width * dpr) * this.widthResolutionScale);
-                height = Math.round((height * dpr) * this.heightResolutionScale);
-
-                this.renderTarget.setSize(width, height);
-
-                if (this.isLoaded) {
-                    this.update();
-                }
-            };
-
-            update = () => {
-                const currentRenderTarget = this.renderer.getRenderTarget();
-
-                // Scene pass
-                this.renderer.setRenderTarget(this.renderTarget);
-                this.renderer.render(this.scene, this.camera);
-
-                // Restore renderer settings
-                this.renderer.setRenderTarget(currentRenderTarget);
-            };
-
-            ready = async () => {
-                await this.triangle.initMesh();
-
-                this.isLoaded = true;
-
-                this.update();
-            };
         }
 
-        class Floor extends Group {
+        class Polyhedron extends Group {
             constructor() {
                 super();
-
-                this.initMesh();
             }
 
-            initMesh() {
-                const { scene, quad, getTexture } = WorldController;
+            async initGeometry() {
+                const { loadBufferGeometry } = WorldController;
 
-                const map = getTexture('assets/textures/pbr/polished_concrete_basecolor.jpg');
+                const geometry = await loadBufferGeometry('assets/geometry/polyhedron.json');
+
+                // 2nd set of UV's for aoMap and lightMap
+                geometry.attributes.uv2 = geometry.attributes.uv;
+
+                this.geometry = geometry;
+            }
+
+            async initMaterial() {
+                const { anisotropy, loadTexture, loadEnvironmentTexture } = WorldController;
+
+                // Textures
+                const [map, normalMap, ormMap, thicknessMap, envMap] = await Promise.all([
+                    // loadTexture('assets/textures/uv.jpg'),
+                    loadTexture('assets/textures/pbr/pitted_metal_basecolor.jpg'),
+                    loadTexture('assets/textures/pbr/pitted_metal_normal.jpg'),
+                    // https://occlusion-roughness-metalness.glitch.me/
+                    loadTexture('assets/textures/pbr/pitted_metal_orm.jpg'),
+                    loadTexture('assets/textures/pbr/pitted_metal_height.jpg'),
+                    loadEnvironmentTexture('assets/textures/env.jpg')
+                ]);
+
+                map.anisotropy = anisotropy;
                 map.wrapS = RepeatWrapping;
                 map.wrapT = RepeatWrapping;
-                map.repeat.set(16, 16);
+                map.repeat.set(2, 1);
 
-                const { fog } = scene;
+                normalMap.anisotropy = anisotropy;
+                normalMap.wrapS = RepeatWrapping;
+                normalMap.wrapT = RepeatWrapping;
+                normalMap.repeat.set(2, 1);
 
-                this.reflector = new Reflector(quad, {
+                ormMap.anisotropy = anisotropy;
+                ormMap.wrapS = RepeatWrapping;
+                ormMap.wrapT = RepeatWrapping;
+                ormMap.repeat.set(2, 1);
+
+                thicknessMap.anisotropy = anisotropy;
+                thicknessMap.wrapS = RepeatWrapping;
+                thicknessMap.wrapT = RepeatWrapping;
+                thicknessMap.repeat.set(2, 1);
+
+                const material = new MeshStandardMaterial({
+                    roughness: 3,
+                    metalness: 0.6,
                     map,
-                    fog,
-                    dithering: true
+                    aoMap: ormMap,
+                    aoMapIntensity: 1,
+                    roughnessMap: ormMap,
+                    metalnessMap: ormMap,
+                    normalMap,
+                    normalScale: new Vector2(3, 3),
+                    envMap,
+                    envMapIntensity: 1,
+                    flatShading: true
                 });
-                this.reflector.position.y = -1.6;
-                this.reflector.rotation.x = -Math.PI / 2;
-                this.reflector.scale.set(110, 110, 1);
 
-                this.add(this.reflector);
+                // Based on {@link module:three/examples/jsm/shaders/SubsurfaceScatteringShader.js} by daoshengmu
+
+                material.onBeforeCompile = shader => {
+                    shader.uniforms.thicknessMap = new Uniform(thicknessMap);
+                    shader.uniforms.thicknessDistortion = new Uniform(0.1);
+                    shader.uniforms.thicknessAmbient = new Uniform(0);
+                    shader.uniforms.thicknessAttenuation = new Uniform(5);
+                    shader.uniforms.thicknessPower = new Uniform(16);
+                    shader.uniforms.thicknessScale = new Uniform(4);
+
+                    shader.fragmentShader = shader.fragmentShader.replace(
+                        'void main() {',
+                        /* glsl */`
+                        uniform sampler2D thicknessMap;
+                        uniform float thicknessDistortion;
+                        uniform float thicknessAmbient;
+                        uniform float thicknessAttenuation;
+                        uniform float thicknessPower;
+                        uniform float thicknessScale;
+
+                        void RE_Direct_Scattering(const in IncidentLight directLight, const in vec2 uv, const in GeometricContext geometry, inout ReflectedLight reflectedLight) {
+                            vec3 thickness = directLight.color * texture2D(thicknessMap, uv).g;
+                            vec3 scatteringHalf = normalize(directLight.direction + (geometry.normal * thicknessDistortion));
+                            float scatteringDot = pow(saturate(dot(geometry.viewDir, -scatteringHalf)), thicknessPower) * thicknessScale;
+                            vec3 scatteringIllu = (scatteringDot + thicknessAmbient) * thickness;
+                            reflectedLight.directDiffuse += scatteringIllu * thicknessAttenuation * directLight.color;
+                        }
+
+                        void main() {
+                        `
+                    );
+
+                    shader.fragmentShader = shader.fragmentShader.replace(
+                        '#include <lights_fragment_begin>',
+                        ShaderChunk['lights_fragment_begin'].replaceAll(
+                            'RE_Direct( directLight, geometry, material, reflectedLight );',
+                            /* glsl */`
+                            RE_Direct( directLight, geometry, material, reflectedLight );
+                            RE_Direct_Scattering(directLight, vUv, geometry, reflectedLight);
+                            `
+                        )
+                    );
+                };
+
+                this.material = material;
+            }
+
+            initMesh() {
+                this.mesh = new Mesh(this.geometry, this.material);
+                this.add(this.mesh);
             }
 
             /**
              * Public methods
              */
 
-            resize = (width, height) => {
-                width = MathUtils.floorPowerOfTwo(width) / 2;
-                height = 1024;
+            ready = async () => {
+                await Promise.all([
+                    this.initGeometry(),
+                    this.initMaterial()
+                ]);
 
-                this.reflector.setSize(width, height);
+                this.initMesh();
             };
         }
 
@@ -326,26 +247,22 @@
             }
 
             initViews() {
-                this.floor = new Floor();
-                this.add(this.floor);
+                this.polyhedron = new Polyhedron();
+                this.add(this.polyhedron);
 
-                this.triangle = new TriangleView();
-                this.add(this.triangle);
+                this.light = new MouseLight();
+                this.add(this.light);
             }
         }
 
         class SceneController {
-            static init(camera, view) {
-                this.camera = camera;
+            static init(view) {
                 this.view = view;
 
-                this.mouse = new Vector2(-1, -1);
-                this.velocity = new Vector2();
-                this.lastTime = null;
-                this.lastMouse = new Vector2();
-
-                this.triangleWorldPosition = new Vector3();
-                this.screenSpacePosition = new Vector3();
+                this.mouse = new Vector2();
+                this.target = new Vector2();
+                this.lightPosition = new Vector3();
+                this.lerpSpeed = 0.25;
 
                 this.addListeners();
             }
@@ -369,48 +286,8 @@
                     return;
                 }
 
-                // Adjust for triangle screen space
-                const halfWidth = this.width / 2;
-                const halfHeight = this.height / 2;
-                const triangleWidth = Math.round(this.width * this.view.triangle.widthResolutionScale);
-                const triangleHeight = Math.round(this.height * this.view.triangle.heightResolutionScale);
-                const triangleHalfWidth = triangleWidth / 2;
-                const triangleHalfHeight = triangleHeight / 2;
-
-                this.triangleWorldPosition.setFromMatrixPosition(this.view.triangle.mesh.matrixWorld);
-                this.screenSpacePosition.copy(this.triangleWorldPosition).project(this.camera);
-
-                this.screenSpacePosition.x = (this.screenSpacePosition.x * halfWidth) + halfWidth - triangleHalfWidth;
-                this.screenSpacePosition.y = -(this.screenSpacePosition.y * halfHeight) + halfHeight - triangleHalfHeight;
-
-                // Get mouse value in 0 to 1 range, with Y flipped
-                this.mouse.set(
-                    range(clientX, this.screenSpacePosition.x, this.screenSpacePosition.x + triangleWidth, 0, 1),
-                    1 - range(clientY, this.screenSpacePosition.y, this.screenSpacePosition.y + triangleHeight, 0, 1)
-                );
-
-                // Calculate velocity
-                if (!this.lastTime) {
-                    this.lastTime = performance.now();
-                    this.lastMouse.copy(event);
-                }
-
-                const deltaX = clientX - this.lastMouse.x;
-                const deltaY = clientY - this.lastMouse.y;
-
-                this.lastMouse.copy(event);
-
-                const time = performance.now();
-
-                // Avoid dividing by 0
-                const delta = Math.max(14, time - this.lastTime);
-                this.lastTime = time;
-
-                this.velocity.x = deltaX / delta;
-                this.velocity.y = deltaY / delta;
-
-                // Flag update to prevent hanging velocity values when not moving
-                this.velocity.needsUpdate = true;
+                this.target.x = (clientX / Stage.width) * 2 - 1;
+                this.target.y = 1 - (clientY / Stage.height) * 2;
             };
 
             static onPointerUp = e => {
@@ -421,36 +298,32 @@
              * Public methods
              */
 
-            static resize = (width, height, dpr) => {
-                this.width = width;
-                this.height = height;
+            static resize = () => {
+                const { width, height } = WorldController.getFrustum(this.view.light.position.z);
 
-                this.view.floor.resize(width, height);
-                this.view.triangle.resize(width, height, dpr);
+                this.halfWidth = width / 2;
+                this.halfHeight = height / 2;
             };
 
             static update = () => {
-                // Reset velocity when mouse not moving
-                if (!this.velocity.needsUpdate) {
-                    this.mouse.set(-1, -1);
-                    this.velocity.set(0, 0);
-                    this.lastTime = null;
+                if (!this.view.visible) {
+                    return;
                 }
-                this.velocity.needsUpdate = false;
 
-                // Update flowmap inputs
-                this.view.triangle.flowmap.mouse.copy(this.mouse);
+                this.mouse.lerp(this.target, this.lerpSpeed);
 
-                // Ease velocity input, slower when fading out
-                this.view.triangle.flowmap.velocity.lerp(this.velocity, this.velocity.length() ? 0.5 : 0.1);
-                this.view.triangle.flowmap.update();
+                this.lightPosition.x = this.mouse.x * this.halfWidth;
+                this.lightPosition.y = this.mouse.y * this.halfHeight;
+                this.lightPosition.z = this.view.light.position.z;
+
+                this.view.light.position.copy(this.lightPosition);
             };
 
             static animateIn = () => {
                 this.view.visible = true;
             };
 
-            static ready = () => this.view.triangle.ready();
+            static ready = () => this.view.polyhedron.ready();
         }
 
         const BlurDirectionX = new Vector2(1, 0);
@@ -644,14 +517,23 @@
                 this.camera = camera;
 
                 this.mouse = new Vector2();
-                this.lookAt = new Vector3(0, 0, -2);
-                this.origin = new Vector3();
-                this.target = new Vector3();
-                this.targetXY = new Vector2(5, 1);
-                this.origin.copy(this.camera.position);
+                this.target = new Vector2();
 
-                this.lerpSpeed = 0.02;
+                // Motion control
+                this.group = new Group();
+                this.innerGroup = new Group();
+                this.group.add(this.innerGroup);
+                this.group.matrixAutoUpdate = false;
+                this.innerGroup.matrixAutoUpdate = false;
+
+                // Start position
+                this.innerGroup.position.copy(this.camera.position);
+
+                this.rotation = 0.0002;
+                this.lerpSpeed = 0.05;
+                this.multiplier = 1;
                 this.enabled = false;
+                this.prevent = true;
 
                 this.addListeners();
             }
@@ -671,12 +553,15 @@
             };
 
             static onPointerMove = ({ clientX, clientY }) => {
-                if (!this.enabled) {
+                if (this.prevent) {
                     return;
                 }
 
-                this.mouse.x = (clientX / Stage.width) * 2 - 1;
-                this.mouse.y = 1 - (clientY / Stage.height) * 2;
+                this.mouse.x = (clientX - this.halfWidth);
+                this.mouse.y = (clientY - this.halfHeight);
+
+                this.target.x = radians(-360) + (1 - this.mouse.x) * this.rotation * this.multiplier;
+                this.target.y = (1 - this.mouse.y) * this.rotation * this.multiplier;
             };
 
             static onPointerUp = e => {
@@ -691,13 +576,18 @@
                 this.camera.aspect = width / height;
                 this.camera.updateProjectionMatrix();
 
+                this.halfWidth = width / 2;
+                this.halfHeight = height / 2;
+
                 if (width < height) {
-                    this.camera.position.z = 14;
-                } else {
                     this.camera.position.z = 10;
+                    this.multiplier = 2;
+                } else {
+                    this.camera.position.z = 8;
+                    this.multiplier = 1;
                 }
 
-                this.origin.z = this.camera.position.z;
+                this.innerGroup.position.z = this.camera.position.z;
             };
 
             static update = () => {
@@ -705,16 +595,25 @@
                     return;
                 }
 
-                this.target.x = this.origin.x + this.targetXY.x * this.mouse.x;
-                this.target.y = this.origin.y + this.targetXY.y * this.mouse.y;
-                this.target.z = this.origin.z;
+                this.group.rotation.x += (this.target.y - this.group.rotation.x) * this.lerpSpeed;
+                this.group.rotation.y += (this.target.x - this.group.rotation.y) * this.lerpSpeed;
 
-                this.camera.position.lerp(this.target, this.lerpSpeed);
-                this.camera.lookAt(this.lookAt);
+                this.updateCamera();
+            };
+
+            static updateCamera = () => {
+                this.group.updateMatrix();
+                this.innerGroup.updateMatrix();
+                this.group.updateMatrixWorld();
+                this.innerGroup.matrixWorld.decompose(this.camera.position, this.camera.quaternion, this.camera.scale);
             };
 
             static animateIn = () => {
                 this.enabled = true;
+
+                tween(this.target, { x: radians(-360) }, 4200, 'easeInOutQuart', () => {
+                    this.prevent = false;
+                });
             };
         }
 
@@ -741,15 +640,13 @@
                 // 3D scene
                 this.scene = new Scene();
                 this.scene.background = new Color(Config.BG_COLOR);
-                this.scene.fog = new Fog(Config.BG_COLOR, 1, 100);
                 this.camera = new PerspectiveCamera(30);
                 this.camera.near = 0.5;
                 this.camera.far = 50;
-                this.camera.position.z = 10;
+                this.camera.position.z = 8;
                 this.camera.lookAt(this.scene.position);
 
                 // Global geometries
-                this.quad = new PlaneGeometry(1, 1);
                 this.screenTriangle = getFullscreenTriangle();
 
                 // Global uniforms
@@ -757,19 +654,21 @@
                 this.aspect = new Uniform(1);
                 this.time = new Uniform(0);
                 this.frame = new Uniform(0);
+
+                // Global settings
+                this.anisotropy = this.renderer.capabilities.getMaxAnisotropy();
             }
 
             static initLights() {
-                this.scene.add(new HemisphereLight(0x606060, 0x404040));
+                this.scene.add(new AmbientLight(0xffffff, 0.2));
 
-                const light = new DirectionalLight(0xffffff);
-                light.position.set(1, 1, 1);
-                this.scene.add(light);
+                this.scene.add(new HemisphereLight(0x606060, 0x404040));
             }
 
             static initLoaders() {
                 this.textureLoader = new TextureLoader();
-                this.svgLoader = new SVGLoader();
+                this.environmentLoader = new EnvironmentTextureLoader(this.renderer);
+                this.bufferGeometryLoader = new BufferGeometryLoader();
             }
 
             static addListeners() {
@@ -805,13 +704,24 @@
 
             static loadTexture = path => this.textureLoader.loadAsync(path);
 
-            static loadSVG = path => this.svgLoader.loadAsync(path);
+            static getEnvironmentTexture = (path, callback) => this.environmentLoader.load(path, callback);
+
+            static loadEnvironmentTexture = path => this.environmentLoader.loadAsync(path);
+
+            static getBufferGeometry = (path, callback) => this.bufferGeometryLoader.load(path, callback);
+
+            static loadBufferGeometry = path => this.bufferGeometryLoader.loadAsync(path);
 
             static getFrustum = offsetZ => getFrustum(this.camera, offsetZ);
         }
 
         class App {
             static async init() {
+                if (Device.agent.includes('chrome')) {
+                    this.initThread();
+                }
+
+                this.initStage();
                 this.initWorld();
                 this.initViews();
                 this.initControllers();
@@ -819,13 +729,21 @@
                 this.addListeners();
                 this.onResize();
 
-                await Promise.all([
-                    WorldController.textureLoader.ready(),
-                    SceneController.ready()
-                ]);
+                await SceneController.ready();
 
                 CameraController.animateIn();
                 SceneController.animateIn();
+            }
+
+            static initThread() {
+                ImageBitmapLoaderThread.init();
+                BufferGeometryLoaderThread.init();
+
+                Thread.shared();
+            }
+
+            static initStage() {
+                Stage.css({ cursor: 'none' });
             }
 
             static initWorld() {
@@ -842,7 +760,7 @@
                 const { renderer, scene, camera } = WorldController;
 
                 CameraController.init(camera);
-                SceneController.init(camera, this.view);
+                SceneController.init(this.view);
                 RenderManager.init(renderer, scene, camera);
             }
 
@@ -860,13 +778,13 @@
 
                 WorldController.resize(width, height, dpr);
                 CameraController.resize(width, height);
-                SceneController.resize(width, height, dpr);
+                SceneController.resize();
                 RenderManager.resize(width, height, dpr);
             };
 
             static onUpdate = (time, delta, frame) => {
                 WorldController.update(time, delta, frame);
-                CameraController.update();
+                CameraController.update(time);
                 SceneController.update();
                 RenderManager.update(time, delta, frame);
             };

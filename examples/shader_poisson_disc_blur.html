@@ -18,13 +18,9 @@
         class Config {
             static BG_COLOR = '#0e0e0e';
             static UI_COLOR = 'rgba(255, 255, 255, 0.94)';
-
-            static BREAKPOINT = 1000;
         }
 
         import periodic3d from '../src/shaders/modules/noise/periodic3d.glsl.js';
-
-        // Based on https://github.com/spite/perlin-experiments
 
         class SceneView extends Group {
             constructor() {
@@ -40,18 +36,19 @@
 
                 const material = new MeshStandardMaterial({ roughness: 0 });
 
-                // https://threejs.org/examples/#webgl_materials_modified
+                // Based on https://github.com/spite/perlin-experiments
 
                 material.onBeforeCompile = shader => {
                     shader.uniforms.time = time;
 
                     shader.vertexShader = shader.vertexShader.replace(
-                        '#include <clipping_planes_pars_vertex>',
+                        'void main() {',
                         /* glsl */`
-                        #include <clipping_planes_pars_vertex>
                         uniform float time;
 
                         ${periodic3d}
+
+                        void main() {
                         `
                     );
 
@@ -231,8 +228,6 @@
 
                 if (width < height) {
                     this.camera.position.z = 10;
-                } else if (width < Config.BREAKPOINT) {
-                    this.camera.position.z = 6;
                 } else {
                     this.camera.position.z = 8;
                 }

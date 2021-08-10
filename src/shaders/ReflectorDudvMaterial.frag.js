@@ -1,3 +1,5 @@
+import dither from './modules/dither/dither.glsl.js';
+
 export default /* glsl */`
 precision highp float;
 
@@ -7,6 +9,8 @@ uniform sampler2D tReflectBlur;
 
 varying vec2 vUv;
 varying vec4 vCoord;
+
+${dither}
 
 void main() {
     vec2 reflectionUv = vCoord.xy / vCoord.w;
@@ -23,5 +27,7 @@ void main() {
     color = mix(color, blur, smoothstep(0.5, 1.0, dudv.r));
 
     gl_FragColor = color * mix(0.6, 0.75, dudv.g);
+
+    gl_FragColor.rgb = dither(gl_FragColor.rgb);
 }
 `;

@@ -15,11 +15,11 @@ export class BufferGeometryLoaderThread {
             fetch(path, options).then(response => {
                 return response.json();
             }).then(({ data }) => {
-                const buffers = {
-                    position: new Float32Array(data.attributes.position.array),
-                    normal: new Float32Array(data.attributes.normal.array),
-                    uv: new Float32Array(data.attributes.uv.array)
-                };
+                const buffers = {};
+
+                for (const key in data.attributes) {
+                    buffers[key] = new Float32Array(data.attributes[key].array);
+                }
 
                 postMessage({ id, message: buffers });
             }).catch(error => {

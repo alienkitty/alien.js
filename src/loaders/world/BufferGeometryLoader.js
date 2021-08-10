@@ -19,11 +19,11 @@ export class BufferGeometryLoader extends Loader {
             promise = fetch(path, Assets.options).then(response => {
                 return response.json();
             }).then(({ data }) => {
-                const buffers = {
-                    position: new Float32Array(data.attributes.position.array),
-                    normal: new Float32Array(data.attributes.normal.array),
-                    uv: new Float32Array(data.attributes.uv.array)
-                };
+                const buffers = {};
+
+                for (const key in data.attributes) {
+                    buffers[key] = new Float32Array(data.attributes[key].array);
+                }
 
                 return buffers;
             });
@@ -38,6 +38,10 @@ export class BufferGeometryLoader extends Loader {
             geometry.setAttribute('position', new BufferAttribute(buffers.position, 3));
             geometry.setAttribute('normal', new BufferAttribute(buffers.normal, 3));
             geometry.setAttribute('uv', new BufferAttribute(buffers.uv, 2));
+
+            if (buffers.uv2) {
+                geometry.setAttribute('uv2', new BufferAttribute(buffers.uv2, 2));
+            }
 
             this.increment();
 

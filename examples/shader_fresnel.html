@@ -41,13 +41,25 @@
             ${periodic3d}
 
             void main() {
-                float f = 0.05 * pnoise(vec3(2.0 * normal + uTime), vec3(10.0));
+                // http://connorbell.ca/2017/09/09/Generating-Looping-Noise.html
 
-                vec4 worldPosition = modelMatrix * vec4(position + f * normal, 1.0);
+                float loopLength = 2.0;
+                float transitionStart = 1.5;
+                float time = mod(uTime, loopLength);
+
+                float v1 = 0.05 * pnoise(vec3(2.0 * normal + time), vec3(10.0));
+                float v2 = 0.05 * pnoise(vec3(2.0 * normal + time - loopLength), vec3(10.0));
+
+                float transitionProgress = (time - transitionStart) / (loopLength - transitionStart);
+                float progress = clamp(transitionProgress, 0.0, 1.0);
+
+                float result = mix(v1, v2, progress);
+
+                vec4 worldPosition = modelMatrix * vec4(position + result * normal, 1.0);
                 vWorldNormal = normalize(modelMatrix * vec4(normal, 0.0)).xyz;
                 vViewDirection = normalize(cameraPosition - worldPosition.xyz);
 
-                gl_Position = projectionMatrix * modelViewMatrix * vec4(position + f * normal, 1.0);
+                gl_Position = projectionMatrix * modelViewMatrix * vec4(position + result * normal, 1.0);
             }
         `;
 

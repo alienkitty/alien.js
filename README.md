@@ -87,7 +87,6 @@ In its design, everything is an ES module, all user interfaces and components fo
 [flowmap](https://alien.js.org/examples/shader_flowmap_view.html) (view)  
 [depth](https://alien.js.org/examples/shader_depth.html) (fragment depth with dither)  
 [hologram](https://alien.js.org/examples/shader_hologram.html)  
-[text](https://alien.js.org/examples/shader_text.html) (MSDF text)  
 [subsurface scattering](https://alien.js.org/examples/shader_subsurface_scattering.html) (SSS, [debug](https://alien.js.org/examples/shader_subsurface_scattering.html?debug))  
 [baked cube](https://alien.js.org/examples/shader_baked_cube.html)  
 [baked cube](https://alien.js.org/examples/shader_baked_cube_dudv.html) (DuDv)  
@@ -98,6 +97,7 @@ In its design, everything is an ES module, all user interfaces and components fo
 [baked spherical cube](https://alien.js.org/examples/shader_baked_spherical_cube.html)  
 [baked spherical cube](https://alien.js.org/examples/shader_baked_spherical_cube_dudv.html) (DuDv)  
 [baked spherical cube](https://alien.js.org/examples/shader_baked_spherical_cube_sss.html) (SSS, [debug](https://alien.js.org/examples/shader_baked_spherical_cube_sss.html?debug))  
+[text](https://alien.js.org/examples/shader_text.html) (MSDF text)  
 [alienkitty](https://alienkitty.com/) (2d scene, flowmap with RGB shift, MSDF text)  
 
 #### thread

@@ -1,8 +1,8 @@
 // Based on https://github.com/mattdesl/glsl-fxaa
 
 export default /* glsl */`
-attribute vec2 uv;
 attribute vec3 position;
+attribute vec2 uv;
 
 uniform vec2 uResolution;
 

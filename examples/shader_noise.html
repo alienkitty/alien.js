@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
-    <title>Shader Noise — Alien.js</title>
+    <title>Noise Shader — Alien.js</title>
 
     <link rel="preconnect" href="https://fonts.gstatic.com">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto+Mono">
@@ -20,8 +20,8 @@
         // Based on https://codepen.io/vaalentin/pen/MKMmXG
 
         const vertexShader = /* glsl */`
-            attribute vec2 uv;
             attribute vec3 position;
+            attribute vec2 uv;
 
             varying vec2 vUv;
 

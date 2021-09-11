@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
-    <title>Shader Baked Subsurface Scattering — Alien.js</title>
+    <title>Baked Subsurface Scattering Shader — Alien.js</title>
 
     <link rel="preconnect" href="https://fonts.gstatic.com">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto+Mono">
@@ -25,8 +25,8 @@
         import rgbshift from '../src/shaders/modules/rgbshift/rgbshift.glsl.js';
 
         const vertexCompositeShader = /* glsl */`
-            attribute vec2 uv;
             attribute vec3 position;
+            attribute vec2 uv;
 
             varying vec2 vUv;
 
@@ -168,7 +168,7 @@
                     shader.uniforms.thicknessMap = new Uniform(thicknessMap);
                     shader.uniforms.thicknessDistortion = new Uniform(0.1);
                     shader.uniforms.thicknessAmbient = new Uniform(0.4);
-                    shader.uniforms.thicknessAttenuation = new Uniform(5);
+                    shader.uniforms.thicknessAttenuation = new Uniform(0.8);
                     shader.uniforms.thicknessPower = new Uniform(2);
                     shader.uniforms.thicknessScale = new Uniform(16);
 

@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
-    <title>Shader Flowmap View — Alien.js</title>
+    <title>Flowmap Shader View — Alien.js</title>
 
     <link rel="preconnect" href="https://fonts.gstatic.com">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto+Mono">
@@ -25,8 +25,8 @@
         // Based on https://oframe.github.io/ogl/examples/?src=mouse-flowmap.html by gordonnl
 
         const vertexFlowShader = /* glsl */`
-            attribute vec2 uv;
             attribute vec3 position;
+            attribute vec2 uv;
 
             uniform mat4 modelViewMatrix;
             uniform mat4 projectionMatrix;
@@ -82,8 +82,8 @@
         }
 
         const vertexCompositeShader = /* glsl */`
-            attribute vec2 uv;
             attribute vec3 position;
+            attribute vec2 uv;
 
             varying vec2 vUv;
 

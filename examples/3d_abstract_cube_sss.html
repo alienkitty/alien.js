@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
-    <title>Shader Subsurface Scattering — Alien.js</title>
+    <title>Abstract Cube — Alien.js</title>
 
     <link rel="preconnect" href="https://fonts.gstatic.com">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto+Mono">
@@ -25,8 +25,8 @@
         import rgbshift from '../src/shaders/modules/rgbshift/rgbshift.glsl.js';
 
         const vertexCompositeShader = /* glsl */`
-            attribute vec2 uv;
             attribute vec3 position;
+            attribute vec2 uv;
 
             varying vec2 vUv;
 
@@ -154,10 +154,10 @@
 
                 material.onBeforeCompile = shader => {
                     shader.uniforms.thicknessMap = new Uniform(thicknessMap);
-                    shader.uniforms.thicknessDistortion = new Uniform(0.1);
+                    shader.uniforms.thicknessDistortion = new Uniform(0.185);
                     shader.uniforms.thicknessAmbient = new Uniform(0);
-                    shader.uniforms.thicknessAttenuation = new Uniform(5);
-                    shader.uniforms.thicknessPower = new Uniform(16);
+                    shader.uniforms.thicknessAttenuation = new Uniform(1);
+                    shader.uniforms.thicknessPower = new Uniform(20);
                     shader.uniforms.thicknessScale = new Uniform(4);
 
                     shader.fragmentShader = shader.fragmentShader.replace(

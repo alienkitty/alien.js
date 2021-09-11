@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
-    <title>Soft Particles — Alien.js</title>
+    <title>Soft Particles Shader — Alien.js</title>
 
     <link rel="preconnect" href="https://fonts.gstatic.com">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto+Mono">
@@ -13,7 +13,7 @@
 <body>
     <div id="root"></div>
     <script type="module">
-        import { ACESFilmicToneMapping, AdditiveBlending, AmbientLight, BloomCompositeMaterial, BufferAttribute, BufferGeometry, Color, DepthTexture, Device, DirectionalLight, EnvironmentTextureLoader, Events, FXAAMaterial, Group, HemisphereLight, ImageBitmapLoaderThread, LuminosityMaterial, MathUtils, Mesh, MeshStandardMaterial, OrbitControls, OrthographicCamera, PerspectiveCamera, Points, RGBFormat, RawShaderMaterial, Scene, SceneCompositeMaterial, SphericalCubeTextureLoader, Stage, TextureLoader, Thread, Uniform, UnrealBloomBlurMaterial, Vector2, WebGL1Renderer, WebGLRenderTarget, getFullscreenTriangle, getSphericalCube, mix, ticker } from '../build/alien.js';
+        import { ACESFilmicToneMapping, AdditiveBlending, AmbientLight, BloomCompositeMaterial, BufferAttribute, BufferGeometry, Color, DepthTexture, Device, DirectionalLight, EnvironmentTextureLoader, Events, FXAAMaterial, Group, HemisphereLight, ImageBitmapLoaderThread, LuminosityMaterial, MathUtils, Mesh, MeshStandardMaterial, OrbitControls, OrthographicCamera, PerspectiveCamera, Points, RGBFormat, RawShaderMaterial, RepeatWrapping, Scene, SceneCompositeMaterial, SphereGeometry, Stage, TextureLoader, Thread, Uniform, UnrealBloomBlurMaterial, Vector2, WebGL1Renderer, WebGLRenderTarget, getFullscreenTriangle, mix, ticker } from '../build/alien.js';
 
         class Config {
             static BG_COLOR = '#0e0e0e';
@@ -162,53 +162,54 @@
             }
 
             async initMesh() {
-                const { anisotropy, loadSphericalCubeTextures, loadEnvironmentTexture } = WorldController;
+                const { anisotropy, loadTexture, loadEnvironmentTexture } = WorldController;
 
-                // Spherical cube geometry
-                const geometry = getSphericalCube(1, 32);
+                const geometry = new SphereGeometry(1, 80, 80);
 
                 // 2nd set of UV's for aoMap and lightMap
                 geometry.attributes.uv2 = geometry.attributes.uv;
 
                 // Textures
                 const [map, normalMap, ormMap, envMap] = await Promise.all([
-                    // loadSphericalCubeTextures('assets/textures/uv.jpg'),
-                    loadSphericalCubeTextures('assets/textures/pbr/pitted_metal_basecolor.jpg'),
-                    loadSphericalCubeTextures('assets/textures/pbr/pitted_metal_normal.jpg'),
+                    // loadTexture('assets/textures/uv.jpg'),
+                    loadTexture('assets/textures/pbr/pitted_metal_basecolor.jpg'),
+                    loadTexture('assets/textures/pbr/pitted_metal_normal.jpg'),
                     // https://occlusion-roughness-metalness.glitch.me/
-                    loadSphericalCubeTextures('assets/textures/pbr/pitted_metal_orm.jpg'),
+                    loadTexture('assets/textures/pbr/pitted_metal_orm.jpg'),
                     loadEnvironmentTexture('assets/textures/env.jpg')
                 ]);
 
-                // Materials
-                const material = [];
+                map.anisotropy = anisotropy;
+                map.wrapS = RepeatWrapping;
+                map.wrapT = RepeatWrapping;
+                map.repeat.set(2, 1);
 
-                for (let i = 0; i < 6; i++) {
-                    map[i].anisotropy = anisotropy;
-                    normalMap[i].anisotropy = anisotropy;
-                    ormMap[i].anisotropy = anisotropy;
+                normalMap.anisotropy = anisotropy;
+                normalMap.wrapS = RepeatWrapping;
+                normalMap.wrapT = RepeatWrapping;
+                normalMap.repeat.set(2, 1);
 
-                    material[i] = new MeshStandardMaterial({
-                        color: Config.BG_COLOR,
-                        roughness: 1,
-                        metalness: 1,
-                        map: map[i],
-                        aoMap: ormMap[i],
-                        aoMapIntensity: 1,
-                        roughnessMap: ormMap[i],
-                        metalnessMap: ormMap[i],
-                        normalMap: normalMap[i],
-                        normalScale: new Vector2(1, 1),
-                        envMap,
-                        envMapIntensity: 0.5
-                    });
-                }
+                ormMap.anisotropy = anisotropy;
+                ormMap.wrapS = RepeatWrapping;
+                ormMap.wrapT = RepeatWrapping;
+                ormMap.repeat.set(2, 1);
+
+                const material = new MeshStandardMaterial({
+                    color: Config.BG_COLOR,
+                    roughness: 1,
+                    metalness: 1,
+                    map,
+                    aoMap: ormMap,
+                    aoMapIntensity: 1,
+                    roughnessMap: ormMap,
+                    metalnessMap: ormMap,
+                    normalMap,
+                    normalScale: new Vector2(1, 1),
+                    envMap,
+                    envMapIntensity: 0.5
+                });
 
                 const mesh = new Mesh(geometry, material);
-
-                // Flip horizontally
-                mesh.scale.x = -1;
-
                 this.add(mesh);
             }
         }
@@ -476,10 +477,6 @@
 
             static initLoaders() {
                 this.textureLoader = new TextureLoader();
-
-                this.spherizeLoader = new SphericalCubeTextureLoader(this.renderer, true);
-                this.spherizeLoader.setOptions({ size: 512 });
-
                 this.environmentLoader = new EnvironmentTextureLoader(this.renderer);
             }
 
@@ -536,10 +533,6 @@
             static getEnvironmentTexture = (path, callback) => this.environmentLoader.load(path, callback);
 
             static loadEnvironmentTexture = path => this.environmentLoader.loadAsync(path);
-
-            static getSphericalCubeTextures = (path, callback) => this.spherizeLoader.load(path, callback);
-
-            static loadSphericalCubeTextures = path => this.spherizeLoader.loadAsync(path);
         }
 
         class App {

@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
-    <title>Shader Reflection — Alien.js</title>
+    <title>Reflection Shader — Alien.js</title>
 
     <link rel="preconnect" href="https://fonts.gstatic.com">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto+Mono">
@@ -23,8 +23,8 @@
         import rgbshift from '../src/shaders/modules/rgbshift/rgbshift.glsl.js';
 
         const vertexCompositeShader = /* glsl */`
-            attribute vec2 uv;
             attribute vec3 position;
+            attribute vec2 uv;
 
             varying vec2 vUv;
 
@@ -196,6 +196,7 @@
                         '#include <project_vertex>',
                         /* glsl */`
                         #include <project_vertex>
+
                         vCoord = textureMatrix * vec4(transformed, 1.0);
                         `
                     );
@@ -214,6 +215,7 @@
                         'vec3 totalEmissiveRadiance = emissive;',
                         /* glsl */`
                         vec3 totalEmissiveRadiance = emissive;
+
                         totalEmissiveRadiance += texture2DProj(reflectMap, vCoord).rgb * 0.2;
                         `
                     );

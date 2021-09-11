@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
-    <title>Post-processing Film Grain — Alien.js</title>
+    <title>Film Grain Post-processing — Alien.js</title>
 
     <link rel="preconnect" href="https://fonts.gstatic.com">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto+Mono">
@@ -25,8 +25,8 @@
         import rgbshift from '../src/shaders/modules/rgbshift/rgbshift.glsl.js';
 
         const vertexCompositeShader = /* glsl */`
-            attribute vec2 uv;
             attribute vec3 position;
+            attribute vec2 uv;
 
             varying vec2 vUv;
 
@@ -352,7 +352,7 @@
             }
 
             static initLights() {
-                this.scene.add(new AmbientLight(0xffffff, 2));
+                this.scene.add(new AmbientLight(0xffffff));
 
                 this.scene.add(new HemisphereLight(0x606060, 0x404040));
 

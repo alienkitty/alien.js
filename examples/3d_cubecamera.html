@@ -13,7 +13,7 @@
 <body>
     <div id="root"></div>
     <script type="module">
-        import { ACESFilmicToneMapping, AdditiveBlending, BackSide, BlurMaterial, Color, CubeCamera, Device, Events, FilmGrainFXAAMaterial, Group, IcosahedronGeometry, ImageBitmapLoaderThread, LinearMipmapLinearFilter, MathUtils, Mesh, MeshBasicMaterial, MultiplyOperation, NoBlending, OrthographicCamera, PerspectiveCamera, RGBFormat, RawShaderMaterial, Scene, Sprite, SpriteMaterial, Stage, TextureLoader, Thread, Uniform, Vector2, Vector3, WebGL1Renderer, WebGLCubeRenderTarget, WebGLRenderTarget, Wobble, getFullscreenTriangle, getSphericalCube, radians, ticker, tween } from '../build/alien.js';
+        import { ACESFilmicToneMapping, AdditiveBlending, BackSide, BlurMaterial, Color, CubeCamera, Device, Events, FilmGrainFXAAMaterial, Group, IcosahedronGeometry, ImageBitmapLoaderThread, LinearMipmapLinearFilter, MathUtils, Mesh, MeshBasicMaterial, MultiplyOperation, NoBlending, OrthographicCamera, PerspectiveCamera, RGBFormat, RawShaderMaterial, Scene, SphereGeometry, Sprite, SpriteMaterial, Stage, TextureLoader, Thread, Uniform, Vector2, Vector3, WebGL1Renderer, WebGLCubeRenderTarget, WebGLRenderTarget, Wobble, getFullscreenTriangle, radians, ticker, tween } from '../build/alien.js';
 
         class Config {
             static BG_COLOR = '#030627';
@@ -33,8 +33,8 @@
         // Based on https://github.com/spite/codevember-2016
 
         const vertexCompositeShader = /* glsl */`
-            attribute vec2 uv;
             attribute vec3 position;
+            attribute vec2 uv;
 
             varying vec2 vUv;
 
@@ -167,8 +167,7 @@
             initMesh() {
                 const { cubeRenderTarget } = WorldController;
 
-                // Spherical cube geometry
-                const geometry = getSphericalCube(1, 32);
+                const geometry = new SphereGeometry(1, 80, 80);
 
                 // Chrome material
                 const material = new MeshBasicMaterial({

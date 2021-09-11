@@ -86,6 +86,7 @@ In its design, everything is an ES module, all user interfaces and components fo
 [flowmap](https://alien.js.org/examples/shader_flowmap_rgbshift.html) (RGB shift)  
 [flowmap](https://alien.js.org/examples/shader_flowmap_view.html) (view)  
 [depth](https://alien.js.org/examples/shader_depth.html) (fragment depth with dither)  
+[fresnel](https://alien.js.org/examples/shader_fresnel.html)  
 [hologram](https://alien.js.org/examples/shader_hologram.html)  
 [subsurface scattering](https://alien.js.org/examples/shader_subsurface_scattering.html) (SSS, [debug](https://alien.js.org/examples/shader_subsurface_scattering.html?debug))  
 [baked cube](https://alien.js.org/examples/shader_baked_cube.html)  

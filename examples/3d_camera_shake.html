@@ -13,7 +13,7 @@
 <body>
     <div id="root"></div>
     <script type="module">
-        import { AssetLoader, Assets, Color, CylinderGeometry, Device, DirectionalLight, EventEmitter, Events, Fog, Group, HemisphereLight, MathUtils, Mesh, MeshStandardMaterial, PerspectiveCamera, PlaneGeometry, PointLight, Reflector, RepeatWrapping, Scene, Sound3D, SphereGeometry, Stage, TextureLoader, Thread, Uniform, Vector2, Vector3, WebAudio, WebGL1Renderer, Wobble, clamp, clearTween, delayedCall, getFrustum, radians, range, ticker, tween } from '../build/alien.js';
+        import { AssetLoader, Assets, Color, CylinderGeometry, Device, DirectionalLight, EventEmitter, Events, Fog, Group, HemisphereLight, MathUtils, Mesh, MeshStandardMaterial, PerspectiveCamera, PlaneGeometry, PointLight, Reflector, ReflectorMaterial, RepeatWrapping, Scene, Sound3D, SphereGeometry, Stage, TextureLoader, Thread, Uniform, Vector2, Vector3, WebAudio, WebGL1Renderer, Wobble, clamp, clearTween, delayedCall, getFrustum, radians, range, ticker, tween } from '../build/alien.js';
 
         import { World } from 'https://unpkg.com/oimo/build/oimo.module.js';
 
@@ -396,24 +396,45 @@
 
                 this.size = new Vector3(1000, 3, 1000);
 
-                this.initMesh();
+                this.initReflector();
             }
 
-            initMesh() {
-                const { getTexture } = WorldController;
+            initReflector() {
+                this.reflector = new Reflector();
+            }
+
+            async initMesh() {
+                const { scene, loadTexture } = WorldController;
 
                 const geometry = new PlaneGeometry(1000, 1000);
 
-                const map = getTexture('assets/textures/pbr/polished_concrete_basecolor.jpg');
+                const map = await loadTexture('assets/textures/pbr/polished_concrete_basecolor.jpg');
                 map.wrapS = RepeatWrapping;
                 map.wrapT = RepeatWrapping;
                 map.repeat.set(16, 16);
 
-                this.reflector = new Reflector(geometry, { map });
-                this.reflector.position.y = this.size.y / 2;
-                this.reflector.rotation.x = -Math.PI / 2;
+                const { fog } = scene;
 
-                this.add(this.reflector);
+                const material = new ReflectorMaterial({
+                    map,
+                    fog,
+                    dithering: true
+                });
+                material.uniforms.tReflect = this.reflector.renderTargetUniform;
+                material.uniforms.uMatrix = this.reflector.textureMatrixUniform;
+
+                const mesh = new Mesh(geometry, material);
+                mesh.position.y = this.size.y / 2;
+                mesh.rotation.x = -Math.PI / 2;
+                mesh.add(this.reflector);
+
+                mesh.onBeforeRender = (renderer, scene, camera) => {
+                    this.visible = false;
+                    this.reflector.update(renderer, scene, camera);
+                    this.visible = true;
+                };
+
+                this.add(mesh);
             }
 
             /**
@@ -447,6 +468,20 @@
                 this.mallet = new Mallet();
                 this.add(this.mallet);
             }
+
+            /**
+             * Public methods
+             */
+
+            resize = (width, height) => {
+                this.floor.resize(width, height);
+            };
+
+            ready = () => Promise.all([
+                this.floor.initMesh(),
+                this.wand.initMesh(),
+                this.mallet.initMesh()
+            ]);
         }
 
         class SceneController {
@@ -499,7 +534,7 @@
                 this.width = width;
                 this.height = height;
 
-                this.view.floor.resize(width, height);
+                this.view.resize(width, height);
 
                 const frustum = WorldController.getFrustum(this.view.mallet.position.z);
                 this.physics.resize(frustum.width, frustum.height);
@@ -520,7 +555,10 @@
                 this.view.visible = true;
             };
 
-            static ready = () => this.physics.ready();
+            static ready = () => Promise.all([
+                this.view.ready(),
+                this.physics.ready()
+            ]);
         }
 
         class AudioController {

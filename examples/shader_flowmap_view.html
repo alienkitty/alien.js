@@ -13,7 +13,7 @@
 <body>
     <div id="root"></div>
     <script type="module">
-        import { ACESFilmicToneMapping, AdditiveBlending, BloomCompositeMaterial, Color, DirectionalLight, Events, FXAAMaterial, Flowmap, Fog, Group, HemisphereLight, LuminosityMaterial, MathUtils, Mesh, MeshStandardMaterial, NoBlending, OrthographicCamera, PerspectiveCamera, PlaneGeometry, RGBFormat, RawShaderMaterial, Reflector, RepeatWrapping, SVGLoader, Scene, Stage, TextureLoader, Uniform, UnrealBloomBlurMaterial, Vector2, Vector3, WebGL1Renderer, WebGLRenderTarget, getFrustum, getFullscreenTriangle, mix, range, ticker } from '../build/alien.js';
+        import { ACESFilmicToneMapping, AdditiveBlending, BloomCompositeMaterial, Color, DirectionalLight, Events, FXAAMaterial, Flowmap, Fog, Group, HemisphereLight, LuminosityMaterial, MathUtils, Mesh, MeshStandardMaterial, NoBlending, OrthographicCamera, PerspectiveCamera, PlaneGeometry, RGBFormat, RawShaderMaterial, Reflector, ReflectorMaterial, RepeatWrapping, SVGLoader, Scene, Stage, TextureLoader, Uniform, UnrealBloomBlurMaterial, Vector2, Vector3, WebGL1Renderer, WebGLRenderTarget, getFrustum, getFullscreenTriangle, mix, range, ticker } from '../build/alien.js';
 
         class Config {
             static BG_COLOR = '#0e0e0e';
@@ -279,29 +279,45 @@
             constructor() {
                 super();
 
-                this.initMesh();
+                this.initReflector();
             }
 
-            initMesh() {
-                const { scene, quad, getTexture } = WorldController;
+            initReflector() {
+                this.reflector = new Reflector();
+            }
 
-                const map = getTexture('assets/textures/pbr/polished_concrete_basecolor.jpg');
+            async initMesh() {
+                const { scene, loadTexture } = WorldController;
+
+                const geometry = new PlaneGeometry(110, 110);
+
+                const map = await loadTexture('assets/textures/pbr/polished_concrete_basecolor.jpg');
                 map.wrapS = RepeatWrapping;
                 map.wrapT = RepeatWrapping;
                 map.repeat.set(16, 16);
 
                 const { fog } = scene;
 
-                this.reflector = new Reflector(quad, {
+                const material = new ReflectorMaterial({
                     map,
                     fog,
                     dithering: true
                 });
-                this.reflector.position.y = -1.6;
-                this.reflector.rotation.x = -Math.PI / 2;
-                this.reflector.scale.set(110, 110, 1);
+                material.uniforms.tReflect = this.reflector.renderTargetUniform;
+                material.uniforms.uMatrix = this.reflector.textureMatrixUniform;
 
-                this.add(this.reflector);
+                const mesh = new Mesh(geometry, material);
+                mesh.position.y = -1.6;
+                mesh.rotation.x = -Math.PI / 2;
+                mesh.add(this.reflector);
+
+                mesh.onBeforeRender = (renderer, scene, camera) => {
+                    this.visible = false;
+                    this.reflector.update(renderer, scene, camera);
+                    this.visible = true;
+                };
+
+                this.add(mesh);
             }
 
             /**
@@ -332,6 +348,20 @@
                 this.triangle = new TriangleView();
                 this.add(this.triangle);
             }
+
+            /**
+             * Public methods
+             */
+
+            resize = (width, height, dpr) => {
+                this.floor.resize(width, height);
+                this.triangle.resize(width, height, dpr);
+            };
+
+            ready = () => Promise.all([
+                this.floor.initMesh(),
+                this.triangle.ready()
+            ]);
         }
 
         class SceneController {
@@ -425,8 +455,7 @@
                 this.width = width;
                 this.height = height;
 
-                this.view.floor.resize(width, height);
-                this.view.triangle.resize(width, height, dpr);
+                this.view.resize(width, height, dpr);
             };
 
             static update = () => {
@@ -450,7 +479,7 @@
                 this.view.visible = true;
             };
 
-            static ready = () => this.view.triangle.ready();
+            static ready = () => this.view.ready();
         }
 
         const BlurDirectionX = new Vector2(1, 0);

@@ -13,7 +13,7 @@
 <body>
     <div id="root"></div>
     <script type="module">
-        import { ACESFilmicToneMapping, BloomCompositeMaterial, Color, DirectionalLight, Events, FXAAMaterial, Fog, Group, HemisphereLight, LuminosityMaterial, MathUtils, Mesh, MeshStandardMaterial, NoBlending, OrthographicCamera, PerspectiveCamera, PlaneGeometry, RGBFormat, RawShaderMaterial, Reflector, RepeatWrapping, SVGLoader, Scene, Stage, TextureLoader, Uniform, UnrealBloomBlurMaterial, Vector2, Vector3, WebGL1Renderer, WebGLRenderTarget, getFullscreenTriangle, mix, ticker } from '../build/alien.js';
+        import { ACESFilmicToneMapping, BloomCompositeMaterial, Color, DirectionalLight, Events, FXAAMaterial, Fog, Group, HemisphereLight, LuminosityMaterial, MathUtils, Mesh, MeshStandardMaterial, NoBlending, OrthographicCamera, PerspectiveCamera, PlaneGeometry, RGBFormat, RawShaderMaterial, Reflector, ReflectorMaterial, RepeatWrapping, SVGLoader, Scene, Stage, TextureLoader, Uniform, UnrealBloomBlurMaterial, Vector2, Vector3, WebGL1Renderer, WebGLRenderTarget, getFullscreenTriangle, mix, ticker } from '../build/alien.js';
 
         class Config {
             static BG_COLOR = '#0e0e0e';
@@ -117,30 +117,45 @@
             constructor() {
                 super();
 
-                this.initMesh();
+                this.initReflector();
             }
 
-            initMesh() {
-                const { scene, getTexture } = WorldController;
+            initReflector() {
+                this.reflector = new Reflector();
+            }
+
+            async initMesh() {
+                const { scene, loadTexture } = WorldController;
 
                 const geometry = new PlaneGeometry(110, 110);
 
-                const map = getTexture('assets/textures/pbr/polished_concrete_basecolor.jpg');
+                const map = await loadTexture('assets/textures/pbr/polished_concrete_basecolor.jpg');
                 map.wrapS = RepeatWrapping;
                 map.wrapT = RepeatWrapping;
                 map.repeat.set(16, 16);
 
                 const { fog } = scene;
 
-                this.reflector = new Reflector(geometry, {
+                const material = new ReflectorMaterial({
                     map,
                     fog,
                     dithering: true
                 });
-                this.reflector.position.y = -1.6;
-                this.reflector.rotation.x = -Math.PI / 2;
+                material.uniforms.tReflect = this.reflector.renderTargetUniform;
+                material.uniforms.uMatrix = this.reflector.textureMatrixUniform;
 
-                this.add(this.reflector);
+                const mesh = new Mesh(geometry, material);
+                mesh.position.y = -1.6;
+                mesh.rotation.x = -Math.PI / 2;
+                mesh.add(this.reflector);
+
+                mesh.onBeforeRender = (renderer, scene, camera) => {
+                    this.visible = false;
+                    this.reflector.update(renderer, scene, camera);
+                    this.visible = true;
+                };
+
+                this.add(mesh);
             }
 
             /**
@@ -171,6 +186,19 @@
                 this.triangle = new Triangle();
                 this.add(this.triangle);
             }
+
+            /**
+             * Public methods
+             */
+
+            resize = (width, height) => {
+                this.floor.resize(width, height);
+            };
+
+            ready = () => Promise.all([
+                this.floor.initMesh(),
+                this.triangle.initMesh()
+            ]);
         }
 
         class SceneController {
@@ -183,7 +211,7 @@
              */
 
             static resize = (width, height) => {
-                this.view.floor.resize(width, height);
+                this.view.resize(width, height);
             };
 
             static update = () => {
@@ -193,7 +221,7 @@
                 this.view.visible = true;
             };
 
-            static ready = () => this.view.triangle.initMesh();
+            static ready = () => this.view.ready();
         }
 
         const BlurDirectionX = new Vector2(1, 0);

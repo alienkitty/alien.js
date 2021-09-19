@@ -13,7 +13,7 @@
 <body>
     <div id="root"></div>
     <script type="module">
-        import { BasicMaterial, BufferGeometryLoader, BufferGeometryLoaderThread, Color, Device, Events, FXAAMaterial, Group, ImageBitmapLoaderThread, Mesh, OrbitControls, OrthographicCamera, PerspectiveCamera, PlaneGeometry, RGBFormat, ReflectorDudvMaterial, ReflectorObject, RepeatWrapping, Scene, Stage, TextureLoader, Thread, Uniform, Vector2, WebGL1Renderer, WebGLRenderTarget, getFullscreenTriangle, ticker } from '../build/alien.js';
+        import { BasicMaterial, BufferGeometryLoader, BufferGeometryLoaderThread, Color, Device, Events, FXAAMaterial, Group, ImageBitmapLoaderThread, Mesh, OrbitControls, OrthographicCamera, PerspectiveCamera, PlaneGeometry, RGBFormat, Reflector, ReflectorDudvMaterial, RepeatWrapping, Scene, Stage, TextureLoader, Thread, Uniform, Vector2, WebGL1Renderer, WebGLRenderTarget, getFullscreenTriangle, ticker } from '../build/alien.js';
 
         class Config {
             static BG_COLOR = '#fff';
@@ -73,7 +73,7 @@
             }
 
             initReflector() {
-                this.reflector = new ReflectorObject();
+                this.reflector = new Reflector();
             }
 
             async initMesh() {

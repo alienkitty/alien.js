@@ -31,6 +31,7 @@ export class Reflector extends Mesh {
         height = 512,
         clipBias = 0,
         blurIterations = 8,
+        blurFactor = 1,
         map = null,
         fog = null,
         dithering = false
@@ -79,6 +80,7 @@ export class Reflector extends Mesh {
 
         // Reflection blur material
         this.blurMaterial = new ReflectorBlurMaterial();
+        this.blurMaterial.uniforms.uBluriness.value = blurFactor;
         this.blurMaterial.uniforms.uResolution.value.set(width, height);
 
         // Fullscreen triangle

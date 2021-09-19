@@ -8,6 +8,7 @@ export class ReflectorBlurMaterial extends RawShaderMaterial {
         super({
             uniforms: {
                 tMap: new Uniform(null),
+                uBluriness: new Uniform(1),
                 uDirection: new Uniform(new Vector2(1, 0)),
                 uResolution: new Uniform(new Vector2())
             },

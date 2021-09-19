@@ -5,7 +5,7 @@
  */
 
 import {
-    Color,
+    Group,
     Matrix4,
     Mesh,
     OrthographicCamera,
@@ -19,24 +19,19 @@ import {
     WebGLRenderTarget
 } from 'three';
 
-import { ReflectorMaterial } from '../../materials/ReflectorMaterial.js';
 import { ReflectorBlurMaterial } from '../../materials/ReflectorBlurMaterial.js';
 
 import { getFullscreenTriangle } from './Utils3D.js';
 
-export class Reflector extends Mesh {
-    constructor(geometry, {
-        color = new Color(0x7F7F7F),
+export class Reflector extends Group {
+    constructor({
         width = 512,
         height = 512,
         clipBias = 0,
         blurIterations = 8,
-        blurFactor = 1,
-        map = null,
-        fog = null,
-        dithering = false
+        blurFactor = 1
     } = {}) {
-        super(geometry);
+        super();
 
         this.clipBias = clipBias;
         this.blurIterations = blurIterations;
@@ -73,11 +68,6 @@ export class Reflector extends Mesh {
         // Uniform containing render target textures
         this.renderTargetUniform = this.blurIterations > 0 ? new Uniform(this.renderTargetRead.texture) : new Uniform(this.renderTarget.texture);
 
-        // Reflection material
-        this.material = new ReflectorMaterial({ color, map, fog, dithering });
-        this.material.uniforms.tReflect = this.renderTargetUniform;
-        this.material.uniforms.uMatrix = this.textureMatrixUniform;
-
         // Reflection blur material
         this.blurMaterial = new ReflectorBlurMaterial();
         this.blurMaterial.uniforms.uBluriness.value = blurFactor;
@@ -94,7 +84,15 @@ export class Reflector extends Mesh {
         this.screenScene.add(this.screen);
     }
 
-    onBeforeRender(renderer, scene, camera) {
+    setSize(width, height) {
+        this.renderTarget.setSize(width, height);
+        this.renderTargetRead.setSize(width, height);
+        this.renderTargetWrite.setSize(width, height);
+
+        this.blurMaterial.uniforms.uResolution.value.set(width, height);
+    }
+
+    update(renderer, scene, camera) {
         this.reflectorWorldPosition.setFromMatrixPosition(this.matrixWorld);
         this.cameraWorldPosition.setFromMatrixPosition(camera.matrixWorld);
 
@@ -170,8 +168,6 @@ export class Reflector extends Mesh {
         projectionMatrix.elements[14] = this.clipPlane.w;
 
         // Render
-        this.visible = false;
-
         const currentRenderTarget = renderer.getRenderTarget();
 
         const currentXrEnabled = renderer.xr.enabled;
@@ -228,16 +224,6 @@ export class Reflector extends Mesh {
         renderer.shadowMap.autoUpdate = currentShadowAutoUpdate;
 
         renderer.setRenderTarget(currentRenderTarget);
-
-        this.visible = true;
-    }
-
-    setSize(width, height) {
-        this.renderTarget.setSize(width, height);
-        this.renderTargetRead.setSize(width, height);
-        this.renderTargetWrite.setSize(width, height);
-
-        this.blurMaterial.uniforms.uResolution.value.set(width, height);
     }
 
     destroy() {
@@ -245,7 +231,6 @@ export class Reflector extends Mesh {
         this.renderTargetRead.dispose();
         this.renderTarget.dispose();
         this.blurMaterial.dispose();
-        this.material.dispose();
         this.screenGeometry.dispose();
 
         for (const prop in this) {

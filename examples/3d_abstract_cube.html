@@ -13,7 +13,7 @@
 <body>
     <div id="root"></div>
     <script type="module">
-        import { ACESFilmicToneMapping, AmbientLight, BloomCompositeMaterial, BoxGeometry, Color, Device, DirectionalLight, EnvironmentTextureLoader, Events, FXAAMaterial, Group, HemisphereLight, ImageBitmapLoaderThread, LuminosityMaterial, MathUtils, Mesh, MeshStandardMaterial, NoBlending, OrthographicCamera, PerspectiveCamera, PlaneGeometry, RGBFormat, RawShaderMaterial, ReflectorDudvMaterial, ReflectorObject, RepeatWrapping, Scene, Stage, TextureLoader, Thread, Uniform, UnrealBloomBlurMaterial, Vector2, Vector3, WebGL1Renderer, WebGLRenderTarget, getFullscreenTriangle, mix, radians, ticker } from '../build/alien.js';
+        import { ACESFilmicToneMapping, AmbientLight, BloomCompositeMaterial, BoxGeometry, Color, Device, DirectionalLight, EnvironmentTextureLoader, Events, FXAAMaterial, Group, HemisphereLight, ImageBitmapLoaderThread, LuminosityMaterial, MathUtils, Mesh, MeshStandardMaterial, NoBlending, OrthographicCamera, PerspectiveCamera, PlaneGeometry, RGBFormat, RawShaderMaterial, Reflector, ReflectorDudvMaterial, RepeatWrapping, Scene, Stage, TextureLoader, Thread, Uniform, UnrealBloomBlurMaterial, Vector2, Vector3, WebGL1Renderer, WebGLRenderTarget, getFullscreenTriangle, mix, radians, ticker } from '../build/alien.js';
 
         class Config {
             static BG_COLOR = '#0e0e0e';
@@ -138,7 +138,7 @@
             }
 
             initReflector() {
-                this.reflector = new ReflectorObject({ blurIterations: 6 });
+                this.reflector = new Reflector({ blurIterations: 6 });
             }
 
             async initMesh() {

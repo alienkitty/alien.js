@@ -50,7 +50,6 @@ In its design, everything is an ES module, all user interfaces and components fo
 [physics](https://alien.js.org/examples/3d_physics_thread.html)  
 [audio](https://alien.js.org/examples/3d_audio.html)  
 [audio](https://alien.js.org/examples/3d_audio_fast.html) (fast)  
-[spherical cube](https://alien.js.org/examples/3d_spherical_cube.html)  
 [cubemap uv](https://alien.js.org/examples/3d_cubemap_uv.html)  
 [spherical cube uv](https://alien.js.org/examples/3d_spherical_cube_uv.html)  
 [penrose triangle](https://alien.js.org/examples/3d_penrose_triangle.html)  

@@ -167,7 +167,7 @@
                 material.onBeforeCompile = shader => {
                     shader.uniforms.thicknessMap = new Uniform(thicknessMap);
                     shader.uniforms.thicknessDistortion = new Uniform(0.1);
-                    shader.uniforms.thicknessAmbient = new Uniform(0.4);
+                    shader.uniforms.thicknessAmbient = new Uniform(0);
                     shader.uniforms.thicknessAttenuation = new Uniform(0.8);
                     shader.uniforms.thicknessPower = new Uniform(2);
                     shader.uniforms.thicknessScale = new Uniform(16);

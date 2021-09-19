@@ -198,7 +198,10 @@
                 this.camera.updateProjectionMatrix();
 
                 // Render targets
-                this.renderTarget = new WebGLRenderTarget(1, 1);
+                this.renderTarget = new WebGLRenderTarget(1, 1, {
+                    format: RGBFormat,
+                    depthBuffer: false
+                });
 
                 // Flowmap
                 this.flowmap = new Flowmap(this.renderer, {
@@ -219,6 +222,7 @@
                 mesh.position.set(0, 1.4, -11);
                 mesh.scale.set(this.width, this.height, 1);
                 mesh.lookAt(camera.position);
+                mesh.renderOrder = 1;
 
                 this.add(mesh);
 

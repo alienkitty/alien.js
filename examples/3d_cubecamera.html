@@ -13,7 +13,7 @@
 <body>
     <div id="root"></div>
     <script type="module">
-        import { ACESFilmicToneMapping, AdditiveBlending, BackSide, BlurMaterial, Color, CubeCamera, Device, Events, FilmGrainFXAAMaterial, Group, IcosahedronGeometry, ImageBitmapLoaderThread, LinearMipmapLinearFilter, MathUtils, Mesh, MeshBasicMaterial, MultiplyOperation, NoBlending, OrthographicCamera, PerspectiveCamera, RGBFormat, RawShaderMaterial, Scene, SphereGeometry, Sprite, SpriteMaterial, Stage, TextureLoader, Thread, Uniform, Vector2, Vector3, WebGL1Renderer, WebGLCubeRenderTarget, WebGLRenderTarget, Wobble, getFullscreenTriangle, radians, ticker, tween } from '../build/alien.js';
+        import { ACESFilmicToneMapping, AdditiveBlending, BackSide, BlurMaterial, Color, CubeCamera, Device, Events, FilmGrainFXAAMaterial, Group, IcosahedronGeometry, ImageBitmapLoaderThread, LinearMipmapLinearFilter, MathUtils, Mesh, MeshBasicMaterial, MultiplyOperation, NoBlending, OrthographicCamera, PerspectiveCamera, RGBFormat, RawShaderMaterial, Scene, SphereGeometry, Sprite, SpriteMaterial, Stage, TextureLoader, Thread, Uniform, Vector2, Vector3, WebGLCubeRenderTarget, WebGLRenderTarget, WebGLRenderer, Wobble, getFullscreenTriangle, radians, ticker, tween } from '../build/alien.js';
 
         class Config {
             static BG_COLOR = '#030627';
@@ -591,7 +591,7 @@
             }
 
             static initWorld() {
-                this.renderer = new WebGL1Renderer({
+                this.renderer = new WebGLRenderer({
                     powerPreference: 'high-performance',
                     stencil: false
                 });

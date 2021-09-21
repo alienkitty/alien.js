@@ -13,7 +13,7 @@
 <body>
     <div id="root"></div>
     <script type="module">
-        import { Assets, Color, DirectionalLight, Events, Group, Interface, LinearFilter, Mesh, MeshStandardMaterial, PerspectiveCamera, PlaneGeometry, Scene, Stage, Texture, Uniform, Vector2, WebGL1Renderer, clearTween, delayedCall, getFrustum, ticker } from '../build/alien.js';
+        import { Assets, Color, DirectionalLight, Events, Group, Interface, LinearFilter, Mesh, MeshStandardMaterial, PerspectiveCamera, PlaneGeometry, Scene, Stage, Texture, Uniform, Vector2, WebGLRenderer, clearTween, delayedCall, getFrustum, ticker } from '../build/alien.js';
 
         class Config {
             static BG_COLOR = '#0e0e0e';
@@ -387,7 +387,7 @@
             }
 
             static initWorld() {
-                this.renderer = new WebGL1Renderer({
+                this.renderer = new WebGLRenderer({
                     powerPreference: 'high-performance',
                     stencil: false
                 });

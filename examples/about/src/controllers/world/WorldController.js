@@ -1,4 +1,4 @@
-import { Mesh, OrthographicCamera, Scene, Uniform, Vector2, WebGL1Renderer } from 'three';
+import { Mesh, OrthographicCamera, Scene, Uniform, Vector2, WebGLRenderer } from 'three';
 
 import { getFullscreenTriangle } from 'alien.js';
 
@@ -10,7 +10,7 @@ export class WorldController {
     }
 
     static initWorld() {
-        this.renderer = new WebGL1Renderer({
+        this.renderer = new WebGLRenderer({
             powerPreference: 'high-performance',
             stencil: false,
             depth: false

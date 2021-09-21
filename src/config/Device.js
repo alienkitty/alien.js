@@ -17,7 +17,7 @@ export class Device {
         };
 
         let canvas = document.createElement('canvas');
-        let gl = canvas.getContext('webgl', contextOptions) || canvas.getContext('experimental-webgl', contextOptions);
+        let gl = canvas.getContext('webgl2', contextOptions);
 
         const result = !!gl;
 

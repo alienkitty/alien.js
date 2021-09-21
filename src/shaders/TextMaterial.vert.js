@@ -1,11 +1,11 @@
-export default /* glsl */`
-attribute vec3 position;
-attribute vec2 uv;
+export default /* glsl */`#version 300 es
+in vec3 position;
+in vec2 uv;
 
 uniform mat4 modelViewMatrix;
 uniform mat4 projectionMatrix;
 
-varying vec2 vUv;
+out vec2 vUv;
 
 void main() {
     vUv = uv;

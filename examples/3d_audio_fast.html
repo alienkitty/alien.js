@@ -13,7 +13,7 @@
 <body>
     <div id="root"></div>
     <script type="module">
-        import { AssetLoader, Assets, Color, Device, DirectionalLight, EventEmitter, Events, Fog, Group, HemisphereLight, MathUtils, Mesh, MeshStandardMaterial, PerspectiveCamera, PointLight, Scene, Sound3D, SphereGeometry, Stage, Thread, Uniform, Vector2, Vector3, WebAudio, WebGL1Renderer, clamp, delayedCall, getFrustum, range, ticker } from '../build/alien.js';
+        import { AssetLoader, Assets, Color, Device, DirectionalLight, EventEmitter, Events, Fog, Group, HemisphereLight, MathUtils, Mesh, MeshStandardMaterial, PerspectiveCamera, PointLight, Scene, Sound3D, SphereGeometry, Stage, Thread, Uniform, Vector2, Vector3, WebAudio, WebGLRenderer, clamp, delayedCall, getFrustum, range, ticker } from '../build/alien.js';
 
         import { World } from 'https://unpkg.com/oimo/build/oimo.module.js';
 
@@ -580,7 +580,7 @@
             }
 
             static initWorld() {
-                this.renderer = new WebGL1Renderer({
+                this.renderer = new WebGLRenderer({
                     powerPreference: 'high-performance',
                     stencil: false
                 });

@@ -17,7 +17,7 @@ class Device {
         };
 
         let canvas = document.createElement('canvas');
-        let gl = canvas.getContext('webgl', contextOptions) || canvas.getContext('experimental-webgl', contextOptions);
+        let gl = canvas.getContext('webgl2', contextOptions);
 
         const result = !!gl;
 
@@ -56091,14 +56091,14 @@ class DepthMaskMaterial extends RawShaderMaterial {
     }
 }
 
-var vertexShader = /* glsl */`
-attribute vec3 position;
-attribute vec2 uv;
+var vertexShader = /* glsl */`#version 300 es
+in vec3 position;
+in vec2 uv;
 
 uniform mat4 modelViewMatrix;
 uniform mat4 projectionMatrix;
 
-varying vec2 vUv;
+out vec2 vUv;
 
 void main() {
     vUv = uv;
@@ -56109,27 +56109,27 @@ void main() {
 
 // Based on https://oframe.github.io/ogl/examples/?src=msdf-text.html by gordonnl
 
-var fragmentShader = /* glsl */`
-#extension GL_OES_standard_derivatives : enable
-
+var fragmentShader = /* glsl */`#version 300 es
 precision highp float;
 
 uniform sampler2D tMap;
 uniform vec3 uColor;
 uniform float uAlpha;
 
-varying vec2 vUv;
+in vec2 vUv;
+
+out vec4 color;
 
 void main() {
-    vec3 tex = texture2D(tMap, vUv).rgb;
+    vec3 tex = texture(tMap, vUv).rgb;
     float signedDist = max(min(tex.r, tex.g), min(max(tex.r, tex.g), tex.b)) - 0.5;
     float d = fwidth(signedDist);
     float alpha = smoothstep(-d, d, signedDist);
 
     if (alpha < 0.01) discard;
 
-    gl_FragColor.rgb = uColor;
-    gl_FragColor.a = alpha * uAlpha;
+    color.rgb = uColor;
+    color.a = alpha * uAlpha;
 }
 `;
 

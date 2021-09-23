@@ -8,7 +8,9 @@ precision highp float;
 uniform sampler2D tMap;
 uniform float uTime;
 
-varying vec2 vUv;
+in vec2 vUv;
+
+out vec4 FragColor;
 
 ${simplex2d}
 
@@ -23,14 +25,14 @@ void main() {
 
     // Apply the noise as X displacement for every line
     float xpos = uv.x - noise * noise * 0.25;
-    gl_FragColor = texture2D(tMap, vec2(xpos, uv.y));
+    FragColor = texture(tMap, vec2(xpos, uv.y));
 
     // Mix in some random interference for lines
-    gl_FragColor.rgb = mix(gl_FragColor.rgb, vec3(0.0), noise * 0.3).rgb;
+    FragColor.rgb = mix(FragColor.rgb, vec3(0.0), noise * 0.3).rgb;
 
     // Apply a line pattern every 4 pixels
     if (floor(mod(gl_FragCoord.y * 0.25, 2.0)) == 0.0) {
-        gl_FragColor.rgb *= 1.0 - (0.15 * noise);
+        FragColor.rgb *= 1.0 - (0.15 * noise);
     }
 }
 `;

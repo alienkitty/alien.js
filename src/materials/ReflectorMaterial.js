@@ -1,4 +1,4 @@
-import { Color, Matrix3, Matrix4, RawShaderMaterial, Uniform } from 'three';
+import { Color, GLSL3, Matrix3, Matrix4, RawShaderMaterial, Uniform } from 'three';
 
 import vertexShader from '../shaders/ReflectorMaterial.vert.js';
 import fragmentShader from '../shaders/ReflectorMaterial.frag.js';
@@ -11,6 +11,7 @@ export class ReflectorMaterial extends RawShaderMaterial {
         dithering = false
     } = {}) {
         const parameters = {
+            glslVersion: GLSL3,
             defines: {
             },
             uniforms: {

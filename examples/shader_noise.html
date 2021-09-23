@@ -13,17 +13,17 @@
 <body>
     <div id="root"></div>
     <script type="module">
-        import { Events, Mesh, NoBlending, OrthographicCamera, RawShaderMaterial, Scene, Stage, Uniform, Vector2, WebGLRenderer, getFullscreenTriangle, ticker } from '../build/alien.js';
+        import { Events, GLSL3, Mesh, NoBlending, OrthographicCamera, RawShaderMaterial, Scene, Stage, Uniform, Vector2, WebGLRenderer, getFullscreenTriangle, ticker } from '../build/alien.js';
 
         import simplex2d from '../src/shaders/modules/noise/simplex2d.glsl.js';
 
         // Based on https://codepen.io/vaalentin/pen/MKMmXG
 
         const vertexShader = /* glsl */`
-            attribute vec3 position;
-            attribute vec2 uv;
+            in vec3 position;
+            in vec2 uv;
 
-            varying vec2 vUv;
+            out vec2 vUv;
 
             void main() {
                 vUv = uv;
@@ -39,7 +39,9 @@
             uniform float uSpeed;
             uniform float uTime;
 
-            varying vec2 vUv;
+            in vec2 vUv;
+
+            out vec4 FragColor;
 
             ${simplex2d}
 
@@ -69,15 +71,16 @@
 
                 vec2 q = vec2(fbm(pos + vec2(0.0)), fbm(pos + vec2(0.0)));
 
-                float col = fbm(pos + sin(uTime * uSpeed) * uMultiplier * q);
+                float c = fbm(pos + sin(uTime * uSpeed) * uMultiplier * q);
 
-                gl_FragColor = vec4(vec3(col), 1.0);
+                FragColor = vec4(vec3(c), 1.0);
             }
         `;
 
         class NoiseMaterial extends RawShaderMaterial {
             constructor() {
                 super({
+                    glslVersion: GLSL3,
                     uniforms: {
                         uMultiplier: new Uniform(4),
                         uSpeed: new Uniform(0.5),

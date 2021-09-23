@@ -1,9 +1,11 @@
 export default /* glsl */`
 precision highp float;
 
-varying vec3 vNormal;
+in vec3 vNormal;
+
+out vec4 FragColor;
 
 void main() {
-    gl_FragColor = vec4(vNormal, 1.0);
+    FragColor = vec4(vNormal, 1.0);
 }
 `;

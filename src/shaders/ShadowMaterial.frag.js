@@ -4,12 +4,14 @@ precision highp float;
 uniform sampler2D tMap;
 uniform float uAlpha;
 
-varying vec2 vUv;
+in vec2 vUv;
+
+out vec4 FragColor;
 
 void main() {
-    float shadow = texture2D(tMap, vUv).g;
+    float shadow = texture(tMap, vUv).g;
 
-    gl_FragColor.rgb = vec3(0.0);
-    gl_FragColor.a = shadow * uAlpha;
+    FragColor.rgb = vec3(0.0);
+    FragColor.a = shadow * uAlpha;
 }
 `;

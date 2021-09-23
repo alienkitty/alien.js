@@ -1,18 +1,18 @@
 // Based on https://github.com/mattdesl/glsl-fxaa
 
 export default /* glsl */`
-attribute vec3 position;
-attribute vec2 uv;
+in vec3 position;
+in vec2 uv;
 
 uniform vec2 uResolution;
 
-varying vec2 v_rgbNW;
-varying vec2 v_rgbNE;
-varying vec2 v_rgbSW;
-varying vec2 v_rgbSE;
-varying vec2 v_rgbM;
+out vec2 v_rgbNW;
+out vec2 v_rgbNE;
+out vec2 v_rgbSW;
+out vec2 v_rgbSE;
+out vec2 v_rgbM;
 
-varying vec2 vUv;
+out vec2 vUv;
 
 void main() {
     vUv = uv;

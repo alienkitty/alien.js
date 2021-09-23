@@ -11,13 +11,15 @@ uniform float uIntensity;
 uniform vec2 uResolution;
 uniform float uTime;
 
-varying vec2 v_rgbNW;
-varying vec2 v_rgbNE;
-varying vec2 v_rgbSW;
-varying vec2 v_rgbSE;
-varying vec2 v_rgbM;
+in vec2 v_rgbNW;
+in vec2 v_rgbNE;
+in vec2 v_rgbSW;
+in vec2 v_rgbSE;
+in vec2 v_rgbM;
 
-varying vec2 vUv;
+in vec2 vUv;
+
+out vec4 FragColor;
 
 ${fxaa}
 ${random}
@@ -30,11 +32,11 @@ void main(){
     float dx = random(vUv + uTime);
 
     // Add noise
-    vec3 cResult = color.rgb + color.rgb * clamp(0.1 + dx, 0.0, 1.0);
+    vec3 result = color.rgb + color.rgb * clamp(0.1 + dx, 0.0, 1.0);
 
     // Interpolate between source and result by intensity
-    cResult = color.rgb + clamp(uIntensity, 0.0, 1.0) * (cResult - color.rgb);
+    result = color.rgb + clamp(uIntensity, 0.0, 1.0) * (result - color.rgb);
 
-    gl_FragColor =  vec4(cResult, color.a);
+    FragColor = vec4(result, color.a);
 }
 `;

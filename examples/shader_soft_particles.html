@@ -13,7 +13,7 @@
 <body>
     <div id="root"></div>
     <script type="module">
-        import { ACESFilmicToneMapping, AdditiveBlending, AmbientLight, BloomCompositeMaterial, BufferAttribute, BufferGeometry, Color, DepthTexture, Device, DirectionalLight, EnvironmentTextureLoader, Events, FXAAMaterial, Group, HemisphereLight, ImageBitmapLoaderThread, LuminosityMaterial, MathUtils, Mesh, MeshStandardMaterial, OrbitControls, OrthographicCamera, PerspectiveCamera, Points, RGBFormat, RawShaderMaterial, RepeatWrapping, Scene, SceneCompositeMaterial, SphereGeometry, Stage, TextureLoader, Thread, Uniform, UnrealBloomBlurMaterial, Vector2, WebGLRenderTarget, WebGLRenderer, getFullscreenTriangle, mix, ticker } from '../build/alien.js';
+        import { ACESFilmicToneMapping, AdditiveBlending, AmbientLight, BloomCompositeMaterial, BufferAttribute, BufferGeometry, Color, DepthTexture, Device, DirectionalLight, EnvironmentTextureLoader, Events, FXAAMaterial, GLSL3, Group, HemisphereLight, ImageBitmapLoaderThread, LuminosityMaterial, MathUtils, Mesh, MeshStandardMaterial, OrbitControls, OrthographicCamera, PerspectiveCamera, Points, RGBFormat, RawShaderMaterial, RepeatWrapping, Scene, SceneCompositeMaterial, SphereGeometry, Stage, TextureLoader, Thread, Uniform, UnrealBloomBlurMaterial, Vector2, WebGLRenderTarget, WebGLRenderer, getFullscreenTriangle, mix, ticker } from '../build/alien.js';
 
         class Config {
             static BG_COLOR = '#0e0e0e';
@@ -26,7 +26,7 @@
         // Based on https://jsfiddle.net/m7tvxpbs/ by Mugen87
 
         const vertexDustShader = /* glsl */`
-            attribute vec3 position;
+            in vec3 position;
 
             uniform mat4 modelMatrix;
             uniform mat4 modelViewMatrix;
@@ -38,7 +38,7 @@
             uniform float uCameraFar;
             uniform float uTime;
 
-            varying float vFade;
+            out float vFade;
 
             ${simplex3d}
 
@@ -74,14 +74,18 @@
             uniform float uCameraFar;
             uniform vec2 uResolution;
 
-            varying float vFade;
+            in float vFade;
+
+            out vec4 FragColor;
 
             ${depth}
 
             float fadeEdge(float particleDepth, float sceneDepth) {
-                // Margin makes it blend through the solid objects a little bit more, creating illusion of density
+                // Margin makes it blend through the solid objects a little bit more,
+                // creating illusion of density
                 float extraMargin = 0.015;
                 float a = (sceneDepth + extraMargin - particleDepth) * 120.0;
+
                 if (a <= 0.0) return 0.0;
                 if (a >= 1.0) return 1.0;
 
@@ -92,16 +96,16 @@
             }
 
             void main() {
-                vec4 tex = texture2D(tMap, vec2(gl_PointCoord.x, 1.0 - gl_PointCoord.y));
+                FragColor = texture(tMap, vec2(gl_PointCoord.x, 1.0 - gl_PointCoord.y));
+
                 vec2 uv = gl_FragCoord.xy / uResolution;
                 float particleDepth = getDepth(gl_FragCoord.z, uCameraNear, uCameraFar);
                 float sceneDepth = getDepth(tDepth, uv, uCameraNear, uCameraFar);
                 float alphaScale = fadeEdge(particleDepth, sceneDepth);
-                tex.a *= alphaScale;
-                tex.a *= vFade;
-                tex.a *= uAlpha;
 
-                gl_FragColor = tex;
+                FragColor.a *= alphaScale;
+                FragColor.a *= vFade;
+                FragColor.a *= uAlpha;
             }
         `;
 
@@ -129,6 +133,7 @@
                 geometry.setAttribute('position', new BufferAttribute(new Float32Array(vertices), 3));
 
                 const material = new RawShaderMaterial({
+                    glslVersion: GLSL3,
                     uniforms: {
                         tMap: new Uniform(getTexture('assets/textures/particle.png')),
                         tDepth: new Uniform(null),

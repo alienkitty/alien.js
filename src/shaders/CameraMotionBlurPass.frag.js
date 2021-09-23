@@ -14,10 +14,12 @@ uniform mat4 uWorldToClipMatrix;
 uniform mat4 uPreviousWorldToClipMatrix;
 uniform vec3 uCameraMove;
 
-varying vec2 vUv;
+in vec2 vUv;
+
+out vec4 FragColor;
 
 void main() {
-    float fragCoordZ = texture2D(tDepth, vUv).x;
+    float fragCoordZ = texture(tDepth, vUv).x;
 
     // Viewport position at this pixel in the range -1 to 1
     vec4 clipPosition = vec4(vUv.x * 2.0 - 1.0, vUv.y * 2.0 - 1.0, fragCoordZ * 2.0 - 1.0, 1.0);
@@ -44,11 +46,11 @@ void main() {
 
     for (int i = 0; i < samples; i++) {
         offset = velocity * (float(i) / (float(samples) - 1.0) - 0.5);
-        finalColor += texture2D(tMap, vUv + offset);
+        finalColor += texture(tMap, vUv + offset);
     }
 
     finalColor /= float(samples);
 
-    gl_FragColor = vec4(finalColor.rgb, 1.0);
+    FragColor = vec4(finalColor.rgb, 1.0);
 }
 `;

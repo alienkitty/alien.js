@@ -1,4 +1,4 @@
-import { Color, RawShaderMaterial, Uniform, Vector2 } from 'three';
+import { Color, GLSL3, RawShaderMaterial, Uniform, Vector2 } from 'three';
 
 import vertexShader from '../shaders/TransmissionMaterial.vert.js';
 import fragmentShader from '../shaders/TransmissionMaterial.frag.js';
@@ -9,6 +9,7 @@ export class TransmissionMaterial extends RawShaderMaterial {
         fresnelPower = 1.5
     } = {}) {
         super({
+            glslVersion: GLSL3,
             uniforms: {
                 tFront: new Uniform(null),
                 tBack: new Uniform(null),

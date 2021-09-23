@@ -13,7 +13,7 @@
 <body>
     <div id="root"></div>
     <script type="module">
-        import { ACESFilmicToneMapping, BloomCompositeMaterial, Color, DirectionalLight, Events, FXAAMaterial, Fog, Group, HemisphereLight, LuminosityMaterial, MathUtils, Mesh, MeshStandardMaterial, NoBlending, OrthographicCamera, PerspectiveCamera, PlaneGeometry, RGBFormat, RawShaderMaterial, Reflector, ReflectorMaterial, RepeatWrapping, SVGLoader, Scene, Stage, TextureLoader, Uniform, UnrealBloomBlurMaterial, Vector2, Vector3, WebGLRenderTarget, WebGLRenderer, getFullscreenTriangle, mix, ticker } from '../build/alien.js';
+        import { ACESFilmicToneMapping, BloomCompositeMaterial, Color, DirectionalLight, Events, FXAAMaterial, Fog, GLSL3, Group, HemisphereLight, LuminosityMaterial, MathUtils, Mesh, MeshStandardMaterial, NoBlending, OrthographicCamera, PerspectiveCamera, PlaneGeometry, RGBFormat, RawShaderMaterial, Reflector, ReflectorMaterial, RepeatWrapping, SVGLoader, Scene, Stage, TextureLoader, Uniform, UnrealBloomBlurMaterial, Vector2, Vector3, WebGLRenderTarget, WebGLRenderer, getFullscreenTriangle, mix, ticker } from '../build/alien.js';
 
         class Config {
             static BG_COLOR = '#0e0e0e';
@@ -23,10 +23,10 @@
         import rgbshift from '../src/shaders/modules/rgbshift/rgbshift.glsl.js';
 
         const vertexCompositeShader = /* glsl */`
-            attribute vec3 position;
-            attribute vec2 uv;
+            in vec3 position;
+            in vec2 uv;
 
-            varying vec2 vUv;
+            out vec2 vUv;
 
             void main() {
                 vUv = uv;
@@ -42,23 +42,26 @@
             uniform sampler2D tBloom;
             uniform float uDistortion;
 
-            varying vec2 vUv;
+            in vec2 vUv;
+
+            out vec4 FragColor;
 
             ${rgbshift}
 
             void main() {
-                gl_FragColor = texture2D(tScene, vUv);
+                FragColor = texture(tScene, vUv);
 
                 float angle = length(vUv - 0.5);
                 float amount = 0.0002 + uDistortion;
 
-                gl_FragColor.rgb += getRGB(tBloom, vUv, angle, amount).rgb;
+                FragColor.rgb += getRGB(tBloom, vUv, angle, amount).rgb;
             }
         `;
 
         class CompositeMaterial extends RawShaderMaterial {
             constructor() {
                 super({
+                    glslVersion: GLSL3,
                     uniforms: {
                         tScene: new Uniform(null),
                         tBloom: new Uniform(null),

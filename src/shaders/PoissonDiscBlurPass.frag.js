@@ -11,7 +11,9 @@ uniform float uRadius;
 uniform vec2 uResolution;
 uniform float uTime;
 
-varying vec2 vUv;
+in vec2 vUv;
+
+out vec4 FragColor;
 
 vec2 rot2d(vec2 p, float a) {
     vec2 sc = vec2(sin(a), cos(a));
@@ -25,6 +27,6 @@ void main() {
     float rnd = getBlueNoise(tBlueNoise, gl_FragCoord.xy, uBlueNoiseTexelSize, vec2(fract(uTime)));
     vec4 basis = vec4(rot2d(vec2(1, 0), rnd), rot2d(vec2(0, 1), rnd));
 
-    gl_FragColor = poissonSample(tMap, vUv, uResolution, uRadius, basis);
+    FragColor = poissonSample(tMap, vUv, uResolution, uRadius, basis);
 }
 `;

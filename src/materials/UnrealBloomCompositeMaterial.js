@@ -1,4 +1,4 @@
-import { NoBlending, RawShaderMaterial, Uniform } from 'three';
+import { GLSL3, NoBlending, RawShaderMaterial, Uniform } from 'three';
 
 import vertexShader from '../shaders/UnrealBloomCompositePass.vert.js';
 import fragmentShader from '../shaders/UnrealBloomCompositePass.frag.js';
@@ -6,6 +6,7 @@ import fragmentShader from '../shaders/UnrealBloomCompositePass.frag.js';
 export class UnrealBloomCompositeMaterial extends RawShaderMaterial {
     constructor(nMips) {
         super({
+            glslVersion: GLSL3,
             defines: {
                 NUM_MIPS: nMips
             },

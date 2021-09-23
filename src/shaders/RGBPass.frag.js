@@ -7,11 +7,13 @@ uniform sampler2D tMap;
 uniform float uAngle;
 uniform float uAmount;
 
-varying vec2 vUv;
+in vec2 vUv;
+
+out vec4 FragColor;
 
 ${rgbshift}
 
 void main() {
-    gl_FragColor = getRGB(tMap, vUv, uAngle, uAmount);
+    FragColor = getRGB(tMap, vUv, uAngle, uAmount);
 }
 `;

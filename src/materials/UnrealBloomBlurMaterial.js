@@ -1,4 +1,4 @@
-import { NoBlending, RawShaderMaterial, Uniform, Vector2 } from 'three';
+import { GLSL3, NoBlending, RawShaderMaterial, Uniform, Vector2 } from 'three';
 
 import vertexShader from '../shaders/UnrealBloomBlurPass.vert.js';
 import fragmentShader from '../shaders/UnrealBloomBlurPass.frag.js';
@@ -6,6 +6,7 @@ import fragmentShader from '../shaders/UnrealBloomBlurPass.frag.js';
 export class UnrealBloomBlurMaterial extends RawShaderMaterial {
     constructor(kernelRadius) {
         super({
+            glslVersion: GLSL3,
             defines: {
                 KERNEL_RADIUS: kernelRadius,
                 SIGMA: kernelRadius

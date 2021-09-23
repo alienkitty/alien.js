@@ -7,11 +7,13 @@ uniform sampler2D tMap;
 uniform vec2 uDirection;
 uniform vec2 uResolution;
 
-varying vec2 vUv;
+in vec2 vUv;
+
+out vec4 FragColor;
 
 ${blur}
 
 void main() {
-    gl_FragColor = blur(tMap, vUv, uResolution, uDirection, KERNEL_RADIUS, SIGMA);
+    FragColor = blur(tMap, vUv, uResolution, uDirection, KERNEL_RADIUS, SIGMA);
 }
 `;

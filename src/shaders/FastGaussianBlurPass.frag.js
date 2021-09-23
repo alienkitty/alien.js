@@ -7,11 +7,13 @@ uniform sampler2D tMap;
 uniform vec2 uDirection;
 uniform vec2 uResolution;
 
-varying vec2 vUv;
+in vec2 vUv;
+
+out vec4 FragColor;
 
 ${blur13}
 
 void main() {
-    gl_FragColor = blur13(tMap, vUv, uResolution, uDirection);
+    FragColor = blur13(tMap, vUv, uResolution, uDirection);
 }
 `;

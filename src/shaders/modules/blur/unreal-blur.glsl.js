@@ -11,15 +11,15 @@ vec4 blur(sampler2D image, vec2 uv, vec2 resolution, vec2 direction, int kernelR
     vec2 invSize = 1.0 / resolution;
     float fSigma = float(sigma);
     float weightSum = gaussianPdf(0.0, fSigma);
-    vec3 diffuseSum = texture2D(image, uv).rgb * weightSum;
+    vec3 diffuseSum = texture(image, uv).rgb * weightSum;
 
     for (int i = 1; i < MAX_KERNEL_RADIUS; i++) {
         if (i >= kernelRadius) break;
         float x = float(i);
         float w = gaussianPdf(x, fSigma);
         vec2 uvOffset = direction * invSize * x;
-        vec3 sample1 = texture2D(image, uv + uvOffset).rgb;
-        vec3 sample2 = texture2D(image, uv - uvOffset).rgb;
+        vec3 sample1 = texture(image, uv + uvOffset).rgb;
+        vec3 sample2 = texture(image, uv - uvOffset).rgb;
         diffuseSum += (sample1 + sample2) * w;
         weightSum += 2.0 * w;
     }

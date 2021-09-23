@@ -107,8 +107,8 @@
                     shader.vertexShader = shader.vertexShader.replace(
                         'void main() {',
                         /* glsl */`
-                        varying vec3 vWorldNormal;
-                        varying vec3 vViewDirection;
+                        out vec3 vWorldNormal;
+                        out vec3 vViewDirection;
 
                         void main() {
                         `
@@ -130,8 +130,8 @@
                         uniform vec3 fresnelColor;
                         uniform float fresnelPower;
 
-                        varying vec3 vWorldNormal;
-                        varying vec3 vViewDirection;
+                        in vec3 vWorldNormal;
+                        in vec3 vViewDirection;
 
                         ${fresnel}
 
@@ -143,7 +143,7 @@
                         uniform float thicknessScale;
 
                         void RE_Direct_Scattering(const in IncidentLight directLight, const in vec2 uv, const in GeometricContext geometry, const in PhysicalMaterial material, inout ReflectedLight reflectedLight) {
-                            vec3 thickness = directLight.color * texture2D(thicknessMap, uv).r;
+                            vec3 thickness = directLight.color * texture(thicknessMap, uv).r;
                             vec3 scatteringHalf = normalize(directLight.direction + (geometry.normal * thicknessDistortion));
                             float scatteringDot = pow(saturate(dot(geometry.viewDir, -scatteringHalf)), thicknessPower) * thicknessScale;
                             vec3 scatteringIllu = (scatteringDot + thicknessAmbient) * thickness;

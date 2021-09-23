@@ -13,7 +13,7 @@
 <body>
     <div id="root"></div>
     <script type="module">
-        import { ACESFilmicToneMapping, AdditiveBlending, BloomCompositeMaterial, Color, DirectionalLight, Events, FXAAMaterial, Flowmap, Fog, Group, HemisphereLight, LuminosityMaterial, MathUtils, Mesh, MeshStandardMaterial, NoBlending, OrthographicCamera, PerspectiveCamera, PlaneGeometry, RGBFormat, RawShaderMaterial, Reflector, ReflectorMaterial, RepeatWrapping, SVGLoader, Scene, Stage, TextureLoader, Uniform, UnrealBloomBlurMaterial, Vector2, Vector3, WebGLRenderTarget, WebGLRenderer, getFrustum, getFullscreenTriangle, mix, range, ticker } from '../build/alien.js';
+        import { ACESFilmicToneMapping, AdditiveBlending, BloomCompositeMaterial, Color, DirectionalLight, Events, FXAAMaterial, Flowmap, Fog, GLSL3, Group, HemisphereLight, LuminosityMaterial, MathUtils, Mesh, MeshStandardMaterial, NoBlending, OrthographicCamera, PerspectiveCamera, PlaneGeometry, RGBFormat, RawShaderMaterial, Reflector, ReflectorMaterial, RepeatWrapping, SVGLoader, Scene, Stage, TextureLoader, Uniform, UnrealBloomBlurMaterial, Vector2, Vector3, WebGLRenderTarget, WebGLRenderer, getFrustum, getFullscreenTriangle, mix, range, ticker } from '../build/alien.js';
 
         class Config {
             static BG_COLOR = '#0e0e0e';
@@ -25,13 +25,13 @@
         // Based on https://oframe.github.io/ogl/examples/?src=mouse-flowmap.html by gordonnl
 
         const vertexFlowShader = /* glsl */`
-            attribute vec3 position;
-            attribute vec2 uv;
+            in vec3 position;
+            in vec2 uv;
 
             uniform mat4 modelViewMatrix;
             uniform mat4 projectionMatrix;
 
-            varying vec2 vUv;
+            out vec2 vUv;
 
             void main() {
                 vUv = uv;
@@ -46,14 +46,16 @@
             uniform sampler2D tMap;
             uniform sampler2D tFlow;
 
-            varying vec2 vUv;
+            in vec2 vUv;
+
+            out vec4 FragColor;
 
             ${rgbshift}
 
             void main() {
                 // R and G values are velocity in the X and Y direction
                 // B value is the velocity length
-                vec3 flow = texture2D(tFlow, vUv).rgb;
+                vec3 flow = texture(tFlow, vUv).rgb;
 
                 // Use flow to adjust the UV lookup of a texture
                 vec2 uv = vUv;
@@ -62,14 +64,15 @@
                 float angle = length(vUv - 0.5);
                 float amount = length(flow.rg) * 0.025;
 
-                gl_FragColor = getRGB(tMap, uv, angle, amount);
-                gl_FragColor.a = 1.0;
+                FragColor = getRGB(tMap, uv, angle, amount);
+                FragColor.a = 1.0;
             }
         `;
 
         class FlowMaterial extends RawShaderMaterial {
             constructor() {
                 super({
+                    glslVersion: GLSL3,
                     uniforms: {
                         tMap: new Uniform(null),
                         tFlow: new Uniform(null)
@@ -82,10 +85,10 @@
         }
 
         const vertexCompositeShader = /* glsl */`
-            attribute vec3 position;
-            attribute vec2 uv;
+            in vec3 position;
+            in vec2 uv;
 
-            varying vec2 vUv;
+            out vec2 vUv;
 
             void main() {
                 vUv = uv;
@@ -101,23 +104,26 @@
             uniform sampler2D tBloom;
             uniform float uDistortion;
 
-            varying vec2 vUv;
+            in vec2 vUv;
+
+            out vec4 FragColor;
 
             ${rgbshift}
 
             void main() {
-                gl_FragColor = texture2D(tScene, vUv);
+                FragColor = texture(tScene, vUv);
 
                 float angle = length(vUv - 0.5);
                 float amount = 0.0002 + uDistortion;
 
-                gl_FragColor.rgb += getRGB(tBloom, vUv, angle, amount).rgb;
+                FragColor.rgb += getRGB(tBloom, vUv, angle, amount).rgb;
             }
         `;
 
         class CompositeMaterial extends RawShaderMaterial {
             constructor() {
                 super({
+                    glslVersion: GLSL3,
                     uniforms: {
                         tScene: new Uniform(null),
                         tBloom: new Uniform(null),

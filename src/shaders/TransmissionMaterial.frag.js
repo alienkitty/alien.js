@@ -10,8 +10,10 @@ uniform vec3 uFresnelColor;
 uniform float uFresnelPower;
 uniform vec2 uResolution;
 
-varying vec3 vWorldNormal;
-varying vec3 vViewDirection;
+in vec3 vWorldNormal;
+in vec3 vViewDirection;
+
+out vec4 FragColor;
 
 ${blendScreen}
 ${fresnel}
@@ -19,12 +21,12 @@ ${fresnel}
 void main() {
     vec2 uv = gl_FragCoord.xy / uResolution;
 
-    vec4 base = texture2D(tFront, uv);
-    vec4 blend = texture2D(tBack, uv);
+    vec4 base = texture(tFront, uv);
+    vec4 blend = texture(tBack, uv);
 
-    gl_FragColor = blendScreen(base, blend, 1.0);
+    FragColor = blendScreen(base, blend, 1.0);
 
     float fresnel = getFresnel(vViewDirection, vWorldNormal, uFresnelPower);
-    gl_FragColor.rgb += (fresnel * uFresnelColor) * 0.2;
+    FragColor.rgb += (fresnel * uFresnelColor) * 0.2;
 }
 `;

@@ -10,11 +10,13 @@ uniform float uSpeed;
 uniform float uRollSpeed;
 uniform float uTime;
 
-varying vec2 vUv;
+in vec2 vUv;
+
+out vec4 FragColor;
 
 ${badtv}
 
 void main() {
-    gl_FragColor = getBadTV(tMap, vUv, uTime, uDistortion, uDistortion2, uSpeed, uRollSpeed);
+    FragColor = getBadTV(tMap, vUv, uTime, uDistortion, uDistortion2, uSpeed, uRollSpeed);
 }
 `;

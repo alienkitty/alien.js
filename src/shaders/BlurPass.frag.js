@@ -8,11 +8,13 @@ uniform float uBluriness;
 uniform vec2 uDirection;
 uniform vec2 uResolution;
 
-varying vec2 vUv;
+in vec2 vUv;
+
+out vec4 FragColor;
 
 ${blur}
 
 void main() {
-    gl_FragColor = blur(tMap, vUv, uResolution, uBluriness * uDirection);
+    FragColor = blur(tMap, vUv, uResolution, uBluriness * uDirection);
 }
 `;

@@ -10,17 +10,19 @@ uniform sampler2D tBlur4;
 uniform sampler2D tBlur5;
 uniform float uBloomFactors[NUM_MIPS];
 
-varying vec2 vUv;
+in vec2 vUv;
+
+out vec4 FragColor;
 
 ${dither}
 
 void main() {
-    gl_FragColor = uBloomFactors[0] * texture2D(tBlur1, vUv) +
-                   uBloomFactors[1] * texture2D(tBlur2, vUv) +
-                   uBloomFactors[2] * texture2D(tBlur3, vUv) +
-                   uBloomFactors[3] * texture2D(tBlur4, vUv) +
-                   uBloomFactors[4] * texture2D(tBlur5, vUv);
+    FragColor = uBloomFactors[0] * texture(tBlur1, vUv) +
+                uBloomFactors[1] * texture(tBlur2, vUv) +
+                uBloomFactors[2] * texture(tBlur3, vUv) +
+                uBloomFactors[3] * texture(tBlur4, vUv) +
+                uBloomFactors[4] * texture(tBlur5, vUv);
 
-    gl_FragColor.rgb = dither(gl_FragColor.rgb);
+    FragColor.rgb = dither(FragColor.rgb);
 }
 `;

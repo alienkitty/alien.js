@@ -1,4 +1,4 @@
-import { Matrix4, NoBlending, RawShaderMaterial, Uniform, Vector3 } from 'three';
+import { GLSL3, Matrix4, NoBlending, RawShaderMaterial, Uniform, Vector3 } from 'three';
 
 import vertexShader from '../shaders/CameraMotionBlurPass.vert.js';
 import fragmentShader from '../shaders/CameraMotionBlurPass.frag.js';
@@ -6,6 +6,7 @@ import fragmentShader from '../shaders/CameraMotionBlurPass.frag.js';
 export class CameraMotionBlurMaterial extends RawShaderMaterial {
     constructor() {
         super({
+            glslVersion: GLSL3,
             uniforms: {
                 tMap: new Uniform(null),
                 tDepth: new Uniform(null),

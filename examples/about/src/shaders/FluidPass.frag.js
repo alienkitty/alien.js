@@ -11,7 +11,9 @@ uniform vec2 uStrength[NUM_POINTERS];
 uniform vec2 uResolution;
 uniform int uFrame;
 
-#define T(p) texture2D(tMap, (p) / uResolution.xy)
+out vec4 FragColor;
+
+#define T(p) texture(tMap, (p) / uResolution.xy)
 #define length2(p) dot(p, p)
 
 #define dt 0.15
@@ -21,7 +23,7 @@ uniform int uFrame;
 
 void main() {
     if (uFrame < 10) {
-        gl_FragColor = vec4(0, 0, 1, 0);
+        FragColor = vec4(0, 0, 1, 0);
         return;
     }
 
@@ -73,6 +75,6 @@ void main() {
     // Dissipation
     c.w -= dt * 0.0005;
 
-    gl_FragColor = clamp(c, vec4(-5, -5, 0.5, 0), vec4(5, 5, 3, 5));
+    FragColor = clamp(c, vec4(-5, -5, 0.5, 0), vec4(5, 5, 3, 5));
 }
 `;

@@ -11,7 +11,9 @@ uniform sampler2D tMap;
 uniform float uScale;
 uniform vec2 uResolution;
 
-varying vec2 vUv;
+in vec2 vUv;
+
+out vec4 FragColor;
 
 const float blurRadMax = 0.08;
 const float blurCircles = 4.0;
@@ -40,10 +42,10 @@ void main() {
             samplePoint *= vec2(uResolution.y / uResolution.x, 1.0);
 
             totalSamples++;
-            colAcum += texture2D(tMap, vUv + samplePoint, blurRadius * 30.0).rgb;
+            colAcum += texture(tMap, vUv + samplePoint, blurRadius * 30.0).rgb;
         }
     }
 
-    gl_FragColor = vec4(colAcum / totalSamples, 1.0);
+    FragColor = vec4(colAcum / totalSamples, 1.0);
 }
 `;

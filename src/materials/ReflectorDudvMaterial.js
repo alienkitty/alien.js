@@ -1,4 +1,4 @@
-import { Matrix4, RawShaderMaterial, Uniform } from 'three';
+import { GLSL3, Matrix4, RawShaderMaterial, Uniform } from 'three';
 
 import vertexShader from '../shaders/ReflectorDudvMaterial.vert.js';
 import fragmentShader from '../shaders/ReflectorDudvMaterial.frag.js';
@@ -8,6 +8,7 @@ export class ReflectorDudvMaterial extends RawShaderMaterial {
         map.updateMatrix();
 
         super({
+            glslVersion: GLSL3,
             uniforms: {
                 tMap: new Uniform(map),
                 tReflect: new Uniform(null),

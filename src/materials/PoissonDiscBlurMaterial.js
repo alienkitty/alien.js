@@ -1,4 +1,4 @@
-import { NearestFilter, NoBlending, RawShaderMaterial, RepeatWrapping, Uniform, Vector2 } from 'three';
+import { GLSL3, NearestFilter, NoBlending, RawShaderMaterial, RepeatWrapping, Uniform, Vector2 } from 'three';
 
 import { TextureLoader } from '../loaders/world/TextureLoader.js';
 
@@ -17,6 +17,7 @@ export class PoissonDiscBlurMaterial extends RawShaderMaterial {
         texture.generateMipmaps = false;
 
         super({
+            glslVersion: GLSL3,
             uniforms: {
                 tMap: new Uniform(null),
                 tBlueNoise: new Uniform(texture),

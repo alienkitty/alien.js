@@ -1,4 +1,4 @@
-import { NoBlending, RawShaderMaterial, Uniform } from 'three';
+import { GLSL3, NoBlending, RawShaderMaterial, Uniform } from 'three';
 
 import { Global } from '../config/Global.js';
 import { WorldController } from '../controllers/world/WorldController.js';
@@ -9,6 +9,7 @@ import fragmentShader from '../shaders/FluidPass.frag.js';
 export class FluidPassMaterial extends RawShaderMaterial {
     constructor() {
         super({
+            glslVersion: GLSL3,
             defines: {
                 NUM_POINTERS: Global.NUM_POINTERS,
                 MAX_ITERATIONS: '5.0'

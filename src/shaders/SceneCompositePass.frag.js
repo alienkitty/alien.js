@@ -4,11 +4,13 @@ precision highp float;
 uniform sampler2D tScene;
 uniform sampler2D tBloom;
 
-varying vec2 vUv;
+in vec2 vUv;
+
+out vec4 FragColor;
 
 void main() {
-    gl_FragColor = texture2D(tScene, vUv);
+    FragColor = texture(tScene, vUv);
 
-    gl_FragColor.rgb += texture2D(tBloom, vUv).rgb;
+    FragColor.rgb += texture(tBloom, vUv).rgb;
 }
 `;

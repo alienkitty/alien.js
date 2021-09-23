@@ -5,6 +5,7 @@
  */
 
 import {
+    GLSL3,
     HalfFloatType,
     Mesh,
     OrthographicCamera,
@@ -45,6 +46,7 @@ export class Flowmap {
 
         // Flowmap material
         this.material = new RawShaderMaterial({
+            glslVersion: GLSL3,
             uniforms: {
                 tMap: this.uniform,
 

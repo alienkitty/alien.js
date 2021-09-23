@@ -9,7 +9,7 @@ uniform float uAlpha;
 
 in vec2 vUv;
 
-out vec4 color;
+out vec4 FragColor;
 
 void main() {
     vec3 tex = texture(tMap, vUv).rgb;
@@ -19,7 +19,7 @@ void main() {
 
     if (alpha < 0.01) discard;
 
-    color.rgb = uColor;
-    color.a = alpha * uAlpha;
+    FragColor.rgb = uColor;
+    FragColor.a = alpha * uAlpha;
 }
 `;

@@ -44,7 +44,7 @@ vec4 poissonSample(sampler2D image, vec2 uv, vec2 resolution, float radius, vec4
         vec2 ofs = fTaps_Poisson[i];
         ofs = vec2(dot(ofs, basis.xz), dot(ofs, basis.yw));
         vec2 texcoord = uv + max_siz * ofs / resolution.xy;
-        sum += texture2D(image, texcoord, -16.0);
+        sum += texture(image, texcoord, -16.0);
     }
 
     return sum / float(NUM_TAPS);

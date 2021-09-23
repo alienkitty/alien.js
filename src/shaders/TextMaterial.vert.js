@@ -1,4 +1,4 @@
-export default /* glsl */`#version 300 es
+export default /* glsl */`
 in vec3 position;
 in vec2 uv;
 

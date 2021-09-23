@@ -1,6 +1,6 @@
 // Based on https://oframe.github.io/ogl/examples/?src=msdf-text.html by gordonnl
 
-export default /* glsl */`#version 300 es
+export default /* glsl */`
 precision highp float;
 
 uniform sampler2D tMap;

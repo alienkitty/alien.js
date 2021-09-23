@@ -51843,7 +51843,7 @@ class TextureLoader extends Loader$1 {
 
             if (cached) {
                 promise = Promise.resolve(cached);
-            } else if (Device.agent.includes('chrome')) {
+            } else if ('createImageBitmap' in window) {
                 const params = {
                     imageOrientation: this.options.imageOrientation,
                     premultiplyAlpha: this.options.premultiplyAlpha

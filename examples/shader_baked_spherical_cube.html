@@ -13,7 +13,7 @@
 <body>
     <div id="root"></div>
     <script type="module">
-        import { BasicMaterial, BufferGeometryLoader, BufferGeometryLoaderThread, Color, Device, DoubleSide, Events, FXAAMaterial, Group, ImageBitmapLoaderThread, Mesh, OrbitControls, OrthographicCamera, PerspectiveCamera, RGBFormat, Scene, ShadowMaterial, Stage, TextureLoader, Thread, Uniform, Vector2, WebGLRenderTarget, WebGLRenderer, getFullscreenTriangle, ticker } from '../build/alien.js';
+        import { BasicMaterial, BufferGeometryLoader, BufferGeometryLoaderThread, Color, DoubleSide, Events, FXAAMaterial, Group, ImageBitmapLoaderThread, Mesh, OrbitControls, OrthographicCamera, PerspectiveCamera, RGBFormat, Scene, ShadowMaterial, Stage, TextureLoader, Thread, Uniform, Vector2, WebGLRenderTarget, WebGLRenderer, getFullscreenTriangle, ticker } from '../build/alien.js';
 
         class Config {
             static BG_COLOR = '#fff';
@@ -314,10 +314,7 @@
 
         class App {
             static async init() {
-                if (Device.agent.includes('chrome')) {
-                    this.initThread();
-                }
-
+                this.initThread();
                 this.initWorld();
                 this.initViews();
                 this.initControllers();

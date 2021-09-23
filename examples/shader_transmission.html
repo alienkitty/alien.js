@@ -13,7 +13,7 @@
 <body>
     <div id="root"></div>
     <script type="module">
-        import { ACESFilmicToneMapping, AmbientLight, Assets, BackSide, BloomCompositeMaterial, Color, Device, DirectionalLight, EnvironmentTextureLoader, Events, FXAAMaterial, FastGaussianBlurMaterial, Group, HemisphereLight, ImageBitmapLoaderThread, LuminosityMaterial, MathUtils, Mesh, MeshPhysicalMaterial, MeshStandardMaterial, OrbitControls, OrthographicCamera, PerspectiveCamera, RGBFormat, RepeatWrapping, Scene, SceneCompositeMaterial, ShaderChunk, SphereGeometry, Stage, TextureLoader, Thread, TransmissionMaterial, Uniform, UnrealBloomBlurMaterial, Vector2, WebGLRenderTarget, WebGLRenderer, getFullscreenTriangle, mix, ticker } from '../build/alien.js';
+        import { ACESFilmicToneMapping, AmbientLight, Assets, BackSide, BloomCompositeMaterial, Color, DirectionalLight, EnvironmentTextureLoader, Events, FXAAMaterial, FastGaussianBlurMaterial, Group, HemisphereLight, ImageBitmapLoaderThread, LuminosityMaterial, MathUtils, Mesh, MeshPhysicalMaterial, MeshStandardMaterial, OrbitControls, OrthographicCamera, PerspectiveCamera, RGBFormat, RepeatWrapping, Scene, SceneCompositeMaterial, ShaderChunk, SphereGeometry, Stage, TextureLoader, Thread, TransmissionMaterial, Uniform, UnrealBloomBlurMaterial, Vector2, WebGLRenderTarget, WebGLRenderer, getFullscreenTriangle, mix, ticker } from '../build/alien.js';
 
         class Config {
             static BG_COLOR = '#0e0e0e';
@@ -683,10 +683,7 @@
             static async init() {
                 Assets.cache = true;
 
-                if (Device.agent.includes('chrome')) {
-                    this.initThread();
-                }
-
+                this.initThread();
                 this.initWorld();
                 this.initViews();
                 this.initControllers();

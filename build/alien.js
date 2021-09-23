@@ -53267,10 +53267,10 @@ class Wobble {
 }
 
 var vertexShader$u = /* glsl */`
-attribute vec3 position;
-attribute vec2 uv;
+in vec3 position;
+in vec2 uv;
 
-varying vec2 vUv;
+out vec2 vUv;
 
 void main() {
     vUv = uv;
@@ -53294,10 +53294,12 @@ uniform float uAspect;
 uniform vec2 uMouse;
 uniform vec2 uVelocity;
 
-varying vec2 vUv;
+in vec2 vUv;
+
+out vec4 FragColor;
 
 void main() {
-    vec4 color = texture2D(tMap, vUv) * uDissipation;
+    vec4 color = texture(tMap, vUv) * uDissipation;
 
     vec2 cursor = vUv - uMouse;
     cursor.x *= uAspect;
@@ -53305,9 +53307,9 @@ void main() {
     vec3 stamp = vec3(uVelocity * vec2(1, -1), 1.0 - pow(1.0 - min(1.0, length(uVelocity)), 3.0));
     float falloff = smoothstep(uFalloff, 0.0, length(cursor)) * uAlpha;
 
-    color.rgb = mix(color.rgb, stamp, vec3(falloff));
+    color.rgb = mix(color.rgb, stamp, falloff);
 
-    gl_FragColor = color;
+    FragColor = color;
 }
 `;
 
@@ -53342,6 +53344,7 @@ class Flowmap {
 
         // Flowmap material
         this.material = new RawShaderMaterial({
+            glslVersion: GLSL3,
             uniforms: {
                 tMap: this.uniform,
 
@@ -53407,10 +53410,10 @@ class Flowmap {
 }
 
 var vertexShader$t = /* glsl */`
-attribute vec2 uv;
-attribute vec3 position;
+in vec2 uv;
+in vec3 position;
 
-varying vec2 vUv;
+out vec2 vUv;
 
 void main() {
     vUv = uv;
@@ -53427,13 +53430,13 @@ vec4 blur13(sampler2D image, vec2 uv, vec2 resolution, vec2 direction) {
   vec2 off1 = vec2(1.411764705882353) * direction;
   vec2 off2 = vec2(3.2941176470588234) * direction;
   vec2 off3 = vec2(5.176470588235294) * direction;
-  color += texture2D(image, uv) * 0.1964825501511404;
-  color += texture2D(image, uv + (off1 / resolution)) * 0.2969069646728344;
-  color += texture2D(image, uv - (off1 / resolution)) * 0.2969069646728344;
-  color += texture2D(image, uv + (off2 / resolution)) * 0.09447039785044732;
-  color += texture2D(image, uv - (off2 / resolution)) * 0.09447039785044732;
-  color += texture2D(image, uv + (off3 / resolution)) * 0.010381362401148057;
-  color += texture2D(image, uv - (off3 / resolution)) * 0.010381362401148057;
+  color += texture(image, uv) * 0.1964825501511404;
+  color += texture(image, uv + (off1 / resolution)) * 0.2969069646728344;
+  color += texture(image, uv - (off1 / resolution)) * 0.2969069646728344;
+  color += texture(image, uv + (off2 / resolution)) * 0.09447039785044732;
+  color += texture(image, uv - (off2 / resolution)) * 0.09447039785044732;
+  color += texture(image, uv + (off3 / resolution)) * 0.010381362401148057;
+  color += texture(image, uv - (off3 / resolution)) * 0.010381362401148057;
   return color;
 }
 `;
@@ -53446,18 +53449,21 @@ uniform float uBluriness;
 uniform vec2 uDirection;
 uniform vec2 uResolution;
 
-varying vec2 vUv;
+in vec2 vUv;
+
+out vec4 FragColor;
 
 ${blur13}
 
 void main() {
-    gl_FragColor = blur13(tMap, vUv, uResolution, smoothstep(0.5 + uBluriness * 0.5, 0.0, vUv.y) * uDirection);
+    FragColor = blur13(tMap, vUv, uResolution, smoothstep(0.5 + uBluriness * 0.5, 0.0, vUv.y) * uDirection);
 }
 `;
 
 class ReflectorBlurMaterial extends RawShaderMaterial {
     constructor() {
         super({
+            glslVersion: GLSL3,
             uniforms: {
                 tMap: new Uniform(null),
                 uBluriness: new Uniform(1),
@@ -54070,14 +54076,14 @@ class Magnetic extends Component {
 }
 
 var vertexShader$s = /* glsl */`
-attribute vec3 position;
-attribute vec3 normal;
+in vec3 position;
+in vec3 normal;
 
 uniform mat4 modelViewMatrix;
 uniform mat4 projectionMatrix;
 uniform mat3 normalMatrix;
 
-varying vec3 vNormal;
+out vec3 vNormal;
 
 void main() {
     vNormal = normalMatrix * normal;
@@ -54089,10 +54095,12 @@ void main() {
 var fragmentShader$s = /* glsl */`
 precision highp float;
 
-varying vec3 vNormal;
+in vec3 vNormal;
+
+out vec4 FragColor;
 
 void main() {
-    gl_FragColor = vec4(vNormal, 1.0);
+    FragColor = vec4(vNormal, 1.0);
 }
 `;
 
@@ -54106,7 +54114,7 @@ class NormalMaterial extends RawShaderMaterial {
 }
 
 var vertexShader$r = /* glsl */`
-attribute vec3 position;
+in vec3 position;
 
 uniform mat4 modelViewMatrix;
 uniform mat4 projectionMatrix;
@@ -54121,14 +54129,17 @@ precision highp float;
 
 uniform vec3 uColor;
 
+out vec4 FragColor;
+
 void main() {
-    gl_FragColor = vec4(uColor, 1.0);
+    FragColor = vec4(uColor, 1.0);
 }
 `;
 
 class ColorMaterial extends RawShaderMaterial {
     constructor(color) {
         super({
+            glslVersion: GLSL3,
             uniforms: {
                 uColor: new Uniform(color instanceof Color ? color : new Color(color))
             },
@@ -54139,13 +54150,13 @@ class ColorMaterial extends RawShaderMaterial {
 }
 
 var vertexShader$q = /* glsl */`
-attribute vec3 position;
-attribute vec2 uv;
+in vec3 position;
+in vec2 uv;
 
 uniform mat4 modelViewMatrix;
 uniform mat4 projectionMatrix;
 
-varying vec2 vUv;
+out vec2 vUv;
 
 void main() {
     vUv = uv;
@@ -54160,17 +54171,20 @@ precision highp float;
 uniform sampler2D tMap;
 uniform float uAlpha;
 
-varying vec2 vUv;
+in vec2 vUv;
+
+out vec4 FragColor;
 
 void main() {
-    gl_FragColor = texture2D(tMap, vUv);
-    gl_FragColor.a *= uAlpha;
+    FragColor = texture(tMap, vUv);
+    FragColor.a *= uAlpha;
 }
 `;
 
 class BasicMaterial extends RawShaderMaterial {
     constructor(map) {
         super({
+            glslVersion: GLSL3,
             uniforms: {
                 tMap: new Uniform(map),
                 uAlpha: new Uniform(1)
@@ -54183,13 +54197,13 @@ class BasicMaterial extends RawShaderMaterial {
 }
 
 var vertexShader$p = /* glsl */`
-attribute vec3 position;
-attribute vec2 uv;
+in vec3 position;
+in vec2 uv;
 
 uniform mat4 modelViewMatrix;
 uniform mat4 projectionMatrix;
 
-varying vec2 vUv;
+out vec2 vUv;
 
 void main() {
     vUv = uv;
@@ -54204,19 +54218,22 @@ precision highp float;
 uniform sampler2D tMap;
 uniform float uAlpha;
 
-varying vec2 vUv;
+in vec2 vUv;
+
+out vec4 FragColor;
 
 void main() {
-    float shadow = texture2D(tMap, vUv).g;
+    float shadow = texture(tMap, vUv).g;
 
-    gl_FragColor.rgb = vec3(0.0);
-    gl_FragColor.a = shadow * uAlpha;
+    FragColor.rgb = vec3(0.0);
+    FragColor.a = shadow * uAlpha;
 }
 `;
 
 class ShadowMaterial extends RawShaderMaterial {
     constructor(map) {
         super({
+            glslVersion: GLSL3,
             uniforms: {
                 tMap: new Uniform(map),
                 uAlpha: new Uniform(1)
@@ -54229,10 +54246,10 @@ class ShadowMaterial extends RawShaderMaterial {
 }
 
 var vertexShader$o = /* glsl */`
-attribute vec3 position;
-attribute vec2 uv;
+in vec3 position;
+in vec2 uv;
 
-varying vec2 vUv;
+out vec2 vUv;
 
 void main() {
     vUv = uv;
@@ -54249,24 +54266,27 @@ precision highp float;
 uniform sampler2D tMap;
 uniform sampler2D tFlow;
 
-varying vec2 vUv;
+in vec2 vUv;
+
+out vec4 FragColor;
 
 void main() {
     // R and G values are velocity in the X and Y direction
     // B value is the velocity length
-    vec3 flow = texture2D(tFlow, vUv).rgb;
+    vec3 flow = texture(tFlow, vUv).rgb;
 
     // Use flow to adjust the UV lookup of a texture
     vec2 uv = vUv;
     uv += flow.rg * 0.05;
 
-    gl_FragColor = texture2D(tMap, uv);
+    FragColor = texture(tMap, uv);
 }
 `;
 
 class FlowMaterial extends RawShaderMaterial {
     constructor() {
         super({
+            glslVersion: GLSL3,
             uniforms: {
                 tMap: new Uniform(null),
                 tFlow: new Uniform(null)
@@ -54281,10 +54301,10 @@ class FlowMaterial extends RawShaderMaterial {
 }
 
 var vertexShader$n = /* glsl */`
-attribute vec3 position;
-attribute vec2 uv;
+in vec3 position;
+in vec2 uv;
 
-varying vec2 vUv;
+out vec2 vUv;
 
 void main() {
     vUv = uv;
@@ -54298,16 +54318,19 @@ precision highp float;
 
 uniform sampler2D tMap;
 
-varying vec2 vUv;
+in vec2 vUv;
+
+out vec4 FragColor;
 
 void main() {
-    gl_FragColor = texture2D(tMap, vUv);
+    FragColor = texture(tMap, vUv);
 }
 `;
 
 class CopyMaterial extends RawShaderMaterial {
     constructor() {
         super({
+            glslVersion: GLSL3,
             uniforms: {
                 tMap: new Uniform(null)
             },
@@ -54323,18 +54346,18 @@ class CopyMaterial extends RawShaderMaterial {
 // Based on https://github.com/mattdesl/glsl-fxaa
 
 var vertexShader$m = /* glsl */`
-attribute vec3 position;
-attribute vec2 uv;
+in vec3 position;
+in vec2 uv;
 
 uniform vec2 uResolution;
 
-varying vec2 v_rgbNW;
-varying vec2 v_rgbNE;
-varying vec2 v_rgbSW;
-varying vec2 v_rgbSE;
-varying vec2 v_rgbM;
+out vec2 v_rgbNW;
+out vec2 v_rgbNE;
+out vec2 v_rgbSW;
+out vec2 v_rgbSE;
+out vec2 v_rgbM;
 
-varying vec2 vUv;
+out vec2 vUv;
 
 void main() {
     vUv = uv;
@@ -54370,11 +54393,11 @@ vec4 fxaa(sampler2D tex, vec2 fragCoord, vec2 resolution,
             vec2 v_rgbM) {
     vec4 color;
     mediump vec2 inverseVP = vec2(1.0 / resolution.x, 1.0 / resolution.y);
-    vec3 rgbNW = texture2D(tex, v_rgbNW).xyz;
-    vec3 rgbNE = texture2D(tex, v_rgbNE).xyz;
-    vec3 rgbSW = texture2D(tex, v_rgbSW).xyz;
-    vec3 rgbSE = texture2D(tex, v_rgbSE).xyz;
-    vec4 texColor = texture2D(tex, v_rgbM);
+    vec3 rgbNW = texture(tex, v_rgbNW).xyz;
+    vec3 rgbNE = texture(tex, v_rgbNE).xyz;
+    vec3 rgbSW = texture(tex, v_rgbSW).xyz;
+    vec3 rgbSE = texture(tex, v_rgbSE).xyz;
+    vec4 texColor = texture(tex, v_rgbM);
     vec3 rgbM  = texColor.xyz;
     vec3 luma = vec3(0.299, 0.587, 0.114);
     float lumaNW = dot(rgbNW, luma);
@@ -54398,11 +54421,11 @@ vec4 fxaa(sampler2D tex, vec2 fragCoord, vec2 resolution,
               dir * rcpDirMin)) * inverseVP;
 
     vec3 rgbA = 0.5 * (
-        texture2D(tex, fragCoord * inverseVP + dir * (1.0 / 3.0 - 0.5)).xyz +
-        texture2D(tex, fragCoord * inverseVP + dir * (2.0 / 3.0 - 0.5)).xyz);
+        texture(tex, fragCoord * inverseVP + dir * (1.0 / 3.0 - 0.5)).xyz +
+        texture(tex, fragCoord * inverseVP + dir * (2.0 / 3.0 - 0.5)).xyz);
     vec3 rgbB = rgbA * 0.5 + 0.25 * (
-        texture2D(tex, fragCoord * inverseVP + dir * -0.5).xyz +
-        texture2D(tex, fragCoord * inverseVP + dir * 0.5).xyz);
+        texture(tex, fragCoord * inverseVP + dir * -0.5).xyz +
+        texture(tex, fragCoord * inverseVP + dir * 0.5).xyz);
 
     float lumaB = dot(rgbB, luma);
     if ((lumaB < lumaMin) || (lumaB > lumaMax))
@@ -54421,24 +54444,27 @@ precision highp float;
 uniform sampler2D tMap;
 uniform vec2 uResolution;
 
-varying vec2 v_rgbNW;
-varying vec2 v_rgbNE;
-varying vec2 v_rgbSW;
-varying vec2 v_rgbSE;
-varying vec2 v_rgbM;
+in vec2 v_rgbNW;
+in vec2 v_rgbNE;
+in vec2 v_rgbSW;
+in vec2 v_rgbSE;
+in vec2 v_rgbM;
 
-varying vec2 vUv;
+in vec2 vUv;
+
+out vec4 FragColor;
 
 ${fxaa}
 
 void main() {
-    gl_FragColor = fxaa(tMap, vUv * uResolution, uResolution, v_rgbNW, v_rgbNE, v_rgbSW, v_rgbSE, v_rgbM);
+    FragColor = fxaa(tMap, vUv * uResolution, uResolution, v_rgbNW, v_rgbNE, v_rgbSW, v_rgbSE, v_rgbM);
 }
 `;
 
 class FXAAMaterial extends RawShaderMaterial {
     constructor() {
         super({
+            glslVersion: GLSL3,
             uniforms: {
                 tMap: new Uniform(null),
                 uResolution: new Uniform(new Vector2())
@@ -54453,10 +54479,10 @@ class FXAAMaterial extends RawShaderMaterial {
 }
 
 var vertexShader$l = /* glsl */`
-attribute vec3 position;
-attribute vec2 uv;
+in vec3 position;
+in vec2 uv;
 
-varying vec2 vUv;
+out vec2 vUv;
 
 void main() {
     vUv = uv;
@@ -54560,7 +54586,7 @@ vec4 getBadTV(sampler2D image, vec2 uv, float time, float distortion, float dist
     offset += snoise(vec2(yt * 50.0, 0.0)) * distortion2 * 0.001;
 
     // Combine distortion on X with roll on Y
-    return texture2D(image, vec2(fract(p.x + offset), fract(p.y - time * rollSpeed)));
+    return texture(image, vec2(fract(p.x + offset), fract(p.y - time * rollSpeed)));
 }
 `;
 
@@ -54574,18 +54600,21 @@ uniform float uSpeed;
 uniform float uRollSpeed;
 uniform float uTime;
 
-varying vec2 vUv;
+in vec2 vUv;
+
+out vec4 FragColor;
 
 ${badtv}
 
 void main() {
-    gl_FragColor = getBadTV(tMap, vUv, uTime, uDistortion, uDistortion2, uSpeed, uRollSpeed);
+    FragColor = getBadTV(tMap, vUv, uTime, uDistortion, uDistortion2, uSpeed, uRollSpeed);
 }
 `;
 
 class BadTVMaterial extends RawShaderMaterial {
     constructor() {
         super({
+            glslVersion: GLSL3,
             uniforms: {
                 tMap: new Uniform(null),
                 uDistortion: new Uniform(3),
@@ -54604,10 +54633,10 @@ class BadTVMaterial extends RawShaderMaterial {
 }
 
 var vertexShader$k = /* glsl */`
-attribute vec3 position;
-attribute vec2 uv;
+in vec3 position;
+in vec2 uv;
 
-varying vec2 vUv;
+out vec2 vUv;
 
 void main() {
     vUv = uv;
@@ -54621,9 +54650,9 @@ void main() {
 var rgbshift = /* glsl */`
 vec4 getRGB(sampler2D image, vec2 uv, float angle, float amount) {
     vec2 offset = vec2(cos(angle), sin(angle)) * amount;
-    vec4 r = texture2D(image, uv + offset);
-    vec4 g = texture2D(image, uv);
-    vec4 b = texture2D(image, uv - offset);
+    vec4 r = texture(image, uv + offset);
+    vec4 g = texture(image, uv);
+    vec4 b = texture(image, uv - offset);
     return vec4(r.r, g.g, b.b, g.a);
 }
 `;
@@ -54635,18 +54664,21 @@ uniform sampler2D tMap;
 uniform float uAngle;
 uniform float uAmount;
 
-varying vec2 vUv;
+in vec2 vUv;
+
+out vec4 FragColor;
 
 ${rgbshift}
 
 void main() {
-    gl_FragColor = getRGB(tMap, vUv, uAngle, uAmount);
+    FragColor = getRGB(tMap, vUv, uAngle, uAmount);
 }
 `;
 
 class RGBMaterial extends RawShaderMaterial {
     constructor() {
         super({
+            glslVersion: GLSL3,
             uniforms: {
                 tMap: new Uniform(null),
                 uAngle: new Uniform(0),
@@ -54662,10 +54694,10 @@ class RGBMaterial extends RawShaderMaterial {
 }
 
 var vertexShader$j = /* glsl */`
-attribute vec3 position;
-attribute vec2 uv;
+in vec3 position;
+in vec2 uv;
 
-varying vec2 vUv;
+out vec2 vUv;
 
 void main() {
     vUv = uv;
@@ -54696,30 +54728,33 @@ uniform sampler2D tMap;
 uniform float uIntensity;
 uniform float uTime;
 
-varying vec2 vUv;
+in vec2 vUv;
+
+out vec4 FragColor;
 
 ${random}
 
 void main(){
     // Sample the source
-    vec4 color = texture2D(tMap, vUv);
+    vec4 color = texture(tMap, vUv);
 
     // Make some noise
     float dx = random(vUv + uTime);
 
     // Add noise
-    vec3 cResult = color.rgb + color.rgb * clamp(0.1 + dx, 0.0, 1.0);
+    vec3 result = color.rgb + color.rgb * clamp(0.1 + dx, 0.0, 1.0);
 
     // Interpolate between source and result by intensity
-    cResult = color.rgb + clamp(uIntensity, 0.0, 1.0) * (cResult - color.rgb);
+    result = color.rgb + clamp(uIntensity, 0.0, 1.0) * (result - color.rgb);
 
-    gl_FragColor =  vec4(cResult, color.a);
+    FragColor = vec4(result, color.a);
 }
 `;
 
 class FilmGrainMaterial extends RawShaderMaterial {
     constructor() {
         super({
+            glslVersion: GLSL3,
             uniforms: {
                 tMap: new Uniform(null),
                 uIntensity: new Uniform(0.5),
@@ -54737,18 +54772,18 @@ class FilmGrainMaterial extends RawShaderMaterial {
 // Based on https://github.com/mattdesl/glsl-fxaa
 
 var vertexShader$i = /* glsl */`
-attribute vec3 position;
-attribute vec2 uv;
+in vec3 position;
+in vec2 uv;
 
 uniform vec2 uResolution;
 
-varying vec2 v_rgbNW;
-varying vec2 v_rgbNE;
-varying vec2 v_rgbSW;
-varying vec2 v_rgbSE;
-varying vec2 v_rgbM;
+out vec2 v_rgbNW;
+out vec2 v_rgbNE;
+out vec2 v_rgbSW;
+out vec2 v_rgbSE;
+out vec2 v_rgbM;
 
-varying vec2 vUv;
+out vec2 vUv;
 
 void main() {
     vUv = uv;
@@ -54775,13 +54810,15 @@ uniform float uIntensity;
 uniform vec2 uResolution;
 uniform float uTime;
 
-varying vec2 v_rgbNW;
-varying vec2 v_rgbNE;
-varying vec2 v_rgbSW;
-varying vec2 v_rgbSE;
-varying vec2 v_rgbM;
+in vec2 v_rgbNW;
+in vec2 v_rgbNE;
+in vec2 v_rgbSW;
+in vec2 v_rgbSE;
+in vec2 v_rgbM;
 
-varying vec2 vUv;
+in vec2 vUv;
+
+out vec4 FragColor;
 
 ${fxaa}
 ${random}
@@ -54794,18 +54831,19 @@ void main(){
     float dx = random(vUv + uTime);
 
     // Add noise
-    vec3 cResult = color.rgb + color.rgb * clamp(0.1 + dx, 0.0, 1.0);
+    vec3 result = color.rgb + color.rgb * clamp(0.1 + dx, 0.0, 1.0);
 
     // Interpolate between source and result by intensity
-    cResult = color.rgb + clamp(uIntensity, 0.0, 1.0) * (cResult - color.rgb);
+    result = color.rgb + clamp(uIntensity, 0.0, 1.0) * (result - color.rgb);
 
-    gl_FragColor =  vec4(cResult, color.a);
+    FragColor = vec4(result, color.a);
 }
 `;
 
 class FilmGrainFXAAMaterial extends RawShaderMaterial {
     constructor() {
         super({
+            glslVersion: GLSL3,
             uniforms: {
                 tMap: new Uniform(null),
                 uIntensity: new Uniform(0.5),
@@ -54822,10 +54860,10 @@ class FilmGrainFXAAMaterial extends RawShaderMaterial {
 }
 
 var vertexShader$h = /* glsl */`
-attribute vec3 position;
-attribute vec2 uv;
+in vec3 position;
+in vec2 uv;
 
-varying vec2 vUv;
+out vec2 vUv;
 
 void main() {
     vUv = uv;
@@ -54841,15 +54879,15 @@ vec4 blur(sampler2D image, vec2 uv, vec2 resolution, vec2 direction) {
     vec2 pixel = vec2(1) / resolution;
 
     vec4 color = vec4(0.0);
-    color += texture2D(image, uv - 4.0 * pixel * direction) * 0.051;
-    color += texture2D(image, uv - 3.0 * pixel * direction) * 0.0918;
-    color += texture2D(image, uv - 2.0 * pixel * direction) * 0.12245;
-    color += texture2D(image, uv - 1.0 * pixel * direction) * 0.1531;
-    color += texture2D(image, uv) * 0.1633;
-    color += texture2D(image, uv + 1.0 * pixel * direction) * 0.1531;
-    color += texture2D(image, uv + 2.0 * pixel * direction) * 0.12245;
-    color += texture2D(image, uv + 3.0 * pixel * direction) * 0.0918;
-    color += texture2D(image, uv + 4.0 * pixel * direction) * 0.051;
+    color += texture(image, uv - 4.0 * pixel * direction) * 0.051;
+    color += texture(image, uv - 3.0 * pixel * direction) * 0.0918;
+    color += texture(image, uv - 2.0 * pixel * direction) * 0.12245;
+    color += texture(image, uv - 1.0 * pixel * direction) * 0.1531;
+    color += texture(image, uv) * 0.1633;
+    color += texture(image, uv + 1.0 * pixel * direction) * 0.1531;
+    color += texture(image, uv + 2.0 * pixel * direction) * 0.12245;
+    color += texture(image, uv + 3.0 * pixel * direction) * 0.0918;
+    color += texture(image, uv + 4.0 * pixel * direction) * 0.051;
 
     return color;
 }
@@ -54863,18 +54901,21 @@ uniform float uBluriness;
 uniform vec2 uDirection;
 uniform vec2 uResolution;
 
-varying vec2 vUv;
+in vec2 vUv;
+
+out vec4 FragColor;
 
 ${blur$2}
 
 void main() {
-    gl_FragColor = blur(tMap, vUv, uResolution, uBluriness * uDirection);
+    FragColor = blur(tMap, vUv, uResolution, uBluriness * uDirection);
 }
 `;
 
 class BlurMaterial extends RawShaderMaterial {
     constructor(direction = new Vector2(0.5, 0.5)) {
         super({
+            glslVersion: GLSL3,
             uniforms: {
                 tMap: new Uniform(null),
                 uBluriness: new Uniform(1),
@@ -54891,10 +54932,10 @@ class BlurMaterial extends RawShaderMaterial {
 }
 
 var vertexShader$g = /* glsl */`
-attribute vec3 position;
-attribute vec2 uv;
+in vec3 position;
+in vec2 uv;
 
-varying vec2 vUv;
+out vec2 vUv;
 
 void main() {
     vUv = uv;
@@ -54910,18 +54951,21 @@ uniform sampler2D tMap;
 uniform vec2 uDirection;
 uniform vec2 uResolution;
 
-varying vec2 vUv;
+in vec2 vUv;
+
+out vec4 FragColor;
 
 ${blur13}
 
 void main() {
-    gl_FragColor = blur13(tMap, vUv, uResolution, uDirection);
+    FragColor = blur13(tMap, vUv, uResolution, uDirection);
 }
 `;
 
 class FastGaussianBlurMaterial extends RawShaderMaterial {
     constructor() {
         super({
+            glslVersion: GLSL3,
             uniforms: {
                 tMap: new Uniform(null),
                 uDirection: new Uniform(new Vector2(1, 0)),
@@ -54937,10 +54981,10 @@ class FastGaussianBlurMaterial extends RawShaderMaterial {
 }
 
 var vertexShader$f = /* glsl */`
-attribute vec3 position;
-attribute vec2 uv;
+in vec3 position;
+in vec2 uv;
 
-varying vec2 vUv;
+out vec2 vUv;
 
 void main() {
     vUv = uv;
@@ -54958,22 +55002,25 @@ uniform sampler2D tMap;
 uniform float uLuminosityThreshold;
 uniform float uLuminositySmoothing;
 
-varying vec2 vUv;
+in vec2 vUv;
+
+out vec4 FragColor;
 
 void main() {
-    vec4 texel = texture2D(tMap, vUv);
+    vec4 texel = texture(tMap, vUv);
     vec3 luma = vec3(0.299, 0.587, 0.114);
     float v = dot(texel.xyz, luma);
     vec4 outputColor = vec4(0);
     float alpha = smoothstep(uLuminosityThreshold, uLuminosityThreshold + uLuminositySmoothing, v);
 
-    gl_FragColor = mix(outputColor, texel, alpha);
+    FragColor = mix(outputColor, texel, alpha);
 }
 `;
 
 class LuminosityMaterial extends RawShaderMaterial {
     constructor() {
         super({
+            glslVersion: GLSL3,
             uniforms: {
                 tMap: new Uniform(null),
                 uLuminosityThreshold: new Uniform(1),
@@ -54989,10 +55036,10 @@ class LuminosityMaterial extends RawShaderMaterial {
 }
 
 var vertexShader$e = /* glsl */`
-attribute vec3 position;
-attribute vec2 uv;
+in vec3 position;
+in vec2 uv;
 
-varying vec2 vUv;
+out vec2 vUv;
 
 void main() {
     vUv = uv;
@@ -55014,15 +55061,15 @@ vec4 blur(sampler2D image, vec2 uv, vec2 resolution, vec2 direction, int kernelR
     vec2 invSize = 1.0 / resolution;
     float fSigma = float(sigma);
     float weightSum = gaussianPdf(0.0, fSigma);
-    vec3 diffuseSum = texture2D(image, uv).rgb * weightSum;
+    vec3 diffuseSum = texture(image, uv).rgb * weightSum;
 
     for (int i = 1; i < MAX_KERNEL_RADIUS; i++) {
         if (i >= kernelRadius) break;
         float x = float(i);
         float w = gaussianPdf(x, fSigma);
         vec2 uvOffset = direction * invSize * x;
-        vec3 sample1 = texture2D(image, uv + uvOffset).rgb;
-        vec3 sample2 = texture2D(image, uv - uvOffset).rgb;
+        vec3 sample1 = texture(image, uv + uvOffset).rgb;
+        vec3 sample2 = texture(image, uv - uvOffset).rgb;
         diffuseSum += (sample1 + sample2) * w;
         weightSum += 2.0 * w;
     }
@@ -55042,18 +55089,21 @@ uniform sampler2D tMap;
 uniform vec2 uDirection;
 uniform vec2 uResolution;
 
-varying vec2 vUv;
+in vec2 vUv;
+
+out vec4 FragColor;
 
 ${blur$1}
 
 void main() {
-    gl_FragColor = blur(tMap, vUv, uResolution, uDirection, KERNEL_RADIUS, SIGMA);
+    FragColor = blur(tMap, vUv, uResolution, uDirection, KERNEL_RADIUS, SIGMA);
 }
 `;
 
 class UnrealBloomBlurMaterial extends RawShaderMaterial {
     constructor(kernelRadius) {
         super({
+            glslVersion: GLSL3,
             defines: {
                 KERNEL_RADIUS: kernelRadius,
                 SIGMA: kernelRadius
@@ -55073,10 +55123,10 @@ class UnrealBloomBlurMaterial extends RawShaderMaterial {
 }
 
 var vertexShader$d = /* glsl */`
-attribute vec3 position;
-attribute vec2 uv;
+in vec3 position;
+in vec2 uv;
 
-varying vec2 vUv;
+out vec2 vUv;
 
 void main() {
     vUv = uv;
@@ -55100,24 +55150,27 @@ uniform float uBloomRadius;
 uniform float uBloomFactors[NUM_MIPS];
 uniform vec3 uBloomTintColors[NUM_MIPS];
 
-varying vec2 vUv;
+in vec2 vUv;
+
+out vec4 FragColor;
 
 float lerpBloomFactor(float factor) {
     return mix(factor, 1.2 - factor, uBloomRadius);
 }
 
 void main() {
-    gl_FragColor = uBloomStrength * (lerpBloomFactor(uBloomFactors[0]) * vec4(uBloomTintColors[0], 1.0) * texture2D(tBlur1, vUv) +
-                                     lerpBloomFactor(uBloomFactors[1]) * vec4(uBloomTintColors[1], 1.0) * texture2D(tBlur2, vUv) +
-                                     lerpBloomFactor(uBloomFactors[2]) * vec4(uBloomTintColors[2], 1.0) * texture2D(tBlur3, vUv) +
-                                     lerpBloomFactor(uBloomFactors[3]) * vec4(uBloomTintColors[3], 1.0) * texture2D(tBlur4, vUv) +
-                                     lerpBloomFactor(uBloomFactors[4]) * vec4(uBloomTintColors[4], 1.0) * texture2D(tBlur5, vUv));
+    FragColor = uBloomStrength * (lerpBloomFactor(uBloomFactors[0]) * vec4(uBloomTintColors[0], 1.0) * texture(tBlur1, vUv) +
+                                  lerpBloomFactor(uBloomFactors[1]) * vec4(uBloomTintColors[1], 1.0) * texture(tBlur2, vUv) +
+                                  lerpBloomFactor(uBloomFactors[2]) * vec4(uBloomTintColors[2], 1.0) * texture(tBlur3, vUv) +
+                                  lerpBloomFactor(uBloomFactors[3]) * vec4(uBloomTintColors[3], 1.0) * texture(tBlur4, vUv) +
+                                  lerpBloomFactor(uBloomFactors[4]) * vec4(uBloomTintColors[4], 1.0) * texture(tBlur5, vUv));
 }
 `;
 
 class UnrealBloomCompositeMaterial extends RawShaderMaterial {
     constructor(nMips) {
         super({
+            glslVersion: GLSL3,
             defines: {
                 NUM_MIPS: nMips
             },
@@ -55142,10 +55195,10 @@ class UnrealBloomCompositeMaterial extends RawShaderMaterial {
 }
 
 var vertexShader$c = /* glsl */`
-attribute vec3 position;
-attribute vec2 uv;
+in vec3 position;
+in vec2 uv;
 
-varying vec2 vUv;
+out vec2 vUv;
 
 void main() {
     vUv = uv;
@@ -55184,24 +55237,27 @@ uniform sampler2D tBlur4;
 uniform sampler2D tBlur5;
 uniform float uBloomFactors[NUM_MIPS];
 
-varying vec2 vUv;
+in vec2 vUv;
+
+out vec4 FragColor;
 
 ${dither}
 
 void main() {
-    gl_FragColor = uBloomFactors[0] * texture2D(tBlur1, vUv) +
-                   uBloomFactors[1] * texture2D(tBlur2, vUv) +
-                   uBloomFactors[2] * texture2D(tBlur3, vUv) +
-                   uBloomFactors[3] * texture2D(tBlur4, vUv) +
-                   uBloomFactors[4] * texture2D(tBlur5, vUv);
+    FragColor = uBloomFactors[0] * texture(tBlur1, vUv) +
+                uBloomFactors[1] * texture(tBlur2, vUv) +
+                uBloomFactors[2] * texture(tBlur3, vUv) +
+                uBloomFactors[3] * texture(tBlur4, vUv) +
+                uBloomFactors[4] * texture(tBlur5, vUv);
 
-    gl_FragColor.rgb = dither(gl_FragColor.rgb);
+    FragColor.rgb = dither(FragColor.rgb);
 }
 `;
 
 class BloomCompositeMaterial extends RawShaderMaterial {
     constructor(nMips) {
         super({
+            glslVersion: GLSL3,
             defines: {
                 NUM_MIPS: nMips
             },
@@ -55223,10 +55279,10 @@ class BloomCompositeMaterial extends RawShaderMaterial {
 }
 
 var vertexShader$b = /* glsl */`
-attribute vec3 position;
-attribute vec2 uv;
+in vec3 position;
+in vec2 uv;
 
-varying vec2 vUv;
+out vec2 vUv;
 
 void main() {
     vUv = uv;
@@ -55241,18 +55297,21 @@ precision highp float;
 uniform sampler2D tScene;
 uniform sampler2D tBloom;
 
-varying vec2 vUv;
+in vec2 vUv;
+
+out vec4 FragColor;
 
 void main() {
-    gl_FragColor = texture2D(tScene, vUv);
+    FragColor = texture(tScene, vUv);
 
-    gl_FragColor.rgb += texture2D(tBloom, vUv).rgb;
+    FragColor.rgb += texture(tBloom, vUv).rgb;
 }
 `;
 
 class SceneCompositeMaterial extends RawShaderMaterial {
     constructor() {
         super({
+            glslVersion: GLSL3,
             uniforms: {
                 tScene: new Uniform(null),
                 tBloom: new Uniform(null)
@@ -55267,10 +55326,10 @@ class SceneCompositeMaterial extends RawShaderMaterial {
 }
 
 var vertexShader$a = /* glsl */`
-attribute vec3 position;
-attribute vec2 uv;
+in vec3 position;
+in vec2 uv;
 
-varying vec2 vUv;
+out vec2 vUv;
 
 void main() {
     vUv = uv;
@@ -55309,7 +55368,7 @@ vec4 poissonSample(sampler2D image, vec2 uv, vec2 resolution, float radius, vec4
         vec2 ofs = fTaps_Poisson[i];
         ofs = vec2(dot(ofs, basis.xz), dot(ofs, basis.yw));
         vec2 texcoord = uv + max_siz * ofs / resolution.xy;
-        sum += texture2D(image, texcoord, -10.0);
+        sum += texture(image, texcoord, -10.0);
     }
 
     return sum / float(NUM_TAPS);
@@ -55320,7 +55379,7 @@ vec4 poissonSample(sampler2D image, vec2 uv, vec2 resolution, float radius, vec4
 
 var blueNoise = /* glsl */`
 float getBlueNoise(sampler2D tex, vec2 coord, vec2 size, vec2 offset) {
-    return texture2D(tex, coord * size + offset).r;
+    return texture(tex, coord * size + offset).r;
 }
 
 float getBlueNoise(sampler2D tex, vec2 coord, vec2 size) {
@@ -55338,7 +55397,9 @@ uniform float uRadius;
 uniform vec2 uResolution;
 uniform float uTime;
 
-varying vec2 vUv;
+in vec2 vUv;
+
+out vec4 FragColor;
 
 vec2 rot2d(vec2 p, float a) {
     vec2 sc = vec2(sin(a), cos(a));
@@ -55352,7 +55413,7 @@ void main() {
     float rnd = getBlueNoise(tBlueNoise, gl_FragCoord.xy, uBlueNoiseTexelSize, vec2(fract(uTime)));
     vec4 basis = vec4(rot2d(vec2(1, 0), rnd), rot2d(vec2(0, 1), rnd));
 
-    gl_FragColor = poissonSample(tMap, vUv, uResolution, uRadius, basis);
+    FragColor = poissonSample(tMap, vUv, uResolution, uRadius, basis);
 }
 `;
 
@@ -55368,6 +55429,7 @@ class PoissonDiscBlurMaterial extends RawShaderMaterial {
         texture.generateMipmaps = false;
 
         super({
+            glslVersion: GLSL3,
             uniforms: {
                 tMap: new Uniform(null),
                 tBlueNoise: new Uniform(texture),
@@ -55386,10 +55448,10 @@ class PoissonDiscBlurMaterial extends RawShaderMaterial {
 }
 
 var vertexShader$9 = /* glsl */`
-attribute vec3 position;
-attribute vec2 uv;
+in vec3 position;
+in vec2 uv;
 
-varying vec2 vUv;
+out vec2 vUv;
 
 void main() {
     vUv = uv;
@@ -55414,10 +55476,12 @@ uniform mat4 uWorldToClipMatrix;
 uniform mat4 uPreviousWorldToClipMatrix;
 uniform vec3 uCameraMove;
 
-varying vec2 vUv;
+in vec2 vUv;
+
+out vec4 FragColor;
 
 void main() {
-    float fragCoordZ = texture2D(tDepth, vUv).x;
+    float fragCoordZ = texture(tDepth, vUv).x;
 
     // Viewport position at this pixel in the range -1 to 1
     vec4 clipPosition = vec4(vUv.x * 2.0 - 1.0, vUv.y * 2.0 - 1.0, fragCoordZ * 2.0 - 1.0, 1.0);
@@ -55444,18 +55508,19 @@ void main() {
 
     for (int i = 0; i < samples; i++) {
         offset = velocity * (float(i) / (float(samples) - 1.0) - 0.5);
-        finalColor += texture2D(tMap, vUv + offset);
+        finalColor += texture(tMap, vUv + offset);
     }
 
     finalColor /= float(samples);
 
-    gl_FragColor = vec4(finalColor.rgb, 1.0);
+    FragColor = vec4(finalColor.rgb, 1.0);
 }
 `;
 
 class CameraMotionBlurMaterial extends RawShaderMaterial {
     constructor() {
         super({
+            glslVersion: GLSL3,
             uniforms: {
                 tMap: new Uniform(null),
                 tDepth: new Uniform(null),
@@ -55476,10 +55541,10 @@ class CameraMotionBlurMaterial extends RawShaderMaterial {
 }
 
 var vertexShader$8 = /* glsl */`
-attribute vec3 position;
-attribute vec2 uv;
+in vec3 position;
+in vec2 uv;
 
-varying vec2 vUv;
+out vec2 vUv;
 
 void main() {
     vUv = uv;
@@ -55501,7 +55566,9 @@ uniform sampler2D tMap;
 uniform float uScale;
 uniform vec2 uResolution;
 
-varying vec2 vUv;
+in vec2 vUv;
+
+out vec4 FragColor;
 
 const float blurRadMax = 0.08;
 const float blurCircles = 4.0;
@@ -55530,17 +55597,18 @@ void main() {
             samplePoint *= vec2(uResolution.y / uResolution.x, 1.0);
 
             totalSamples++;
-            colAcum += texture2D(tMap, vUv + samplePoint, blurRadius * 30.0).rgb;
+            colAcum += texture(tMap, vUv + samplePoint, blurRadius * 30.0).rgb;
         }
     }
 
-    gl_FragColor = vec4(colAcum / totalSamples, 1.0);
+    FragColor = vec4(colAcum / totalSamples, 1.0);
 }
 `;
 
 class BokehBlurMaterial1 extends RawShaderMaterial {
     constructor() {
         super({
+            glslVersion: GLSL3,
             uniforms: {
                 tMap: new Uniform(null),
                 uScale: new Uniform(1),
@@ -55556,10 +55624,10 @@ class BokehBlurMaterial1 extends RawShaderMaterial {
 }
 
 var vertexShader$7 = /* glsl */`
-attribute vec3 position;
-attribute vec2 uv;
+in vec3 position;
+in vec2 uv;
 
-varying vec2 vUv;
+out vec2 vUv;
 
 void main() {
     vUv = uv;
@@ -55581,7 +55649,9 @@ uniform sampler2D tMap;
 uniform float uScale;
 uniform vec2 uResolution;
 
-varying vec2 vUv;
+in vec2 vUv;
+
+out vec4 FragColor;
 
 const float blurRadMax = 0.08;
 const float blurCircles = 3.0;
@@ -55610,17 +55680,18 @@ void main() {
             samplePoint *= vec2(uResolution.y / uResolution.x, 1.0);
 
             totalSamples++;
-            colAcum = max(colAcum, texture2D(tMap, vUv + samplePoint).rgb);
+            colAcum = max(colAcum, texture(tMap, vUv + samplePoint).rgb);
         }
     }
 
-    gl_FragColor = vec4(colAcum, 1.0);
+    FragColor = vec4(colAcum, 1.0);
 }
 `;
 
 class BokehBlurMaterial2 extends RawShaderMaterial {
     constructor() {
         super({
+            glslVersion: GLSL3,
             uniforms: {
                 tMap: new Uniform(null),
                 uScale: new Uniform(1),
@@ -55636,8 +55707,8 @@ class BokehBlurMaterial2 extends RawShaderMaterial {
 }
 
 var vertexShader$6 = /* glsl */`
-attribute vec3 position;
-attribute vec2 uv;
+in vec3 position;
+in vec2 uv;
 
 uniform mat4 modelViewMatrix;
 uniform mat4 projectionMatrix;
@@ -55645,8 +55716,8 @@ uniform mat4 projectionMatrix;
 uniform mat3 uMapTransform;
 uniform mat4 uMatrix;
 
-varying vec2 vUv;
-varying vec4 vCoord;
+out vec2 vUv;
+out vec4 vCoord;
 
 void main() {
     vUv = (uMapTransform * vec3(uv, 1.0)).xy;
@@ -55682,32 +55753,34 @@ uniform vec3 uColor;
     uniform float uFogFar;
 #endif
 
-varying vec2 vUv;
-varying vec4 vCoord;
+in vec2 vUv;
+in vec4 vCoord;
+
+out vec4 FragColor;
 
 ${blendOverlay}
 ${dither}
 
 void main() {
-    vec4 base = texture2D(tMap, vUv);
-    vec4 blend = texture2DProj(tReflect, vCoord);
+    vec4 base = texture(tMap, vUv);
+    vec4 blend = textureProj(tReflect, vCoord);
 
-    gl_FragColor = base * blend;
+    FragColor = base * blend;
 
-    base = gl_FragColor;
+    base = FragColor;
     blend = vec4(uColor, 1.0);
 
-    gl_FragColor = blendOverlay(base, blend, 1.0);
+    FragColor = blendOverlay(base, blend, 1.0);
 
     #ifdef USE_FOG
         float fogDepth = gl_FragCoord.z / gl_FragCoord.w;
         float fogFactor = smoothstep(uFogNear, uFogFar, fogDepth);
 
-        gl_FragColor.rgb = mix(gl_FragColor.rgb, uFogColor, fogFactor);
+        FragColor.rgb = mix(FragColor.rgb, uFogColor, fogFactor);
     #endif
 
     #ifdef DITHERING
-        gl_FragColor.rgb = dither(gl_FragColor.rgb);
+        FragColor.rgb = dither(FragColor.rgb);
     #endif
 }
 `;
@@ -55720,6 +55793,7 @@ class ReflectorMaterial extends RawShaderMaterial {
         dithering = false
     } = {}) {
         const parameters = {
+            glslVersion: GLSL3,
             defines: {
             },
             uniforms: {
@@ -55765,8 +55839,8 @@ class ReflectorMaterial extends RawShaderMaterial {
 }
 
 var vertexShader$5 = /* glsl */`
-attribute vec3 position;
-attribute vec2 uv;
+in vec3 position;
+in vec2 uv;
 
 uniform mat4 modelViewMatrix;
 uniform mat4 projectionMatrix;
@@ -55774,8 +55848,8 @@ uniform mat4 projectionMatrix;
 uniform mat3 uMapTransform;
 uniform mat4 uMatrix;
 
-varying vec2 vUv;
-varying vec4 vCoord;
+out vec2 vUv;
+out vec4 vCoord;
 
 void main() {
     vUv = (uMapTransform * vec3(uv, 1.0)).xy;
@@ -55792,28 +55866,30 @@ uniform sampler2D tMap;
 uniform sampler2D tReflect;
 uniform sampler2D tReflectBlur;
 
-varying vec2 vUv;
-varying vec4 vCoord;
+in vec2 vUv;
+in vec4 vCoord;
+
+out vec4 FragColor;
 
 ${dither}
 
 void main() {
     vec2 reflectionUv = vCoord.xy / vCoord.w;
 
-    vec4 dudv = texture2D(tMap, vUv);
-    vec4 color = texture2D(tReflect, reflectionUv);
+    vec4 dudv = texture(tMap, vUv);
+    vec4 color = texture(tReflect, reflectionUv);
 
     vec4 blur;
 
-    blur = texture2D(tReflectBlur, reflectionUv + dudv.rg / 256.0);
+    blur = texture(tReflectBlur, reflectionUv + dudv.rg / 256.0);
     color = mix(color, blur, smoothstep(1.0, 0.1, dudv.g));
 
-    blur = texture2D(tReflectBlur, reflectionUv);
+    blur = texture(tReflectBlur, reflectionUv);
     color = mix(color, blur, smoothstep(0.5, 1.0, dudv.r));
 
-    gl_FragColor = color * mix(0.6, 0.75, dudv.g);
+    FragColor = color * mix(0.6, 0.75, dudv.g);
 
-    gl_FragColor.rgb = dither(gl_FragColor.rgb);
+    FragColor.rgb = dither(FragColor.rgb);
 }
 `;
 
@@ -55822,6 +55898,7 @@ class ReflectorDudvMaterial extends RawShaderMaterial {
         map.updateMatrix();
 
         super({
+            glslVersion: GLSL3,
             uniforms: {
                 tMap: new Uniform(map),
                 tReflect: new Uniform(null),
@@ -55836,16 +55913,16 @@ class ReflectorDudvMaterial extends RawShaderMaterial {
 }
 
 var vertexShader$4 = /* glsl */`
-attribute vec3 position;
-attribute vec3 normal;
+in vec3 position;
+in vec3 normal;
 
 uniform mat4 modelMatrix;
 uniform mat4 modelViewMatrix;
 uniform mat4 projectionMatrix;
 uniform vec3 cameraPosition;
 
-varying vec3 vWorldNormal;
-varying vec3 vViewDirection;
+out vec3 vWorldNormal;
+out vec3 vViewDirection;
 
 void main() {
     vec4 worldPosition = modelMatrix * vec4(position, 1.0);
@@ -55879,8 +55956,10 @@ uniform vec3 uFresnelColor;
 uniform float uFresnelPower;
 uniform vec2 uResolution;
 
-varying vec3 vWorldNormal;
-varying vec3 vViewDirection;
+in vec3 vWorldNormal;
+in vec3 vViewDirection;
+
+out vec4 FragColor;
 
 ${blendScreen}
 ${fresnel}
@@ -55888,13 +55967,13 @@ ${fresnel}
 void main() {
     vec2 uv = gl_FragCoord.xy / uResolution;
 
-    vec4 base = texture2D(tFront, uv);
-    vec4 blend = texture2D(tBack, uv);
+    vec4 base = texture(tFront, uv);
+    vec4 blend = texture(tBack, uv);
 
-    gl_FragColor = blendScreen(base, blend, 1.0);
+    FragColor = blendScreen(base, blend, 1.0);
 
     float fresnel = getFresnel(vViewDirection, vWorldNormal, uFresnelPower);
-    gl_FragColor.rgb += (fresnel * uFresnelColor) * 0.2;
+    FragColor.rgb += (fresnel * uFresnelColor) * 0.2;
 }
 `;
 
@@ -55904,6 +55983,7 @@ class TransmissionMaterial extends RawShaderMaterial {
         fresnelPower = 1.5
     } = {}) {
         super({
+            glslVersion: GLSL3,
             uniforms: {
                 tFront: new Uniform(null),
                 tBack: new Uniform(null),
@@ -55919,10 +55999,10 @@ class TransmissionMaterial extends RawShaderMaterial {
 }
 
 var vertexShader$3 = /* glsl */`
-attribute vec3 position;
-attribute vec2 uv;
+in vec3 position;
+in vec2 uv;
 
-varying vec2 vUv;
+out vec2 vUv;
 
 void main() {
     vUv = uv;
@@ -55942,24 +56022,27 @@ uniform float uGreenOffset;
 uniform float uBlueOffset;
 uniform float uIntensity;
 
-varying vec2 vUv;
+in vec2 vUv;
+
+out vec4 FragColor;
 
 void main() {
     float ro = uRedOffset * uIntensity;
     float go = uGreenOffset * uIntensity;
     float bo = uBlueOffset * uIntensity;
 
-    float r = texture2D(tMap, vUv * (1.0 + ro) - (ro / 2.0)).r;
-    float g = texture2D(tMap, vUv * (1.0 + go) - (go / 2.0)).g;
-    float b = texture2D(tMap, vUv * (1.0 + bo) - (bo / 2.0)).b;
+    float r = texture(tMap, vUv * (1.0 + ro) - (ro / 2.0)).r;
+    float g = texture(tMap, vUv * (1.0 + go) - (go / 2.0)).g;
+    float b = texture(tMap, vUv * (1.0 + bo) - (bo / 2.0)).b;
 
-    gl_FragColor = vec4(r, g, b, 1.0);
+    FragColor = vec4(r, g, b, 1.0);
 }
 `;
 
 class ChromaticAberrationMaterial extends RawShaderMaterial {
     constructor() {
         super({
+            glslVersion: GLSL3,
             uniforms: {
                 tMap: new Uniform(null),
                 uRedOffset: new Uniform(-0.004),
@@ -55977,10 +56060,10 @@ class ChromaticAberrationMaterial extends RawShaderMaterial {
 }
 
 var vertexShader$2 = /* glsl */`
-attribute vec3 position;
-attribute vec2 uv;
+in vec3 position;
+in vec2 uv;
 
-varying vec2 vUv;
+out vec2 vUv;
 
 void main() {
     vUv = uv;
@@ -55997,7 +56080,9 @@ precision highp float;
 uniform sampler2D tMap;
 uniform float uTime;
 
-varying vec2 vUv;
+in vec2 vUv;
+
+out vec4 FragColor;
 
 ${simplex2d}
 
@@ -56012,14 +56097,14 @@ void main() {
 
     // Apply the noise as X displacement for every line
     float xpos = uv.x - noise * noise * 0.25;
-    gl_FragColor = texture2D(tMap, vec2(xpos, uv.y));
+    FragColor = texture(tMap, vec2(xpos, uv.y));
 
     // Mix in some random interference for lines
-    gl_FragColor.rgb = mix(gl_FragColor.rgb, vec3(0.0), noise * 0.3).rgb;
+    FragColor.rgb = mix(FragColor.rgb, vec3(0.0), noise * 0.3).rgb;
 
     // Apply a line pattern every 4 pixels
     if (floor(mod(gl_FragCoord.y * 0.25, 2.0)) == 0.0) {
-        gl_FragColor.rgb *= 1.0 - (0.15 * noise);
+        FragColor.rgb *= 1.0 - (0.15 * noise);
     }
 }
 `;
@@ -56027,6 +56112,7 @@ void main() {
 class VideoGlitchMaterial extends RawShaderMaterial {
     constructor() {
         super({
+            glslVersion: GLSL3,
             uniforms: {
                 tMap: new Uniform(null),
                 uTime: new Uniform(0)
@@ -56041,10 +56127,10 @@ class VideoGlitchMaterial extends RawShaderMaterial {
 }
 
 var vertexShader$1 = /* glsl */`
-attribute vec3 position;
-attribute vec2 uv;
+in vec3 position;
+in vec2 uv;
 
-varying vec2 vUv;
+out vec2 vUv;
 
 void main() {
     vUv = uv;
@@ -56060,23 +56146,26 @@ uniform sampler2D tMap;
 uniform sampler2D tDepth1;
 uniform sampler2D tDepth2;
 
-varying vec2 vUv;
+in vec2 vUv;
+
+out vec4 FragColor;
 
 void main() {
-    float d1 = texture2D(tDepth1, vUv).r;
-    float d2 = texture2D(tDepth2, vUv).r;
+    float d1 = texture(tDepth1, vUv).r;
+    float d2 = texture(tDepth2, vUv).r;
 
     if (d1 < d2) {
         discard;
     }
 
-    gl_FragColor = texture2D(tMap, vUv);
+    FragColor = texture(tMap, vUv);
 }
 `;
 
 class DepthMaskMaterial extends RawShaderMaterial {
     constructor() {
         super({
+            glslVersion: GLSL3,
             uniforms: {
                 tMap: new Uniform(null),
                 tDepth1: new Uniform(null),
@@ -56091,7 +56180,7 @@ class DepthMaskMaterial extends RawShaderMaterial {
     }
 }
 
-var vertexShader = /* glsl */`#version 300 es
+var vertexShader = /* glsl */`
 in vec3 position;
 in vec2 uv;
 
@@ -56109,7 +56198,7 @@ void main() {
 
 // Based on https://oframe.github.io/ogl/examples/?src=msdf-text.html by gordonnl
 
-var fragmentShader = /* glsl */`#version 300 es
+var fragmentShader = /* glsl */`
 precision highp float;
 
 uniform sampler2D tMap;
@@ -56118,7 +56207,7 @@ uniform float uAlpha;
 
 in vec2 vUv;
 
-out vec4 color;
+out vec4 FragColor;
 
 void main() {
     vec3 tex = texture(tMap, vUv).rgb;
@@ -56128,8 +56217,8 @@ void main() {
 
     if (alpha < 0.01) discard;
 
-    color.rgb = uColor;
-    color.a = alpha * uAlpha;
+    FragColor.rgb = uColor;
+    FragColor.a = alpha * uAlpha;
 }
 `;
 
@@ -56139,6 +56228,7 @@ class TextMaterial extends RawShaderMaterial {
         color
     } = {}) {
         super({
+            glslVersion: GLSL3,
             uniforms: {
                 tMap: new Uniform(map),
                 uColor: new Uniform(color instanceof Color ? color : new Color(color)),

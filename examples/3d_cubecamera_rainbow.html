@@ -13,7 +13,7 @@
 <body>
     <div id="root"></div>
     <script type="module">
-        import { ACESFilmicToneMapping, AdditiveBlending, BackSide, BlurMaterial, Color, CubeCamera, Device, Events, FilmGrainFXAAMaterial, Group, IcosahedronGeometry, ImageBitmapLoaderThread, LinearMipmapLinearFilter, MathUtils, Mesh, MeshBasicMaterial, MultiplyOperation, NoBlending, OrthographicCamera, PerspectiveCamera, RGBFormat, RawShaderMaterial, Scene, SphereGeometry, Sprite, SpriteMaterial, Stage, TextureLoader, Thread, Uniform, Vector2, Vector3, WebGLCubeRenderTarget, WebGLRenderTarget, WebGLRenderer, Wobble, getFullscreenTriangle, radians, ticker, tween } from '../build/alien.js';
+        import { ACESFilmicToneMapping, AdditiveBlending, BackSide, BlurMaterial, Color, CubeCamera, Device, Events, FilmGrainFXAAMaterial, GLSL3, Group, IcosahedronGeometry, ImageBitmapLoaderThread, LinearMipmapLinearFilter, MathUtils, Mesh, MeshBasicMaterial, MultiplyOperation, NoBlending, OrthographicCamera, PerspectiveCamera, RGBFormat, RawShaderMaterial, Scene, SphereGeometry, Sprite, SpriteMaterial, Stage, TextureLoader, Thread, Uniform, Vector2, Vector3, WebGLCubeRenderTarget, WebGLRenderTarget, WebGLRenderer, Wobble, getFullscreenTriangle, radians, ticker, tween } from '../build/alien.js';
 
         class Config {
             static BG_COLOR = '#030627';
@@ -39,10 +39,10 @@
         // Based on https://github.com/spite/codevember-2016
 
         const vertexCompositeShader = /* glsl */`
-            attribute vec3 position;
-            attribute vec2 uv;
+            in vec3 position;
+            in vec2 uv;
 
-            varying vec2 vUv;
+            out vec2 vUv;
 
             void main() {
                 vUv = uv;
@@ -67,7 +67,9 @@
             uniform vec2 uResolution;
             uniform float uTime;
 
-            varying vec2 vUv;
+            in vec2 vUv;
+
+            out vec4 FragColor;
 
             ${hsv2rgbSmooth}
             ${rgb2hsv}
@@ -90,7 +92,7 @@
 
                 color += getRGB(tScene, vUv, 0.1, 0.001 * uDistortion);
 
-                vec4 bloom = texture2D(tBloom, vUv);
+                vec4 bloom = texture(tBloom, vUv);
                 bloom.x = max(0.0, bloom.x - uMinBright);
                 bloom.y = max(0.0, bloom.y - uMinBright);
                 bloom.z = max(0.0, bloom.z - uMinBright);
@@ -139,9 +141,9 @@
                     vUv2.y += 0.5 * (1.0 - heightRatio);
                 }
 
-                color += smoothstep(0.0, 0.4, bloom) * texture2D(tLensDirt, vUv2);
+                color += smoothstep(0.0, 0.4, bloom) * texture(tLensDirt, vUv2);
 
-                gl_FragColor = color;
+                FragColor = color;
             }
         `;
 
@@ -150,6 +152,7 @@
                 const { getTexture } = WorldController;
 
                 super({
+                    glslVersion: GLSL3,
                     uniforms: {
                         tScene: new Uniform(null),
                         tBloom: new Uniform(null),

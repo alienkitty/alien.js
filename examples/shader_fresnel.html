@@ -13,7 +13,7 @@
 <body>
     <div id="root"></div>
     <script type="module">
-        import { Color, DoubleSide, Events, FXAAMaterial, Group, Mesh, OrbitControls, OrthographicCamera, PerspectiveCamera, RGBFormat, RawShaderMaterial, Scene, SphereGeometry, Stage, Uniform, Vector2, WebGLRenderTarget, WebGLRenderer, getFullscreenTriangle, ticker } from '../build/alien.js';
+        import { Color, DoubleSide, Events, FXAAMaterial, GLSL3, Group, Mesh, OrbitControls, OrthographicCamera, PerspectiveCamera, RGBFormat, RawShaderMaterial, Scene, SphereGeometry, Stage, Uniform, Vector2, WebGLRenderTarget, WebGLRenderer, getFullscreenTriangle, ticker } from '../build/alien.js';
 
         class Config {
             static BG_COLOR = '#b6d8f2';
@@ -25,8 +25,8 @@
         // Based on https://oframe.github.io/ogl/examples/?src=fresnel.html by michaeldll
 
         const vertexShader = /* glsl */`
-            attribute vec3 position;
-            attribute vec3 normal;
+            in vec3 position;
+            in vec3 normal;
 
             uniform mat4 modelMatrix;
             uniform mat4 modelViewMatrix;
@@ -35,8 +35,8 @@
 
             uniform float uTime;
 
-            varying vec3 vWorldNormal;
-            varying vec3 vViewDirection;
+            out vec3 vWorldNormal;
+            out vec3 vViewDirection;
 
             ${periodic3d}
 
@@ -70,8 +70,10 @@
             uniform vec3 uFresnelColor;
             uniform float uFresnelPower;
 
-            varying vec3 vWorldNormal;
-            varying vec3 vViewDirection;
+            in vec3 vWorldNormal;
+            in vec3 vViewDirection;
+
+            out vec4 FragColor;
 
             void main() {
                 float fresnelFactor = abs(dot(vViewDirection, vWorldNormal));
@@ -81,13 +83,14 @@
                 fresnelFactor = pow(fresnelFactor, uFresnelPower);
                 inversefresnelFactor = pow(inversefresnelFactor, uFresnelPower);
 
-                gl_FragColor = vec4(fresnelFactor * uBaseColor + inversefresnelFactor * uFresnelColor, 1.0);
+                FragColor = vec4(fresnelFactor * uBaseColor + inversefresnelFactor * uFresnelColor, 1.0);
             }
         `;
 
         class FresnelMaterial extends RawShaderMaterial {
             constructor() {
                 super({
+                    glslVersion: GLSL3,
                     uniforms: {
                         uBaseColor: new Uniform(new Color('#b6d8f2')),
                         uFresnelColor: new Uniform(new Color('#f7f6cf')),

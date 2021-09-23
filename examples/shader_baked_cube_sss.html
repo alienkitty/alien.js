@@ -13,7 +13,7 @@
 <body>
     <div id="root"></div>
     <script type="module">
-        import { ACESFilmicToneMapping, AmbientLight, BloomCompositeMaterial, BufferGeometryLoader, BufferGeometryLoaderThread, Color, Device, EnvironmentTextureLoader, Events, FXAAMaterial, Group, HemisphereLight, ImageBitmapLoaderThread, LuminosityMaterial, MathUtils, Mesh, MeshBasicMaterial, MeshStandardMaterial, NoBlending, OrthographicCamera, PerspectiveCamera, PlaneGeometry, PointLight, RGBFormat, RawShaderMaterial, Reflector, ReflectorDudvMaterial, RepeatWrapping, Scene, ShaderChunk, SphereGeometry, Stage, TextureLoader, Thread, Uniform, UnrealBloomBlurMaterial, Vector2, Vector3, WebGLRenderTarget, WebGLRenderer, getFrustum, getFullscreenTriangle, mix, ticker } from '../build/alien.js';
+        import { ACESFilmicToneMapping, AmbientLight, BloomCompositeMaterial, BufferGeometryLoader, BufferGeometryLoaderThread, Color, Device, EnvironmentTextureLoader, Events, FXAAMaterial, GLSL3, Group, HemisphereLight, ImageBitmapLoaderThread, LuminosityMaterial, MathUtils, Mesh, MeshBasicMaterial, MeshStandardMaterial, NoBlending, OrthographicCamera, PerspectiveCamera, PlaneGeometry, PointLight, RGBFormat, RawShaderMaterial, Reflector, ReflectorDudvMaterial, RepeatWrapping, Scene, ShaderChunk, SphereGeometry, Stage, TextureLoader, Thread, Uniform, UnrealBloomBlurMaterial, Vector2, Vector3, WebGLRenderTarget, WebGLRenderer, getFrustum, getFullscreenTriangle, mix, ticker } from '../build/alien.js';
 
         class Config {
             static BG_COLOR = '#0e0e0e';
@@ -25,10 +25,10 @@
         import rgbshift from '../src/shaders/modules/rgbshift/rgbshift.glsl.js';
 
         const vertexCompositeShader = /* glsl */`
-            attribute vec3 position;
-            attribute vec2 uv;
+            in vec3 position;
+            in vec2 uv;
 
-            varying vec2 vUv;
+            out vec2 vUv;
 
             void main() {
                 vUv = uv;
@@ -44,23 +44,26 @@
             uniform sampler2D tBloom;
             uniform float uDistortion;
 
-            varying vec2 vUv;
+            in vec2 vUv;
+
+            out vec4 FragColor;
 
             ${rgbshift}
 
             void main() {
-                gl_FragColor = texture2D(tScene, vUv);
+                FragColor = texture(tScene, vUv);
 
                 float angle = length(vUv - 0.5);
                 float amount = 0.0002 + uDistortion;
 
-                gl_FragColor.rgb += getRGB(tBloom, vUv, angle, amount).rgb;
+                FragColor.rgb += getRGB(tBloom, vUv, angle, amount).rgb;
             }
         `;
 
         class CompositeMaterial extends RawShaderMaterial {
             constructor() {
                 super({
+                    glslVersion: GLSL3,
                     uniforms: {
                         tScene: new Uniform(null),
                         tBloom: new Uniform(null),
@@ -172,7 +175,7 @@
                         uniform float thicknessScale;
 
                         void RE_Direct_Scattering(const in IncidentLight directLight, const in vec2 uv, const in GeometricContext geometry, inout ReflectedLight reflectedLight) {
-                            vec3 thickness = directLight.color * texture2D(thicknessMap, uv).g;
+                            vec3 thickness = directLight.color * texture(thicknessMap, uv).g;
                             vec3 scatteringHalf = normalize(directLight.direction + (geometry.normal * thicknessDistortion));
                             float scatteringDot = pow(saturate(dot(geometry.viewDir, -scatteringHalf)), thicknessPower) * thicknessScale;
                             vec3 scatteringIllu = (scatteringDot + thicknessAmbient) * thickness;

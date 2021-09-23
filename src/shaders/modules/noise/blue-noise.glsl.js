@@ -2,7 +2,7 @@
 
 export default /* glsl */`
 float getBlueNoise(sampler2D tex, vec2 coord, vec2 size, vec2 offset) {
-    return texture2D(tex, coord * size + offset).r;
+    return texture(tex, coord * size + offset).r;
 }
 
 float getBlueNoise(sampler2D tex, vec2 coord, vec2 size) {

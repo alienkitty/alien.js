@@ -20,6 +20,6 @@ vec4 getBadTV(sampler2D image, vec2 uv, float time, float distortion, float dist
     offset += snoise(vec2(yt * 50.0, 0.0)) * distortion2 * 0.001;
 
     // Combine distortion on X with roll on Y
-    return texture2D(image, vec2(fract(p.x + offset), fract(p.y - time * rollSpeed)));
+    return texture(image, vec2(fract(p.x + offset), fract(p.y - time * rollSpeed)));
 }
 `;

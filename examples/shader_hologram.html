@@ -13,7 +13,7 @@
 <body>
     <div id="root"></div>
     <script type="module">
-        import { ACESFilmicToneMapping, AmbientLight, Assets, BloomCompositeMaterial, BlurMaterial, Color, Device, DirectionalLight, EnvironmentTextureLoader, Events, FilmGrainFXAAMaterial, Group, HemisphereLight, ImageBitmapLoaderThread, LuminosityMaterial, MathUtils, Mesh, MeshBasicMaterial, MeshPhysicalMaterial, MeshStandardMaterial, NoBlending, OrbitControls, OrthographicCamera, PerspectiveCamera, RGBFormat, RawShaderMaterial, RepeatWrapping, Scene, SceneCompositeMaterial, ShaderChunk, SphereGeometry, Stage, TextureLoader, Thread, Uniform, UnrealBloomBlurMaterial, Vector2, VideoGlitchMaterial, WebGLRenderTarget, WebGLRenderer, getFullscreenTriangle, mix, ticker } from '../build/alien.js';
+        import { ACESFilmicToneMapping, AmbientLight, Assets, BloomCompositeMaterial, BlurMaterial, Color, Device, DirectionalLight, EnvironmentTextureLoader, Events, FilmGrainFXAAMaterial, GLSL3, Group, HemisphereLight, ImageBitmapLoaderThread, LuminosityMaterial, MathUtils, Mesh, MeshBasicMaterial, MeshPhysicalMaterial, MeshStandardMaterial, NoBlending, OrbitControls, OrthographicCamera, PerspectiveCamera, RGBFormat, RawShaderMaterial, RepeatWrapping, Scene, SceneCompositeMaterial, ShaderChunk, SphereGeometry, Stage, TextureLoader, Thread, Uniform, UnrealBloomBlurMaterial, Vector2, VideoGlitchMaterial, WebGLRenderTarget, WebGLRenderer, getFullscreenTriangle, mix, ticker } from '../build/alien.js';
 
         class Config {
             static BG_COLOR = '#0e0e0e';
@@ -37,10 +37,10 @@
         // Based on https://codepen.io/vakhula/pen/gObVeLR
 
         const vertexCompositeShader = /* glsl */`
-            attribute vec3 position;
-            attribute vec2 uv;
+            in vec3 position;
+            in vec2 uv;
 
-            varying vec2 vUv;
+            out vec2 vUv;
 
             void main() {
                 vUv = uv;
@@ -56,26 +56,29 @@
             uniform sampler2D tHologram;
             uniform sampler2D tOcclusion;
 
-            varying vec2 vUv;
+            in vec2 vUv;
+
+            out vec4 FragColor;
 
             ${blendScreen}
 
             void main() {
-                vec4 base = texture2D(tScene, vUv);
-                vec4 blend = texture2D(tHologram, vUv);
+                vec4 base = texture(tScene, vUv);
+                vec4 blend = texture(tHologram, vUv);
 
-                gl_FragColor = blendScreen(base, blend, 1.0);
+                FragColor = blendScreen(base, blend, 1.0);
 
-                base = gl_FragColor;
-                blend = texture2D(tOcclusion, vUv);
+                base = FragColor;
+                blend = texture(tOcclusion, vUv);
 
-                gl_FragColor = blendScreen(base, blend, 1.0);
+                FragColor = blendScreen(base, blend, 1.0);
             }
         `;
 
         class CompositeMaterial extends RawShaderMaterial {
             constructor() {
                 super({
+                    glslVersion: GLSL3,
                     uniforms: {
                         tScene: new Uniform(null),
                         tHologram: new Uniform(null),
@@ -174,8 +177,8 @@
                     shader.vertexShader = shader.vertexShader.replace(
                         'void main() {',
                         /* glsl */`
-                        varying vec3 vWorldNormal;
-                        varying vec3 vViewDirection;
+                        out vec3 vWorldNormal;
+                        out vec3 vViewDirection;
 
                         void main() {
                         `
@@ -197,8 +200,8 @@
                         uniform vec3 fresnelColor;
                         uniform float fresnelPower;
 
-                        varying vec3 vWorldNormal;
-                        varying vec3 vViewDirection;
+                        in vec3 vWorldNormal;
+                        in vec3 vViewDirection;
 
                         ${fresnel}
 
@@ -210,7 +213,7 @@
                         uniform float thicknessScale;
 
                         void RE_Direct_Scattering(const in IncidentLight directLight, const in vec2 uv, const in GeometricContext geometry, const in PhysicalMaterial material, inout ReflectedLight reflectedLight) {
-                            vec3 thickness = directLight.color * texture2D(thicknessMap, uv).r;
+                            vec3 thickness = directLight.color * texture(thicknessMap, uv).r;
                             vec3 scatteringHalf = normalize(directLight.direction + (geometry.normal * thicknessDistortion));
                             float scatteringDot = pow(saturate(dot(geometry.viewDir, -scatteringHalf)), thicknessPower) * thicknessScale;
                             vec3 scatteringIllu = (scatteringDot + thicknessAmbient) * thickness;

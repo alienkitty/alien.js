@@ -51843,7 +51843,7 @@ class TextureLoader extends Loader$1 {
 
             if (cached) {
                 promise = Promise.resolve(cached);
-            } else if ('createImageBitmap' in window) {
+            } else if (typeof createImageBitmap !== 'undefined' && !Device.agent.includes('firefox')) {
                 const params = {
                     imageOrientation: this.options.imageOrientation,
                     premultiplyAlpha: this.options.premultiplyAlpha

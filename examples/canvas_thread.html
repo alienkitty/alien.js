@@ -13,7 +13,7 @@
 <body>
     <div id="root"></div>
     <script type="module">
-        import { Events, Stage, Thread, ticker } from '../build/alien.js';
+        import { Device, Events, Stage, Thread, ticker } from '../build/alien.js';
 
         // Based on https://codepen.io/zepha/pen/VpXvBJ
 
@@ -137,7 +137,7 @@
             }
 
             static initThread() {
-                if ('transferControlToOffscreen' in this.params.canvas) {
+                if (!Device.agent.includes('firefox')) {
                     this.thread = new Thread({
                         imports: [
                             ['../build/alien.js', 'ticker']

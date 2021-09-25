@@ -13,7 +13,7 @@
 <body>
     <div id="root"></div>
     <script type="module">
-        import { AssetLoader, Assets, Color, DirectionalLight, EventEmitter, Events, Fog, Group, HemisphereLight, MathUtils, Mesh, MeshStandardMaterial, PerspectiveCamera, PointLight, Scene, Sound3D, SphereGeometry, Stage, Thread, Uniform, Vector2, Vector3, WebAudio, WebAudio3D, WebGLRenderer, clamp, delayedCall, getFrustum, range, ticker } from '../build/alien.js';
+        import { AssetLoader, Assets, Color, Device, DirectionalLight, EventEmitter, Events, Fog, Group, HemisphereLight, MathUtils, Mesh, MeshStandardMaterial, PerspectiveCamera, PointLight, Scene, Sound3D, SphereGeometry, Stage, Thread, Uniform, Vector2, Vector3, WebAudio, WebAudio3D, WebGLRenderer, clamp, delayedCall, getFrustum, range, ticker } from '../build/alien.js';
 
         import { World } from 'https://unpkg.com/oimo/build/oimo.module.js';
 
@@ -217,16 +217,20 @@
             }
 
             initEngine() {
-                this.thread = new Thread({
-                    imports: [
-                        ['../build/alien.js', 'EventEmitter', 'Vector2', 'Vector3', 'delayedCall', 'ticker'],
-                        ['https://unpkg.com/oimo/build/oimo.module.js', 'World']
-                    ],
-                    classes: [ScenePhysics],
-                    controller: [ScenePhysicsThread, 'init', 'resize', 'update']
-                });
+                if (!Device.agent.includes('firefox')) {
+                    this.thread = new Thread({
+                        imports: [
+                            ['../build/alien.js', 'EventEmitter', 'Vector2', 'Vector3', 'delayedCall', 'ticker'],
+                            ['https://unpkg.com/oimo/build/oimo.module.js', 'World']
+                        ],
+                        classes: [ScenePhysics],
+                        controller: [ScenePhysicsThread, 'init', 'resize', 'update']
+                    });
 
-                this.thread.init({ shapes: this.shapes });
+                    this.thread.init({ shapes: this.shapes });
+                } else {
+                    this.physics = new ScenePhysics(this.shapes);
+                }
             }
 
             createShapeObject(name, type, position, rotation, size, move, paddle) {
@@ -270,9 +274,16 @@
             }
 
             addListeners() {
-                this.thread.on('ready', this.onReady);
-                this.thread.on('update', this.onUpdate);
-                this.thread.on('contact', this.onContact);
+                if (this.thread) {
+                    this.thread.on('ready', this.onReady);
+                    this.thread.on('update', this.onUpdate);
+                    this.thread.on('contact', this.onContact);
+                } else {
+                    this.physics.on('update', this.onUpdate);
+                    this.physics.on('contact', this.onContact);
+
+                    this.resolve();
+                }
             }
 
             /**
@@ -296,10 +307,18 @@
              */
 
             resize = (width, height) => {
-                this.thread.resize({ width, height });
+                if (this.thread) {
+                    this.thread.resize({ width, height });
+                } else {
+                    this.physics.resize(width, height);
+                }
             };
 
             update = () => {
+                if (this.physics) {
+                    this.physics.update();
+                }
+
                 let index = 0;
 
                 this.meshes.forEach((mesh, i) => {
@@ -313,7 +332,11 @@
             };
 
             send = (event, message = {}) => {
-                this.thread.send(event, message);
+                if (this.thread) {
+                    this.thread.send(event, message);
+                } else {
+                    this.physics[event].call(this.physics, message);
+                }
             };
 
             ready = () => this.promise;
@@ -670,14 +693,16 @@
             }
 
             static addListeners() {
-                ticker.stop();
+                if (SceneController.physics.thread) {
+                    ticker.stop();
 
-                SceneController.physics.thread.on('update', () => {
-                    ticker.onTick(this.time);
+                    SceneController.physics.thread.on('update', () => {
+                        ticker.onTick(this.time);
+                        requestAnimationFrame(this.onTick);
+                    });
+
                     requestAnimationFrame(this.onTick);
-                });
-
-                requestAnimationFrame(this.onTick);
+                }
 
                 Stage.events.on(Events.RESIZE, this.onResize);
                 ticker.add(this.onUpdate);

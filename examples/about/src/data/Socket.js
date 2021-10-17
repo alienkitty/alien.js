@@ -7,9 +7,7 @@ export class Socket extends EventEmitter {
     constructor() {
         super();
 
-        this.socket;
         this.connected = false;
-        this.id;
     }
 
     init() {

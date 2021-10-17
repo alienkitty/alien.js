@@ -5,7 +5,7 @@ export class HeaderInfo extends Interface {
         super('.info');
 
         this.count = 0;
-        this.time;
+        this.time = 0;
         this.prev = 0;
         this.fps = 0;
 

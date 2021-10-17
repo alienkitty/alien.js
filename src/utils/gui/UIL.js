@@ -6,7 +6,7 @@ import { Interface } from '../Interface.js';
 
 export class UIL {
     static count = 0;
-    static time;
+    static time = 0;
     static prev = 0;
     static fps = 0;
     static promise = new Promise(resolve => this.resolve = resolve);

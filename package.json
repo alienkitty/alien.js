@@ -31,8 +31,7 @@
   "scripts": {
     "build": "rollup -c",
     "dev": "concurrently --names \"ROLLUP,HTTP\" -c \"bgBlue.bold,bgGreen.bold\" \"rollup -c -w -m inline\" \"servez public\"",
-    "start": "servez public",
-    "travis": "npm run build"
+    "start": "servez public"
   },
   "dependencies": {
     "three": "latest"

@@ -5,17 +5,11 @@
 <h1 align="center">Alien.js</h1>
 
 <p align="center">
-    <a href="https://npmjs.org/package/alien.js">
-        <img src="https://img.shields.io/npm/v/alien.js.svg" alt="NPM Package">
+    <a href="https://www.npmjs.com/package/alien.js">
+        <img src="https://img.shields.io/npm/v/alien.js" alt="NPM Package">
     </a>
-    <a href="https://travis-ci.org/pschroen/alien.js">
-        <img src="https://travis-ci.org/pschroen/alien.js.svg" alt="Build Status">
-    </a>
-    <a href="https://david-dm.org/pschroen/alien.js">
-        <img src="https://img.shields.io/david/pschroen/alien.js.svg" alt="Dependencies">
-    </a>
-    <a href="https://david-dm.org/pschroen/alien.js?type=dev">
-        <img src="https://img.shields.io/david/dev/pschroen/alien.js.svg" alt="Dev Dependencies">
+    <a href="https://lgtm.com/projects/g/pschroen/alien.js">
+        <img src="https://img.shields.io/lgtm/alerts/github/pschroen/alien.js" alt="Security Status">
     </a>
 </p>
 

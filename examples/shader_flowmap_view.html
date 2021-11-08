@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
 
     <title>Flowmap Shader View — Alien.js</title>
 
@@ -146,7 +146,7 @@
             async initMesh() {
                 const { loadSVG } = WorldController;
 
-                const data = await loadSVG('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg"><path stroke-width="0.3" d="M3 0L0 5h6z"/></svg>');
+                const data = await loadSVG('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg"><path stroke-width="0.3" d="M 3 0 L 0 5 H 6 Z"/></svg>');
                 const paths = data.paths;
 
                 const group = new Group();

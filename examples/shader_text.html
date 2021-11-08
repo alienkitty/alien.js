@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
 
     <title>Text Shader — Alien.js</title>
 
@@ -97,7 +97,7 @@
                 super();
 
                 this.count = 0;
-                this.time;
+                this.time = 0;
                 this.prev = 0;
                 this.fps = 0;
             }
@@ -106,6 +106,7 @@
                 const { loadTexture, camera } = WorldController;
 
                 const map = await loadTexture('assets/fonts/Roboto-Bold.png');
+                map.format = RGBFormat;
                 map.minFilter = LinearFilter;
                 map.generateMipmaps = false;
 
@@ -121,7 +122,7 @@
                     align: 'center',
                     letterSpacing: -0.05,
                     size: 2,
-                    lineHeight: 1.1,
+                    lineHeight: 1.1
                 });
 
                 const geometry = new BufferGeometry();

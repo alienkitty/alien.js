@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
 
     <title>3D Camera Shake — Alien.js</title>
 
@@ -589,7 +589,7 @@
              * Public methods
              */
 
-            static trigger = (event, ...params) => {
+            static trigger = (event, force) => {
                 if (!WebAudio.context) {
                     return;
                 }
@@ -601,7 +601,7 @@
                         gong.quaternion.copy(this.view.wand.quaternion);
                         gong.updateMatrixWorld();
 
-                        const strength = range(params[0], 0, 1000, 0, 1, true);
+                        const strength = range(force, 0, 1000, 0, 1, true);
                         gong.sound.gain.alpha = strength * 0.5;
                         gong.sound.playbackRate.alpha = clamp(0.8 + strength * 0.4, 0.8, 1.2);
                         gong.sound.play();

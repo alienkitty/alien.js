@@ -142,7 +142,7 @@
                         uniform float thicknessPower;
                         uniform float thicknessScale;
 
-                        void RE_Direct_Scattering(const in IncidentLight directLight, const in vec2 uv, const in GeometricContext geometry, const in PhysicalMaterial material, inout ReflectedLight reflectedLight) {
+                        void RE_Direct_Scattering(IncidentLight directLight, vec2 uv, GeometricContext geometry, PhysicalMaterial material, inout ReflectedLight reflectedLight) {
                             vec3 thickness = directLight.color * texture(thicknessMap, uv).r;
                             vec3 scatteringHalf = normalize(directLight.direction + (geometry.normal * thicknessDistortion));
                             float scatteringDot = pow(saturate(dot(geometry.viewDir, -scatteringHalf)), thicknessPower) * thicknessScale;
@@ -166,7 +166,7 @@
 
                     shader.fragmentShader = shader.fragmentShader.replace(
                         '#include <lights_fragment_begin>',
-                        ShaderChunk['lights_fragment_begin'].replaceAll(
+                        ShaderChunk.lights_fragment_begin.replaceAll(
                             'RE_Direct( directLight, geometry, material, reflectedLight );',
                             /* glsl */`
                             RE_Direct( directLight, geometry, material, reflectedLight );
@@ -546,7 +546,7 @@
                 this.scene.background = new Color(Config.BG_COLOR);
                 this.camera = new PerspectiveCamera(30);
                 this.camera.near = 0.5;
-                this.camera.far = 50;
+                this.camera.far = 40;
                 this.camera.position.z = 8;
                 this.camera.lookAt(this.scene.position);
 

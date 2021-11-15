@@ -128,7 +128,7 @@
             async initMesh() {
                 const { scene, loadTexture } = WorldController;
 
-                const geometry = new PlaneGeometry(110, 110);
+                const geometry = new PlaneGeometry(100, 100);
 
                 const map = await loadTexture('assets/textures/pbr/polished_concrete_basecolor.jpg');
                 map.wrapS = RepeatWrapping;
@@ -563,7 +563,7 @@
                 this.scene.fog = new Fog(Config.BG_COLOR, 1, 100);
                 this.camera = new PerspectiveCamera(30);
                 this.camera.near = 0.5;
-                this.camera.far = 50;
+                this.camera.far = 40;
                 this.camera.position.z = 10;
                 this.camera.lookAt(this.scene.position);
 

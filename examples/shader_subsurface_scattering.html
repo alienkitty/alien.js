@@ -13,13 +13,13 @@
 <body>
     <div id="root"></div>
     <script type="module">
-        import { ACESFilmicToneMapping, AmbientLight, BloomCompositeMaterial, BufferGeometryLoader, BufferGeometryLoaderThread, Color, Device, EnvironmentTextureLoader, Events, FXAAMaterial, GLSL3, Group, HemisphereLight, ImageBitmapLoaderThread, LuminosityMaterial, MathUtils, Mesh, MeshBasicMaterial, MeshStandardMaterial, NoBlending, OrthographicCamera, PerspectiveCamera, PointLight, RGBFormat, RawShaderMaterial, RepeatWrapping, Scene, ShaderChunk, SphereGeometry, Stage, TextureLoader, Thread, Uniform, UnrealBloomBlurMaterial, Vector2, Vector3, WebGLRenderTarget, WebGLRenderer, getFrustum, getFullscreenTriangle, mix, radians, ticker, tween } from '../build/alien.js';
+        import { ACESFilmicToneMapping, AmbientLight, BloomCompositeMaterial, BufferGeometryLoader, BufferGeometryLoaderThread, Color, Device, EnvironmentTextureLoader, Events, FXAAMaterial, GLSL3, Group, HemisphereLight, ImageBitmapLoaderThread, LuminosityMaterial, MathUtils, Mesh, MeshStandardMaterial, NoBlending, OrthographicCamera, PerspectiveCamera, PlaneGeometry, PointLight, RGBFormat, RawShaderMaterial, Reflector, ReflectorDudvMaterial, RepeatWrapping, Scene, ShaderChunk, Stage, TextureLoader, Thread, Uniform, UnrealBloomBlurMaterial, Vector2, Vector3, WebGLRenderTarget, WebGLRenderer, getFullscreenTriangle, mix, ticker } from '../build/alien.js';
 
         class Config {
             static BG_COLOR = '#0e0e0e';
             static UI_COLOR = 'rgba(255, 255, 255, 0.94)';
 
-            static DEBUG = location.search === '?debug';
+            static LIGHT_COLOR = 0xf44336;
         }
 
         import rgbshift from '../src/shaders/modules/rgbshift/rgbshift.glsl.js';
@@ -78,51 +78,26 @@
             }
         }
 
-        class MouseLight extends Group {
+        class Ball extends Group {
             constructor() {
                 super();
 
-                this.position.z = -1.5;
-
-                if (Config.DEBUG) {
-                    this.initDebug();
-                }
+                this.frameRotation = 0;
+                this.position.x = 0;
+                this.position.z = 1;
 
                 this.initLight();
             }
 
-            initDebug() {
-                const geometry = new SphereGeometry(0.125, 1, 1);
-
-                const material = new MeshBasicMaterial({
-                    color: 0xff0000,
-                    wireframe: true
-                });
-
-                const mesh = new Mesh(geometry, material);
-                this.add(mesh);
-            }
-
             initLight() {
-                const light = new PointLight(0x7f4c00, 0.2);
+                const light = new PointLight(Config.LIGHT_COLOR, 0.2);
                 this.add(light);
-            }
-        }
-
-        class Polyhedron extends Group {
-            constructor() {
-                super();
             }
 
             async initGeometry() {
                 const { loadBufferGeometry } = WorldController;
 
-                const geometry = await loadBufferGeometry('assets/geometry/polyhedron.json');
-
-                // 2nd set of UV's for aoMap and lightMap
-                geometry.attributes.uv2 = geometry.attributes.uv;
-
-                this.geometry = geometry;
+                this.geometry = await loadBufferGeometry('assets/geometry/spherical_cube.json');
             }
 
             async initMaterial() {
@@ -135,7 +110,7 @@
                     loadTexture('assets/textures/pbr/pitted_metal_normal.jpg'),
                     // https://occlusion-roughness-metalness.glitch.me/
                     loadTexture('assets/textures/pbr/pitted_metal_orm.jpg'),
-                    loadTexture('assets/textures/pbr/pitted_metal_height.jpg'),
+                    loadTexture('assets/textures/spherical_cube/spherical_cube_thickness.jpg'),
                     loadEnvironmentTexture('assets/textures/env.jpg')
                 ]);
 
@@ -155,12 +130,10 @@
                 ormMap.repeat.set(2, 1);
 
                 thicknessMap.anisotropy = anisotropy;
-                thicknessMap.wrapS = RepeatWrapping;
-                thicknessMap.wrapT = RepeatWrapping;
-                thicknessMap.repeat.set(2, 1);
 
                 const material = new MeshStandardMaterial({
-                    roughness: 3,
+                    color: new Color(Config.LIGHT_COLOR),
+                    roughness: 2,
                     metalness: 0.6,
                     map,
                     aoMap: ormMap,
@@ -170,19 +143,18 @@
                     normalMap,
                     normalScale: new Vector2(3, 3),
                     envMap,
-                    envMapIntensity: 1,
-                    flatShading: true
+                    envMapIntensity: 1
                 });
 
                 // Based on {@link module:three/examples/jsm/shaders/SubsurfaceScatteringShader.js} by daoshengmu
 
                 material.onBeforeCompile = shader => {
                     shader.uniforms.thicknessMap = new Uniform(thicknessMap);
-                    shader.uniforms.thicknessDistortion = new Uniform(0.185);
+                    shader.uniforms.thicknessDistortion = new Uniform(0.1);
                     shader.uniforms.thicknessAmbient = new Uniform(0);
-                    shader.uniforms.thicknessAttenuation = new Uniform(1);
-                    shader.uniforms.thicknessPower = new Uniform(20);
-                    shader.uniforms.thicknessScale = new Uniform(4);
+                    shader.uniforms.thicknessAttenuation = new Uniform(0.8);
+                    shader.uniforms.thicknessPower = new Uniform(2);
+                    shader.uniforms.thicknessScale = new Uniform(16);
 
                     shader.fragmentShader = shader.fragmentShader.replace(
                         'void main() {',
@@ -194,7 +166,7 @@
                         uniform float thicknessPower;
                         uniform float thicknessScale;
 
-                        void RE_Direct_Scattering(const in IncidentLight directLight, const in vec2 uv, const in GeometricContext geometry, inout ReflectedLight reflectedLight) {
+                        void RE_Direct_Scattering(IncidentLight directLight, vec2 uv, GeometricContext geometry, inout ReflectedLight reflectedLight) {
                             vec3 thickness = directLight.color * texture(thicknessMap, uv).g;
                             vec3 scatteringHalf = normalize(directLight.direction + (geometry.normal * thicknessDistortion));
                             float scatteringDot = pow(saturate(dot(geometry.viewDir, -scatteringHalf)), thicknessPower) * thicknessScale;
@@ -208,11 +180,140 @@
 
                     shader.fragmentShader = shader.fragmentShader.replace(
                         '#include <lights_fragment_begin>',
-                        ShaderChunk['lights_fragment_begin'].replaceAll(
+                        ShaderChunk.lights_fragment_begin.replaceAll(
                             'RE_Direct( directLight, geometry, material, reflectedLight );',
                             /* glsl */`
                             RE_Direct( directLight, geometry, material, reflectedLight );
-                            RE_Direct_Scattering(directLight, vUv, geometry, reflectedLight);
+                            RE_Direct_Scattering(directLight, vUv2, geometry, reflectedLight);
+                            `
+                        )
+                    );
+                };
+
+                this.material = material;
+            }
+
+            initMesh() {
+                this.mesh = new Mesh(this.geometry, this.material);
+                this.mesh.scale.multiplyScalar(0.5);
+                this.add(this.mesh);
+            }
+
+            /**
+             * Public methods
+             */
+
+            update = () => {
+                this.frameRotation += 0.01;
+                this.position.x = 1 * Math.sin(this.frameRotation);
+                this.position.z = 1 * Math.cos(this.frameRotation);
+            };
+
+            ready = async () => {
+                await Promise.all([
+                    this.initGeometry(),
+                    this.initMaterial()
+                ]);
+
+                this.initMesh();
+            };
+        }
+
+        class Sphere extends Group {
+            constructor() {
+                super();
+            }
+
+            async initGeometry() {
+                const { loadBufferGeometry } = WorldController;
+
+                this.geometry = await loadBufferGeometry('assets/geometry/spherical_cube.json');
+            }
+
+            async initMaterial() {
+                const { anisotropy, loadTexture, loadEnvironmentTexture } = WorldController;
+
+                // Textures
+                const [map, normalMap, ormMap, thicknessMap, envMap] = await Promise.all([
+                    // loadTexture('assets/textures/uv.jpg'),
+                    loadTexture('assets/textures/pbr/pitted_metal_basecolor.jpg'),
+                    loadTexture('assets/textures/pbr/pitted_metal_normal.jpg'),
+                    // https://occlusion-roughness-metalness.glitch.me/
+                    loadTexture('assets/textures/pbr/pitted_metal_orm.jpg'),
+                    loadTexture('assets/textures/spherical_cube/spherical_cube_thickness.jpg'),
+                    loadEnvironmentTexture('assets/textures/env.jpg')
+                ]);
+
+                map.anisotropy = anisotropy;
+                map.wrapS = RepeatWrapping;
+                map.wrapT = RepeatWrapping;
+                map.repeat.set(2, 1);
+
+                normalMap.anisotropy = anisotropy;
+                normalMap.wrapS = RepeatWrapping;
+                normalMap.wrapT = RepeatWrapping;
+                normalMap.repeat.set(2, 1);
+
+                ormMap.anisotropy = anisotropy;
+                ormMap.wrapS = RepeatWrapping;
+                ormMap.wrapT = RepeatWrapping;
+                ormMap.repeat.set(2, 1);
+
+                thicknessMap.anisotropy = anisotropy;
+
+                const material = new MeshStandardMaterial({
+                    roughness: 2,
+                    metalness: 0.6,
+                    map,
+                    aoMap: ormMap,
+                    aoMapIntensity: 1,
+                    roughnessMap: ormMap,
+                    metalnessMap: ormMap,
+                    normalMap,
+                    normalScale: new Vector2(3, 3),
+                    envMap,
+                    envMapIntensity: 1
+                });
+
+                // Based on {@link module:three/examples/jsm/shaders/SubsurfaceScatteringShader.js} by daoshengmu
+
+                material.onBeforeCompile = shader => {
+                    shader.uniforms.thicknessMap = new Uniform(thicknessMap);
+                    shader.uniforms.thicknessDistortion = new Uniform(0.185);
+                    shader.uniforms.thicknessAmbient = new Uniform(0);
+                    shader.uniforms.thicknessAttenuation = new Uniform(1);
+                    shader.uniforms.thicknessPower = new Uniform(20);
+                    shader.uniforms.thicknessScale = new Uniform(16);
+
+                    shader.fragmentShader = shader.fragmentShader.replace(
+                        'void main() {',
+                        /* glsl */`
+                        uniform sampler2D thicknessMap;
+                        uniform float thicknessDistortion;
+                        uniform float thicknessAmbient;
+                        uniform float thicknessAttenuation;
+                        uniform float thicknessPower;
+                        uniform float thicknessScale;
+
+                        void RE_Direct_Scattering(IncidentLight directLight, vec2 uv, GeometricContext geometry, PhysicalMaterial material, inout ReflectedLight reflectedLight) {
+                            vec3 thickness = directLight.color * texture(thicknessMap, uv).r;
+                            vec3 scatteringHalf = normalize(directLight.direction + (geometry.normal * thicknessDistortion));
+                            float scatteringDot = pow(saturate(dot(geometry.viewDir, -scatteringHalf)), thicknessPower) * thicknessScale;
+                            vec3 scatteringIllu = (scatteringDot + thicknessAmbient) * thickness;
+                            reflectedLight.directDiffuse += material.diffuseColor * directLight.color * scatteringIllu * thicknessAttenuation;
+                        }
+
+                        void main() {
+                        `
+                    );
+
+                    shader.fragmentShader = shader.fragmentShader.replace(
+                        '#include <lights_fragment_begin>',
+                        ShaderChunk.lights_fragment_begin.replaceAll(
+                            'RE_Direct( directLight, geometry, material, reflectedLight );',
+                            /* glsl */`
+                            RE_Direct( directLight, geometry, material, reflectedLight );
+                            RE_Direct_Scattering(directLight, vUv2, geometry, material, reflectedLight);
                             `
                         )
                     );
@@ -240,6 +341,59 @@
             };
         }
 
+        class Floor extends Group {
+            constructor() {
+                super();
+
+                this.initReflector();
+            }
+
+            initReflector() {
+                this.reflector = new Reflector({ blurIterations: 6 });
+            }
+
+            async initMesh() {
+                const { loadTexture } = WorldController;
+
+                const geometry = new PlaneGeometry(100, 100);
+
+                const map = await loadTexture('assets/textures/waterdudv.jpg');
+                map.wrapS = RepeatWrapping;
+                map.wrapT = RepeatWrapping;
+                map.repeat.set(6, 6);
+
+                const material = new ReflectorDudvMaterial(map);
+                material.uniforms.tReflect = new Uniform(this.reflector.renderTarget.texture);
+                material.uniforms.tReflectBlur = this.reflector.renderTargetUniform;
+                material.uniforms.uMatrix = this.reflector.textureMatrixUniform;
+
+                const mesh = new Mesh(geometry, material);
+                mesh.position.y = -0.54;
+                mesh.rotation.x = -Math.PI / 2;
+                mesh.add(this.reflector);
+
+                mesh.onBeforeRender = (renderer, scene, camera) => {
+                    this.visible = false;
+                    this.reflector.update(renderer, scene, camera);
+                    this.visible = true;
+                };
+
+                this.add(mesh);
+            }
+
+            /**
+             * Public methods
+             */
+
+            resize = (width, height) => {
+                height = 1024;
+
+                this.reflector.setSize(width, height);
+            };
+
+            ready = () => this.initMesh();
+        }
+
         class SceneView extends Group {
             constructor() {
                 super();
@@ -250,62 +404,46 @@
             }
 
             initViews() {
-                this.polyhedron = new Polyhedron();
-                this.add(this.polyhedron);
+                this.floor = new Floor();
+                this.add(this.floor);
 
-                this.light = new MouseLight();
-                this.add(this.light);
+                this.sphere = new Sphere();
+                this.add(this.sphere);
+
+                this.ball = new Ball();
+                this.add(this.ball);
             }
-        }
-
-        class SceneController {
-            static init(view) {
-                this.view = view;
-
-                this.mouse = new Vector2();
-                this.target = new Vector2();
-                this.lightPosition = new Vector3();
-                this.lerpSpeed = 0.25;
-
-                this.addListeners();
-            }
-
-            static addListeners() {
-                Stage.element.addEventListener('pointerdown', this.onPointerDown);
-                window.addEventListener('pointermove', this.onPointerMove);
-                window.addEventListener('pointerup', this.onPointerUp);
-            }
-
-            /**
-             * Event handlers
-             */
-
-            static onPointerDown = e => {
-                this.onPointerMove(e);
-            };
-
-            static onPointerMove = ({ clientX, clientY }) => {
-                if (!this.view.visible) {
-                    return;
-                }
-
-                this.target.x = (clientX / Stage.width) * 2 - 1;
-                this.target.y = 1 - (clientY / Stage.height) * 2;
-            };
-
-            static onPointerUp = e => {
-                this.onPointerMove(e);
-            };
 
             /**
              * Public methods
              */
 
-            static resize = () => {
-                const { width, height } = WorldController.getFrustum(this.view.light.position.z);
+            resize = (width, height) => {
+                this.floor.resize(width, height);
+            };
 
-                this.halfWidth = width / 2;
-                this.halfHeight = height / 2;
+            update = () => {
+                this.ball.update();
+            };
+
+            ready = () => Promise.all([
+                this.floor.ready(),
+                this.sphere.ready(),
+                this.ball.ready()
+            ]);
+        }
+
+        class SceneController {
+            static init(view) {
+                this.view = view;
+            }
+
+            /**
+             * Public methods
+             */
+
+            static resize = (width, height) => {
+                this.view.resize(width, height);
             };
 
             static update = () => {
@@ -313,20 +451,14 @@
                     return;
                 }
 
-                this.mouse.lerp(this.target, this.lerpSpeed);
-
-                this.lightPosition.x = this.mouse.x * this.halfWidth;
-                this.lightPosition.y = this.mouse.y * this.halfHeight;
-                this.lightPosition.z = this.view.light.position.z;
-
-                this.view.light.position.copy(this.lightPosition);
+                this.view.update();
             };
 
             static animateIn = () => {
                 this.view.visible = true;
             };
 
-            static ready = () => this.view.polyhedron.ready();
+            static ready = () => this.view.ready();
         }
 
         const BlurDirectionX = new Vector2(1, 0);
@@ -520,23 +652,14 @@
                 this.camera = camera;
 
                 this.mouse = new Vector2();
-                this.target = new Vector2();
+                this.lookAt = new Vector3(0, 0, -2);
+                this.origin = new Vector3();
+                this.target = new Vector3();
+                this.targetXY = new Vector2(5, 0.4);
+                this.origin.copy(this.camera.position);
 
-                // Motion control
-                this.group = new Group();
-                this.innerGroup = new Group();
-                this.group.add(this.innerGroup);
-                this.group.matrixAutoUpdate = false;
-                this.innerGroup.matrixAutoUpdate = false;
-
-                // Start position
-                this.innerGroup.position.copy(this.camera.position);
-
-                this.rotation = 0.0002;
-                this.lerpSpeed = 0.05;
-                this.multiplier = 1;
+                this.lerpSpeed = 0.02;
                 this.enabled = false;
-                this.prevent = true;
 
                 this.addListeners();
             }
@@ -556,15 +679,12 @@
             };
 
             static onPointerMove = ({ clientX, clientY }) => {
-                if (this.prevent) {
+                if (!this.enabled) {
                     return;
                 }
 
-                this.mouse.x = (clientX - this.halfWidth);
-                this.mouse.y = (clientY - this.halfHeight);
-
-                this.target.x = radians(-360) + (1 - this.mouse.x) * this.rotation * this.multiplier;
-                this.target.y = (1 - this.mouse.y) * this.rotation * this.multiplier;
+                this.mouse.x = (clientX / Stage.width) * 2 - 1;
+                this.mouse.y = 1 - (clientY / Stage.height) * 2;
             };
 
             static onPointerUp = e => {
@@ -578,19 +698,6 @@
             static resize = (width, height) => {
                 this.camera.aspect = width / height;
                 this.camera.updateProjectionMatrix();
-
-                this.halfWidth = width / 2;
-                this.halfHeight = height / 2;
-
-                if (width < height) {
-                    this.camera.position.z = 10;
-                    this.multiplier = 2;
-                } else {
-                    this.camera.position.z = 8;
-                    this.multiplier = 1;
-                }
-
-                this.innerGroup.position.z = this.camera.position.z;
             };
 
             static update = () => {
@@ -598,25 +705,16 @@
                     return;
                 }
 
-                this.group.rotation.x += (this.target.y - this.group.rotation.x) * this.lerpSpeed;
-                this.group.rotation.y += (this.target.x - this.group.rotation.y) * this.lerpSpeed;
+                this.target.x = this.origin.x + this.targetXY.x * this.mouse.x;
+                this.target.y = this.origin.y + this.targetXY.y * this.mouse.y;
+                this.target.z = this.origin.z;
 
-                this.updateCamera();
-            };
-
-            static updateCamera = () => {
-                this.group.updateMatrix();
-                this.innerGroup.updateMatrix();
-                this.group.updateMatrixWorld();
-                this.innerGroup.matrixWorld.decompose(this.camera.position, this.camera.quaternion, this.camera.scale);
+                this.camera.position.lerp(this.target, this.lerpSpeed);
+                this.camera.lookAt(this.lookAt);
             };
 
             static animateIn = () => {
                 this.enabled = true;
-
-                tween(this.target, { x: radians(-360) }, 4200, 'easeInOutQuart', () => {
-                    this.prevent = false;
-                });
             };
         }
 
@@ -645,7 +743,7 @@
                 this.scene.background = new Color(Config.BG_COLOR);
                 this.camera = new PerspectiveCamera(30);
                 this.camera.near = 0.5;
-                this.camera.far = 50;
+                this.camera.far = 40;
                 this.camera.position.z = 8;
                 this.camera.lookAt(this.scene.position);
 
@@ -714,8 +812,6 @@
             static getBufferGeometry = (path, callback) => this.bufferGeometryLoader.load(path, callback);
 
             static loadBufferGeometry = path => this.bufferGeometryLoader.loadAsync(path);
-
-            static getFrustum = offsetZ => getFrustum(this.camera, offsetZ);
         }
 
         class App {
@@ -724,7 +820,6 @@
                     this.initThread();
                 }
 
-                this.initStage();
                 this.initWorld();
                 this.initViews();
                 this.initControllers();
@@ -743,10 +838,6 @@
                 BufferGeometryLoaderThread.init();
 
                 Thread.shared();
-            }
-
-            static initStage() {
-                Stage.css({ cursor: 'none' });
             }
 
             static initWorld() {
@@ -781,13 +872,13 @@
 
                 WorldController.resize(width, height, dpr);
                 CameraController.resize(width, height);
-                SceneController.resize();
+                SceneController.resize(width, height);
                 RenderManager.resize(width, height, dpr);
             };
 
             static onUpdate = (time, delta, frame) => {
                 WorldController.update(time, delta, frame);
-                CameraController.update(time);
+                CameraController.update();
                 SceneController.update();
                 RenderManager.update(time, delta, frame);
             };

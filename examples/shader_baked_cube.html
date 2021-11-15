@@ -13,7 +13,7 @@
 <body>
     <div id="root"></div>
     <script type="module">
-        import { BasicMaterial, BufferGeometryLoader, BufferGeometryLoaderThread, Color, Device, DoubleSide, Events, FXAAMaterial, Group, ImageBitmapLoaderThread, Mesh, OrbitControls, OrthographicCamera, PerspectiveCamera, RGBFormat, Scene, ShadowMaterial, Stage, TextureLoader, Thread, Uniform, Vector2, WebGLRenderTarget, WebGLRenderer, getFullscreenTriangle, ticker } from '../build/alien.js';
+        import { BasicMaterial, BufferGeometryLoader, BufferGeometryLoaderThread, Color, Device, DoubleSide, Events, FXAAMaterial, Group, ImageBitmapLoaderThread, Mesh, OrbitControls, OrthographicCamera, PerspectiveCamera, RGBFormat, Scene, ShadowTextureMaterial, Stage, TextureLoader, Thread, Uniform, Vector2, WebGLRenderTarget, WebGLRenderer, getFullscreenTriangle, ticker } from '../build/alien.js';
 
         class Config {
             static BG_COLOR = '#fff';
@@ -85,7 +85,7 @@
                 const map = await loadTexture('assets/textures/cube/cube_shadow.jpg');
                 map.anisotropy = anisotropy;
 
-                this.material = new ShadowMaterial(map);
+                this.material = new ShadowTextureMaterial(map);
                 this.material.side = DoubleSide;
             }
 
@@ -235,7 +235,7 @@
                 this.scene.background = new Color(Config.BG_COLOR);
                 this.camera = new PerspectiveCamera(30);
                 this.camera.near = 0.5;
-                this.camera.far = 50;
+                this.camera.far = 40;
                 this.camera.position.z = 8;
                 this.camera.lookAt(this.scene.position);
 

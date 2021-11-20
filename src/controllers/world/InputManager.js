@@ -16,7 +16,6 @@ export class InputManager {
         this.click = null;
         this.lastTime = null;
         this.lastMouse = new Vector2();
-
         this.raycastInterval = 1 / 10; // 10 frames per second
         this.lastRaycast = 0;
         this.enabled = true;

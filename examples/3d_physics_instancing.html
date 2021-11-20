@@ -131,7 +131,12 @@
             }
 
             async initMesh() {
-                const { loadTexture } = WorldController;
+                const { physics, loadTexture } = WorldController;
+
+                const floor = new Mesh(new BoxGeometry(100, 5, 100));
+                floor.position.y = -2.5;
+                floor.geometry.setDrawRange(0, 0); // Avoid rendering geometry
+                physics.addMesh(floor);
 
                 const geometry = new PlaneGeometry(100, 100);
 
@@ -248,10 +253,8 @@
         }
 
         class SceneView extends Group {
-            constructor(physics) {
+            constructor() {
                 super();
-
-                this.physics = physics;
 
                 this.visible = false;
 
@@ -267,12 +270,7 @@
             }
 
             async initMesh() {
-                const floor = new Mesh(new BoxGeometry(100, 5, 100));
-                floor.position.y = -2.5;
-                floor.geometry.setDrawRange(0, 0); // Avoid rendering geometry
-                this.physics.addMesh(floor);
-
-                const { anisotropy, loadTexture, loadEnvironmentTexture } = WorldController;
+                const { physics, anisotropy, loadTexture, loadEnvironmentTexture } = WorldController;
 
                 // Textures
                 const [map, normalMap, ormMap, thicknessMap, envMap] = await Promise.all([
@@ -385,7 +383,7 @@
                     boxes.setMatrixAt(i, matrix);
                 }
 
-                this.physics.addMesh(boxes, 1);
+                physics.addMesh(boxes, 1);
 
                 // Spheres
                 const geometrySphere = new IcosahedronGeometry(0.075, 3);
@@ -404,7 +402,7 @@
                     spheres.setMatrixAt(i, matrix);
                 }
 
-                this.physics.addMesh(spheres, 1);
+                physics.addMesh(spheres, 1);
 
                 this.boxes = boxes;
                 this.spheres = spheres;
@@ -770,6 +768,7 @@
                 this.initWorld();
                 this.initLights();
                 this.initLoaders();
+                this.initPhysics();
 
                 this.addListeners();
             }
@@ -831,6 +830,10 @@
                 this.environmentLoader = new EnvironmentTextureLoader(this.renderer);
             }
 
+            static initPhysics() {
+                this.physics = new OimoPhysics();
+            }
+
             static addListeners() {
                 this.renderer.domElement.addEventListener('touchstart', this.onTouchStart);
             }
@@ -877,7 +880,6 @@
                     this.initThread();
                 }
 
-                this.initPhysics();
                 this.initWorld();
                 this.initViews();
                 this.initControllers();
@@ -897,25 +899,21 @@
                 Thread.shared();
             }
 
-            static initPhysics() {
-                this.physics = new OimoPhysics();
-            }
-
             static initWorld() {
                 WorldController.init();
                 Stage.add(WorldController.element);
             }
 
             static initViews() {
-                this.view = new SceneView(this.physics);
+                this.view = new SceneView();
                 WorldController.scene.add(this.view);
             }
 
             static initControllers() {
-                const { renderer, scene, camera } = WorldController;
+                const { renderer, scene, camera, physics } = WorldController;
 
                 CameraController.init(camera);
-                SceneController.init(this.view, this.physics);
+                SceneController.init(this.view, physics);
                 RenderManager.init(renderer, scene, camera);
             }
 
@@ -939,7 +937,7 @@
 
             static onUpdate = (time, delta, frame) => {
                 WorldController.update(time, delta, frame);
-                CameraController.update(time);
+                CameraController.update();
                 SceneController.update();
                 RenderManager.update(time, delta, frame);
             };

@@ -800,7 +800,7 @@
 
             static onUpdate = (time, delta, frame) => {
                 WorldController.update(time, delta, frame);
-                CameraController.update(time);
+                CameraController.update();
                 SceneController.update();
                 RenderManager.update(time, delta, frame);
             };

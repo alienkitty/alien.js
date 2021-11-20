@@ -13,7 +13,7 @@
 <body>
     <div id="root"></div>
     <script type="module">
-        import { ACESFilmicToneMapping, AmbientLight, BloomCompositeMaterial, BufferGeometryLoader, BufferGeometryLoaderThread, Color, Device, EnvironmentTextureLoader, Events, FXAAMaterial, GLSL3, Group, HemisphereLight, ImageBitmapLoaderThread, LuminosityMaterial, MathUtils, Mesh, MeshStandardMaterial, NoBlending, OrthographicCamera, PerspectiveCamera, PlaneGeometry, PointLight, RGBFormat, RawShaderMaterial, Reflector, ReflectorDudvMaterial, RepeatWrapping, Scene, ShaderChunk, Stage, TextureLoader, Thread, Uniform, UnrealBloomBlurMaterial, Vector2, Vector3, WebGLRenderTarget, WebGLRenderer, getFullscreenTriangle, mix, ticker } from '../build/alien.js';
+        import { ACESFilmicToneMapping, AmbientLight, BloomCompositeMaterial, Color, Device, EnvironmentTextureLoader, Events, FXAAMaterial, GLSL3, Group, HemisphereLight, IcosahedronGeometry, ImageBitmapLoaderThread, LuminosityMaterial, MathUtils, Mesh, MeshStandardMaterial, NoBlending, OrthographicCamera, PerspectiveCamera, PlaneGeometry, PointLight, RGBFormat, RawShaderMaterial, Reflector, ReflectorDudvMaterial, RepeatWrapping, Scene, ShaderChunk, Stage, TextureLoader, Thread, Uniform, UnrealBloomBlurMaterial, Vector2, Vector3, WebGLRenderTarget, WebGLRenderer, getFullscreenTriangle, mix, ticker } from '../build/alien.js';
 
         class Config {
             static BG_COLOR = '#0e0e0e';
@@ -94,14 +94,13 @@
                 this.add(light);
             }
 
-            async initGeometry() {
-                const { loadBufferGeometry } = WorldController;
-
-                this.geometry = await loadBufferGeometry('assets/geometry/spherical_cube.json');
-            }
-
-            async initMaterial() {
+            async initMesh() {
                 const { anisotropy, loadTexture, loadEnvironmentTexture } = WorldController;
+
+                const geometry = new IcosahedronGeometry(0.25, 6);
+
+                // 2nd set of UV's for aoMap and lightMap
+                geometry.attributes.uv2 = geometry.attributes.uv;
 
                 // Textures
                 const [map, normalMap, ormMap, thicknessMap, envMap] = await Promise.all([
@@ -110,7 +109,7 @@
                     loadTexture('assets/textures/pbr/pitted_metal_normal.jpg'),
                     // https://occlusion-roughness-metalness.glitch.me/
                     loadTexture('assets/textures/pbr/pitted_metal_orm.jpg'),
-                    loadTexture('assets/textures/spherical_cube/spherical_cube_thickness.jpg'),
+                    loadTexture('assets/textures/pbr/pitted_metal_height.jpg'),
                     loadEnvironmentTexture('assets/textures/env.jpg')
                 ]);
 
@@ -130,6 +129,9 @@
                 ormMap.repeat.set(2, 1);
 
                 thicknessMap.anisotropy = anisotropy;
+                thicknessMap.wrapS = RepeatWrapping;
+                thicknessMap.wrapT = RepeatWrapping;
+                thicknessMap.repeat.set(2, 1);
 
                 const material = new MeshStandardMaterial({
                     color: new Color(Config.LIGHT_COLOR),
@@ -190,13 +192,8 @@
                     );
                 };
 
-                this.material = material;
-            }
-
-            initMesh() {
-                this.mesh = new Mesh(this.geometry, this.material);
-                this.mesh.scale.multiplyScalar(0.5);
-                this.add(this.mesh);
+                const mesh = new Mesh(geometry, material);
+                this.add(mesh);
             }
 
             /**
@@ -209,14 +206,7 @@
                 this.position.z = 1 * Math.cos(this.frameRotation);
             };
 
-            ready = async () => {
-                await Promise.all([
-                    this.initGeometry(),
-                    this.initMaterial()
-                ]);
-
-                this.initMesh();
-            };
+            ready = () => this.initMesh();
         }
 
         class Sphere extends Group {
@@ -224,14 +214,13 @@
                 super();
             }
 
-            async initGeometry() {
-                const { loadBufferGeometry } = WorldController;
-
-                this.geometry = await loadBufferGeometry('assets/geometry/spherical_cube.json');
-            }
-
-            async initMaterial() {
+            async initMesh() {
                 const { anisotropy, loadTexture, loadEnvironmentTexture } = WorldController;
+
+                const geometry = new IcosahedronGeometry(0.5, 12);
+
+                // 2nd set of UV's for aoMap and lightMap
+                geometry.attributes.uv2 = geometry.attributes.uv;
 
                 // Textures
                 const [map, normalMap, ormMap, thicknessMap, envMap] = await Promise.all([
@@ -240,7 +229,7 @@
                     loadTexture('assets/textures/pbr/pitted_metal_normal.jpg'),
                     // https://occlusion-roughness-metalness.glitch.me/
                     loadTexture('assets/textures/pbr/pitted_metal_orm.jpg'),
-                    loadTexture('assets/textures/spherical_cube/spherical_cube_thickness.jpg'),
+                    loadTexture('assets/textures/pbr/pitted_metal_height.jpg'),
                     loadEnvironmentTexture('assets/textures/env.jpg')
                 ]);
 
@@ -260,6 +249,9 @@
                 ormMap.repeat.set(2, 1);
 
                 thicknessMap.anisotropy = anisotropy;
+                thicknessMap.wrapS = RepeatWrapping;
+                thicknessMap.wrapT = RepeatWrapping;
+                thicknessMap.repeat.set(2, 1);
 
                 const material = new MeshStandardMaterial({
                     roughness: 2,
@@ -319,26 +311,15 @@
                     );
                 };
 
-                this.material = material;
-            }
-
-            initMesh() {
-                this.mesh = new Mesh(this.geometry, this.material);
-                this.add(this.mesh);
+                const mesh = new Mesh(geometry, material);
+                this.add(mesh);
             }
 
             /**
              * Public methods
              */
 
-            ready = async () => {
-                await Promise.all([
-                    this.initGeometry(),
-                    this.initMaterial()
-                ]);
-
-                this.initMesh();
-            };
+            ready = () => this.initMesh();
         }
 
         class Floor extends Group {
@@ -769,7 +750,6 @@
             static initLoaders() {
                 this.textureLoader = new TextureLoader();
                 this.environmentLoader = new EnvironmentTextureLoader(this.renderer);
-                this.bufferGeometryLoader = new BufferGeometryLoader();
             }
 
             static addListeners() {
@@ -808,10 +788,6 @@
             static getEnvironmentTexture = (path, callback) => this.environmentLoader.load(path, callback);
 
             static loadEnvironmentTexture = path => this.environmentLoader.loadAsync(path);
-
-            static getBufferGeometry = (path, callback) => this.bufferGeometryLoader.load(path, callback);
-
-            static loadBufferGeometry = path => this.bufferGeometryLoader.loadAsync(path);
         }
 
         class App {
@@ -835,7 +811,6 @@
 
             static initThread() {
                 ImageBitmapLoaderThread.init();
-                BufferGeometryLoaderThread.init();
 
                 Thread.shared();
             }

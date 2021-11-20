@@ -60,8 +60,8 @@ export class App {
         const { renderer, scene, camera } = WorldController;
 
         CameraController.init(camera);
-        InputManager.init(camera);
         SceneController.init(this.view);
+        InputManager.init(camera);
         RenderManager.init(renderer, scene, camera);
     }
 
@@ -105,7 +105,7 @@ export class App {
 
     static onUpdate = (time, delta, frame) => {
         WorldController.update(time, delta, frame);
-        CameraController.update(time);
+        CameraController.update();
         SceneController.update();
         InputManager.update(time);
         RenderManager.update(time, delta, frame);

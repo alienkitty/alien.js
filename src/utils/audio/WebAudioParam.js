@@ -10,6 +10,7 @@ export class WebAudioParam {
         this.alpha = alpha;
 
         if (this.parent[this.node]) {
+            this.parent[this.node][this.param].cancelScheduledValues(this.parent.context.currentTime);
             this.parent[this.node][this.param].setValueAtTime(this.alpha, this.parent.context.currentTime);
         }
     }

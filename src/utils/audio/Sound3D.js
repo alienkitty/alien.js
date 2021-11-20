@@ -39,16 +39,14 @@ export class Sound3D extends Group {
 
             this.gain = new WebAudioParam(this, 'output', 'gain', 1);
 
-            if (this.context.createStereoPanner) {
-                this.screenSpacePosition = new Vector3();
+            this.screenSpacePosition = new Vector3();
 
-                this.stereo = this.context.createStereoPanner();
-                this.stereo.connect(this.output);
+            this.stereo = this.context.createStereoPanner();
+            this.stereo.connect(this.output);
 
-                this.stereoPan = new WebAudioParam(this, 'stereo', 'pan', 0);
-            }
+            this.stereoPan = new WebAudioParam(this, 'stereo', 'pan', 0);
 
-            this.input = this.stereo || this.output;
+            this.input = this.output;
         } else {
             this.worldPosition = new Vector3();
             this.worldQuaternion = new Quaternion();
@@ -59,17 +57,14 @@ export class Sound3D extends Group {
             this.panner.panningModel = 'HRTF';
             this.panner.connect(WebAudio.input);
 
-            if (this.panner.positionX) {
-                this.audioPositionX = new WebAudioParam(this, 'panner', 'positionX', 0);
-                this.audioPositionY = new WebAudioParam(this, 'panner', 'positionY', 0);
-                this.audioPositionZ = new WebAudioParam(this, 'panner', 'positionZ', 0);
-                this.audioOrientationX = new WebAudioParam(this, 'panner', 'orientationX', 0);
-                this.audioOrientationY = new WebAudioParam(this, 'panner', 'orientationY', 0);
-                this.audioOrientationZ = new WebAudioParam(this, 'panner', 'orientationZ', 1);
-            }
+            this.audioPositionX = new WebAudioParam(this, 'panner', 'positionX', 0);
+            this.audioPositionY = new WebAudioParam(this, 'panner', 'positionY', 0);
+            this.audioPositionZ = new WebAudioParam(this, 'panner', 'positionZ', 0);
+            this.audioOrientationX = new WebAudioParam(this, 'panner', 'orientationX', 0);
+            this.audioOrientationY = new WebAudioParam(this, 'panner', 'orientationY', 0);
+            this.audioOrientationZ = new WebAudioParam(this, 'panner', 'orientationZ', 1);
 
             this.output = this.panner;
-
             this.input = this.output;
         }
 
@@ -93,31 +88,23 @@ export class Sound3D extends Group {
 
             this.gain.value = 1 - range(this.cameraWorldPosition.distanceTo(this.worldPosition) - this.audioDistance, this.audioNearDistance, this.audioFarDistance, 0, 1, true);
 
-            if (this.stereo) {
-                this.screenSpacePosition.copy(this.worldPosition).project(this.camera);
+            this.screenSpacePosition.copy(this.worldPosition).project(this.camera);
 
-                if (isNaN(this.screenSpacePosition.x)) {
-                    this.stereoPan.value = 0;
-                } else {
-                    this.stereoPan.value = clamp(this.screenSpacePosition.x, -1, 1);
-                }
+            if (isNaN(this.screenSpacePosition.x)) {
+                this.stereoPan.value = 0;
+            } else {
+                this.stereoPan.value = clamp(this.screenSpacePosition.x, -1, 1);
             }
         } else {
             this.matrixWorld.decompose(this.worldPosition, this.worldQuaternion, this.worldScale);
-
             this.worldOrientation.set(0, 0, 1).applyQuaternion(this.worldQuaternion);
 
-            if (this.panner.positionX) {
-                this.audioPositionX.value = this.worldPosition.x;
-                this.audioPositionY.value = this.worldPosition.y;
-                this.audioPositionZ.value = this.worldPosition.z;
-                this.audioOrientationX.value = this.worldOrientation.x;
-                this.audioOrientationY.value = this.worldOrientation.y;
-                this.audioOrientationZ.value = this.worldOrientation.z;
-            } else {
-                this.panner.setPosition(this.worldPosition.x, this.worldPosition.y, this.worldPosition.z);
-                this.panner.setOrientation(this.worldOrientation.x, this.worldOrientation.y, this.worldOrientation.z);
-            }
+            this.audioPositionX.value = this.worldPosition.x;
+            this.audioPositionY.value = this.worldPosition.y;
+            this.audioPositionZ.value = this.worldPosition.z;
+            this.audioOrientationX.value = this.worldOrientation.x;
+            this.audioOrientationY.value = this.worldOrientation.y;
+            this.audioOrientationZ.value = this.worldOrientation.z;
         }
     }
 

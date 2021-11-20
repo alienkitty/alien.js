@@ -24,17 +24,15 @@ export class WebAudio3D extends Group {
 
         this.listener = this.context.listener;
 
-        if (this.listener.positionX) {
-            this.audioPositionX = new WebAudioParam(this, 'listener', 'positionX', 0);
-            this.audioPositionY = new WebAudioParam(this, 'listener', 'positionY', 0);
-            this.audioPositionZ = new WebAudioParam(this, 'listener', 'positionZ', 0);
-            this.audioForwardX = new WebAudioParam(this, 'listener', 'forwardX', 0);
-            this.audioForwardY = new WebAudioParam(this, 'listener', 'forwardY', 0);
-            this.audioForwardZ = new WebAudioParam(this, 'listener', 'forwardZ', -1);
-            this.audioUpX = new WebAudioParam(this, 'listener', 'upX', 0);
-            this.audioUpY = new WebAudioParam(this, 'listener', 'upY', 1);
-            this.audioUpZ = new WebAudioParam(this, 'listener', 'upZ', 0);
-        }
+        this.audioPositionX = new WebAudioParam(this, 'listener', 'positionX', 0);
+        this.audioPositionY = new WebAudioParam(this, 'listener', 'positionY', 0);
+        this.audioPositionZ = new WebAudioParam(this, 'listener', 'positionZ', 0);
+        this.audioForwardX = new WebAudioParam(this, 'listener', 'forwardX', 0);
+        this.audioForwardY = new WebAudioParam(this, 'listener', 'forwardY', 0);
+        this.audioForwardZ = new WebAudioParam(this, 'listener', 'forwardZ', -1);
+        this.audioUpX = new WebAudioParam(this, 'listener', 'upX', 0);
+        this.audioUpY = new WebAudioParam(this, 'listener', 'upY', 1);
+        this.audioUpZ = new WebAudioParam(this, 'listener', 'upZ', 0);
     }
 
     updateMatrixWorld(force) {
@@ -45,22 +43,16 @@ export class WebAudio3D extends Group {
         }
 
         this.matrixWorld.decompose(this.worldPosition, this.worldQuaternion, this.worldScale);
-
         this.worldOrientation.set(0, 0, -1).applyQuaternion(this.worldQuaternion);
 
-        if (this.listener.positionX) {
-            this.audioPositionX.value = this.worldPosition.x;
-            this.audioPositionY.value = this.worldPosition.y;
-            this.audioPositionZ.value = this.worldPosition.z;
-            this.audioForwardX.value = this.worldOrientation.x;
-            this.audioForwardY.value = this.worldOrientation.y;
-            this.audioForwardZ.value = this.worldOrientation.z;
-            this.audioUpX.value = this.up.x;
-            this.audioUpY.value = this.up.y;
-            this.audioUpZ.value = this.up.z;
-        } else {
-            this.listener.setPosition(this.worldPosition.x, this.worldPosition.y, this.worldPosition.z);
-            this.listener.setOrientation(this.worldOrientation.x, this.worldOrientation.y, this.worldOrientation.z, this.up.x, this.up.y, this.up.z);
-        }
+        this.audioPositionX.value = this.worldPosition.x;
+        this.audioPositionY.value = this.worldPosition.y;
+        this.audioPositionZ.value = this.worldPosition.z;
+        this.audioForwardX.value = this.worldOrientation.x;
+        this.audioForwardY.value = this.worldOrientation.y;
+        this.audioForwardZ.value = this.worldOrientation.z;
+        this.audioUpX.value = this.up.x;
+        this.audioUpY.value = this.up.y;
+        this.audioUpZ.value = this.up.z;
     }
 }

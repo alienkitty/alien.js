@@ -12,7 +12,7 @@ import { basename } from '../Utils.js';
 var AudioContext;
 
 if (typeof window !== 'undefined') {
-    AudioContext = window.AudioContext || window.webkitAudioContext;
+    AudioContext = window.AudioContext;
 }
 
 export class WebAudio {

@@ -18,7 +18,7 @@ export class Sound {
         this.output = this.context.createGain();
         this.output.connect(parent.input);
 
-        if (this.context.createStereoPanner && !bypass) {
+        if (!bypass) {
             this.stereo = this.context.createStereoPanner();
             this.stereo.connect(this.output);
         }
@@ -58,9 +58,11 @@ export class Sound {
                 return;
             }
 
+            this.output.gain.cancelScheduledValues(this.context.currentTime);
             this.output.gain.setValueAtTime(this.gain.value, this.context.currentTime);
 
             if (this.stereo) {
+                this.stereo.pan.cancelScheduledValues(this.context.currentTime);
                 this.stereo.pan.setValueAtTime(this.stereoPan.value, this.context.currentTime);
             }
 
@@ -76,11 +78,10 @@ export class Sound {
                 this.source = this.context.createBufferSource();
                 this.source.buffer = this.buffer;
                 this.source.loop = this.loop;
-                this.source.start();
-
+                this.source.playbackRate.cancelScheduledValues(this.context.currentTime);
                 this.source.playbackRate.setValueAtTime(this.playbackRate.value, this.context.currentTime);
-
                 this.source.connect(this.input);
+                this.source.start();
             }
 
             this.playing = true;

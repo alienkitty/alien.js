@@ -1,8 +1,7 @@
 import { HalfFloatType, Vector2, WebGLRenderTarget } from 'three';
 
-import { Stage } from 'alien.js';
+import { Events, Stage } from 'alien.js';
 
-import { Events } from '../../config/Events.js';
 import { Global } from '../../config/Global.js';
 import { Data } from '../../data/Data.js';
 import { AudioController } from '../audio/AudioController.js';
@@ -82,9 +81,11 @@ export class FluidController {
                 this.pointer[id].tracker.setData(Data.getUser(id));
             } else {
                 this.pointer[id].tracker.animateOut(() => {
-                    this.pointer[id].tracker.destroy();
+                    if (this.pointer[id]) {
+                        this.pointer[id].tracker.destroy();
 
-                    delete this.pointer[id];
+                        delete this.pointer[id];
+                    }
 
                     this.passMaterial.uniforms.uMouse.value[i] = new Vector2(0.5, 0.5);
                     this.passMaterial.uniforms.uLast.value[i] = new Vector2(0.5, 0.5);

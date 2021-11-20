@@ -1,11 +1,12 @@
-import { Stage, WebAudio, clamp, tween } from 'alien.js';
+import { Events, Stage, WebAudio, clamp, tween } from 'alien.js';
 
 import { Config } from '../../config/Config.js';
-import { Events } from '../../config/Events.js';
 import { Global } from '../../config/Global.js';
 
 export class AudioController {
-    static init() {
+    static init(instructions) {
+        this.instructions = instructions;
+
         if (!WebAudio.context) {
             return;
         }
@@ -14,7 +15,7 @@ export class AudioController {
         this.multiplier = 8;
         this.easing = 0.97;
         this.lerpSpeed = 0.07;
-        this.enabled = false;
+        this.enabled = WebAudio.context.state === 'running';
 
         if (!Global.SOUND) {
             WebAudio.gain.value = 0;
@@ -26,6 +27,12 @@ export class AudioController {
     static addListeners() {
         Stage.events.on(Events.VISIBILITY, this.onVisibility);
         Stage.element.addEventListener('pointerdown', this.onPointerDown);
+
+        if (this.enabled) {
+            return;
+        }
+
+        this.instructions.toggle(true, 3000);
     }
 
     static getMouseSpeed(id, normalX, normalY) {
@@ -73,6 +80,8 @@ export class AudioController {
 
         Stage.element.removeEventListener('pointerdown', this.onPointerDown);
 
+        this.instructions.toggle(false);
+
         this.trigger('bass_drum');
     };
 
@@ -89,7 +98,7 @@ export class AudioController {
     };
 
     static update = (id, x, y) => {
-        if (!WebAudio.context) {
+        if (!this.enabled) {
             return;
         }
 
@@ -115,7 +124,7 @@ export class AudioController {
     };
 
     static trigger = (event, id, gain, pan, rate) => {
-        if (!WebAudio.context) {
+        if (!this.enabled) {
             return;
         }
 

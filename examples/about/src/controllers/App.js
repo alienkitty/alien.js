@@ -1,6 +1,5 @@
-import { Assets, Stage, WebAudio, ticker, wait } from 'alien.js';
+import { Assets, Events, Stage, WebAudio, ticker, wait } from 'alien.js';
 
-import { Events } from '../config/Events.js';
 import { Global } from '../config/Global.js';
 import { AudioController } from './audio/AudioController.js';
 import { WorldController } from './world/WorldController.js';
@@ -25,7 +24,7 @@ export class App {
         await this.loader.ready();
 
         WebAudio.init(Assets.filter(path => /sounds/.test(path)));
-        AudioController.init();
+        AudioController.init(this.ui.instructions);
     }
 
     static initWorld() {
@@ -82,6 +81,6 @@ export class App {
 
         await wait(1000);
 
-        Stage.events.emit(Events.UI_SHOW);
+        this.ui.animateIn();
     };
 }

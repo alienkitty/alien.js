@@ -1,6 +1,4 @@
-import { Interface } from 'alien.js';
-
-import { Events } from '../../config/Events.js';
+import { Events, Interface } from 'alien.js';
 
 export class NavLink extends Interface {
     constructor(copy, link) {
@@ -20,9 +18,15 @@ export class NavLink extends Interface {
         this.css({
             cssFloat: 'left',
             padding: 10,
-            lineHeight: 15,
-            whiteSpace: 'nowrap',
-            pointerEvents: 'auto'
+            fontWeight: '700',
+            fontSize: 11,
+            lineHeight: 18,
+            letterSpacing: '0.03em',
+            textTransform: 'uppercase',
+            whiteSpace: 'no-wrap',
+            pointerEvents: 'auto',
+            webkitUserSelect: 'none',
+            userSelect: 'none'
         });
         this.attr({ href: this.link });
     }

@@ -10,25 +10,25 @@ export class HeaderInfo extends Interface {
         this.fps = 0;
 
         this.initHTML();
-        this.initText();
     }
 
     initHTML() {
         this.css({
             position: 'relative',
             cssFloat: 'right',
-            padding: 10
+            padding: 10,
+            webkitUserSelect: 'none',
+            userSelect: 'none'
         });
-    }
 
-    initText() {
         this.text = new Interface('.text');
         this.text.css({
             position: 'relative',
             cssFloat: 'left',
+            fontFamily: '"Roboto Mono", monospace',
+            fontSize: 11,
             lineHeight: 15,
-            letterSpacing: 1,
-            whiteSpace: 'nowrap'
+            letterSpacing: 1
         });
         this.text.text(this.fps);
         this.add(this.text);

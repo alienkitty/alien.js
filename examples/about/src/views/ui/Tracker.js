@@ -11,7 +11,7 @@ export class Tracker extends Interface {
         this.animatedIn = false;
 
         this.initHTML();
-        this.initView();
+        this.initText();
     }
 
     initHTML() {
@@ -25,8 +25,8 @@ export class Tracker extends Interface {
             marginTop: -12 / 2
         });
 
-        this.center = new Interface('.center');
-        this.center.css({
+        this.reticle = new Interface('.reticle');
+        this.reticle.css({
             left: '50%',
             top: '50%',
             width: 12,
@@ -36,10 +36,10 @@ export class Tracker extends Interface {
             border: `2px solid ${Config.UI_COLOR}`,
             borderRadius: '50%'
         });
-        this.add(this.center);
+        this.add(this.reticle);
     }
 
-    initView() {
+    initText() {
         this.text = new TrackerText();
         this.add(this.text);
     }

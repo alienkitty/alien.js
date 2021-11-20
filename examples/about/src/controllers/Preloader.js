@@ -1,7 +1,6 @@
 import { AssetLoader, Assets, Device, Events, FontLoader, MultiLoader, Stage, WebAudio } from 'alien.js';
 
 import { Config } from '../config/Config.js';
-import { Events } from '../config/Events.js';
 import { Data } from '../data/Data.js';
 import { PreloaderView } from '../views/PreloaderView.js';
 
@@ -39,7 +38,12 @@ export class Preloader {
         this.view.animateIn();
 
         this.loader = new MultiLoader();
-        this.loader.load(new FontLoader(['Roboto Mono']));
+        this.loader.load(new FontLoader([
+            { family: 'D-DIN', style: 'normal', weight: '400' },
+            { family: 'Gothic A1', style: 'normal', weight: '500' },
+            { family: 'Gothic A1', style: 'normal', weight: '700' },
+            { family: 'Roboto Mono', style: 'normal', weight: '500' }
+        ]));
         this.loader.load(new AssetLoader(Config.ASSETS));
         this.loader.add(1);
 

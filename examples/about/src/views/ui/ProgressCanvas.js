@@ -1,13 +1,12 @@
-import { Interface, clearTween, radians, ticker, tween } from 'alien.js';
+import { Events, Interface, clearTween, radians, ticker, tween } from 'alien.js';
 
 import { Config } from '../../config/Config.js';
-import { Events } from '../../config/Events.js';
 
 export class ProgressCanvas extends Interface {
     constructor() {
         super(null, 'canvas');
 
-        const size = 48;
+        const size = 32;
 
         this.width = size;
         this.height = size;

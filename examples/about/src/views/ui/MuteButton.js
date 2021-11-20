@@ -1,7 +1,6 @@
-import { Interface, Stage, clearTween, tween } from 'alien.js';
+import { Events, Interface, Stage, clearTween, tween } from 'alien.js';
 
 import { Config } from '../../config/Config.js';
-import { Events } from '../../config/Events.js';
 import { Global } from '../../config/Global.js';
 import { AudioController } from '../../controllers/audio/AudioController.js';
 
@@ -26,12 +25,14 @@ export class MuteButton extends Interface {
 
     initHTML() {
         this.css({
-            right: 20,
+            right: 22,
             bottom: 20,
             width: this.width + 20,
             height: this.height + 20,
             cursor: 'pointer',
             pointerEvents: 'none',
+            webkitUserSelect: 'none',
+            userSelect: 'none',
             opacity: 0
         });
     }
@@ -41,8 +42,6 @@ export class MuteButton extends Interface {
         this.canvas.css({
             left: '50%',
             top: '50%',
-            width: this.width,
-            height: this.height,
             marginLeft: -this.width / 2,
             marginTop: -this.height / 2
         });
@@ -115,12 +114,12 @@ export class MuteButton extends Interface {
     onResize = () => {
         if (Stage.width < Config.BREAKPOINT) {
             this.css({
-                right: 10,
+                right: 12,
                 bottom: 10
             });
         } else {
             this.css({
-                right: 20,
+                right: 22,
                 bottom: 20
             });
         }
@@ -136,7 +135,7 @@ export class MuteButton extends Interface {
         this.needsUpdate = true;
 
         if (type === 'mouseenter') {
-            tween(this, { yMultiplier: Global.SOUND ? 0.75 : 0.25 }, 275, 'easeInOutCubic', () => {
+            tween(this, { yMultiplier: Global.SOUND ? 0.7 : 0.3 }, 275, 'easeInOutCubic', () => {
                 this.needsUpdate = false;
             });
         } else {
@@ -184,7 +183,7 @@ export class MuteButton extends Interface {
         this.drawLine();
     };
 
-    showButton = () => {
+    animateIn = () => {
         clearTween(this);
 
         this.progress = 0;
@@ -200,7 +199,7 @@ export class MuteButton extends Interface {
         this.tween({ opacity: 1 }, 400, 'easeOutCubic');
     };
 
-    hideButton = () => {
+    animateOut = () => {
         this.animatedIn = false;
 
         this.css({ pointerEvents: 'none' });

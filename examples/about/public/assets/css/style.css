@@ -1,3 +1,31 @@
+@font-face {
+    font-family: 'D-DIN';
+    font-style: normal;
+    font-weight: 400;
+    src: url(../fonts/D-DIN.woff2) format('woff2');
+}
+
+@font-face {
+    font-family: 'Gothic A1';
+    font-style: normal;
+    font-weight: 500;
+    src: url(../fonts/GothicA1-Medium.woff2) format('woff2');
+}
+
+@font-face {
+    font-family: 'Gothic A1';
+    font-style: normal;
+    font-weight: 700;
+    src: url(../fonts/GothicA1-Bold.woff2) format('woff2');
+}
+
+@font-face {
+    font-family: 'Roboto Mono';
+    font-style: normal;
+    font-weight: 500;
+    src: url(../fonts/RobotoMono-Medium.woff2) format('woff2');
+}
+
 html, body, #root {
     width: 100%;
     height: 100%;
@@ -7,13 +35,14 @@ html, body, #root {
 body {
     margin: 0;
     position: fixed;
-    font-family: 'Roboto Mono', monospace;
-    font-weight: 400;
-    font-size: 11px;
-    line-height: 1.7;
-    letter-spacing: 0.03em;
+    font-family: 'Gothic A1', sans-serif;
+    font-weight: 500;
+    font-size: 13px;
+    line-height: 1.6;
     background: #000;
     color: rgba(255, 255, 255, 0.94);
+    -moz-osx-font-smoothing: grayscale;
+    -webkit-font-smoothing: antialiased;
 }
 
 #root, #root * {
@@ -27,6 +56,22 @@ body {
     -webkit-tap-highlight-color: transparent;
     -webkit-text-size-adjust: none;
     text-size-adjust: none;
+}
+
+#root h1 {
+    position: relative;
+    left: -1px;
+    margin: 0 0 6px;
+    font-family: 'D-DIN', sans-serif;
+    font-weight: 400;
+    font-size: 24px;
+    line-height: 1.3;
+    text-transform: uppercase;
+}
+
+#root p {
+    position: relative;
+    margin: 6px 0;
 }
 
 #root br, #root span, #root a {

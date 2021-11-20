@@ -16,14 +16,20 @@ export class TrackerText extends Interface {
         this.text = new Interface('.text');
         this.text.css({
             position: 'relative',
-            letterSpacing: 1
+            fontFamily: '"Roboto Mono", monospace',
+            fontSize: 11,
+            lineHeight: 18,
+            letterSpacing: 1,
+            whiteSpace: 'no-wrap'
         });
         this.add(this.text);
 
         this.latency = new Interface('.latency');
         this.latency.css({
             position: 'relative',
+            fontFamily: '"Roboto Mono", monospace',
             fontSize: 10,
+            lineHeight: 18,
             letterSpacing: 0.5,
             opacity: 0.7
         });

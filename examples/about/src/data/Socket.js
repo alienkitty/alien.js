@@ -1,6 +1,5 @@
-import { EventEmitter, Stage } from 'alien.js';
+import { EventEmitter, Events, Stage } from 'alien.js';
 
-import { Events } from '../config/Events.js';
 import { Global } from '../config/Global.js';
 
 export class Socket extends EventEmitter {

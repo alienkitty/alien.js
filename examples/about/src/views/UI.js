@@ -1,9 +1,11 @@
-import { Interface, Stage } from 'alien.js';
+import { Events, Interface, Stage } from 'alien.js';
 
-import { Events } from '../config/Events.js';
+import { Global } from '../config/Global.js';
+import { Details } from './ui/Details.js';
 import { Header } from './ui/Header.js';
-import { Footer } from './ui/Footer.js';
+import { DetailsButton } from './ui/DetailsButton.js';
 import { MuteButton } from './ui/MuteButton.js';
+import { Instructions } from './ui/Instructions.js';
 
 export class UI extends Interface {
     constructor() {
@@ -28,43 +30,50 @@ export class UI extends Interface {
     }
 
     initViews() {
+        this.details = new Details();
+        this.add(this.details);
+
         this.header = new Header();
         this.add(this.header);
 
-        this.footer = new Footer();
-        this.add(this.footer);
+        this.detailsButton = new DetailsButton();
+        this.add(this.detailsButton);
 
         this.muteButton = new MuteButton();
         this.add(this.muteButton);
 
+        this.instructions = new Instructions();
+        this.add(this.instructions);
+
+        this.buttons.push(this.detailsButton);
         this.buttons.push(this.muteButton);
     }
 
     addListeners() {
-        Stage.events.on(Events.UI_SHOW, this.onShow);
-        Stage.events.on(Events.UI_HIDE, this.onHide);
+        Stage.events.on(Events.UPDATE, this.onUsers);
+        this.detailsButton.events.on(Events.CLICK, this.onDetails);
     }
 
     /**
      * Event handlers
      */
 
-    onShow = () => {
-        this.header.animateIn();
-        this.footer.animateIn();
-
-        this.buttons.forEach(button => {
-            button.showButton();
-        });
+    onUsers = () => {
+        this.detailsButton.swapIndex();
     };
 
-    onHide = () => {
-        this.header.animateOut();
-        this.footer.animateOut();
+    onDetails = () => {
+        if (!Global.DETAILS_OPEN) {
+            Global.DETAILS_OPEN = true;
 
-        this.buttons.forEach(button => {
-            button.hideButton();
-        });
+            this.detailsButton.open();
+            this.details.animateIn();
+        } else {
+            Global.DETAILS_OPEN = false;
+
+            this.details.animateOut();
+            this.detailsButton.close();
+        }
     };
 
     /**
@@ -79,5 +88,21 @@ export class UI extends Interface {
         });
 
         this.header.info.update();
+    };
+
+    animateIn = () => {
+        this.header.animateIn();
+
+        this.buttons.forEach(button => {
+            button.animateIn();
+        });
+    };
+
+    animateOut = () => {
+        this.header.animateOut();
+
+        this.buttons.forEach(button => {
+            button.animateOut();
+        });
     };
 }

@@ -7,10 +7,14 @@
 
     <title>Error creating WebGL context!!1</title>
 
-    <link rel="preconnect" href="https://fonts.gstatic.com">
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto+Mono">
-
     <style>
+        @font-face {
+            font-family: 'Roboto Mono';
+            font-style: normal;
+            font-weight: 500;
+            src: url(assets/fonts/RobotoMono-Medium.woff2) format('woff2');
+        }
+
         html, body, #root {
             width: 100%;
             height: 100%;
@@ -21,12 +25,14 @@
             margin: 0;
             position: fixed;
             font-family: 'Roboto Mono', monospace;
-            font-weight: 400;
+            font-weight: 500;
             font-size: 11px;
             line-height: 1.7;
             letter-spacing: 0.03em;
             background: #000;
             color: rgba(255, 255, 255, 0.94);
+            -moz-osx-font-smoothing: grayscale;
+            -webkit-font-smoothing: antialiased;
         }
 
         #root, #root * {

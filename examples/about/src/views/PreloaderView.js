@@ -1,7 +1,6 @@
-import { Interface } from 'alien.js';
+import { Events, Interface } from 'alien.js';
 
 import { Config } from '../config/Config.js';
-import { Events } from '../config/Events.js';
 import { ProgressCanvas } from './ui/ProgressCanvas.js';
 
 export class PreloaderView extends Interface {
@@ -22,7 +21,9 @@ export class PreloaderView extends Interface {
             height: '100%',
             backgroundColor: Config.BG_COLOR,
             zIndex: 1,
-            pointerEvents: 'none'
+            pointerEvents: 'none',
+            webkitUserSelect: 'none',
+            userSelect: 'none'
         });
     }
 

@@ -1,8 +1,6 @@
-import { Interface, Stage } from 'alien.js';
+import { Events, Interface, Stage } from 'alien.js';
 
 import { Config } from '../../config/Config.js';
-import { Events } from '../../config/Events.js';
-import { AudioController } from '../../controllers/audio/AudioController.js';
 import { NavLink } from './NavLink.js';
 import { HeaderInfo } from './HeaderInfo.js';
 
@@ -43,12 +41,10 @@ export class Header extends Interface {
 
     addListeners() {
         Stage.events.on(Events.RESIZE, this.onResize);
-        this.about.events.on(Events.CLICK, this.onAboutClick);
     }
 
     removeListeners() {
         Stage.events.off(Events.RESIZE, this.onResize);
-        this.about.events.off(Events.CLICK, this.onAboutClick);
     }
 
     /**
@@ -69,10 +65,6 @@ export class Header extends Interface {
                 right: 20
             });
         }
-    };
-
-    onAboutClick = () => {
-        AudioController.mute();
     };
 
     /**

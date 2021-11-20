@@ -80,7 +80,6 @@ In its design, everything is an ES module, all user interfaces and components fo
 [depth](https://alien.js.org/examples/shader_depth.html) (fragment depth with dither)  
 [fresnel](https://alien.js.org/examples/shader_fresnel.html) (with looping noise)  
 [hologram](https://alien.js.org/examples/shader_hologram.html)  
-[transmission](https://alien.js.org/examples/shader_transmission.html)  
 [subsurface scattering](https://alien.js.org/examples/shader_subsurface_scattering.html) (SSS, [debug](https://alien.js.org/examples/shader_subsurface_scattering.html?debug))  
 [baked cube](https://alien.js.org/examples/shader_baked_cube.html)  
 [baked cube](https://alien.js.org/examples/shader_baked_cube_dudv.html) (DuDv)  

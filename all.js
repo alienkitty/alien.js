@@ -81,7 +81,6 @@ export { BokehBlurMaterial2 } from './src/materials/BokehBlurMaterial2.js';
 export { ReflectorBlurMaterial } from './src/materials/ReflectorBlurMaterial.js';
 export { ReflectorMaterial } from './src/materials/ReflectorMaterial.js';
 export { ReflectorDudvMaterial } from './src/materials/ReflectorDudvMaterial.js';
-export { TransmissionMaterial } from './src/materials/TransmissionMaterial.js';
 export { ChromaticAberrationMaterial } from './src/materials/ChromaticAberrationMaterial.js';
 export { VideoGlitchMaterial } from './src/materials/VideoGlitchMaterial.js';
 export { DepthMaskMaterial } from './src/materials/DepthMaskMaterial.js';

@@ -49,6 +49,7 @@ export { Flowmap } from './src/utils/world/Flowmap.js';
 export { Reflector } from './src/utils/world/Reflector.js';
 export { SoftShadows } from './src/utils/world/SoftShadows.js';
 export { TextGeometry } from './src/utils/world/TextGeometry.js';
+export { OimoPhysics } from './src/utils/world/OimoPhysics.js';
 export { WebAudio3D } from './src/utils/audio/WebAudio3D.js';
 export { Sound3D } from './src/utils/audio/Sound3D.js';
 

@@ -112,10 +112,6 @@ export class WebAudio {
             return;
         }
 
-        if (this.context.state === 'suspended') {
-            this.context.resume();
-        }
-
         const sound = this.sounds[id];
 
         if (sound) {
@@ -230,9 +226,7 @@ export class WebAudio {
             return;
         }
 
-        if (this.context.state === 'suspended') {
-            this.context.resume();
-        }
+        this.context.resume();
     }
 
     static destroy() {

@@ -1,4 +1,4 @@
-import { AssetLoader, Assets, Device, FontLoader, MultiLoader, Stage } from 'alien.js';
+import { AssetLoader, Assets, Device, Events, FontLoader, MultiLoader, Stage, WebAudio } from 'alien.js';
 
 import { Config } from '../config/Config.js';
 import { Events } from '../config/Events.js';
@@ -6,7 +6,7 @@ import { Data } from '../data/Data.js';
 import { PreloaderView } from '../views/PreloaderView.js';
 
 export class Preloader {
-    static async init() {
+    static init() {
         if (!Device.webgl) {
             return location.href = 'fallback.html';
         }
@@ -16,7 +16,7 @@ export class Preloader {
 
         Assets.options = {
             mode: 'cors',
-            //credentials: 'include'
+            // credentials: 'include'
         };
 
         Assets.cache = true;
@@ -54,11 +54,13 @@ export class Preloader {
     static addListeners() {
         this.loader.events.on(Events.PROGRESS, this.view.onProgress);
         this.view.events.on(Events.COMPLETE, this.onComplete);
+        Stage.element.addEventListener('pointerdown', this.onPointerDown);
     }
 
     static removeListeners() {
         this.loader.events.off(Events.PROGRESS, this.view.onProgress);
         this.view.events.off(Events.COMPLETE, this.onComplete);
+        Stage.element.removeEventListener('pointerdown', this.onPointerDown);
     }
 
     /**
@@ -74,5 +76,11 @@ export class Preloader {
         this.view = this.view.destroy();
 
         this.app.start();
+    };
+
+    static onPointerDown = () => {
+        Stage.element.removeEventListener('pointerdown', this.onPointerDown);
+
+        WebAudio.resume();
     };
 }

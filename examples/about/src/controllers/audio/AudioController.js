@@ -14,6 +14,7 @@ export class AudioController {
         this.multiplier = 8;
         this.easing = 0.97;
         this.lerpSpeed = 0.07;
+        this.enabled = false;
 
         if (!Global.SOUND) {
             WebAudio.gain.value = 0;
@@ -68,6 +69,8 @@ export class AudioController {
     };
 
     static onPointerDown = () => {
+        this.enabled = true;
+
         Stage.element.removeEventListener('pointerdown', this.onPointerDown);
 
         this.trigger('bass_drum');
@@ -111,7 +114,7 @@ export class AudioController {
         this.trigger('mouse_move', id, speed, pan, rate);
     };
 
-    static trigger = (event, ...params) => {
+    static trigger = (event, id, gain, pan, rate) => {
         if (!WebAudio.context) {
             return;
         }
@@ -124,12 +127,12 @@ export class AudioController {
                 WebAudio.fadeInAndPlay('deep_spacy_loop', 0.2, true, 2000, 'linear');
                 break;
             case 'mouse_move': {
-                const sound = this.water[params[0]] && this.water[params[0]].sound;
+                const sound = this.water[id] && this.water[id].sound;
 
                 if (sound && sound.playing) {
-                    sound.gain.value += (params[1] - sound.gain.value) * this.lerpSpeed;
-                    sound.stereoPan.value += (params[2] - sound.stereoPan.value) * this.lerpSpeed;
-                    sound.playbackRate.value += (params[3] - sound.playbackRate.value) * this.lerpSpeed;
+                    sound.gain.value += (gain - sound.gain.value) * this.lerpSpeed;
+                    sound.stereoPan.value += (pan - sound.stereoPan.value) * this.lerpSpeed;
+                    sound.playbackRate.value += (rate - sound.playbackRate.value) * this.lerpSpeed;
                 }
                 break;
             }

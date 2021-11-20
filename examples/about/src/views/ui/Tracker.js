@@ -61,7 +61,7 @@ export class Tracker extends Interface {
     };
 
     animateOut = callback => {
-        this.tween({ scale: 0, opacity: 0 }, 500, 'easeInCubic', () => {
+        this.tween({ scale: 0, opacity: 0 }, 500, 'easeOutCubic', () => {
             this.invisible();
 
             if (callback) {

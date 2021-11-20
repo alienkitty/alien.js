@@ -34,15 +34,11 @@ body {
     display: inline-block;
 }
 
-a, a:hover, a:focus {
+#root a, #root a:hover, #root a:focus {
     color: rgba(255, 255, 255, 0.94);
 }
 
 ::selection {
-    background: #fff;
+    background: rgba(255, 255, 255, 0.94);
     color: #000;
-}
-
-.preloader {
-    z-index: 100;
 }

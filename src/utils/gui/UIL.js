@@ -61,6 +61,7 @@ export class UIL {
             whiteSpace: 'nowrap',
             color: '#f2f2f2',
             pointerEvents: 'none',
+            webkitUserSelect: 'none',
             userSelect: 'none'
         });
         this.info.text(this.fps);

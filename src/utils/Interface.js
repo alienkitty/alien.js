@@ -11,8 +11,8 @@ import { clearTween, delayedCall, tween } from '../tween/Tween.js';
 // https://developer.mozilla.org/en-US/docs/Web/CSS/filter
 const Transforms = ['x', 'y', 'z', 'skewX', 'skewY', 'rotation', 'rotationX', 'rotationY', 'rotationZ', 'scale', 'scaleX', 'scaleY', 'scaleZ'];
 const Filters = ['blur', 'brightness', 'contrast', 'grayscale', 'hue', 'invert', 'saturate', 'sepia'];
-const Lacuna1 = ['opacity', 'brightness', 'contrast', 'saturate', 'scale'];
 const Numeric = ['opacity', 'zIndex', 'fontWeight', 'strokeWidth', 'strokeDashoffset'];
+const Lacuna1 = ['opacity', 'brightness', 'contrast', 'saturate', 'scale'];
 
 export class Interface {
     constructor(name, type = 'div', qualifiedName) {
@@ -143,7 +143,16 @@ export class Interface {
                 continue;
             }
 
-            this.element.style[key] = typeof props[key] !== 'string' && !~Numeric.indexOf(key) ? props[key] + 'px' : props[key];
+            let val;
+
+            if (~Numeric.indexOf(key)) {
+                val = props[key];
+                style[key] = val;
+            } else {
+                val = typeof props[key] !== 'string' ? props[key] + 'px' : props[key];
+            }
+
+            this.element.style[key] = val;
         }
 
         if (this.isTransform) {
@@ -257,8 +266,10 @@ export class Interface {
         for (const key in props) {
             let val;
 
-            if (~Transforms.indexOf(key) || ~Filters.indexOf(key)) {
-                val = typeof this.style[key] !== 'undefined' ? this.style[key] : ~Lacuna1.indexOf(key) ? 1 : 0;
+            if (typeof this.style[key] !== 'undefined') {
+                val = this.style[key];
+            } else if (~Transforms.indexOf(key) || ~Filters.indexOf(key) || ~Numeric.indexOf(key)) {
+                val = ~Lacuna1.indexOf(key) ? 1 : 0;
             } else if (typeof style[key] === 'string') {
                 val = parseFloat(style[key]);
             }
@@ -386,15 +397,17 @@ export class Interface {
         return this.css(style);
     }
 
-    line(progress) {
+    line(progress = this.progress || 0) {
+        const start = this.start || 0;
+        const offset = this.offset || 0;
+
         const length = this.element.getTotalLength();
-        const dash = length * (progress || this.progress);
+        const dash = length * progress;
         const gap = length - dash;
-        const offset = -length * (this.start + this.offset);
 
         const style = {
             strokeDasharray: `${dash},${gap}`,
-            strokeDashoffset: offset
+            strokeDashoffset: -length * (start + offset)
         };
 
         return this.css(style);

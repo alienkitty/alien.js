@@ -12,6 +12,9 @@
     "interaction",
     "html5",
     "css3",
+    "svg",
+    "canvas",
+    "threejs",
     "webgl",
     "webgl2",
     "webaudio"

@@ -13,6 +13,7 @@ export class Sound {
         this.buffer = buffer;
         this.loop = false;
         this.playing = false;
+        this.stopping = false;
 
         this.output = this.context.createGain();
         this.output.connect(parent.input);
@@ -22,7 +23,7 @@ export class Sound {
             this.stereo.connect(this.output);
         }
 
-        this.gain = new WebAudioParam(this, 'output', 'gain', 1);
+        this.gain = new WebAudioParam(this, 'output', 'gain', 0);
         this.stereoPan = new WebAudioParam(this, 'stereo', 'pan', 0);
         this.playbackRate = new WebAudioParam(this, 'source', 'playbackRate', 1);
 

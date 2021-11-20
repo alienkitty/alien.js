@@ -53,7 +53,6 @@ In its design, everything is an ES module, all user interfaces and components fo
 [camera wobble](https://alien.js.org/examples/3d_camera_wobble.html)  
 [camera shake](https://alien.js.org/examples/3d_camera_shake.html)  
 [abstract cube](https://alien.js.org/examples/3d_abstract_cube.html)  
-[abstract cube](https://alien.js.org/examples/3d_abstract_cube_sss.html) (SSS, [debug](https://alien.js.org/examples/3d_abstract_cube_sss.html?debug))  
 
 #### shader
 
@@ -80,7 +79,7 @@ In its design, everything is an ES module, all user interfaces and components fo
 [depth](https://alien.js.org/examples/shader_depth.html) (fragment depth with dither)  
 [fresnel](https://alien.js.org/examples/shader_fresnel.html) (with looping noise)  
 [hologram](https://alien.js.org/examples/shader_hologram.html)  
-[subsurface scattering](https://alien.js.org/examples/shader_subsurface_scattering.html) (SSS, [debug](https://alien.js.org/examples/shader_subsurface_scattering.html?debug))  
+[subsurface scattering](https://alien.js.org/examples/shader_subsurface_scattering.html) (SSS)  
 [baked cube](https://alien.js.org/examples/shader_baked_cube.html)  
 [baked cube](https://alien.js.org/examples/shader_baked_cube_dudv.html) (DuDv)  
 [baked cube](https://alien.js.org/examples/shader_baked_cube_sss.html) (SSS, [debug](https://alien.js.org/examples/shader_baked_cube_sss.html?debug))  

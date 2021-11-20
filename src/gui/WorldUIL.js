@@ -33,7 +33,7 @@ export class WorldUIL {
         const list = toneMapping.addList(Object.keys(toneMappingOptions), params, 'toneMapping', () => {
             renderer.toneMapping = toneMappingOptions[params.toneMapping];
             scene.traverse(object => {
-                if (object.type === 'Mesh') {
+                if (object.isMesh) {
                     object.material.needsUpdate = true;
                 }
             });

@@ -28,7 +28,7 @@ export class SoftShadows {
 
             vec2 poissonDisk[NUM_SAMPLES];
 
-            void initPoissonSamples(const in vec2 randomSeed) {
+            void initPoissonSamples(vec2 randomSeed) {
                 float ANGLE_STEP = PI2 * float(NUM_RINGS) / float(NUM_SAMPLES);
                 float INV_NUM_SAMPLES = 1.0 / float(NUM_SAMPLES);
 
@@ -44,11 +44,11 @@ export class SoftShadows {
                 }
             }
 
-            float penumbraSize(const in float zReceiver, const in float zBlocker) { // Parallel plane estimation
+            float penumbraSize(float zReceiver, float zBlocker) { // Parallel plane estimation
                 return (zReceiver - zBlocker) / zBlocker;
             }
 
-            float findBlocker(sampler2D shadowMap, const in vec2 uv, const in float zReceiver) {
+            float findBlocker(sampler2D shadowMap, vec2 uv, float zReceiver) {
                 // This uses similar triangles to compute what
                 // area of the shadow map we should search
                 float searchRadius = LIGHT_SIZE_UV * (zReceiver - NEAR_PLANE) / zReceiver;

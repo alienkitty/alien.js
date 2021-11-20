@@ -10,9 +10,10 @@ if (typeof window !== 'undefined') {
     CancelFrame = window.cancelAnimationFrame;
 } else {
     const start = performance.now();
+    const timestep = 1000 / 60;
 
     RequestFrame = callback => {
-        return setTimeout(() => callback(performance.now() - start), 1000 / 60);
+        return setTimeout(() => callback(performance.now() - start), timestep);
     };
 
     CancelFrame = clearTimeout;
@@ -64,7 +65,7 @@ export class Ticker {
 
             callback(this.time, this.delta, this.frame);
         }
-    }
+    };
 
     add(callback, fps) {
         if (fps) {

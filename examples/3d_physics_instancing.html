@@ -119,6 +119,8 @@
 
                 this.mouseLight = light;
 
+                this.position.y = -2.5;
+
                 this.initReflector();
             }
 
@@ -131,7 +133,7 @@
             }
 
             async initMesh() {
-                const { loadTexture } = WorldController;
+                const { physics, loadTexture } = WorldController;
 
                 const geometry = new PlaneGeometry(100, 100);
 
@@ -217,6 +219,7 @@
                 };
 
                 const mesh = new Mesh(geometry, material);
+                mesh.position.y = 2.5;
                 mesh.rotation.x = -Math.PI / 2;
                 mesh.receiveShadow = true;
                 mesh.add(this.reflector);
@@ -232,6 +235,13 @@
                 };
 
                 this.add(mesh);
+
+                // Physics mesh
+                const floor = new Mesh(new BoxGeometry(100, 5, 100));
+                floor.geometry.setDrawRange(0, 0); // Avoid rendering geometry
+                this.add(floor);
+
+                physics.add(floor, { density: 0 });
             }
 
             /**
@@ -248,10 +258,8 @@
         }
 
         class SceneView extends Group {
-            constructor(physics) {
+            constructor() {
                 super();
-
-                this.physics = physics;
 
                 this.visible = false;
 
@@ -267,12 +275,7 @@
             }
 
             async initMesh() {
-                const floor = new Mesh(new BoxGeometry(100, 5, 100));
-                floor.position.y = -2.5;
-                floor.geometry.setDrawRange(0, 0); // Avoid rendering geometry
-                this.physics.addMesh(floor);
-
-                const { anisotropy, loadTexture, loadEnvironmentTexture } = WorldController;
+                const { physics, anisotropy, loadTexture, loadEnvironmentTexture } = WorldController;
 
                 // Textures
                 const [map, normalMap, ormMap, thicknessMap, envMap] = await Promise.all([
@@ -385,7 +388,7 @@
                     boxes.setMatrixAt(i, matrix);
                 }
 
-                this.physics.addMesh(boxes, 1);
+                physics.add(boxes);
 
                 // Spheres
                 const geometrySphere = new IcosahedronGeometry(0.075, 3);
@@ -404,7 +407,7 @@
                     spheres.setMatrixAt(i, matrix);
                 }
 
-                this.physics.addMesh(spheres, 1);
+                physics.add(spheres);
 
                 this.boxes = boxes;
                 this.spheres = spheres;
@@ -491,12 +494,12 @@
                 let index = Math.floor(Math.random() * this.view.boxes.count);
 
                 this.position.set(0, Math.random() + 1, 0);
-                this.physics.setMeshPosition(this.view.boxes, this.position, index);
+                this.physics.setPosition(this.view.boxes, this.position, index);
 
                 index = Math.floor(Math.random() * this.view.spheres.count);
 
                 this.position.set(0, Math.random() + 1, 0);
-                this.physics.setMeshPosition(this.view.spheres, this.position, index);
+                this.physics.setPosition(this.view.spheres, this.position, index);
 
                 this.physics.step();
             };
@@ -770,6 +773,7 @@
                 this.initWorld();
                 this.initLights();
                 this.initLoaders();
+                this.initPhysics();
 
                 this.addListeners();
             }
@@ -831,6 +835,10 @@
                 this.environmentLoader = new EnvironmentTextureLoader(this.renderer);
             }
 
+            static initPhysics() {
+                this.physics = new OimoPhysics();
+            }
+
             static addListeners() {
                 this.renderer.domElement.addEventListener('touchstart', this.onTouchStart);
             }
@@ -877,7 +885,6 @@
                     this.initThread();
                 }
 
-                this.initPhysics();
                 this.initWorld();
                 this.initViews();
                 this.initControllers();
@@ -897,25 +904,21 @@
                 Thread.shared();
             }
 
-            static initPhysics() {
-                this.physics = new OimoPhysics();
-            }
-
             static initWorld() {
                 WorldController.init();
                 Stage.add(WorldController.element);
             }
 
             static initViews() {
-                this.view = new SceneView(this.physics);
+                this.view = new SceneView();
                 WorldController.scene.add(this.view);
             }
 
             static initControllers() {
-                const { renderer, scene, camera } = WorldController;
+                const { renderer, scene, camera, physics } = WorldController;
 
                 CameraController.init(camera);
-                SceneController.init(this.view, this.physics);
+                SceneController.init(this.view, physics);
                 RenderManager.init(renderer, scene, camera);
             }
 
@@ -939,7 +942,7 @@
 
             static onUpdate = (time, delta, frame) => {
                 WorldController.update(time, delta, frame);
-                CameraController.update(time);
+                CameraController.update();
                 SceneController.update();
                 RenderManager.update(time, delta, frame);
             };

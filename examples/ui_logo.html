@@ -63,7 +63,9 @@
              */
 
             onResize = () => {
-                if (Stage.width < Stage.height) {
+                const { width, height } = Stage;
+
+                if (width < height) {
                     this.css({
                         left: 30,
                         top: 30,

@@ -41,9 +41,6 @@ In its design, everything is an ES module, all user interfaces and components fo
 #### 3d
 
 [ripple](https://alien.js.org/examples/3d_ripple.html)  
-[physics](https://alien.js.org/examples/3d_physics_thread.html)  
-[audio](https://alien.js.org/examples/3d_audio.html)  
-[audio](https://alien.js.org/examples/3d_audio_fast.html) (fast)  
 [cubemap uv](https://alien.js.org/examples/3d_cubemap_uv.html)  
 [spherical cube uv](https://alien.js.org/examples/3d_spherical_cube_uv.html)  
 [penrose triangle](https://alien.js.org/examples/3d_penrose_triangle.html)  
@@ -51,7 +48,6 @@ In its design, everything is an ES module, all user interfaces and components fo
 [cubecamera](https://alien.js.org/examples/3d_cubecamera.html) (orbit camera, [debug](https://alien.js.org/examples/3d_cubecamera.html?debug))  
 [cubecamera rainbow](https://alien.js.org/examples/3d_cubecamera_rainbow.html) (orbit camera, [debug](https://alien.js.org/examples/3d_cubecamera_rainbow.html?debug))  
 [camera wobble](https://alien.js.org/examples/3d_camera_wobble.html)  
-[camera shake](https://alien.js.org/examples/3d_camera_shake.html)  
 [abstract cube](https://alien.js.org/examples/3d_abstract_cube.html)  
 
 #### shader
@@ -95,10 +91,6 @@ In its design, everything is an ES module, all user interfaces and components fo
 #### thread
 
 [canvas](https://alien.js.org/examples/canvas_thread.html) (noise)  
-[physics](https://alien.js.org/examples/3d_physics_thread.html)  
-[audio](https://alien.js.org/examples/3d_audio.html)  
-[audio](https://alien.js.org/examples/3d_audio_fast.html) (fast)  
-[camera shake](https://alien.js.org/examples/3d_camera_shake.html)  
 [pbr](https://alien.js.org/examples/shader_pbr.html) (texture loader thread)  
 [cubemap uv](https://alien.js.org/examples/3d_cubemap_uv.html) (buffer geometry loader thread)  
 

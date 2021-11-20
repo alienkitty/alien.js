@@ -1,9 +1,9 @@
 import { GLSL3, RawShaderMaterial, Uniform } from 'three';
 
-import vertexShader from '../shaders/ShadowMaterial.vert.js';
-import fragmentShader from '../shaders/ShadowMaterial.frag.js';
+import vertexShader from '../shaders/ShadowTextureMaterial.vert.js';
+import fragmentShader from '../shaders/ShadowTextureMaterial.frag.js';
 
-export class ShadowMaterial extends RawShaderMaterial {
+export class ShadowTextureMaterial extends RawShaderMaterial {
     constructor(map) {
         super({
             glslVersion: GLSL3,

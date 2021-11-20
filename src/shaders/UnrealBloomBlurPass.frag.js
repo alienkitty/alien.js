@@ -14,6 +14,6 @@ out vec4 FragColor;
 ${blur}
 
 void main() {
-    FragColor = blur(tMap, vUv, uResolution, uDirection, KERNEL_RADIUS, SIGMA);
+    FragColor = blur(tMap, vUv, uResolution, uDirection);
 }
 `;

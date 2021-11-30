@@ -422,7 +422,6 @@
                 mesh.position.y = 2.5;
                 mesh.rotation.x = -Math.PI / 2;
                 mesh.receiveShadow = true;
-                // mesh.layers.enable(Layer.PICKING);
                 mesh.add(this.reflector);
 
                 mesh.onBeforeRender = (renderer, scene, camera) => {
@@ -783,8 +782,6 @@
                     if (intersects.length) {
                         const point = intersects[0].point;
 
-                        // this.selected.position.copy(point);
-                        // this.physics.setPosition(this.selected, point);
                         this.physics.setPosition(this.body, point);
                     }
 
@@ -804,7 +801,6 @@
 
                     if (this.isDown && this.selected !== object) {
                         const point = intersects[0].point;
-                        point.z = object.position.z;
 
                         const body = new RigidBodyConfig();
                         body.type = RigidBodyType.STATIC;
@@ -814,6 +810,8 @@
                         const joint = new SphericalJointConfig();
                         joint.rigidBody1 = this.physics.get(object);
                         joint.rigidBody2 = this.physics.get(body);
+                        joint.rigidBody1.getLocalPointTo(point, joint.localAnchor1);
+                        joint.rigidBody2.getLocalPointTo(point, joint.localAnchor2);
                         joint.springDamper.setSpring(4, 1); // frequency, dampingRatio
                         this.physics.add(joint);
 

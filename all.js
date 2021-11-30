@@ -54,6 +54,7 @@ export { Sound3D } from './src/utils/audio/Sound3D.js';
 
 // Physics
 export { OimoPhysics, RigidBodyConfig, RigidBodyType, SphericalJointConfig } from './src/utils/world/OimoPhysics.js';
+export { OimoPhysicsBuffer } from './src/utils/world/OimoPhysicsBuffer.js';
 
 // Extras
 export { Smooth } from './src/utils/extras/Smooth.js';

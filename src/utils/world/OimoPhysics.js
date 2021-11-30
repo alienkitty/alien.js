@@ -74,6 +74,56 @@ export class OimoPhysics {
         this.map = new WeakMap();
     }
 
+    getBody(position, shape, {
+        density,
+        friction,
+        restitution,
+        contactCallback,
+        autoSleep,
+        kinematic
+    }) {
+        const shapeConfig = new ShapeConfig();
+        shapeConfig.geometry = shape;
+
+        if (density !== undefined) {
+            shapeConfig.density = density;
+        }
+
+        if (friction !== undefined) {
+            shapeConfig.friction = friction;
+        }
+
+        if (restitution !== undefined) {
+            shapeConfig.restitution = restitution;
+        }
+
+        const bodyConfig = new RigidBodyConfig();
+        bodyConfig.position.copyFrom(position);
+
+        if (autoSleep !== undefined) {
+            bodyConfig.autoSleep = autoSleep;
+        }
+
+        if (kinematic) {
+            bodyConfig.type = RigidBodyType.KINEMATIC;
+        } else if (density === 0) {
+            bodyConfig.type = RigidBodyType.STATIC;
+        } else {
+            bodyConfig.type = RigidBodyType.DYNAMIC;
+        }
+
+        const body = new RigidBody(bodyConfig);
+
+        if (contactCallback !== undefined) {
+            shapeConfig.contactCallback = new ContactCallback();
+            shapeConfig.contactCallback.preSolve = contact => contactCallback(body, contact);
+        }
+
+        body.addShape(new Shape(shapeConfig));
+
+        return body;
+    }
+
     getShape(geometry) {
         const parameters = geometry.parameters;
 
@@ -103,14 +153,14 @@ export class OimoPhysics {
             const shape = this.getShape(mesh.geometry);
 
             if (mesh.isInstancedMesh) {
-                this.handleInstancedMesh(mesh, shape, props);
+                return this.handleInstancedMesh(mesh, shape, props);
             } else {
-                this.handleMesh(object, shape, props);
+                return this.handleMesh(object, shape, props);
             }
         } else if (object instanceof JointConfig) {
-            this.handleJoint(object);
+            return this.handleJoint(object);
         } else {
-            this.handleBody(object);
+            return this.handleBody(object);
         }
     }
 
@@ -153,6 +203,8 @@ export class OimoPhysics {
         this.world.addJoint(joint);
 
         this.map.set(object, joint);
+
+        return joint;
     }
 
     handleBody(object) {
@@ -160,65 +212,26 @@ export class OimoPhysics {
         this.world.addRigidBody(body);
 
         this.map.set(object, body);
+
+        return body;
     }
 
-    handleMesh(object, shape, {
-        density,
-        friction,
-        restitution,
-        autoSleep,
-        kinematic
-    } = {}) {
+    handleMesh(object, shape, props = {}) {
         const position = object.position;
 
-        const shapeConfig = new ShapeConfig();
-        shapeConfig.geometry = shape;
-
-        if (density !== undefined) {
-            shapeConfig.density = density;
-        }
-
-        if (friction !== undefined) {
-            shapeConfig.friction = friction;
-        }
-
-        if (restitution !== undefined) {
-            shapeConfig.restitution = restitution;
-        }
-
-        const bodyConfig = new RigidBodyConfig();
-        bodyConfig.position.copyFrom(position);
-
-        if (autoSleep !== undefined) {
-            bodyConfig.autoSleep = autoSleep;
-        }
-
-        if (kinematic) {
-            bodyConfig.type = RigidBodyType.KINEMATIC;
-        } else if (density === 0) {
-            bodyConfig.type = RigidBodyType.STATIC;
-        } else {
-            bodyConfig.type = RigidBodyType.DYNAMIC;
-        }
-
-        const body = new RigidBody(bodyConfig);
-        body.addShape(new Shape(shapeConfig));
+        const body = this.getBody(position, shape, props);
         this.world.addRigidBody(body);
 
-        if (density !== 0) {
+        if (props.density !== 0) {
             this.objects.push(object);
         }
 
         this.map.set(object, body);
+
+        return body;
     }
 
-    handleInstancedMesh(object, shape, {
-        density,
-        friction,
-        restitution,
-        autoSleep,
-        kinematic
-    } = {}) {
+    handleInstancedMesh(object, shape, props = {}) {
         const array = object.instanceMatrix.array;
         const bodies = [];
 
@@ -226,61 +239,48 @@ export class OimoPhysics {
             const index = i * 16;
             const position = new Vec3(array[index + 12], array[index + 13], array[index + 14]);
 
-            const shapeConfig = new ShapeConfig();
-            shapeConfig.geometry = shape;
-
-            if (density !== undefined) {
-                shapeConfig.density = density;
-            }
-
-            if (friction !== undefined) {
-                shapeConfig.friction = friction;
-            }
-
-            if (restitution !== undefined) {
-                shapeConfig.restitution = restitution;
-            }
-
-            const bodyConfig = new RigidBodyConfig();
-            bodyConfig.position.copyFrom(position);
-
-            if (autoSleep !== undefined) {
-                bodyConfig.autoSleep = autoSleep;
-            }
-
-            if (kinematic) {
-                bodyConfig.type = RigidBodyType.KINEMATIC;
-            } else if (density === 0) {
-                bodyConfig.type = RigidBodyType.STATIC;
-            } else {
-                bodyConfig.type = RigidBodyType.DYNAMIC;
-            }
-
-            const body = new RigidBody(bodyConfig);
-            body.addShape(new Shape(shapeConfig));
+            const body = this.getBody(position, shape, props);
             this.world.addRigidBody(body);
 
             bodies.push(body);
         }
 
-        if (density !== 0) {
+        if (props.density !== 0) {
             this.objects.push(object);
         }
 
         this.map.set(object, bodies);
+
+        return bodies;
     }
 
     setPosition(object, position, index = 0) {
-        const body = object.isInstancedMesh ? this.map.get(object)[index] : this.map.get(object);
+        let body;
+
+        if (object instanceof RigidBody) {
+            body = object;
+        } else if (object.isInstancedMesh) {
+            body = this.map.get(object)[index];
+        } else {
+            body = this.map.get(object);
+        }
 
         body.setPosition(position);
     }
 
     setContactCallback(object, callback, index = 0) {
-        const contactCallback = new ContactCallback();
-        contactCallback.preSolve = callback;
+        let body;
 
-        const body = object.isInstancedMesh ? this.map.get(object)[index] : this.map.get(object);
+        if (object instanceof RigidBody) {
+            body = object;
+        } else if (object.isInstancedMesh) {
+            body = this.map.get(object)[index];
+        } else {
+            body = this.map.get(object);
+        }
+
+        const contactCallback = new ContactCallback();
+        contactCallback.preSolve = contact => callback(body, contact);
 
         let shape = body.getShapeList();
 

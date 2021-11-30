@@ -17,7 +17,7 @@
 
 <br>
 
-Alien.js is a design pattern for building [single-page applications](https://en.wikipedia.org/wiki/Single-page_application) with ES modules and [three.js](https://threejs.org/).
+Alien.js is a [MVC](https://en.wikipedia.org/wiki/Model%E2%80%93view%E2%80%93controller) design pattern for building [single-page applications](https://en.wikipedia.org/wiki/Single-page_application) with ES modules and [three.js](https://threejs.org/).
 
 The idea is to keep it simple, with minimal abstraction, and to build websites more like a framework, which is why [rollup.js](https://rollupjs.org/) is used instead for bundling.
 
@@ -95,7 +95,7 @@ In its design, everything is an ES module, all user interfaces and components fo
 
 #### audio
 
-[picking](https://alien.js.org/examples/3d_physics_picking.html) (SSS, contact audio, [debug](https://alien.js.org/examples/3d_physics_picking.html?debug))  
+[picking](https://alien.js.org/examples/3d_physics_picking.html) (with fast 3D audio)  
 
 #### thread
 
@@ -160,7 +160,9 @@ class Logo extends Interface {
      */
 
     onResize = () => {
-        if (Stage.width < Stage.height) {
+        const { width, height } = Stage;
+
+        if (width < height) {
             this.css({
                 left: 30,
                 top: 30,

@@ -939,7 +939,7 @@
                 }
             };
 
-            static onPointerUp = () => {
+            static onPointerUp = e => {
                 if (!this.enabled) {
                     return;
                 }
@@ -956,6 +956,8 @@
                 }
 
                 this.isDown = false;
+
+                this.onPointerMove(e);
             };
         }
 

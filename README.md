@@ -41,7 +41,6 @@ In its design, everything is an ES module, all user interfaces and components fo
 #### 3d
 
 [ripple](https://alien.js.org/examples/3d_ripple.html)  
-[physics](https://alien.js.org/examples/3d_physics_instancing.html) (instancing, SSS, [debug](https://alien.js.org/examples/3d_physics_instancing.html?debug))  
 [cubemap uv](https://alien.js.org/examples/3d_cubemap_uv.html)  
 [spherical cube uv](https://alien.js.org/examples/3d_spherical_cube_uv.html)  
 [penrose triangle](https://alien.js.org/examples/3d_penrose_triangle.html)  
@@ -94,6 +93,11 @@ In its design, everything is an ES module, all user interfaces and components fo
 [canvas](https://alien.js.org/examples/canvas_thread.html) (noise)  
 [pbr](https://alien.js.org/examples/shader_pbr.html) (texture loader thread)  
 [cubemap uv](https://alien.js.org/examples/3d_cubemap_uv.html) (buffer geometry loader thread)  
+
+#### physics
+
+[instancing](https://alien.js.org/examples/3d_physics_instancing.html) (SSS, [debug](https://alien.js.org/examples/3d_physics_instancing.html?debug))  
+[picking](https://alien.js.org/examples/3d_physics_picking.html) (SSS, [debug](https://alien.js.org/examples/3d_physics_picking.html?debug))  
 
 <br>
 

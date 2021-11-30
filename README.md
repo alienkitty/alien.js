@@ -88,16 +88,20 @@ In its design, everything is an ES module, all user interfaces and components fo
 [text](https://alien.js.org/examples/shader_text.html) (MSDF text)  
 [alienkitty](https://alienkitty.com/) (2d scene, flowmap with RGB shift, MSDF text)  
 
+#### physics
+
+[instancing](https://alien.js.org/examples/3d_physics_instancing.html) (SSS, [debug](https://alien.js.org/examples/3d_physics_instancing.html?debug))  
+[picking](https://alien.js.org/examples/3d_physics_picking.html) (SSS, contact audio, [debug](https://alien.js.org/examples/3d_physics_picking.html?debug))  
+
+#### audio
+
+[picking](https://alien.js.org/examples/3d_physics_picking.html) (SSS, contact audio, [debug](https://alien.js.org/examples/3d_physics_picking.html?debug))  
+
 #### thread
 
 [canvas](https://alien.js.org/examples/canvas_thread.html) (noise)  
 [pbr](https://alien.js.org/examples/shader_pbr.html) (texture loader thread)  
 [cubemap uv](https://alien.js.org/examples/3d_cubemap_uv.html) (buffer geometry loader thread)  
-
-#### physics
-
-[instancing](https://alien.js.org/examples/3d_physics_instancing.html) (SSS, [debug](https://alien.js.org/examples/3d_physics_instancing.html?debug))  
-[picking](https://alien.js.org/examples/3d_physics_picking.html) (SSS, [debug](https://alien.js.org/examples/3d_physics_picking.html?debug))  
 
 <br>
 

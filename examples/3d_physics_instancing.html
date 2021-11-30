@@ -119,6 +119,8 @@
 
                 this.mouseLight = light;
 
+                this.position.y = -2.5;
+
                 this.initReflector();
             }
 
@@ -132,11 +134,6 @@
 
             async initMesh() {
                 const { physics, loadTexture } = WorldController;
-
-                const floor = new Mesh(new BoxGeometry(100, 5, 100));
-                floor.position.y = -2.5;
-                floor.geometry.setDrawRange(0, 0); // Avoid rendering geometry
-                physics.addMesh(floor);
 
                 const geometry = new PlaneGeometry(100, 100);
 
@@ -222,6 +219,7 @@
                 };
 
                 const mesh = new Mesh(geometry, material);
+                mesh.position.y = 2.5;
                 mesh.rotation.x = -Math.PI / 2;
                 mesh.receiveShadow = true;
                 mesh.add(this.reflector);
@@ -237,6 +235,13 @@
                 };
 
                 this.add(mesh);
+
+                // Physics mesh
+                const floor = new Mesh(new BoxGeometry(100, 5, 100));
+                floor.geometry.setDrawRange(0, 0); // Avoid rendering geometry
+                this.add(floor);
+
+                physics.add(floor, { density: 0 });
             }
 
             /**
@@ -383,7 +388,7 @@
                     boxes.setMatrixAt(i, matrix);
                 }
 
-                physics.addMesh(boxes, 1);
+                physics.add(boxes);
 
                 // Spheres
                 const geometrySphere = new IcosahedronGeometry(0.075, 3);
@@ -402,7 +407,7 @@
                     spheres.setMatrixAt(i, matrix);
                 }
 
-                physics.addMesh(spheres, 1);
+                physics.add(spheres);
 
                 this.boxes = boxes;
                 this.spheres = spheres;
@@ -489,12 +494,12 @@
                 let index = Math.floor(Math.random() * this.view.boxes.count);
 
                 this.position.set(0, Math.random() + 1, 0);
-                this.physics.setMeshPosition(this.view.boxes, this.position, index);
+                this.physics.setPosition(this.view.boxes, this.position, index);
 
                 index = Math.floor(Math.random() * this.view.spheres.count);
 
                 this.position.set(0, Math.random() + 1, 0);
-                this.physics.setMeshPosition(this.view.spheres, this.position, index);
+                this.physics.setPosition(this.view.spheres, this.position, index);
 
                 this.physics.step();
             };

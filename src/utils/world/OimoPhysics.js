@@ -28,6 +28,8 @@ export const RagdollJointConfig = oimo.dynamics.constraint.joint.RagdollJointCon
 export const RagdollJoint = oimo.dynamics.constraint.joint.RagdollJoint;
 export const GenericJointConfig = oimo.dynamics.constraint.joint.GenericJointConfig;
 export const GenericJoint = oimo.dynamics.constraint.joint.GenericJoint;
+export const JointConfig = oimo.dynamics.constraint.joint.JointConfig;
+export const Joint = oimo.dynamics.constraint.joint.Joint;
 export const SpringDamper = oimo.dynamics.constraint.joint.SpringDamper;
 export const TranslationalLimitMotor = oimo.dynamics.constraint.joint.TranslationalLimitMotor;
 export const RotationalLimitMotor = oimo.dynamics.constraint.joint.RotationalLimitMotor;
@@ -58,7 +60,7 @@ export class OimoPhysics {
         fps = 60,
         timestep = 1 / fps,
         broadphase = 2,
-        gravity = new Vec3(0, -9.80665, 0),
+        gravity = new Vec3(0, -9.81, 0),
         velocityIterations = 10,
         positionIterations = 5
     } = {}) {
@@ -68,8 +70,8 @@ export class OimoPhysics {
         this.world.setNumVelocityIterations(velocityIterations);
         this.world.setNumPositionIterations(positionIterations);
 
-        this.meshes = [];
-        this.meshMap = new WeakMap();
+        this.objects = [];
+        this.map = new WeakMap();
     }
 
     getShape(geometry) {
@@ -90,49 +92,169 @@ export class OimoPhysics {
         return null;
     }
 
-    addMesh(mesh, mass = 0) {
-        const shape = this.getShape(mesh.geometry);
+    add(object, props) {
+        const mesh = object;
 
-        if (shape) {
+        if (object.parent && object.parent.isGroup) {
+            object = object.parent;
+        }
+
+        if (mesh.geometry) {
+            const shape = this.getShape(mesh.geometry);
+
             if (mesh.isInstancedMesh) {
-                this.handleInstancedMesh(mesh, mass, shape);
-            } else if (mesh.isMesh) {
-                this.handleMesh(mesh, mass, shape);
+                this.handleInstancedMesh(mesh, shape, props);
+            } else {
+                this.handleMesh(object, shape, props);
             }
+        } else if (object instanceof JointConfig) {
+            this.handleJoint(object);
+        } else {
+            this.handleBody(object);
         }
     }
 
-    handleMesh(mesh, mass, shape) {
+    get(object) {
+        return this.map.get(object);
+    }
+
+    remove(object) {
+        const body = this.map.get(object);
+
+        if (object instanceof JointConfig) {
+            this.world.removeJoint(body);
+        } else {
+            this.world.removeRigidBody(body);
+        }
+
+        this.map.delete(object);
+    }
+
+    handleJoint(object) {
+        let Joint;
+
+        if (object instanceof SphericalJointConfig) {
+            Joint = SphericalJoint;
+        } else if (object instanceof RevoluteJointConfig) {
+            Joint = RevoluteJoint;
+        } else if (object instanceof CylindricalJointConfig) {
+            Joint = CylindricalJoint;
+        } else if (object instanceof PrismaticJointConfig) {
+            Joint = PrismaticJoint;
+        } else if (object instanceof UniversalJointConfig) {
+            Joint = UniversalJoint;
+        } else if (object instanceof RagdollJointConfig) {
+            Joint = RagdollJoint;
+        } else if (object instanceof GenericJointConfig) {
+            Joint = GenericJoint;
+        }
+
+        const joint = new Joint(object);
+        this.world.addJoint(joint);
+
+        this.map.set(object, joint);
+    }
+
+    handleBody(object) {
+        const body = new RigidBody(object);
+        this.world.addRigidBody(body);
+
+        this.map.set(object, body);
+    }
+
+    handleMesh(object, shape, {
+        density,
+        friction,
+        restitution,
+        autoSleep,
+        kinematic
+    } = {}) {
+        const position = object.position;
+
         const shapeConfig = new ShapeConfig();
         shapeConfig.geometry = shape;
 
+        if (density !== undefined) {
+            shapeConfig.density = density;
+        }
+
+        if (friction !== undefined) {
+            shapeConfig.friction = friction;
+        }
+
+        if (restitution !== undefined) {
+            shapeConfig.restitution = restitution;
+        }
+
         const bodyConfig = new RigidBodyConfig();
-        bodyConfig.type = mass === 0 ? RigidBodyType.STATIC : RigidBodyType.DYNAMIC;
-        bodyConfig.position = new Vec3(mesh.position.x, mesh.position.y, mesh.position.z);
+        bodyConfig.position.copyFrom(position);
+
+        if (autoSleep !== undefined) {
+            bodyConfig.autoSleep = autoSleep;
+        }
+
+        if (kinematic) {
+            bodyConfig.type = RigidBodyType.KINEMATIC;
+        } else if (density === 0) {
+            bodyConfig.type = RigidBodyType.STATIC;
+        } else {
+            bodyConfig.type = RigidBodyType.DYNAMIC;
+        }
 
         const body = new RigidBody(bodyConfig);
         body.addShape(new Shape(shapeConfig));
         this.world.addRigidBody(body);
 
-        if (mass > 0) {
-            this.meshes.push(mesh);
-            this.meshMap.set(mesh, body);
+        if (density !== 0) {
+            this.objects.push(object);
         }
+
+        this.map.set(object, body);
     }
 
-    handleInstancedMesh(mesh, mass, shape) {
-        const array = mesh.instanceMatrix.array;
+    handleInstancedMesh(object, shape, {
+        density,
+        friction,
+        restitution,
+        autoSleep,
+        kinematic
+    } = {}) {
+        const array = object.instanceMatrix.array;
         const bodies = [];
 
-        for (let i = 0; i < mesh.count; i++) {
+        for (let i = 0; i < object.count; i++) {
             const index = i * 16;
+            const position = new Vec3(array[index + 12], array[index + 13], array[index + 14]);
 
             const shapeConfig = new ShapeConfig();
             shapeConfig.geometry = shape;
 
+            if (density !== undefined) {
+                shapeConfig.density = density;
+            }
+
+            if (friction !== undefined) {
+                shapeConfig.friction = friction;
+            }
+
+            if (restitution !== undefined) {
+                shapeConfig.restitution = restitution;
+            }
+
             const bodyConfig = new RigidBodyConfig();
-            bodyConfig.type = mass === 0 ? RigidBodyType.STATIC : RigidBodyType.DYNAMIC;
-            bodyConfig.position = new Vec3(array[index + 12], array[index + 13], array[index + 14]);
+            bodyConfig.position.copyFrom(position);
+
+            if (autoSleep !== undefined) {
+                bodyConfig.autoSleep = autoSleep;
+            }
+
+            if (kinematic) {
+                bodyConfig.type = RigidBodyType.KINEMATIC;
+            } else if (density === 0) {
+                bodyConfig.type = RigidBodyType.STATIC;
+            } else {
+                bodyConfig.type = RigidBodyType.DYNAMIC;
+            }
 
             const body = new RigidBody(bodyConfig);
             body.addShape(new Shape(shapeConfig));
@@ -141,34 +263,42 @@ export class OimoPhysics {
             bodies.push(body);
         }
 
-        if (mass > 0) {
-            this.meshes.push(mesh);
-            this.meshMap.set(mesh, bodies);
+        if (density !== 0) {
+            this.objects.push(object);
         }
+
+        this.map.set(object, bodies);
     }
 
-    setMeshPosition(mesh, position, index = 0) {
-        if (mesh.isInstancedMesh) {
-            const bodies = this.meshMap.get(mesh);
-            const body = bodies[index];
+    setPosition(object, position, index = 0) {
+        const body = object.isInstancedMesh ? this.map.get(object)[index] : this.map.get(object);
 
-            body.setPosition(new Vec3(position.x, position.y, position.z));
-        } else if (mesh.isMesh) {
-            const body = this.meshMap.get(mesh);
+        body.setPosition(position);
+    }
 
-            body.setPosition(new Vec3(position.x, position.y, position.z));
+    setContactCallback(object, callback, index = 0) {
+        const contactCallback = new ContactCallback();
+        contactCallback.preSolve = callback;
+
+        const body = object.isInstancedMesh ? this.map.get(object)[index] : this.map.get(object);
+
+        let shape = body.getShapeList();
+
+        while (shape) {
+            shape.setContactCallback(contactCallback);
+            shape = shape._next;
         }
     }
 
     step() {
         this.world.step(this.timestep);
 
-        for (let i = 0, il = this.meshes.length; i < il; i++) {
-            const mesh = this.meshes[i];
+        for (let i = 0, il = this.objects.length; i < il; i++) {
+            const object = this.objects[i];
 
-            if (mesh.isInstancedMesh) {
-                const array = mesh.instanceMatrix.array;
-                const bodies = this.meshMap.get(mesh);
+            if (object.isInstancedMesh) {
+                const array = object.instanceMatrix.array;
+                const bodies = this.map.get(object);
 
                 for (let j = 0, jl = bodies.length; j < jl; j++) {
                     const body = bodies[j];
@@ -176,12 +306,12 @@ export class OimoPhysics {
                     this.compose(body.getPosition(), body.getOrientation(), array, j * 16);
                 }
 
-                mesh.instanceMatrix.needsUpdate = true;
-            } else if (mesh.isMesh) {
-                const body = this.meshMap.get(mesh);
+                object.instanceMatrix.needsUpdate = true;
+            } else {
+                const body = this.map.get(object);
 
-                mesh.position.copy(body.getPosition());
-                mesh.quaternion.copy(body.getOrientation());
+                object.position.copy(body.getPosition());
+                object.quaternion.copy(body.getOrientation());
             }
         }
     }
@@ -204,19 +334,19 @@ export class OimoPhysics {
         const wy = w * y2;
         const wz = w * z2;
 
-        array[index + 0] = (1 - (yy + zz));
-        array[index + 1] = (xy + wz);
-        array[index + 2] = (xz - wy);
+        array[index + 0] = 1 - (yy + zz);
+        array[index + 1] = xy + wz;
+        array[index + 2] = xz - wy;
         array[index + 3] = 0;
 
-        array[index + 4] = (xy - wz);
-        array[index + 5] = (1 - (xx + zz));
-        array[index + 6] = (yz + wx);
+        array[index + 4] = xy - wz;
+        array[index + 5] = 1 - (xx + zz);
+        array[index + 6] = yz + wx;
         array[index + 7] = 0;
 
-        array[index + 8] = (xz + wy);
-        array[index + 9] = (yz - wx);
-        array[index + 10] = (1 - (xx + yy));
+        array[index + 8] = xz + wy;
+        array[index + 9] = yz - wx;
+        array[index + 10] = 1 - (xx + yy);
         array[index + 11] = 0;
 
         array[index + 12] = position.x;

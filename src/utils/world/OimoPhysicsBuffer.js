@@ -59,6 +59,8 @@ export class OimoPhysicsBuffer {
         this.bodies = [];
         this.map = new Map();
         this.array = new Float32Array();
+
+        this.position = new Vec3();
     }
 
     add(object) {
@@ -231,7 +233,9 @@ export class OimoPhysicsBuffer {
     setPosition(name, position) {
         const body = this.map.get(name);
 
-        body.setPosition(new Vec3(position[0], position[1], position[2]));
+        this.position.init(position[0], position[1], position[2]);
+
+        body.setPosition(this.position);
     }
 
     setContactCallback(name, callback) {

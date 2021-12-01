@@ -5,6 +5,8 @@
  * Based on https://github.com/lo-th/phy
  */
 
+import { Matrix4, Object3D } from 'three';
+
 import { oimo } from 'three/examples/jsm/libs/OimoPhysics/OimoPhysics.js';
 
 // Dynamics
@@ -72,9 +74,12 @@ export class OimoPhysics {
 
         this.objects = [];
         this.map = new WeakMap();
+
+        this.object = new Object3D();
+        this.matrix = new Matrix4();
     }
 
-    getBody(position, shape, {
+    getBody(position, quaternion, shape, {
         density,
         friction,
         restitution,
@@ -82,23 +87,7 @@ export class OimoPhysics {
         autoSleep,
         kinematic
     }) {
-        const shapeConfig = new ShapeConfig();
-        shapeConfig.geometry = shape;
-
-        if (density !== undefined) {
-            shapeConfig.density = density;
-        }
-
-        if (friction !== undefined) {
-            shapeConfig.friction = friction;
-        }
-
-        if (restitution !== undefined) {
-            shapeConfig.restitution = restitution;
-        }
-
         const bodyConfig = new RigidBodyConfig();
-        bodyConfig.position.copyFrom(position);
 
         if (autoSleep !== undefined) {
             bodyConfig.autoSleep = autoSleep;
@@ -114,12 +103,29 @@ export class OimoPhysics {
 
         const body = new RigidBody(bodyConfig);
 
+        const shapeConfig = new ShapeConfig();
+        shapeConfig.geometry = shape;
+
+        if (density !== undefined) {
+            shapeConfig.density = density;
+        }
+
+        if (friction !== undefined) {
+            shapeConfig.friction = friction;
+        }
+
+        if (restitution !== undefined) {
+            shapeConfig.restitution = restitution;
+        }
+
         if (contactCallback !== undefined) {
             shapeConfig.contactCallback = new ContactCallback();
             shapeConfig.contactCallback.preSolve = contact => contactCallback(body, contact);
         }
 
         body.addShape(new Shape(shapeConfig));
+        body.setPosition(position);
+        body.setOrientation(quaternion);
 
         return body;
     }
@@ -217,9 +223,7 @@ export class OimoPhysics {
     }
 
     handleMesh(object, shape, props = {}) {
-        const position = object.position;
-
-        const body = this.getBody(position, shape, props);
+        const body = this.getBody(object.position, object.quaternion, shape, props);
         this.world.addRigidBody(body);
 
         if (props.density !== 0) {
@@ -232,14 +236,13 @@ export class OimoPhysics {
     }
 
     handleInstancedMesh(object, shape, props = {}) {
-        const array = object.instanceMatrix.array;
         const bodies = [];
 
         for (let i = 0; i < object.count; i++) {
-            const index = i * 16;
-            const position = new Vec3(array[index + 12], array[index + 13], array[index + 14]);
+            object.getMatrixAt(i, this.matrix);
+            this.matrix.decompose(this.object.position, this.object.quaternion, this.object.scale);
 
-            const body = this.getBody(position, shape, props);
+            const body = this.getBody(this.object.position, this.object.quaternion, shape, props);
             this.world.addRigidBody(body);
 
             bodies.push(body);
@@ -297,13 +300,16 @@ export class OimoPhysics {
             const object = this.objects[i];
 
             if (object.isInstancedMesh) {
-                const array = object.instanceMatrix.array;
                 const bodies = this.map.get(object);
 
                 for (let j = 0, jl = bodies.length; j < jl; j++) {
                     const body = bodies[j];
 
-                    this.compose(body.getPosition(), body.getOrientation(), array, j * 16);
+                    this.object.position.copy(body.getPosition());
+                    this.object.quaternion.copy(body.getOrientation());
+                    this.object.updateMatrix();
+
+                    object.setMatrixAt(j, this.object.matrix);
                 }
 
                 object.instanceMatrix.needsUpdate = true;
@@ -314,44 +320,5 @@ export class OimoPhysics {
                 object.quaternion.copy(body.getOrientation());
             }
         }
-    }
-
-    compose(position, quaternion, array, index) {
-        const x = quaternion.x;
-        const y = quaternion.y;
-        const z = quaternion.z;
-        const w = quaternion.w;
-        const x2 = x + x;
-        const y2 = y + y;
-        const z2 = z + z;
-        const xx = x * x2;
-        const xy = x * y2;
-        const xz = x * z2;
-        const yy = y * y2;
-        const yz = y * z2;
-        const zz = z * z2;
-        const wx = w * x2;
-        const wy = w * y2;
-        const wz = w * z2;
-
-        array[index + 0] = 1 - (yy + zz);
-        array[index + 1] = xy + wz;
-        array[index + 2] = xz - wy;
-        array[index + 3] = 0;
-
-        array[index + 4] = xy - wz;
-        array[index + 5] = 1 - (xx + zz);
-        array[index + 6] = yz + wx;
-        array[index + 7] = 0;
-
-        array[index + 8] = xz + wy;
-        array[index + 9] = yz - wx;
-        array[index + 10] = 1 - (xx + yy);
-        array[index + 11] = 0;
-
-        array[index + 12] = position.x;
-        array[index + 13] = position.y;
-        array[index + 14] = position.z;
-        array[index + 15] = 1;
     }
 }

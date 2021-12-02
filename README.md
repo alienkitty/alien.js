@@ -91,8 +91,9 @@ In its design, everything is an ES module, all user interfaces and components fo
 #### physics
 
 [instancing](https://alien.js.org/examples/3d_physics_instancing.html) (SSS, [debug](https://alien.js.org/examples/3d_physics_instancing.html?debug))  
-[picking](https://alien.js.org/examples/3d_physics_picking.html) (SSS, contact audio, [debug](https://alien.js.org/examples/3d_physics_picking.html?debug))  
-[picking](https://alien.js.org/examples/3d_physics_thread.html) (physics thread, SSS, contact audio, [debug](https://alien.js.org/examples/3d_physics_thread.html?debug))  
+[instancing](https://alien.js.org/examples/3d_physics_instancing_thread.html) (physics thread, SSS, [debug](https://alien.js.org/examples/3d_physics_instancing_thread.html?debug))  
+[picking](https://alien.js.org/examples/3d_physics_picking.html) (contact audio, SSS, [debug](https://alien.js.org/examples/3d_physics_picking.html?debug))  
+[picking](https://alien.js.org/examples/3d_physics_picking_thread.html) (physics thread, contact audio, SSS, [debug](https://alien.js.org/examples/3d_physics_picking_thread.html?debug))  
 
 #### audio
 
@@ -103,7 +104,8 @@ In its design, everything is an ES module, all user interfaces and components fo
 [canvas](https://alien.js.org/examples/canvas_thread.html) (noise)  
 [pbr](https://alien.js.org/examples/shader_pbr.html) (texture loader thread)  
 [cubemap uv](https://alien.js.org/examples/3d_cubemap_uv.html) (buffer geometry loader thread)  
-[picking](https://alien.js.org/examples/3d_physics_thread.html) (physics thread)  
+[instancing](https://alien.js.org/examples/3d_physics_instancing_thread.html) (physics thread)  
+[picking](https://alien.js.org/examples/3d_physics_picking_thread.html) (physics thread)  
 
 <br>
 

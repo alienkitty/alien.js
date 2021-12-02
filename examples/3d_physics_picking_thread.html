@@ -244,7 +244,7 @@
             constructor(view) {
                 this.view = view;
 
-                this.meshes = [];
+                this.objects = [];
                 this.shapes = [];
                 this.buffer = [];
                 this.promise = new Promise(resolve => this.resolve = resolve);
@@ -306,7 +306,7 @@
                     object.kinematic = view.kinematic;
 
                     if (view.density !== 0) {
-                        this.meshes.push(view);
+                        this.objects.push(view);
                     }
                 }
 
@@ -370,14 +370,14 @@
                 if (array) {
                     let index = 0;
 
-                    for (let i = 0, l = this.meshes.length; i < l; i++) {
-                        const mesh = this.meshes[i];
+                    for (let i = 0, l = this.objects.length; i < l; i++) {
+                        const object = this.objects[i];
 
                         index = i * 8;
 
                         if (array[index + 7] !== 1) {
-                            mesh.position.fromArray(array, index);
-                            mesh.quaternion.fromArray(array, index + 3);
+                            object.position.fromArray(array, index);
+                            object.quaternion.fromArray(array, index + 3);
                         }
                     }
 

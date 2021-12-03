@@ -266,17 +266,11 @@
             }
 
             add(object, props) {
-                const mesh = object;
-
-                if (object.parent && object.parent.isGroup) {
-                    object = object.parent;
-                }
-
-                if (mesh.geometry) {
-                    if (mesh.isInstancedMesh) {
-                        return this.handleInstancedMesh(mesh, mesh.geometry, props);
+                if (object.geometry) {
+                    if (object.isInstancedMesh) {
+                        return this.handleInstancedMesh(object, object.geometry, props);
                     } else {
-                        return this.handleMesh(object, mesh.geometry, props);
+                        return this.handleMesh(object, object.geometry, props);
                     }
                 } else {
                     return this.handleObject(object, props);
@@ -317,6 +311,10 @@
             }
 
             handleMesh(object, geometry, props = {}) {
+                if (object.parent && object.parent.isGroup) {
+                    object = object.parent;
+                }
+
                 const body = this.getObject(object.position, object.quaternion, geometry, props);
                 this.shapes.push(body);
 
@@ -375,17 +373,15 @@
              */
 
             onVisibility = () => {
-                if (document.hidden) {
-                    this.enabled = false;
-                } else {
-                    this.enabled = true;
-                }
+                this.enabled = !document.hidden;
             };
 
             onBuffer = ({ array }) => {
-                if (this.enabled) {
-                    this.buffer.push(array);
+                if (!this.enabled) {
+                    return;
                 }
+
+                this.buffer.push(array);
             };
 
             /**

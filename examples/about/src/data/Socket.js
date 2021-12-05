@@ -2,16 +2,43 @@ import { EventEmitter, Events, Stage } from 'alien.js';
 
 import { Global } from '../config/Global.js';
 
+// https://stackoverflow.com/questions/1908492/unsigned-integer-in-javascript/7414641#7414641
+/* function ip2long(ip) {
+    let ipl = 0;
+
+    ip.split('.').forEach(octet => {
+        ipl <<= 8;
+        ipl += parseInt(octet, 10);
+    });
+
+    return ipl >>> 0;
+} */
+
+function long2ip(ipl) {
+    return `${ipl >>> 24}.${ipl >> 16 & 255}.${ipl >> 8 & 255}.${ipl & 255}`;
+}
+
 export class Socket extends EventEmitter {
     constructor() {
         super();
+
+        this.views = [];
+        // 0: USERS: EVENT_ID(UINT8), USER_ID(UINT8), NICKNAME(UINT8), REMOTE_ADDRESS(UINT32), LATENCY(UINT8)
+        // 1: HEARTBEAT: EVENT_ID(UINT8), USER_ID(UINT8), TIME(UINT64)
+        // 2: NICKNAME: EVENT_ID(UINT8), USER_ID(UINT8), NICKNAME(UINT8)
+        this.views[2] = new DataView(new ArrayBuffer(1 + 1 + 10));
+        // 3: MOTION: EVENT_ID(UINT8), USER_ID(UINT8), IS_DOWN(UINT8), X(FLOAT32), Y(FLOAT32)
+        this.views[3] = new DataView(new ArrayBuffer(1 + 1 + 1 + 4 + 4));
+
+        this.encoder = new TextEncoder();
+        this.decoder = new TextDecoder();
 
         this.connected = false;
     }
 
     init() {
-        this.socket = new WebSocket('wss://multiuser-fluid.glitch.me/');
-        // this.socket.binaryType = 'arraybuffer';
+        this.socket = new WebSocket('wss://multiuser-fluid.glitch.me/', ['permessage-deflate']);
+        this.socket.binaryType = 'arraybuffer';
 
         this.addListeners();
     }
@@ -32,10 +59,41 @@ export class Socket extends EventEmitter {
     };
 
     onMessage = ({ data }) => {
-        data = JSON.parse(data);
+        data = new DataView(data);
 
-        if (data.event) {
-            this.emit(data.event, data.message);
+        switch (data.getUint8(0)) {
+            case 0: {
+                const users = [];
+                const byteLength = 1 + 10 + 4 + 1;
+
+                let index = 1;
+
+                for (let i = 0, l = (data.byteLength - 1) / byteLength; i < l; i++) {
+                    const id = data.getUint8(index).toString();
+                    const nickname = this.decoder.decode(data.buffer.slice(index + 1, index + 11)).replace(/\0/g, '');
+                    const remoteAddress = long2ip(data.getUint32(index + 11));
+                    const latency = data.getUint8(index + 15);
+
+                    users.push({ id, nickname, remoteAddress, latency });
+
+                    index += byteLength;
+                }
+
+                this.emit('users', users);
+                break;
+            }
+            case 1:
+                this.emit('heartbeat', data);
+                break;
+            case 3: {
+                const id = data.getUint8(1).toString();
+                const isDown = !!data.getUint8(2);
+                const x = data.getFloat32(3);
+                const y = data.getFloat32(7);
+
+                this.emit('motion', { id, isDown, x, y });
+                break;
+            }
         }
     };
 
@@ -48,12 +106,12 @@ export class Socket extends EventEmitter {
     onHeartbeat = e => {
         if (!this.connected) {
             this.connected = true;
-            this.id = e.id;
+            this.id = e.getUint8(1).toString();
 
             this.nickname();
         }
 
-        this.send('heartbeat', e);
+        this.send(e);
     };
 
     /**
@@ -61,16 +119,33 @@ export class Socket extends EventEmitter {
      */
 
     nickname = () => {
-        this.send('nickname', { nickname: Global.NICKNAME });
+        const data = this.views[2];
+        data.setUint8(0, 2);
+
+        const buf = this.encoder.encode(Global.NICKNAME);
+
+        for (let i = 0; i < 10; i++) {
+            data.setUint8(2 + i, buf[i]);
+        }
+
+        this.send(data);
     };
 
-    send = (event, message = {}) => {
+    motion = ({ isDown, x, y }) => {
+        const data = this.views[3];
+        data.setUint8(0, 3);
+        data.setUint8(2, isDown ? 1 : 0);
+        data.setFloat32(3, x);
+        data.setFloat32(7, y);
+
+        this.send(data);
+    };
+
+    send = data => {
         if (!this.connected) {
             return;
         }
 
-        message.id = this.id;
-
-        this.socket.send(JSON.stringify({ event, message }));
+        this.socket.send(data.buffer);
     };
 }

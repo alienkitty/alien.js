@@ -218,7 +218,7 @@ export class FluidController {
     };
 
     static send = e => {
-        Data.Socket.send('motion', {
+        Data.Socket.motion({
             isDown: this.pointer.main.isDown,
             x: e.x / this.width,
             y: e.y / this.height

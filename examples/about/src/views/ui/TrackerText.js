@@ -29,7 +29,6 @@ export class TrackerText extends Interface {
             position: 'relative',
             fontFamily: '"Roboto Mono", monospace',
             fontSize: 10,
-            lineHeight: 18,
             letterSpacing: 0.5,
             opacity: 0.7
         });

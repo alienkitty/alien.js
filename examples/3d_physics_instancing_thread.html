@@ -188,13 +188,11 @@
         }
 
         class ScenePhysicsController {
-            constructor(view) {
-                this.view = view;
-
+            constructor() {
                 this.objects = [];
                 this.shapes = [];
-                this.map = new WeakMap();
                 this.buffer = [];
+                this.map = new WeakMap();
                 this.enabled = true;
 
                 this.object = new Object3D();
@@ -233,70 +231,49 @@
                 }
             }
 
-            getBody(position, quaternion, geometry, {
-                name,
-                density,
-                friction,
-                restitution,
-                autoSleep,
-                kinematic
-            }) {
-                const object = {};
-
-                object.name = name || guid();
-                object.position = position.toArray();
-                object.quaternion = quaternion.toArray();
-
-                const parameters = geometry.parameters;
-
-                if (geometry.type === 'BoxGeometry') {
-                    const sx = parameters.width !== undefined ? parameters.width / 2 : 0.5;
-                    const sy = parameters.height !== undefined ? parameters.height / 2 : 0.5;
-                    const sz = parameters.depth !== undefined ? parameters.depth / 2 : 0.5;
-
-                    object.type = 'box';
-                    object.size = [sx, sy, sz];
-                } else if (geometry.type === 'SphereGeometry' || geometry.type === 'IcosahedronGeometry') {
-                    object.type = 'sphere';
-                    object.size = parameters.radius !== undefined ? parameters.radius : 1;
-                }
-
-                object.density = density;
-                object.friction = friction;
-                object.restitution = restitution;
-                object.autoSleep = autoSleep;
-                object.kinematic = kinematic;
-
-                return object;
-            }
-
-            getJoint(object) {
-                object = Object.assign({}, object);
+            getObject(position, quaternion, geometry, props) {
+                const object = Object.assign({}, props);
 
                 if (object.name === undefined) {
                     object.name = guid();
+                }
+
+                if (position) {
+                    object.position = position.toArray();
+                }
+
+                if (quaternion) {
+                    object.quaternion = quaternion.toArray();
+                }
+
+                if (geometry) {
+                    const parameters = geometry.parameters;
+
+                    if (geometry.type === 'BoxGeometry') {
+                        const sx = parameters.width !== undefined ? parameters.width / 2 : 0.5;
+                        const sy = parameters.height !== undefined ? parameters.height / 2 : 0.5;
+                        const sz = parameters.depth !== undefined ? parameters.depth / 2 : 0.5;
+
+                        object.type = 'box';
+                        object.size = [sx, sy, sz];
+                    } else if (geometry.type === 'SphereGeometry' || geometry.type === 'IcosahedronGeometry') {
+                        object.type = 'sphere';
+                        object.size = parameters.radius !== undefined ? parameters.radius : 1;
+                    }
                 }
 
                 return object;
             }
 
             add(object, props) {
-                const mesh = object;
-
-                if (object.parent && object.parent.isGroup) {
-                    object = object.parent;
-                }
-
-                if (mesh.geometry) {
-                    if (mesh.isInstancedMesh) {
-                        return this.handleInstancedMesh(mesh, mesh.geometry, props);
+                if (object.geometry) {
+                    if (object.isInstancedMesh) {
+                        return this.handleInstancedMesh(object, object.geometry, props);
                     } else {
-                        return this.handleMesh(object, mesh.geometry, props);
+                        return this.handleMesh(object, object.geometry, props);
                     }
-                } else if (object.type === 'joint') {
-                    return this.handleJoint(object);
                 } else {
-                    return this.handleBody(object, props);
+                    return this.handleObject(object, props);
                 }
             }
 
@@ -306,23 +283,27 @@
 
             remove(object) {
                 const body = this.map.get(object);
-                this.thread.remove({ object: body });
+
+                if (this.thread) {
+                    this.thread.remove({ name: body.name });
+                } else {
+                    this.physics.remove(body.name);
+                }
 
                 this.map.delete(object);
             }
 
-            handleJoint(object) {
-                const joint = this.getJoint(object);
-                this.shapes.push(joint);
+            handleObject(object, props) {
+                if (props === undefined) {
+                    props = object;
+                }
 
-                this.map.set(object, joint);
-
-                return joint;
-            }
-
-            handleBody(object, props = {}) {
-                const body = this.getBody(object.position, object.quaternion, null, props);
+                const body = this.getObject(null, null, null, props);
                 this.shapes.push(body);
+
+                if (object.isObject3D && props.density !== 0) {
+                    this.objects.push(object);
+                }
 
                 this.map.set(object, body);
 
@@ -330,7 +311,11 @@
             }
 
             handleMesh(object, geometry, props = {}) {
-                const body = this.getBody(object.position, object.quaternion, geometry, props);
+                if (object.parent && object.parent.isGroup) {
+                    object = object.parent;
+                }
+
+                const body = this.getObject(object.position, object.quaternion, geometry, props);
                 this.shapes.push(body);
 
                 if (props.density !== 0) {
@@ -352,7 +337,7 @@
 
                     props.name = `${name}_${i}`;
 
-                    const body = this.getBody(this.object.position, this.object.quaternion, geometry, props);
+                    const body = this.getObject(this.object.position, this.object.quaternion, geometry, props);
                     this.shapes.push(body);
 
                     bodies.push(body);
@@ -388,21 +373,15 @@
              */
 
             onVisibility = () => {
-                if (document.hidden) {
-                    this.enabled = false;
-                } else {
-                    this.enabled = true;
-                }
+                this.enabled = !document.hidden;
             };
 
             onBuffer = ({ array }) => {
-                if (this.enabled) {
-                    this.buffer.push(array);
+                if (!this.enabled) {
+                    return;
                 }
-            };
 
-            onReady = () => {
-                this.resolve();
+                this.buffer.push(array);
             };
 
             /**

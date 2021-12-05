@@ -91306,17 +91306,11 @@ class OimoPhysics {
     }
 
     add(object, props) {
-        const mesh = object;
+        if (object.geometry) {
+            const shape = this.getShape(object.geometry);
 
-        if (object.parent && object.parent.isGroup) {
-            object = object.parent;
-        }
-
-        if (mesh.geometry) {
-            const shape = this.getShape(mesh.geometry);
-
-            if (mesh.isInstancedMesh) {
-                return this.handleInstancedMesh(mesh, shape, props);
+            if (object.isInstancedMesh) {
+                return this.handleInstancedMesh(object, shape, props);
             } else {
                 return this.handleMesh(object, shape, props);
             }
@@ -91380,6 +91374,10 @@ class OimoPhysics {
     }
 
     handleMesh(object, shape, props = {}) {
+        if (object.parent && object.parent.isGroup) {
+            object = object.parent;
+        }
+
         const body = this.getBody(object.position, object.quaternion, shape, props);
         this.world.addRigidBody(body);
 

@@ -333,17 +333,15 @@
              */
 
             onVisibility = () => {
-                if (document.hidden) {
-                    this.enabled = false;
-                } else {
-                    this.enabled = true;
-                }
+                this.enabled = !document.hidden;
             };
 
             onBuffer = ({ array }) => {
-                if (this.enabled) {
-                    this.buffer.push(array);
+                if (!this.enabled) {
+                    return;
                 }
+
+                this.buffer.push(array);
             };
 
             onContact = ({ force }) => {
@@ -1115,8 +1113,6 @@
                 this.mouse = new Vector2();
                 this.hover = null;
                 this.selected = null;
-                this.body = null;
-                this.joint = null;
                 this.isDown = false;
                 this.enabled = true;
 
@@ -1203,7 +1199,6 @@
                         const point = intersects[0].point;
                         const array = point.toArray();
 
-                        // SceneController.physics.add({ name: 'mouse', position: array });
                         SceneController.physics.setPosition('mouse', array);
 
                         SceneController.physics.add({
@@ -1245,7 +1240,6 @@
                     this.scene.remove(this.dragPlane);
 
                     SceneController.physics.remove('mouseJoint');
-                    // SceneController.physics.remove('mouse');
 
                     this.selected = null;
 

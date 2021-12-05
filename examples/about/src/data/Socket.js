@@ -23,7 +23,7 @@ export class Socket extends EventEmitter {
         super();
 
         this.views = [];
-        // 0: USERS: EVENT_ID(UINT8), USER_ID(UINT8), NICKNAME(UINT8), REMOTE_ADDRESS(UINT32), LATENCY(UINT8)
+        // 0: USERS: EVENT_ID(UINT8), USER_ID(UINT8), NICKNAME(UINT8), REMOTE_ADDRESS(UINT32), LATENCY(UINT16)
         // 1: HEARTBEAT: EVENT_ID(UINT8), USER_ID(UINT8), TIME(UINT64)
         // 2: NICKNAME: EVENT_ID(UINT8), USER_ID(UINT8), NICKNAME(UINT8)
         this.views[2] = new DataView(new ArrayBuffer(1 + 1 + 10));
@@ -64,7 +64,7 @@ export class Socket extends EventEmitter {
         switch (data.getUint8(0)) {
             case 0: {
                 const users = [];
-                const byteLength = 1 + 10 + 4 + 1;
+                const byteLength = 1 + 10 + 4 + 2;
 
                 let index = 1;
 
@@ -72,7 +72,7 @@ export class Socket extends EventEmitter {
                     const id = data.getUint8(index).toString();
                     const nickname = this.decoder.decode(data.buffer.slice(index + 1, index + 11)).replace(/\0/g, '');
                     const remoteAddress = long2ip(data.getUint32(index + 11));
-                    const latency = data.getUint8(index + 15);
+                    const latency = data.getUint16(index + 15);
 
                     users.push({ id, nickname, remoteAddress, latency });
 

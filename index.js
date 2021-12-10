@@ -51,3 +51,7 @@ export { SoftShadows } from './src/utils/world/SoftShadows.js';
 export { TextGeometry } from './src/utils/world/TextGeometry.js';
 export { WebAudio3D } from './src/utils/audio/WebAudio3D.js';
 export { Sound3D } from './src/utils/audio/Sound3D.js';
+
+// Physics
+export { OimoPhysicsBuffer } from './src/utils/physics/OimoPhysicsBuffer.js';
+export { OimoPhysicsController } from './src/utils/physics/OimoPhysicsController.js';

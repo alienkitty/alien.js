@@ -80,7 +80,7 @@ export class OimoPhysicsBuffer {
 
         if (object instanceof Joint) {
             this.world.removeJoint(object);
-        } else {
+        } else if (object instanceof RigidBody) {
             this.world.removeRigidBody(object);
         }
 

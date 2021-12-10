@@ -13,7 +13,7 @@
 <body>
     <div id="root"></div>
     <script type="module">
-        import { ACESFilmicToneMapping, AmbientLight, AssetLoader, Assets, BasicShadowMap, BloomCompositeMaterial, BoxGeometry, Color, Device, DirectionalLight, EnvironmentTextureLoader, EventEmitter, Events, FXAAMaterial, GLSL3, Group, HemisphereLight, IcosahedronGeometry, ImageBitmapLoaderThread, LuminosityMaterial, MathUtils, Mesh, MeshBasicMaterial, MeshPhongMaterial, MeshStandardMaterial, NoBlending, OimoPhysicsBuffer, OrthographicCamera, PerspectiveCamera, PlaneGeometry, PointLight, RGBFormat, RawShaderMaterial, Raycaster, Reflector, RepeatWrapping, Scene, ShaderChunk, ShadowMaterial, Sound3D, Stage, TextureLoader, Thread, Uniform, UnrealBloomBlurMaterial, Vector2, Vector3, WebAudio, WebGLRenderTarget, WebGLRenderer, clamp, delayedCall, getFullscreenTriangle, mix, range, ticker } from '../build/alien.js';
+        import { ACESFilmicToneMapping, AmbientLight, AssetLoader, Assets, BasicShadowMap, BloomCompositeMaterial, BoxGeometry, Color, Device, DirectionalLight, EnvironmentTextureLoader, EventEmitter, Events, FXAAMaterial, GLSL3, Group, HemisphereLight, IcosahedronGeometry, ImageBitmapLoaderThread, LuminosityMaterial, MathUtils, Mesh, MeshBasicMaterial, MeshPhongMaterial, MeshStandardMaterial, NoBlending, OimoPhysicsBuffer, OimoPhysicsController, OrthographicCamera, PerspectiveCamera, PlaneGeometry, PointLight, RGBFormat, RawShaderMaterial, Raycaster, Reflector, RepeatWrapping, Scene, ShaderChunk, ShadowMaterial, Sound3D, Stage, TextureLoader, Thread, Uniform, UnrealBloomBlurMaterial, Vector2, Vector3, WebAudio, WebGLRenderTarget, WebGLRenderer, clamp, delayedCall, getFullscreenTriangle, mix, range, ticker } from '../build/alien.js';
 
         class Config {
             static BG_COLOR = '#0e0e0e';
@@ -240,15 +240,14 @@
             };
         }
 
-        class ScenePhysicsController {
-            constructor(view) {
-                this.view = view;
+        class ScenePhysicsController extends OimoPhysicsController {
+            constructor() {
+                super();
 
-                this.objects = [];
-                this.shapes = [];
                 this.buffer = [];
-                this.promise = new Promise(resolve => this.resolve = resolve);
+            }
 
+            init() {
                 this.initShapes();
                 this.initEngine();
 
@@ -256,12 +255,7 @@
             }
 
             initShapes() {
-                const { floor, cube, ball } = this.view;
-
-                this.shapes.push(this.createShapeObject('floor', 'box', floor));
-                this.shapes.push(this.createShapeObject('cube', 'box', cube));
-                this.shapes.push(this.createShapeObject('ball', 'sphere', ball));
-                this.shapes.push(this.createShapeObject('mouse'));
+                this.add({ name: 'mouse' });
             }
 
             initEngine() {
@@ -280,48 +274,13 @@
                 }
             }
 
-            createShapeObject(name, type, view) {
-                const object = {};
-
-                object.name = name;
-
-                if (type) {
-                    view.name = name;
-
-                    object.type = type;
-                    object.position = view.position.toArray();
-                    object.quaternion = view.quaternion.toArray();
-
-                    if (type === 'box') {
-                        object.size = view.size.clone().divideScalar(2).toArray();
-                    } else if (type === 'sphere') {
-                        object.size = view.radius;
-                    }
-
-                    object.density = view.density;
-                    object.friction = view.friction;
-                    object.restitution = view.restitution;
-                    object.autoSleep = view.autoSleep;
-                    object.kinematic = view.kinematic;
-
-                    if (view.density !== 0) {
-                        this.objects.push(view);
-                    }
-                }
-
-                return object;
-            }
-
             addListeners() {
                 if (this.thread) {
                     this.thread.on('buffer', this.onBuffer);
                     this.thread.on('contact', this.onContact);
-                    this.thread.on('ready', this.onReady);
                 } else {
                     this.physics.on('buffer', this.onBuffer);
                     this.physics.on('contact', this.onContact);
-
-                    this.resolve();
                 }
             }
 
@@ -335,10 +294,6 @@
 
             onContact = ({ force }) => {
                 AudioController.trigger('gong', force);
-            };
-
-            onReady = () => {
-                this.resolve();
             };
 
             /**
@@ -355,18 +310,7 @@
                 }
 
                 if (array) {
-                    let index = 0;
-
-                    for (let i = 0, l = this.objects.length; i < l; i++) {
-                        const object = this.objects[i];
-
-                        index = i * 8;
-
-                        if (array[index + 7] !== 1) {
-                            object.position.fromArray(array, index);
-                            object.quaternion.fromArray(array, index + 3);
-                        }
-                    }
+                    this.step(array);
 
                     if (this.thread) {
                         this.thread.update({ array, buffer: [array.buffer] });
@@ -374,7 +318,7 @@
                 }
             };
 
-            add = object => {
+            addJoint = object => {
                 if (this.thread) {
                     this.thread.add({ object });
                 } else {
@@ -398,7 +342,7 @@
                 }
             };
 
-            ready = () => this.promise;
+            ready = () => this.init();
         }
 
         class Ball extends Group {
@@ -407,6 +351,7 @@
 
                 this.position.z = 1;
 
+                this.name = 'ball';
                 this.radius = 0.075;
                 this.autoSleep = false;
 
@@ -419,7 +364,7 @@
             }
 
             async initMesh() {
-                const { anisotropy, loadTexture } = WorldController;
+                const { physics, anisotropy, loadTexture } = WorldController;
 
                 const geometry = new IcosahedronGeometry(this.radius, 3);
 
@@ -482,6 +427,8 @@
                 mesh.receiveShadow = true;
                 mesh.layers.enable(Layer.PICKING);
                 this.add(mesh);
+
+                physics.add(mesh, { autoSleep: false });
             }
 
             /**
@@ -495,12 +442,13 @@
             constructor() {
                 super();
 
+                this.name = 'cube';
                 this.size = new Vector3(0.5, 0.5, 0.5);
                 this.autoSleep = false;
             }
 
             async initMesh() {
-                const { anisotropy, loadTexture, loadEnvironmentTexture } = WorldController;
+                const { physics, anisotropy, loadTexture, loadEnvironmentTexture } = WorldController;
 
                 const geometry = new BoxGeometry(this.size.x, this.size.y, this.size.z);
 
@@ -586,6 +534,8 @@
                 mesh.receiveShadow = true;
                 mesh.layers.enable(Layer.PICKING);
                 this.add(mesh);
+
+                physics.add(mesh, { autoSleep: false });
             }
 
             /**
@@ -603,6 +553,7 @@
 
                 this.position.y = -3.04;
 
+                this.name = 'floor';
                 this.size = new Vector3(100, 5, 100);
                 this.density = 0;
 
@@ -618,7 +569,7 @@
             }
 
             async initMesh() {
-                const { loadTexture } = WorldController;
+                const { physics, loadTexture } = WorldController;
 
                 const geometry = new PlaneGeometry(this.size.x, this.size.z);
 
@@ -718,6 +669,13 @@
                 };
 
                 this.add(mesh);
+
+                // Physics mesh
+                const floor = new Mesh(new BoxGeometry(100, 5, 100));
+                floor.geometry.setDrawRange(0, 0); // Avoid rendering geometry
+                this.add(floor);
+
+                physics.add(floor, { density: 0 });
             }
 
             /**
@@ -773,14 +731,9 @@
         }
 
         class SceneController {
-            static init(view) {
+            static init(view, physics) {
                 this.view = view;
-
-                this.initPhysics();
-            }
-
-            static initPhysics() {
-                this.physics = new ScenePhysicsController(this.view);
+                this.physics = physics;
             }
 
             /**
@@ -803,10 +756,10 @@
                 this.view.visible = true;
             };
 
-            static ready = () => Promise.all([
-                this.view.ready(),
-                this.physics.ready()
-            ]);
+            static ready = async () => {
+                await this.view.ready();
+                this.physics.ready();
+            };
         }
 
         class AudioController {
@@ -1154,7 +1107,7 @@
 
                         SceneController.physics.setPosition('mouse', array);
 
-                        SceneController.physics.add({
+                        SceneController.physics.addJoint({
                             name: 'mouseJoint',
                             type: 'joint',
                             mode: 'spherical',
@@ -1287,6 +1240,7 @@
                 this.initWorld();
                 this.initLights();
                 this.initLoaders();
+                this.initPhysics();
 
                 this.addListeners();
             }
@@ -1347,6 +1301,10 @@
             static initLoaders() {
                 this.textureLoader = new TextureLoader();
                 this.environmentLoader = new EnvironmentTextureLoader(this.renderer);
+            }
+
+            static initPhysics() {
+                this.physics = new ScenePhysicsController();
             }
 
             static addListeners() {
@@ -1427,10 +1385,10 @@
             }
 
             static initControllers() {
-                const { renderer, scene, camera } = WorldController;
+                const { renderer, scene, camera, physics } = WorldController;
 
                 CameraController.init(camera);
-                SceneController.init(this.view);
+                SceneController.init(this.view, physics);
                 InputManager.init(scene, camera);
                 RenderManager.init(renderer, scene, camera);
             }

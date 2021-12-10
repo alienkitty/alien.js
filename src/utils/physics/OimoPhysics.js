@@ -159,7 +159,7 @@ export class OimoPhysics {
             }
         } else if (object instanceof JointConfig) {
             return this.handleJoint(object);
-        } else {
+        } else if (object instanceof RigidBodyConfig) {
             return this.handleBody(object);
         }
     }
@@ -173,7 +173,7 @@ export class OimoPhysics {
 
         if (object instanceof JointConfig) {
             this.world.removeJoint(body);
-        } else {
+        } else if (object instanceof RigidBody) {
             this.world.removeRigidBody(body);
         }
 

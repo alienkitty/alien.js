@@ -2,22 +2,6 @@ import { EventEmitter, Events, Stage } from 'alien.js';
 
 import { Global } from '../config/Global.js';
 
-// https://stackoverflow.com/questions/1908492/unsigned-integer-in-javascript/7414641#7414641
-/* function ip2long(ip) {
-    let ipl = 0;
-
-    ip.split('.').forEach(octet => {
-        ipl <<= 8;
-        ipl += parseInt(octet, 10);
-    });
-
-    return ipl >>> 0;
-} */
-
-function long2ip(ipl) {
-    return `${ipl >>> 24}.${ipl >> 16 & 255}.${ipl >> 8 & 255}.${ipl & 255}`;
-}
-
 export class Socket extends EventEmitter {
     constructor() {
         super();
@@ -37,7 +21,7 @@ export class Socket extends EventEmitter {
     }
 
     init() {
-        this.socket = new WebSocket('wss://multiuser-fluid.glitch.me/', ['permessage-deflate']);
+        this.socket = new WebSocket('wss://multiuser-fluid.glitch.me', ['permessage-deflate']);
         this.socket.binaryType = 'arraybuffer';
 
         this.addListeners();
@@ -48,6 +32,21 @@ export class Socket extends EventEmitter {
         this.socket.addEventListener('message', this.onMessage);
         this.on('users', this.onUsers);
         this.on('heartbeat', this.onHeartbeat);
+    }
+
+    ip2long(ip) {
+        let ipl = 0;
+
+        ip.split('.').forEach(octet => {
+            ipl <<= 8;
+            ipl += parseInt(octet, 10);
+        });
+
+        return ipl >>> 0;
+    }
+
+    long2ip(ipl) {
+        return `${ipl >>> 24}.${ipl >> 16 & 255}.${ipl >> 8 & 255}.${ipl & 255}`;
     }
 
     /**
@@ -71,7 +70,7 @@ export class Socket extends EventEmitter {
                 for (let i = 0, l = (data.byteLength - 1) / byteLength; i < l; i++) {
                     const id = data.getUint8(index).toString();
                     const nickname = this.decoder.decode(data.buffer.slice(index + 1, index + 11)).replace(/\0/g, '');
-                    const remoteAddress = long2ip(data.getUint32(index + 11));
+                    const remoteAddress = this.long2ip(data.getUint32(index + 11));
                     const latency = data.getUint16(index + 15);
 
                     users.push({ id, nickname, remoteAddress, latency });

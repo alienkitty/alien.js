@@ -193,7 +193,6 @@
                 this.shapes = [];
                 this.buffer = [];
                 this.map = new WeakMap();
-                this.enabled = true;
 
                 this.object = new Object3D();
                 this.matrix = new Matrix4();
@@ -222,8 +221,6 @@
             }
 
             addListeners() {
-                Stage.events.on(Events.VISIBILITY, this.onVisibility);
-
                 if (this.thread) {
                     this.thread.on('buffer', this.onBuffer);
                 } else {
@@ -372,15 +369,7 @@
              * Event handlers
              */
 
-            onVisibility = () => {
-                this.enabled = !document.hidden;
-            };
-
             onBuffer = ({ array }) => {
-                if (!this.enabled) {
-                    return;
-                }
-
                 this.buffer.push(array);
             };
 
@@ -1066,7 +1055,7 @@
                 this.lookAt = new Vector3(0, 0, -2);
                 this.origin = new Vector3();
                 this.target = new Vector3();
-                this.targetXY = new Vector2(5, 0.75);
+                this.targetXY = new Vector2(2, 0.4);
                 this.origin.copy(this.camera.position);
 
                 this.lerpSpeed = 0.02;

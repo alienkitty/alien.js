@@ -66,6 +66,7 @@ export { NormalMaterial } from './src/materials/NormalMaterial.js';
 export { ColorMaterial } from './src/materials/ColorMaterial.js';
 export { BasicMaterial } from './src/materials/BasicMaterial.js';
 export { ShadowTextureMaterial } from './src/materials/ShadowTextureMaterial.js';
+export { FresnelMaterial } from './src/materials/FresnelMaterial.js';
 export { FlowMaterial } from './src/materials/FlowMaterial.js';
 export { CopyMaterial } from './src/materials/CopyMaterial.js';
 export { FXAAMaterial } from './src/materials/FXAAMaterial.js';

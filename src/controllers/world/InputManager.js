@@ -65,10 +65,10 @@ export class InputManager {
 
         this.raycaster.setFromCamera(this.mouse, this.camera);
 
-        const intersects = this.raycaster.intersectObjects(this.meshes);
+        const intersection = this.raycaster.intersectObjects(this.meshes);
 
-        if (intersects.length) {
-            const object = this.objects[this.meshes.indexOf(intersects[0].object)];
+        if (intersection.length) {
+            const object = this.objects[this.meshes.indexOf(intersection[0].object)];
 
             if (!this.hover) {
                 this.hover = object;

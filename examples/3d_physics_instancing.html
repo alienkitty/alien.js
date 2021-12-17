@@ -289,24 +289,9 @@
                 ]);
 
                 map.anisotropy = anisotropy;
-                map.wrapS = RepeatWrapping;
-                map.wrapT = RepeatWrapping;
-                map.repeat.set(2, 1);
-
                 normalMap.anisotropy = anisotropy;
-                normalMap.wrapS = RepeatWrapping;
-                normalMap.wrapT = RepeatWrapping;
-                normalMap.repeat.set(2, 1);
-
                 ormMap.anisotropy = anisotropy;
-                ormMap.wrapS = RepeatWrapping;
-                ormMap.wrapT = RepeatWrapping;
-                ormMap.repeat.set(2, 1);
-
                 thicknessMap.anisotropy = anisotropy;
-                thicknessMap.wrapS = RepeatWrapping;
-                thicknessMap.wrapT = RepeatWrapping;
-                thicknessMap.repeat.set(2, 1);
 
                 const material = new MeshStandardMaterial({
                     roughness: 2,
@@ -486,7 +471,7 @@
                 this.mouse.lerp(this.target, this.lerpSpeed);
 
                 this.lightPosition.x = this.mouse.x * this.halfWidth;
-                this.lightPosition.y = this.mouse.y * this.halfHeight;
+                this.lightPosition.y = 0.5 + this.mouse.y * this.halfHeight;
                 this.lightPosition.z = this.view.light.position.z;
 
                 this.view.light.position.copy(this.lightPosition);

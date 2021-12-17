@@ -1077,10 +1077,10 @@
                 if (this.selected) {
                     this.raycaster.setFromCamera(this.mouse, this.camera);
 
-                    const intersects = this.raycaster.intersectObject(this.dragPlane);
+                    const intersection = this.raycaster.intersectObject(this.dragPlane);
 
-                    if (intersects.length) {
-                        const point = intersects[0].point;
+                    if (intersection.length) {
+                        const point = intersection[0].point;
 
                         SceneController.physics.setPosition('mouse', point.toArray());
                     }
@@ -1090,10 +1090,10 @@
 
                 this.raycaster.setFromCamera(this.mouse, this.camera);
 
-                const intersects = this.raycaster.intersectObjects(this.scene.children);
+                const intersection = this.raycaster.intersectObjects(this.scene.children);
 
-                if (intersects.length) {
-                    let object = intersects[0].object;
+                if (intersection.length) {
+                    let object = intersection[0].object;
 
                     if (object.parent.isGroup) {
                         object = object.parent;
@@ -1102,7 +1102,7 @@
                     if (this.isDown && this.selected !== object) {
                         this.selected = object;
 
-                        const point = intersects[0].point;
+                        const point = intersection[0].point;
                         const array = point.toArray();
 
                         SceneController.physics.setPosition('mouse', array);

@@ -135,13 +135,9 @@ export class FluidController {
     };
 
     static onMotion = e => {
-        if (!this.pointer[e.id]) {
-            if (Object.keys(this.pointer).length >= Global.NUM_POINTERS) {
-                return;
-            }
-
+        if (!this.pointer[e.id] && Object.keys(this.pointer).length - 1 < Global.NUM_POINTERS) {
             this.pointer[e.id] = {};
-            this.pointer[e.id].isDown = false;
+            this.pointer[e.id].isDown = e.isDown;
             this.pointer[e.id].mouse = new Vector2();
             this.pointer[e.id].last = new Vector2();
             this.pointer[e.id].delta = new Vector2();

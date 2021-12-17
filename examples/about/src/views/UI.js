@@ -1,6 +1,7 @@
 import { Events, Interface, Stage } from 'alien.js';
 
 import { Global } from '../config/Global.js';
+import { AudioController } from '../controllers/audio/AudioController.js';
 import { Details } from './ui/Details.js';
 import { Header } from './ui/Header.js';
 import { DetailsButton } from './ui/DetailsButton.js';
@@ -51,6 +52,8 @@ export class UI extends Interface {
 
     addListeners() {
         Stage.events.on(Events.UPDATE, this.onUsers);
+        Stage.events.on(Events.KEY_UP, this.onKeyUp);
+        this.details.events.on(Events.CLICK, this.onDetails);
         this.detailsButton.events.on(Events.CLICK, this.onDetails);
     }
 
@@ -62,17 +65,32 @@ export class UI extends Interface {
         this.detailsButton.swapIndex();
     };
 
+    onKeyUp = e => {
+        if (e.keyCode === 27) {
+            // Esc
+            this.onDetails();
+        }
+    };
+
     onDetails = () => {
         if (!Global.DETAILS_OPEN) {
             Global.DETAILS_OPEN = true;
 
             this.detailsButton.open();
             this.details.animateIn();
+
+            if (Global.SOUND) {
+                AudioController.trigger('about_section');
+            }
         } else {
             Global.DETAILS_OPEN = false;
 
             this.details.animateOut();
             this.detailsButton.close();
+
+            if (Global.SOUND) {
+                AudioController.trigger('fluid_section');
+            }
         }
     };
 

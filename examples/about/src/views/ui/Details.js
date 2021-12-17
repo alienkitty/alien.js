@@ -12,6 +12,7 @@ export class Details extends Interface {
 
         this.initHTML();
         this.initViews();
+        this.setStackOrder();
 
         this.addListeners();
         this.onResize();
@@ -28,6 +29,16 @@ export class Details extends Interface {
             opacity: 0
         });
 
+        this.bg = new Interface('.bg');
+        this.bg.css({
+            width: '100%',
+            height: '100%',
+            backgroundColor: '#000',
+            zIndex: 1,
+            opacity: 0
+        });
+        this.add(this.bg);
+
         this.container = new Interface('.container');
         this.container.css({
             position: 'relative',
@@ -37,13 +48,25 @@ export class Details extends Interface {
         this.add(this.container);
 
         this.title = new DetailsTitle(basename('Multiuser Fluid').replace(/[\s.]+/g, '_'));
+        this.title.css({
+            width: 'fit-content'
+        });
         this.container.add(this.title);
         this.texts.push(this.title);
 
         this.text = new Interface('.text', 'p');
+        this.text.css({
+            width: 'fit-content'
+        });
         this.text.html('A fluid shader tribute to Mr.doob’s Multiuser Sketchpad from 2010. Multiuser Fluid is an experiment to combine UI and data visualization elements in a multiuser environment.');
         this.container.add(this.text);
         this.texts.push(this.text);
+    }
+
+    setStackOrder() {
+        this.texts.forEach(text => {
+            text.css({ zIndex: 4 });
+        });
     }
 
     initViews() {
@@ -75,10 +98,12 @@ export class Details extends Interface {
 
     addListeners() {
         Stage.events.on(Events.RESIZE, this.onResize);
+        this.bg.element.addEventListener('click', this.onClick);
     }
 
     removeListeners() {
         Stage.events.off(Events.RESIZE, this.onResize);
+        this.bg.element.removeEventListener('click', this.onClick);
     }
 
     /**
@@ -103,6 +128,10 @@ export class Details extends Interface {
         }
     };
 
+    onClick = () => {
+        this.events.emit(Events.CLICK);
+    };
+
     /**
      * Public methods
      */
@@ -116,6 +145,8 @@ export class Details extends Interface {
         const duration = 2000;
         const stagger = 175;
 
+        this.bg.clearTween().tween({ opacity: 0.3 }, duration, 'easeOutSine');
+
         this.texts.forEach((text, i) => {
             const delay = i === 0 ? 0 : duration;
 
@@ -127,6 +158,8 @@ export class Details extends Interface {
 
     animateOut = () => {
         this.css({ pointerEvents: 'none' });
+
+        this.bg.clearTween().tween({ opacity: 0 }, 1000, 'easeOutSine');
 
         this.clearTween().tween({ opacity: 0 }, 1800, 'easeOutExpo', () => {
             this.invisible();

@@ -19,7 +19,8 @@ export class Header extends Interface {
         this.css({
             left: 20,
             top: 20,
-            right: 20
+            right: 20,
+            zIndex: 3
         });
     }
 

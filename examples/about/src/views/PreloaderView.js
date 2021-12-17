@@ -20,7 +20,7 @@ export class PreloaderView extends Interface {
             width: '100%',
             height: '100%',
             backgroundColor: Config.BG_COLOR,
-            zIndex: 1,
+            zIndex: 100,
             pointerEvents: 'none',
             webkitUserSelect: 'none',
             userSelect: 'none'

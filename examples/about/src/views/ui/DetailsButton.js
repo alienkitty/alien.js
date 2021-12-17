@@ -39,6 +39,7 @@ export class DetailsButton extends Interface {
             bottom: 18,
             width: this.width + 40,
             height: this.height + 20,
+            zIndex: 3,
             cursor: 'pointer',
             pointerEvents: 'none',
             webkitUserSelect: 'none',

@@ -242,13 +242,13 @@ export class OimoPhysicsBuffer {
         const body = this.map.get(name);
 
         const contactCallback = new ContactCallback();
-        contactCallback.preSolve = contact => callback(body, contact);
+        contactCallback.preSolve = contact => callback(body, name, contact);
 
         let shape = body.getShapeList();
 
         while (shape) {
             shape.setContactCallback(contactCallback);
-            shape = shape._next;
+            shape = shape.getNext();
         }
     }
 

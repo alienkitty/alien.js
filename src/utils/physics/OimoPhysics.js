@@ -287,7 +287,7 @@ export class OimoPhysics {
 
         while (shape) {
             shape.setContactCallback(contactCallback);
-            shape = shape._next;
+            shape = shape.getNext();
         }
     }
 

@@ -117,7 +117,7 @@
              * Event handlers
              */
 
-            onContact = body => {
+            onContact = (body/* , name, contact */) => {
                 if (this.contact) {
                     return;
                 }
@@ -126,7 +126,7 @@
                 const mass = body.getMass();
 
                 this.force.addScaledVector(linearVelocity, mass);
-                this.force.multiplyScalar(0.5);
+                this.force.multiplyScalar(0.4);
 
                 const force = this.force.length();
 
@@ -364,20 +364,12 @@
             }
 
             async initMesh() {
-                const { physics, anisotropy, loadTexture } = WorldController;
+                const { physics } = WorldController;
 
                 const geometry = new IcosahedronGeometry(this.radius, 3);
 
-                // const map = await loadTexture('assets/textures/uv.jpg');
-                const map = await loadTexture('assets/textures/pbr/pitted_metal_basecolor.jpg');
-                map.anisotropy = anisotropy;
-                map.wrapS = RepeatWrapping;
-                map.wrapT = RepeatWrapping;
-                map.repeat.set(2, 1);
-
                 const material = new MeshPhongMaterial({
-                    color: new Color(Config.LIGHT_COLOR),
-                    map
+                    color: new Color(Config.LIGHT_COLOR).offsetHSL(0, 0, -0.3)
                 });
 
                 // Based on {@link module:three/examples/jsm/shaders/SubsurfaceScatteringShader.js} by daoshengmu
@@ -655,7 +647,7 @@
                 };
 
                 const mesh = new Mesh(geometry, material);
-                mesh.position.y = 2.5;
+                mesh.position.y = 2.495;
                 mesh.rotation.x = -Math.PI / 2;
                 mesh.receiveShadow = true;
                 mesh.add(this.reflector);

@@ -15,11 +15,6 @@
     <script type="module">
         import { Color, DirectionalLight, Events, FXAAMaterial, Group, HemisphereLight, LinearMipmapLinearFilter, MathUtils, Mesh, MeshStandardMaterial, OrthographicCamera, PerspectiveCamera, PoissonDiscBlurMaterial, RGBFormat, Scene, SphereGeometry, Stage, Uniform, Vector2, WebGLRenderTarget, WebGLRenderer, getFullscreenTriangle, ticker } from '../build/alien.js';
 
-        class Config {
-            static BG_COLOR = '#0e0e0e';
-            static UI_COLOR = 'rgba(255, 255, 255, 0.94)';
-        }
-
         import periodic3d from '../src/shaders/modules/noise/periodic3d.glsl.js';
 
         class SceneView extends Group {
@@ -181,7 +176,7 @@
 
                 // 3D scene
                 this.scene = new Scene();
-                this.scene.background = new Color(Config.BG_COLOR);
+                this.scene.background = new Color(Stage.rootStyle.getPropertyValue('--main-bg-color').trim());
                 this.camera = new PerspectiveCamera(30);
                 this.camera.near = 0.5;
                 this.camera.far = 40;

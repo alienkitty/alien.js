@@ -13,23 +13,20 @@
 <body>
     <div id="root"></div>
     <script type="module">
-        import { ACESFilmicToneMapping, AdditiveBlending, BackSide, BlurMaterial, Color, CubeCamera, Device, Events, FilmGrainFXAAMaterial, GLSL3, Group, IcosahedronGeometry, ImageBitmapLoaderThread, LinearMipmapLinearFilter, MathUtils, Mesh, MeshBasicMaterial, MultiplyOperation, NoBlending, OrthographicCamera, PerspectiveCamera, RGBFormat, RawShaderMaterial, Scene, SphereGeometry, Sprite, SpriteMaterial, Stage, TextureLoader, Thread, Uniform, Vector2, Vector3, WebGLCubeRenderTarget, WebGLRenderTarget, WebGLRenderer, Wobble, getFullscreenTriangle, radians, ticker, tween } from '../build/alien.js';
+        import { ACESFilmicToneMapping, AdditiveBlending, BackSide, BlurMaterial, Color, CubeCamera, Device, Events, FXAAMaterial, GLSL3, Group, IcosahedronGeometry, ImageBitmapLoaderThread, LinearMipmapLinearFilter, MathUtils, Mesh, MeshBasicMaterial, MultiplyOperation, NoBlending, OrthographicCamera, PerspectiveCamera, RGBFormat, RawShaderMaterial, Scene, SphereGeometry, Sprite, SpriteMaterial, Stage, TextureLoader, Thread, Uniform, Vector2, Vector3, WebGLCubeRenderTarget, WebGLRenderTarget, WebGLRenderer, Wobble, getFullscreenTriangle, radians, ticker, tween } from '../build/alien.js';
 
         class Config {
-            static BG_COLOR = '#030627';
-            static UI_COLOR = 'rgba(255, 255, 255, 0.94)';
-
-            static COLOR = new Color(this.BG_COLOR);
+            static BG_COLOR = new Color(0x030627);
             static LIGHT_COLOR = new Color(0xff8dfc);
             static PARTICLE_COLOR = new Color(0x8080ff);
 
             static DEBUG = location.search === '?debug';
         }
 
+        // Based on https://github.com/yuichiroharai/glsl-y-hsv
+
         import hsv2rgbSmooth from '../src/shaders/modules/hsv/hsv2rgbSmooth.glsl.js';
         import rgb2hsv from '../src/shaders/modules/hsv/rgb2hsv.glsl.js';
-
-        // Based on https://github.com/yuichiroharai/glsl-y-hsv
 
         import noise from '../src/shaders/modules/noise/noise.glsl.js';
         import rgbshift from '../src/shaders/modules/rgbshift/rgbshift.glsl.js';
@@ -62,8 +59,10 @@
             uniform float uBlurBright;
             uniform vec3 uLightColor;
             uniform vec3 uColor;
-            uniform float uDebug;
             uniform float uHue;
+            uniform float uBoost;
+            uniform float uReduction;
+            uniform float uDebug;
             uniform vec2 uResolution;
             uniform float uTime;
 
@@ -110,7 +109,7 @@
                 }
 
                 // Blend overlay vignette
-                float vignette = 1.0 - center * 1.2;
+                float vignette = uBoost - center * uReduction;
 
                 vec4 base = color;
                 vec4 blend = vec4(vec3(vignette), 1.0);
@@ -161,9 +160,11 @@
                         uMinBright: new Uniform(0.07),
                         uBlurBright: new Uniform(0.4166),
                         uLightColor: new Uniform(Config.LIGHT_COLOR),
-                        uColor: new Uniform(Config.COLOR),
-                        uDebug: new Uniform(Config.DEBUG ? 1 : 0),
+                        uColor: new Uniform(Config.BG_COLOR),
                         uHue: new Uniform(0),
+                        uBoost: new Uniform(1.0),
+                        uReduction: new Uniform(1.2),
+                        uDebug: new Uniform(Config.DEBUG ? 1 : 0),
                         uResolution: new Uniform(new Vector2()),
                         uTime: new Uniform(0)
                     },
@@ -405,7 +406,6 @@
                 this.scene = scene;
                 this.camera = camera;
 
-                this.grainEffect = 0.15;
                 this.blurResolutionScale = 0.25;
                 this.blurFactor = 6;
                 this.enabled = true;
@@ -437,10 +437,8 @@
                 this.renderTargetA.depthBuffer = true;
 
                 // FXAA material
-                this.fxaaMaterial = new FilmGrainFXAAMaterial();
-                this.fxaaMaterial.uniforms.uIntensity.value = this.grainEffect;
+                this.fxaaMaterial = new FXAAMaterial();
                 this.fxaaMaterial.uniforms.uResolution = resolution;
-                this.fxaaMaterial.uniforms.uTime = time;
 
                 // Gaussian blur materials
                 this.hBlurMaterial = new BlurMaterial(BlurDirectionX);
@@ -637,7 +635,7 @@
             static init() {
                 this.color = {};
 
-                Config.COLOR.getHSL(this.color);
+                Config.BG_COLOR.getHSL(this.color);
 
                 this.initWorld();
                 this.initLights();
@@ -659,7 +657,7 @@
 
                 // 3D scene
                 this.scene = new Scene();
-                this.scene.background = Config.COLOR;
+                this.scene.background = Config.BG_COLOR;
                 this.camera = new PerspectiveCamera(30);
                 this.camera.near = 0.5;
                 this.camera.far = 40;
@@ -723,7 +721,7 @@
             static update = (time, delta, frame) => {
                 this.hue.value += 0.0005;
 
-                Config.COLOR.setHSL(this.hue.value, this.color.s, this.color.l);
+                Config.BG_COLOR.setHSL(this.hue.value, this.color.s, this.color.l);
 
                 this.time.value = time;
                 this.frame.value = frame;

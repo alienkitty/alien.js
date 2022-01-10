@@ -15,11 +15,6 @@
     <script type="module">
         import { Events, Interface, Magnetic, Stage, clearTween, ticker, tween } from '../build/alien.js';
 
-        class Config {
-            static BG_COLOR = '#0e0e0e';
-            static UI_COLOR = 'rgba(255, 255, 255, 0.94)';
-        }
-
         class Progress extends Interface {
             constructor() {
                 super(null, 'svg');
@@ -53,7 +48,7 @@
                 });
                 this.circle.css({
                     fill: 'none',
-                    stroke: Config.UI_COLOR,
+                    stroke: 'var(--main-color)',
                     strokeWidth: 1.5
                 });
                 this.circle.start = 0;

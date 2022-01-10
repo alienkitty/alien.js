@@ -16,9 +16,6 @@
         import { ACESFilmicToneMapping, AdditiveBlending, AmbientLight, BloomCompositeMaterial, BufferAttribute, BufferGeometry, Color, CopyMaterial, DepthTexture, Device, DirectionalLight, EnvironmentTextureLoader, Events, FXAAMaterial, GLSL3, Group, HemisphereLight, ImageBitmapLoaderThread, LuminosityMaterial, MathUtils, Mesh, MeshStandardMaterial, NoBlending, OrbitControls, OrthographicCamera, PerspectiveCamera, Points, RGBFormat, RawShaderMaterial, RepeatWrapping, Scene, SceneCompositeMaterial, SphereGeometry, Stage, TextureLoader, Thread, Uniform, UnrealBloomBlurMaterial, Vector2, WebGLRenderTarget, WebGLRenderer, getFullscreenTriangle, mix, ticker } from '../build/alien.js';
 
         class Config {
-            static BG_COLOR = '#0e0e0e';
-            static UI_COLOR = 'rgba(255, 255, 255, 0.94)';
-
             static DEBUG = location.search === '?debug';
         }
 
@@ -355,7 +352,7 @@
             }
 
             async initMesh() {
-                const { anisotropy, loadTexture, loadEnvironmentTexture } = WorldController;
+                const { anisotropy, loadTexture } = WorldController;
 
                 const geometry = new SphereGeometry(1, 80, 80);
 
@@ -363,13 +360,12 @@
                 geometry.attributes.uv2 = geometry.attributes.uv;
 
                 // Textures
-                const [map, normalMap, ormMap, envMap] = await Promise.all([
+                const [map, normalMap, ormMap] = await Promise.all([
                     // loadTexture('assets/textures/uv.jpg'),
                     loadTexture('assets/textures/pbr/pitted_metal_basecolor.jpg'),
                     loadTexture('assets/textures/pbr/pitted_metal_normal.jpg'),
                     // https://occlusion-roughness-metalness.glitch.me/
-                    loadTexture('assets/textures/pbr/pitted_metal_orm.jpg'),
-                    loadEnvironmentTexture('assets/textures/env.jpg')
+                    loadTexture('assets/textures/pbr/pitted_metal_orm.jpg')
                 ]);
 
                 map.anisotropy = anisotropy;
@@ -388,7 +384,7 @@
                 ormMap.repeat.set(2, 1);
 
                 const material = new MeshStandardMaterial({
-                    color: Config.BG_COLOR,
+                    color: Stage.rootStyle.getPropertyValue('--main-bg-color').trim(),
                     roughness: 1,
                     metalness: 1,
                     map,
@@ -398,7 +394,6 @@
                     metalnessMap: ormMap,
                     normalMap,
                     normalScale: new Vector2(1, 1),
-                    envMap,
                     envMapIntensity: 0.5
                 });
 
@@ -418,6 +413,7 @@
                 this.dust = dust;
 
                 this.luminosityThreshold = 0.1;
+                this.luminositySmoothing = 1;
                 this.bloomStrength = 0.3;
                 this.bloomRadius = 0.75;
                 this.enabled = true;
@@ -466,7 +462,8 @@
 
                 // Luminosity high pass material
                 this.luminosityMaterial = new LuminosityMaterial();
-                this.luminosityMaterial.uniforms.uLuminosityThreshold.value = this.luminosityThreshold;
+                this.luminosityMaterial.uniforms.uThreshold.value = this.luminosityThreshold;
+                this.luminosityMaterial.uniforms.uSmoothing.value = this.luminositySmoothing;
 
                 // Gaussian blur materials
                 this.blurMaterials = [];
@@ -475,7 +472,6 @@
 
                 for (let i = 0, l = this.nMips; i < l; i++) {
                     this.blurMaterials.push(new UnrealBloomBlurMaterial(kernelSizeArray[i]));
-                    this.blurMaterials[i].uniforms.uResolution.value = new Vector2();
                 }
 
                 // Bloom composite material
@@ -650,6 +646,7 @@
                 this.initWorld();
                 this.initLights();
                 this.initLoaders();
+                this.initEnvironment();
                 this.initControls();
 
                 this.addListeners();
@@ -668,7 +665,7 @@
 
                 // 3D scene
                 this.scene = new Scene();
-                this.scene.background = new Color(Config.BG_COLOR);
+                this.scene.background = new Color(Stage.rootStyle.getPropertyValue('--main-bg-color').trim());
                 this.camera = new PerspectiveCamera(30);
                 this.camera.near = 0.5;
                 this.camera.far = 40;
@@ -701,6 +698,10 @@
             static initLoaders() {
                 this.textureLoader = new TextureLoader();
                 this.environmentLoader = new EnvironmentTextureLoader(this.renderer);
+            }
+
+            static async initEnvironment() {
+                this.scene.environment = await this.loadEnvironmentTexture('assets/textures/env.jpg');
             }
 
             static initControls() {
@@ -752,8 +753,6 @@
             static getTexture = (path, callback) => this.textureLoader.load(path, callback);
 
             static loadTexture = path => this.textureLoader.loadAsync(path);
-
-            static getEnvironmentTexture = (path, callback) => this.environmentLoader.load(path, callback);
 
             static loadEnvironmentTexture = path => this.environmentLoader.loadAsync(path);
         }

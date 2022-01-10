@@ -15,11 +15,6 @@
     <script type="module">
         import { BlurMaterial, Color, DirectionalLight, Events, FXAAMaterial, GLSL3, Group, HemisphereLight, Mesh, MeshStandardMaterial, NoBlending, OrthographicCamera, PerspectiveCamera, RGBFormat, RawShaderMaterial, Scene, SphereGeometry, Stage, Uniform, Vector2, WebGLRenderTarget, WebGLRenderer, getFullscreenTriangle, ticker } from '../build/alien.js';
 
-        class Config {
-            static BG_COLOR = '#0e0e0e';
-            static UI_COLOR = 'rgba(255, 255, 255, 0.94)';
-        }
-
         const vertexCompositeShader = /* glsl */`
             in vec3 position;
             in vec2 uv;
@@ -153,7 +148,7 @@
 
                 // Background scene
                 this.backgroundScene = new Scene();
-                this.backgroundScene.background = new Color(Config.BG_COLOR);
+                this.backgroundScene.background = new Color(Stage.rootStyle.getPropertyValue('--main-bg-color').trim());
 
                 // Render targets
                 this.renderTargetA = new WebGLRenderTarget(1, 1, {

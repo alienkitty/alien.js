@@ -15,11 +15,6 @@
     <script type="module">
         import { Assets, Color, DirectionalLight, Events, Group, Interface, LinearFilter, Mesh, MeshStandardMaterial, PerspectiveCamera, PlaneGeometry, Scene, Stage, Texture, Uniform, Vector2, WebGLRenderer, clearTween, delayedCall, getFrustum, ticker } from '../build/alien.js';
 
-        class Config {
-            static BG_COLOR = '#0e0e0e';
-            static UI_COLOR = 'rgba(255, 255, 255, 0.94)';
-        }
-
         class GridCanvas extends Interface {
             constructor() {
                 super(null, 'canvas');
@@ -34,8 +29,8 @@
 
             initGrid() {
                 this.grid = {
-                    fillStyle: Config.BG_COLOR,
-                    strokeStyle: Config.UI_COLOR
+                    fillStyle: Stage.rootStyle.getPropertyValue('--main-bg-color').trim(),
+                    strokeStyle: Stage.rootStyle.getPropertyValue('--main-color').trim()
                 };
             }
 
@@ -395,7 +390,7 @@
 
                 // 3D scene
                 this.scene = new Scene();
-                this.scene.background = new Color(Config.BG_COLOR);
+                this.scene.background = new Color(Stage.rootStyle.getPropertyValue('--main-bg-color').trim());
                 this.camera = new PerspectiveCamera(25);
                 this.camera.near = 0.1;
                 this.camera.far = 1000;

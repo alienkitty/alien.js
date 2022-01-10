@@ -13,7 +13,7 @@
 <body>
     <div id="root"></div>
     <script type="module">
-        import { ACESFilmicToneMapping, AmbientLight, BloomCompositeMaterial, BoxGeometry, BufferAttribute, BufferGeometry, Color, DirectionalLight, Events, FilmGrainFXAAMaterial, GLSL3, Group, HemisphereLight, LuminosityMaterial, MathUtils, Mesh, MeshStandardMaterial, NoBlending, OrthographicCamera, PlaneGeometry, RGBFormat, RawShaderMaterial, Scene, Stage, Uniform, UnrealBloomBlurMaterial, Vector2, WebGLRenderTarget, WebGLRenderer, getFullscreenTriangle, mix, ticker } from '../build/alien.js';
+        import { ACESFilmicToneMapping, AmbientLight, BloomCompositeMaterial, BoxGeometry, BufferAttribute, BufferGeometry, Color, DirectionalLight, Events, FXAAMaterial, GLSL3, Group, HemisphereLight, LuminosityMaterial, MathUtils, Mesh, MeshStandardMaterial, NoBlending, OrthographicCamera, PlaneGeometry, RGBFormat, RawShaderMaterial, Scene, Stage, Uniform, UnrealBloomBlurMaterial, Vector2, WebGLRenderTarget, WebGLRenderer, getFullscreenTriangle, mix, ticker } from '../build/alien.js';
 
         class Config {
             static BG_COLOR = '#0e0e0e';
@@ -22,6 +22,7 @@
             static BREAKPOINT = 1000;
         }
 
+        import random from '../src/shaders/modules/random/random.glsl.js';
         import rgbshift from '../src/shaders/modules/rgbshift/rgbshift.glsl.js';
 
         const vertexCompositeShader = /* glsl */`
@@ -43,20 +44,30 @@
             uniform sampler2D tScene;
             uniform sampler2D tBloom;
             uniform float uDistortion;
+            uniform float uBoost;
+            uniform float uReduction;
+            uniform float uGrainAmount;
+            uniform float uTime;
 
             in vec2 vUv;
 
             out vec4 FragColor;
 
+            ${random}
             ${rgbshift}
 
             void main() {
+                float center = length(vUv - 0.5);
+
                 FragColor = texture(tScene, vUv);
 
-                float angle = length(vUv - 0.5);
-                float amount = 0.0002 + uDistortion;
+                FragColor.rgb += getRGB(tBloom, vUv, center, 0.0002 + uDistortion).rgb;
 
-                FragColor.rgb += getRGB(tBloom, vUv, angle, amount).rgb;
+                // Vignetting
+                FragColor.rgb *= uBoost - center * uReduction;
+
+                // Film grain
+                FragColor.rgb += vec3(uGrainAmount * random(vUv + vec2(uTime, 0.0) * 0.06));
             }
         `;
 
@@ -67,7 +78,11 @@
                     uniforms: {
                         tScene: new Uniform(null),
                         tBloom: new Uniform(null),
-                        uDistortion: new Uniform(0.00125)
+                        uDistortion: new Uniform(0.00125),
+                        uBoost: new Uniform(1.1),
+                        uReduction: new Uniform(0.9),
+                        uGrainAmount: new Uniform(0.05),
+                        uTime: new Uniform(0)
                     },
                     vertexShader: vertexCompositeShader,
                     fragmentShader: fragmentCompositeShader,
@@ -138,7 +153,6 @@
                 this.scene = scene;
                 this.camera = camera;
 
-                this.grainEffect = 0.15;
                 this.luminosityThreshold = 0.1;
                 this.bloomStrength = 0.3;
                 this.bloomRadius = 0.75;
@@ -180,10 +194,8 @@
                 this.renderTargetA.depthBuffer = true;
 
                 // FXAA material
-                this.fxaaMaterial = new FilmGrainFXAAMaterial();
-                this.fxaaMaterial.uniforms.uIntensity.value = this.grainEffect;
+                this.fxaaMaterial = new FXAAMaterial();
                 this.fxaaMaterial.uniforms.uResolution = resolution;
-                this.fxaaMaterial.uniforms.uTime = time;
 
                 // Luminosity high pass material
                 this.luminosityMaterial = new LuminosityMaterial();
@@ -217,6 +229,7 @@
 
                 // Composite material
                 this.compositeMaterial = new CompositeMaterial();
+                this.compositeMaterial.uniforms.uTime = time;
             }
 
             /**

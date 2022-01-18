@@ -1,6 +1,5 @@
 import { Interface } from 'alien.js';
 
-import { Config } from '../../config/Config.js';
 import { AudioController } from '../../controllers/audio/AudioController.js';
 import { TrackerText } from './TrackerText.js';
 
@@ -33,7 +32,7 @@ export class Tracker extends Interface {
             height: 12,
             marginLeft: -12 / 2,
             marginTop: -12 / 2,
-            border: `2px solid ${Config.UI_COLOR}`,
+            border: '2px solid var(--main-color)',
             borderRadius: '50%'
         });
         this.add(this.reticle);

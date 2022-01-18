@@ -1,6 +1,6 @@
-import { Config } from '../config/Config.js';
 import { Events } from '../config/Events.js';
 import { Interface } from '../utils/Interface.js';
+import { Stage } from '../controllers/Stage.js';
 
 import { ticker } from '../tween/Ticker.js';
 import { clearTween, tween } from '../tween/Tween.js';
@@ -80,7 +80,7 @@ export class ProgressCanvas extends Interface {
         this.context.scale(dpr, dpr);
 
         this.context.lineWidth = 1.5;
-        this.context.strokeStyle = Config.UI_COLOR;
+        this.context.strokeStyle = Stage.rootStyle.getPropertyValue('--main-color').trim();
 
         this.update();
     };

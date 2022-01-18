@@ -1,5 +1,7 @@
 import { Interface, shuffle } from 'alien.js';
 
+import { Styles } from '../../config/Styles.js';
+
 export class DetailsTitle extends Interface {
     constructor(copy) {
         super('.title', 'h1');
@@ -7,11 +9,19 @@ export class DetailsTitle extends Interface {
         this.copy = copy;
         this.letters = [];
 
+        this.initHTML();
         this.initText();
+    }
+
+    initHTML() {
+        this.css({
+            ...Styles.h1
+        });
     }
 
     initText() {
         const split = this.copy.split('');
+
         split.forEach(str => {
             if (str === ' ') {
                 str = '&nbsp';
@@ -32,9 +42,16 @@ export class DetailsTitle extends Interface {
     animateIn = () => {
         shuffle(this.letters);
 
-        for (let i = 0; i < 2; i++) {
-            const letter = this.letters[i];
+        const underscores = this.letters.filter(letter => letter === '_');
+
+        underscores.forEach((letter, i) => {
+            letter.clearTween().css({ opacity: 0 }).tween({ opacity: 1 }, 2000, 'easeOutCubic', i * 15);
+        });
+
+        const letters = this.letters.filter(letter => letter !== '_').slice(0, 2);
+
+        letters.forEach((letter, i) => {
             letter.clearTween().css({ opacity: 0 }).tween({ opacity: 1 }, 2000, 'easeOutCubic', 100 + i * 15);
-        }
+        });
     };
 }

@@ -15,11 +15,6 @@
     <script type="module">
         import { Events, Interface, Stage, clearTween, radians, ticker, tween } from '../build/alien.js';
 
-        class Config {
-            static BG_COLOR = '#0e0e0e';
-            static UI_COLOR = 'rgba(255, 255, 255, 0.94)';
-        }
-
         class ProgressCanvas extends Interface {
             constructor() {
                 super(null, 'canvas');
@@ -97,7 +92,7 @@
                 this.context.scale(dpr, dpr);
 
                 this.context.lineWidth = 1.5;
-                this.context.strokeStyle = Config.UI_COLOR;
+                this.context.strokeStyle = Stage.rootStyle.getPropertyValue('--main-color').trim();
 
                 this.update();
             };

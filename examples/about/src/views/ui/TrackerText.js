@@ -1,5 +1,7 @@
 import { Interface } from 'alien.js';
 
+import { Styles } from '../../config/Styles.js';
+
 export class TrackerText extends Interface {
     constructor() {
         super('.text');
@@ -16,10 +18,8 @@ export class TrackerText extends Interface {
         this.text = new Interface('.text');
         this.text.css({
             position: 'relative',
-            fontFamily: '"Roboto Mono", monospace',
-            fontSize: 11,
+            ...Styles.monospaceLabel,
             lineHeight: 18,
-            letterSpacing: 1,
             whiteSpace: 'no-wrap'
         });
         this.add(this.text);
@@ -27,9 +27,7 @@ export class TrackerText extends Interface {
         this.latency = new Interface('.latency');
         this.latency.css({
             position: 'relative',
-            fontFamily: '"Roboto Mono", monospace',
-            fontSize: 10,
-            letterSpacing: 0.5,
+            ...Styles.monospaceSmall,
             opacity: 0.7
         });
         this.add(this.latency);

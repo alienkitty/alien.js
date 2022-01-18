@@ -1,5 +1,7 @@
 import { Interface } from 'alien.js';
 
+import { Styles } from '../../config/Styles.js';
+
 export class HeaderInfo extends Interface {
     constructor() {
         super('.info');
@@ -24,11 +26,7 @@ export class HeaderInfo extends Interface {
         this.text = new Interface('.text');
         this.text.css({
             position: 'relative',
-            cssFloat: 'left',
-            fontFamily: '"Roboto Mono", monospace',
-            fontSize: 11,
-            lineHeight: 15,
-            letterSpacing: 1
+            ...Styles.monospaceLabel
         });
         this.text.text(this.fps);
         this.add(this.text);

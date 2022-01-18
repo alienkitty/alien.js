@@ -64,8 +64,8 @@ export class RenderManager {
 
         // Luminosity high pass material
         this.luminosityMaterial = new LuminosityMaterial();
-        this.luminosityMaterial.uniforms.uLuminosityThreshold.value = this.luminosityThreshold;
-        this.luminosityMaterial.uniforms.uLuminositySmoothing.value = this.luminositySmoothing;
+        this.luminosityMaterial.uniforms.uThreshold.value = this.luminosityThreshold;
+        this.luminosityMaterial.uniforms.uSmoothing.value = this.luminositySmoothing;
 
         // Gaussian blur materials
         this.blurMaterials = [];
@@ -74,7 +74,6 @@ export class RenderManager {
 
         for (let i = 0, l = this.nMips; i < l; i++) {
             this.blurMaterials.push(new UnrealBloomBlurMaterial(kernelSizeArray[i]));
-            this.blurMaterials[i].uniforms.uResolution.value = new Vector2();
         }
 
         // Bloom composite material

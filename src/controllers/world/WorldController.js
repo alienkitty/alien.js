@@ -7,6 +7,7 @@ import { TextureLoader } from '../../loaders/world/TextureLoader.js';
 import { EnvironmentTextureLoader } from '../../loaders/world/EnvironmentTextureLoader.js';
 import { BufferGeometryLoader } from '../../loaders/world/BufferGeometryLoader.js';
 // import { Interface } from '../../utils/Interface.js';
+import { Stage } from '../Stage.js';
 
 import { getFrustum, getFullscreenTriangle } from '../../utils/world/Utils3D.js';
 
@@ -36,7 +37,7 @@ export class WorldController {
 
         // 3D scene
         this.scene = new Scene();
-        this.scene.background = new Color(Config.BG_COLOR);
+        this.scene.background = new Color(Stage.rootStyle.getPropertyValue('--main-bg-color').trim());
         this.camera = new PerspectiveCamera(30);
         this.camera.near = 0.1;
         this.camera.far = 1000;
@@ -116,8 +117,6 @@ export class WorldController {
     static getTexture = (path, callback) => this.textureLoader.load(path, callback);
 
     static loadTexture = path => this.textureLoader.loadAsync(path);
-
-    static getEnvironmentTexture = (path, callback) => this.environmentLoader.load(path, callback);
 
     static loadEnvironmentTexture = path => this.environmentLoader.loadAsync(path);
 

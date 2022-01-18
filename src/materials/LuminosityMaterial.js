@@ -9,8 +9,8 @@ export class LuminosityMaterial extends RawShaderMaterial {
             glslVersion: GLSL3,
             uniforms: {
                 tMap: new Uniform(null),
-                uLuminosityThreshold: new Uniform(1),
-                uLuminositySmoothing: new Uniform(1)
+                uThreshold: new Uniform(1),
+                uSmoothing: new Uniform(1)
             },
             vertexShader,
             fragmentShader,

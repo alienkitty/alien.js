@@ -4,8 +4,8 @@ export default /* glsl */`
 precision highp float;
 
 uniform sampler2D tMap;
-uniform float uLuminosityThreshold;
-uniform float uLuminositySmoothing;
+uniform float uThreshold;
+uniform float uSmoothing;
 
 in vec2 vUv;
 
@@ -16,7 +16,7 @@ void main() {
     vec3 luma = vec3(0.299, 0.587, 0.114);
     float v = dot(texel.xyz, luma);
     vec4 outputColor = vec4(0);
-    float alpha = smoothstep(uLuminosityThreshold, uLuminosityThreshold + uLuminositySmoothing, v);
+    float alpha = smoothstep(uThreshold, uThreshold + uSmoothing, v);
 
     FragColor = mix(outputColor, texel, alpha);
 }

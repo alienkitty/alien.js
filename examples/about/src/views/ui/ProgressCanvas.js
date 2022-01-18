@@ -1,6 +1,4 @@
-import { Events, Interface, clearTween, radians, ticker, tween } from 'alien.js';
-
-import { Config } from '../../config/Config.js';
+import { Events, Interface, Stage, clearTween, radians, ticker, tween } from 'alien.js';
 
 export class ProgressCanvas extends Interface {
     constructor() {
@@ -76,7 +74,7 @@ export class ProgressCanvas extends Interface {
         this.context.scale(dpr, dpr);
 
         this.context.lineWidth = 1.5;
-        this.context.strokeStyle = Config.UI_COLOR;
+        this.context.strokeStyle = Stage.rootStyle.getPropertyValue('--main-color').trim();
 
         this.update();
     };

@@ -10,14 +10,6 @@ export class Preloader {
             return location.href = 'fallback.html';
         }
 
-        Assets.path = Config.CDN;
-        Assets.crossOrigin = 'anonymous';
-
-        Assets.options = {
-            mode: 'cors',
-            // credentials: 'include'
-        };
-
         Assets.cache = true;
 
         Data.init();

@@ -26,6 +26,12 @@
     src: url(../fonts/RobotoMono-Medium.woff2) format('woff2');
 }
 
+:root {
+    --main-bg-color: #000;
+    --main-color: rgba(255, 255, 255, 0.94);
+    --main-color-triplet: 255, 255, 255;
+}
+
 html, body, #root {
     width: 100%;
     height: 100%;
@@ -39,8 +45,8 @@ body {
     font-weight: 500;
     font-size: 13px;
     line-height: 1.6;
-    background: #000;
-    color: rgba(255, 255, 255, 0.94);
+    background-color: var(--main-bg-color);
+    color: var(--main-color);
     -moz-osx-font-smoothing: grayscale;
     -webkit-font-smoothing: antialiased;
 }
@@ -58,32 +64,16 @@ body {
     text-size-adjust: none;
 }
 
-#root h1 {
-    position: relative;
-    left: -1px;
-    margin: 0 0 6px;
-    font-family: 'D-DIN', sans-serif;
-    font-weight: 400;
-    font-size: 24px;
-    line-height: 1.3;
-    text-transform: uppercase;
-}
-
-#root p {
-    position: relative;
-    margin: 6px 0;
-}
-
 #root br, #root span, #root a {
     position: relative;
     display: inline-block;
 }
 
 #root a, #root a:hover, #root a:focus {
-    color: rgba(255, 255, 255, 0.94);
+    color: var(--main-color);
 }
 
 ::selection {
-    background: rgba(255, 255, 255, 0.94);
-    color: #000;
+    background-color: var(--main-color);
+    color: var(--main-bg-color);
 }

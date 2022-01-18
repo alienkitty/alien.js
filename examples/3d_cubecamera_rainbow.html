@@ -16,10 +16,7 @@
         import { ACESFilmicToneMapping, AdditiveBlending, BackSide, BlurMaterial, Color, CubeCamera, Device, Events, FXAAMaterial, GLSL3, Group, IcosahedronGeometry, ImageBitmapLoaderThread, LinearMipmapLinearFilter, MathUtils, Mesh, MeshBasicMaterial, MultiplyOperation, NoBlending, OrthographicCamera, PerspectiveCamera, RGBFormat, RawShaderMaterial, Scene, SphereGeometry, Sprite, SpriteMaterial, Stage, TextureLoader, Thread, Uniform, Vector2, Vector3, WebGLCubeRenderTarget, WebGLRenderTarget, WebGLRenderer, Wobble, getFullscreenTriangle, radians, ticker, tween } from '../build/alien.js';
 
         class Config {
-            static BG_COLOR = '#030627';
-            static UI_COLOR = 'rgba(255, 255, 255, 0.94)';
-
-            static COLOR = new Color(this.BG_COLOR);
+            static BG_COLOR = new Color(0x030627);
             static LIGHT_COLOR = new Color(0xff8dfc);
             static PARTICLE_COLOR = new Color(0x8080ff);
 
@@ -163,7 +160,7 @@
                         uMinBright: new Uniform(0.07),
                         uBlurBright: new Uniform(0.4166),
                         uLightColor: new Uniform(Config.LIGHT_COLOR),
-                        uColor: new Uniform(Config.COLOR),
+                        uColor: new Uniform(Config.BG_COLOR),
                         uHue: new Uniform(0),
                         uBoost: new Uniform(1.0),
                         uReduction: new Uniform(1.2),
@@ -638,7 +635,7 @@
             static init() {
                 this.color = {};
 
-                Config.COLOR.getHSL(this.color);
+                Config.BG_COLOR.getHSL(this.color);
 
                 this.initWorld();
                 this.initLights();
@@ -660,7 +657,7 @@
 
                 // 3D scene
                 this.scene = new Scene();
-                this.scene.background = Config.COLOR;
+                this.scene.background = Config.BG_COLOR;
                 this.camera = new PerspectiveCamera(30);
                 this.camera.near = 0.5;
                 this.camera.far = 40;
@@ -724,7 +721,7 @@
             static update = (time, delta, frame) => {
                 this.hue.value += 0.0005;
 
-                Config.COLOR.setHSL(this.hue.value, this.color.s, this.color.l);
+                Config.BG_COLOR.setHSL(this.hue.value, this.color.s, this.color.l);
 
                 this.time.value = time;
                 this.frame.value = frame;

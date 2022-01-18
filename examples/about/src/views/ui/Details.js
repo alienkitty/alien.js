@@ -1,6 +1,7 @@
 import { Events, Interface, Stage, basename } from 'alien.js';
 
 import { Config } from '../../config/Config.js';
+import { Styles } from '../../config/Styles.js';
 import { DetailsTitle } from './DetailsTitle.js';
 import { DetailsLink } from './DetailsLink.js';
 
@@ -56,17 +57,12 @@ export class Details extends Interface {
 
         this.text = new Interface('.text', 'p');
         this.text.css({
-            width: 'fit-content'
+            width: 'fit-content',
+            ...Styles.content
         });
         this.text.html('A fluid shader tribute to Mr.doob’s Multiuser Sketchpad from 2010. Multiuser Fluid is an experiment to combine UI and data visualization elements in a multiuser environment.');
         this.container.add(this.text);
         this.texts.push(this.text);
-    }
-
-    setStackOrder() {
-        this.texts.forEach(text => {
-            text.css({ zIndex: 4 });
-        });
     }
 
     initViews() {
@@ -93,6 +89,12 @@ export class Details extends Interface {
             });
             this.container.add(link);
             this.texts.push(link);
+        });
+    }
+
+    setStackOrder() {
+        this.texts.forEach(text => {
+            text.css({ zIndex: 4 });
         });
     }
 
@@ -145,7 +147,7 @@ export class Details extends Interface {
         const duration = 2000;
         const stagger = 175;
 
-        this.bg.clearTween().tween({ opacity: 0.3 }, duration, 'easeOutSine');
+        this.bg.clearTween().tween({ opacity: 0.35 }, duration, 'easeOutSine');
 
         this.texts.forEach((text, i) => {
             const delay = i === 0 ? 0 : duration;

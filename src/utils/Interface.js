@@ -11,8 +11,8 @@ import { clearTween, delayedCall, tween } from '../tween/Tween.js';
 // https://developer.mozilla.org/en-US/docs/Web/CSS/filter
 const Transforms = ['x', 'y', 'z', 'skewX', 'skewY', 'rotation', 'rotationX', 'rotationY', 'rotationZ', 'scale', 'scaleX', 'scaleY', 'scaleZ'];
 const Filters = ['blur', 'brightness', 'contrast', 'grayscale', 'hue', 'invert', 'saturate', 'sepia'];
-const Numeric = ['opacity', 'zIndex', 'fontWeight', 'strokeWidth', 'strokeDashoffset'];
-const Lacuna1 = ['opacity', 'brightness', 'contrast', 'saturate', 'scale'];
+const Numeric = ['opacity', 'zIndex', 'fontWeight', 'strokeWidth', 'strokeDashoffset', 'stopOpacity'];
+const Lacuna1 = ['opacity', 'brightness', 'contrast', 'saturate', 'scale', 'stopOpacity'];
 
 export class Interface {
     constructor(name, type = 'div', qualifiedName) {

@@ -4,7 +4,10 @@ import { Interface } from '../utils/Interface.js';
 export var Stage;
 
 if (typeof window !== 'undefined') {
-    Stage = new Interface(document.getElementById('root'));
+    Stage = new Interface(document.querySelector('#root'));
+
+    Stage.root = document.querySelector(':root');
+    Stage.rootStyle = getComputedStyle(Stage.root);
 
     window.addEventListener('popstate', onPopState);
     window.addEventListener('keydown', onKeyDown);

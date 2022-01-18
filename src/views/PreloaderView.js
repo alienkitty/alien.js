@@ -1,4 +1,3 @@
-import { Config } from '../config/Config.js';
 import { Events } from '../config/Events.js';
 import { Interface } from '../utils/Interface.js';
 import { ProgressCanvas } from './ProgressCanvas.js';
@@ -20,7 +19,7 @@ export class PreloaderView extends Interface {
             top: 0,
             width: '100%',
             height: '100%',
-            backgroundColor: Config.BG_COLOR,
+            backgroundColor: 'var(--main-bg-color)',
             zIndex: 1,
             pointerEvents: 'none'
         });

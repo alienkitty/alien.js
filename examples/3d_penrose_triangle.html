@@ -16,9 +16,6 @@
         import { ACESFilmicToneMapping, AmbientLight, BloomCompositeMaterial, BoxGeometry, BufferAttribute, BufferGeometry, Color, DirectionalLight, Events, FXAAMaterial, GLSL3, Group, HemisphereLight, LuminosityMaterial, MathUtils, Mesh, MeshStandardMaterial, NoBlending, OrthographicCamera, PlaneGeometry, RGBFormat, RawShaderMaterial, Scene, Stage, Uniform, UnrealBloomBlurMaterial, Vector2, WebGLRenderTarget, WebGLRenderer, getFullscreenTriangle, mix, ticker } from '../build/alien.js';
 
         class Config {
-            static BG_COLOR = '#0e0e0e';
-            static UI_COLOR = 'rgba(255, 255, 255, 0.94)';
-
             static BREAKPOINT = 1000;
         }
 
@@ -139,6 +136,7 @@
                 this.camera = camera;
 
                 this.luminosityThreshold = 0.1;
+                this.luminositySmoothing = 1;
                 this.bloomStrength = 0.3;
                 this.bloomRadius = 0.75;
                 this.enabled = true;
@@ -184,7 +182,8 @@
 
                 // Luminosity high pass material
                 this.luminosityMaterial = new LuminosityMaterial();
-                this.luminosityMaterial.uniforms.uLuminosityThreshold.value = this.luminosityThreshold;
+                this.luminosityMaterial.uniforms.uThreshold.value = this.luminosityThreshold;
+                this.luminosityMaterial.uniforms.uSmoothing.value = this.luminositySmoothing;
 
                 // Gaussian blur materials
                 this.blurMaterials = [];
@@ -193,7 +192,6 @@
 
                 for (let i = 0, l = this.nMips; i < l; i++) {
                     this.blurMaterials.push(new UnrealBloomBlurMaterial(kernelSizeArray[i]));
-                    this.blurMaterials[i].uniforms.uResolution.value = new Vector2();
                 }
 
                 // Bloom composite material
@@ -336,7 +334,7 @@
 
                 // 2D scene
                 this.scene = new Scene();
-                this.scene.background = new Color(Config.BG_COLOR);
+                this.scene.background = new Color(Stage.rootStyle.getPropertyValue('--main-bg-color').trim());
                 this.camera = new OrthographicCamera(-1, 1, 1, -1, 0, 1000);
                 this.camera.position.set(500, 500, 500);
                 this.camera.lookAt(this.scene.position);

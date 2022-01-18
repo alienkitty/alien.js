@@ -2,6 +2,7 @@ import { Events, Interface, Stage, clearTween, tween } from 'alien.js';
 
 import { Config } from '../../config/Config.js';
 import { Global } from '../../config/Global.js';
+import { Styles } from '../../config/Styles.js';
 
 export class DetailsButton extends Interface {
     constructor() {
@@ -53,10 +54,7 @@ export class DetailsButton extends Interface {
         this.index.css({
             left: 34,
             top: 12,
-            fontFamily: '"Roboto Mono", monospace',
-            fontSize: 11,
-            lineHeight: 15,
-            letterSpacing: 1
+            ...Styles.monospaceLabel
         });
         this.index.text(Global.USERS.length);
         this.add(this.index);
@@ -92,7 +90,7 @@ export class DetailsButton extends Interface {
         this.circle.radius = this.radius;
         this.circle.scale = 1;
         this.circle.lineWidth = 1.5;
-        this.circle.strokeStyle = Config.UI_COLOR;
+        this.circle.strokeStyle = Stage.rootStyle.getPropertyValue('--main-color').trim();
     }
 
     drawCircle() {

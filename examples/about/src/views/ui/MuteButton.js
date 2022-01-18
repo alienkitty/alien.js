@@ -62,7 +62,7 @@ export class MuteButton extends Interface {
     initLine() {
         this.line = {};
         this.line.lineWidth = 1.5;
-        this.line.strokeStyle = Config.UI_COLOR;
+        this.line.strokeStyle = Stage.rootStyle.getPropertyValue('--main-color').trim();
     }
 
     drawLine() {

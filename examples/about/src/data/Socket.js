@@ -1,4 +1,4 @@
-import { EventEmitter, Events, Stage } from 'alien.js';
+import { EventEmitter, Events, Stage, clearTween, delayedCall } from 'alien.js';
 
 import { Global } from '../config/Global.js';
 
@@ -21,10 +21,9 @@ export class Socket extends EventEmitter {
     }
 
     init() {
-        this.socket = new WebSocket('wss://multiuser-fluid.glitch.me', ['permessage-deflate']);
-        this.socket.binaryType = 'arraybuffer';
+        this.server = 'wss://multiuser-fluid.glitch.me';
 
-        this.addListeners();
+        this.connect();
     }
 
     addListeners() {
@@ -46,7 +45,7 @@ export class Socket extends EventEmitter {
     }
 
     long2ip(ipl) {
-        return `${ipl >>> 24}.${ipl >> 16 & 255}.${ipl >> 8 & 255}.${ipl & 255}`;
+        return (ipl >>> 24) + '.' + (ipl >> 16 & 255) + '.' + (ipl >> 8 & 255) + '.' + (ipl & 255);
     }
 
     /**
@@ -55,6 +54,9 @@ export class Socket extends EventEmitter {
 
     onClose = () => {
         this.connected = false;
+
+        clearTween(this.timeout);
+        this.timeout = delayedCall(250, this.connect);
     };
 
     onMessage = ({ data }) => {
@@ -146,5 +148,24 @@ export class Socket extends EventEmitter {
         }
 
         this.socket.send(data.buffer);
+    };
+
+    connect = () => {
+        if (this.socket) {
+            this.close();
+        }
+
+        this.socket = new WebSocket(this.server, ['permessage-deflate']);
+        this.socket.binaryType = 'arraybuffer';
+
+        this.addListeners();
+    };
+
+    close = () => {
+        this.removeListeners();
+
+        clearTween(this.timeout);
+
+        this.socket.close();
     };
 }

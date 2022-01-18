@@ -1,3 +1,9 @@
+:root {
+    --main-bg-color: #000;
+    --main-color: rgba(255, 255, 255, 0.94);
+    --main-color-triplet: 255, 255, 255;
+}
+
 html, body, #root {
     width: 100%;
     height: 100%;
@@ -12,8 +18,8 @@ body {
     font-size: 11px;
     line-height: 1.7;
     letter-spacing: 0.03em;
-    background: #000;
-    color: rgba(255, 255, 255, 0.94);
+    background-color: var(--main-bg-color);
+    color: var(--main-color);
 }
 
 #root, #root * {
@@ -35,10 +41,10 @@ body {
 }
 
 #root a, #root a:hover, #root a:focus {
-    color: rgba(255, 255, 255, 0.94);
+    color: var(--main-color);
 }
 
 ::selection {
-    background: rgba(255, 255, 255, 0.94);
-    color: #000;
+    background-color: var(--main-color);
+    color: var(--main-bg-color);
 }

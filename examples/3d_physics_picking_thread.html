@@ -417,7 +417,7 @@
                 mesh.layers.enable(Layer.PICKING);
                 this.add(mesh);
 
-                physics.add(mesh, { autoSleep: false });
+                physics.add(mesh);
             }
 
             /**
@@ -522,7 +522,7 @@
                 mesh.layers.enable(Layer.PICKING);
                 this.add(mesh);
 
-                physics.add(mesh, { autoSleep: false });
+                physics.add(mesh);
             }
 
             /**
@@ -662,7 +662,7 @@
                 floor.geometry.setDrawRange(0, 0); // Avoid rendering geometry
                 this.add(floor);
 
-                physics.add(floor, { density: 0 });
+                physics.add(floor);
             }
 
             /**

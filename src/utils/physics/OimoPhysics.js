@@ -79,7 +79,7 @@ export class OimoPhysics {
         this.matrix = new Matrix4();
     }
 
-    getBody(position, quaternion, shape, {
+    getBody(position, quaternion, scale, geometry, {
         density,
         friction,
         restitution,
@@ -104,7 +104,19 @@ export class OimoPhysics {
         const body = new RigidBody(bodyConfig);
 
         const shapeConfig = new ShapeConfig();
-        shapeConfig.geometry = shape;
+        const parameters = geometry.parameters;
+
+        if (geometry.type === 'BoxGeometry') {
+            const sx = parameters.width !== undefined ? (parameters.width * scale.x) / 2 : 0.5;
+            const sy = parameters.height !== undefined ? (parameters.height * scale.y) / 2 : 0.5;
+            const sz = parameters.depth !== undefined ? (parameters.depth * scale.z) / 2 : 0.5;
+
+            shapeConfig.geometry = new BoxGeometry(new Vec3(sx, sy, sz));
+        } else if (geometry.type === 'SphereGeometry' || geometry.type === 'IcosahedronGeometry') {
+            const radius = parameters.radius !== undefined ? parameters.radius * scale.x : 1;
+
+            shapeConfig.geometry = new SphereGeometry(radius);
+        }
 
         if (density !== undefined) {
             shapeConfig.density = density;
@@ -130,32 +142,12 @@ export class OimoPhysics {
         return body;
     }
 
-    getShape(geometry) {
-        const parameters = geometry.parameters;
-
-        if (geometry.type === 'BoxGeometry') {
-            const sx = parameters.width !== undefined ? parameters.width / 2 : 0.5;
-            const sy = parameters.height !== undefined ? parameters.height / 2 : 0.5;
-            const sz = parameters.depth !== undefined ? parameters.depth / 2 : 0.5;
-
-            return new BoxGeometry(new Vec3(sx, sy, sz));
-        } else if (geometry.type === 'SphereGeometry' || geometry.type === 'IcosahedronGeometry') {
-            const radius = parameters.radius !== undefined ? parameters.radius : 1;
-
-            return new SphereGeometry(radius);
-        }
-
-        return null;
-    }
-
     add(object, props) {
         if (object.geometry) {
-            const shape = this.getShape(object.geometry);
-
             if (object.isInstancedMesh) {
-                return this.handleInstancedMesh(object, shape, props);
+                return this.handleInstancedMesh(object, object.geometry, props);
             } else {
-                return this.handleMesh(object, shape, props);
+                return this.handleMesh(object, object.geometry, props);
             }
         } else if (object instanceof JointConfig) {
             return this.handleJoint(object);
@@ -216,12 +208,16 @@ export class OimoPhysics {
         return body;
     }
 
-    handleMesh(object, shape, props = {}) {
+    handleMesh(object, geometry, props) {
         if (object.parent && object.parent.isGroup) {
             object = object.parent;
         }
 
-        const body = this.getBody(object.position, object.quaternion, shape, props);
+        if (props === undefined) {
+            props = object;
+        }
+
+        const body = this.getBody(object.position, object.quaternion, object.scale, geometry, props);
         this.world.addRigidBody(body);
 
         if (props.density !== 0) {
@@ -233,14 +229,14 @@ export class OimoPhysics {
         return body;
     }
 
-    handleInstancedMesh(object, shape, props = {}) {
+    handleInstancedMesh(object, geometry, props = {}) {
         const bodies = [];
 
         for (let i = 0; i < object.count; i++) {
             object.getMatrixAt(i, this.matrix);
             this.matrix.decompose(this.object.position, this.object.quaternion, this.object.scale);
 
-            const body = this.getBody(this.object.position, this.object.quaternion, shape, props);
+            const body = this.getBody(this.object.position, this.object.quaternion, this.object.scale, geometry, props);
             this.world.addRigidBody(body);
 
             bodies.push(body);

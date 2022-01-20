@@ -21,10 +21,19 @@ export class OimoPhysicsController {
         this.matrix = new Matrix4();
     }
 
-    getObject(position, quaternion, geometry, props) {
-        const object = Object.assign({}, props);
+    getObject(position, quaternion, scale, geometry, {
+        name,
+        density,
+        friction,
+        restitution,
+        autoSleep,
+        kinematic
+    }) {
+        const object = {};
 
-        if (object.name === undefined) {
+        if (name !== undefined) {
+            object.name = name;
+        } else {
             object.name = guid();
         }
 
@@ -40,16 +49,38 @@ export class OimoPhysicsController {
             const parameters = geometry.parameters;
 
             if (geometry.type === 'BoxGeometry') {
-                const sx = parameters.width !== undefined ? parameters.width / 2 : 0.5;
-                const sy = parameters.height !== undefined ? parameters.height / 2 : 0.5;
-                const sz = parameters.depth !== undefined ? parameters.depth / 2 : 0.5;
+                const sx = parameters.width !== undefined ? (parameters.width * scale.x) / 2 : 0.5;
+                const sy = parameters.height !== undefined ? (parameters.height * scale.y) / 2 : 0.5;
+                const sz = parameters.depth !== undefined ? (parameters.depth * scale.z) / 2 : 0.5;
 
                 object.type = 'box';
                 object.size = [sx, sy, sz];
             } else if (geometry.type === 'SphereGeometry' || geometry.type === 'IcosahedronGeometry') {
+                const radius = parameters.radius !== undefined ? parameters.radius * scale.x : 1;
+
                 object.type = 'sphere';
-                object.size = parameters.radius !== undefined ? parameters.radius : 1;
+                object.size = radius;
             }
+        }
+
+        if (density !== undefined) {
+            object.density = density;
+        }
+
+        if (friction !== undefined) {
+            object.friction = friction;
+        }
+
+        if (restitution !== undefined) {
+            object.restitution = restitution;
+        }
+
+        if (autoSleep !== undefined) {
+            object.autoSleep = autoSleep;
+        }
+
+        if (kinematic !== undefined) {
+            object.kinematic = kinematic;
         }
 
         return object;
@@ -76,7 +107,7 @@ export class OimoPhysicsController {
             props = object;
         }
 
-        const body = this.getObject(null, null, null, props);
+        const body = this.getObject(null, null, null, null, props);
         this.shapes.push(body);
 
         if (object.isObject3D && props.density !== 0) {
@@ -88,16 +119,16 @@ export class OimoPhysicsController {
         return body;
     }
 
-    handleMesh(object, geometry, props = {}) {
+    handleMesh(object, geometry, props) {
         if (object.parent && object.parent.isGroup) {
             object = object.parent;
         }
 
-        if (object.name && props.name === undefined) {
-            props.name = object.name;
+        if (props === undefined) {
+            props = object;
         }
 
-        const body = this.getObject(object.position, object.quaternion, geometry, props);
+        const body = this.getObject(object.position, object.quaternion, object.scale, geometry, props);
         this.shapes.push(body);
 
         if (props.density !== 0) {
@@ -119,7 +150,7 @@ export class OimoPhysicsController {
 
             props.name = `${name}_${i}`;
 
-            const body = this.getObject(this.object.position, this.object.quaternion, geometry, props);
+            const body = this.getObject(this.object.position, this.object.quaternion, this.object.scale, geometry, props);
             this.shapes.push(body);
 
             bodies.push(body);

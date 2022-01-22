@@ -32,10 +32,16 @@ export function step(edge, value) {
     return value < edge ? 0 : 1;
 }
 
-export function smoothStep(min, max, value) {
-    const x = Math.max(0, Math.min(1, (value - min) / (max - min)));
+export function smoothstep(min, max, value) {
+    const x = clamp((value - min) / (max - min), 0, 1);
 
     return x * x * (3 - 2 * x);
+}
+
+export function smootherstep(min, max, value) {
+    const x = clamp((value - min) / (max - min), 0, 1);
+
+    return x * x * x * (x * (x * 6 - 15) + 10);
 }
 
 export function fract(value) {
@@ -66,6 +72,10 @@ export function headsTails(heads, tails) {
 
 export function guid() {
     return (Date.now() + random(0, 99999)).toString();
+}
+
+export function brightness(color) {
+    return color.r * 0.3 + color.g * 0.59 + color.b * 0.11;
 }
 
 export function basename(path, ext) {

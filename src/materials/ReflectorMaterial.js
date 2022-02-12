@@ -5,7 +5,7 @@ import fragmentShader from '../shaders/ReflectorMaterial.frag.js';
 
 export class ReflectorMaterial extends RawShaderMaterial {
     constructor({
-        color = new Color(0x7F7F7F),
+        color = new Color(0x7f7f7f),
         map = null,
         fog = null,
         dithering = false

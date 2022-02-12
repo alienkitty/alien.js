@@ -13,7 +13,7 @@
 <body>
     <div id="root"></div>
     <script type="module">
-        import { ACESFilmicToneMapping, AmbientLight, BloomCompositeMaterial, BoxGeometry, BufferAttribute, BufferGeometry, Color, DirectionalLight, Events, FXAAMaterial, GLSL3, Group, HemisphereLight, LuminosityMaterial, MathUtils, Mesh, MeshStandardMaterial, NoBlending, OrthographicCamera, PlaneGeometry, RGBFormat, RawShaderMaterial, Scene, Stage, Uniform, UnrealBloomBlurMaterial, Vector2, WebGLRenderTarget, WebGLRenderer, getFullscreenTriangle, mix, ticker } from '../build/alien.js';
+        import { ACESFilmicToneMapping, AmbientLight, BloomCompositeMaterial, BoxGeometry, BufferAttribute, BufferGeometry, Color, DirectionalLight, Events, FXAAMaterial, GLSL3, Group, HemisphereLight, LuminosityMaterial, MathUtils, Mesh, MeshStandardMaterial, NoBlending, OrthographicCamera, PlaneGeometry, RawShaderMaterial, Scene, Stage, Uniform, UnrealBloomBlurMaterial, Vector2, WebGLRenderTarget, WebGLRenderer, getFullscreenTriangle, mix, ticker } from '../build/alien.js';
 
         class Config {
             static BREAKPOINT = 1000;
@@ -100,27 +100,25 @@
             }
 
             initMesh() {
-                this.material = new MeshStandardMaterial({
-                    metalness: 1
-                });
+                const material = new MeshStandardMaterial({ metalness: 1 });
 
                 // Penrose triangle geometry
                 const bottomBox = new BoxGeometry(50, 50, 300);
-                const bottomMesh = new Mesh(bottomBox, this.material);
+                const bottomMesh = new Mesh(bottomBox, material);
                 this.add(bottomMesh);
 
                 const upBox = new BoxGeometry(50, 250, 50);
-                const upMesh = new Mesh(upBox, this.material);
+                const upMesh = new Mesh(upBox, material);
                 upMesh.position.set(0, 150, 125);
                 this.add(upMesh);
 
                 const topBox = new BoxGeometry(150, 50, 50);
-                const topMesh = new Mesh(topBox, this.material);
+                const topMesh = new Mesh(topBox, material);
                 topMesh.position.set(100, 250, 125);
                 this.add(topMesh);
 
                 const topPlane = new PlaneGeometry(50, 50, 32);
-                const topPlaneMesh = new Mesh(topPlane, this.material);
+                const topPlaneMesh = new Mesh(topPlane, material);
                 topPlaneMesh.position.set(200, 275, 125);
                 topPlaneMesh.rotation.x = MathUtils.degToRad(-90);
                 this.add(topPlaneMesh);
@@ -131,7 +129,7 @@
                 topTri.setAttribute('position', new BufferAttribute(vertices, 3));
                 topTri.setAttribute('uv', new BufferAttribute(uvs, 2));
                 topTri.computeVertexNormals();
-                const topTriMesh = new Mesh(topTri, this.material);
+                const topTriMesh = new Mesh(topTri, material);
                 topTriMesh.position.set(175, 275, 150);
                 topTriMesh.scale.y = -1;
                 this.add(topTriMesh);
@@ -172,7 +170,6 @@
 
                 // Render targets
                 this.renderTargetA = new WebGLRenderTarget(1, 1, {
-                    format: RGBFormat,
                     depthBuffer: false
                 });
 

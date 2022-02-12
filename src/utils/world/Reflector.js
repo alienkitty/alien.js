@@ -11,7 +11,6 @@ import {
     OrthographicCamera,
     PerspectiveCamera,
     Plane,
-    RGBFormat,
     Scene,
     Uniform,
     Vector3,
@@ -56,7 +55,6 @@ export class Reflector extends Group {
 
         // Render targets
         this.renderTarget = new WebGLRenderTarget(width, height, {
-            format: RGBFormat,
             depthBuffer: false
         });
 

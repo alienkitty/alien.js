@@ -9,8 +9,7 @@
     "start": "servez public"
   },
   "dependencies": {
-    "gsap": "^3.6.1",
-    "three": "^0.128.0"
+    "three": "latest"
   },
   "devDependencies": {
     "@rollup/plugin-node-resolve": "^11.2.1",

@@ -109,7 +109,7 @@ export class Socket extends EventEmitter {
             this.connected = true;
             this.id = e.getUint8(1).toString();
 
-            this.nickname();
+            this.nickname(Global.NICKNAME);
         }
 
         this.send(e);
@@ -119,11 +119,11 @@ export class Socket extends EventEmitter {
      * Public methods
      */
 
-    nickname = () => {
+    nickname = text => {
         const data = this.views[2];
         data.setUint8(0, 2);
 
-        const buf = this.encoder.encode(Global.NICKNAME);
+        const buf = this.encoder.encode(text);
 
         for (let i = 0; i < 10; i++) {
             data.setUint8(2 + i, buf[i]);

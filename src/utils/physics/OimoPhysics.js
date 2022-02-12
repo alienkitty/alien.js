@@ -7,7 +7,7 @@
 
 import { Matrix4, Object3D } from 'three';
 
-import { oimo } from 'three/examples/jsm/libs/OimoPhysics/OimoPhysics.js';
+import { oimo } from 'oimophysics';
 
 // Dynamics
 export const World = oimo.dynamics.World;

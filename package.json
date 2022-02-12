@@ -10,11 +10,9 @@
     "3d",
     "animation",
     "interaction",
-    "html5",
-    "css3",
+    "physics",
     "svg",
     "canvas",
-    "threejs",
     "webgl",
     "webgl2",
     "webaudio"
@@ -37,6 +35,7 @@
     "start": "servez public"
   },
   "dependencies": {
+    "oimophysics": "latest",
     "three": "latest"
   },
   "devDependencies": {

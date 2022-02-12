@@ -5,7 +5,7 @@
  * Based on https://github.com/lo-th/phy
  */
 
-import { oimo } from 'three/examples/jsm/libs/OimoPhysics/OimoPhysics.js';
+import { oimo } from 'oimophysics';
 
 // Dynamics
 const World = oimo.dynamics.World;

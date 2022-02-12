@@ -222,12 +222,12 @@ Clone this repository template and install its dependencies:
 ```sh
 git clone https://github.com/pschroen/alien.js
 cd alien.js
-npm i
+npm i three
 
 # or
 npx degit pschroen/alien.js my-app
 cd my-app
-npm i
+npm i three
 ```
 
 ```sh
@@ -243,7 +243,6 @@ npm run build
 Uncomment all the lines in `App.js`, and download the [uil](https://github.com/lo-th/uil) ES module:
 
 ```sh
-npm i
 mkdir src/lib
 curl -L https://raw.githubusercontent.com/lo-th/uil/gh-pages/build/uil.module.js --output src/lib/uil.module.js
 npm run dev
@@ -259,7 +258,7 @@ UIL is loaded dynamically and not part of the main bundle.
 ### With examples
 
 ```sh
-npm i
+npm i three oimophysics
 cd examples
 npm i
 npm run build

@@ -34,10 +34,6 @@
     "dev": "concurrently --names \"ROLLUP,HTTP\" -c \"bgBlue.bold,bgGreen.bold\" \"rollup -c -w -m inline\" \"servez public\"",
     "start": "servez public"
   },
-  "dependencies": {
-    "oimophysics": "latest",
-    "three": "latest"
-  },
   "devDependencies": {
     "@rollup/plugin-node-resolve": "^11.2.1",
     "concurrently": "^6.0.2",

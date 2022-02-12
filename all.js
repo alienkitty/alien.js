@@ -58,6 +58,8 @@ export { OimoPhysicsBuffer } from './src/utils/physics/OimoPhysicsBuffer.js';
 export { OimoPhysicsController } from './src/utils/physics/OimoPhysicsController.js';
 
 // Extras
+// export { Vector2 } from './src/utils/extras/Vector2.js';
+// export { Color } from './src/utils/extras/Color.js';
 export { Smooth } from './src/utils/extras/Smooth.js';
 export { Magnetic } from './src/utils/extras/Magnetic.js';
 

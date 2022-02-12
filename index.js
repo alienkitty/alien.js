@@ -55,3 +55,7 @@ export { Sound3D } from './src/utils/audio/Sound3D.js';
 // Physics
 export { OimoPhysicsBuffer } from './src/utils/physics/OimoPhysicsBuffer.js';
 export { OimoPhysicsController } from './src/utils/physics/OimoPhysicsController.js';
+
+// Extras
+export { Vector2 } from './src/utils/extras/Vector2.js';
+export { Color } from './src/utils/extras/Color.js';

@@ -13,7 +13,7 @@
 <body>
     <div id="root"></div>
     <script type="module">
-        import { BasicMaterial, BufferGeometryLoader, BufferGeometryLoaderThread, Color, Device, Events, FXAAMaterial, Group, ImageBitmapLoaderThread, Mesh, OrbitControls, OrthographicCamera, PerspectiveCamera, PlaneGeometry, RGBFormat, Reflector, ReflectorDudvMaterial, RepeatWrapping, Scene, Stage, TextureLoader, Thread, Uniform, Vector2, WebGLRenderTarget, WebGLRenderer, getFullscreenTriangle, ticker } from '../build/alien.js';
+        import { BasicMaterial, BufferGeometryLoader, BufferGeometryLoaderThread, Color, Device, Events, FXAAMaterial, Group, ImageBitmapLoaderThread, Mesh, OrbitControls, OrthographicCamera, PerspectiveCamera, PlaneGeometry, Reflector, ReflectorDudvMaterial, RepeatWrapping, Scene, Stage, TextureLoader, Thread, Uniform, Vector2, WebGLRenderTarget, WebGLRenderer, getFullscreenTriangle, ticker } from '../build/alien.js';
 
         class Config {
             static BG_COLOR = 0xffffff;
@@ -194,9 +194,7 @@
                 this.screenScene.add(this.screen);
 
                 // Render targets
-                this.renderTarget = new WebGLRenderTarget(1, 1, {
-                    format: RGBFormat
-                });
+                this.renderTarget = new WebGLRenderTarget(1, 1);
 
                 // FXAA material
                 this.fxaaMaterial = new FXAAMaterial();

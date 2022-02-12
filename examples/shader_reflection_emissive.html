@@ -13,7 +13,7 @@
 <body>
     <div id="root"></div>
     <script type="module">
-        import { ACESFilmicToneMapping, BloomCompositeMaterial, Color, DirectionalLight, Events, FXAAMaterial, Fog, GLSL3, Group, HemisphereLight, LuminosityMaterial, MathUtils, Mesh, MeshStandardMaterial, NoBlending, OrthographicCamera, PerspectiveCamera, PlaneGeometry, RGBFormat, RawShaderMaterial, Reflector, RepeatWrapping, SVGLoader, Scene, Stage, TextureLoader, Uniform, UnrealBloomBlurMaterial, Vector2, Vector3, WebGLRenderTarget, WebGLRenderer, getFullscreenTriangle, mix, ticker } from '../build/alien.js';
+        import { ACESFilmicToneMapping, BloomCompositeMaterial, Color, DirectionalLight, Events, FXAAMaterial, Fog, GLSL3, Group, HemisphereLight, LuminosityMaterial, MathUtils, Mesh, MeshStandardMaterial, NoBlending, OrthographicCamera, PerspectiveCamera, PlaneGeometry, RawShaderMaterial, Reflector, RepeatWrapping, SVGLoader, Scene, Stage, TextureLoader, Uniform, UnrealBloomBlurMaterial, Vector2, Vector3, WebGLRenderTarget, WebGLRenderer, getFullscreenTriangle, mix, ticker } from '../build/alien.js';
 
         import rgbshift from '../src/shaders/modules/rgbshift/rgbshift.glsl.js';
 
@@ -152,6 +152,7 @@
                 ormMap.repeat.set(16, 16);
 
                 const material = new MeshStandardMaterial({
+                    color: new Color().offsetHSL(0, 0, -0.65),
                     roughness: 0.35,
                     metalness: 0.18,
                     map,
@@ -318,7 +319,6 @@
 
                 // Render targets
                 this.renderTargetA = new WebGLRenderTarget(1, 1, {
-                    format: RGBFormat,
                     depthBuffer: false
                 });
 
@@ -533,6 +533,8 @@
                 }
 
                 this.origin.z = this.camera.position.z;
+
+                this.camera.lookAt(this.lookAt);
             };
 
             static update = () => {

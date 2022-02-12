@@ -125,7 +125,7 @@
 
             async initImages() {
                 const now = Date.now();
-                const svgHTML = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024"><filter id="ripple-${now}"><feGaussianBlur in="SourceGraphic" stdDeviation="16"/></filter><g fill="none" filter="url(#ripple-${now})"><rect width="100%" height="100%"></rect><circle cx="512" cy="512" r="256" stroke="#fff" stroke-width="64"/></g></svg>`;
+                const svgHTML = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024"><filter id="ripple_${now}"><feGaussianBlur in="SourceGraphic" stdDeviation="16"/></filter><g fill="none" filter="url(#ripple_${now})"><rect width="100%" height="100%"></rect><circle cx="512" cy="512" r="256" stroke="#fff" stroke-width="64"/></g></svg>`;
 
                 await Promise.all([
                     this.loadImage('ripple', `data:image/svg+xml;base64,${btoa(svgHTML)}`)

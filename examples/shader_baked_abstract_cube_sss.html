@@ -13,7 +13,7 @@
 <body>
     <div id="root"></div>
     <script type="module">
-        import { ACESFilmicToneMapping, AmbientLight, BloomCompositeMaterial, BufferGeometryLoader, BufferGeometryLoaderThread, Color, Device, EnvironmentTextureLoader, Events, FXAAMaterial, GLSL3, Group, HemisphereLight, ImageBitmapLoaderThread, LuminosityMaterial, MathUtils, Mesh, MeshBasicMaterial, MeshStandardMaterial, NoBlending, OrthographicCamera, PerspectiveCamera, PlaneGeometry, PointLight, RGBFormat, RawShaderMaterial, Reflector, ReflectorDudvMaterial, RepeatWrapping, Scene, ShaderChunk, SphereGeometry, Stage, TextureLoader, Thread, Uniform, UnrealBloomBlurMaterial, Vector2, Vector3, WebGLRenderTarget, WebGLRenderer, getFrustum, getFullscreenTriangle, mix, ticker } from '../build/alien.js';
+        import { ACESFilmicToneMapping, AmbientLight, BloomCompositeMaterial, BufferGeometryLoader, BufferGeometryLoaderThread, Color, Device, EnvironmentTextureLoader, Events, FXAAMaterial, GLSL3, Group, HemisphereLight, ImageBitmapLoaderThread, LuminosityMaterial, MathUtils, Mesh, MeshBasicMaterial, MeshStandardMaterial, NoBlending, OrthographicCamera, PerspectiveCamera, PlaneGeometry, PointLight, RawShaderMaterial, Reflector, ReflectorDudvMaterial, RepeatWrapping, Scene, ShaderChunk, SphereGeometry, Stage, TextureLoader, Thread, Uniform, UnrealBloomBlurMaterial, Vector2, Vector3, WebGLRenderTarget, WebGLRenderer, getFrustum, getFullscreenTriangle, mix, ticker } from '../build/alien.js';
 
         class Config {
             static DEBUG = location.search === '?debug';
@@ -136,6 +136,7 @@
                 thicknessMap.anisotropy = anisotropy;
 
                 const material = new MeshStandardMaterial({
+                    color: new Color().offsetHSL(0, 0, -0.65),
                     roughness: 2,
                     metalness: 0.6,
                     map,
@@ -402,7 +403,6 @@
 
                 // Render targets
                 this.renderTargetA = new WebGLRenderTarget(1, 1, {
-                    format: RGBFormat,
                     depthBuffer: false
                 });
 
@@ -745,9 +745,9 @@
                 this.onResize();
 
                 await Promise.all([
+                    SceneController.ready(),
                     WorldController.textureLoader.ready(),
-                    WorldController.environmentLoader.ready(),
-                    SceneController.ready()
+                    WorldController.environmentLoader.ready()
                 ]);
 
                 CameraController.animateIn();

@@ -13,7 +13,7 @@
 <body>
     <div id="root"></div>
     <script type="module">
-        import { ACESFilmicToneMapping, AmbientLight, Assets, BloomCompositeMaterial, Color, Device, DirectionalLight, EnvironmentTextureLoader, Events, FXAAMaterial, Group, HemisphereLight, ImageBitmapLoaderThread, LuminosityMaterial, MathUtils, Mesh, MeshPhysicalMaterial, MeshStandardMaterial, OrbitControls, OrthographicCamera, PerspectiveCamera, RGBFormat, RepeatWrapping, Scene, SceneCompositeMaterial, ShaderChunk, SphereGeometry, Stage, TextureLoader, Thread, Uniform, UnrealBloomBlurMaterial, Vector2, WebGLRenderTarget, WebGLRenderer, getFullscreenTriangle, mix, ticker } from '../build/alien.js';
+        import { ACESFilmicToneMapping, AmbientLight, Assets, BloomCompositeMaterial, Color, Device, DirectionalLight, EnvironmentTextureLoader, Events, FXAAMaterial, Group, HemisphereLight, ImageBitmapLoaderThread, LuminosityMaterial, MathUtils, Mesh, MeshPhysicalMaterial, MeshStandardMaterial, OrbitControls, OrthographicCamera, PerspectiveCamera, RepeatWrapping, Scene, SceneCompositeMaterial, ShaderChunk, SphereGeometry, Stage, TextureLoader, Thread, Uniform, UnrealBloomBlurMaterial, Vector2, WebGLRenderTarget, WebGLRenderer, getFullscreenTriangle, mix, ticker } from '../build/alien.js';
 
         class Config {
             static ICE_COLOR = 0x547691;
@@ -82,7 +82,7 @@
                     clearcoatRoughness: 1,
                     clearcoatRoughnessMap: ormMap,
                     clearcoatNormalMap: normalMap,
-                    clearcoatNormalScale: new Vector2(2.0, -2.0),
+                    clearcoatNormalScale: new Vector2(2, -2),
                     envMapIntensity: 0.1,
                     specularColor: new Color(Config.FRESNEL_COLOR),
                     specularIntensity: 1
@@ -368,7 +368,6 @@
 
                 // Render targets
                 this.renderTargetA = new WebGLRenderTarget(1, 1, {
-                    format: RGBFormat,
                     depthBuffer: false
                 });
 
@@ -656,9 +655,9 @@
                 this.onResize();
 
                 await Promise.all([
+                    SceneController.ready(),
                     WorldController.textureLoader.ready(),
-                    WorldController.environmentLoader.ready(),
-                    SceneController.ready()
+                    WorldController.environmentLoader.ready()
                 ]);
 
                 SceneController.animateIn();

@@ -13,7 +13,7 @@
 <body>
     <div id="root"></div>
     <script type="module">
-        import { ACESFilmicToneMapping, AmbientLight, AssetLoader, Assets, BasicShadowMap, BloomCompositeMaterial, BoxGeometry, Color, Device, DirectionalLight, EnvironmentTextureLoader, Events, FXAAMaterial, GLSL3, Group, HemisphereLight, IcosahedronGeometry, ImageBitmapLoaderThread, LuminosityMaterial, MathUtils, Mesh, MeshBasicMaterial, MeshPhongMaterial, MeshStandardMaterial, NoBlending, OimoPhysics, OrthographicCamera, PerspectiveCamera, PlaneGeometry, PointLight, RGBFormat, RawShaderMaterial, Raycaster, Reflector, RepeatWrapping, RigidBodyConfig, RigidBodyType, Scene, ShaderChunk, ShadowMaterial, Sound3D, SphericalJointConfig, Stage, TextureLoader, Thread, Uniform, UnrealBloomBlurMaterial, Vector2, Vector3, WebAudio, WebGLRenderTarget, WebGLRenderer, clamp, delayedCall, getFullscreenTriangle, mix, range, ticker } from '../build/alien.js';
+        import { ACESFilmicToneMapping, AmbientLight, AssetLoader, Assets, BasicShadowMap, BloomCompositeMaterial, BoxGeometry, Color, Device, DirectionalLight, EnvironmentTextureLoader, Events, FXAAMaterial, GLSL3, Group, HemisphereLight, IcosahedronGeometry, ImageBitmapLoaderThread, LuminosityMaterial, MathUtils, Mesh, MeshBasicMaterial, MeshPhongMaterial, MeshStandardMaterial, NoBlending, OimoPhysics, OrthographicCamera, PerspectiveCamera, PlaneGeometry, PointLight, RawShaderMaterial, Raycaster, Reflector, RepeatWrapping, RigidBodyConfig, RigidBodyType, Scene, ShaderChunk, ShadowMaterial, Sound3D, SphericalJointConfig, Stage, TextureLoader, Thread, Uniform, UnrealBloomBlurMaterial, Vector2, Vector3, WebAudio, WebGLRenderTarget, WebGLRenderer, clamp, delayedCall, getFullscreenTriangle, mix, range, ticker } from '../build/alien.js';
 
         class Config {
             static LIGHT_COLOR = 0xf44336;
@@ -199,6 +199,7 @@
                 thicknessMap.anisotropy = anisotropy;
 
                 const material = new MeshStandardMaterial({
+                    color: new Color().offsetHSL(0, 0, -0.65),
                     roughness: 2,
                     metalness: 0.6,
                     map,
@@ -557,8 +558,8 @@
                         gong.updateMatrixWorld();
 
                         const strength = range(force, 0, 4, 0, 1, true);
-                        gong.sound.gain.alpha = strength * 0.5;
-                        gong.sound.playbackRate.alpha = clamp(0.8 + strength * 0.4, 0.8, 1.2);
+                        gong.sound.gain.set(strength * 0.5);
+                        gong.sound.playbackRate.set(clamp(0.8 + strength * 0.4, 0.8, 1.2));
                         gong.sound.play();
 
                         delayedCall(6000, () => {
@@ -601,7 +602,6 @@
 
                 // Render targets
                 this.renderTargetA = new WebGLRenderTarget(1, 1, {
-                    format: RGBFormat,
                     depthBuffer: false
                 });
 
@@ -1120,9 +1120,9 @@
                 this.onResize();
 
                 await Promise.all([
+                    SceneController.ready(),
                     WorldController.textureLoader.ready(),
-                    WorldController.environmentLoader.ready(),
-                    SceneController.ready()
+                    WorldController.environmentLoader.ready()
                 ]);
 
                 CameraController.animateIn();

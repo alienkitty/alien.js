@@ -13,7 +13,7 @@
 <body>
     <div id="root"></div>
     <script type="module">
-        import { ACESFilmicToneMapping, AdditiveBlending, BloomCompositeMaterial, Color, DirectionalLight, Events, FXAAMaterial, Flowmap, Fog, GLSL3, Group, HemisphereLight, LuminosityMaterial, MathUtils, Mesh, MeshStandardMaterial, NoBlending, OrthographicCamera, PerspectiveCamera, PlaneGeometry, RGBFormat, RawShaderMaterial, Reflector, ReflectorMaterial, RepeatWrapping, SVGLoader, Scene, Stage, TextureLoader, Uniform, UnrealBloomBlurMaterial, Vector2, Vector3, WebGLRenderTarget, WebGLRenderer, getFrustum, getFullscreenTriangle, mix, range, ticker } from '../build/alien.js';
+        import { ACESFilmicToneMapping, AdditiveBlending, BloomCompositeMaterial, Color, DirectionalLight, Events, FXAAMaterial, Flowmap, Fog, GLSL3, Group, HemisphereLight, LuminosityMaterial, MathUtils, Mesh, MeshStandardMaterial, NoBlending, OrthographicCamera, PerspectiveCamera, PlaneGeometry, RawShaderMaterial, Reflector, ReflectorMaterial, RepeatWrapping, SVGLoader, Scene, Stage, TextureLoader, Uniform, UnrealBloomBlurMaterial, Vector2, Vector3, WebGLRenderTarget, WebGLRenderer, getFrustum, getFullscreenTriangle, mix, range, ticker } from '../build/alien.js';
 
         import rgbshift from '../src/shaders/modules/rgbshift/rgbshift.glsl.js';
 
@@ -189,18 +189,10 @@
 
                 // 2D scene
                 this.scene = new Scene();
-                this.camera = new OrthographicCamera();
-                this.camera.left = -this.width / 2;
-                this.camera.right = this.width / 2;
-                this.camera.top = this.height / 2;
-                this.camera.bottom = -this.height / 2;
-                this.camera.near = 0;
-                this.camera.far = 1;
-                this.camera.updateProjectionMatrix();
+                this.camera = new OrthographicCamera(-this.width / 2, this.width / 2, this.height / 2, -this.height / 2, 0, 1);
 
                 // Render targets
                 this.renderTarget = new WebGLRenderTarget(1, 1, {
-                    format: RGBFormat,
                     depthBuffer: false
                 });
 
@@ -232,7 +224,6 @@
 
             initViews() {
                 this.triangle = new Triangle();
-                this.triangle.frustumCulled = false;
 
                 // Reduce size to make room for flowmap dissipation
                 this.triangle.scale.multiplyScalar(0.8);
@@ -523,7 +514,6 @@
 
                 // Render targets
                 this.renderTargetA = new WebGLRenderTarget(1, 1, {
-                    format: RGBFormat,
                     depthBuffer: false
                 });
 
@@ -738,6 +728,8 @@
                 }
 
                 this.origin.z = this.camera.position.z;
+
+                this.camera.lookAt(this.lookAt);
             };
 
             static update = () => {

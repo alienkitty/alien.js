@@ -18,6 +18,7 @@
   "rules": {
     "arrow-parens": ["error", "as-needed"],
     "arrow-spacing": ["error", { "before": true, "after": true }],
+    "comma-spacing": ["error", { "before": false, "after": true }],
     "curly": ["error", "multi-line"],
     "eqeqeq": ["error", "always"],
     "indent": ["error", 4, { "SwitchCase": 1 }],

@@ -12,8 +12,8 @@ export class Sound {
         this.id = id;
         this.buffer = buffer;
         this.loop = false;
-        this.playing = false;
-        this.stopping = false;
+        this.isPlaying = false;
+        this.isStopping = false;
 
         this.output = this.context.createGain();
         this.output.connect(parent.input);
@@ -54,37 +54,36 @@ export class Sound {
         }
 
         this.context.resume().then(this.ready).then(() => {
-            if (!this.output) {
+            if (!this.context) {
                 return;
             }
 
-            this.output.gain.cancelScheduledValues(this.context.currentTime);
-            this.output.gain.setValueAtTime(this.gain.value, this.context.currentTime);
+            const startTime = this.context.currentTime;
+
+            this.output.gain.setTargetAtTime(this.gain.value, startTime + 0.01, 0.1);
 
             if (this.stereo) {
-                this.stereo.pan.cancelScheduledValues(this.context.currentTime);
-                this.stereo.pan.setValueAtTime(this.stereoPan.value, this.context.currentTime);
+                this.stereo.pan.setValueAtTime(this.stereoPan.value, startTime);
             }
 
             if (this.element) {
                 this.element.loop = this.loop;
                 this.element.play();
             } else {
-                if (this.stopping && this.loop) {
-                    this.stopping = false;
+                if (this.isStopping && this.loop) {
+                    this.isStopping = false;
                     return;
                 }
 
                 this.source = this.context.createBufferSource();
                 this.source.buffer = this.buffer;
                 this.source.loop = this.loop;
-                this.source.playbackRate.cancelScheduledValues(this.context.currentTime);
-                this.source.playbackRate.setValueAtTime(this.playbackRate.value, this.context.currentTime);
+                this.source.playbackRate.setValueAtTime(this.playbackRate.value, startTime);
                 this.source.connect(this.input);
                 this.source.start();
             }
 
-            this.playing = true;
+            this.isPlaying = true;
         });
     }
 
@@ -95,7 +94,7 @@ export class Sound {
             this.source.stop();
         }
 
-        this.playing = false;
+        this.isPlaying = false;
     }
 
     destroy() {

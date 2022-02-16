@@ -153,16 +153,16 @@ export class Reflector extends Group {
 
         this.q.x = (Math.sign(this.clipPlane.x) + projectionMatrix.elements[8]) / projectionMatrix.elements[0];
         this.q.y = (Math.sign(this.clipPlane.y) + projectionMatrix.elements[9]) / projectionMatrix.elements[5];
-        this.q.z = -1.0;
-        this.q.w = (1.0 + projectionMatrix.elements[10]) / projectionMatrix.elements[14];
+        this.q.z = -1;
+        this.q.w = (1 + projectionMatrix.elements[10]) / projectionMatrix.elements[14];
 
         // Calculate the scaled plane vector
-        this.clipPlane.multiplyScalar(2.0 / this.clipPlane.dot(this.q));
+        this.clipPlane.multiplyScalar(2 / this.clipPlane.dot(this.q));
 
         // Replacing the third row of the projection matrix
         projectionMatrix.elements[2] = this.clipPlane.x;
         projectionMatrix.elements[6] = this.clipPlane.y;
-        projectionMatrix.elements[10] = this.clipPlane.z + 1.0 - this.clipBias;
+        projectionMatrix.elements[10] = this.clipPlane.z + 1 - this.clipBias;
         projectionMatrix.elements[14] = this.clipPlane.w;
 
         // Render

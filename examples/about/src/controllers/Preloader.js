@@ -1,4 +1,4 @@
-import { AssetLoader, Assets, Device, Events, FontLoader, MultiLoader, Stage, WebAudio } from 'alien.js';
+import { AssetLoader, Assets, Device, Events, FontLoader, MultiLoader, Stage } from 'alien.js';
 
 import { Config } from '../config/Config.js';
 import { Data } from '../data/Data.js';
@@ -50,13 +50,11 @@ export class Preloader {
     static addListeners() {
         this.loader.events.on(Events.PROGRESS, this.view.onProgress);
         this.view.events.on(Events.COMPLETE, this.onComplete);
-        Stage.element.addEventListener('pointerdown', this.onPointerDown);
     }
 
     static removeListeners() {
         this.loader.events.off(Events.PROGRESS, this.view.onProgress);
         this.view.events.off(Events.COMPLETE, this.onComplete);
-        Stage.element.removeEventListener('pointerdown', this.onPointerDown);
     }
 
     /**
@@ -72,11 +70,5 @@ export class Preloader {
         this.view = this.view.destroy();
 
         this.app.start();
-    };
-
-    static onPointerDown = () => {
-        Stage.element.removeEventListener('pointerdown', this.onPointerDown);
-
-        WebAudio.resume();
     };
 }

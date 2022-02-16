@@ -96,9 +96,9 @@ export class UIL {
         return this.promise;
     }
 
-    constructor(name, materials, keys) {
+    constructor(name, materials = [], keys) {
         if (!Array.isArray(materials)) {
-            materials = materials ? [materials] : [];
+            materials = [materials];
         }
 
         this.group = UIL.add('group', { name });

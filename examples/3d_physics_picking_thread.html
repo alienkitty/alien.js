@@ -460,7 +460,7 @@
                 thicknessMap.anisotropy = anisotropy;
 
                 const material = new MeshStandardMaterial({
-                    color: new Color().offsetHSL(0, 0, -0.6),
+                    color: new Color().offsetHSL(0, 0, -0.65),
                     roughness: 2,
                     metalness: 0.6,
                     map,
@@ -785,10 +785,6 @@
              */
 
             static trigger = (event, force) => {
-                if (!WebAudio.context) {
-                    return;
-                }
-
                 switch (event) {
                     case 'gong': {
                         const gong = new Sound3D(WorldController.camera, 'gong');
@@ -797,8 +793,8 @@
                         gong.updateMatrixWorld();
 
                         const strength = range(force, 0, 4, 0, 1, true);
-                        gong.sound.gain.alpha = strength * 0.5;
-                        gong.sound.playbackRate.alpha = clamp(0.8 + strength * 0.4, 0.8, 1.2);
+                        gong.sound.gain.set(strength * 0.5);
+                        gong.sound.playbackRate.set(clamp(0.8 + strength * 0.4, 0.8, 1.2));
                         gong.sound.play();
 
                         delayedCall(6000, () => {
@@ -1353,9 +1349,9 @@
                 this.onResize();
 
                 await Promise.all([
+                    SceneController.ready(),
                     WorldController.textureLoader.ready(),
-                    WorldController.environmentLoader.ready(),
-                    SceneController.ready()
+                    WorldController.environmentLoader.ready()
                 ]);
 
                 CameraController.animateIn();

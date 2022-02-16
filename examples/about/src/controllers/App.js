@@ -23,7 +23,7 @@ export class App {
 
         await this.loader.ready();
 
-        WebAudio.init(Assets.filter(path => /sounds/.test(path)));
+        WebAudio.init(Assets.filter(path => /sounds/.test(path)), { sampleRate: 48000 });
         AudioController.init(this.ui.instructions);
     }
 
@@ -76,6 +76,7 @@ export class App {
      */
 
     static start = async () => {
+        AudioController.start();
         AudioController.trigger('fluid_start');
         FluidController.animateIn();
 

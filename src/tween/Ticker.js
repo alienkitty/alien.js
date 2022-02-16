@@ -13,7 +13,9 @@ if (typeof window !== 'undefined') {
     const timestep = 1000 / 60;
 
     RequestFrame = callback => {
-        return setTimeout(() => callback(performance.now() - start), timestep);
+        return setTimeout(() => {
+            callback(performance.now() - start);
+        }, timestep);
     };
 
     CancelFrame = clearTimeout;

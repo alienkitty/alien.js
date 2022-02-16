@@ -209,7 +209,7 @@ export class TextGeometry {
 
                 const u = glyph.x / texW;
                 const uw = glyph.width / texW;
-                const v = 1.0 - glyph.y / texH;
+                const v = 1 - glyph.y / texH;
                 const vh = glyph.height / texH;
                 this.buffers.uv.set([u, v - vh, u, v, u + uw, v - vh, u + uw, v], j * 4 * 2);
 

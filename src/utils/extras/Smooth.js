@@ -65,8 +65,7 @@ export class Smooth extends Component {
 
     enable = () => {
         this.addListeners();
-
-        defer(this.onResize);
+        this.onResize();
     };
 
     disable = () => {

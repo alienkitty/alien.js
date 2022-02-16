@@ -9,20 +9,9 @@ import { Sound } from './Sound.js';
 import { tween } from '../../tween/Tween.js';
 import { basename } from '../Utils.js';
 
-var AudioContext;
-
-if (typeof window !== 'undefined') {
-    AudioContext = window.AudioContext;
-}
-
 export class WebAudio {
-    static context = AudioContext ? new AudioContext() : null;
-
-    static init(assets = {}) {
-        if (!this.context) {
-            return;
-        }
-
+    static init(assets = {}, options) {
+        this.context = new AudioContext(options);
         this.sounds = {};
 
         this.output = this.context.createGain();
@@ -38,10 +27,6 @@ export class WebAudio {
     }
 
     static add(parent, id, buffer, bypass) {
-        if (!this.context) {
-            return;
-        }
-
         if (typeof parent === 'string') {
             bypass = buffer;
             buffer = id;
@@ -73,10 +58,6 @@ export class WebAudio {
     }
 
     static remove(id) {
-        if (!this.context) {
-            return;
-        }
-
         const sound = this.sounds[id];
 
         if (sound) {
@@ -87,10 +68,6 @@ export class WebAudio {
     }
 
     static clone(parent, from, to, bypass) {
-        if (!this.context) {
-            return;
-        }
-
         if (typeof parent === 'string') {
             bypass = to;
             to = from;
@@ -108,10 +85,6 @@ export class WebAudio {
     }
 
     static trigger(id) {
-        if (!this.context) {
-            return;
-        }
-
         const sound = this.sounds[id];
 
         if (sound) {
@@ -122,10 +95,6 @@ export class WebAudio {
     }
 
     static play(id, volume = 1, loop) {
-        if (!this.context) {
-            return;
-        }
-
         if (typeof volume !== 'number') {
             loop = volume;
             volume = 1;
@@ -134,7 +103,7 @@ export class WebAudio {
         const sound = this.sounds[id];
 
         if (sound) {
-            sound.gain.alpha = volume;
+            sound.gain.set(volume);
             sound.loop = !!loop;
 
             this.trigger(id);
@@ -144,10 +113,6 @@ export class WebAudio {
     }
 
     static fadeInAndPlay(id, volume, loop, duration, ease, delay = 0, complete, update) {
-        if (!this.context) {
-            return;
-        }
-
         if (typeof delay !== 'number') {
             update = complete;
             complete = delay;
@@ -157,7 +122,7 @@ export class WebAudio {
         const sound = this.sounds[id];
 
         if (sound) {
-            sound.gain.alpha = 0;
+            sound.gain.set(0);
             sound.loop = !!loop;
 
             this.trigger(id);
@@ -171,10 +136,6 @@ export class WebAudio {
     }
 
     static fadeOutAndStop(id, duration, ease, delay = 0, complete, update) {
-        if (!this.context) {
-            return;
-        }
-
         if (typeof delay !== 'number') {
             update = complete;
             complete = delay;
@@ -186,11 +147,11 @@ export class WebAudio {
         if (sound) {
             sound.ready().then(() => {
                 tween(sound.gain, { value: 0 }, duration, ease, delay, () => {
-                    if (!sound.stopping) {
+                    if (!sound.isStopping) {
                         return;
                     }
 
-                    sound.stopping = false;
+                    sound.isStopping = false;
                     sound.stop();
 
                     if (complete) {
@@ -199,41 +160,33 @@ export class WebAudio {
                 }, update);
             });
 
-            sound.stopping = true;
+            sound.isStopping = true;
         }
 
         return sound;
     }
 
-    static mute() {
-        if (!this.context) {
-            return;
+    static mute(instant) {
+        if (instant) {
+            this.gain.set(0);
+        } else {
+            this.gain.fade(0, 300);
         }
-
-        this.gain.fade(0, 300);
     }
 
-    static unmute() {
-        if (!this.context) {
-            return;
+    static unmute(instant) {
+        if (instant) {
+            this.gain.set(1);
+        } else {
+            this.gain.fade(1, 500);
         }
-
-        this.gain.fade(1, 500);
     }
 
     static resume() {
-        if (!this.context) {
-            return;
-        }
-
         this.context.resume();
     }
 
     static destroy() {
-        if (!this.context) {
-            return;
-        }
-
         for (const id in this.sounds) {
             if (this.sounds[id] && this.sounds[id].destroy) {
                 this.sounds[id].destroy();

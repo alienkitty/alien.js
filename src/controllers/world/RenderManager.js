@@ -89,7 +89,7 @@ export class RenderManager {
     }
 
     static bloomFactors() {
-        const bloomFactors = [1.0, 0.8, 0.6, 0.4, 0.2];
+        const bloomFactors = [1, 0.8, 0.6, 0.4, 0.2];
 
         for (let i = 0, l = this.nMips; i < l; i++) {
             const factor = bloomFactors[i];

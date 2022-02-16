@@ -7,8 +7,8 @@ export class AudioController {
     static init(instructions) {
         this.instructions = instructions;
 
-        if (!WebAudio.context) {
-            return;
+        if (!Global.SOUND) {
+            WebAudio.mute(true);
         }
 
         this.water = {};
@@ -17,10 +17,6 @@ export class AudioController {
         this.lerpSpeed = 0.07;
         this.enabled = WebAudio.context.state === 'running';
 
-        if (!Global.SOUND) {
-            WebAudio.gain.value = 0;
-        }
-
         this.addListeners();
     }
 
@@ -28,7 +24,7 @@ export class AudioController {
         Stage.events.on(Events.VISIBILITY, this.onVisibility);
         Stage.element.addEventListener('pointerdown', this.onPointerDown);
 
-        if (this.enabled) {
+        if (this.enabled || !Global.SOUND) {
             return;
         }
 
@@ -123,11 +119,11 @@ export class AudioController {
         this.trigger('mouse_move', id, speed, pan, rate);
     };
 
-    static trigger = (event, id, gain, pan, rate) => {
-        if (!this.enabled) {
-            return;
-        }
+    static start = () => {
+        this.enabled = true;
+    };
 
+    static trigger = (event, id, gain, pan, rate) => {
         switch (event) {
             case 'bass_drum':
                 WebAudio.play('bass_drum').gain.fade(0, 2000);
@@ -138,7 +134,7 @@ export class AudioController {
             case 'mouse_move': {
                 const sound = this.water[id] && this.water[id].sound;
 
-                if (sound && sound.playing) {
+                if (sound && sound.isPlaying) {
                     sound.gain.value += (gain - sound.gain.value) * this.lerpSpeed;
                     sound.stereoPan.value += (pan - sound.stereoPan.value) * this.lerpSpeed;
                     sound.playbackRate.value += (rate - sound.playbackRate.value) * this.lerpSpeed;
@@ -162,8 +158,6 @@ export class AudioController {
 
     static remove = id => {
         if (this.water[id]) {
-            this.water[id].sound = null;
-
             delete this.water[id];
         }
 

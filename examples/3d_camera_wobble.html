@@ -490,6 +490,8 @@
 
                 this.group.position.z = this.camera.position.z;
                 this.origin.z = this.group.position.z;
+
+                this.group.lookAt(this.lookAt);
             };
 
             static update = time => {

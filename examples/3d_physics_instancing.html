@@ -290,7 +290,7 @@
                 thicknessMap.anisotropy = anisotropy;
 
                 const material = new MeshStandardMaterial({
-                    color: new Color().offsetHSL(0, 0, -0.6),
+                    color: new Color().offsetHSL(0, 0, -0.65),
                     roughness: 2,
                     metalness: 0.6,
                     map,
@@ -877,9 +877,9 @@
                 this.onResize();
 
                 await Promise.all([
+                    SceneController.ready(),
                     WorldController.textureLoader.ready(),
-                    WorldController.environmentLoader.ready(),
-                    SceneController.ready()
+                    WorldController.environmentLoader.ready()
                 ]);
 
                 CameraController.animateIn();

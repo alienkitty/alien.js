@@ -79,7 +79,7 @@ export class Easing {
     }
 
     static easeInSine(t) {
-        return 1 - Math.sin(((1.0 - t) * Math.PI) / 2);
+        return 1 - Math.sin(((1 - t) * Math.PI) / 2);
     }
 
     static easeOutSine(t) {

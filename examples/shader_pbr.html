@@ -82,7 +82,7 @@
                     clearcoatRoughness: 1,
                     clearcoatRoughnessMap: ormMap,
                     clearcoatNormalMap: normalMap,
-                    clearcoatNormalScale: new Vector2(2.0, -2.0),
+                    clearcoatNormalScale: new Vector2(2, -2),
                     envMapIntensity: 0.1,
                     specularColor: new Color(Config.FRESNEL_COLOR),
                     specularIntensity: 1
@@ -655,9 +655,9 @@
                 this.onResize();
 
                 await Promise.all([
+                    SceneController.ready(),
                     WorldController.textureLoader.ready(),
-                    WorldController.environmentLoader.ready(),
-                    SceneController.ready()
+                    WorldController.environmentLoader.ready()
                 ]);
 
                 SceneController.animateIn();

@@ -44,6 +44,16 @@ export function smootherstep(min, max, value) {
     return x * x * x * (x * (x * 6 - 15) + 10);
 }
 
+export function parabola(x, k) {
+    return Math.pow(4 * x * (1 - x), k);
+}
+
+export function pcurve(x, a, b) {
+    const k = Math.pow(a + b, a + b) / (Math.pow(a, a) * Math.pow(b, b));
+
+    return k * Math.pow(x, a) * Math.pow(1 - x, b);
+}
+
 export function fract(value) {
     return value - Math.floor(value);
 }

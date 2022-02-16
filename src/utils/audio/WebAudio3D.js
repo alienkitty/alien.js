@@ -11,10 +11,6 @@ export class WebAudio3D extends Group {
     constructor() {
         super();
 
-        if (!WebAudio.context) {
-            return;
-        }
-
         this.context = WebAudio.context;
 
         this.worldPosition = new Vector3();
@@ -37,10 +33,6 @@ export class WebAudio3D extends Group {
 
     updateMatrixWorld(force) {
         super.updateMatrixWorld(force);
-
-        if (!WebAudio.context) {
-            return;
-        }
 
         this.matrixWorld.decompose(this.worldPosition, this.worldQuaternion, this.worldScale);
         this.worldOrientation.set(0, 0, -1).applyQuaternion(this.worldQuaternion);

@@ -5,7 +5,6 @@ import { Assets } from '../loaders/Assets.js';
 import { MultiLoader } from '../loaders/MultiLoader.js';
 import { FontLoader } from '../loaders/FontLoader.js';
 import { AssetLoader } from '../loaders/AssetLoader.js';
-import { WebAudio } from '../utils/audio/WebAudio.js';
 import { Stage } from './Stage.js';
 import { PreloaderView } from '../views/PreloaderView.js';
 
@@ -62,13 +61,11 @@ export class Preloader {
     static addListeners() {
         this.loader.events.on(Events.PROGRESS, this.view.onProgress);
         this.view.events.on(Events.COMPLETE, this.onComplete);
-        Stage.element.addEventListener('pointerdown', this.onPointerDown);
     }
 
     static removeListeners() {
         this.loader.events.off(Events.PROGRESS, this.view.onProgress);
         this.view.events.off(Events.COMPLETE, this.onComplete);
-        Stage.element.removeEventListener('pointerdown', this.onPointerDown);
     }
 
     /**
@@ -84,11 +81,5 @@ export class Preloader {
         this.view = this.view.destroy();
 
         this.app.start();
-    };
-
-    static onPointerDown = () => {
-        Stage.element.removeEventListener('pointerdown', this.onPointerDown);
-
-        WebAudio.resume();
     };
 }

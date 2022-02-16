@@ -37,9 +37,9 @@ export class App {
         AudioController.init();
 
         await Promise.all([
+            SceneController.ready(),
             WorldController.textureLoader.ready(),
-            WorldController.environmentLoader.ready(),
-            SceneController.ready()
+            WorldController.environmentLoader.ready()
         ]);
     }
 

@@ -13,10 +13,6 @@ export class Sound3D extends Group {
     constructor(camera, id, buffer) {
         super();
 
-        if (!WebAudio.context) {
-            return;
-        }
-
         if (typeof id !== 'string') {
             buffer = id;
             id = camera;
@@ -78,7 +74,7 @@ export class Sound3D extends Group {
     updateMatrixWorld(force) {
         super.updateMatrixWorld(force);
 
-        if (!WebAudio.context) {
+        if (isNaN(this.matrixWorld.elements[0])) {
             return;
         }
 
@@ -90,11 +86,7 @@ export class Sound3D extends Group {
 
             this.screenSpacePosition.copy(this.worldPosition).project(this.camera);
 
-            if (isNaN(this.screenSpacePosition.x)) {
-                this.stereoPan.value = 0;
-            } else {
-                this.stereoPan.value = clamp(this.screenSpacePosition.x, -1, 1);
-            }
+            this.stereoPan.value = clamp(this.screenSpacePosition.x, -1, 1);
         } else {
             this.matrixWorld.decompose(this.worldPosition, this.worldQuaternion, this.worldScale);
             this.worldOrientation.set(0, 0, 1).applyQuaternion(this.worldQuaternion);

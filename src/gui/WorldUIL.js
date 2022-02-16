@@ -16,7 +16,7 @@ export class WorldUIL {
         // https://threejs.org/examples/#webgl_tonemapping
 
         const params = {
-            exposure: 1.0,
+            exposure: 1,
             toneMapping: 'ACESFilmic'
         };
 

@@ -20,9 +20,7 @@ export class PreloaderView extends Interface {
             height: '100%',
             backgroundColor: 'var(--main-bg-color)',
             zIndex: 100,
-            pointerEvents: 'none',
-            webkitUserSelect: 'none',
-            userSelect: 'none'
+            pointerEvents: 'none'
         });
     }
 

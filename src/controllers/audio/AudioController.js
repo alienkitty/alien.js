@@ -4,10 +4,6 @@ import { Stage } from '../Stage.js';
 
 export class AudioController {
     static init() {
-        if (!WebAudio.context) {
-            return;
-        }
-
         this.addListeners();
     }
 
@@ -39,10 +35,6 @@ export class AudioController {
      */
 
     /* static trigger = (event, ...params) => {
-        if (!WebAudio.context) {
-            return;
-        }
-
         switch (event) {
             case 'bass_drum':
                 WebAudio.play('bass_drum');

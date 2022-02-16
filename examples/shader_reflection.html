@@ -467,6 +467,8 @@
                 }
 
                 this.origin.z = this.camera.position.z;
+
+                this.camera.lookAt(this.lookAt);
             };
 
             static update = () => {

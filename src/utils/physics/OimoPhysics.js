@@ -79,13 +79,70 @@ export class OimoPhysics {
         this.matrix = new Matrix4();
     }
 
+    getShape(position, quaternion, scale, geometry, {
+        density,
+        friction,
+        restitution,
+        collisionMask,
+        collisionGroup
+    }) {
+        const shapeConfig = new ShapeConfig();
+
+        if (density !== undefined) {
+            shapeConfig.density = density;
+        }
+
+        if (friction !== undefined) {
+            shapeConfig.friction = friction;
+        }
+
+        if (restitution !== undefined) {
+            shapeConfig.restitution = restitution;
+        }
+
+        if (collisionMask !== undefined) {
+            shapeConfig.collisionMask = collisionMask;
+        }
+
+        if (collisionGroup !== undefined) {
+            shapeConfig.collisionGroup = collisionGroup;
+        }
+
+        const parameters = geometry.parameters;
+
+        if (geometry.type === 'BoxGeometry') {
+            const sx = parameters.width !== undefined ? (parameters.width * scale.x) / 2 : 0.5;
+            const sy = parameters.height !== undefined ? (parameters.height * scale.y) / 2 : 0.5;
+            const sz = parameters.depth !== undefined ? (parameters.depth * scale.z) / 2 : 0.5;
+
+            shapeConfig.geometry = new BoxGeometry(new Vec3(sx, sy, sz));
+        } else if (geometry.type === 'SphereGeometry' || geometry.type === 'IcosahedronGeometry') {
+            const radius = parameters.radius !== undefined ? parameters.radius * scale.x : 1;
+
+            shapeConfig.geometry = new SphereGeometry(radius);
+        }
+
+        if (position) {
+            shapeConfig.position.copyFrom(position);
+        }
+
+        if (quaternion) {
+            shapeConfig.rotation.fromQuat(quaternion);
+        }
+
+        return new Shape(shapeConfig);
+    }
+
     getBody(position, quaternion, scale, geometry, {
         density,
         friction,
         restitution,
+        collisionMask,
+        collisionGroup,
         contactCallback,
         autoSleep,
-        kinematic
+        kinematic,
+        shapes
     }) {
         const bodyConfig = new RigidBodyConfig();
 
@@ -103,41 +160,39 @@ export class OimoPhysics {
 
         const body = new RigidBody(bodyConfig);
 
-        const shapeConfig = new ShapeConfig();
-        const parameters = geometry.parameters;
+        if (shapes !== undefined) {
+            for (let i = 0; i < shapes.length; i++) {
+                const { position, quaternion, scale, geometry } = shapes[i];
 
-        if (geometry.type === 'BoxGeometry') {
-            const sx = parameters.width !== undefined ? (parameters.width * scale.x) / 2 : 0.5;
-            const sy = parameters.height !== undefined ? (parameters.height * scale.y) / 2 : 0.5;
-            const sz = parameters.depth !== undefined ? (parameters.depth * scale.z) / 2 : 0.5;
-
-            shapeConfig.geometry = new BoxGeometry(new Vec3(sx, sy, sz));
-        } else if (geometry.type === 'SphereGeometry' || geometry.type === 'IcosahedronGeometry') {
-            const radius = parameters.radius !== undefined ? parameters.radius * scale.x : 1;
-
-            shapeConfig.geometry = new SphereGeometry(radius);
+                body.addShape(this.getShape(position, quaternion, scale, geometry, {
+                    density,
+                    friction,
+                    restitution,
+                    collisionMask,
+                    collisionGroup
+                }));
+            }
+        } else {
+            body.addShape(this.getShape(null, null, scale, geometry, {
+                density,
+                friction,
+                restitution,
+                collisionMask,
+                collisionGroup
+            }));
         }
 
-        if (density !== undefined) {
-            shapeConfig.density = density;
+        if (position) {
+            body.setPosition(position);
         }
 
-        if (friction !== undefined) {
-            shapeConfig.friction = friction;
+        if (quaternion) {
+            body.setOrientation(quaternion);
         }
 
-        if (restitution !== undefined) {
-            shapeConfig.restitution = restitution;
+        if (contactCallback) {
+            this.setContactCallback(body, contactCallback);
         }
-
-        if (contactCallback !== undefined) {
-            shapeConfig.contactCallback = new ContactCallback();
-            shapeConfig.contactCallback.preSolve = contact => contactCallback(body, contact);
-        }
-
-        body.addShape(new Shape(shapeConfig));
-        body.setPosition(position);
-        body.setOrientation(quaternion);
 
         return body;
     }
@@ -217,7 +272,9 @@ export class OimoPhysics {
             props = object;
         }
 
-        const body = this.getBody(object.position, object.quaternion, object.scale, geometry, props);
+        const { position, quaternion, scale } = object;
+
+        const body = this.getBody(position, quaternion, scale, geometry, props);
         this.world.addRigidBody(body);
 
         if (props.density !== 0) {
@@ -233,10 +290,12 @@ export class OimoPhysics {
         const bodies = [];
 
         for (let i = 0; i < object.count; i++) {
-            object.getMatrixAt(i, this.matrix);
-            this.matrix.decompose(this.object.position, this.object.quaternion, this.object.scale);
+            const { position, quaternion, scale } = this.object;
 
-            const body = this.getBody(this.object.position, this.object.quaternion, this.object.scale, geometry, props);
+            object.getMatrixAt(i, this.matrix);
+            this.matrix.decompose(position, quaternion, scale);
+
+            const body = this.getBody(position, quaternion, scale, geometry, props);
             this.world.addRigidBody(body);
 
             bodies.push(body);

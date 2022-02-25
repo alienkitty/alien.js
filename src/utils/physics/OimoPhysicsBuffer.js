@@ -63,6 +63,56 @@ export class OimoPhysicsBuffer {
         this.position = new Vec3();
     }
 
+    getShape({
+        type,
+        position,
+        quaternion,
+        size,
+        density,
+        friction,
+        restitution,
+        collisionMask,
+        collisionGroup
+    }) {
+        const shapeConfig = new ShapeConfig();
+
+        if (density !== undefined) {
+            shapeConfig.density = density;
+        }
+
+        if (friction !== undefined) {
+            shapeConfig.friction = friction;
+        }
+
+        if (restitution !== undefined) {
+            shapeConfig.restitution = restitution;
+        }
+
+        if (collisionMask !== undefined) {
+            shapeConfig.collisionMask = collisionMask;
+        }
+
+        if (collisionGroup !== undefined) {
+            shapeConfig.collisionGroup = collisionGroup;
+        }
+
+        if (type === 'box') {
+            shapeConfig.geometry = new BoxGeometry(new Vec3(size[0], size[1], size[2]));
+        } else if (type === 'sphere') {
+            shapeConfig.geometry = new SphereGeometry(size);
+        }
+
+        if (position) {
+            shapeConfig.position.copyFrom(new Vec3(position[0], position[1], position[2]));
+        }
+
+        if (quaternion) {
+            shapeConfig.rotation.fromQuat(new Quat(quaternion[0], quaternion[1], quaternion[2], quaternion[3]));
+        }
+
+        return new Shape(shapeConfig);
+    }
+
     add(object) {
         if (object.type === 'joint') {
             return this.handleJoint(object);
@@ -163,8 +213,11 @@ export class OimoPhysicsBuffer {
         density,
         friction,
         restitution,
+        collisionMask,
+        collisionGroup,
         autoSleep,
-        kinematic
+        kinematic,
+        shapes
     }) {
         const bodyConfig = new RigidBodyConfig();
 
@@ -183,27 +236,29 @@ export class OimoPhysicsBuffer {
         const body = new RigidBody(bodyConfig);
 
         if (type) {
-            const shapeConfig = new ShapeConfig();
+            if (shapes !== undefined) {
+                for (let i = 0; i < shapes.length; i++) {
+                    const shape = shapes[i];
 
-            if (type === 'box') {
-                shapeConfig.geometry = new BoxGeometry(new Vec3(size[0], size[1], size[2]));
-            } else if (type === 'sphere') {
-                shapeConfig.geometry = new SphereGeometry(size);
+                    shape.density = density;
+                    shape.friction = friction;
+                    shape.restitution = restitution;
+                    shape.collisionMask = collisionMask;
+                    shape.collisionGroup = collisionGroup;
+
+                    body.addShape(this.getShape(shape));
+                }
+            } else {
+                body.addShape(this.getShape({
+                    type,
+                    size,
+                    density,
+                    friction,
+                    restitution,
+                    collisionMask,
+                    collisionGroup
+                }));
             }
-
-            if (density !== undefined) {
-                shapeConfig.density = density;
-            }
-
-            if (friction !== undefined) {
-                shapeConfig.friction = friction;
-            }
-
-            if (restitution !== undefined) {
-                shapeConfig.restitution = restitution;
-            }
-
-            body.addShape(new Shape(shapeConfig));
         }
 
         if (position) {

@@ -26,8 +26,11 @@ export class OimoPhysicsController {
         density,
         friction,
         restitution,
+        collisionMask,
+        collisionGroup,
         autoSleep,
-        kinematic
+        kinematic,
+        shapes
     }) {
         const object = {};
 
@@ -75,12 +78,30 @@ export class OimoPhysicsController {
             object.restitution = restitution;
         }
 
+        if (collisionMask !== undefined) {
+            object.collisionMask = collisionMask;
+        }
+
+        if (collisionGroup !== undefined) {
+            object.collisionGroup = collisionGroup;
+        }
+
         if (autoSleep !== undefined) {
             object.autoSleep = autoSleep;
         }
 
         if (kinematic !== undefined) {
             object.kinematic = kinematic;
+        }
+
+        if (shapes !== undefined) {
+            object.type = 'compound';
+            object.shapes = [];
+
+            for (let i = 0; i < shapes.length; i++) {
+                const { position, quaternion, scale, geometry } = shapes[i];
+                object.shapes.push(this.getObject(position, quaternion, scale, geometry, { name: `${name}_${i}` }));
+            }
         }
 
         return object;
@@ -128,7 +149,9 @@ export class OimoPhysicsController {
             props = object;
         }
 
-        const body = this.getObject(object.position, object.quaternion, object.scale, geometry, props);
+        const { position, quaternion, scale } = object;
+
+        const body = this.getObject(position, quaternion, scale, geometry, props);
         this.shapes.push(body);
 
         if (props.density !== 0) {
@@ -145,12 +168,14 @@ export class OimoPhysicsController {
         const name = props.name || guid();
 
         for (let i = 0; i < object.count; i++) {
+            const { position, quaternion, scale } = this.object;
+
             object.getMatrixAt(i, this.matrix);
-            this.matrix.decompose(this.object.position, this.object.quaternion, this.object.scale);
+            this.matrix.decompose(position, quaternion, scale);
 
             props.name = `${name}_${i}`;
 
-            const body = this.getObject(this.object.position, this.object.quaternion, this.object.scale, geometry, props);
+            const body = this.getObject(position, quaternion, scale, geometry, props);
             this.shapes.push(body);
 
             bodies.push(body);

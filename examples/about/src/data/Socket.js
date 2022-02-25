@@ -1,4 +1,4 @@
-import { EventEmitter, Events, Stage, clearTween, delayedCall } from 'alien.js';
+import { EventEmitter, Events, Stage } from 'alien.js';
 
 import { Global } from '../config/Global.js';
 
@@ -54,9 +54,6 @@ export class Socket extends EventEmitter {
 
     onClose = () => {
         this.connected = false;
-
-        clearTween(this.timeout);
-        this.timeout = delayedCall(250, this.connect);
     };
 
     onMessage = ({ data }) => {
@@ -163,8 +160,6 @@ export class Socket extends EventEmitter {
 
     close = () => {
         this.removeListeners();
-
-        clearTween(this.timeout);
 
         this.socket.close();
     };

@@ -546,10 +546,6 @@
              */
 
             static trigger = (event, force) => {
-                if (!WebAudio.context) {
-                    return;
-                }
-
                 switch (event) {
                     case 'gong': {
                         const gong = new Sound3D(WorldController.camera, 'gong');

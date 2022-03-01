@@ -19,9 +19,9 @@
 
         Instructions to export buffer geometry from Cinema 4D
 
-        1) Select Model mode from the toolbar on the left and select the object you would like to export.
+        1) Select Model mode from the toolbar and select the object you would like to export.
 
-        2) Load the UV grid texture from the assets directory into the Material pane.
+        2) Load the UV grid texture from the assets directory into the Material Manager.
 
         3) Double-click on the UV grid Material and turn off Reflectance.
 
@@ -33,14 +33,15 @@
 
         6) We're going to export a local space object with the axis and coordinates at the centre of the object.
 
-        If you need to centre the axis, from the Mesh Axis menu, "Center Axis to".
+        If you need to centre the axis, from the Tools Axis menu, "Center Axis to".
         And set the world space coordinates of the object to 0 by setting the "Position" to 0 cm.
 
         7) The default size of objects in three.js is much smaller than the default in Cinema 4D.
 
         If you need to reduce the size, for example, a default sized cube in Cinema 4D is 200 cm.
         And units in three.js are normalized at 1 cm, so in this case you would set the "Size" to 2 cm.
-        Alternatively, you can set the "Scale" to 0.01.
+        Alternatively, you can set the "Scale" to 0.01. Note that "Size" and "Scale" are different.
+        You can find the "Size" of your object in the Coordinate Manager.
 
         8) From the Objects' File menu, export the selected object as an OBJ file, Default settings are fine.
 

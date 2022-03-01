@@ -177,9 +177,9 @@
 
         class ScenePhysicsThread {
             constructor() {
-                this.addListeners();
-
                 this.start = performance.now();
+
+                this.addListeners();
             }
 
             addListeners() {
@@ -785,10 +785,6 @@
              */
 
             static trigger = (event, force) => {
-                if (!WebAudio.context) {
-                    return;
-                }
-
                 switch (event) {
                     case 'gong': {
                         const gong = new Sound3D(WorldController.camera, 'gong');

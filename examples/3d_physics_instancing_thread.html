@@ -330,11 +330,12 @@
                 const map = await loadTexture('assets/textures/waterdudv.jpg');
                 map.wrapS = RepeatWrapping;
                 map.wrapT = RepeatWrapping;
-                map.repeat.set(6, 6);
+                map.repeat.set(6, 3);
 
                 const material = new ShadowMaterial({
                     blending: NoBlending,
-                    toneMapped: false
+                    toneMapped: false,
+                    transparent: false
                 });
 
                 material.onBeforeCompile = shader => {
@@ -399,7 +400,7 @@
                         blur = texture(reflectMapBlur, reflectionUv);
                         color = mix(color, blur, smoothstep(0.5, 1.0, dudv.r));
 
-                        gl_FragColor = color * mix(0.6, 0.75, dudv.g);
+                        gl_FragColor = color * mix(0.3, 0.55, dudv.g);
 
                         gl_FragColor.rgb -= (1.0 - getShadowMask()) * 0.025;
 
@@ -409,7 +410,7 @@
                 };
 
                 const mesh = new Mesh(geometry, material);
-                mesh.position.y = 2.495;
+                mesh.position.y = 2.494;
                 mesh.rotation.x = -Math.PI / 2;
                 mesh.receiveShadow = true;
                 mesh.add(this.reflector);

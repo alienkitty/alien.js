@@ -568,7 +568,8 @@
 
                 const material = new ShadowMaterial({
                     blending: NoBlending,
-                    toneMapped: false
+                    toneMapped: false,
+                    transparent: false
                 });
 
                 material.onBeforeCompile = shader => {
@@ -643,7 +644,7 @@
                 };
 
                 const mesh = new Mesh(geometry, material);
-                mesh.position.y = 2.495;
+                mesh.position.y = 2.494;
                 mesh.rotation.x = -Math.PI / 2;
                 mesh.receiveShadow = true;
                 mesh.add(this.reflector);

@@ -17,9 +17,11 @@ void main() {
     float d = fwidth(signedDist);
     float alpha = smoothstep(-d, d, signedDist);
 
+    alpha *= uAlpha;
+
     if (alpha < 0.01) discard;
 
     FragColor.rgb = uColor;
-    FragColor.a = alpha * uAlpha;
+    FragColor.a = alpha;
 }
 `;

@@ -135,8 +135,6 @@
             }
 
             addListeners() {
-                ticker.stop();
-
                 addEventListener('message', this.onMessage);
             }
 
@@ -1066,6 +1064,7 @@
                     this.initThread();
                 }
 
+                this.initStage();
                 this.initWorld();
                 this.initViews();
                 this.initControllers();
@@ -1088,6 +1087,13 @@
 
                 Thread.count--; // Make room for the physics thread
                 Thread.shared();
+            }
+
+            static initStage() {
+                Stage.init(document.querySelector('#root'));
+
+                Stage.root = document.querySelector(':root');
+                Stage.rootStyle = getComputedStyle(Stage.root);
             }
 
             static initWorld() {

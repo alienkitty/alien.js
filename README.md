@@ -115,7 +115,7 @@ In its design, everything is an ES module, all user interfaces and components fo
 ```js
 import { Events } from '../config/Events.js';
 import { Interface } from '../utils/Interface.js';
-import { Stage } from '../controllers/Stage.js';
+import { Stage } from '../utils/Stage.js';
 
 class Logo extends Interface {
     constructor() {

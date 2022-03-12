@@ -7,7 +7,7 @@ import { TextureLoader } from '../../loaders/world/TextureLoader.js';
 import { EnvironmentTextureLoader } from '../../loaders/world/EnvironmentTextureLoader.js';
 import { BufferGeometryLoader } from '../../loaders/world/BufferGeometryLoader.js';
 // import { Interface } from '../../utils/Interface.js';
-import { Stage } from '../Stage.js';
+import { Stage } from '../../utils/Stage.js';
 
 import { getFrustum, getFullscreenTriangle } from '../../utils/world/Utils3D.js';
 

@@ -1,6 +1,6 @@
 import { Events } from '../../config/Events.js';
 import { WebAudio } from '../../utils/audio/WebAudio.js';
-import { Stage } from '../Stage.js';
+import { Stage } from '../../utils/Stage.js';
 
 export class AudioController {
     static init() {

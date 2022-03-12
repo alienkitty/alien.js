@@ -3,9 +3,6 @@ export { Device } from './src/config/Device.js';
 export { Events } from './src/config/Events.js';
 export { Global } from './src/config/Global.js';
 
-// Controllers
-export { Stage } from './src/controllers/Stage.js';
-
 // Loaders
 export { Assets } from './src/loaders/Assets.js';
 export { Loader } from './src/loaders/Loader.js';
@@ -31,6 +28,7 @@ export * from './src/tween/Tween.js';
 export * from './src/utils/Utils.js';
 export { EventEmitter } from './src/utils/EventEmitter.js';
 export { Interface } from './src/utils/Interface.js';
+export { Stage } from './src/utils/Stage.js';
 export { Component } from './src/utils/Component.js';
 export { LinkedList } from './src/utils/LinkedList.js';
 export { ObjectPool } from './src/utils/ObjectPool.js';

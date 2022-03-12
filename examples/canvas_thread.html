@@ -94,6 +94,8 @@
 
             addListeners() {
                 addEventListener('message', this.onMessage);
+
+                ticker.start();
             }
 
             /**
@@ -194,11 +196,19 @@
 
         class App {
             static async init() {
+                this.initStage();
                 this.initCanvas();
                 this.initControllers();
 
                 this.addListeners();
                 this.onResize();
+            }
+
+            static initStage() {
+                Stage.init(document.querySelector('#root'));
+
+                Stage.root = document.querySelector(':root');
+                Stage.rootStyle = getComputedStyle(Stage.root);
             }
 
             static initCanvas() {

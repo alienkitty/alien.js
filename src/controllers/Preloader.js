@@ -5,7 +5,7 @@ import { Assets } from '../loaders/Assets.js';
 import { MultiLoader } from '../loaders/MultiLoader.js';
 import { FontLoader } from '../loaders/FontLoader.js';
 import { AssetLoader } from '../loaders/AssetLoader.js';
-import { Stage } from './Stage.js';
+import { Stage } from '../utils/Stage.js';
 import { PreloaderView } from '../views/PreloaderView.js';
 
 export class Preloader {
@@ -24,10 +24,18 @@ export class Preloader {
 
         Assets.cache = true;
 
+        this.initStage();
         this.initView();
         this.initLoader();
 
         this.addListeners();
+    }
+
+    static initStage() {
+        Stage.init(document.querySelector('#root'));
+
+        Stage.root = document.querySelector(':root');
+        Stage.rootStyle = getComputedStyle(Stage.root);
     }
 
     static initView() {

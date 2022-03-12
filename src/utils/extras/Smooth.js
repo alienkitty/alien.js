@@ -6,7 +6,7 @@
 
 import { Events } from '../../config/Events.js';
 import { Component } from '../Component.js';
-import { Stage } from '../../controllers/Stage.js';
+import { Stage } from '../Stage.js';
 
 import { ticker } from '../../tween/Ticker.js';
 import { defer } from '../../tween/Tween.js';

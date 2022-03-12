@@ -8,7 +8,7 @@ import { CameraController } from './world/CameraController.js';
 import { SceneController } from './world/SceneController.js';
 import { InputManager } from './world/InputManager.js';
 import { RenderManager } from './world/RenderManager.js';
-import { Stage } from './Stage.js';
+import { Stage } from '../utils/Stage.js';
 import { SceneView } from '../views/SceneView.js';
 import { LandingView } from '../views/LandingView.js';
 // import { UIL } from '../utils/gui/UIL.js';

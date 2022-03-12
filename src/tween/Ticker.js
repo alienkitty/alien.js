@@ -29,8 +29,6 @@ export class Ticker {
         this.delta = 0;
         this.frame = 0;
         this.isAnimating = false;
-
-        this.start();
     }
 
     onTick = time => {

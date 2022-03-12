@@ -1,7 +1,7 @@
 import { Vector2 } from 'three';
 
 import { WorldController } from './WorldController.js';
-import { Stage } from '../Stage.js';
+import { Stage } from '../../utils/Stage.js';
 
 export class SceneController {
     static init(view) {

@@ -1,7 +1,7 @@
 import { Vector2, Vector3 } from 'three';
 
 import { Config } from '../../config/Config.js';
-import { Stage } from '../Stage.js';
+import { Stage } from '../../utils/Stage.js';
 
 export class CameraController {
     static init(camera) {

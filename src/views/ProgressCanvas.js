@@ -1,6 +1,6 @@
 import { Events } from '../config/Events.js';
 import { Interface } from '../utils/Interface.js';
-import { Stage } from '../controllers/Stage.js';
+import { Stage } from '../utils/Stage.js';
 
 import { ticker } from '../tween/Ticker.js';
 import { clearTween, tween } from '../tween/Tween.js';

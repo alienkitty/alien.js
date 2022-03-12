@@ -295,9 +295,7 @@
                 this.renderTargetA.depthBuffer = true;
 
                 // Flowmap
-                this.flowmap = new Flowmap(this.renderer, {
-                    // dissipation: 0.3
-                });
+                this.flowmap = new Flowmap(this.renderer);
                 this.flowmap.material.uniforms.uAspect = aspect;
 
                 // FXAA material
@@ -686,6 +684,7 @@
 
         class App {
             static async init() {
+                this.initStage();
                 this.initWorld();
                 this.initViews();
                 this.initControllers();
@@ -697,6 +696,13 @@
 
                 CameraController.animateIn();
                 SceneController.animateIn();
+            }
+
+            static initStage() {
+                Stage.init(document.querySelector('#root'));
+
+                Stage.root = document.querySelector(':root');
+                Stage.rootStyle = getComputedStyle(Stage.root);
             }
 
             static initWorld() {

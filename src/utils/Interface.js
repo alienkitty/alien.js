@@ -25,7 +25,7 @@ export class Interface {
 
         if (typeof name === 'object' && name !== null) {
             this.element = name;
-        } else {
+        } else if (type !== null) {
             this.name = name;
             this.type = type;
 
@@ -37,14 +37,12 @@ export class Interface {
 
             if (typeof name === 'string') {
                 if (name.charAt(0) === '.') {
-                    this.element.className = name.substr(1);
+                    this.element.className = name.slice(1);
                 } else {
                     this.element.id = name;
                 }
             }
         }
-
-        this.element.object = this;
     }
 
     add(child) {

@@ -15,10 +15,18 @@ export class Preloader {
         Data.init();
         Data.Socket.init();
 
+        this.initStage();
         this.initView();
         this.initLoader();
 
         this.addListeners();
+    }
+
+    static initStage() {
+        Stage.init(document.querySelector('#root'));
+
+        Stage.root = document.querySelector(':root');
+        Stage.rootStyle = getComputedStyle(Stage.root);
     }
 
     static initView() {

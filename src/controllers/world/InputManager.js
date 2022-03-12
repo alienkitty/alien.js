@@ -1,7 +1,7 @@
 import { Raycaster, Vector2 } from 'three';
 
 import { Device } from '../../config/Device.js';
-import { Stage } from '../Stage.js';
+import { Stage } from '../../utils/Stage.js';
 
 export class InputManager {
     static init(camera) {

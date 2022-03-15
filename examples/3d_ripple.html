@@ -29,8 +29,8 @@
 
             initGrid() {
                 this.grid = {
-                    fillStyle: Stage.rootStyle.getPropertyValue('--main-bg-color').trim(),
-                    strokeStyle: Stage.rootStyle.getPropertyValue('--main-color').trim()
+                    fillStyle: Stage.rootStyle.getPropertyValue('--bg-color').trim(),
+                    strokeStyle: Stage.rootStyle.getPropertyValue('--ui-color').trim()
                 };
             }
 
@@ -390,7 +390,7 @@
 
                 // 3D scene
                 this.scene = new Scene();
-                this.scene.background = new Color(Stage.rootStyle.getPropertyValue('--main-bg-color').trim());
+                this.scene.background = new Color(Stage.rootStyle.getPropertyValue('--bg-color').trim());
                 this.camera = new PerspectiveCamera(25);
                 this.camera.near = 0.1;
                 this.camera.far = 1000;

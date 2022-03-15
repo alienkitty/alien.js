@@ -74,7 +74,7 @@ export class ProgressCanvas extends Interface {
         this.context.scale(dpr, dpr);
 
         this.context.lineWidth = 1.5;
-        this.context.strokeStyle = Stage.rootStyle.getPropertyValue('--main-color').trim();
+        this.context.strokeStyle = Stage.rootStyle.getPropertyValue('--ui-color').trim();
 
         this.update();
     };

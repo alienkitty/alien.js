@@ -615,8 +615,8 @@
 
                 // 3D scene
                 this.scene = new Scene();
-                this.scene.background = new Color(Stage.rootStyle.getPropertyValue('--main-bg-color').trim());
-                this.scene.fog = new Fog(Stage.rootStyle.getPropertyValue('--main-bg-color').trim(), 1, 100);
+                this.scene.background = new Color(Stage.rootStyle.getPropertyValue('--bg-color').trim());
+                this.scene.fog = new Fog(Stage.rootStyle.getPropertyValue('--bg-color').trim(), 1, 100);
                 this.camera = new PerspectiveCamera(30);
                 this.camera.near = 0.5;
                 this.camera.far = 40;

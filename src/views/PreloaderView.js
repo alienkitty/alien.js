@@ -19,7 +19,7 @@ export class PreloaderView extends Interface {
             top: 0,
             width: '100%',
             height: '100%',
-            backgroundColor: 'var(--main-bg-color)',
+            backgroundColor: 'var(--bg-color)',
             zIndex: 1,
             pointerEvents: 'none'
         });

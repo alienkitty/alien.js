@@ -301,7 +301,7 @@
                 ormMap.repeat.set(2, 1);
 
                 const material = new MeshStandardMaterial({
-                    color: Stage.rootStyle.getPropertyValue('--main-bg-color').trim(),
+                    color: Stage.rootStyle.getPropertyValue('--bg-color').trim(),
                     roughness: 1,
                     metalness: 1,
                     map,
@@ -500,7 +500,7 @@
 
                 // Background scene
                 this.backgroundScene = new Scene();
-                this.backgroundScene.background = new Color(Stage.rootStyle.getPropertyValue('--main-bg-color').trim());
+                this.backgroundScene.background = new Color(Stage.rootStyle.getPropertyValue('--bg-color').trim());
 
                 // Video glitch material
                 this.videoGlitchMaterial = new VideoGlitchMaterial();

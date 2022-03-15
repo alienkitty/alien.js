@@ -21,7 +21,7 @@ export class NavLink extends Interface {
             fontWeight: '700',
             fontSize: 11,
             lineHeight: 18,
-            letterSpacing: '0.03em',
+            letterSpacing: 0.33,
             textTransform: 'uppercase',
             whiteSpace: 'no-wrap',
             pointerEvents: 'auto',

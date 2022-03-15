@@ -37,7 +37,7 @@ export class WorldController {
 
         // 3D scene
         this.scene = new Scene();
-        this.scene.background = new Color(Stage.rootStyle.getPropertyValue('--main-bg-color').trim());
+        this.scene.background = new Color(Stage.rootStyle.getPropertyValue('--bg-color').trim());
         this.camera = new PerspectiveCamera(30);
         this.camera.near = 0.1;
         this.camera.far = 1000;

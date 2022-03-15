@@ -331,7 +331,7 @@
 
                 // Isometric scene
                 this.scene = new Scene();
-                this.scene.background = new Color(Stage.rootStyle.getPropertyValue('--main-bg-color').trim());
+                this.scene.background = new Color(Stage.rootStyle.getPropertyValue('--bg-color').trim());
                 this.camera = new OrthographicCamera(-1, 1, 1, -1, 0, 1000);
                 this.camera.position.set(500, 500, 500);
                 this.camera.lookAt(this.scene.position);

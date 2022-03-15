@@ -194,7 +194,7 @@
                 ormMap.repeat.set(2, 1);
 
                 const material = new MeshStandardMaterial({
-                    color: Stage.rootStyle.getPropertyValue('--main-bg-color').trim(),
+                    color: Stage.rootStyle.getPropertyValue('--bg-color').trim(),
                     roughness: 1,
                     metalness: 1,
                     map,
@@ -454,7 +454,7 @@
 
                 // 3D scene
                 this.scene = new Scene();
-                this.scene.background = new Color(Stage.rootStyle.getPropertyValue('--main-bg-color').trim());
+                this.scene.background = new Color(Stage.rootStyle.getPropertyValue('--bg-color').trim());
                 this.camera = new PerspectiveCamera(30);
                 this.camera.near = 0.5;
                 this.camera.far = 40;

@@ -32,7 +32,7 @@ export class Tracker extends Interface {
             height: 12,
             marginLeft: -12 / 2,
             marginTop: -12 / 2,
-            border: '2px solid var(--main-color)',
+            border: '2px solid var(--ui-color)',
             borderRadius: '50%'
         });
         this.add(this.reticle);

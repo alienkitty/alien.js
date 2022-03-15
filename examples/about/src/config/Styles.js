@@ -19,7 +19,7 @@ export class Styles {
         fontFamily: '"Roboto Mono", monospace',
         fontSize: 11,
         lineHeight: 15,
-        letterSpacing: '0.03em',
+        letterSpacing: 0.33
     };
 
     static monospaceLabel = {

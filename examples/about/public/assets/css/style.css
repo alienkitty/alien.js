@@ -27,9 +27,9 @@
 }
 
 :root {
-    --main-bg-color: #000;
-    --main-color: rgba(255, 255, 255, 0.94);
-    --main-color-triplet: 255, 255, 255;
+    --bg-color: #000;
+    --ui-color: rgba(255, 255, 255, 0.94);
+    --ui-color-triplet: 255, 255, 255;
 }
 
 html, body, #root {
@@ -45,8 +45,8 @@ body {
     font-weight: 500;
     font-size: 13px;
     line-height: 1.6;
-    background-color: var(--main-bg-color);
-    color: var(--main-color);
+    background-color: var(--bg-color);
+    color: var(--ui-color);
     -moz-osx-font-smoothing: grayscale;
     -webkit-font-smoothing: antialiased;
 }
@@ -70,10 +70,10 @@ body {
 }
 
 #root a, #root a:hover, #root a:focus {
-    color: var(--main-color);
+    color: var(--ui-color);
 }
 
 ::selection {
-    background-color: var(--main-color);
-    color: var(--main-bg-color);
+    background-color: var(--ui-color);
+    color: var(--bg-color);
 }

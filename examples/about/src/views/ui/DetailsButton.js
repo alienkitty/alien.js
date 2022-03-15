@@ -90,7 +90,7 @@ export class DetailsButton extends Interface {
         this.circle.radius = this.radius;
         this.circle.scale = 1;
         this.circle.lineWidth = 1.5;
-        this.circle.strokeStyle = Stage.rootStyle.getPropertyValue('--main-color').trim();
+        this.circle.strokeStyle = Stage.rootStyle.getPropertyValue('--ui-color').trim();
     }
 
     drawCircle() {

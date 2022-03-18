@@ -8,6 +8,7 @@ export default /* glsl */`
 precision highp float;
 
 uniform sampler2D tMap;
+uniform float uFocus;
 uniform float uBluriness;
 uniform vec2 uDirection;
 uniform vec2 uResolution;
@@ -20,7 +21,7 @@ ${smootherstep}
 ${blur}
 
 void main() {
-    float d = abs(0.5 - vUv.y);
+    float d = abs(uFocus - vUv.y);
 
     FragColor = blur(tMap, vUv, uResolution, uBluriness * smootherstep(0.0, 1.0, d) * uDirection);
 }

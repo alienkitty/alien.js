@@ -9,6 +9,7 @@ export class TiltShiftMaterial extends RawShaderMaterial {
             glslVersion: GLSL3,
             uniforms: {
                 tMap: new Uniform(null),
+                uFocus: new Uniform(0.5),
                 uBluriness: new Uniform(1),
                 uDirection: new Uniform(direction),
                 uResolution: new Uniform(new Vector2())

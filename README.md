@@ -40,6 +40,7 @@ In its design, everything is an ES module, all user interfaces and components fo
 [fps](https://alien.js.org/examples/ui_fps.html)  
 [fps panel](https://alien.js.org/examples/ui_fps_panel.html)  
 [panel](https://alien.js.org/examples/ui_panel.html) (standalone)  
+[panel tracking](https://alien.js.org/examples/3d_panel_tracking.html) (3d scene)  
 [ufo](https://ufo.ai/) (2d scene, smooth scroll with skew effect)  
 
 #### 3d
@@ -53,6 +54,7 @@ In its design, everything is an ES module, all user interfaces and components fo
 [cubecamera rainbow](https://alien.js.org/examples/3d_cubecamera_rainbow.html) (orbit camera, [debug](https://alien.js.org/examples/3d_cubecamera_rainbow.html?debug))  
 [camera wobble](https://alien.js.org/examples/3d_camera_wobble.html)  
 [abstract cube](https://alien.js.org/examples/3d_abstract_cube.html)  
+[panel tracking](https://alien.js.org/examples/3d_panel_tracking.html)  
 
 #### shader
 
@@ -102,7 +104,7 @@ In its design, everything is an ES module, all user interfaces and components fo
 
 #### audio
 
-[picking](https://alien.js.org/examples/3d_physics_picking.html) (with fast 3D audio)  
+[picking](https://alien.js.org/examples/3d_physics_picking.html) (with fast 3d audio)  
 
 #### thread
 

@@ -37,6 +37,9 @@ In its design, everything is an ES module, all user interfaces and components fo
 [magnetic](https://alien.js.org/examples/ui_magnetic.html) (component, svg)  
 [tilt](https://alien.js.org/examples/ui_tilt.html)  
 [styles](https://alien.js.org/examples/ui_styles.html)  
+[fps](https://alien.js.org/examples/ui_fps.html)  
+[fps panel](https://alien.js.org/examples/ui_fps_panel.html)  
+[panel](https://alien.js.org/examples/ui_panel.html) (standalone)  
 [ufo](https://ufo.ai/) (2d scene, smooth scroll with skew effect)  
 
 #### 3d

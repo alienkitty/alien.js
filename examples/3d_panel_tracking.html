@@ -8,40 +8,16 @@
 
     <link rel="preconnect" href="https://fonts.gstatic.com">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto+Mono">
-    <!-- <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto"> -->
     <link rel="stylesheet" href="assets/css/style.css">
 </head>
 <body>
     <div id="root"></div>
     <script type="module">
-        import { ACESFilmicToneMapping, AmbientLight, BasicShadowMap, BloomCompositeMaterial, BoxGeometry, Color, Device, DirectionalLight, EnvironmentTextureLoader, Events, FXAAMaterial, GLSL3, Group, HemisphereLight, IcosahedronGeometry, ImageBitmapLoaderThread, LuminosityMaterial, MaterialPanelController, MathUtils, Mesh, MeshStandardMaterial, NoBlending, OrthographicCamera, PanelItem, PerspectiveCamera, PlaneGeometry, Point3D, PolyhedronGeometry, RawShaderMaterial, Reflector, RepeatWrapping, Scene, ShadowMaterial, Stage, TextureLoader, Thread, UI, Uniform, UnrealBloomBlurMaterial, Vector2, Vector3, WebGLRenderTarget, WebGLRenderer, getFullscreenTriangle, mix, radians, ticker } from '../build/alien.js';
+        import { ACESFilmicToneMapping, AmbientLight, BasicShadowMap, BloomCompositeMaterial, BoxGeometry, Color, Device, DirectionalLight, EnvironmentTextureLoader, Events, FXAAMaterial, GLSL3, Group, HemisphereLight, IcosahedronGeometry, ImageBitmapLoaderThread, LuminosityMaterial, MaterialPanelController, MathUtils, Mesh, MeshStandardMaterial, NoBlending, OctahedronGeometry, OrthographicCamera, PanelItem, PerspectiveCamera, PlaneGeometry, Point3D, RawShaderMaterial, Reflector, RepeatWrapping, Scene, ShadowMaterial, Stage, TextureLoader, Thread, UI, Uniform, UnrealBloomBlurMaterial, Vector2, Vector3, WebGLRenderTarget, WebGLRenderer, getFullscreenTriangle, mix, radians, ticker } from '../build/alien.js';
 
-        /* class Styles {
-            static label = {
-                fontFamily: '"Roboto", sans-serif',
-                fontSize: 11,
-                lineHeight: 15,
-                letterSpacing: 0.33,
-                fontVariantNumeric: 'tabular-nums'
-            };
-
-            static small = {
-                ...this.label,
-                fontSize: 10,
-                letterSpacing: 0.5
-            };
-
-            static number = {
-                ...this.label,
-                fontSize: 10,
-                letterSpacing: 1
-            };
-
-            static panel = {
-                ...this.label,
-                fontSize: 10
-            };
-        } */
+        class Config {
+            static DEBUG = location.search === '?debug';
+        }
 
         import rgbshift from '../src/shaders/modules/rgbshift/rgbshift.glsl.js';
 
@@ -175,25 +151,7 @@
             async initMesh() {
                 const { anisotropy, loadTexture } = WorldController;
 
-                // https://observablehq.com/@sxywu/three-js-exploration-shapes
-                const front = Math.tan(Math.PI / 6);
-                const back = Math.cos(Math.PI / 6);
-                const vertices = [
-                    0, 1, 0,      // 0: top
-                    1, 0, front,  // 1: right
-                    -1, 0, front, // 2: left
-                    0, 0, -back,  // 3: back middle
-                    0, -1, 0      // 4: bottom
-                ];
-                const faces = [
-                    2, 1, 0, // left, right, top
-                    1, 3, 0, // right, back, top
-                    3, 2, 0, // back, left, top
-                    2, 4, 1, // left, bottom, right
-                    1, 4, 3, // right, bottom, back
-                    3, 4, 2  // back, bottom, left
-                ];
-                const geometry = new PolyhedronGeometry(vertices, faces, 1);
+                const geometry = new OctahedronGeometry();
 
                 // 2nd set of UV's for aoMap and lightMap
                 geometry.attributes.uv2 = geometry.attributes.uv;
@@ -614,10 +572,7 @@
             }
 
             static initViews() {
-                this.ui = new UI({
-                    fps: true,
-                    // styles: Styles
-                });
+                this.ui = new UI({ fps: true });
                 this.ui.animateIn();
                 Stage.add(this.ui);
             }
@@ -626,11 +581,8 @@
                 Point3D.init(this.scene, this.camera, {
                     element: this.ui,
                     stage: Stage,
-                    // styles: Styles,
-                    // debug: true
+                    debug: Config.DEBUG
                 });
-
-                // PanelItem.styles = Styles;
 
                 ScenePanelController.init(this.view);
             }

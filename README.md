@@ -54,7 +54,7 @@ In its design, everything is an ES module, all user interfaces and components fo
 [cubecamera rainbow](https://alien.js.org/examples/3d_cubecamera_rainbow.html) (orbit camera, [debug](https://alien.js.org/examples/3d_cubecamera_rainbow.html?debug))  
 [camera wobble](https://alien.js.org/examples/3d_camera_wobble.html)  
 [abstract cube](https://alien.js.org/examples/3d_abstract_cube.html)  
-[panel tracking](https://alien.js.org/examples/3d_panel_tracking.html)  
+[panel tracking](https://alien.js.org/examples/3d_panel_tracking.html) ([debug](https://alien.js.org/examples/3d_panel_tracking.html?debug))  
 
 #### shader
 

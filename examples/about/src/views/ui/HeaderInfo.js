@@ -26,7 +26,7 @@ export class HeaderInfo extends Interface {
         this.text = new Interface('.text');
         this.text.css({
             position: 'relative',
-            ...Styles.monospaceLabel
+            ...Styles.number
         });
         this.text.text(this.fps);
         this.add(this.text);

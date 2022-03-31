@@ -13,7 +13,7 @@
 <body>
     <div id="root"></div>
     <script type="module">
-        import { BlurMaterial, Color, CopyMaterial, DirectionalLight, Events, FXAAMaterial, Group, HemisphereLight, Mesh, MeshStandardMaterial, OrthographicCamera, PerspectiveCamera, Scene, SphereGeometry, Stage, Uniform, Vector2, WebGLRenderTarget, WebGLRenderer, getFullscreenTriangle, ticker } from '../build/alien.js';
+        import { BlurMaterial, Color, CopyMaterial, DirectionalLight, Events, FXAAMaterial, Group, HemisphereLight, Mesh, MeshStandardMaterial, OrthographicCamera, PanelItem, PerspectiveCamera, Scene, SphereGeometry, Stage, UI, Uniform, Vector2, WebGLRenderTarget, WebGLRenderer, getFullscreenTriangle, ticker } from '../build/alien.js';
 
         import periodic3d from '../src/shaders/modules/noise/periodic3d.glsl.js';
 
@@ -59,6 +59,61 @@
                 const mesh = new Mesh(geometry, material);
                 this.add(mesh);
             }
+        }
+
+        class PanelController {
+            static init() {
+                this.initViews();
+                this.initPanel();
+            }
+
+            static initViews() {
+                this.ui = new UI({ fps: true });
+                this.ui.animateIn();
+                Stage.add(this.ui);
+            }
+
+            static initPanel() {
+                const { hBlurMaterial, vBlurMaterial } = RenderManager;
+
+                const items = [
+                    {
+                        label: 'FPS'
+                    },
+                    {
+                        type: 'divider'
+                    },
+                    {
+                        type: 'slider',
+                        label: 'Blur',
+                        min: 0,
+                        max: 10,
+                        step: 0.1,
+                        value: RenderManager.blurFactor,
+                        callback: value => {
+                            hBlurMaterial.uniforms.uBluriness.value = value;
+                            vBlurMaterial.uniforms.uBluriness.value = value;
+                        }
+                    }
+                ];
+
+                items.forEach(data => {
+                    const item = new PanelItem(data);
+                    this.ui.addPanel(item);
+                });
+            }
+
+            /**
+             * Public methods
+             */
+
+            static update = () => {
+                if (!this.ui) {
+                    return;
+                }
+
+                this.ui.update();
+            };
         }
 
         const BlurDirectionX = new Vector2(1, 0);
@@ -275,6 +330,8 @@
 
                 this.addListeners();
                 this.onResize();
+
+                this.initPanel();
             }
 
             static initStage() {
@@ -300,6 +357,10 @@
                 RenderManager.init(renderer, scene, camera);
             }
 
+            static initPanel() {
+                PanelController.init();
+            }
+
             static addListeners() {
                 Stage.events.on(Events.RESIZE, this.onResize);
                 ticker.add(this.onUpdate);
@@ -319,6 +380,7 @@
             static onUpdate = (time, delta, frame) => {
                 WorldController.update(time, delta, frame);
                 RenderManager.update(time, delta, frame);
+                PanelController.update();
             };
         }
 

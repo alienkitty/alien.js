@@ -32,16 +32,8 @@ export class Cluster {
         this.array.length = 0;
     }
 
-    push(object) {
-        this.array.push(object);
-    }
-
-    insert(array) {
-        if (!Array.isArray(array)) {
-            array = [array];
-        }
-
-        this.array.push(...array);
+    push(...objects) {
+        this.array.push(...objects);
     }
 
     length() {

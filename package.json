@@ -16,7 +16,10 @@
     "three.js",
     "webgl",
     "webgl2",
-    "webaudio"
+    "webaudio",
+    "gui",
+    "ui",
+    "creative coding"
   ],
   "author": "pschroen",
   "repository": {

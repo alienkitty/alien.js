@@ -13,7 +13,7 @@
 <body>
     <div id="root"></div>
     <script type="module">
-        import { ACESFilmicToneMapping, AmbientLight, BasicShadowMap, BloomCompositeMaterial, BoxGeometry, Color, Device, DirectionalLight, DynamicDrawUsage, EnvironmentTextureLoader, EventEmitter, Events, FXAAMaterial, GLSL3, Group, HemisphereLight, IcosahedronGeometry, ImageBitmapLoaderThread, InstancedMesh, LuminosityMaterial, MathUtils, Matrix4, Mesh, MeshBasicMaterial, MeshStandardMaterial, NoBlending, OimoPhysicsBuffer, OimoPhysicsController, OrthographicCamera, PerspectiveCamera, PlaneGeometry, PointLight, RawShaderMaterial, Reflector, RepeatWrapping, Scene, ShaderChunk, ShadowMaterial, SphereGeometry, Stage, TextureLoader, Thread, Uniform, UnrealBloomBlurMaterial, Vector2, Vector3, WebGLRenderTarget, WebGLRenderer, getFrustum, getFullscreenTriangle, mix, ticker } from '../build/alien.js';
+        import { ACESFilmicToneMapping, AmbientLight, BasicShadowMap, BloomCompositeMaterial, BoxGeometry, Color, Device, DirectionalLight, DynamicDrawUsage, EnvironmentTextureLoader, EventEmitter, Events, FXAAMaterial, GLSL3, Group, HemisphereLight, IcosahedronGeometry, ImageBitmapLoaderThread, InstancedMesh, LuminosityMaterial, MathUtils, Matrix4, Mesh, MeshBasicMaterial, MeshStandardMaterial, NoBlending, OimoPhysicsBuffer, OimoPhysicsController, OrthographicCamera, PanelItem, PerspectiveCamera, PlaneGeometry, PointLight, RawShaderMaterial, Reflector, RepeatWrapping, Scene, ShaderChunk, ShadowMaterial, SphereGeometry, Stage, TextureLoader, Thread, UI, Uniform, UnrealBloomBlurMaterial, Vector2, Vector3, WebGLRenderTarget, WebGLRenderer, getFrustum, getFullscreenTriangle, getKeyByValue, mix, ticker } from '../build/alien.js';
 
         class Config {
             static LIGHT_COLOR = 0xf44336;
@@ -41,7 +41,7 @@
 
             uniform sampler2D tScene;
             uniform sampler2D tBloom;
-            uniform float uDistortion;
+            uniform float uBloomDistortion;
 
             in vec2 vUv;
 
@@ -53,7 +53,7 @@
                 FragColor = texture(tScene, vUv);
 
                 float angle = length(vUv - 0.5);
-                float amount = 0.0002 + uDistortion;
+                float amount = 0.001 * uBloomDistortion;
 
                 FragColor.rgb += getRGB(tBloom, vUv, angle, amount).rgb;
             }
@@ -66,7 +66,7 @@
                     uniforms: {
                         tScene: new Uniform(null),
                         tBloom: new Uniform(null),
-                        uDistortion: new Uniform(0.00125)
+                        uBloomDistortion: new Uniform(1.45)
                     },
                     vertexShader: vertexCompositeShader,
                     fragmentShader: fragmentCompositeShader,
@@ -114,22 +114,26 @@
                 }
             };
 
-            add = object => {
-                this.physics.add(object);
-            };
-
-            remove = name => {
-                this.physics.remove(name);
+            setGravity = gravity => {
+                this.physics.setGravity(gravity);
             };
 
             setPosition = (name, position) => {
                 this.physics.setPosition(name, position);
             };
+
+            setLinearVelocity = (name, linearVelocity) => {
+                this.physics.setLinearVelocity(name, linearVelocity);
+            };
+
+            setAngularVelocity = (name, angularVelocity) => {
+                this.physics.setAngularVelocity(name, angularVelocity);
+            };
         }
 
         class ScenePhysicsThread {
             constructor() {
-                this.start = performance.now();
+                this.startTime = performance.now();
 
                 this.addListeners();
             }
@@ -166,19 +170,23 @@
             update = ({ array }) => {
                 this.physics.update(array);
 
-                ticker.onTick(performance.now() - this.start);
+                ticker.onTick(performance.now() - this.startTime);
             };
 
-            add = ({ object }) => {
-                this.physics.add(object);
-            };
-
-            remove = ({ name }) => {
-                this.physics.remove(name);
+            setGravity = ({ gravity }) => {
+                this.physics.setGravity(gravity);
             };
 
             setPosition = ({ name, position }) => {
                 this.physics.setPosition(name, position);
+            };
+
+            setLinearVelocity = ({ name, linearVelocity }) => {
+                this.physics.setLinearVelocity(name, linearVelocity);
+            };
+
+            setAngularVelocity = ({ name, angularVelocity }) => {
+                this.physics.setAngularVelocity(name, angularVelocity);
             };
         }
 
@@ -202,7 +210,7 @@
                             ['../build/alien.js', 'EventEmitter', 'OimoPhysicsBuffer', 'Vector3', 'delayedCall', 'ticker']
                         ],
                         classes: [ScenePhysics],
-                        controller: [ScenePhysicsThread, 'init', 'update', 'add', 'remove', 'setPosition']
+                        controller: [ScenePhysicsThread, 'init', 'update', 'setGravity', 'setPosition', 'setLinearVelocity', 'setAngularVelocity']
                     });
 
                     this.thread.init({ shapes: this.shapes });
@@ -249,19 +257,41 @@
                 }
             };
 
-            setPosition = (object, position, index = 0) => {
-                let body;
-
-                if (object.isInstancedMesh) {
-                    body = this.map.get(object)[index];
+            setGravity = gravity => {
+                if (this.thread) {
+                    this.thread.setGravity({ gravity });
                 } else {
-                    body = this.map.get(object);
+                    this.physics.setGravity(gravity);
                 }
+            };
+
+            setPosition = (object, position, index) => {
+                const { name } = this.getObjectBody(object, index);
 
                 if (this.thread) {
-                    this.thread.setPosition({ name: body.name, position: position.toArray() });
+                    this.thread.setPosition({ name, position });
                 } else {
-                    this.physics.setPosition(body.name, position.toArray());
+                    this.physics.setPosition(name, position);
+                }
+            };
+
+            setLinearVelocity = (object, linearVelocity, index) => {
+                const { name } = this.getObjectBody(object, index);
+
+                if (this.thread) {
+                    this.thread.setLinearVelocity({ name, linearVelocity });
+                } else {
+                    this.physics.setLinearVelocity(name, linearVelocity);
+                }
+            };
+
+            setAngularVelocity = (object, angularVelocity, index) => {
+                const { name } = this.getObjectBody(object, index);
+
+                if (this.thread) {
+                    this.thread.setAngularVelocity({ name, angularVelocity });
+                } else {
+                    this.physics.setAngularVelocity(name, angularVelocity);
                 }
             };
 
@@ -403,6 +433,7 @@
                         gl_FragColor.rgb -= (1.0 - getShadowMask()) * 0.025;
 
                         gl_FragColor.rgb = dither(gl_FragColor.rgb);
+                        gl_FragColor.a = 1.0;
                         `
                     );
                 };
@@ -561,7 +592,7 @@
                     boxes.setMatrixAt(i, matrix);
                 }
 
-                physics.add(boxes);
+                physics.add(boxes, { autoSleep: false });
 
                 // Spheres
                 const geometrySphere = new IcosahedronGeometry(0.075, 3);
@@ -580,7 +611,7 @@
                     spheres.setMatrixAt(i, matrix);
                 }
 
-                physics.add(spheres);
+                physics.add(spheres, { autoSleep: false });
 
                 this.boxes = boxes;
                 this.spheres = spheres;
@@ -605,6 +636,7 @@
                 this.target = new Vector2();
                 this.lightPosition = new Vector3();
                 this.lerpSpeed = 0.25;
+                this.enabled = true;
 
                 this.position = new Vector3();
 
@@ -612,7 +644,7 @@
             }
 
             static addListeners() {
-                Stage.element.addEventListener('pointerdown', this.onPointerDown);
+                window.addEventListener('pointerdown', this.onPointerDown);
                 window.addEventListener('pointermove', this.onPointerMove);
                 window.addEventListener('pointerup', this.onPointerUp);
             }
@@ -652,7 +684,7 @@
             };
 
             static update = () => {
-                if (!this.view.visible) {
+                if (!this.enabled || !this.view.visible) {
                     return;
                 }
 
@@ -667,12 +699,12 @@
                 let index = Math.floor(Math.random() * this.view.boxes.count);
 
                 this.position.set(0, Math.random() + 1, 0);
-                this.physics.setPosition(this.view.boxes, this.position, index);
+                this.physics.setPosition(this.view.boxes, this.position.toArray(), index);
 
                 index = Math.floor(Math.random() * this.view.spheres.count);
 
                 this.position.set(0, Math.random() + 1, 0);
-                this.physics.setPosition(this.view.spheres, this.position, index);
+                this.physics.setPosition(this.view.spheres, this.position.toArray(), index);
 
                 this.physics.update();
             };
@@ -684,6 +716,158 @@
             static ready = async () => {
                 await this.view.ready();
                 this.physics.ready();
+            };
+        }
+
+        class PanelController {
+            static init(view) {
+                this.view = view;
+
+                this.initViews();
+                this.initPanel();
+            }
+
+            static initViews() {
+                this.ui = new UI({ fps: true });
+                this.ui.animateIn();
+                Stage.add(this.ui);
+            }
+
+            static initPanel() {
+                const { luminosityMaterial, bloomCompositeMaterial, compositeMaterial } = RenderManager;
+
+                const physicsOptions = {
+                    Off: false,
+                    Physics: true
+                };
+
+                const vector3 = new Vector3();
+                const gravity = new Vector3(0, -9.81, 0);
+
+                const items = [
+                    {
+                        label: 'FPS'
+                    },
+                    {
+                        type: 'divider'
+                    },
+                    {
+                        type: 'list',
+                        list: physicsOptions,
+                        value: getKeyByValue(physicsOptions, SceneController.enabled),
+                        callback: value => {
+                            SceneController.enabled = physicsOptions[value];
+
+                            if (!SceneController.enabled) {
+                                // Reset
+                                vector3.set(0, 0, 0);
+                                const array = vector3.toArray();
+
+                                for (let i = 0, l = this.view.boxes.count; i < l; i++) {
+                                    SceneController.physics.setLinearVelocity(this.view.boxes, array, i);
+                                    SceneController.physics.setAngularVelocity(this.view.boxes, array, i);
+                                }
+
+                                for (let i = 0, l = this.view.spheres.count; i < l; i++) {
+                                    SceneController.physics.setLinearVelocity(this.view.spheres, array, i);
+                                    SceneController.physics.setAngularVelocity(this.view.spheres, array, i);
+                                }
+
+                                // Flush last frame
+                                SceneController.physics.update();
+                            }
+                        }
+                    },
+                    {
+                        type: 'slider',
+                        label: 'Gravity',
+                        min: -10,
+                        max: 10,
+                        step: 0.1,
+                        value: -gravity.y,
+                        callback: value => {
+                            gravity.y = -value;
+                            SceneController.physics.setGravity(gravity.toArray());
+                        }
+                    },
+                    {
+                        type: 'divider'
+                    },
+                    {
+                        type: 'slider',
+                        label: 'Thresh',
+                        min: 0,
+                        max: 1,
+                        step: 0.01,
+                        value: RenderManager.luminosityThreshold,
+                        callback: value => {
+                            luminosityMaterial.uniforms.uThreshold.value = value;
+                        }
+                    },
+                    {
+                        type: 'slider',
+                        label: 'Smooth',
+                        min: 0,
+                        max: 1,
+                        step: 0.01,
+                        value: RenderManager.luminositySmoothing,
+                        callback: value => {
+                            luminosityMaterial.uniforms.uSmoothing.value = value;
+                        }
+                    },
+                    {
+                        type: 'slider',
+                        label: 'Strength',
+                        min: 0,
+                        max: 1,
+                        step: 0.01,
+                        value: RenderManager.bloomStrength,
+                        callback: value => {
+                            RenderManager.bloomStrength = value;
+                            bloomCompositeMaterial.uniforms.uBloomFactors.value = RenderManager.bloomFactors();
+                        }
+                    },
+                    {
+                        type: 'slider',
+                        label: 'Radius',
+                        min: 0,
+                        max: 1,
+                        step: 0.01,
+                        value: RenderManager.bloomRadius,
+                        callback: value => {
+                            RenderManager.bloomRadius = value;
+                            bloomCompositeMaterial.uniforms.uBloomFactors.value = RenderManager.bloomFactors();
+                        }
+                    },
+                    {
+                        type: 'slider',
+                        label: 'Chroma',
+                        min: 0,
+                        max: 2,
+                        step: 0.01,
+                        value: RenderManager.bloomDistortion,
+                        callback: value => {
+                            compositeMaterial.uniforms.uBloomDistortion.value = value;
+                        }
+                    }
+                ];
+
+                items.forEach(data => {
+                    const item = new PanelItem(data);
+                    this.ui.addPanel(item);
+                });
+            }
+
+            /**
+             * Public methods
+             */
+
+            static update = () => {
+                if (!this.ui) {
+                    return;
+                }
+
+                this.ui.update();
             };
         }
 
@@ -700,6 +884,7 @@
                 this.luminositySmoothing = 1;
                 this.bloomStrength = 0.3;
                 this.bloomRadius = 0.75;
+                this.bloomDistortion = 1.45;
                 this.enabled = true;
 
                 this.initRenderer();
@@ -755,6 +940,20 @@
                 }
 
                 // Bloom composite material
+                this.bloomCompositeMaterial = new BloomCompositeMaterial(this.nMips);
+                this.bloomCompositeMaterial.uniforms.tBlur1.value = this.renderTargetsVertical[0].texture;
+                this.bloomCompositeMaterial.uniforms.tBlur2.value = this.renderTargetsVertical[1].texture;
+                this.bloomCompositeMaterial.uniforms.tBlur3.value = this.renderTargetsVertical[2].texture;
+                this.bloomCompositeMaterial.uniforms.tBlur4.value = this.renderTargetsVertical[3].texture;
+                this.bloomCompositeMaterial.uniforms.tBlur5.value = this.renderTargetsVertical[4].texture;
+                this.bloomCompositeMaterial.uniforms.uBloomFactors.value = this.bloomFactors();
+
+                // Composite material
+                this.compositeMaterial = new CompositeMaterial();
+                this.compositeMaterial.uniforms.uBloomDistortion.value = this.bloomDistortion;
+            }
+
+            static bloomFactors() {
                 const bloomFactors = [1, 0.8, 0.6, 0.4, 0.2];
 
                 for (let i = 0, l = this.nMips; i < l; i++) {
@@ -762,16 +961,7 @@
                     bloomFactors[i] = this.bloomStrength * mix(factor, 1.2 - factor, this.bloomRadius);
                 }
 
-                this.bloomCompositeMaterial = new BloomCompositeMaterial(this.nMips);
-                this.bloomCompositeMaterial.uniforms.tBlur1.value = this.renderTargetsVertical[0].texture;
-                this.bloomCompositeMaterial.uniforms.tBlur2.value = this.renderTargetsVertical[1].texture;
-                this.bloomCompositeMaterial.uniforms.tBlur3.value = this.renderTargetsVertical[2].texture;
-                this.bloomCompositeMaterial.uniforms.tBlur4.value = this.renderTargetsVertical[3].texture;
-                this.bloomCompositeMaterial.uniforms.tBlur5.value = this.renderTargetsVertical[4].texture;
-                this.bloomCompositeMaterial.uniforms.uBloomFactors.value = bloomFactors;
-
-                // Composite material
-                this.compositeMaterial = new CompositeMaterial();
+                return bloomFactors;
             }
 
             /**
@@ -891,7 +1081,7 @@
             }
 
             static addListeners() {
-                Stage.element.addEventListener('pointerdown', this.onPointerDown);
+                window.addEventListener('pointerdown', this.onPointerDown);
                 window.addEventListener('pointermove', this.onPointerMove);
                 window.addEventListener('pointerup', this.onPointerUp);
             }
@@ -1078,6 +1268,8 @@
                     WorldController.environmentLoader.ready()
                 ]);
 
+                this.initPanel();
+
                 CameraController.animateIn();
                 SceneController.animateIn();
             }
@@ -1114,6 +1306,10 @@
                 RenderManager.init(renderer, scene, camera);
             }
 
+            static initPanel() {
+                PanelController.init(this.view);
+            }
+
             static addListeners() {
                 Stage.events.on(Events.RESIZE, this.onResize);
                 ticker.add(this.onUpdate);
@@ -1137,6 +1333,7 @@
                 CameraController.update();
                 SceneController.update();
                 RenderManager.update(time, delta, frame);
+                PanelController.update();
             };
         }
 

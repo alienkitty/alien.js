@@ -54,7 +54,7 @@ export class DetailsButton extends Interface {
         this.index.css({
             left: 34,
             top: 12,
-            ...Styles.monospaceLabel
+            ...Styles.number
         });
         this.index.text(Global.USERS.length);
         this.add(this.index);

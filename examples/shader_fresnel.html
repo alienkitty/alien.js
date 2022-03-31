@@ -9,15 +9,19 @@
     <link rel="preconnect" href="https://fonts.gstatic.com">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto+Mono">
     <link rel="stylesheet" href="assets/css/style.css">
+
+    <style>
+        :root {
+            --bg-color: #b6d8f2;
+            --ui-color: #000;
+            --ui-color-triplet: 0, 0, 0;
+        }
+    </style>
 </head>
 <body>
     <div id="root"></div>
     <script type="module">
-        import { Color, Events, FXAAMaterial, GLSL3, Group, Mesh, OrbitControls, OrthographicCamera, PerspectiveCamera, RawShaderMaterial, Scene, SphereGeometry, Stage, Uniform, Vector2, WebGLRenderTarget, WebGLRenderer, getFullscreenTriangle, ticker } from '../build/alien.js';
-
-        class Config {
-            static BG_COLOR = 0xb6d8f2;
-        }
+        import { Color, Events, FXAAMaterial, GLSL3, Group, Mesh, OrbitControls, OrthographicCamera, PanelItem, PerspectiveCamera, RawShaderMaterial, Scene, SphereGeometry, Stage, UI, Uniform, Vector2, WebGLRenderTarget, WebGLRenderer, brightness, getFullscreenTriangle, ticker } from '../build/alien.js';
 
         import periodic3d from '../src/shaders/modules/noise/periodic3d.glsl.js';
 
@@ -110,12 +114,101 @@
             }
 
             initMesh() {
-                const mesh = new Mesh(
+                this.mesh = new Mesh(
                     new SphereGeometry(1, 160, 80),
                     new FresnelMaterial()
                 );
-                this.add(mesh);
+                this.add(this.mesh);
             }
+        }
+
+        class PanelController {
+            static init(scene, view) {
+                this.scene = scene;
+                this.view = view;
+
+                this.lastInvert = null;
+
+                this.initViews();
+                this.initPanel();
+                this.setInvert(this.scene.background);
+            }
+
+            static initViews() {
+                this.ui = new UI({ fps: true });
+                this.ui.animateIn();
+                Stage.add(this.ui);
+            }
+
+            static initPanel() {
+                const { mesh } = this.view;
+
+                const items = [
+                    {
+                        label: 'FPS'
+                    },
+                    {
+                        type: 'divider'
+                    },
+                    {
+                        type: 'color',
+                        value: this.scene.background,
+                        callback: value => {
+                            this.scene.background.copy(value);
+
+                            this.setInvert(value);
+                        }
+                    },
+                    {
+                        type: 'divider'
+                    },
+                    {
+                        type: 'color',
+                        value: mesh.material.uniforms.uFresnelColor.value,
+                        callback: value => {
+                            mesh.material.uniforms.uFresnelColor.value.copy(value);
+                        }
+                    },
+                    {
+                        type: 'slider',
+                        label: 'Power',
+                        min: 0,
+                        max: 3,
+                        step: 0.01,
+                        value: mesh.material.uniforms.uFresnelPower.value,
+                        callback: value => {
+                            mesh.material.uniforms.uFresnelPower.value = value;
+                        }
+                    }
+                ];
+
+                items.forEach(data => {
+                    const item = new PanelItem(data);
+                    this.ui.addPanel(item);
+                });
+            }
+
+            /**
+             * Public methods
+             */
+
+            static setInvert = value => {
+                const invert = brightness(value) > 0.6; // Light colour is inverted
+
+                if (invert !== this.lastInvert) {
+                    this.lastInvert = invert;
+
+                    Stage.events.emit(Events.INVERT, { invert });
+                }
+            };
+
+            static update = () => {
+                if (!this.ui) {
+                    return;
+                }
+
+                this.ui.update();
+            };
         }
 
         class RenderManager {
@@ -207,7 +300,7 @@
 
                 // 3D scene
                 this.scene = new Scene();
-                this.scene.background = new Color(Config.BG_COLOR);
+                this.scene.background = new Color(Stage.rootStyle.getPropertyValue('--bg-color').trim());
                 this.camera = new PerspectiveCamera(30);
                 this.camera.near = 0.5;
                 this.camera.far = 40;
@@ -279,6 +372,8 @@
 
                 this.addListeners();
                 this.onResize();
+
+                this.initPanel();
             }
 
             static initStage() {
@@ -304,6 +399,12 @@
                 RenderManager.init(renderer, scene, camera);
             }
 
+            static initPanel() {
+                const { scene } = WorldController;
+
+                PanelController.init(scene, this.view);
+            }
+
             static addListeners() {
                 Stage.events.on(Events.RESIZE, this.onResize);
                 ticker.add(this.onUpdate);
@@ -323,6 +424,7 @@
             static onUpdate = (time, delta, frame) => {
                 WorldController.update(time, delta, frame);
                 RenderManager.update(time, delta, frame);
+                PanelController.update();
             };
         }
 

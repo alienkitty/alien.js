@@ -108,9 +108,13 @@ export function absolute(path) {
     return location.protocol + '//' + location.hostname + port + location.pathname.replace(/\/[^/]*$/, '/') + path;
 }
 
-export function getConstructor(obj) {
-    const isInstance = typeof obj !== 'function';
-    const code = isInstance ? obj.constructor.toString() : obj.toString();
+export function getKeyByValue(object, value) {
+    return Object.keys(object).find(key => object[key] === value);
+}
+
+export function getConstructor(object) {
+    const isInstance = typeof object !== 'function';
+    const code = isInstance ? object.constructor.toString() : object.toString();
     const name = code.match(/(?:class|function)\s([^\s{(]+)/)[1];
 
     return { name, code, isInstance };

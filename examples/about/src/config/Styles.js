@@ -15,21 +15,21 @@ export class Styles {
         margin: '6px 0'
     };
 
-    static monospace = {
+    static label = {
         fontFamily: '"Roboto Mono", monospace',
         fontSize: 11,
         lineHeight: 15,
         letterSpacing: 0.33
     };
 
-    static monospaceLabel = {
-        ...this.monospace,
-        letterSpacing: 1
-    };
-
-    static monospaceSmall = {
-        ...this.monospace,
+    static small = {
+        ...this.label,
         fontSize: 10,
         letterSpacing: 0.5
+    };
+
+    static number = {
+        ...this.label,
+        letterSpacing: 1
     };
 }

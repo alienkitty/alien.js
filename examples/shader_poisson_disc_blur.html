@@ -13,7 +13,7 @@
 <body>
     <div id="root"></div>
     <script type="module">
-        import { Color, DirectionalLight, Events, FXAAMaterial, Group, HemisphereLight, LinearMipmapLinearFilter, MathUtils, Mesh, MeshStandardMaterial, OrthographicCamera, PerspectiveCamera, PoissonDiscBlurMaterial, Scene, SphereGeometry, Stage, Uniform, Vector2, WebGLRenderTarget, WebGLRenderer, getFullscreenTriangle, ticker } from '../build/alien.js';
+        import { Color, DirectionalLight, Events, FXAAMaterial, Group, HemisphereLight, LinearMipmapLinearFilter, MathUtils, Mesh, MeshStandardMaterial, OrthographicCamera, PanelItem, PerspectiveCamera, PoissonDiscBlurMaterial, Scene, SphereGeometry, Stage, UI, Uniform, Vector2, WebGLRenderTarget, WebGLRenderer, getFullscreenTriangle, ticker } from '../build/alien.js';
 
         import periodic3d from '../src/shaders/modules/noise/periodic3d.glsl.js';
 
@@ -59,6 +59,60 @@
                 const mesh = new Mesh(geometry, material);
                 this.add(mesh);
             }
+        }
+
+        class PanelController {
+            static init() {
+                this.initViews();
+                this.initPanel();
+            }
+
+            static initViews() {
+                this.ui = new UI({ fps: true });
+                this.ui.animateIn();
+                Stage.add(this.ui);
+            }
+
+            static initPanel() {
+                const { blurMaterial } = RenderManager;
+
+                const items = [
+                    {
+                        label: 'FPS'
+                    },
+                    {
+                        type: 'divider'
+                    },
+                    {
+                        type: 'slider',
+                        label: 'Radius',
+                        min: 0,
+                        max: 50,
+                        step: 0.1,
+                        value: blurMaterial.uniforms.uRadius.value,
+                        callback: value => {
+                            blurMaterial.uniforms.uRadius.value = value;
+                        }
+                    }
+                ];
+
+                items.forEach(data => {
+                    const item = new PanelItem(data);
+                    this.ui.addPanel(item);
+                });
+            }
+
+            /**
+             * Public methods
+             */
+
+            static update = () => {
+                if (!this.ui) {
+                    return;
+                }
+
+                this.ui.update();
+            };
         }
 
         class RenderManager {
@@ -248,6 +302,8 @@
 
                 this.addListeners();
                 this.onResize();
+
+                this.initPanel();
             }
 
             static initStage() {
@@ -273,6 +329,10 @@
                 RenderManager.init(renderer, scene, camera);
             }
 
+            static initPanel() {
+                PanelController.init();
+            }
+
             static addListeners() {
                 Stage.events.on(Events.RESIZE, this.onResize);
                 ticker.add(this.onUpdate);
@@ -292,6 +352,7 @@
             static onUpdate = (time, delta, frame) => {
                 WorldController.update(time, delta, frame);
                 RenderManager.update(time, delta, frame);
+                PanelController.update();
             };
         }
 

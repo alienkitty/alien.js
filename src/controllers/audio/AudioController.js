@@ -9,7 +9,7 @@ export class AudioController {
 
     static addListeners() {
         Stage.events.on(Events.VISIBILITY, this.onVisibility);
-        Stage.element.addEventListener('pointerdown', this.onPointerDown);
+        window.addEventListener('pointerdown', this.onPointerDown);
     }
 
     /**
@@ -25,7 +25,7 @@ export class AudioController {
     };
 
     static onPointerDown = () => {
-        Stage.element.removeEventListener('pointerdown', this.onPointerDown);
+        window.removeEventListener('pointerdown', this.onPointerDown);
 
         // this.trigger('bass_drum');
     };

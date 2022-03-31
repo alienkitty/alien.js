@@ -14,9 +14,9 @@ in vec2 vUv;
 out vec4 FragColor;
 
 void main() {
-    float ro = uRedOffset * uIntensity;
-    float go = uGreenOffset * uIntensity;
-    float bo = uBlueOffset * uIntensity;
+    float ro = 0.001 * uRedOffset * uIntensity;
+    float go = 0.001 * uGreenOffset * uIntensity;
+    float bo = 0.001 * uBlueOffset * uIntensity;
 
     float r = texture(tMap, vUv * (1.0 + ro) - (ro / 2.0)).r;
     float g = texture(tMap, vUv * (1.0 + go) - (go / 2.0)).g;

@@ -70,7 +70,7 @@
             };
 
             update = () => {
-                this.context.clearRect(0, 0, this.width, this.height);
+                this.context.clearRect(0, 0, this.element.width, this.element.height);
 
                 this.drawGrid();
             };
@@ -275,7 +275,7 @@
 
             static addListeners() {
                 Stage.events.on(Events.VISIBILITY, this.onVisibility);
-                Stage.element.addEventListener('pointerdown', this.onPointerDown);
+                window.addEventListener('pointerdown', this.onPointerDown);
                 window.addEventListener('pointermove', this.onPointerMove);
                 window.addEventListener('pointerup', this.onPointerUp);
             }

@@ -1,4 +1,4 @@
-import { GLSL3, Matrix4, RawShaderMaterial, Uniform } from 'three';
+import { GLSL3, Matrix4, NoBlending, RawShaderMaterial, Uniform } from 'three';
 
 import vertexShader from '../shaders/ReflectorDudvMaterial.vert.js';
 import fragmentShader from '../shaders/ReflectorDudvMaterial.frag.js';
@@ -17,7 +17,8 @@ export class ReflectorDudvMaterial extends RawShaderMaterial {
                 uMatrix: new Uniform(new Matrix4())
             },
             vertexShader,
-            fragmentShader
+            fragmentShader,
+            blending: NoBlending
         });
     }
 }

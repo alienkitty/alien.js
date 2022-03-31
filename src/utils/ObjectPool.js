@@ -23,16 +23,8 @@ export class ObjectPool {
         this.array.length = 0;
     }
 
-    put(object) {
-        this.array.push(object);
-    }
-
-    insert(array) {
-        if (!Array.isArray(array)) {
-            array = [array];
-        }
-
-        this.array.push(...array);
+    put(...objects) {
+        this.array.push(...objects);
     }
 
     length() {

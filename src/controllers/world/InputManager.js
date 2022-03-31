@@ -7,11 +7,10 @@ export class InputManager {
     static init(camera) {
         this.camera = camera;
 
+        this.objects = [];
         this.raycaster = new Raycaster();
         this.mouse = new Vector2(-1, -1);
         this.delta = new Vector2();
-        this.meshes = [];
-        this.objects = [];
         this.hover = null;
         this.click = null;
         this.lastTime = null;
@@ -24,13 +23,13 @@ export class InputManager {
     }
 
     static addListeners() {
-        Stage.element.addEventListener('pointerdown', this.onPointerDown);
+        window.addEventListener('pointerdown', this.onPointerDown);
         window.addEventListener('pointermove', this.onPointerMove);
         window.addEventListener('pointerup', this.onPointerUp);
     }
 
     static removeListeners() {
-        Stage.element.removeEventListener('pointerdown', this.onPointerDown);
+        window.removeEventListener('pointerdown', this.onPointerDown);
         window.removeEventListener('pointermove', this.onPointerMove);
         window.removeEventListener('pointerup', this.onPointerUp);
     }
@@ -65,10 +64,14 @@ export class InputManager {
 
         this.raycaster.setFromCamera(this.mouse, this.camera);
 
-        const intersection = this.raycaster.intersectObjects(this.meshes);
+        const intersection = this.raycaster.intersectObjects(this.objects);
 
         if (intersection.length) {
-            const object = this.objects[this.meshes.indexOf(intersection[0].object)];
+            let object = intersection[0].object;
+
+            if (object.parent.isGroup) {
+                object = object.parent;
+            }
 
             if (!this.hover) {
                 this.hover = object;
@@ -117,23 +120,27 @@ export class InputManager {
         }
     };
 
-    static add = object => {
-        this.meshes.push(object.hitMesh);
-        this.objects.push(object);
+    static add = (...objects) => {
+        this.objects.push(...objects);
     };
 
-    static remove = object => {
-        if (object === this.hover) {
-            this.hover.onHover({ type: 'out' });
-            this.hover = null;
-            Stage.css({ cursor: '' });
-        }
+    static remove = (...objects) => {
+        objects.forEach(object => {
+            const index = this.objects.indexOf(object);
 
-        const index = this.meshes.indexOf(object.hitMesh);
+            if (~index) {
+                this.objects.splice(index, 1);
+            }
 
-        if (~index) {
-            this.meshes.splice(index, 1);
-            this.objects.splice(index, 1);
-        }
+            if (object.parent.isGroup) {
+                object = object.parent;
+            }
+
+            if (object === this.hover) {
+                this.hover.onHover({ type: 'out' });
+                this.hover = null;
+                Stage.css({ cursor: '' });
+            }
+        });
     };
 }

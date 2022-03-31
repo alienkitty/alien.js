@@ -2,6 +2,10 @@
     --bg-color: #000;
     --ui-color: rgba(255, 255, 255, 0.94);
     --ui-color-triplet: 255, 255, 255;
+    --ui-invert-light-color: #000;
+    --ui-invert-light-color-triplet: 0, 0, 0;
+    --ui-invert-dark-color: rgba(255, 255, 255, 0.94);
+    --ui-invert-dark-color-triplet: 255, 255, 255;
 }
 
 html, body, #root {

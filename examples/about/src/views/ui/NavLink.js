@@ -23,7 +23,7 @@ export class NavLink extends Interface {
             lineHeight: 18,
             letterSpacing: 0.33,
             textTransform: 'uppercase',
-            whiteSpace: 'no-wrap',
+            whiteSpace: 'nowrap',
             pointerEvents: 'auto',
             webkitUserSelect: 'none',
             userSelect: 'none'

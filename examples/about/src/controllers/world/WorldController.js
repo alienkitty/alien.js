@@ -25,6 +25,7 @@ export class WorldController {
         // Global geometries
         this.screenTriangle = getFullscreenTriangle();
 
+        // Fullscreen triangle
         this.screen = new Mesh(this.screenTriangle);
         this.screen.frustumCulled = false;
         this.scene.add(this.screen);

@@ -13,7 +13,7 @@
 <body>
     <div id="root"></div>
     <script type="module">
-        import { BlurMaterial, Color, DirectionalLight, Events, FXAAMaterial, GLSL3, Group, HemisphereLight, Mesh, MeshStandardMaterial, NoBlending, OrthographicCamera, PerspectiveCamera, RawShaderMaterial, Scene, SphereGeometry, Stage, Uniform, Vector2, WebGLRenderTarget, WebGLRenderer, getFullscreenTriangle, ticker } from '../build/alien.js';
+        import { BlurMaterial, Color, DirectionalLight, Events, FXAAMaterial, GLSL3, Group, HemisphereLight, Mesh, MeshStandardMaterial, NoBlending, OrthographicCamera, PanelItem, PerspectiveCamera, RawShaderMaterial, Scene, SphereGeometry, Stage, UI, Uniform, Vector2, WebGLRenderTarget, WebGLRenderer, getFullscreenTriangle, ticker } from '../build/alien.js';
 
         const vertexCompositeShader = /* glsl */`
             in vec3 position;
@@ -115,6 +115,83 @@
                 const mesh = new Mesh(geometry, material);
                 this.add(mesh);
             }
+        }
+
+        class PanelController {
+            static init() {
+                this.initViews();
+                this.initPanel();
+            }
+
+            static initViews() {
+                this.ui = new UI({ fps: true });
+                this.ui.animateIn();
+                Stage.add(this.ui);
+            }
+
+            static initPanel() {
+                const { hBlurMaterial, vBlurMaterial, compositeMaterial } = RenderManager;
+
+                const items = [
+                    {
+                        label: 'FPS'
+                    },
+                    {
+                        type: 'divider'
+                    },
+                    {
+                        type: 'slider',
+                        label: 'Blur',
+                        min: 0,
+                        max: 10,
+                        step: 0.1,
+                        value: RenderManager.blurFactor,
+                        callback: value => {
+                            hBlurMaterial.uniforms.uBluriness.value = value;
+                            vBlurMaterial.uniforms.uBluriness.value = value;
+                        }
+                    },
+                    {
+                        type: 'slider',
+                        label: 'Reduce',
+                        min: 0,
+                        max: 1,
+                        step: 0.01,
+                        value: compositeMaterial.uniforms.uMinBright.value,
+                        callback: value => {
+                            compositeMaterial.uniforms.uMinBright.value = value;
+                        }
+                    },
+                    {
+                        type: 'slider',
+                        label: 'Bright',
+                        min: 0,
+                        max: 1,
+                        step: 0.01,
+                        value: compositeMaterial.uniforms.uBlurBright.value,
+                        callback: value => {
+                            compositeMaterial.uniforms.uBlurBright.value = value;
+                        }
+                    }
+                ];
+
+                items.forEach(data => {
+                    const item = new PanelItem(data);
+                    this.ui.addPanel(item);
+                });
+            }
+
+            /**
+             * Public methods
+             */
+
+            static update = () => {
+                if (!this.ui) {
+                    return;
+                }
+
+                this.ui.update();
+            };
         }
 
         const BlurDirectionX = new Vector2(1, 0);
@@ -347,6 +424,8 @@
 
                 this.addListeners();
                 this.onResize();
+
+                this.initPanel();
             }
 
             static initStage() {
@@ -372,6 +451,10 @@
                 RenderManager.init(renderer, scene, camera);
             }
 
+            static initPanel() {
+                PanelController.init();
+            }
+
             static addListeners() {
                 Stage.events.on(Events.RESIZE, this.onResize);
                 ticker.add(this.onUpdate);
@@ -391,6 +474,7 @@
             static onUpdate = (time, delta, frame) => {
                 WorldController.update(time, delta, frame);
                 RenderManager.update(time, delta, frame);
+                PanelController.update();
             };
         }
 

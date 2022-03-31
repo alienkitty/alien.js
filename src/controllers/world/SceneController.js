@@ -13,13 +13,13 @@ export class SceneController {
     }
 
     static addListeners() {
-        Stage.element.addEventListener('pointerdown', this.onPointerDown);
+        window.addEventListener('pointerdown', this.onPointerDown);
         window.addEventListener('pointermove', this.onPointerMove);
         window.addEventListener('pointerup', this.onPointerUp);
     }
 
     static removeListeners() {
-        Stage.element.removeEventListener('pointerdown', this.onPointerDown);
+        window.removeEventListener('pointerdown', this.onPointerDown);
         window.removeEventListener('pointermove', this.onPointerMove);
         window.removeEventListener('pointerup', this.onPointerUp);
     }
@@ -58,11 +58,17 @@ export class SceneController {
     };
 
     static update = () => {
+        if (!this.view.visible) {
+            return;
+        }
+
         this.view.update();
     };
 
     static animateIn = () => {
         this.view.animateIn();
+
+        this.view.visible = true;
     };
 
     static ready = () => this.view.ready();

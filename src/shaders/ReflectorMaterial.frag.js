@@ -43,5 +43,7 @@ void main() {
     #ifdef DITHERING
         FragColor.rgb = dither(FragColor.rgb);
     #endif
+
+    FragColor.a = 1.0;
 }
 `;

@@ -13,7 +13,7 @@
 <body>
     <div id="root"></div>
     <script type="module">
-        import { Color, DirectionalLight, Events, FXAAMaterial, Group, HemisphereLight, LuminosityMaterial, MathUtils, Mesh, MeshStandardMaterial, OrthographicCamera, PerspectiveCamera, Scene, SceneCompositeMaterial, SphereGeometry, Stage, Uniform, UnrealBloomBlurMaterial, UnrealBloomCompositeMaterial, Vector2, Vector3, WebGLRenderTarget, WebGLRenderer, getFullscreenTriangle, ticker } from '../build/alien.js';
+        import { Color, DirectionalLight, Events, FXAAMaterial, Group, HemisphereLight, LuminosityMaterial, MathUtils, Mesh, MeshStandardMaterial, OrthographicCamera, PanelItem, PerspectiveCamera, Scene, SceneCompositeMaterial, SphereGeometry, Stage, UI, Uniform, UnrealBloomBlurMaterial, UnrealBloomCompositeMaterial, Vector2, Vector3, WebGLRenderTarget, WebGLRenderer, getFullscreenTriangle, ticker } from '../build/alien.js';
 
         import periodic3d from '../src/shaders/modules/noise/periodic3d.glsl.js';
 
@@ -59,6 +59,93 @@
                 const mesh = new Mesh(geometry, material);
                 this.add(mesh);
             }
+        }
+
+        class PanelController {
+            static init() {
+                this.initViews();
+                this.initPanel();
+            }
+
+            static initViews() {
+                this.ui = new UI({ fps: true });
+                this.ui.animateIn();
+                Stage.add(this.ui);
+            }
+
+            static initPanel() {
+                const { luminosityMaterial, bloomCompositeMaterial } = RenderManager;
+
+                const items = [
+                    {
+                        label: 'FPS'
+                    },
+                    {
+                        type: 'divider'
+                    },
+                    {
+                        type: 'slider',
+                        label: 'Thresh',
+                        min: 0,
+                        max: 1,
+                        step: 0.01,
+                        value: RenderManager.luminosityThreshold,
+                        callback: value => {
+                            luminosityMaterial.uniforms.uThreshold.value = value;
+                        }
+                    },
+                    {
+                        type: 'slider',
+                        label: 'Smooth',
+                        min: 0,
+                        max: 1,
+                        step: 0.01,
+                        value: RenderManager.luminositySmoothing,
+                        callback: value => {
+                            luminosityMaterial.uniforms.uSmoothing.value = value;
+                        }
+                    },
+                    {
+                        type: 'slider',
+                        label: 'Strength',
+                        min: 0,
+                        max: 1,
+                        step: 0.01,
+                        value: RenderManager.bloomStrength,
+                        callback: value => {
+                            bloomCompositeMaterial.uniforms.uBloomStrength.value = value;
+                        }
+                    },
+                    {
+                        type: 'slider',
+                        label: 'Radius',
+                        min: 0,
+                        max: 1,
+                        step: 0.01,
+                        value: RenderManager.bloomRadius,
+                        callback: value => {
+                            bloomCompositeMaterial.uniforms.uBloomRadius.value = value;
+                        }
+                    }
+                ];
+
+                items.forEach(data => {
+                    const item = new PanelItem(data);
+                    this.ui.addPanel(item);
+                });
+            }
+
+            /**
+             * Public methods
+             */
+
+            static update = () => {
+                if (!this.ui) {
+                    return;
+                }
+
+                this.ui.update();
+            };
         }
 
         // Based on {@link module:three/examples/jsm/postprocessing/UnrealBloomPass.js} by spidersharma and bhouston
@@ -344,6 +431,8 @@
 
                 this.addListeners();
                 this.onResize();
+
+                this.initPanel();
             }
 
             static initStage() {
@@ -369,6 +458,10 @@
                 RenderManager.init(renderer, scene, camera);
             }
 
+            static initPanel() {
+                PanelController.init();
+            }
+
             static addListeners() {
                 Stage.events.on(Events.RESIZE, this.onResize);
                 ticker.add(this.onUpdate);
@@ -388,6 +481,7 @@
             static onUpdate = (time, delta, frame) => {
                 WorldController.update(time, delta, frame);
                 RenderManager.update(time, delta, frame);
+                PanelController.update();
             };
         }
 

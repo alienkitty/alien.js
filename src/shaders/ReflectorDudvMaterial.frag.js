@@ -31,5 +31,6 @@ void main() {
     FragColor = color * mix(0.6, 0.75, dudv.g);
 
     FragColor.rgb = dither(FragColor.rgb);
+    FragColor.a = 1.0;
 }
 `;

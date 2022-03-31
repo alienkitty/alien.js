@@ -13,7 +13,7 @@
 <body>
     <div id="root"></div>
     <script type="module">
-        import { ACESFilmicToneMapping, AmbientLight, BloomCompositeMaterial, BufferGeometryLoader, BufferGeometryLoaderThread, Color, Device, EnvironmentTextureLoader, Events, FXAAMaterial, GLSL3, Group, HemisphereLight, ImageBitmapLoaderThread, LuminosityMaterial, MathUtils, Mesh, MeshBasicMaterial, MeshStandardMaterial, NoBlending, OrthographicCamera, PerspectiveCamera, PlaneGeometry, PointLight, RawShaderMaterial, Reflector, ReflectorDudvMaterial, RepeatWrapping, Scene, ShaderChunk, SphereGeometry, Stage, TextureLoader, Thread, Uniform, UnrealBloomBlurMaterial, Vector2, Vector3, WebGLRenderTarget, WebGLRenderer, getFrustum, getFullscreenTriangle, mix, ticker } from '../build/alien.js';
+        import { ACESFilmicToneMapping, AmbientLight, BloomCompositeMaterial, BufferGeometryLoader, BufferGeometryLoaderThread, Color, Device, EnvironmentTextureLoader, Events, FXAAMaterial, GLSL3, Group, HemisphereLight, ImageBitmapLoaderThread, LuminosityMaterial, MathUtils, Mesh, MeshBasicMaterial, MeshStandardMaterial, NoBlending, OrthographicCamera, PanelItem, PerspectiveCamera, PlaneGeometry, PointLight, RawShaderMaterial, Reflector, ReflectorDudvMaterial, RepeatWrapping, Scene, ShaderChunk, SphereGeometry, Stage, TextureLoader, Thread, UI, Uniform, UnrealBloomBlurMaterial, Vector2, Vector3, WebGLRenderTarget, WebGLRenderer, getFrustum, getFullscreenTriangle, mix, ticker } from '../build/alien.js';
 
         class Config {
             static DEBUG = location.search === '?debug';
@@ -39,7 +39,7 @@
 
             uniform sampler2D tScene;
             uniform sampler2D tBloom;
-            uniform float uDistortion;
+            uniform float uBloomDistortion;
 
             in vec2 vUv;
 
@@ -51,7 +51,7 @@
                 FragColor = texture(tScene, vUv);
 
                 float angle = length(vUv - 0.5);
-                float amount = 0.0002 + uDistortion;
+                float amount = 0.001 * uBloomDistortion;
 
                 FragColor.rgb += getRGB(tBloom, vUv, angle, amount).rgb;
             }
@@ -64,7 +64,7 @@
                     uniforms: {
                         tScene: new Uniform(null),
                         tBloom: new Uniform(null),
-                        uDistortion: new Uniform(0.00125)
+                        uBloomDistortion: new Uniform(1.45)
                     },
                     vertexShader: vertexCompositeShader,
                     fragmentShader: fragmentCompositeShader,
@@ -163,13 +163,17 @@
 
                 // Based on {@link module:three/examples/jsm/shaders/SubsurfaceScatteringShader.js} by daoshengmu
 
+                const uniforms = {
+                    thicknessMap: new Uniform(thicknessMap),
+                    thicknessDistortion: new Uniform(0.1),
+                    thicknessAmbient: new Uniform(0),
+                    thicknessAttenuation: new Uniform(0.8),
+                    thicknessPower: new Uniform(2),
+                    thicknessScale: new Uniform(16)
+                };
+
                 material.onBeforeCompile = shader => {
-                    shader.uniforms.thicknessMap = new Uniform(thicknessMap);
-                    shader.uniforms.thicknessDistortion = new Uniform(0.1);
-                    shader.uniforms.thicknessAmbient = new Uniform(0);
-                    shader.uniforms.thicknessAttenuation = new Uniform(0.8);
-                    shader.uniforms.thicknessPower = new Uniform(2);
-                    shader.uniforms.thicknessScale = new Uniform(16);
+                    shader.uniforms = Object.assign(shader.uniforms, uniforms);
 
                     shader.fragmentShader = shader.fragmentShader.replace(
                         'void main() {',
@@ -206,6 +210,7 @@
                 };
 
                 this.material = material;
+                this.uniforms = uniforms;
             }
 
             initMesh() {
@@ -323,7 +328,7 @@
             }
 
             static addListeners() {
-                Stage.element.addEventListener('pointerdown', this.onPointerDown);
+                window.addEventListener('pointerdown', this.onPointerDown);
                 window.addEventListener('pointermove', this.onPointerMove);
                 window.addEventListener('pointerup', this.onPointerUp);
             }
@@ -383,6 +388,168 @@
             static ready = () => this.view.ready();
         }
 
+        class PanelController {
+            static init(view) {
+                this.view = view;
+
+                this.initViews();
+                this.initPanel();
+            }
+
+            static initViews() {
+                this.ui = new UI({ fps: true });
+                this.ui.animateIn();
+                Stage.add(this.ui);
+            }
+
+            static initPanel() {
+                const { sphere } = this.view;
+
+                const { luminosityMaterial, bloomCompositeMaterial, compositeMaterial } = RenderManager;
+
+                const items = [
+                    {
+                        label: 'FPS'
+                    },
+                    {
+                        type: 'divider'
+                    },
+                    {
+                        type: 'slider',
+                        label: 'Distort',
+                        min: 0,
+                        max: 1,
+                        step: 0.01,
+                        value: sphere.uniforms.thicknessDistortion.value,
+                        callback: value => {
+                            sphere.uniforms.thicknessDistortion.value = value;
+                        }
+                    },
+                    {
+                        type: 'slider',
+                        label: 'Ambient',
+                        min: 0,
+                        max: 5,
+                        step: 0.05,
+                        value: sphere.uniforms.thicknessAmbient.value,
+                        callback: value => {
+                            sphere.uniforms.thicknessAmbient.value = value;
+                        }
+                    },
+                    {
+                        type: 'slider',
+                        label: 'Atten',
+                        min: 0,
+                        max: 5,
+                        step: 0.05,
+                        value: sphere.uniforms.thicknessAttenuation.value,
+                        callback: value => {
+                            sphere.uniforms.thicknessAttenuation.value = value;
+                        }
+                    },
+                    {
+                        type: 'slider',
+                        label: 'Power',
+                        min: 0,
+                        max: 32,
+                        step: 0.1,
+                        value: sphere.uniforms.thicknessPower.value,
+                        callback: value => {
+                            sphere.uniforms.thicknessPower.value = value;
+                        }
+                    },
+                    {
+                        type: 'slider',
+                        label: 'Scale',
+                        min: 0,
+                        max: 64,
+                        step: 0.1,
+                        value: sphere.uniforms.thicknessScale.value,
+                        callback: value => {
+                            sphere.uniforms.thicknessScale.value = value;
+                        }
+                    },
+                    {
+                        type: 'divider'
+                    },
+                    {
+                        type: 'slider',
+                        label: 'Thresh',
+                        min: 0,
+                        max: 1,
+                        step: 0.01,
+                        value: RenderManager.luminosityThreshold,
+                        callback: value => {
+                            luminosityMaterial.uniforms.uThreshold.value = value;
+                        }
+                    },
+                    {
+                        type: 'slider',
+                        label: 'Smooth',
+                        min: 0,
+                        max: 1,
+                        step: 0.01,
+                        value: RenderManager.luminositySmoothing,
+                        callback: value => {
+                            luminosityMaterial.uniforms.uSmoothing.value = value;
+                        }
+                    },
+                    {
+                        type: 'slider',
+                        label: 'Strength',
+                        min: 0,
+                        max: 1,
+                        step: 0.01,
+                        value: RenderManager.bloomStrength,
+                        callback: value => {
+                            RenderManager.bloomStrength = value;
+                            bloomCompositeMaterial.uniforms.uBloomFactors.value = RenderManager.bloomFactors();
+                        }
+                    },
+                    {
+                        type: 'slider',
+                        label: 'Radius',
+                        min: 0,
+                        max: 1,
+                        step: 0.01,
+                        value: RenderManager.bloomRadius,
+                        callback: value => {
+                            RenderManager.bloomRadius = value;
+                            bloomCompositeMaterial.uniforms.uBloomFactors.value = RenderManager.bloomFactors();
+                        }
+                    },
+                    {
+                        type: 'slider',
+                        label: 'Chroma',
+                        min: 0,
+                        max: 2,
+                        step: 0.01,
+                        value: RenderManager.bloomDistortion,
+                        callback: value => {
+                            compositeMaterial.uniforms.uBloomDistortion.value = value;
+                        }
+                    }
+                ];
+
+                items.forEach(data => {
+                    const item = new PanelItem(data);
+                    this.ui.addPanel(item);
+                });
+            }
+
+            /**
+             * Public methods
+             */
+
+            static update = () => {
+                if (!this.ui) {
+                    return;
+                }
+
+                this.ui.update();
+            };
+        }
+
         const BlurDirectionX = new Vector2(1, 0);
         const BlurDirectionY = new Vector2(0, 1);
 
@@ -396,6 +563,7 @@
                 this.luminositySmoothing = 1;
                 this.bloomStrength = 0.3;
                 this.bloomRadius = 0.75;
+                this.bloomDistortion = 1.45;
                 this.enabled = true;
 
                 this.initRenderer();
@@ -451,6 +619,20 @@
                 }
 
                 // Bloom composite material
+                this.bloomCompositeMaterial = new BloomCompositeMaterial(this.nMips);
+                this.bloomCompositeMaterial.uniforms.tBlur1.value = this.renderTargetsVertical[0].texture;
+                this.bloomCompositeMaterial.uniforms.tBlur2.value = this.renderTargetsVertical[1].texture;
+                this.bloomCompositeMaterial.uniforms.tBlur3.value = this.renderTargetsVertical[2].texture;
+                this.bloomCompositeMaterial.uniforms.tBlur4.value = this.renderTargetsVertical[3].texture;
+                this.bloomCompositeMaterial.uniforms.tBlur5.value = this.renderTargetsVertical[4].texture;
+                this.bloomCompositeMaterial.uniforms.uBloomFactors.value = this.bloomFactors();
+
+                // Composite material
+                this.compositeMaterial = new CompositeMaterial();
+                this.compositeMaterial.uniforms.uBloomDistortion.value = this.bloomDistortion;
+            }
+
+            static bloomFactors() {
                 const bloomFactors = [1, 0.8, 0.6, 0.4, 0.2];
 
                 for (let i = 0, l = this.nMips; i < l; i++) {
@@ -458,16 +640,7 @@
                     bloomFactors[i] = this.bloomStrength * mix(factor, 1.2 - factor, this.bloomRadius);
                 }
 
-                this.bloomCompositeMaterial = new BloomCompositeMaterial(this.nMips);
-                this.bloomCompositeMaterial.uniforms.tBlur1.value = this.renderTargetsVertical[0].texture;
-                this.bloomCompositeMaterial.uniforms.tBlur2.value = this.renderTargetsVertical[1].texture;
-                this.bloomCompositeMaterial.uniforms.tBlur3.value = this.renderTargetsVertical[2].texture;
-                this.bloomCompositeMaterial.uniforms.tBlur4.value = this.renderTargetsVertical[3].texture;
-                this.bloomCompositeMaterial.uniforms.tBlur5.value = this.renderTargetsVertical[4].texture;
-                this.bloomCompositeMaterial.uniforms.uBloomFactors.value = bloomFactors;
-
-                // Composite material
-                this.compositeMaterial = new CompositeMaterial();
+                return bloomFactors;
             }
 
             /**
@@ -587,7 +760,7 @@
             }
 
             static addListeners() {
-                Stage.element.addEventListener('pointerdown', this.onPointerDown);
+                window.addEventListener('pointerdown', this.onPointerDown);
                 window.addEventListener('pointermove', this.onPointerMove);
                 window.addEventListener('pointerup', this.onPointerUp);
             }
@@ -761,6 +934,8 @@
                     WorldController.environmentLoader.ready()
                 ]);
 
+                this.initPanel();
+
                 CameraController.animateIn();
                 SceneController.animateIn();
             }
@@ -777,8 +952,6 @@
 
                 Stage.root = document.querySelector(':root');
                 Stage.rootStyle = getComputedStyle(Stage.root);
-
-                Stage.css({ cursor: 'none' });
             }
 
             static initWorld() {
@@ -797,6 +970,10 @@
                 CameraController.init(camera);
                 SceneController.init(this.view);
                 RenderManager.init(renderer, scene, camera);
+            }
+
+            static initPanel() {
+                PanelController.init(this.view);
             }
 
             static addListeners() {
@@ -822,6 +999,7 @@
                 CameraController.update();
                 SceneController.update();
                 RenderManager.update(time, delta, frame);
+                PanelController.update();
             };
         }
 

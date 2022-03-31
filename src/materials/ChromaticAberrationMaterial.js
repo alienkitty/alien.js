@@ -9,8 +9,8 @@ export class ChromaticAberrationMaterial extends RawShaderMaterial {
             glslVersion: GLSL3,
             uniforms: {
                 tMap: new Uniform(null),
-                uRedOffset: new Uniform(-0.004),
-                uGreenOffset: new Uniform(0.0015),
+                uRedOffset: new Uniform(-4),
+                uGreenOffset: new Uniform(1.5),
                 uBlueOffset: new Uniform(0),
                 uIntensity: new Uniform(1.5)
             },

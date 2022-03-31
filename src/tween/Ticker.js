@@ -9,12 +9,12 @@ if (typeof window !== 'undefined') {
     RequestFrame = window.requestAnimationFrame;
     CancelFrame = window.cancelAnimationFrame;
 } else {
-    const start = performance.now();
+    const startTime = performance.now();
     const timestep = 1000 / 60;
 
     RequestFrame = callback => {
         return setTimeout(() => {
-            callback(performance.now() - start);
+            callback(performance.now() - startTime);
         }, timestep);
     };
 

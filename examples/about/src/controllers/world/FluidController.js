@@ -59,7 +59,7 @@ export class FluidController {
 
     static addListeners() {
         Stage.events.on(Events.UPDATE, this.onUsers);
-        Stage.element.addEventListener('pointerdown', this.onPointerDown);
+        window.addEventListener('pointerdown', this.onPointerDown);
         window.addEventListener('pointermove', this.onPointerMove);
         window.addEventListener('pointerup', this.onPointerUp);
         Data.Socket.on('motion', this.onMotion);

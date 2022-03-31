@@ -13,7 +13,7 @@
 <body>
     <div id="root"></div>
     <script type="module">
-        import { ACESFilmicToneMapping, AmbientLight, BloomCompositeMaterial, BoxGeometry, BufferAttribute, BufferGeometry, Color, DirectionalLight, Events, FXAAMaterial, GLSL3, Group, HemisphereLight, LuminosityMaterial, MathUtils, Mesh, MeshStandardMaterial, NoBlending, OrthographicCamera, PlaneGeometry, RawShaderMaterial, Scene, Stage, Uniform, UnrealBloomBlurMaterial, Vector2, WebGLRenderTarget, WebGLRenderer, getFullscreenTriangle, mix, ticker } from '../build/alien.js';
+        import { ACESFilmicToneMapping, AmbientLight, BloomCompositeMaterial, BoxGeometry, BufferAttribute, BufferGeometry, Color, DirectionalLight, Events, FXAAMaterial, GLSL3, Group, HemisphereLight, LuminosityMaterial, MathUtils, Mesh, MeshStandardMaterial, NoBlending, OrthographicCamera, PanelItem, PlaneGeometry, RawShaderMaterial, Scene, Stage, UI, Uniform, UnrealBloomBlurMaterial, Vector2, WebGLRenderTarget, WebGLRenderer, getFullscreenTriangle, mix, ticker } from '../build/alien.js';
 
         class Config {
             static BREAKPOINT = 1000;
@@ -40,7 +40,7 @@
 
             uniform sampler2D tScene;
             uniform sampler2D tBloom;
-            uniform float uDistortion;
+            uniform float uBloomDistortion;
             uniform float uBoost;
             uniform float uReduction;
             uniform float uGrainAmount;
@@ -58,7 +58,7 @@
 
                 FragColor = texture(tScene, vUv);
 
-                FragColor.rgb += getRGB(tBloom, vUv, center, 0.0002 + uDistortion).rgb;
+                FragColor.rgb += getRGB(tBloom, vUv, center, 0.001 * uBloomDistortion).rgb;
 
                 // Vignetting
                 FragColor.rgb *= uBoost - center * uReduction;
@@ -75,7 +75,7 @@
                     uniforms: {
                         tScene: new Uniform(null),
                         tBloom: new Uniform(null),
-                        uDistortion: new Uniform(0.00125),
+                        uBloomDistortion: new Uniform(1.45),
                         uBoost: new Uniform(1.1),
                         uReduction: new Uniform(0.9),
                         uGrainAmount: new Uniform(0.05),
@@ -139,6 +139,142 @@
             }
         }
 
+        class PanelController {
+            static init() {
+                this.initViews();
+                this.initPanel();
+            }
+
+            static initViews() {
+                this.ui = new UI({ fps: true });
+                this.ui.animateIn();
+                Stage.add(this.ui);
+            }
+
+            static initPanel() {
+                const { luminosityMaterial, bloomCompositeMaterial, compositeMaterial } = RenderManager;
+
+                const items = [
+                    {
+                        label: 'FPS'
+                    },
+                    {
+                        type: 'divider'
+                    },
+                    {
+                        type: 'slider',
+                        label: 'Boost',
+                        min: 0,
+                        max: 2,
+                        step: 0.01,
+                        value: RenderManager.boost,
+                        callback: value => {
+                            compositeMaterial.uniforms.uBoost.value = value;
+                        }
+                    },
+                    {
+                        type: 'slider',
+                        label: 'Reduce',
+                        min: 0,
+                        max: 2,
+                        step: 0.01,
+                        value: RenderManager.reduction,
+                        callback: value => {
+                            compositeMaterial.uniforms.uReduction.value = value;
+                        }
+                    },
+                    {
+                        type: 'slider',
+                        label: 'Grain',
+                        min: 0,
+                        max: 1,
+                        step: 0.01,
+                        value: RenderManager.grainAmount,
+                        callback: value => {
+                            compositeMaterial.uniforms.uGrainAmount.value = value;
+                        }
+                    },
+                    {
+                        type: 'divider'
+                    },
+                    {
+                        type: 'slider',
+                        label: 'Thresh',
+                        min: 0,
+                        max: 1,
+                        step: 0.01,
+                        value: RenderManager.luminosityThreshold,
+                        callback: value => {
+                            luminosityMaterial.uniforms.uThreshold.value = value;
+                        }
+                    },
+                    {
+                        type: 'slider',
+                        label: 'Smooth',
+                        min: 0,
+                        max: 1,
+                        step: 0.01,
+                        value: RenderManager.luminositySmoothing,
+                        callback: value => {
+                            luminosityMaterial.uniforms.uSmoothing.value = value;
+                        }
+                    },
+                    {
+                        type: 'slider',
+                        label: 'Strength',
+                        min: 0,
+                        max: 1,
+                        step: 0.01,
+                        value: RenderManager.bloomStrength,
+                        callback: value => {
+                            RenderManager.bloomStrength = value;
+                            bloomCompositeMaterial.uniforms.uBloomFactors.value = RenderManager.bloomFactors();
+                        }
+                    },
+                    {
+                        type: 'slider',
+                        label: 'Radius',
+                        min: 0,
+                        max: 1,
+                        step: 0.01,
+                        value: RenderManager.bloomRadius,
+                        callback: value => {
+                            RenderManager.bloomRadius = value;
+                            bloomCompositeMaterial.uniforms.uBloomFactors.value = RenderManager.bloomFactors();
+                        }
+                    },
+                    {
+                        type: 'slider',
+                        label: 'Chroma',
+                        min: 0,
+                        max: 2,
+                        step: 0.01,
+                        value: RenderManager.bloomDistortion,
+                        callback: value => {
+                            compositeMaterial.uniforms.uBloomDistortion.value = value;
+                        }
+                    }
+                ];
+
+                items.forEach(data => {
+                    const item = new PanelItem(data);
+                    this.ui.addPanel(item);
+                });
+            }
+
+            /**
+             * Public methods
+             */
+
+            static update = () => {
+                if (!this.ui) {
+                    return;
+                }
+
+                this.ui.update();
+            };
+        }
+
         const BlurDirectionX = new Vector2(1, 0);
         const BlurDirectionY = new Vector2(0, 1);
 
@@ -152,6 +288,10 @@
                 this.luminositySmoothing = 1;
                 this.bloomStrength = 0.3;
                 this.bloomRadius = 0.75;
+                this.bloomDistortion = 1.45;
+                this.boost = 1.1;
+                this.reduction = 0.9;
+                this.grainAmount = 0.03;
                 this.enabled = true;
 
                 this.initRenderer();
@@ -207,6 +347,24 @@
                 }
 
                 // Bloom composite material
+                this.bloomCompositeMaterial = new BloomCompositeMaterial(this.nMips);
+                this.bloomCompositeMaterial.uniforms.tBlur1.value = this.renderTargetsVertical[0].texture;
+                this.bloomCompositeMaterial.uniforms.tBlur2.value = this.renderTargetsVertical[1].texture;
+                this.bloomCompositeMaterial.uniforms.tBlur3.value = this.renderTargetsVertical[2].texture;
+                this.bloomCompositeMaterial.uniforms.tBlur4.value = this.renderTargetsVertical[3].texture;
+                this.bloomCompositeMaterial.uniforms.tBlur5.value = this.renderTargetsVertical[4].texture;
+                this.bloomCompositeMaterial.uniforms.uBloomFactors.value = this.bloomFactors();
+
+                // Composite material
+                this.compositeMaterial = new CompositeMaterial();
+                this.compositeMaterial.uniforms.uBloomDistortion.value = this.bloomDistortion;
+                this.compositeMaterial.uniforms.uBoost.value = this.boost;
+                this.compositeMaterial.uniforms.uReduction.value = this.reduction;
+                this.compositeMaterial.uniforms.uGrainAmount.value = this.grainAmount;
+                this.compositeMaterial.uniforms.uTime = time;
+            }
+
+            static bloomFactors() {
                 const bloomFactors = [1, 0.8, 0.6, 0.4, 0.2];
 
                 for (let i = 0, l = this.nMips; i < l; i++) {
@@ -214,17 +372,7 @@
                     bloomFactors[i] = this.bloomStrength * mix(factor, 1.2 - factor, this.bloomRadius);
                 }
 
-                this.bloomCompositeMaterial = new BloomCompositeMaterial(this.nMips);
-                this.bloomCompositeMaterial.uniforms.tBlur1.value = this.renderTargetsVertical[0].texture;
-                this.bloomCompositeMaterial.uniforms.tBlur2.value = this.renderTargetsVertical[1].texture;
-                this.bloomCompositeMaterial.uniforms.tBlur3.value = this.renderTargetsVertical[2].texture;
-                this.bloomCompositeMaterial.uniforms.tBlur4.value = this.renderTargetsVertical[3].texture;
-                this.bloomCompositeMaterial.uniforms.tBlur5.value = this.renderTargetsVertical[4].texture;
-                this.bloomCompositeMaterial.uniforms.uBloomFactors.value = bloomFactors;
-
-                // Composite material
-                this.compositeMaterial = new CompositeMaterial();
-                this.compositeMaterial.uniforms.uTime = time;
+                return bloomFactors;
             }
 
             /**
@@ -424,6 +572,8 @@
 
                 this.addListeners();
                 this.onResize();
+
+                this.initPanel();
             }
 
             static initStage() {
@@ -449,6 +599,10 @@
                 RenderManager.init(renderer, scene, camera);
             }
 
+            static initPanel() {
+                PanelController.init();
+            }
+
             static addListeners() {
                 Stage.events.on(Events.RESIZE, this.onResize);
                 ticker.add(this.onUpdate);
@@ -468,6 +622,7 @@
             static onUpdate = (time, delta, frame) => {
                 WorldController.update(time, delta, frame);
                 RenderManager.update(time, delta, frame);
+                PanelController.update();
             };
         }
 

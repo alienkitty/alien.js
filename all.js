@@ -2,6 +2,7 @@
 export { Device } from './src/config/Device.js';
 export { Events } from './src/config/Events.js';
 export { Global } from './src/config/Global.js';
+export { Styles } from './src/config/Styles.js';
 
 // Loaders
 export { Assets } from './src/loaders/Assets.js';
@@ -40,6 +41,28 @@ export { WebAudio } from './src/utils/audio/WebAudio.js';
 export { WebAudioParam } from './src/utils/audio/WebAudioParam.js';
 export { Sound } from './src/utils/audio/Sound.js';
 
+// Panel
+export { Panel } from './src/utils/panel/Panel.js';
+export { PanelItem } from './src/utils/panel/PanelItem.js';
+export { List } from './src/utils/panel/List.js';
+export { ListToggle } from './src/utils/panel/ListToggle.js';
+export { ListSelect } from './src/utils/panel/ListSelect.js';
+export { Slider } from './src/utils/panel/Slider.js';
+export { ColorPicker } from './src/utils/panel/ColorPicker.js';
+export { MaterialPanelController } from './src/utils/panel/MaterialPanelController.js';
+
+// UI
+export { UI } from './src/utils/ui/UI.js';
+export { Header } from './src/utils/ui/Header.js';
+export { HeaderInfo } from './src/utils/ui/HeaderInfo.js';
+export { Line } from './src/utils/ui/Line.js';
+export { Reticle } from './src/utils/ui/Reticle.js';
+export { ReticleText } from './src/utils/ui/ReticleText.js';
+export { Tracker } from './src/utils/ui/Tracker.js';
+export { Point } from './src/utils/ui/Point.js';
+export { PointText } from './src/utils/ui/PointText.js';
+export { TargetNumber } from './src/utils/ui/TargetNumber.js';
+
 // 3D
 export * from './src/utils/world/Utils3D.js';
 export { Wobble } from './src/utils/world/Wobble.js';
@@ -49,6 +72,7 @@ export { SoftShadows } from './src/utils/world/SoftShadows.js';
 export { TextGeometry } from './src/utils/world/TextGeometry.js';
 export { WebAudio3D } from './src/utils/audio/WebAudio3D.js';
 export { Sound3D } from './src/utils/audio/Sound3D.js';
+export { Point3D } from './src/utils/ui/Point3D.js';
 
 // Physics
 export { OimoPhysics, RigidBodyConfig, RigidBodyType, SphericalJointConfig } from './src/utils/physics/OimoPhysics.js';
@@ -56,8 +80,8 @@ export { OimoPhysicsBuffer } from './src/utils/physics/OimoPhysicsBuffer.js';
 export { OimoPhysicsController } from './src/utils/physics/OimoPhysicsController.js';
 
 // Extras
-// export { Vector2 } from './src/utils/extras/Vector2.js';
-// export { Color } from './src/utils/extras/Color.js';
+// export { Color } from 'three/src/math/Color.js';
+// export { Vector2 } from 'three/src/math/Vector2.js';
 export { Smooth } from './src/utils/extras/Smooth.js';
 export { Magnetic } from './src/utils/extras/Magnetic.js';
 

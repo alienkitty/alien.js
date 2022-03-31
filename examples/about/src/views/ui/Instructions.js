@@ -29,7 +29,7 @@ export class Instructions extends Interface {
             position: 'relative',
             fontWeight: '700',
             fontSize: 10,
-            letterSpacing: '0.08em',
+            letterSpacing: 0.8,
             textAlign: 'center',
             textTransform: 'uppercase',
             opacity: 0.7

@@ -13,7 +13,7 @@
 <body>
     <div id="root"></div>
     <script type="module">
-        import { ACESFilmicToneMapping, AdditiveBlending, AmbientLight, BloomCompositeMaterial, BufferAttribute, BufferGeometry, Color, CopyMaterial, DepthTexture, Device, DirectionalLight, EnvironmentTextureLoader, Events, FXAAMaterial, GLSL3, Group, HemisphereLight, ImageBitmapLoaderThread, LuminosityMaterial, MathUtils, Mesh, MeshStandardMaterial, OrbitControls, OrthographicCamera, PerspectiveCamera, Points, RawShaderMaterial, RepeatWrapping, Scene, SceneCompositeMaterial, SphereGeometry, Stage, TextureLoader, Thread, TiltShiftMaterial, Uniform, UnrealBloomBlurMaterial, Vector2, WebGLRenderTarget, WebGLRenderer, getFullscreenTriangle, mix, ticker } from '../build/alien.js';
+        import { ACESFilmicToneMapping, AdditiveBlending, AmbientLight, BloomCompositeMaterial, BufferAttribute, BufferGeometry, Color, CopyMaterial, DepthTexture, Device, DirectionalLight, EnvironmentTextureLoader, Events, FXAAMaterial, GLSL3, Group, HemisphereLight, ImageBitmapLoaderThread, LuminosityMaterial, MathUtils, Mesh, MeshStandardMaterial, OrbitControls, OrthographicCamera, PanelItem, PerspectiveCamera, Points, RawShaderMaterial, RepeatWrapping, Scene, SceneCompositeMaterial, SphereGeometry, Stage, TextureLoader, Thread, TiltShiftMaterial, UI, Uniform, UnrealBloomBlurMaterial, Vector2, WebGLRenderTarget, WebGLRenderer, getFullscreenTriangle, mix, ticker } from '../build/alien.js';
 
         import simplex3d from '../src/shaders/modules/noise/simplex3d.glsl.js';
         import depth from '../src/shaders/modules/depth/depth.glsl.js';
@@ -212,6 +212,122 @@
             }
         }
 
+        class PanelController {
+            static init() {
+                this.initViews();
+                this.initPanel();
+            }
+
+            static initViews() {
+                this.ui = new UI({ fps: true });
+                this.ui.animateIn();
+                Stage.add(this.ui);
+            }
+
+            static initPanel() {
+                const { hBlurMaterial, vBlurMaterial, luminosityMaterial, bloomCompositeMaterial } = RenderManager;
+
+                const items = [
+                    {
+                        label: 'FPS'
+                    },
+                    {
+                        type: 'divider'
+                    },
+                    {
+                        type: 'slider',
+                        label: 'Focus',
+                        min: 0,
+                        max: 1,
+                        step: 0.01,
+                        value: hBlurMaterial.uniforms.uFocus.value,
+                        callback: value => {
+                            hBlurMaterial.uniforms.uFocus.value = value;
+                            vBlurMaterial.uniforms.uFocus.value = value;
+                        }
+                    },
+                    {
+                        type: 'slider',
+                        label: 'Blur',
+                        min: 0,
+                        max: 10,
+                        step: 0.1,
+                        value: RenderManager.blurFactor,
+                        callback: value => {
+                            hBlurMaterial.uniforms.uBluriness.value = value;
+                            vBlurMaterial.uniforms.uBluriness.value = value;
+                        }
+                    },
+                    {
+                        type: 'divider'
+                    },
+                    {
+                        type: 'slider',
+                        label: 'Thresh',
+                        min: 0,
+                        max: 1,
+                        step: 0.01,
+                        value: RenderManager.luminosityThreshold,
+                        callback: value => {
+                            luminosityMaterial.uniforms.uThreshold.value = value;
+                        }
+                    },
+                    {
+                        type: 'slider',
+                        label: 'Smooth',
+                        min: 0,
+                        max: 1,
+                        step: 0.01,
+                        value: RenderManager.luminositySmoothing,
+                        callback: value => {
+                            luminosityMaterial.uniforms.uSmoothing.value = value;
+                        }
+                    },
+                    {
+                        type: 'slider',
+                        label: 'Strength',
+                        min: 0,
+                        max: 1,
+                        step: 0.01,
+                        value: RenderManager.bloomStrength,
+                        callback: value => {
+                            RenderManager.bloomStrength = value;
+                            bloomCompositeMaterial.uniforms.uBloomFactors.value = RenderManager.bloomFactors();
+                        }
+                    },
+                    {
+                        type: 'slider',
+                        label: 'Radius',
+                        min: 0,
+                        max: 1,
+                        step: 0.01,
+                        value: RenderManager.bloomRadius,
+                        callback: value => {
+                            RenderManager.bloomRadius = value;
+                            bloomCompositeMaterial.uniforms.uBloomFactors.value = RenderManager.bloomFactors();
+                        }
+                    }
+                ];
+
+                items.forEach(data => {
+                    const item = new PanelItem(data);
+                    this.ui.addPanel(item);
+                });
+            }
+
+            /**
+             * Public methods
+             */
+
+            static update = () => {
+                if (!this.ui) {
+                    return;
+                }
+
+                this.ui.update();
+            };
+        }
+
         const BlurDirectionX = new Vector2(1, 0);
         const BlurDirectionY = new Vector2(0, 1);
 
@@ -222,11 +338,11 @@
                 this.camera = camera;
                 this.dust = dust;
 
+                this.blurFactor = 7;
                 this.luminosityThreshold = 0.1;
                 this.luminositySmoothing = 1;
                 this.bloomStrength = 0.3;
                 this.bloomRadius = 0.75;
-                this.blurFactor = 7;
                 this.enabled = true;
 
                 this.initRenderer();
@@ -285,20 +401,13 @@
                 }
 
                 // Bloom composite material
-                const bloomFactors = [1, 0.8, 0.6, 0.4, 0.2];
-
-                for (let i = 0, l = this.nMips; i < l; i++) {
-                    const factor = bloomFactors[i];
-                    bloomFactors[i] = this.bloomStrength * mix(factor, 1.2 - factor, this.bloomRadius);
-                }
-
                 this.bloomCompositeMaterial = new BloomCompositeMaterial(this.nMips);
                 this.bloomCompositeMaterial.uniforms.tBlur1.value = this.renderTargetsVertical[0].texture;
                 this.bloomCompositeMaterial.uniforms.tBlur2.value = this.renderTargetsVertical[1].texture;
                 this.bloomCompositeMaterial.uniforms.tBlur3.value = this.renderTargetsVertical[2].texture;
                 this.bloomCompositeMaterial.uniforms.tBlur4.value = this.renderTargetsVertical[3].texture;
                 this.bloomCompositeMaterial.uniforms.tBlur5.value = this.renderTargetsVertical[4].texture;
-                this.bloomCompositeMaterial.uniforms.uBloomFactors.value = bloomFactors;
+                this.bloomCompositeMaterial.uniforms.uBloomFactors.value = this.bloomFactors();
 
                 // Dust scene
                 this.dustScene = new Scene();
@@ -320,6 +429,17 @@
 
                 // Copy material
                 this.copyMaterial = new CopyMaterial();
+            }
+
+            static bloomFactors() {
+                const bloomFactors = [1, 0.8, 0.6, 0.4, 0.2];
+
+                for (let i = 0, l = this.nMips; i < l; i++) {
+                    const factor = bloomFactors[i];
+                    bloomFactors[i] = this.bloomStrength * mix(factor, 1.2 - factor, this.bloomRadius);
+                }
+
+                return bloomFactors;
             }
 
             /**
@@ -582,6 +702,8 @@
 
                 this.addListeners();
                 this.onResize();
+
+                this.initPanel();
             }
 
             static initThread() {
@@ -615,6 +737,10 @@
                 RenderManager.init(renderer, scene, camera, this.dust);
             }
 
+            static initPanel() {
+                PanelController.init();
+            }
+
             static addListeners() {
                 Stage.events.on(Events.RESIZE, this.onResize);
                 ticker.add(this.onUpdate);
@@ -634,6 +760,7 @@
             static onUpdate = (time, delta, frame) => {
                 WorldController.update(time, delta, frame);
                 RenderManager.update(time, delta, frame);
+                PanelController.update();
             };
         }
 

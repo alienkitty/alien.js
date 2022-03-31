@@ -10,7 +10,7 @@ export class Tracker extends Interface {
         this.animatedIn = false;
 
         this.initHTML();
-        this.initText();
+        this.initViews();
     }
 
     initHTML() {
@@ -38,7 +38,7 @@ export class Tracker extends Interface {
         this.add(this.reticle);
     }
 
-    initText() {
+    initViews() {
         this.text = new TrackerText();
         this.add(this.text);
     }

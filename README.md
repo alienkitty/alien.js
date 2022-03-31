@@ -238,21 +238,9 @@ npm run dev
 npm run build
 ```
 
-### With UIL
-
-Uncomment all the lines in `App.js`, and download the [uil](https://github.com/lo-th/uil) ES module:
-
-```sh
-mkdir src/lib
-curl -L https://raw.githubusercontent.com/lo-th/uil/gh-pages/build/uil.module.js --output src/lib/uil.module.js
-npm run dev
-```
-
-UIL is loaded dynamically and not part of the main bundle.
-
-[localhost:8080/](http://localhost:8080/) (without uil)  
-[localhost:8080/?ui](http://localhost:8080/?ui) (with uil)  
-[localhost:8080/?ui&orbit](http://localhost:8080/?ui&orbit) (with uil and orbit controls)  
+[localhost:8080/](http://localhost:8080/) (without ui)  
+[localhost:8080/?ui](http://localhost:8080/?ui) (with ui)  
+[localhost:8080/?ui&orbit](http://localhost:8080/?ui&orbit) (with ui and orbit controls)  
 [localhost:8080/?orbit](http://localhost:8080/?orbit) (just orbit controls)
 
 ### With examples

@@ -22,7 +22,7 @@ export class AudioController {
 
     static addListeners() {
         Stage.events.on(Events.VISIBILITY, this.onVisibility);
-        Stage.element.addEventListener('pointerdown', this.onPointerDown);
+        window.addEventListener('pointerdown', this.onPointerDown);
 
         if (this.enabled || !Global.SOUND) {
             return;
@@ -74,7 +74,7 @@ export class AudioController {
     static onPointerDown = () => {
         this.enabled = true;
 
-        Stage.element.removeEventListener('pointerdown', this.onPointerDown);
+        window.removeEventListener('pointerdown', this.onPointerDown);
 
         this.instructions.toggle(false);
 

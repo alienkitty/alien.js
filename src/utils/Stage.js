@@ -3,7 +3,7 @@
  */
 
 import { Events } from '../config/Events.js';
-import { Interface } from '../utils/Interface.js';
+import { Interface } from './Interface.js';
 
 import { ticker } from '../tween/Ticker.js';
 

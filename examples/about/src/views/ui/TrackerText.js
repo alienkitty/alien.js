@@ -18,16 +18,16 @@ export class TrackerText extends Interface {
         this.text = new Interface('.text');
         this.text.css({
             position: 'relative',
-            ...Styles.monospaceLabel,
+            ...Styles.number,
             lineHeight: 18,
-            whiteSpace: 'no-wrap'
+            whiteSpace: 'nowrap'
         });
         this.add(this.text);
 
         this.latency = new Interface('.latency');
         this.latency.css({
             position: 'relative',
-            ...Styles.monospaceSmall,
+            ...Styles.small,
             opacity: 0.7
         });
         this.add(this.latency);

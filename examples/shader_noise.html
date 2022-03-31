@@ -13,7 +13,7 @@
 <body>
     <div id="root"></div>
     <script type="module">
-        import { Events, GLSL3, Mesh, NoBlending, OrthographicCamera, RawShaderMaterial, Scene, Stage, Uniform, Vector2, WebGLRenderer, getFullscreenTriangle, ticker } from '../build/alien.js';
+        import { Events, GLSL3, Mesh, NoBlending, OrthographicCamera, PanelItem, RawShaderMaterial, Scene, Stage, UI, Uniform, Vector2, WebGLRenderer, getFullscreenTriangle, ticker } from '../build/alien.js';
 
         import simplex2d from '../src/shaders/modules/noise/simplex2d.glsl.js';
 
@@ -82,7 +82,7 @@
                 super({
                     glslVersion: GLSL3,
                     uniforms: {
-                        uMultiplier: new Uniform(4),
+                        uMultiplier: new Uniform(2),
                         uSpeed: new Uniform(0.5),
                         uTime: WorldController.time
                     },
@@ -93,6 +93,71 @@
                     depthTest: false
                 });
             }
+        }
+
+        class PanelController {
+            static init() {
+                this.initViews();
+                this.initPanel();
+            }
+
+            static initViews() {
+                this.ui = new UI({ fps: true });
+                this.ui.animateIn();
+                Stage.add(this.ui);
+            }
+
+            static initPanel() {
+                const { screen } = RenderManager;
+
+                const items = [
+                    {
+                        label: 'FPS'
+                    },
+                    {
+                        type: 'divider'
+                    },
+                    {
+                        type: 'slider',
+                        label: 'Mul',
+                        min: -5,
+                        max: 5,
+                        step: 0.05,
+                        value: screen.material.uniforms.uMultiplier.value,
+                        callback: value => {
+                            screen.material.uniforms.uMultiplier.value = value;
+                        }
+                    },
+                    {
+                        type: 'slider',
+                        label: 'Speed',
+                        min: 0,
+                        max: 1,
+                        step: 0.01,
+                        value: screen.material.uniforms.uSpeed.value,
+                        callback: value => {
+                            screen.material.uniforms.uSpeed.value = value;
+                        }
+                    }
+                ];
+
+                items.forEach(data => {
+                    const item = new PanelItem(data);
+                    this.ui.addPanel(item);
+                });
+            }
+
+            /**
+             * Public methods
+             */
+
+            static update = () => {
+                if (!this.ui) {
+                    return;
+                }
+
+                this.ui.update();
+            };
         }
 
         class RenderManager {
@@ -145,6 +210,7 @@
                 // Global geometries
                 this.screenTriangle = getFullscreenTriangle();
 
+                // Fullscreen triangle
                 this.screen = new Mesh(this.screenTriangle);
                 this.screen.frustumCulled = false;
                 this.scene.add(this.screen);
@@ -194,6 +260,8 @@
 
                 this.addListeners();
                 this.onResize();
+
+                this.initPanel();
             }
 
             static initStage() {
@@ -212,6 +280,10 @@
                 const { renderer, scene, camera, screen } = WorldController;
 
                 RenderManager.init(renderer, scene, camera, screen);
+            }
+
+            static initPanel() {
+                PanelController.init();
             }
 
             static addListeners() {
@@ -233,6 +305,7 @@
             static onUpdate = (time, delta, frame) => {
                 WorldController.update(time, delta, frame);
                 RenderManager.update(time, delta, frame);
+                PanelController.update();
             };
         }
 

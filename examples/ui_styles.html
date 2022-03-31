@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+    <title>Styles — Alien.js</title>
+
+    <link rel="preconnect" href="https://fonts.gstatic.com">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto+Mono&family=Roboto:wght@300&family=Gothic+A1">
+    <link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+    <div id="root"></div>
+    <script type="module">
+        import { Events, Interface, Stage, shuffle } from '../build/alien.js';
+
+        class Config {
+            static BREAKPOINT = 1000;
+        }
+
+        class Styles {
+            static body = {
+                fontFamily: '"Gothic A1", sans-serif',
+                fontWeight: '400',
+                fontSize: 13,
+                lineHeight: '1.6',
+                letterSpacing: 'normal'
+            };
+
+            static h1 = {
+                position: 'relative',
+                left: -1,
+                margin: '0 0 6px',
+                fontFamily: '"Roboto", sans-serif',
+                fontWeight: '300',
+                fontSize: 23,
+                lineHeight: '1.3',
+                letterSpacing: 'normal',
+                textTransform: 'uppercase'
+            };
+
+            static content = {
+                position: 'relative',
+                margin: '6px 0',
+                ...this.body
+            };
+        }
+
+        class DetailsLink extends Interface {
+            constructor(copy, link) {
+                super('.link', 'a');
+
+                this.copy = copy;
+                this.link = link;
+
+                this.initHTML();
+
+                this.addListeners();
+            }
+
+            initHTML() {
+                this.css({
+                    ...Styles.body,
+                    lineHeight: 22
+                });
+                this.attr({ href: this.link });
+
+                this.text = new Interface('.text');
+                this.text.css({
+                    position: 'relative',
+                    display: 'inline-block'
+                });
+                this.text.text(this.copy);
+                this.add(this.text);
+
+                this.line = new Interface('.line');
+                this.line.css({
+                    position: 'relative',
+                    display: 'inline-block',
+                    fontWeight: '700',
+                    verticalAlign: 'middle'
+                });
+                this.line.html('&nbsp;&nbsp;―');
+                this.add(this.line);
+            }
+
+            addListeners() {
+                this.element.addEventListener('mouseenter', this.onHover);
+                this.element.addEventListener('mouseleave', this.onHover);
+            }
+
+            /**
+             * Event handlers
+             */
+
+            onHover = ({ type }) => {
+                this.line.tween({ x: type === 'mouseenter' ? 10 : 0 }, 200, 'easeOutCubic');
+            };
+        }
+
+        class DetailsTitle extends Interface {
+            constructor(copy) {
+                super('.title', 'h1');
+
+                this.copy = copy;
+                this.letters = [];
+
+                this.initHTML();
+                this.initText();
+            }
+
+            initHTML() {
+                this.css({
+                    ...Styles.h1
+                });
+            }
+
+            initText() {
+                const split = this.copy.split('');
+
+                split.forEach(str => {
+                    if (str === ' ') {
+                        str = '&nbsp';
+                    }
+
+                    const letter = new Interface(null, 'span');
+                    letter.html(str);
+                    this.add(letter);
+
+                    this.letters.push(letter);
+                });
+            }
+
+            /**
+             * Public methods
+             */
+
+            animateIn = () => {
+                shuffle(this.letters);
+
+                const underscores = this.letters.filter(letter => letter === '_');
+
+                underscores.forEach((letter, i) => {
+                    letter.css({ opacity: 0 }).tween({ opacity: 1 }, 2000, 'easeOutCubic', i * 15);
+                });
+
+                const letters = this.letters.filter(letter => letter !== '_').slice(0, 2);
+
+                letters.forEach((letter, i) => {
+                    letter.css({ opacity: 0 }).tween({ opacity: 1 }, 2000, 'easeOutCubic', 100 + i * 15);
+                });
+            };
+        }
+
+        class Details extends Interface {
+            constructor() {
+                super('.details');
+
+                this.texts = [];
+
+                this.initHTML();
+                this.initViews();
+
+                this.addListeners();
+                this.onResize();
+            }
+
+            initHTML() {
+                this.invisible();
+                this.css({
+                    display: 'flex',
+                    width: '100%',
+                    height: '100%',
+                    alignItems: 'center',
+                    pointerEvents: 'none',
+                    opacity: 0
+                });
+
+                this.container = new Interface('.container');
+                this.container.css({
+                    position: 'relative',
+                    width: 400,
+                    margin: '10% 10% 13%'
+                });
+                this.add(this.container);
+
+                this.title = new DetailsTitle('Lorem ipsum'.replace(/[\s.]+/g, '_'));
+                this.title.css({
+                    width: 'fit-content'
+                });
+                this.container.add(this.title);
+                this.texts.push(this.title);
+
+                this.text = new Interface('.text', 'p');
+                this.text.css({
+                    width: 'fit-content',
+                    ...Styles.content
+                });
+                this.text.html('Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.');
+                this.container.add(this.text);
+                this.texts.push(this.text);
+            }
+
+            initViews() {
+                const items = [
+                    {
+                        copy: 'Lorem ipsum',
+                        link: 'https://en.wikipedia.org/wiki/Lorem_ipsum'
+                    }
+                ];
+
+                items.forEach(data => {
+                    const link = new DetailsLink(data.copy, data.link);
+                    link.css({
+                        display: 'block',
+                        width: 'fit-content'
+                    });
+                    this.container.add(link);
+                    this.texts.push(link);
+                });
+            }
+
+            addListeners() {
+                Stage.events.on(Events.RESIZE, this.onResize);
+            }
+
+            /**
+             * Event handlers
+             */
+
+            onResize = () => {
+                if (Stage.width < Config.BREAKPOINT) {
+                    this.css({ display: '' });
+
+                    this.container.css({
+                        width: '',
+                        margin: '80px 20px 40px'
+                    });
+                } else {
+                    this.css({ display: 'flex' });
+
+                    this.container.css({
+                        width: 400,
+                        margin: '10% 10% 13%'
+                    });
+                }
+            };
+
+            /**
+             * Public methods
+             */
+
+            animateIn = () => {
+                this.visible();
+                this.css({
+                    pointerEvents: 'auto',
+                    opacity: 1
+                });
+
+                const duration = 2000;
+                const stagger = 175;
+
+                this.texts.forEach((text, i) => {
+                    const delay = i === 0 ? 0 : duration;
+
+                    text.css({ opacity: 0 }).tween({ opacity: 1 }, duration, 'easeOutCubic', delay + i * stagger);
+                });
+
+                this.title.animateIn();
+            };
+        }
+
+        class UI extends Interface {
+            constructor() {
+                super('.ui');
+
+                this.initHTML();
+                this.initViews();
+
+                this.addListeners();
+            }
+
+            initHTML() {
+                this.css({
+                    left: 0,
+                    top: 0,
+                    width: '100%',
+                    height: '100%',
+                    pointerEvents: 'none'
+                });
+            }
+
+            initViews() {
+                this.details = new Details();
+                this.add(this.details);
+            }
+
+            addListeners() {
+            }
+
+            /**
+             * Event handlers
+             */
+
+            /**
+             * Public methods
+             */
+
+            animateIn = () => {
+                this.details.animateIn();
+            };
+        }
+
+        class App {
+            static async init() {
+                this.initStage();
+                this.initViews();
+
+                this.addListeners();
+            }
+
+            static initStage() {
+                Stage.init(document.querySelector('#root'));
+
+                Stage.root = document.querySelector(':root');
+                Stage.rootStyle = getComputedStyle(Stage.root);
+            }
+
+            static initViews() {
+                this.ui = new UI({ fps: true });
+                Stage.add(this.ui);
+            }
+
+            static addListeners() {
+                window.addEventListener('load', this.onLoad);
+            }
+
+            /**
+             * Event handlers
+             */
+
+            static onLoad = () => {
+                this.ui.animateIn();
+            };
+        }
+
+        App.init();
+    </script>
+</body>
+</html>

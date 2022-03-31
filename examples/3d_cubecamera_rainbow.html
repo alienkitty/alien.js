@@ -13,7 +13,7 @@
 <body>
     <div id="root"></div>
     <script type="module">
-        import { ACESFilmicToneMapping, AdditiveBlending, BackSide, BlurMaterial, Color, CubeCamera, Device, Events, FXAAMaterial, GLSL3, Group, IcosahedronGeometry, ImageBitmapLoaderThread, LinearMipmapLinearFilter, MathUtils, Mesh, MeshBasicMaterial, MultiplyOperation, NoBlending, OrthographicCamera, PerspectiveCamera, RawShaderMaterial, Scene, SphereGeometry, Sprite, SpriteMaterial, Stage, TextureLoader, Thread, Uniform, Vector2, Vector3, WebGLCubeRenderTarget, WebGLRenderTarget, WebGLRenderer, Wobble, getFullscreenTriangle, radians, ticker, tween } from '../build/alien.js';
+        import { ACESFilmicToneMapping, AdditiveBlending, BackSide, BlurMaterial, Color, CubeCamera, Device, Events, FXAAMaterial, GLSL3, Group, IcosahedronGeometry, ImageBitmapLoaderThread, LinearMipmapLinearFilter, MathUtils, Mesh, MeshBasicMaterial, MultiplyOperation, NoBlending, OrthographicCamera, PanelItem, PerspectiveCamera, RawShaderMaterial, Scene, SphereGeometry, Sprite, SpriteMaterial, Stage, TextureLoader, Thread, UI, Uniform, Vector2, Vector3, WebGLCubeRenderTarget, WebGLRenderTarget, WebGLRenderer, Wobble, getFullscreenTriangle, getKeyByValue, radians, ticker, tween } from '../build/alien.js';
 
         class Config {
             static BG_COLOR = new Color(0x030627);
@@ -63,6 +63,7 @@
             uniform float uBoost;
             uniform float uReduction;
             uniform float uDebug;
+            uniform float uLensDirt;
             uniform vec2 uResolution;
             uniform float uTime;
 
@@ -108,7 +109,7 @@
                     color = blendOverlay(color, vec4(uLightColor, 1.0), amount);
                 }
 
-                // Blend overlay vignette
+                // Blend overlay vignetting
                 float vignette = uBoost - center * uReduction;
 
                 vec4 base = color;
@@ -123,24 +124,26 @@
                 color = blendSoftLight(base, blend, 0.8);
 
                 // Dirt lens texture
-                vec2 vUv2 = vUv;
+                if (uLensDirt == 1.0) {
+                    vec2 vUv2 = vUv;
 
-                float aspectRatio2 = 1.0;
-                float aspectRatio = uResolution.x / uResolution.y;
+                    float aspectRatio2 = 1.0;
+                    float aspectRatio = uResolution.x / uResolution.y;
 
-                if (aspectRatio2 > aspectRatio) {
-                    float widthRatio = aspectRatio / aspectRatio2;
-                    vUv2.x = vUv.x * widthRatio;
-                    vUv2.x += 0.5 * (1.0 - widthRatio);
-                    vUv2.y = vUv.y;
-                } else {
-                    float heightRatio = aspectRatio2 / aspectRatio;
-                    vUv2.x = vUv.x;
-                    vUv2.y = vUv.y * heightRatio;
-                    vUv2.y += 0.5 * (1.0 - heightRatio);
+                    if (aspectRatio2 > aspectRatio) {
+                        float widthRatio = aspectRatio / aspectRatio2;
+                        vUv2.x = vUv.x * widthRatio;
+                        vUv2.x += 0.5 * (1.0 - widthRatio);
+                        vUv2.y = vUv.y;
+                    } else {
+                        float heightRatio = aspectRatio2 / aspectRatio;
+                        vUv2.x = vUv.x;
+                        vUv2.y = vUv.y * heightRatio;
+                        vUv2.y += 0.5 * (1.0 - heightRatio);
+                    }
+
+                    color.rgb += smoothstep(0.0, 0.4, bloom.rgb) * texture(tLensDirt, vUv2).rgb;
                 }
-
-                color += smoothstep(0.0, 0.4, bloom) * texture(tLensDirt, vUv2);
 
                 FragColor = color;
             }
@@ -165,6 +168,7 @@
                         uBoost: new Uniform(1.0),
                         uReduction: new Uniform(1.2),
                         uDebug: new Uniform(Config.DEBUG ? 1 : 0),
+                        uLensDirt: new Uniform(1),
                         uResolution: new Uniform(new Vector2()),
                         uTime: new Uniform(0)
                     },
@@ -397,6 +401,145 @@
             static ready = () => this.view.ready();
         }
 
+        class PanelController {
+            static init() {
+                this.initViews();
+                this.initPanel();
+            }
+
+            static initViews() {
+                this.ui = new UI({ fps: true });
+                this.ui.animateIn();
+                Stage.add(this.ui);
+            }
+
+            static initPanel() {
+                const { hBlurMaterial, vBlurMaterial, compositeMaterial } = RenderManager;
+
+                const debugOptions = {
+                    Off: 0,
+                    Debug: 1
+                };
+
+                const dirtOptions = {
+                    Off: 0,
+                    Dirt: 1
+                };
+
+                const items = [
+                    {
+                        label: 'FPS'
+                    },
+                    {
+                        type: 'divider'
+                    },
+                    {
+                        type: 'slider',
+                        label: 'Chroma',
+                        min: 0,
+                        max: 1,
+                        step: 0.01,
+                        value: compositeMaterial.uniforms.uDistortion.value,
+                        callback: value => {
+                            compositeMaterial.uniforms.uDistortion.value = value;
+                        }
+                    },
+                    {
+                        type: 'slider',
+                        label: 'Boost',
+                        min: 0,
+                        max: 2,
+                        step: 0.01,
+                        value: compositeMaterial.uniforms.uBoost.value,
+                        callback: value => {
+                            compositeMaterial.uniforms.uBoost.value = value;
+                        }
+                    },
+                    {
+                        type: 'slider',
+                        label: 'Reduce',
+                        min: 0,
+                        max: 2,
+                        step: 0.01,
+                        value: compositeMaterial.uniforms.uReduction.value,
+                        callback: value => {
+                            compositeMaterial.uniforms.uReduction.value = value;
+                        }
+                    },
+                    {
+                        type: 'list',
+                        list: debugOptions,
+                        value: getKeyByValue(debugOptions, compositeMaterial.uniforms.uDebug.value),
+                        callback: value => {
+                            compositeMaterial.uniforms.uDebug.value = debugOptions[value];
+                        }
+                    },
+                    {
+                        type: 'divider'
+                    },
+                    {
+                        type: 'slider',
+                        label: 'Blur',
+                        min: 0,
+                        max: 10,
+                        step: 0.1,
+                        value: RenderManager.blurFactor,
+                        callback: value => {
+                            hBlurMaterial.uniforms.uBluriness.value = value;
+                            vBlurMaterial.uniforms.uBluriness.value = value;
+                        }
+                    },
+                    {
+                        type: 'slider',
+                        label: 'Reduce',
+                        min: 0,
+                        max: 1,
+                        step: 0.01,
+                        value: compositeMaterial.uniforms.uMinBright.value,
+                        callback: value => {
+                            compositeMaterial.uniforms.uMinBright.value = value;
+                        }
+                    },
+                    {
+                        type: 'slider',
+                        label: 'Bright',
+                        min: 0,
+                        max: 1,
+                        step: 0.01,
+                        value: compositeMaterial.uniforms.uBlurBright.value,
+                        callback: value => {
+                            compositeMaterial.uniforms.uBlurBright.value = value;
+                        }
+                    },
+                    {
+                        type: 'list',
+                        list: dirtOptions,
+                        value: getKeyByValue(dirtOptions, compositeMaterial.uniforms.uLensDirt.value),
+                        callback: value => {
+                            compositeMaterial.uniforms.uLensDirt.value = dirtOptions[value];
+                        }
+                    }
+                ];
+
+                items.forEach(data => {
+                    const item = new PanelItem(data);
+                    this.ui.addPanel(item);
+                });
+            }
+
+            /**
+             * Public methods
+             */
+
+            static update = () => {
+                if (!this.ui) {
+                    return;
+                }
+
+                this.ui.update();
+            };
+        }
+
         const BlurDirectionX = new Vector2(1, 0);
         const BlurDirectionY = new Vector2(0, 1);
 
@@ -552,7 +695,7 @@
             }
 
             static addListeners() {
-                Stage.element.addEventListener('pointerdown', this.onPointerDown);
+                window.addEventListener('pointerdown', this.onPointerDown);
                 window.addEventListener('pointermove', this.onPointerMove);
                 window.addEventListener('pointerup', this.onPointerUp);
             }
@@ -659,7 +802,7 @@
                 this.scene.background = Config.BG_COLOR;
                 this.camera = new PerspectiveCamera(30);
                 this.camera.near = 0.5;
-                this.camera.far = 40;
+                this.camera.far = 50;
                 this.camera.position.z = 8;
                 this.camera.zoom = 0.8;
                 this.camera.lookAt(this.scene.position);
@@ -736,6 +879,7 @@
                     this.initThread();
                 }
 
+                this.initStage();
                 this.initWorld();
                 this.initViews();
                 this.initControllers();
@@ -745,6 +889,8 @@
 
                 await SceneController.ready();
 
+                this.initPanel();
+
                 CameraController.animateIn();
                 SceneController.animateIn();
             }
@@ -753,6 +899,13 @@
                 ImageBitmapLoaderThread.init();
 
                 Thread.shared();
+            }
+
+            static initStage() {
+                Stage.init(document.querySelector('#root'));
+
+                Stage.root = document.querySelector(':root');
+                Stage.rootStyle = getComputedStyle(Stage.root);
             }
 
             static initWorld() {
@@ -771,6 +924,10 @@
                 CameraController.init(camera);
                 SceneController.init(this.view);
                 RenderManager.init(renderer, scene, camera);
+            }
+
+            static initPanel() {
+                PanelController.init();
             }
 
             static addListeners() {
@@ -796,6 +953,7 @@
                 CameraController.update();
                 SceneController.update(time);
                 RenderManager.update(time, delta, frame);
+                PanelController.update();
             };
         }
 

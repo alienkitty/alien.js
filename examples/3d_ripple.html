@@ -29,8 +29,8 @@
 
             initGrid() {
                 this.grid = {
-                    fillStyle: Stage.rootStyle.getPropertyValue('--main-bg-color').trim(),
-                    strokeStyle: Stage.rootStyle.getPropertyValue('--main-color').trim()
+                    fillStyle: Stage.rootStyle.getPropertyValue('--bg-color').trim(),
+                    strokeStyle: Stage.rootStyle.getPropertyValue('--ui-color').trim()
                 };
             }
 
@@ -70,7 +70,7 @@
             };
 
             update = () => {
-                this.context.clearRect(0, 0, this.width, this.height);
+                this.context.clearRect(0, 0, this.element.width, this.element.height);
 
                 this.drawGrid();
             };
@@ -275,7 +275,7 @@
 
             static addListeners() {
                 Stage.events.on(Events.VISIBILITY, this.onVisibility);
-                Stage.element.addEventListener('pointerdown', this.onPointerDown);
+                window.addEventListener('pointerdown', this.onPointerDown);
                 window.addEventListener('pointermove', this.onPointerMove);
                 window.addEventListener('pointerup', this.onPointerUp);
             }
@@ -390,7 +390,7 @@
 
                 // 3D scene
                 this.scene = new Scene();
-                this.scene.background = new Color(Stage.rootStyle.getPropertyValue('--main-bg-color').trim());
+                this.scene.background = new Color(Stage.rootStyle.getPropertyValue('--bg-color').trim());
                 this.camera = new PerspectiveCamera(25);
                 this.camera.near = 0.1;
                 this.camera.far = 1000;
@@ -447,6 +447,7 @@
 
         class App {
             static async init() {
+                this.initStage();
                 this.initWorld();
                 this.initViews();
                 this.initControllers();
@@ -456,6 +457,13 @@
 
                 await SceneController.ready();
                 SceneController.animateIn();
+            }
+
+            static initStage() {
+                Stage.init(document.querySelector('#root'));
+
+                Stage.root = document.querySelector(':root');
+                Stage.rootStyle = getComputedStyle(Stage.root);
             }
 
             static initWorld() {

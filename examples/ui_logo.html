@@ -114,9 +114,17 @@
 
         class App {
             static async init() {
+                this.initStage();
                 this.initViews();
 
                 this.addListeners();
+            }
+
+            static initStage() {
+                Stage.init(document.querySelector('#root'));
+
+                Stage.root = document.querySelector(':root');
+                Stage.rootStyle = getComputedStyle(Stage.root);
             }
 
             static initViews() {

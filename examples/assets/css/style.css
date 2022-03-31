@@ -1,7 +1,11 @@
 :root {
-    --main-bg-color: #0e0e0e;
-    --main-color: rgba(255, 255, 255, 0.94);
-    --main-color-triplet: 255, 255, 255;
+    --bg-color: #0e0e0e;
+    --ui-color: rgba(255, 255, 255, 0.94);
+    --ui-color-triplet: 255, 255, 255;
+    --ui-invert-light-color: #000;
+    --ui-invert-light-color-triplet: 0, 0, 0;
+    --ui-invert-dark-color: rgba(255, 255, 255, 0.94);
+    --ui-invert-dark-color-triplet: 255, 255, 255;
 }
 
 html, body, #root {
@@ -18,8 +22,8 @@ body {
     font-size: 11px;
     line-height: 1.7;
     letter-spacing: 0.03em;
-    background-color: var(--main-bg-color);
-    color: var(--main-color);
+    background-color: var(--bg-color);
+    color: var(--ui-color);
 }
 
 #root, #root * {
@@ -41,10 +45,10 @@ body {
 }
 
 #root a, #root a:hover, #root a:focus {
-    color: var(--main-color);
+    color: var(--ui-color);
 }
 
 ::selection {
-    background-color: var(--main-color);
-    color: var(--main-bg-color);
+    background-color: var(--ui-color);
+    color: var(--bg-color);
 }

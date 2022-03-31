@@ -9,15 +9,19 @@
     <link rel="preconnect" href="https://fonts.gstatic.com">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto+Mono">
     <link rel="stylesheet" href="assets/css/style.css">
+
+    <style>
+        :root {
+            --bg-color: #fff;
+            --ui-color: #000;
+            --ui-color-triplet: 0, 0, 0;
+        }
+    </style>
 </head>
 <body>
     <div id="root"></div>
     <script type="module">
         import { BasicMaterial, BufferGeometryLoader, BufferGeometryLoaderThread, Color, Device, DoubleSide, Events, FXAAMaterial, Group, ImageBitmapLoaderThread, Mesh, OrbitControls, OrthographicCamera, PerspectiveCamera, Scene, ShadowTextureMaterial, Stage, TextureLoader, Thread, Uniform, Vector2, WebGLRenderTarget, WebGLRenderer, getFullscreenTriangle, ticker } from '../build/alien.js';
-
-        class Config {
-            static BG_COLOR = 0xffffff;
-        }
 
         class Sphere extends Group {
             constructor() {
@@ -229,7 +233,7 @@
 
                 // 3D scene
                 this.scene = new Scene();
-                this.scene.background = new Color(Config.BG_COLOR);
+                this.scene.background = new Color(Stage.rootStyle.getPropertyValue('--bg-color').trim());
                 this.camera = new PerspectiveCamera(30);
                 this.camera.near = 0.5;
                 this.camera.far = 40;
@@ -315,6 +319,7 @@
                     this.initThread();
                 }
 
+                this.initStage();
                 this.initWorld();
                 this.initViews();
                 this.initControllers();
@@ -331,6 +336,13 @@
                 BufferGeometryLoaderThread.init();
 
                 Thread.shared();
+            }
+
+            static initStage() {
+                Stage.init(document.querySelector('#root'));
+
+                Stage.root = document.querySelector(':root');
+                Stage.rootStyle = getComputedStyle(Stage.root);
             }
 
             static initWorld() {

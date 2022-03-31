@@ -217,10 +217,10 @@
             constructor() {
                 super('.ui');
 
-                // this.mouse = new Vector2(Mouse.tilt.x, Mouse.tilt.y);
+                // this.mouse = new Vector2();
                 this.mouse = {
-                    x: Mouse.tilt.x,
-                    y: Mouse.tilt.y
+                    x: 0,
+                    y: 0
                 };
 
                 this.lerpSpeed = 0.04;
@@ -302,16 +302,27 @@
 
         class App {
             static async init() {
-                Mouse.init();
-
+                this.initStage();
                 this.initViews();
+                this.initControllers();
 
                 this.addListeners();
+            }
+
+            static initStage() {
+                Stage.init(document.querySelector('#root'));
+
+                Stage.root = document.querySelector(':root');
+                Stage.rootStyle = getComputedStyle(Stage.root);
             }
 
             static initViews() {
                 this.ui = new UI();
                 Stage.add(this.ui);
+            }
+
+            static initControllers() {
+                Mouse.init();
             }
 
             static addListeners() {

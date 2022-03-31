@@ -13,7 +13,7 @@
 <body>
     <div id="root"></div>
     <script type="module">
-        import { ACESFilmicToneMapping, AdditiveBlending, AmbientLight, BloomCompositeMaterial, BufferAttribute, BufferGeometry, Color, CopyMaterial, DepthTexture, Device, DirectionalLight, EnvironmentTextureLoader, Events, FXAAMaterial, GLSL3, Group, HemisphereLight, ImageBitmapLoaderThread, LuminosityMaterial, MathUtils, Mesh, MeshStandardMaterial, NoBlending, OrbitControls, OrthographicCamera, PerspectiveCamera, Points, RawShaderMaterial, RepeatWrapping, Scene, SceneCompositeMaterial, SphereGeometry, Stage, TextureLoader, Thread, Uniform, UnrealBloomBlurMaterial, Vector2, WebGLRenderTarget, WebGLRenderer, getFullscreenTriangle, mix, ticker } from '../build/alien.js';
+        import { ACESFilmicToneMapping, AdditiveBlending, AmbientLight, BloomCompositeMaterial, BufferAttribute, BufferGeometry, Color, CopyMaterial, DepthTexture, Device, DirectionalLight, EnvironmentTextureLoader, Events, FXAAMaterial, GLSL3, Group, HemisphereLight, ImageBitmapLoaderThread, LuminosityMaterial, MathUtils, Mesh, MeshStandardMaterial, NoBlending, OrbitControls, OrthographicCamera, PanelItem, PerspectiveCamera, Points, RawShaderMaterial, RepeatWrapping, Scene, SceneCompositeMaterial, SphereGeometry, Stage, TextureLoader, Thread, UI, Uniform, UnrealBloomBlurMaterial, Vector2, WebGLRenderTarget, WebGLRenderer, getFullscreenTriangle, getKeyByValue, mix, ticker } from '../build/alien.js';
 
         class Config {
             static DEBUG = location.search === '?debug';
@@ -384,7 +384,7 @@
                 ormMap.repeat.set(2, 1);
 
                 const material = new MeshStandardMaterial({
-                    color: Stage.rootStyle.getPropertyValue('--main-bg-color').trim(),
+                    color: Stage.rootStyle.getPropertyValue('--bg-color').trim(),
                     roughness: 1,
                     metalness: 1,
                     map,
@@ -400,6 +400,135 @@
                 const mesh = new Mesh(geometry, material);
                 this.add(mesh);
             }
+        }
+
+        class PanelController {
+            static init() {
+                this.initViews();
+                this.initPanel();
+            }
+
+            static initViews() {
+                this.ui = new UI({ fps: true });
+                this.ui.animateIn();
+                Stage.add(this.ui);
+            }
+
+            static initPanel() {
+                const { bokehBlurMaterial1, bokehBlurMaterial2, luminosityMaterial, bloomCompositeMaterial } = RenderManager;
+
+                const debugOptions = {
+                    Off: 0,
+                    Debug: 1
+                };
+
+                const items = [
+                    {
+                        label: 'FPS'
+                    },
+                    {
+                        type: 'divider'
+                    },
+                    {
+                        type: 'slider',
+                        label: 'Power',
+                        min: 0,
+                        max: 6,
+                        step: 0.05,
+                        value: bokehBlurMaterial2.uniforms.uPower.value,
+                        callback: value => {
+                            bokehBlurMaterial1.uniforms.uPower.value = value;
+                            bokehBlurMaterial2.uniforms.uPower.value = value;
+                        }
+                    },
+                    {
+                        type: 'slider',
+                        label: 'Amount',
+                        min: 0,
+                        max: 1,
+                        step: 0.01,
+                        value: bokehBlurMaterial2.uniforms.uAmount.value,
+                        callback: value => {
+                            bokehBlurMaterial1.uniforms.uAmount.value = value;
+                            bokehBlurMaterial2.uniforms.uAmount.value = value;
+                        }
+                    },
+                    {
+                        type: 'list',
+                        list: debugOptions,
+                        value: getKeyByValue(debugOptions, bokehBlurMaterial2.uniforms.uDebug.value),
+                        callback: value => {
+                            bokehBlurMaterial2.uniforms.uDebug.value = debugOptions[value];
+                        }
+                    },
+                    {
+                        type: 'divider'
+                    },
+                    {
+                        type: 'slider',
+                        label: 'Thresh',
+                        min: 0,
+                        max: 1,
+                        step: 0.01,
+                        value: RenderManager.luminosityThreshold,
+                        callback: value => {
+                            luminosityMaterial.uniforms.uThreshold.value = value;
+                        }
+                    },
+                    {
+                        type: 'slider',
+                        label: 'Smooth',
+                        min: 0,
+                        max: 1,
+                        step: 0.01,
+                        value: RenderManager.luminositySmoothing,
+                        callback: value => {
+                            luminosityMaterial.uniforms.uSmoothing.value = value;
+                        }
+                    },
+                    {
+                        type: 'slider',
+                        label: 'Strength',
+                        min: 0,
+                        max: 1,
+                        step: 0.01,
+                        value: RenderManager.bloomStrength,
+                        callback: value => {
+                            RenderManager.bloomStrength = value;
+                            bloomCompositeMaterial.uniforms.uBloomFactors.value = RenderManager.bloomFactors();
+                        }
+                    },
+                    {
+                        type: 'slider',
+                        label: 'Radius',
+                        min: 0,
+                        max: 1,
+                        step: 0.01,
+                        value: RenderManager.bloomRadius,
+                        callback: value => {
+                            RenderManager.bloomRadius = value;
+                            bloomCompositeMaterial.uniforms.uBloomFactors.value = RenderManager.bloomFactors();
+                        }
+                    }
+                ];
+
+                items.forEach(data => {
+                    const item = new PanelItem(data);
+                    this.ui.addPanel(item);
+                });
+            }
+
+            /**
+             * Public methods
+             */
+
+            static update = () => {
+                if (!this.ui) {
+                    return;
+                }
+
+                this.ui.update();
+            };
         }
 
         const BlurDirectionX = new Vector2(1, 0);
@@ -474,20 +603,13 @@
                 }
 
                 // Bloom composite material
-                const bloomFactors = [1, 0.8, 0.6, 0.4, 0.2];
-
-                for (let i = 0, l = this.nMips; i < l; i++) {
-                    const factor = bloomFactors[i];
-                    bloomFactors[i] = this.bloomStrength * mix(factor, 1.2 - factor, this.bloomRadius);
-                }
-
                 this.bloomCompositeMaterial = new BloomCompositeMaterial(this.nMips);
                 this.bloomCompositeMaterial.uniforms.tBlur1.value = this.renderTargetsVertical[0].texture;
                 this.bloomCompositeMaterial.uniforms.tBlur2.value = this.renderTargetsVertical[1].texture;
                 this.bloomCompositeMaterial.uniforms.tBlur3.value = this.renderTargetsVertical[2].texture;
                 this.bloomCompositeMaterial.uniforms.tBlur4.value = this.renderTargetsVertical[3].texture;
                 this.bloomCompositeMaterial.uniforms.tBlur5.value = this.renderTargetsVertical[4].texture;
-                this.bloomCompositeMaterial.uniforms.uBloomFactors.value = bloomFactors;
+                this.bloomCompositeMaterial.uniforms.uBloomFactors.value = this.bloomFactors();
 
                 // Dust scene
                 this.dustScene = new Scene();
@@ -507,6 +629,17 @@
 
                 // Copy material
                 this.copyMaterial = new CopyMaterial();
+            }
+
+            static bloomFactors() {
+                const bloomFactors = [1, 0.8, 0.6, 0.4, 0.2];
+
+                for (let i = 0, l = this.nMips; i < l; i++) {
+                    const factor = bloomFactors[i];
+                    bloomFactors[i] = this.bloomStrength * mix(factor, 1.2 - factor, this.bloomRadius);
+                }
+
+                return bloomFactors;
             }
 
             /**
@@ -664,7 +797,7 @@
 
                 // 3D scene
                 this.scene = new Scene();
-                this.scene.background = new Color(Stage.rootStyle.getPropertyValue('--main-bg-color').trim());
+                this.scene.background = new Color(Stage.rootStyle.getPropertyValue('--bg-color').trim());
                 this.camera = new PerspectiveCamera(30);
                 this.camera.near = 0.5;
                 this.camera.far = 40;
@@ -762,18 +895,28 @@
                     this.initThread();
                 }
 
+                this.initStage();
                 this.initWorld();
                 this.initViews();
                 this.initControllers();
 
                 this.addListeners();
                 this.onResize();
+
+                this.initPanel();
             }
 
             static initThread() {
                 ImageBitmapLoaderThread.init();
 
                 Thread.shared();
+            }
+
+            static initStage() {
+                Stage.init(document.querySelector('#root'));
+
+                Stage.root = document.querySelector(':root');
+                Stage.rootStyle = getComputedStyle(Stage.root);
             }
 
             static initWorld() {
@@ -792,6 +935,10 @@
                 const { renderer, scene, camera } = WorldController;
 
                 RenderManager.init(renderer, scene, camera, this.dust);
+            }
+
+            static initPanel() {
+                PanelController.init();
             }
 
             static addListeners() {
@@ -813,6 +960,7 @@
             static onUpdate = (time, delta, frame) => {
                 WorldController.update(time, delta, frame);
                 RenderManager.update(time, delta, frame);
+                PanelController.update();
             };
         }
 

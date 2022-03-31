@@ -48,7 +48,7 @@
                 });
                 this.circle.css({
                     fill: 'none',
-                    stroke: 'var(--main-color)',
+                    stroke: 'var(--ui-color)',
                     strokeWidth: 1.5
                 });
                 this.circle.start = 0;
@@ -117,9 +117,17 @@
 
         class App {
             static init() {
+                this.initStage();
                 this.initView();
 
                 this.addListeners();
+            }
+
+            static initStage() {
+                Stage.init(document.querySelector('#root'));
+
+                Stage.root = document.querySelector(':root');
+                Stage.rootStyle = getComputedStyle(Stage.root);
             }
 
             static initView() {

@@ -28,6 +28,9 @@ export class OimoPhysicsController {
         restitution,
         collisionMask,
         collisionGroup,
+        gravityScale,
+        linearVelocity,
+        angularVelocity,
         autoSleep,
         kinematic,
         shapes
@@ -86,6 +89,18 @@ export class OimoPhysicsController {
             object.collisionGroup = collisionGroup;
         }
 
+        if (gravityScale !== undefined) {
+            object.gravityScale = gravityScale;
+        }
+
+        if (linearVelocity !== undefined) {
+            object.linearVelocity = linearVelocity;
+        }
+
+        if (angularVelocity !== undefined) {
+            object.angularVelocity = angularVelocity;
+        }
+
         if (autoSleep !== undefined) {
             object.autoSleep = autoSleep;
         }
@@ -105,6 +120,18 @@ export class OimoPhysicsController {
         }
 
         return object;
+    }
+
+    getObjectBody(object, index = 0) {
+        let body;
+
+        if (object.isInstancedMesh) {
+            body = this.map.get(object)[index];
+        } else {
+            body = this.map.get(object);
+        }
+
+        return body;
     }
 
     add(object, props) {

@@ -139,6 +139,9 @@ export class OimoPhysics {
         restitution,
         collisionMask,
         collisionGroup,
+        gravityScale,
+        linearVelocity,
+        angularVelocity,
         contactCallback,
         autoSleep,
         kinematic,
@@ -190,8 +193,34 @@ export class OimoPhysics {
             body.setOrientation(quaternion);
         }
 
+        if (gravityScale) {
+            body.setGravityScale(gravityScale);
+        }
+
+        if (linearVelocity) {
+            body.setLinearVelocity(linearVelocity);
+        }
+
+        if (angularVelocity) {
+            body.setAngularVelocity(angularVelocity);
+        }
+
         if (contactCallback) {
             this.setContactCallback(body, contactCallback);
+        }
+
+        return body;
+    }
+
+    getObjectBody(object, index = 0) {
+        let body;
+
+        if (object instanceof RigidBody) {
+            body = object;
+        } else if (object.isInstancedMesh) {
+            body = this.map.get(object)[index];
+        } else {
+            body = this.map.get(object);
         }
 
         return body;
@@ -310,30 +339,38 @@ export class OimoPhysics {
         return bodies;
     }
 
-    setPosition(object, position, index = 0) {
-        let body;
-
-        if (object instanceof RigidBody) {
-            body = object;
-        } else if (object.isInstancedMesh) {
-            body = this.map.get(object)[index];
-        } else {
-            body = this.map.get(object);
-        }
+    setPosition(object, position, index) {
+        const body = this.getObjectBody(object, index);
 
         body.setPosition(position);
     }
 
-    setContactCallback(object, callback, index = 0) {
-        let body;
+    setOrientation(object, position, index) {
+        const body = this.getObjectBody(object, index);
 
-        if (object instanceof RigidBody) {
-            body = object;
-        } else if (object.isInstancedMesh) {
-            body = this.map.get(object)[index];
-        } else {
-            body = this.map.get(object);
-        }
+        body.setOrientation(position);
+    }
+
+    setGravityScale(object, gravityScale, index) {
+        const body = this.getObjectBody(object, index);
+
+        body.setGravityScale(gravityScale);
+    }
+
+    setLinearVelocity(object, linearVelocity, index) {
+        const body = this.getObjectBody(object, index);
+
+        body.setLinearVelocity(linearVelocity);
+    }
+
+    setAngularVelocity(object, angularVelocity, index) {
+        const body = this.getObjectBody(object, index);
+
+        body.setAngularVelocity(angularVelocity);
+    }
+
+    setContactCallback(object, callback, index) {
+        const body = this.getObjectBody(object, index);
 
         const contactCallback = new ContactCallback();
         contactCallback.preSolve = contact => callback(body, contact);

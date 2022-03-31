@@ -60,7 +60,8 @@ export class OimoPhysicsBuffer {
         this.map = new Map();
         this.array = new Float32Array();
 
-        this.position = new Vec3();
+        this.vector3 = new Vec3();
+        this.quaternion = new Quat();
     }
 
     getShape({
@@ -215,6 +216,9 @@ export class OimoPhysicsBuffer {
         restitution,
         collisionMask,
         collisionGroup,
+        gravityScale,
+        linearVelocity,
+        angularVelocity,
         autoSleep,
         kinematic,
         shapes
@@ -269,6 +273,18 @@ export class OimoPhysicsBuffer {
             body.setOrientation(new Quat(quaternion[0], quaternion[1], quaternion[2], quaternion[3]));
         }
 
+        if (gravityScale) {
+            body.setGravityScale(gravityScale);
+        }
+
+        if (linearVelocity) {
+            body.setLinearVelocity(linearVelocity);
+        }
+
+        if (angularVelocity) {
+            body.setAngularVelocity(angularVelocity);
+        }
+
         this.world.addRigidBody(body);
 
         if (density !== 0) {
@@ -285,12 +301,38 @@ export class OimoPhysicsBuffer {
         return body;
     }
 
-    setPosition(name, position) {
+    setGravity(array) {
+        this.world.setGravity(this.vector3.init(array[0], array[1], array[2]));
+    }
+
+    setPosition(name, array) {
         const body = this.map.get(name);
 
-        this.position.init(position[0], position[1], position[2]);
+        body.setPosition(this.vector3.init(array[0], array[1], array[2]));
+    }
 
-        body.setPosition(this.position);
+    setOrientation(name, array) {
+        const body = this.map.get(name);
+
+        body.setOrientation(this.quaternion.init(array[0], array[1], array[2], array[3]));
+    }
+
+    setGravityScale(name, gravityScale) {
+        const body = this.map.get(name);
+
+        body.setGravityScale(gravityScale);
+    }
+
+    setLinearVelocity(name, array) {
+        const body = this.map.get(name);
+
+        body.setLinearVelocity(this.vector3.init(array[0], array[1], array[2]));
+    }
+
+    setAngularVelocity(name, array) {
+        const body = this.map.get(name);
+
+        body.setAngularVelocity(this.vector3.init(array[0], array[1], array[2]));
     }
 
     setContactCallback(name, callback) {

@@ -404,7 +404,7 @@ export class ColorPicker extends Interface {
                     let rad1 = rad0 % Third - PI60;
                     let b = Math.tan(rad1) * a;
                     let r = Math.sqrt(x * x + y * y);
-                    let maxR = Math.sqrt(a * a + b * b);
+                    const maxR = Math.sqrt(a * a + b * b);
 
                     if (r > maxR) {
                         const dx = Math.tan(rad1) * r;
@@ -421,7 +421,7 @@ export class ColorPicker extends Interface {
                         rad0 = (rad + PI90 + TwoPI + angle) % TwoPI;
                         rad1 = rad0 % Third - PI60;
                         b = Math.tan(rad1) * a;
-                        r = maxR = Math.sqrt(a * a + b * b);
+                        r = Math.sqrt(a * a + b * b);
                     }
 
                     const lightness = (Math.sin(rad0) * r) / this.triangleSideLength + 0.5;

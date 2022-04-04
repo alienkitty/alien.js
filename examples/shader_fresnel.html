@@ -164,6 +164,13 @@
                     },
                     {
                         type: 'color',
+                        value: mesh.material.uniforms.uBaseColor.value,
+                        callback: value => {
+                            mesh.material.uniforms.uBaseColor.value.copy(value);
+                        }
+                    },
+                    {
+                        type: 'color',
                         value: mesh.material.uniforms.uFresnelColor.value,
                         callback: value => {
                             mesh.material.uniforms.uFresnelColor.value.copy(value);

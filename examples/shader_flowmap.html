@@ -245,11 +245,47 @@
             }
 
             static initPanel() {
-                const { luminosityMaterial, bloomCompositeMaterial, compositeMaterial } = RenderManager;
+                const { flowmap, luminosityMaterial, bloomCompositeMaterial, compositeMaterial } = RenderManager;
 
                 const items = [
                     {
                         label: 'FPS'
+                    },
+                    {
+                        type: 'divider'
+                    },
+                    {
+                        type: 'slider',
+                        label: 'Falloff',
+                        min: 0,
+                        max: 1,
+                        step: 0.01,
+                        value: flowmap.material.uniforms.uFalloff.value,
+                        callback: value => {
+                            flowmap.material.uniforms.uFalloff.value = value;
+                        }
+                    },
+                    {
+                        type: 'slider',
+                        label: 'Alpha',
+                        min: 0,
+                        max: 1,
+                        step: 0.01,
+                        value: flowmap.material.uniforms.uAlpha.value,
+                        callback: value => {
+                            flowmap.material.uniforms.uAlpha.value = value;
+                        }
+                    },
+                    {
+                        type: 'slider',
+                        label: 'Dissipate',
+                        min: 0,
+                        max: 1,
+                        step: 0.01,
+                        value: flowmap.material.uniforms.uDissipation.value,
+                        callback: value => {
+                            flowmap.material.uniforms.uDissipation.value = value;
+                        }
                     },
                     {
                         type: 'divider'

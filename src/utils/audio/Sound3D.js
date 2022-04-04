@@ -4,10 +4,12 @@
 
 import { Group, Quaternion, Vector3 } from 'three';
 
+import { clamp, mapLinear } from 'three/src/math/MathUtils.js';
+
 import { WebAudio } from './WebAudio.js';
 import { WebAudioParam } from './WebAudioParam.js';
 
-import { clamp, guid, range } from '../Utils.js';
+import { guid } from '../Utils.js';
 
 export class Sound3D extends Group {
     constructor(camera, id, buffer) {
@@ -82,7 +84,7 @@ export class Sound3D extends Group {
             this.cameraWorldPosition.setFromMatrixPosition(this.camera.matrixWorld);
             this.worldPosition.setFromMatrixPosition(this.matrixWorld);
 
-            this.gain.value = 1 - range(this.cameraWorldPosition.distanceTo(this.worldPosition) - this.audioDistance, this.audioNearDistance, this.audioFarDistance, 0, 1, true);
+            this.gain.value = clamp(1 - mapLinear(this.cameraWorldPosition.distanceTo(this.worldPosition) - this.audioDistance, this.audioNearDistance, this.audioFarDistance, 0, 1), 0, 1);
 
             this.screenSpacePosition.copy(this.worldPosition).project(this.camera);
 

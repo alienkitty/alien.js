@@ -1,6 +1,6 @@
 import { Interface } from '../utils/Interface.js';
 
-import { headsTails, random } from '../utils/Utils.js';
+import { headsTails, randInt } from '../utils/Utils.js';
 
 export class AlienKitty extends Interface {
     constructor() {
@@ -45,7 +45,7 @@ export class AlienKitty extends Interface {
     }
 
     blink() {
-        this.delayedCall(random(0, 10000), headsTails(this.onBlink1, this.onBlink2));
+        this.delayedCall(randInt(0, 10000), headsTails(this.onBlink1, this.onBlink2));
     }
 
     /**

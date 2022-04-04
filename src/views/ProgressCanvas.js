@@ -4,7 +4,7 @@ import { Stage } from '../utils/Stage.js';
 
 import { ticker } from '../tween/Ticker.js';
 import { clearTween, tween } from '../tween/Tween.js';
-import { radians } from '../utils/Utils.js';
+import { degToRad } from '../utils/Utils.js';
 
 export class ProgressCanvas extends Interface {
     constructor() {
@@ -17,7 +17,7 @@ export class ProgressCanvas extends Interface {
         this.x = size / 2;
         this.y = size / 2;
         this.radius = size * 0.4;
-        this.startAngle = radians(-90);
+        this.startAngle = degToRad(-90);
         this.progress = 0;
         this.needsUpdate = false;
 
@@ -88,7 +88,7 @@ export class ProgressCanvas extends Interface {
     update = () => {
         this.context.clearRect(0, 0, this.element.width, this.element.height);
         this.context.beginPath();
-        this.context.arc(this.x, this.y, this.radius, this.startAngle, this.startAngle + radians(360 * this.progress));
+        this.context.arc(this.x, this.y, this.radius, this.startAngle, this.startAngle + degToRad(360 * this.progress));
         this.context.stroke();
     };
 

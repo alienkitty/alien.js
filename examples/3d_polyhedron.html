@@ -13,7 +13,7 @@
 <body>
     <div id="root"></div>
     <script type="module">
-        import { ACESFilmicToneMapping, AmbientLight, BloomCompositeMaterial, BufferGeometryLoader, BufferGeometryLoaderThread, Color, Device, DirectionalLight, EnvironmentTextureLoader, Events, FXAAMaterial, GLSL3, Group, HemisphereLight, ImageBitmapLoaderThread, LuminosityMaterial, MathUtils, Mesh, MeshBasicMaterial, MeshStandardMaterial, NoBlending, OrthographicCamera, PanelItem, PerspectiveCamera, PointLight, RawShaderMaterial, RepeatWrapping, Scene, SphereGeometry, Stage, TextureLoader, Thread, UI, Uniform, UnrealBloomBlurMaterial, Vector2, Vector3, WebGLRenderTarget, WebGLRenderer, getFrustum, getFullscreenTriangle, mix, radians, ticker, tween } from '../build/alien.js';
+        import { ACESFilmicToneMapping, AmbientLight, BloomCompositeMaterial, BufferGeometryLoader, BufferGeometryLoaderThread, Color, Device, DirectionalLight, EnvironmentTextureLoader, Events, FXAAMaterial, GLSL3, Group, HemisphereLight, ImageBitmapLoaderThread, LuminosityMaterial, Mesh, MeshBasicMaterial, MeshStandardMaterial, NoBlending, OrthographicCamera, PanelItem, PerspectiveCamera, PointLight, RawShaderMaterial, RepeatWrapping, Scene, SphereGeometry, Stage, TextureLoader, Thread, UI, Uniform, UnrealBloomBlurMaterial, Vector2, Vector3, WebGLRenderTarget, WebGLRenderer, degToRad, floorPowerOfTwo, getFrustum, getFullscreenTriangle, lerp, ticker, tween } from '../build/alien.js';
 
         class Config {
             static DEBUG = location.search === '?debug';
@@ -463,7 +463,7 @@
 
                 for (let i = 0, l = this.nMips; i < l; i++) {
                     const factor = bloomFactors[i];
-                    bloomFactors[i] = this.bloomStrength * mix(factor, 1.2 - factor, this.bloomRadius);
+                    bloomFactors[i] = this.bloomStrength * lerp(factor, 1.2 - factor, this.bloomRadius);
                 }
 
                 return bloomFactors;
@@ -483,8 +483,8 @@
                 this.renderTargetA.setSize(width, height);
                 this.renderTargetB.setSize(width, height);
 
-                width = MathUtils.floorPowerOfTwo(width) / 2;
-                height = MathUtils.floorPowerOfTwo(height) / 2;
+                width = floorPowerOfTwo(width) / 2;
+                height = floorPowerOfTwo(height) / 2;
 
                 this.renderTargetBright.setSize(width, height);
 
@@ -616,7 +616,7 @@
                 this.mouse.x = (clientX - this.halfWidth);
                 this.mouse.y = (clientY - this.halfHeight);
 
-                this.target.x = radians(-360) + (1 - this.mouse.x) * this.rotation * this.multiplier;
+                this.target.x = degToRad(-360) + (1 - this.mouse.x) * this.rotation * this.multiplier;
                 this.target.y = (1 - this.mouse.y) * this.rotation * this.multiplier;
             };
 
@@ -667,7 +667,7 @@
             static animateIn = () => {
                 this.enabled = true;
 
-                tween(this.target, { x: radians(-360) }, 4200, 'easeInOutQuart', () => {
+                tween(this.target, { x: degToRad(-360) }, 4200, 'easeInOutQuart', () => {
                     this.prevent = false;
                 });
             };

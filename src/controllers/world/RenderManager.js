@@ -1,4 +1,6 @@
-import { MathUtils, Mesh, OrthographicCamera, Scene, Vector2, WebGLRenderTarget } from 'three';
+import { Mesh, OrthographicCamera, Scene, Vector2, WebGLRenderTarget } from 'three';
+
+import { floorPowerOfTwo, lerp } from 'three/src/math/MathUtils.js';
 
 import { WorldController } from './WorldController.js';
 import { FXAAMaterial } from '../../materials/FXAAMaterial.js';
@@ -6,8 +8,6 @@ import { LuminosityMaterial } from '../../materials/LuminosityMaterial.js';
 import { UnrealBloomBlurMaterial } from '../../materials/UnrealBloomBlurMaterial.js';
 import { BloomCompositeMaterial } from '../../materials/BloomCompositeMaterial.js';
 import { SceneCompositeMaterial } from '../../materials/SceneCompositeMaterial.js';
-
-import { mix } from '../../utils/Utils.js';
 
 const BlurDirectionX = new Vector2(1, 0);
 const BlurDirectionY = new Vector2(0, 1);
@@ -93,7 +93,7 @@ export class RenderManager {
 
         for (let i = 0, l = this.nMips; i < l; i++) {
             const factor = bloomFactors[i];
-            bloomFactors[i] = this.bloomStrength * mix(factor, 1.2 - factor, this.bloomRadius);
+            bloomFactors[i] = this.bloomStrength * lerp(factor, 1.2 - factor, this.bloomRadius);
         }
 
         return bloomFactors;
@@ -113,8 +113,8 @@ export class RenderManager {
         this.renderTargetA.setSize(width, height);
         this.renderTargetB.setSize(width, height);
 
-        width = MathUtils.floorPowerOfTwo(width) / 2;
-        height = MathUtils.floorPowerOfTwo(height) / 2;
+        width = floorPowerOfTwo(width) / 2;
+        height = floorPowerOfTwo(height) / 2;
 
         this.renderTargetBright.setSize(width, height);
 

@@ -10,11 +10,13 @@
 import { Color } from 'three/src/math/Color.js';
 import { Vector2 } from 'three/src/math/Vector2.js';
 
+import { clamp, radToDeg } from 'three/src/math/MathUtils.js';
+
 import { Events } from '../../config/Events.js';
 import { Interface } from '../Interface.js';
 import { Stage } from '../Stage.js';
 
-import { brightness, clamp, degrees, guid } from '../Utils.js';
+import { brightness, guid } from '../Utils.js';
 
 const PI = Math.PI;
 const TwoPI = Math.PI * 2;
@@ -546,7 +548,7 @@ export class ColorPicker extends Interface {
         const invert = brightness(this.value) > 0.6; // Light colour is inverted
 
         this.colorRing.sl.css({
-            rotation: degrees(angle - PI90)
+            rotation: radToDeg(angle - PI90)
         });
 
         this.colorRing.hue.css({

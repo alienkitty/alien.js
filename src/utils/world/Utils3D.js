@@ -2,7 +2,9 @@
  * @author pschroen / https://ufo.ai/
  */
 
-import { Box2, BoxGeometry, BufferAttribute, BufferGeometry, MathUtils, Vector3 } from 'three';
+import { Box2, BoxGeometry, BufferAttribute, BufferGeometry, Vector3 } from 'three';
+
+import { degToRad, radToDeg } from 'three/src/math/MathUtils.js';
 
 export function getFullscreenTriangle() {
     const geometry = new BufferGeometry();
@@ -50,7 +52,7 @@ export function getScreenSpaceBox(mesh, camera) {
 
 export function getFrustum(camera, offsetZ = 0) {
     const distance = camera.position.z - offsetZ;
-    const fov = MathUtils.degToRad(camera.fov);
+    const fov = degToRad(camera.fov);
     const height = 2 * Math.tan(fov / 2) * distance;
     const width = height * camera.aspect;
 
@@ -59,7 +61,7 @@ export function getFrustum(camera, offsetZ = 0) {
 
 export function getFrustumFromHeight(camera, height, offsetZ = 0) {
     const distance = camera.position.z - offsetZ;
-    const fov = MathUtils.radToDeg(2 * Math.atan(height / (2 * distance)));
+    const fov = radToDeg(2 * Math.atan(height / (2 * distance)));
 
     return fov;
 }

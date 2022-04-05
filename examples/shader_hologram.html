@@ -30,6 +30,7 @@
         }
 
         import blendScreen from '../src/shaders/modules/blending/screen.glsl.js';
+        import blendSoftLight from '../src/shaders/modules/blending/soft-light.glsl.js';
 
         // Based on https://codepen.io/vakhula/pen/gObVeLR
 
@@ -58,16 +59,14 @@
             out vec4 FragColor;
 
             ${blendScreen}
+            ${blendSoftLight}
 
             void main() {
                 vec4 base = texture(tScene, vUv);
                 vec4 blend = texture(tHologram, vUv);
 
-                // Sine and cosine
-                // vec2 sc = vec2(sin(vUv.y * 2048.0), cos(vUv.y * 2048.0));
-
-                // Scanlines
-                // blend.rgb += blend.rgb * vec3(sc.x, sc.y, sc.x) * 0.95;
+                // Blend soft light with background color
+                blend = blendSoftLight(blend, vec4(vec3(0.11), 1.0), 0.75);
 
                 FragColor = blendScreen(base, blend, 1.0);
 

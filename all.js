@@ -113,6 +113,7 @@ export { ReflectorMaterial } from './src/materials/ReflectorMaterial.js';
 export { ReflectorDudvMaterial } from './src/materials/ReflectorDudvMaterial.js';
 export { ChromaticAberrationMaterial } from './src/materials/ChromaticAberrationMaterial.js';
 export { VideoGlitchMaterial } from './src/materials/VideoGlitchMaterial.js';
+export { AfterimageMaterial } from './src/materials/AfterimageMaterial.js';
 export { DepthMaskMaterial } from './src/materials/DepthMaskMaterial.js';
 export { TextMaterial } from './src/materials/TextMaterial.js';
 

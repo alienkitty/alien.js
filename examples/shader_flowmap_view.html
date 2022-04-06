@@ -13,7 +13,7 @@
 <body>
     <div id="root"></div>
     <script type="module">
-        import { ACESFilmicToneMapping, AdditiveBlending, BloomCompositeMaterial, Color, DirectionalLight, Events, FXAAMaterial, Flowmap, Fog, GLSL3, Group, HemisphereLight, LuminosityMaterial, MathUtils, Mesh, MeshStandardMaterial, NoBlending, OrthographicCamera, PanelItem, PerspectiveCamera, PlaneGeometry, RawShaderMaterial, Reflector, ReflectorMaterial, RepeatWrapping, SVGLoader, Scene, Stage, TextureLoader, UI, Uniform, UnrealBloomBlurMaterial, Vector2, Vector3, WebGLRenderTarget, WebGLRenderer, getFrustum, getFullscreenTriangle, mix, range, ticker } from '../build/alien.js';
+        import { ACESFilmicToneMapping, AdditiveBlending, BloomCompositeMaterial, Color, DirectionalLight, Events, FXAAMaterial, Flowmap, Fog, GLSL3, Group, HemisphereLight, LuminosityMaterial, Mesh, MeshStandardMaterial, NoBlending, OrthographicCamera, PanelItem, PerspectiveCamera, PlaneGeometry, RawShaderMaterial, Reflector, ReflectorMaterial, RepeatWrapping, SVGLoader, Scene, Stage, TextureLoader, UI, Uniform, UnrealBloomBlurMaterial, Vector2, Vector3, WebGLRenderTarget, WebGLRenderer, floorPowerOfTwo, getFrustum, getFullscreenTriangle, lerp, mapLinear, ticker } from '../build/alien.js';
 
         import rgbshift from '../src/shaders/modules/rgbshift/rgbshift.glsl.js';
 
@@ -198,8 +198,7 @@
 
                 // Flowmap
                 this.flowmap = new Flowmap(this.renderer, {
-                    alpha: 0.25,
-                    // dissipation: 0.3
+                    alpha: 0.25
                 });
                 this.flowmap.material.uniforms.uAspect = aspect;
             }
@@ -215,7 +214,7 @@
                 mesh.position.set(0, 1.4, -11);
                 mesh.scale.set(this.width, this.height, 1);
                 mesh.lookAt(camera.position);
-                mesh.renderOrder = 1;
+                mesh.renderOrder = 1; // Render last
 
                 this.add(mesh);
 
@@ -321,7 +320,7 @@
              */
 
             resize = (width, height) => {
-                width = MathUtils.floorPowerOfTwo(width) / 2;
+                width = floorPowerOfTwo(width) / 2;
                 height = 1024;
 
                 this.reflector.setSize(width, height);
@@ -416,8 +415,8 @@
 
                 // Get mouse value in 0 to 1 range, with Y flipped
                 this.mouse.set(
-                    range(event.x, this.screenSpacePosition.x, this.screenSpacePosition.x + triangleWidth, 0, 1),
-                    1 - range(event.y, this.screenSpacePosition.y, this.screenSpacePosition.y + triangleHeight, 0, 1)
+                    mapLinear(event.x, this.screenSpacePosition.x, this.screenSpacePosition.x + triangleWidth, 0, 1),
+                    1 - mapLinear(event.y, this.screenSpacePosition.y, this.screenSpacePosition.y + triangleHeight, 0, 1)
                 );
 
                 // Calculate velocity
@@ -484,7 +483,9 @@
         }
 
         class PanelController {
-            static init() {
+            static init(view) {
+                this.view = view;
+
                 this.initViews();
                 this.initPanel();
             }
@@ -496,11 +497,49 @@
             }
 
             static initPanel() {
+                const { triangle } = this.view;
+
                 const { luminosityMaterial, bloomCompositeMaterial, compositeMaterial } = RenderManager;
 
                 const items = [
                     {
                         label: 'FPS'
+                    },
+                    {
+                        type: 'divider'
+                    },
+                    {
+                        type: 'slider',
+                        label: 'Falloff',
+                        min: 0,
+                        max: 1,
+                        step: 0.01,
+                        value: triangle.flowmap.material.uniforms.uFalloff.value,
+                        callback: value => {
+                            triangle.flowmap.material.uniforms.uFalloff.value = value;
+                        }
+                    },
+                    {
+                        type: 'slider',
+                        label: 'Alpha',
+                        min: 0,
+                        max: 1,
+                        step: 0.01,
+                        value: triangle.flowmap.material.uniforms.uAlpha.value,
+                        callback: value => {
+                            triangle.flowmap.material.uniforms.uAlpha.value = value;
+                        }
+                    },
+                    {
+                        type: 'slider',
+                        label: 'Dissipate',
+                        min: 0,
+                        max: 1,
+                        step: 0.01,
+                        value: triangle.flowmap.material.uniforms.uDissipation.value,
+                        callback: value => {
+                            triangle.flowmap.material.uniforms.uDissipation.value = value;
+                        }
                     },
                     {
                         type: 'divider'
@@ -670,7 +709,7 @@
 
                 for (let i = 0, l = this.nMips; i < l; i++) {
                     const factor = bloomFactors[i];
-                    bloomFactors[i] = this.bloomStrength * mix(factor, 1.2 - factor, this.bloomRadius);
+                    bloomFactors[i] = this.bloomStrength * lerp(factor, 1.2 - factor, this.bloomRadius);
                 }
 
                 return bloomFactors;
@@ -690,8 +729,8 @@
                 this.renderTargetA.setSize(width, height);
                 this.renderTargetB.setSize(width, height);
 
-                width = MathUtils.floorPowerOfTwo(width) / 2;
-                height = MathUtils.floorPowerOfTwo(height) / 2;
+                width = floorPowerOfTwo(width) / 2;
+                height = floorPowerOfTwo(height) / 2;
 
                 this.renderTargetBright.setSize(width, height);
 
@@ -992,7 +1031,7 @@
             }
 
             static initPanel() {
-                PanelController.init();
+                PanelController.init(this.view);
             }
 
             static addListeners() {

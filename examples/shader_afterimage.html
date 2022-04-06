@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
 
-    <title>Polyhedron — Alien.js</title>
+    <title>Afterimage Post-processing — Alien.js</title>
 
     <link rel="preconnect" href="https://fonts.gstatic.com">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto+Mono">
@@ -13,177 +13,133 @@
 <body>
     <div id="root"></div>
     <script type="module">
-        import { ACESFilmicToneMapping, AmbientLight, BloomCompositeMaterial, BufferGeometryLoader, BufferGeometryLoaderThread, Color, Device, DirectionalLight, EnvironmentTextureLoader, Events, FXAAMaterial, GLSL3, Group, HemisphereLight, ImageBitmapLoaderThread, LuminosityMaterial, Mesh, MeshBasicMaterial, MeshStandardMaterial, NoBlending, OrthographicCamera, PanelItem, PerspectiveCamera, PointLight, RawShaderMaterial, RepeatWrapping, Scene, SphereGeometry, Stage, TextureLoader, Thread, UI, Uniform, UnrealBloomBlurMaterial, Vector2, Vector3, WebGLRenderTarget, WebGLRenderer, degToRad, floorPowerOfTwo, getFrustum, getFullscreenTriangle, lerp, ticker, tween } from '../build/alien.js';
+        import { ACESFilmicToneMapping, AfterimageMaterial, BloomCompositeMaterial, BufferAttribute, BufferGeometry, Color, DirectionalLight, Events, FXAAMaterial, Fog, Group, HemisphereLight, LinearFilter, LuminosityMaterial, Mesh, OrthographicCamera, PanelItem, PerspectiveCamera, PlaneGeometry, Reflector, ReflectorMaterial, RepeatWrapping, Scene, SceneCompositeMaterial, Stage, TextGeometry, TextGeometryLoader, TextMaterial, TextureLoader, UI, Uniform, UnrealBloomBlurMaterial, Vector2, Vector3, WebGLRenderTarget, WebGLRenderer, floorPowerOfTwo, getFullscreenTriangle, getKeyByValue, lerp, ticker } from '../build/alien.js';
 
-        class Config {
-            static DEBUG = location.search === '?debug';
-        }
-
-        import rgbshift from '../src/shaders/modules/rgbshift/rgbshift.glsl.js';
-
-        const vertexCompositeShader = /* glsl */`
-            in vec3 position;
-            in vec2 uv;
-
-            out vec2 vUv;
-
-            void main() {
-                vUv = uv;
-
-                gl_Position = vec4(position, 1.0);
-            }
-        `;
-
-        const fragmentCompositeShader = /* glsl */`
-            precision highp float;
-
-            uniform sampler2D tScene;
-            uniform sampler2D tBloom;
-            uniform float uBloomDistortion;
-
-            in vec2 vUv;
-
-            out vec4 FragColor;
-
-            ${rgbshift}
-
-            void main() {
-                FragColor = texture(tScene, vUv);
-
-                float angle = length(vUv - 0.5);
-                float amount = 0.001 * uBloomDistortion;
-
-                FragColor.rgb += getRGB(tBloom, vUv, angle, amount).rgb;
-            }
-        `;
-
-        class CompositeMaterial extends RawShaderMaterial {
-            constructor() {
-                super({
-                    glslVersion: GLSL3,
-                    uniforms: {
-                        tScene: new Uniform(null),
-                        tBloom: new Uniform(null),
-                        uBloomDistortion: new Uniform(1.45)
-                    },
-                    vertexShader: vertexCompositeShader,
-                    fragmentShader: fragmentCompositeShader,
-                    blending: NoBlending,
-                    depthWrite: false,
-                    depthTest: false
-                });
-            }
-        }
-
-        class MouseLight extends Group {
+        class Text extends Group {
             constructor() {
                 super();
 
-                this.position.z = 2;
-
-                if (Config.DEBUG) {
-                    this.initDebug();
-                }
-
-                this.initLight();
+                this.count = 0;
+                this.time = 0;
+                this.prev = 0;
+                this.fps = 0;
             }
 
-            initDebug() {
-                const geometry = new SphereGeometry(0.125, 1, 1);
+            async initMesh() {
+                const { loadTexture, camera } = WorldController;
 
-                const material = new MeshBasicMaterial({
-                    color: 0xff0000,
-                    wireframe: true
+                const map = await loadTexture('assets/fonts/Roboto-Bold.png');
+                map.minFilter = LinearFilter;
+                map.generateMipmaps = false;
+
+                const material = new TextMaterial({ map });
+                material.uniforms.uAlpha.value = 0.94;
+
+                const font = await (await fetch('assets/fonts/Roboto-Bold.json')).json();
+
+                const text = new TextGeometry({
+                    font,
+                    text: this.fps.toString(),
+                    width: 4,
+                    align: 'center',
+                    letterSpacing: -0.05,
+                    size: 2,
+                    lineHeight: 1.1
                 });
+
+                const geometry = new BufferGeometry();
 
                 const mesh = new Mesh(geometry, material);
+                mesh.frustumCulled = false;
+                mesh.position.set(0, 1.4, -11);
+                mesh.lookAt(camera.position);
+
                 this.add(mesh);
-            }
 
-            initLight() {
-                const light = new PointLight(0xffffff, 0.2);
-                this.add(light);
-            }
-        }
-
-        class Polyhedron extends Group {
-            constructor() {
-                super();
-            }
-
-            async initGeometry() {
-                const { loadBufferGeometry } = WorldController;
-
-                const geometry = await loadBufferGeometry('assets/geometry/polyhedron.json');
-
-                // 2nd set of UV's for aoMap and lightMap
-                geometry.attributes.uv2 = geometry.attributes.uv;
-
+                this.text = text;
                 this.geometry = geometry;
-            }
 
-            async initMaterial() {
-                const { anisotropy, loadTexture } = WorldController;
-
-                // Textures
-                const [map, normalMap, ormMap] = await Promise.all([
-                    // loadTexture('assets/textures/uv.jpg'),
-                    loadTexture('assets/textures/pbr/pitted_metal_basecolor.jpg'),
-                    loadTexture('assets/textures/pbr/pitted_metal_normal.jpg'),
-                    // https://occlusion-roughness-metalness.glitch.me/
-                    loadTexture('assets/textures/pbr/pitted_metal_orm.jpg')
-                ]);
-
-                map.anisotropy = anisotropy;
-                map.wrapS = RepeatWrapping;
-                map.wrapT = RepeatWrapping;
-                map.repeat.set(2, 1);
-
-                normalMap.anisotropy = anisotropy;
-                normalMap.wrapS = RepeatWrapping;
-                normalMap.wrapT = RepeatWrapping;
-                normalMap.repeat.set(2, 1);
-
-                ormMap.anisotropy = anisotropy;
-                ormMap.wrapS = RepeatWrapping;
-                ormMap.wrapT = RepeatWrapping;
-                ormMap.repeat.set(2, 1);
-
-                // const material = new MeshBasicMaterial({ map });
-                const material = new MeshStandardMaterial({
-                    color: new Color().offsetHSL(0, 0, -0.65),
-                    roughness: 0.35,
-                    metalness: 0.6,
-                    map,
-                    aoMap: ormMap,
-                    aoMapIntensity: 1,
-                    roughnessMap: ormMap,
-                    metalnessMap: ormMap,
-                    normalMap,
-                    normalScale: new Vector2(1, 1),
-                    envMapIntensity: 0.5,
-                    flatShading: true
-                });
-
-                this.material = material;
-            }
-
-            initMesh() {
-                this.mesh = new Mesh(this.geometry, this.material);
-                this.add(this.mesh);
+                this.update();
             }
 
             /**
              * Public methods
              */
 
-            ready = async () => {
-                await Promise.all([
-                    this.initGeometry(),
-                    this.initMaterial()
-                ]);
+            update = () => {
+                this.time = performance.now();
 
-                this.initMesh();
+                if (this.time - 1000 > this.prev) {
+                    this.prev = this.time;
+                    this.fps = this.count;
+                    this.count = 0;
+                }
+
+                this.count++;
+
+                this.text.update({ text: this.fps.toString() });
+
+                this.geometry.setAttribute('position', new BufferAttribute(this.text.buffers.position, 3));
+                this.geometry.setAttribute('uv', new BufferAttribute(this.text.buffers.uv, 2));
+                this.geometry.setAttribute('id', new BufferAttribute(this.text.buffers.id, 1));
+                this.geometry.setIndex(new BufferAttribute(this.text.buffers.index, 1));
+            };
+        }
+
+        class Floor extends Group {
+            constructor() {
+                super();
+
+                this.initReflector();
+            }
+
+            initReflector() {
+                this.reflector = new Reflector();
+            }
+
+            async initMesh() {
+                const { scene, loadTexture } = WorldController;
+
+                const geometry = new PlaneGeometry(100, 100);
+
+                const map = await loadTexture('assets/textures/pbr/polished_concrete_basecolor.jpg');
+                map.wrapS = RepeatWrapping;
+                map.wrapT = RepeatWrapping;
+                map.repeat.set(16, 16);
+
+                const { fog } = scene;
+
+                const material = new ReflectorMaterial({
+                    map,
+                    fog,
+                    dithering: true
+                });
+                material.uniforms.tReflect = this.reflector.renderTargetUniform;
+                material.uniforms.uMatrix = this.reflector.textureMatrixUniform;
+
+                const mesh = new Mesh(geometry, material);
+                mesh.position.y = -1.6;
+                mesh.rotation.x = -Math.PI / 2;
+                mesh.add(this.reflector);
+
+                mesh.onBeforeRender = (renderer, scene, camera) => {
+                    this.visible = false;
+                    this.reflector.update(renderer, scene, camera);
+                    this.visible = true;
+                };
+
+                this.add(mesh);
+            }
+
+            /**
+             * Public methods
+             */
+
+            resize = (width, height) => {
+                width = floorPowerOfTwo(width) / 2;
+                height = 1024;
+
+                this.reflector.setSize(width, height);
             };
         }
 
@@ -197,62 +153,38 @@
             }
 
             initViews() {
-                this.polyhedron = new Polyhedron();
-                this.add(this.polyhedron);
+                this.floor = new Floor();
+                this.add(this.floor);
 
-                this.light = new MouseLight();
-                this.add(this.light);
+                this.text = new Text();
+                this.add(this.text);
             }
-        }
-
-        class SceneController {
-            static init(view) {
-                this.view = view;
-
-                this.mouse = new Vector2();
-                this.target = new Vector2();
-                this.lightPosition = new Vector3();
-                this.lerpSpeed = 0.25;
-
-                this.addListeners();
-            }
-
-            static addListeners() {
-                window.addEventListener('pointerdown', this.onPointerDown);
-                window.addEventListener('pointermove', this.onPointerMove);
-                window.addEventListener('pointerup', this.onPointerUp);
-            }
-
-            /**
-             * Event handlers
-             */
-
-            static onPointerDown = e => {
-                this.onPointerMove(e);
-            };
-
-            static onPointerMove = ({ clientX, clientY }) => {
-                if (!this.view.visible) {
-                    return;
-                }
-
-                this.target.x = (clientX / Stage.width) * 2 - 1;
-                this.target.y = 1 - (clientY / Stage.height) * 2;
-            };
-
-            static onPointerUp = e => {
-                this.onPointerMove(e);
-            };
 
             /**
              * Public methods
              */
 
-            static resize = () => {
-                const { width, height } = WorldController.getFrustum(this.view.light.position.z);
+            resize = (width, height) => {
+                this.floor.resize(width, height);
+            };
 
-                this.halfWidth = width / 2;
-                this.halfHeight = height / 2;
+            ready = () => Promise.all([
+                this.floor.initMesh(),
+                this.text.initMesh()
+            ]);
+        }
+
+        class SceneController {
+            static init(view) {
+                this.view = view;
+            }
+
+            /**
+             * Public methods
+             */
+
+            static resize = (width, height) => {
+                this.view.resize(width, height);
             };
 
             static update = () => {
@@ -260,20 +192,14 @@
                     return;
                 }
 
-                this.mouse.lerp(this.target, this.lerpSpeed);
-
-                this.lightPosition.x = this.mouse.x * this.halfWidth;
-                this.lightPosition.y = this.mouse.y * this.halfHeight;
-                this.lightPosition.z = this.view.light.position.z;
-
-                this.view.light.position.copy(this.lightPosition);
+                this.view.text.update();
             };
 
             static animateIn = () => {
                 this.view.visible = true;
             };
 
-            static ready = () => this.view.polyhedron.ready();
+            static ready = () => this.view.ready();
         }
 
         class PanelController {
@@ -289,11 +215,38 @@
             }
 
             static initPanel() {
-                const { luminosityMaterial, bloomCompositeMaterial, compositeMaterial } = RenderManager;
+                const { afterimageMaterial, luminosityMaterial, bloomCompositeMaterial } = RenderManager;
+
+                const postOptions = {
+                    Off: false,
+                    Post: true
+                };
 
                 const items = [
                     {
                         label: 'FPS'
+                    },
+                    {
+                        type: 'divider'
+                    },
+                    {
+                        type: 'list',
+                        list: postOptions,
+                        value: getKeyByValue(postOptions, RenderManager.enabled),
+                        callback: value => {
+                            RenderManager.enabled = postOptions[value];
+                        }
+                    },
+                    {
+                        type: 'slider',
+                        label: 'Damping',
+                        min: 0,
+                        max: 1,
+                        step: 0.01,
+                        value: RenderManager.afterimageDamping,
+                        callback: value => {
+                            afterimageMaterial.uniforms.uDamping.value = value;
+                        }
                     },
                     {
                         type: 'divider'
@@ -343,17 +296,6 @@
                             RenderManager.bloomRadius = value;
                             bloomCompositeMaterial.uniforms.uBloomFactors.value = RenderManager.bloomFactors();
                         }
-                    },
-                    {
-                        type: 'slider',
-                        label: 'Chroma',
-                        min: 0,
-                        max: 2,
-                        step: 0.01,
-                        value: RenderManager.bloomDistortion,
-                        callback: value => {
-                            compositeMaterial.uniforms.uBloomDistortion.value = value;
-                        }
                     }
                 ];
 
@@ -385,11 +327,11 @@
                 this.scene = scene;
                 this.camera = camera;
 
+                this.afterimageDamping = 0.96;
                 this.luminosityThreshold = 0.1;
                 this.luminositySmoothing = 1;
                 this.bloomStrength = 0.3;
                 this.bloomRadius = 0.75;
-                this.bloomDistortion = 1.45;
                 this.enabled = true;
 
                 this.initRenderer();
@@ -412,6 +354,8 @@
                 });
 
                 this.renderTargetB = this.renderTargetA.clone();
+                this.renderTargetRead = this.renderTargetA.clone();
+                this.renderTargetWrite = this.renderTargetA.clone();
 
                 this.renderTargetsHorizontal = [];
                 this.renderTargetsVertical = [];
@@ -429,6 +373,10 @@
                 // FXAA material
                 this.fxaaMaterial = new FXAAMaterial();
                 this.fxaaMaterial.uniforms.uResolution = resolution;
+
+                // Afterimage material
+                this.afterimageMaterial = new AfterimageMaterial();
+                this.afterimageMaterial.uniforms.uDamping.value = this.afterimageDamping;
 
                 // Luminosity high pass material
                 this.luminosityMaterial = new LuminosityMaterial();
@@ -454,8 +402,7 @@
                 this.bloomCompositeMaterial.uniforms.uBloomFactors.value = this.bloomFactors();
 
                 // Composite material
-                this.compositeMaterial = new CompositeMaterial();
-                this.compositeMaterial.uniforms.uBloomDistortion.value = this.bloomDistortion;
+                this.compositeMaterial = new SceneCompositeMaterial();
             }
 
             static bloomFactors() {
@@ -482,6 +429,8 @@
 
                 this.renderTargetA.setSize(width, height);
                 this.renderTargetB.setSize(width, height);
+                this.renderTargetRead.setSize(width, height);
+                this.renderTargetWrite.setSize(width, height);
 
                 width = floorPowerOfTwo(width) / 2;
                 height = floorPowerOfTwo(height) / 2;
@@ -529,8 +478,15 @@
                 renderer.setRenderTarget(renderTargetB);
                 renderer.render(screenScene, screenCamera);
 
+                // Afterimage pass
+                this.afterimageMaterial.uniforms.tOld.value = this.renderTargetRead.texture;
+                this.afterimageMaterial.uniforms.tNew.value = renderTargetB.texture;
+                this.screen.material = this.afterimageMaterial;
+                renderer.setRenderTarget(this.renderTargetWrite);
+                renderer.render(screenScene, screenCamera);
+
                 // Extract bright areas
-                this.luminosityMaterial.uniforms.tMap.value = renderTargetB.texture;
+                this.luminosityMaterial.uniforms.tMap.value = this.renderTargetWrite.texture;
                 this.screen.material = this.luminosityMaterial;
                 renderer.setRenderTarget(renderTargetBright);
                 renderer.render(screenScene, screenCamera);
@@ -560,11 +516,16 @@
                 renderer.render(screenScene, screenCamera);
 
                 // Composite pass (render to screen)
-                this.compositeMaterial.uniforms.tScene.value = renderTargetB.texture;
+                this.compositeMaterial.uniforms.tScene.value = this.renderTargetWrite.texture;
                 this.compositeMaterial.uniforms.tBloom.value = renderTargetsHorizontal[0].texture;
                 this.screen.material = this.compositeMaterial;
                 renderer.setRenderTarget(null);
                 renderer.render(screenScene, screenCamera);
+
+                // Swap render targets
+                const temp = this.renderTargetRead;
+                this.renderTargetRead = this.renderTargetWrite;
+                this.renderTargetWrite = temp;
             };
         }
 
@@ -573,23 +534,14 @@
                 this.camera = camera;
 
                 this.mouse = new Vector2();
-                this.target = new Vector2();
+                this.lookAt = new Vector3(0, 0, -2);
+                this.origin = new Vector3();
+                this.target = new Vector3();
+                this.targetXY = new Vector2(5, 1);
+                this.origin.copy(this.camera.position);
 
-                // Motion control
-                this.group = new Group();
-                this.innerGroup = new Group();
-                this.group.add(this.innerGroup);
-                this.group.matrixAutoUpdate = false;
-                this.innerGroup.matrixAutoUpdate = false;
-
-                // Start position
-                this.innerGroup.position.copy(this.camera.position);
-
-                this.rotation = 0.0002;
-                this.lerpSpeed = 0.05;
-                this.multiplier = 1;
+                this.lerpSpeed = 0.02;
                 this.enabled = false;
-                this.prevent = true;
 
                 this.addListeners();
             }
@@ -609,15 +561,12 @@
             };
 
             static onPointerMove = ({ clientX, clientY }) => {
-                if (this.prevent) {
+                if (!this.enabled) {
                     return;
                 }
 
-                this.mouse.x = (clientX - this.halfWidth);
-                this.mouse.y = (clientY - this.halfHeight);
-
-                this.target.x = degToRad(-360) + (1 - this.mouse.x) * this.rotation * this.multiplier;
-                this.target.y = (1 - this.mouse.y) * this.rotation * this.multiplier;
+                this.mouse.x = (clientX / Stage.width) * 2 - 1;
+                this.mouse.y = 1 - (clientY / Stage.height) * 2;
             };
 
             static onPointerUp = e => {
@@ -631,19 +580,6 @@
             static resize = (width, height) => {
                 this.camera.aspect = width / height;
                 this.camera.updateProjectionMatrix();
-
-                this.halfWidth = width / 2;
-                this.halfHeight = height / 2;
-
-                if (width < height) {
-                    this.camera.position.z = 10;
-                    this.multiplier = 2;
-                } else {
-                    this.camera.position.z = 8;
-                    this.multiplier = 1;
-                }
-
-                this.innerGroup.position.z = this.camera.position.z;
             };
 
             static update = () => {
@@ -651,25 +587,16 @@
                     return;
                 }
 
-                this.group.rotation.x += (this.target.y - this.group.rotation.x) * this.lerpSpeed;
-                this.group.rotation.y += (this.target.x - this.group.rotation.y) * this.lerpSpeed;
+                this.target.x = this.origin.x + this.targetXY.x * this.mouse.x;
+                this.target.y = this.origin.y + this.targetXY.y * this.mouse.y;
+                this.target.z = this.origin.z;
 
-                this.updateCamera();
-            };
-
-            static updateCamera = () => {
-                this.group.updateMatrix();
-                this.innerGroup.updateMatrix();
-                this.group.updateMatrixWorld();
-                this.innerGroup.matrixWorld.decompose(this.camera.position, this.camera.quaternion, this.camera.scale);
+                this.camera.position.lerp(this.target, this.lerpSpeed);
+                this.camera.lookAt(this.lookAt);
             };
 
             static animateIn = () => {
                 this.enabled = true;
-
-                tween(this.target, { x: degToRad(-360) }, 4200, 'easeInOutQuart', () => {
-                    this.prevent = false;
-                });
             };
         }
 
@@ -678,7 +605,6 @@
                 this.initWorld();
                 this.initLights();
                 this.initLoaders();
-                this.initEnvironment();
 
                 this.addListeners();
             }
@@ -697,10 +623,11 @@
                 // 3D scene
                 this.scene = new Scene();
                 this.scene.background = new Color(Stage.rootStyle.getPropertyValue('--bg-color').trim());
+                this.scene.fog = new Fog(Stage.rootStyle.getPropertyValue('--bg-color').trim(), 1, 100);
                 this.camera = new PerspectiveCamera(30);
                 this.camera.near = 0.5;
                 this.camera.far = 40;
-                this.camera.position.z = 8;
+                this.camera.position.z = 10;
                 this.camera.lookAt(this.scene.position);
 
                 // Global geometries
@@ -711,29 +638,19 @@
                 this.aspect = new Uniform(1);
                 this.time = new Uniform(0);
                 this.frame = new Uniform(0);
-
-                // Global settings
-                this.anisotropy = this.renderer.capabilities.getMaxAnisotropy();
             }
 
             static initLights() {
-                this.scene.add(new AmbientLight(0xffffff, 0.2));
-
                 this.scene.add(new HemisphereLight(0x606060, 0x404040));
 
-                const light = new DirectionalLight(0xffffff, 0.4);
-                light.position.set(0.6, 0.5, 1);
+                const light = new DirectionalLight(0xffffff);
+                light.position.set(1, 1, 1);
                 this.scene.add(light);
             }
 
             static initLoaders() {
                 this.textureLoader = new TextureLoader();
-                this.environmentLoader = new EnvironmentTextureLoader(this.renderer);
-                this.bufferGeometryLoader = new BufferGeometryLoader();
-            }
-
-            static async initEnvironment() {
-                this.scene.environment = await this.loadEnvironmentTexture('assets/textures/env.jpg');
+                this.textGeometryLoader = new TextGeometryLoader();
             }
 
             static addListeners() {
@@ -769,21 +686,19 @@
 
             static loadTexture = path => this.textureLoader.loadAsync(path);
 
-            static loadEnvironmentTexture = path => this.environmentLoader.loadAsync(path);
+            static getTextGeometry = (path, options = {}, callback) => {
+                this.textGeometryLoader.setOptions(options);
+                this.textGeometryLoader.load(path, callback);
+            };
 
-            static getBufferGeometry = (path, callback) => this.bufferGeometryLoader.load(path, callback);
-
-            static loadBufferGeometry = path => this.bufferGeometryLoader.loadAsync(path);
-
-            static getFrustum = offsetZ => getFrustum(this.camera, offsetZ);
+            static loadTextGeometry = (path, options = {}) => {
+                this.textGeometryLoader.setOptions(options);
+                return this.textGeometryLoader.loadAsync(path);
+            };
         }
 
         class App {
             static async init() {
-                if (!Device.agent.includes('firefox')) {
-                    this.initThread();
-                }
-
                 this.initStage();
                 this.initWorld();
                 this.initViews();
@@ -792,23 +707,12 @@
                 this.addListeners();
                 this.onResize();
 
-                await Promise.all([
-                    SceneController.ready(),
-                    WorldController.textureLoader.ready(),
-                    WorldController.environmentLoader.ready()
-                ]);
+                await SceneController.ready();
 
                 this.initPanel();
 
                 CameraController.animateIn();
                 SceneController.animateIn();
-            }
-
-            static initThread() {
-                ImageBitmapLoaderThread.init();
-                BufferGeometryLoaderThread.init();
-
-                Thread.shared();
             }
 
             static initStage() {
@@ -854,7 +758,7 @@
 
                 WorldController.resize(width, height, dpr);
                 CameraController.resize(width, height);
-                SceneController.resize();
+                SceneController.resize(width, height);
                 RenderManager.resize(width, height, dpr);
             };
 

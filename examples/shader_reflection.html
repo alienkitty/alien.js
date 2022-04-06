@@ -13,7 +13,7 @@
 <body>
     <div id="root"></div>
     <script type="module">
-        import { ACESFilmicToneMapping, BloomCompositeMaterial, Color, DirectionalLight, Events, FXAAMaterial, Fog, GLSL3, Group, HemisphereLight, LuminosityMaterial, MathUtils, Mesh, MeshStandardMaterial, NoBlending, OrthographicCamera, PanelItem, PerspectiveCamera, PlaneGeometry, RawShaderMaterial, Reflector, ReflectorMaterial, RepeatWrapping, SVGLoader, Scene, Stage, TextureLoader, UI, Uniform, UnrealBloomBlurMaterial, Vector2, Vector3, WebGLRenderTarget, WebGLRenderer, getFullscreenTriangle, mix, ticker } from '../build/alien.js';
+        import { ACESFilmicToneMapping, BloomCompositeMaterial, Color, DirectionalLight, Events, FXAAMaterial, Fog, GLSL3, Group, HemisphereLight, LuminosityMaterial, Mesh, MeshStandardMaterial, NoBlending, OrthographicCamera, PanelItem, PerspectiveCamera, PlaneGeometry, RawShaderMaterial, Reflector, ReflectorMaterial, RepeatWrapping, SVGLoader, Scene, Stage, TextureLoader, UI, Uniform, UnrealBloomBlurMaterial, Vector2, Vector3, WebGLRenderTarget, WebGLRenderer, floorPowerOfTwo, getFullscreenTriangle, lerp, ticker } from '../build/alien.js';
 
         import rgbshift from '../src/shaders/modules/rgbshift/rgbshift.glsl.js';
 
@@ -161,7 +161,7 @@
              */
 
             resize = (width, height) => {
-                width = MathUtils.floorPowerOfTwo(width) / 2;
+                width = floorPowerOfTwo(width) / 2;
                 height = 1024;
 
                 this.reflector.setSize(width, height);
@@ -409,7 +409,7 @@
 
                 for (let i = 0, l = this.nMips; i < l; i++) {
                     const factor = bloomFactors[i];
-                    bloomFactors[i] = this.bloomStrength * mix(factor, 1.2 - factor, this.bloomRadius);
+                    bloomFactors[i] = this.bloomStrength * lerp(factor, 1.2 - factor, this.bloomRadius);
                 }
 
                 return bloomFactors;
@@ -429,8 +429,8 @@
                 this.renderTargetA.setSize(width, height);
                 this.renderTargetB.setSize(width, height);
 
-                width = MathUtils.floorPowerOfTwo(width) / 2;
-                height = MathUtils.floorPowerOfTwo(height) / 2;
+                width = floorPowerOfTwo(width) / 2;
+                height = floorPowerOfTwo(height) / 2;
 
                 this.renderTargetBright.setSize(width, height);
 

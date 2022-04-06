@@ -1,5 +1,5 @@
-// 2022-03-31 11:50am
-import{Device,basename,Assets,tween,Global,Stage,Events,Config,clamp as clamp$1,Interface,Data,shuffle,clearTween,ticker,wait}from"./loader.js";
+// 2022-04-06 10:40am
+import{Device,Assets,tween,Global,Stage,Events,Config,clamp as clamp$1,Interface,Data,clearTween,ticker,wait}from"./loader.js";function shuffle(e){return e.sort((()=>Math.random()-.5))}function basename(e,t){const n=e.split("/").pop().split("?")[0];return t?n:n.split(".")[0]}
 /**
  * @license
  * Copyright 2010-2022 Three.js Authors

@@ -13,7 +13,7 @@
 <body>
     <div id="root"></div>
     <script type="module">
-        import { ACESFilmicToneMapping, AfterimageMaterial, BloomCompositeMaterial, BufferAttribute, BufferGeometry, Color, CopyMaterial, DirectionalLight, Events, FXAAMaterial, Fog, Group, HemisphereLight, LinearFilter, LuminosityMaterial, Mesh, OrthographicCamera, PanelItem, PerspectiveCamera, PlaneGeometry, Reflector, ReflectorMaterial, RepeatWrapping, Scene, SceneCompositeMaterial, Stage, TextGeometry, TextGeometryLoader, TextMaterial, TextureLoader, UI, Uniform, UnrealBloomBlurMaterial, Vector2, Vector3, WebGLRenderTarget, WebGLRenderer, floorPowerOfTwo, getFullscreenTriangle, getKeyByValue, lerp, ticker } from '../build/alien.js';
+        import { ACESFilmicToneMapping, AfterimageMaterial, BloomCompositeMaterial, BufferAttribute, BufferGeometry, Color, DirectionalLight, Events, FXAAMaterial, Fog, Group, HemisphereLight, LinearFilter, LuminosityMaterial, Mesh, OrthographicCamera, PanelItem, PerspectiveCamera, PlaneGeometry, Reflector, ReflectorMaterial, RepeatWrapping, Scene, SceneCompositeMaterial, Stage, TextGeometry, TextGeometryLoader, TextMaterial, TextureLoader, UI, Uniform, UnrealBloomBlurMaterial, Vector2, Vector3, WebGLRenderTarget, WebGLRenderer, floorPowerOfTwo, getFullscreenTriangle, getKeyByValue, lerp, ticker } from '../build/alien.js';
 
         class Text extends Group {
             constructor() {
@@ -215,16 +215,38 @@
             }
 
             static initPanel() {
-                const { luminosityMaterial, bloomCompositeMaterial, afterimageMaterial } = RenderManager;
+                const { afterimageMaterial, luminosityMaterial, bloomCompositeMaterial } = RenderManager;
 
                 const postOptions = {
                     Off: false,
-                    After: true
+                    Post: true
                 };
 
                 const items = [
                     {
                         label: 'FPS'
+                    },
+                    {
+                        type: 'divider'
+                    },
+                    {
+                        type: 'list',
+                        list: postOptions,
+                        value: getKeyByValue(postOptions, RenderManager.enabled),
+                        callback: value => {
+                            RenderManager.enabled = postOptions[value];
+                        }
+                    },
+                    {
+                        type: 'slider',
+                        label: 'Damping',
+                        min: 0,
+                        max: 1,
+                        step: 0.01,
+                        value: RenderManager.afterimageDamping,
+                        callback: value => {
+                            afterimageMaterial.uniforms.uDamping.value = value;
+                        }
                     },
                     {
                         type: 'divider'
@@ -274,28 +296,6 @@
                             RenderManager.bloomRadius = value;
                             bloomCompositeMaterial.uniforms.uBloomFactors.value = RenderManager.bloomFactors();
                         }
-                    },
-                    {
-                        type: 'divider'
-                    },
-                    {
-                        type: 'list',
-                        list: postOptions,
-                        value: getKeyByValue(postOptions, RenderManager.enabled),
-                        callback: value => {
-                            RenderManager.enabled = postOptions[value];
-                        }
-                    },
-                    {
-                        type: 'slider',
-                        label: 'Damping',
-                        min: 0,
-                        max: 1,
-                        step: 0.01,
-                        value: RenderManager.afterimageDamping,
-                        callback: value => {
-                            afterimageMaterial.uniforms.uDamping.value = value;
-                        }
                     }
                 ];
 
@@ -327,11 +327,11 @@
                 this.scene = scene;
                 this.camera = camera;
 
+                this.afterimageDamping = 0.96;
                 this.luminosityThreshold = 0.1;
                 this.luminositySmoothing = 1;
                 this.bloomStrength = 0.3;
                 this.bloomRadius = 0.75;
-                this.afterimageDamping = 0.96;
                 this.enabled = true;
 
                 this.initRenderer();
@@ -374,6 +374,10 @@
                 this.fxaaMaterial = new FXAAMaterial();
                 this.fxaaMaterial.uniforms.uResolution = resolution;
 
+                // Afterimage material
+                this.afterimageMaterial = new AfterimageMaterial();
+                this.afterimageMaterial.uniforms.uDamping.value = this.afterimageDamping;
+
                 // Luminosity high pass material
                 this.luminosityMaterial = new LuminosityMaterial();
                 this.luminosityMaterial.uniforms.uThreshold.value = this.luminosityThreshold;
@@ -399,13 +403,6 @@
 
                 // Composite material
                 this.compositeMaterial = new SceneCompositeMaterial();
-
-                // Afterimage material
-                this.afterimageMaterial = new AfterimageMaterial();
-                this.afterimageMaterial.uniforms.uDamping.value = this.afterimageDamping;
-
-                // Copy material
-                this.copyMaterial = new CopyMaterial();
             }
 
             static bloomFactors() {
@@ -481,8 +478,15 @@
                 renderer.setRenderTarget(renderTargetB);
                 renderer.render(screenScene, screenCamera);
 
+                // Afterimage pass
+                this.afterimageMaterial.uniforms.tOld.value = this.renderTargetRead.texture;
+                this.afterimageMaterial.uniforms.tNew.value = renderTargetB.texture;
+                this.screen.material = this.afterimageMaterial;
+                renderer.setRenderTarget(this.renderTargetWrite);
+                renderer.render(screenScene, screenCamera);
+
                 // Extract bright areas
-                this.luminosityMaterial.uniforms.tMap.value = renderTargetB.texture;
+                this.luminosityMaterial.uniforms.tMap.value = this.renderTargetWrite.texture;
                 this.screen.material = this.luminosityMaterial;
                 renderer.setRenderTarget(renderTargetBright);
                 renderer.render(screenScene, screenCamera);
@@ -511,23 +515,10 @@
                 renderer.setRenderTarget(renderTargetsHorizontal[0]);
                 renderer.render(screenScene, screenCamera);
 
-                // Composite pass
-                this.compositeMaterial.uniforms.tScene.value = renderTargetB.texture;
+                // Composite pass (render to screen)
+                this.compositeMaterial.uniforms.tScene.value = this.renderTargetWrite.texture;
                 this.compositeMaterial.uniforms.tBloom.value = renderTargetsHorizontal[0].texture;
                 this.screen.material = this.compositeMaterial;
-                renderer.setRenderTarget(renderTargetA);
-                renderer.render(screenScene, screenCamera);
-
-                // Afterimage pass
-                this.afterimageMaterial.uniforms.tOld.value = this.renderTargetRead.texture;
-                this.afterimageMaterial.uniforms.tNew.value = renderTargetA.texture;
-                this.screen.material = this.afterimageMaterial;
-                renderer.setRenderTarget(this.renderTargetWrite);
-                renderer.render(screenScene, screenCamera);
-
-                // Copy pass (render to screen)
-                this.copyMaterial.uniforms.tMap.value = this.renderTargetWrite.texture;
-                this.screen.material = this.copyMaterial;
                 renderer.setRenderTarget(null);
                 renderer.render(screenScene, screenCamera);
 

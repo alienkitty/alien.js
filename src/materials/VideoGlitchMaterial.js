@@ -9,6 +9,9 @@ export class VideoGlitchMaterial extends RawShaderMaterial {
             glslVersion: GLSL3,
             uniforms: {
                 tMap: new Uniform(null),
+                uDistortion: new Uniform(1.43),
+                uDistortion2: new Uniform(0.15),
+                uSpeed: new Uniform(1),
                 uTime: new Uniform(0)
             },
             vertexShader,

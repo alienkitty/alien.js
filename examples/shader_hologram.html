@@ -505,7 +505,7 @@
             static initPanel() {
                 const { pittedMetalSphere, polishedConcreteSphere } = this.view;
 
-                const { hBlurMaterial, vBlurMaterial, luminosityMaterial, bloomCompositeMaterial, chromaticAberrationMaterial } = RenderManager;
+                const { hBlurMaterial, vBlurMaterial, videoGlitchMaterial, luminosityMaterial, bloomCompositeMaterial, chromaticAberrationMaterial } = RenderManager;
 
                 const items = [
                     {
@@ -536,6 +536,42 @@
                         callback: value => {
                             hBlurMaterial.uniforms.uBluriness.value = value;
                             vBlurMaterial.uniforms.uBluriness.value = value;
+                        }
+                    },
+                    {
+                        type: 'divider'
+                    },
+                    {
+                        type: 'slider',
+                        label: 'Distort',
+                        min: 0,
+                        max: 2,
+                        step: 0.01,
+                        value: RenderManager.glitchDistortion,
+                        callback: value => {
+                            videoGlitchMaterial.uniforms.uDistortion.value = value;
+                        }
+                    },
+                    {
+                        type: 'slider',
+                        label: 'Distort2',
+                        min: 0,
+                        max: 1,
+                        step: 0.01,
+                        value: RenderManager.glitchDistortion2,
+                        callback: value => {
+                            videoGlitchMaterial.uniforms.uDistortion2.value = value;
+                        }
+                    },
+                    {
+                        type: 'slider',
+                        label: 'Speed',
+                        min: 0,
+                        max: 2,
+                        step: 0.01,
+                        value: RenderManager.glitchSpeed,
+                        callback: value => {
+                            videoGlitchMaterial.uniforms.uSpeed.value = value;
                         }
                     },
                     {
@@ -664,6 +700,9 @@
                 this.scene = scene;
                 this.camera = camera;
 
+                this.glitchDistortion = 0.15;
+                this.glitchDistortion2 = 0.04;
+                this.glitchSpeed = 0.01;
                 this.blurResolutionScale = 0.25;
                 this.blurFactor = 3.5;
                 this.luminosityThreshold = 0.1;
@@ -724,6 +763,9 @@
 
                 // Video glitch material
                 this.videoGlitchMaterial = new VideoGlitchMaterial();
+                this.videoGlitchMaterial.uniforms.uDistortion.value = this.glitchDistortion;
+                this.videoGlitchMaterial.uniforms.uDistortion2.value = this.glitchDistortion2;
+                this.videoGlitchMaterial.uniforms.uSpeed.value = this.glitchSpeed;
                 this.videoGlitchMaterial.uniforms.uTime = time;
 
                 // Mask materials

@@ -99365,6 +99365,9 @@ var fragmentShader$3 = /* glsl */`
 precision highp float;
 
 uniform sampler2D tMap;
+uniform float uDistortion;
+uniform float uDistortion2;
+uniform float uSpeed;
 uniform float uTime;
 
 in vec2 vUv;
@@ -99377,10 +99380,10 @@ void main() {
     vec2 uv = vUv;
 
     // Create large, incidental noise waves
-    float noise = max(0.0, snoise(vec2(uTime, uv.y * 0.3)) - 0.3) * 0.25;
+    float noise = max(0.0, snoise(vec2(uTime, uv.y * 0.3)) - 0.3) * uDistortion;
 
     // Offset by smaller, constant noise waves
-    noise += (snoise(vec2(uTime * 20.0, uv.y * 2.4)) - 0.5) * 0.0375;
+    noise += (snoise(vec2(uTime * 10.0 * uSpeed, uv.y * 2.4)) - 0.5) * uDistortion2;
 
     // Apply the noise as X displacement for every line
     float xpos = uv.x - noise * noise * 0.25;
@@ -99402,6 +99405,9 @@ class VideoGlitchMaterial extends RawShaderMaterial {
             glslVersion: GLSL3,
             uniforms: {
                 tMap: new Uniform(null),
+                uDistortion: new Uniform(1.43),
+                uDistortion2: new Uniform(0.15),
+                uSpeed: new Uniform(1),
                 uTime: new Uniform(0)
             },
             vertexShader: vertexShader$3,

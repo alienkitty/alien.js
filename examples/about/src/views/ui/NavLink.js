@@ -44,19 +44,6 @@ export class NavLink extends Interface {
 
             this.letters.push(letter);
         });
-
-        /* const split = this.copy.split(' ');
-        split.forEach((str, i) => {
-            if (i < split.length - 1) {
-                str += '&nbsp';
-            }
-
-            const word = new Interface(null, 'span');
-            word.html(str);
-            this.add(word);
-
-            this.words.push(word);
-        }); */
     }
 
     addListeners() {

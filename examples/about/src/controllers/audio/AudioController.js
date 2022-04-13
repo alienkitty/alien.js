@@ -151,7 +151,7 @@ export class AudioController {
                 tween(WebAudio.gain, { value: 0 }, 500, 'easeOutSine');
                 break;
             case 'sound_on':
-                tween(WebAudio.gain, { value: 1 }, 500, 'easeOutSine');
+                tween(WebAudio.gain, { value: Global.DETAILS_OPEN ? 0.3 : 1 }, 500, 'easeOutSine');
                 break;
         }
     };

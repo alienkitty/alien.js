@@ -29,8 +29,8 @@
 
             initGrid() {
                 this.grid = {
-                    fillStyle: Stage.rootStyle.getPropertyValue('--bg-color').trim(),
-                    strokeStyle: Stage.rootStyle.getPropertyValue('--ui-color').trim()
+                    fillStyle: '#0e0e0e',
+                    strokeStyle: 'rgba(255, 255, 255, 0.94)'
                 };
             }
 
@@ -390,7 +390,7 @@
 
                 // 3D scene
                 this.scene = new Scene();
-                this.scene.background = new Color(Stage.rootStyle.getPropertyValue('--bg-color').trim());
+                this.scene.background = new Color(0x0e0e0e);
                 this.camera = new PerspectiveCamera(25);
                 this.camera.near = 0.1;
                 this.camera.far = 1000;
@@ -461,9 +461,6 @@
 
             static initStage() {
                 Stage.init(document.querySelector('#root'));
-
-                Stage.root = document.querySelector(':root');
-                Stage.rootStyle = getComputedStyle(Stage.root);
             }
 
             static initWorld() {

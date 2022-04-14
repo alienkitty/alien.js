@@ -495,7 +495,7 @@
 
                 // Isometric scene
                 this.scene = new Scene();
-                this.scene.background = new Color(Stage.rootStyle.getPropertyValue('--bg-color').trim());
+                this.scene.background = new Color(0x0e0e0e);
                 this.camera = new OrthographicCamera(-1, 1, 1, -1, 0, 1000);
                 this.camera.position.set(500, 500, 500);
                 this.camera.lookAt(this.scene.position);
@@ -578,9 +578,6 @@
 
             static initStage() {
                 Stage.init(document.querySelector('#root'));
-
-                Stage.root = document.querySelector(':root');
-                Stage.rootStyle = getComputedStyle(Stage.root);
             }
 
             static initWorld() {

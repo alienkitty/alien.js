@@ -92,7 +92,7 @@
                 this.context.scale(dpr, dpr);
 
                 this.context.lineWidth = 1.5;
-                this.context.strokeStyle = Stage.rootStyle.getPropertyValue('--ui-color').trim();
+                this.context.strokeStyle = 'rgba(255, 255, 255, 0.94)';
 
                 this.update();
             };
@@ -127,9 +127,6 @@
 
             static initStage() {
                 Stage.init(document.querySelector('#root'));
-
-                Stage.root = document.querySelector(':root');
-                Stage.rootStyle = getComputedStyle(Stage.root);
             }
 
             static initView() {

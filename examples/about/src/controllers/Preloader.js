@@ -45,14 +45,15 @@ export class Preloader {
             { family: 'Roboto Mono', style: 'normal', weight: '500' }
         ]));
         this.loader.load(new AssetLoader(Config.ASSETS));
-        this.loader.add(1);
+        this.loader.add(2);
 
         const { App } = await import('./App.js');
         this.loader.trigger(1);
 
         this.app = App;
 
-        await this.app.init(this.loader);
+        await this.app.init(this.loader.loaders[1]);
+        this.loader.trigger(1);
     }
 
     static addListeners() {

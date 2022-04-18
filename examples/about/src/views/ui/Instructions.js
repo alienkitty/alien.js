@@ -11,7 +11,7 @@ export class Instructions extends Interface {
         this.invisible();
         this.css({
             left: '50%',
-            bottom: 40,
+            bottom: 55,
             width: 300,
             marginLeft: -300 / 2,
             opacity: 0

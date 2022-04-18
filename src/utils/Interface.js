@@ -36,7 +36,7 @@ export class Interface {
             }
 
             if (typeof name === 'string') {
-                if (name.charAt(0) === '.') {
+                if (name.startsWith('.')) {
                     this.element.className = name.slice(1);
                 } else {
                     this.element.id = name;
@@ -50,11 +50,9 @@ export class Interface {
             return;
         }
 
-        if (child.destroy) {
-            this.children.push(child);
+        this.children.push(child);
 
-            child.parent = this;
-        }
+        child.parent = this;
 
         if (child.element) {
             this.element.appendChild(child.element);
@@ -383,10 +381,8 @@ export class Interface {
     }
 
     bg(path, backgroundSize = 'contain', backgroundPosition = 'center', backgroundRepeat = 'no-repeat') {
-        path = Assets.getPath(path);
-
         const style = {
-            backgroundImage: `url(${path})`,
+            backgroundImage: `url(${Assets.getPath(path)})`,
             backgroundSize,
             backgroundPosition,
             backgroundRepeat
@@ -412,9 +408,7 @@ export class Interface {
     }
 
     load(path) {
-        path = Assets.getPath(path);
-
-        const promise = fetch(path, Assets.options).then(response => {
+        const promise = fetch(Assets.getPath(path), Assets.options).then(response => {
             return response.text();
         }).then(str => {
             this.html(str);

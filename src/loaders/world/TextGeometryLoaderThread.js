@@ -4,7 +4,6 @@
 
 import { Thread } from '../../utils/Thread.js';
 import { TextGeometry } from '../../utils/world/TextGeometry.js';
-import { Assets } from '../Assets.js';
 
 import { absolute } from '../../utils/Utils.js';
 
@@ -32,7 +31,7 @@ export class TextGeometryLoaderThread {
     }
 
     static load(path, options, params) {
-        path = absolute(Assets.getPath(path));
+        path = absolute(path);
 
         return Thread.shared().loadTextGeometry({ path, options, params });
     }

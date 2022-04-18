@@ -37,9 +37,10 @@ export function absolute(path) {
         return path;
     }
 
-    const port = Number(location.port) > 1000 ? ':' + location.port : '';
+    const port = Number(location.port) > 1000 ? `:${location.port}` : '';
+    const pathname = path.startsWith('/') ? path : `${location.pathname.replace(/\/[^/]*$/, '/')}${path}`;
 
-    return location.protocol + '//' + location.hostname + port + location.pathname.replace(/\/[^/]*$/, '/') + path;
+    return `${location.protocol}//${location.hostname}${port}${pathname}`;
 }
 
 export function getKeyByValue(object, value) {

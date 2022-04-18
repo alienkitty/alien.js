@@ -77,9 +77,6 @@ export class Header extends Interface {
         this.info.tween({ x: 0, opacity: 1 }, 1000, 'easeOutQuart', 200);
     };
 
-    animateOut = () => {
-    };
-
     destroy = () => {
         this.removeListeners();
 

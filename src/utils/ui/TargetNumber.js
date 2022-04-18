@@ -2,17 +2,18 @@
  * @author pschroen / https://ufo.ai/
  */
 
+import { Styles } from '../../config/Styles.js';
 import { Interface } from '../Interface.js';
 
 export class TargetNumber extends Interface {
     constructor({
-        styles
-    }) {
+        styles = Styles
+    } = {}) {
         super('.number');
 
         this.styles = styles;
 
-        const size = 17;
+        const size = window.devicePixelRatio > 1 ? 17 : 18;
 
         this.width = size;
         this.height = size;
@@ -27,15 +28,15 @@ export class TargetNumber extends Interface {
             boxSizing: 'border-box',
             width: this.width,
             height: this.height,
-            border: '1.5px solid var(--ui-color)'
+            border: `${window.devicePixelRatio > 1 ? 1.5 : 1}px solid var(--ui-color)`
         });
 
         this.text = new Interface('.text');
         this.text.css({
             position: 'absolute',
-            left: 4,
+            left: window.devicePixelRatio > 1 ? 4 : 5,
             ...this.styles.number,
-            lineHeight: this.height - 3,
+            lineHeight: this.height - (window.devicePixelRatio > 1 ? 3 : 2),
             textAlign: 'center'
         });
         this.add(this.text);

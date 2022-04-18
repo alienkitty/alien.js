@@ -4,11 +4,14 @@ import vertexShader from '../shaders/BloomCompositePass.vert.js';
 import fragmentShader from '../shaders/BloomCompositePass.frag.js';
 
 export class BloomCompositeMaterial extends RawShaderMaterial {
-    constructor(nMips) {
+    constructor({
+        dithering
+    } = {}) {
         super({
             glslVersion: GLSL3,
             defines: {
-                NUM_MIPS: nMips
+                NUM_MIPS: 5,
+                DITHERING: dithering
             },
             uniforms: {
                 tBlur1: new Uniform(null),

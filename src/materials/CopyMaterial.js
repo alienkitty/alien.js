@@ -4,11 +4,11 @@ import vertexShader from '../shaders/CopyPass.vert.js';
 import fragmentShader from '../shaders/CopyPass.frag.js';
 
 export class CopyMaterial extends RawShaderMaterial {
-    constructor() {
+    constructor(map) {
         super({
             glslVersion: GLSL3,
             uniforms: {
-                tMap: new Uniform(null)
+                tMap: new Uniform(map)
             },
             vertexShader,
             fragmentShader,

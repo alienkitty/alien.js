@@ -1,4 +1,8 @@
-// Based on https://threejs.org/examples/#webgl_shadowmap_pcss by spidersharma
+/**
+ * @author pschroen / https://ufo.ai/
+ *
+ * Based on https://threejs.org/examples/#webgl_shadowmap_pcss by spidersharma
+ */
 
 import { ShaderChunk } from 'three';
 

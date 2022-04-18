@@ -75,9 +75,9 @@ export class Reflector extends Group {
         this.screenScene = new Scene();
         this.screenCamera = new OrthographicCamera(-1, 1, 1, -1, 0, 1);
 
-        this.screenGeometry = getFullscreenTriangle();
+        this.screenTriangle = getFullscreenTriangle();
 
-        this.screen = new Mesh(this.screenGeometry, this.blurMaterial);
+        this.screen = new Mesh(this.screenTriangle, this.blurMaterial);
         this.screen.frustumCulled = false;
         this.screenScene.add(this.screen);
     }
@@ -229,7 +229,7 @@ export class Reflector extends Group {
         this.renderTargetRead.dispose();
         this.renderTarget.dispose();
         this.blurMaterial.dispose();
-        this.screenGeometry.dispose();
+        this.screenTriangle.dispose();
 
         for (const prop in this) {
             this[prop] = null;

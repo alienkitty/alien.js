@@ -18,11 +18,9 @@ export class Component {
             return;
         }
 
-        if (child.destroy) {
-            this.children.push(child);
+        this.children.push(child);
 
-            child.parent = this;
-        }
+        child.parent = this;
 
         if (this.group && this.group.isObject3D) {
             if (child.group && child.group.isObject3D) {

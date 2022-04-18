@@ -124,6 +124,7 @@ export class ColorPicker extends Interface {
         });
         this.colorRing.css({
             position: 'absolute',
+            left: 0,
             top: this.top,
             width: this.width,
             height: this.width

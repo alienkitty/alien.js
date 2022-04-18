@@ -3,7 +3,7 @@ export class Device {
 
     static mobile = !!navigator.maxTouchPoints;
 
-    static tablet = this.mobile && Math.max(window.innerWidth, window.innerHeight) > 1000;
+    static tablet = this.mobile && Math.max(screen.width, screen.height) > 1000;
 
     static phone = this.mobile && !this.tablet;
 

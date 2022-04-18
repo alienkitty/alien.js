@@ -2,6 +2,8 @@
  * @author pschroen / https://ufo.ai/
  */
 
+import { guid } from '../utils/Utils.js';
+
 export class Assets {
     static path = '';
     static crossOrigin;
@@ -44,15 +46,7 @@ export class Assets {
     }
 
     static getPath(path) {
-        if (path.includes('//')) {
-            return path;
-        }
-
-        if (this.path && !path.includes(this.path)) {
-            path = this.path + path;
-        }
-
-        return path;
+        return this.path + path;
     }
 
     static loadImage(path, callback) {
@@ -73,6 +67,18 @@ export class Assets {
 
                 image.onerror = null;
             };
+        });
+
+        if (callback) {
+            promise.then(callback);
+        }
+
+        return promise;
+    }
+
+    static loadData(path, callback) {
+        const promise = fetch(`${this.getPath(path)}?${guid()}`, this.options).then(response => {
+            return response.json();
         });
 
         if (callback) {

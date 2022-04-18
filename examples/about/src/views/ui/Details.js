@@ -22,9 +22,11 @@ export class Details extends Interface {
     initHTML() {
         this.invisible();
         this.css({
-            display: 'flex',
+            left: 0,
+            top: 0,
             width: '100%',
             height: '100%',
+            display: 'flex',
             alignItems: 'center',
             pointerEvents: 'none',
             opacity: 0
@@ -47,7 +49,9 @@ export class Details extends Interface {
             margin: '10% 10% 13%'
         });
         this.add(this.container);
+    }
 
+    initViews() {
         this.title = new DetailsTitle(basename('Multiuser Fluid').replace(/[\s.]+/g, '_'));
         this.title.css({
             width: 'fit-content'
@@ -63,26 +67,24 @@ export class Details extends Interface {
         this.text.html('A fluid shader tribute to Mr.doob’s Multiuser Sketchpad from 2010. Multiuser Fluid is an experiment to combine UI and data visualization elements in a multiuser environment.');
         this.container.add(this.text);
         this.texts.push(this.text);
-    }
 
-    initViews() {
         const items = [
             {
-                copy: 'Source code',
+                title: 'Source code',
                 link: 'https://glitch.com/edit/#!/multiuser-fluid'
             },
             {
-                copy: 'Mr.doob’s Multiuser Sketchpad',
+                title: 'Mr.doob’s Multiuser Sketchpad',
                 link: 'https://glitch.com/edit/#!/multiuser-sketchpad'
             },
             {
-                copy: 'David A Roberts’ Single-pass Fluid Solver',
+                title: 'David A Roberts’ Single-pass Fluid Solver',
                 link: 'https://www.shadertoy.com/view/XlsBDf'
             }
         ];
 
         items.forEach(data => {
-            const link = new DetailsLink(data.copy, data.link);
+            const link = new DetailsLink(data.title, data.link);
             link.css({
                 display: 'block',
                 width: 'fit-content'
@@ -118,7 +120,7 @@ export class Details extends Interface {
 
             this.container.css({
                 width: '',
-                margin: '80px 20px 40px'
+                margin: '24px 20px 0'
             });
         } else {
             this.css({ display: 'flex' });
@@ -139,7 +141,9 @@ export class Details extends Interface {
      */
 
     animateIn = () => {
-        this.clearTween().visible().css({
+        this.clearTween();
+        this.visible();
+        this.css({
             pointerEvents: 'auto',
             opacity: 1
         });

@@ -1,7 +1,7 @@
 /**
  * @author pschroen / https://ufo.ai/
  *
- * Based on https://gist.github.com/jesperlandberg/dd2cb6c6d7c928601b7f0229db818171
+ * Based on https://codepen.io/ReGGae/pen/pxMJLW
  */
 
 import { Device } from '../../config/Device.js';
@@ -13,17 +13,19 @@ import { ticker } from '../../tween/Ticker.js';
 import { defer } from '../../tween/Tween.js';
 import { clamp, lerp } from '../Utils.js';
 
-export class Smooth extends Component {
+export class SmoothSkew extends Component {
     constructor({
         root,
         container,
-        lerpSpeed = 0.1
+        lerpSpeed = 0.1,
+        skew = 7.5
     } = {}) {
         super();
 
         this.root = root;
         this.container = container;
         this.lerpSpeed = lerpSpeed;
+        this.skew = skew;
 
         this.position = 0;
         this.last = 0;
@@ -93,7 +95,10 @@ export class Smooth extends Component {
         }
 
         if (!Device.mobile) {
-            this.container.css({ y: -Math.round(this.position) });
+            this.container.css({
+                y: -Math.round(this.position),
+                skewY: (this.delta / Stage.width) * 10 * this.skew
+            });
         }
 
         this.progress = clamp(this.position / (this.height - Stage.height), 0, 1);

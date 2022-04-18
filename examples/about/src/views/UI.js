@@ -22,6 +22,7 @@ export class UI extends Interface {
 
     initHTML() {
         this.css({
+            position: 'fixed',
             left: 0,
             top: 0,
             width: '100%',
@@ -62,7 +63,7 @@ export class UI extends Interface {
      */
 
     onUsers = () => {
-        this.detailsButton.swapIndex();
+        this.detailsButton.setIndex();
     };
 
     onKeyUp = e => {

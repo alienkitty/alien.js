@@ -3,10 +3,10 @@ import { Interface, shuffle } from 'alien.js';
 import { Styles } from '../../config/Styles.js';
 
 export class DetailsTitle extends Interface {
-    constructor(copy) {
+    constructor(title) {
         super('.title', 'h1');
 
-        this.copy = copy;
+        this.title = title;
         this.letters = [];
 
         this.initHTML();
@@ -20,7 +20,7 @@ export class DetailsTitle extends Interface {
     }
 
     initText() {
-        const split = this.copy.split('');
+        const split = this.title.split('');
 
         split.forEach(str => {
             if (str === ' ') {

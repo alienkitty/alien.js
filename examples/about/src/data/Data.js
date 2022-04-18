@@ -11,12 +11,6 @@ export class Data {
      */
 
     static getUser = id => {
-        for (let i = 0, l = Global.USERS.length; i < l; i++) {
-            if (Global.USERS[i].id === id) {
-                return Global.USERS[i];
-            }
-        }
-
-        return null;
+        return Global.USERS.find(item => item.id === id);
     };
 }

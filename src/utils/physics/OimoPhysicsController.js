@@ -5,7 +5,7 @@
  * Based on https://github.com/lo-th/phy
  */
 
-import { Matrix4, Object3D } from 'three';
+import { Group, Matrix4 } from 'three';
 
 import { guid } from '../Utils.js';
 
@@ -17,7 +17,7 @@ export class OimoPhysicsController {
         this.objects = [];
         this.map = new WeakMap();
 
-        this.object = new Object3D();
+        this.object = new Group();
         this.matrix = new Matrix4();
     }
 

@@ -21,6 +21,10 @@ export class EnvironmentTextureLoader extends Loader {
 
     load(path, callback) {
         this.textureLoader.load(path, texture => {
+            if (texture instanceof Error) {
+                throw new Error(texture);
+            }
+
             const renderTargetCube = this.pmremGenerator.fromEquirectangular(texture);
 
             texture.dispose();

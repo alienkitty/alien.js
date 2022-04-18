@@ -18,22 +18,21 @@ import { getScreenSpaceBox } from '../world/Utils3D.js';
 
 export class Point3D extends Group {
     static init(scene, camera, {
-        element = document.body,
-        stage = document.body,
+        root = document.body,
+        container = document.body,
         styles = Styles,
         debug = false
     } = {}) {
         this.scene = scene;
         this.camera = camera;
-        this.element = element;
-        this.ui = element instanceof Interface ? element : new Interface(element);
-        this.stage = stage instanceof Interface ? stage : new Interface(stage);
-        this.events = this.stage.events;
+        this.root = root instanceof Interface ? root : new Interface(root);
+        this.container = container instanceof Interface ? container : new Interface(container);
+        this.events = this.root.events;
         this.styles = styles;
         this.debug = debug;
 
         this.objects = [];
-        this.panels = [];
+        this.points = [];
         this.raycaster = new Raycaster();
         this.mouse = new Vector2(-1, -1);
         this.delta = new Vector2();
@@ -53,8 +52,14 @@ export class Point3D extends Group {
 
     static initCanvas() {
         this.canvas = new Interface(null, 'canvas');
+        this.canvas.css({
+            position: 'absolute',
+            left: 0,
+            top: 0,
+            pointerEvents: 'none'
+        });
         this.context = this.canvas.element.getContext('2d');
-        this.ui.add(this.canvas);
+        this.container.add(this.canvas);
     }
 
     static addListeners() {
@@ -82,8 +87,8 @@ export class Point3D extends Group {
     };
 
     static onResize = () => {
-        this.width = window.innerWidth;
-        this.height = window.innerHeight;
+        this.width = document.documentElement.clientWidth;
+        this.height = document.documentElement.clientHeight;
         this.dpr = window.devicePixelRatio;
 
         this.halfScreen.set(this.width / 2, this.height / 2);
@@ -94,7 +99,7 @@ export class Point3D extends Group {
         this.canvas.element.style.height = this.height + 'px';
         this.context.scale(this.dpr, this.dpr);
 
-        this.panels.forEach(panel => panel.resize());
+        this.points.forEach(point => point.resize());
     };
 
     static onPointerDown = e => {
@@ -118,22 +123,22 @@ export class Point3D extends Group {
         const intersection = this.raycaster.intersectObjects(this.objects);
 
         if (intersection.length) {
-            const panel = this.panels[this.objects.indexOf(intersection[0].object)];
+            const point = this.points[this.objects.indexOf(intersection[0].object)];
 
             if (!this.hover) {
-                this.hover = panel;
+                this.hover = point;
                 this.hover.onHover({ type: 'over' });
-                this.stage.css({ cursor: 'pointer' });
-            } else if (this.hover !== panel) {
+                this.root.css({ cursor: 'pointer' });
+            } else if (this.hover !== point) {
                 this.hover.onHover({ type: 'out' });
-                this.hover = panel;
+                this.hover = point;
                 this.hover.onHover({ type: 'over' });
-                this.stage.css({ cursor: 'pointer' });
+                this.root.css({ cursor: 'pointer' });
             }
         } else if (this.hover) {
             this.hover.onHover({ type: 'out' });
             this.hover = null;
-            this.stage.css({ cursor: '' });
+            this.root.css({ cursor: '' });
         }
     };
 
@@ -161,21 +166,21 @@ export class Point3D extends Group {
      */
 
     static getSelected = () => {
-        return this.panels.filter(panel => panel.selected).map(panel => panel.object);
+        return this.points.filter(point => point.selected).map(point => point.object);
     };
 
     static setIndexes = () => {
-        this.panels.forEach((panel, i) => panel.setIndex(i));
+        this.points.forEach((point, i) => point.setIndex(i));
     };
 
     static invert = () => {
-        this.panels.forEach(panel => panel.resize());
+        this.points.forEach(point => point.resize());
     };
 
     static update = time => {
         this.context.clearRect(0, 0, this.canvas.element.width, this.canvas.element.height);
 
-        this.panels.forEach(panel => panel.update());
+        this.points.forEach(point => point.update());
 
         if (!Device.mobile && time - this.lastRaycast > this.raycastInterval) {
             this.onPointerMove();
@@ -183,28 +188,28 @@ export class Point3D extends Group {
         }
     };
 
-    static add = (...panels) => {
-        panels.forEach(panel => {
-            this.objects.push(panel.object);
-            this.panels.push(panel);
+    static add = (...points) => {
+        points.forEach(point => {
+            this.objects.push(point.object);
+            this.points.push(point);
         });
 
         this.setIndexes();
     };
 
-    static remove = (...panels) => {
-        panels.forEach(panel => {
-            const index = this.panels.indexOf(panel);
+    static remove = (...points) => {
+        points.forEach(point => {
+            const index = this.points.indexOf(point);
 
             if (~index) {
                 this.objects.splice(index, 1);
-                this.panels.splice(index, 1);
+                this.points.splice(index, 1);
             }
 
-            if (panel === this.hover) {
+            if (point === this.hover) {
                 this.hover.onHover({ type: 'out' });
                 this.hover = null;
-                this.stage.css({ cursor: '' });
+                this.root.css({ cursor: '' });
             }
         });
 
@@ -222,8 +227,8 @@ export class Point3D extends Group {
     };
 
     constructor(object, {
-        name = object.name,
-        type = object.type
+        name = object.geometry.type,
+        type = object.material.type
     } = {}) {
         super();
 
@@ -235,7 +240,6 @@ export class Point3D extends Group {
 
         this.center = new Vector2();
         this.size = new Vector2();
-        this.box = null;
         this.selected = false;
         this.animatedIn = false;
 
@@ -245,7 +249,7 @@ export class Point3D extends Group {
 
     initMesh() {
         this.object.geometry.computeBoundingSphere();
-        const geometry = new SphereGeometry(this.object.geometry.boundingSphere.radius, 32, 32);
+        const geometry = new SphereGeometry(this.object.geometry.boundingSphere.radius);
 
         let material;
 
@@ -264,21 +268,21 @@ export class Point3D extends Group {
     }
 
     initViews() {
-        this.line = new Line(Point3D.canvas.element, Point3D.context);
-        Point3D.ui.add(this.line);
+        this.line = new Line(Point3D.context);
+        Point3D.container.add(this.line);
 
         this.reticle = new Reticle({ styles: Point3D.styles });
-        Point3D.ui.add(this.reticle);
+        Point3D.container.add(this.reticle);
 
         this.tracker = new Tracker({ styles: Point3D.styles });
-        Point3D.ui.add(this.tracker);
+        Point3D.container.add(this.tracker);
 
         this.point = new Point(this, this.tracker, { styles: Point3D.styles });
         this.point.setData({
             name: this.name,
             type: this.type
         });
-        Point3D.ui.add(this.point);
+        Point3D.container.add(this.point);
     }
 
     /**
@@ -304,9 +308,9 @@ export class Point3D extends Group {
                 this.line.animateIn();
                 this.reticle.animateIn();
                 this.point.animateIn();
-            }
 
-            this.animatedIn = true;
+                this.animatedIn = true;
+            }
         } else {
             this.timeout = delayedCall(2000, () => {
                 this.line.animateOut();
@@ -358,13 +362,11 @@ export class Point3D extends Group {
     };
 
     resize = () => {
-        this.box = null;
-
         this.line.resize();
     };
 
     update = () => {
-        this.line.startPoint(this.tracker.target);
+        this.line.startPoint(this.reticle.target);
         this.line.endPoint(this.point.originPosition);
         this.line.update();
         this.reticle.update();
@@ -375,14 +377,15 @@ export class Point3D extends Group {
     updateMatrixWorld = force => {
         super.updateMatrixWorld(force);
 
-        this.box = getScreenSpaceBox(this.mesh, this.camera);
+        this.camera.updateMatrixWorld();
 
-        const boxCenter = this.box.getCenter(this.center).multiply(this.halfScreen);
-        const boxSize = this.box.getSize(this.size).multiply(this.halfScreen);
-        const centerX = this.halfScreen.x + boxCenter.x;
-        const centerY = this.halfScreen.y - boxCenter.y;
-        const width = Math.round(boxSize.x);
-        const height = Math.round(boxSize.y);
+        const box = getScreenSpaceBox(this.mesh, this.camera);
+        const center = box.getCenter(this.center).multiply(this.halfScreen);
+        const size = box.getSize(this.size).multiply(this.halfScreen);
+        const centerX = this.halfScreen.x + center.x;
+        const centerY = this.halfScreen.y - center.y;
+        const width = Math.round(size.x);
+        const height = Math.round(size.y);
         const halfWidth = Math.round(width / 2);
         const halfHeight = Math.round(height / 2);
 
@@ -399,7 +402,7 @@ export class Point3D extends Group {
     };
 
     destroy = () => {
-        this.line.animateOut(() => {
+        this.line.animateOut(false, () => {
             this.point = this.point.destroy();
             this.tracker = this.tracker.destroy();
             this.reticle = this.reticle.destroy();

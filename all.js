@@ -83,6 +83,8 @@ export { OimoPhysicsController } from './src/utils/physics/OimoPhysicsController
 // export { Color } from 'three/src/math/Color.js';
 // export { Vector2 } from 'three/src/math/Vector2.js';
 export { Smooth } from './src/utils/extras/Smooth.js';
+export { SmoothSkew } from './src/utils/extras/SmoothSkew.js';
+export { SmoothViews } from './src/utils/extras/SmoothViews.js';
 export { Magnetic } from './src/utils/extras/Magnetic.js';
 
 // Materials

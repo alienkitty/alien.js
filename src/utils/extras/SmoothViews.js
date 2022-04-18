@@ -1,7 +1,5 @@
 /**
  * @author pschroen / https://ufo.ai/
- *
- * Based on https://gist.github.com/jesperlandberg/dd2cb6c6d7c928601b7f0229db818171
  */
 
 import { Device } from '../../config/Device.js';
@@ -13,22 +11,28 @@ import { ticker } from '../../tween/Ticker.js';
 import { defer } from '../../tween/Tween.js';
 import { clamp, lerp } from '../Utils.js';
 
-export class Smooth extends Component {
+export class SmoothViews extends Component {
     constructor({
+        views,
         root,
         container,
+        sections,
         lerpSpeed = 0.1
     } = {}) {
         super();
 
+        this.views = views;
         this.root = root;
         this.container = container;
+        this.sections = sections;
         this.lerpSpeed = lerpSpeed;
 
         this.position = 0;
         this.last = 0;
         this.delta = 0;
         this.direction = 0;
+        this.index1 = 0;
+        this.index2 = 0;
         this.progress = 0;
         this.height = 0;
 
@@ -69,11 +73,20 @@ export class Smooth extends Component {
     onResize = async () => {
         await defer();
 
-        const { height } = this.container.element.getBoundingClientRect();
+        this.height = 0;
 
-        document.body.style.height = `${height}px`;
+        for (let i = 0, l = this.sections.length; i < l; i++) {
+            const view = this.views[i];
+            const section = this.sections[i];
 
-        this.height = height;
+            view.top = this.height;
+            view.height = section.element.getBoundingClientRect().height;
+
+            this.height += view.height;
+        }
+
+        document.body.style.height = `${this.height}px`;
+
         this.position = document.scrollingElement.scrollTop;
     };
 
@@ -96,15 +109,33 @@ export class Smooth extends Component {
             this.container.css({ y: -Math.round(this.position) });
         }
 
-        this.progress = clamp(this.position / (this.height - Stage.height), 0, 1);
+        let height = 0;
+
+        for (let i = 0, l = this.views.length; i < l; i++) {
+            height += this.views[i].height;
+
+            if (this.position < height) {
+                this.index1 = i;
+                this.index2 = i + 1;
+
+                if (this.index2 > l - 1) {
+                    this.index2 = l - 1;
+                }
+
+                break;
+            }
+        }
+
+        const current = this.position + this.views[this.index2].height - this.views[this.index2].top;
+        this.progress = clamp(current / this.views[this.index2].height, 0, 1);
     };
 
     /**
      * Public methods
      */
 
-    setScroll = top => {
-        document.scrollingElement.scrollTop = top;
+    setScroll = index => {
+        document.scrollingElement.scrollTop = this.views[index].top;
     };
 
     enable = () => {

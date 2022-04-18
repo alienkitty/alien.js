@@ -2,12 +2,13 @@
  * @author pschroen / https://ufo.ai/
  */
 
+import { Styles } from '../../config/Styles.js';
 import { Interface } from '../Interface.js';
 
 export class ReticleText extends Interface {
     constructor({
-        styles
-    }) {
+        styles = Styles
+    } = {}) {
         super('.text');
 
         this.styles = styles;
@@ -17,6 +18,7 @@ export class ReticleText extends Interface {
 
     initHTML() {
         this.css({
+            position: 'absolute',
             left: 20,
             top: -3
         });

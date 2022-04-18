@@ -1,6 +1,6 @@
 export default /* glsl */`
-in vec2 uv;
 in vec3 position;
+in vec2 uv;
 
 out vec2 vUv;
 

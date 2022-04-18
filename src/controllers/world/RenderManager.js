@@ -66,7 +66,7 @@ export class RenderManager {
         this.luminosityMaterial.uniforms.uThreshold.value = this.luminosityThreshold;
         this.luminosityMaterial.uniforms.uSmoothing.value = this.luminositySmoothing;
 
-        // Gaussian blur materials
+        // Separable Gaussian blur materials
         this.blurMaterials = [];
 
         const kernelSizeArray = [3, 5, 7, 9, 11];
@@ -76,7 +76,7 @@ export class RenderManager {
         }
 
         // Bloom composite material
-        this.bloomCompositeMaterial = new BloomCompositeMaterial(this.nMips);
+        this.bloomCompositeMaterial = new BloomCompositeMaterial();
         this.bloomCompositeMaterial.uniforms.tBlur1.value = this.renderTargetsVertical[0].texture;
         this.bloomCompositeMaterial.uniforms.tBlur2.value = this.renderTargetsVertical[1].texture;
         this.bloomCompositeMaterial.uniforms.tBlur3.value = this.renderTargetsVertical[2].texture;

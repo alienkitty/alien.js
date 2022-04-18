@@ -44,6 +44,7 @@ export class Reticle extends Interface {
         this.center = new Interface('.center');
         this.center.css({
             position: 'absolute',
+            boxSizing: 'border-box',
             left: '50%',
             top: '50%',
             width: 12,

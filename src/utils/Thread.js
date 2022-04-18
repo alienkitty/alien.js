@@ -2,7 +2,6 @@
  * @author pschroen / https://ufo.ai/
  */
 
-import { Assets } from '../loaders/Assets.js';
 import { EventEmitter } from './EventEmitter.js';
 import { Cluster } from './Cluster.js';
 
@@ -43,7 +42,7 @@ export class Thread extends EventEmitter {
         imports.forEach(bundle => {
             const [path, ...names] = bundle;
 
-            array.push(`import { ${names.join(', ')} } from '${absolute(Assets.getPath(path))}';`);
+            array.push(`import { ${names.join(', ')} } from '${absolute(path)}';`);
         });
 
         if (classes.length) {

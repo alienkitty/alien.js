@@ -68,9 +68,9 @@ export class Flowmap {
         this.screenScene = new Scene();
         this.screenCamera = new OrthographicCamera(-1, 1, 1, -1, 0, 1);
 
-        this.screenGeometry = getFullscreenTriangle();
+        this.screenTriangle = getFullscreenTriangle();
 
-        this.screen = new Mesh(this.screenGeometry, this.material);
+        this.screen = new Mesh(this.screenTriangle, this.material);
         this.screen.frustumCulled = false;
         this.screenScene.add(this.screen);
     }
@@ -101,7 +101,7 @@ export class Flowmap {
         this.renderTargetWrite.dispose();
         this.renderTargetRead.dispose();
         this.material.dispose();
-        this.screenGeometry.dispose();
+        this.screenTriangle.dispose();
 
         for (const prop in this) {
             this[prop] = null;

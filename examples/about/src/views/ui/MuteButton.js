@@ -12,8 +12,8 @@ export class MuteButton extends Interface {
         this.height = 16;
         this.progress = 1;
         this.yMultiplier = Global.SOUND ? 1 : 0;
-        this.needsUpdate = false;
         this.animatedIn = false;
+        this.needsUpdate = false;
 
         this.initHTML();
         this.initCanvas();

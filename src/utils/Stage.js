@@ -46,8 +46,8 @@ if (typeof window !== 'undefined') {
     }
 
     function onResize(e) {
-        Stage.width = window.innerWidth;
-        Stage.height = window.innerHeight;
+        Stage.width = document.documentElement.clientWidth;
+        Stage.height = document.documentElement.clientHeight;
         Stage.dpr = window.devicePixelRatio;
         Stage.aspect = Stage.width / Stage.height;
 
@@ -66,12 +66,21 @@ if (typeof window !== 'undefined') {
         Stage.element = element;
 
         addListeners();
+        onPopState();
         onResize();
     };
 
     Stage.setPath = path => {
+        if (path === location.pathname) {
+            return;
+        }
+
         history.pushState(null, null, path);
 
         onPopState();
+    };
+
+    Stage.setTitle = title => {
+        document.title = title;
     };
 }

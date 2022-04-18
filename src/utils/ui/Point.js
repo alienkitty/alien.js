@@ -46,6 +46,7 @@ export class Point extends Interface {
     initHTML() {
         this.invisible();
         this.css({
+            position: 'absolute',
             pointerEvents: 'auto',
             webkitUserSelect: 'none',
             userSelect: 'none'

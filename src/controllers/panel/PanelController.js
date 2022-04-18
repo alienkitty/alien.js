@@ -35,8 +35,8 @@ export class PanelController {
 
     static initControllers() {
         Point3D.init(this.scene, this.camera, {
-            element: this.ui,
-            stage: Stage
+            root: Stage,
+            container: this.ui
         });
 
         ScenePanelController.init(this.view);
@@ -169,8 +169,7 @@ export class PanelController {
         }
 
         items.forEach(data => {
-            const item = new PanelItem(data);
-            this.ui.addPanel(item);
+            this.ui.addPanel(new PanelItem(data));
         });
     }
 

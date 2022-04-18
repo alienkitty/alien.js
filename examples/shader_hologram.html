@@ -673,8 +673,7 @@
                 ];
 
                 items.forEach(data => {
-                    const item = new PanelItem(data);
-                    this.ui.addPanel(item);
+                    this.ui.addPanel(new PanelItem(data));
                 });
             }
 
@@ -798,7 +797,7 @@
                 }
 
                 // Bloom composite material
-                this.bloomCompositeMaterial = new BloomCompositeMaterial(this.nMips);
+                this.bloomCompositeMaterial = new BloomCompositeMaterial();
                 this.bloomCompositeMaterial.uniforms.tBlur1.value = this.renderTargetsVertical[0].texture;
                 this.bloomCompositeMaterial.uniforms.tBlur2.value = this.renderTargetsVertical[1].texture;
                 this.bloomCompositeMaterial.uniforms.tBlur3.value = this.renderTargetsVertical[2].texture;
@@ -808,7 +807,6 @@
 
                 // Composite materials
                 this.sceneCompositeMaterial = new CompositeMaterial();
-
                 this.compositeMaterial = new SceneCompositeMaterial();
 
                 // Chromatic aberration material
@@ -978,7 +976,7 @@
                 renderer.clear();
                 renderer.render(screenScene, screenCamera);
 
-                // Composite pass
+                // Scene composite pass
                 this.sceneCompositeMaterial.uniforms.tScene.value = renderTargetA.texture;
                 this.sceneCompositeMaterial.uniforms.tHologram.value = renderTargetB.texture;
                 this.sceneCompositeMaterial.uniforms.tGlow.value = renderTargetBlurB.texture;

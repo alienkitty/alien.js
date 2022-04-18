@@ -46,12 +46,13 @@ export class Magnetic extends Component {
     };
 
     onPointerMove = ({ clientX, clientY }) => {
-        const bounds = this.object.element.getBoundingClientRect();
-        const x = clientX - (bounds.left + bounds.width / 2);
-        const y = clientY - (bounds.top + bounds.height / 2);
+        const { left, top, width, height } = this.object.element.getBoundingClientRect();
+
+        const x = clientX - (left + width / 2);
+        const y = clientY - (top + height / 2);
         const distance = Math.sqrt(x * x + y * y);
 
-        if (distance < (bounds.width + bounds.height) / 2 + this.threshold) {
+        if (distance < (width + height) / 2 + this.threshold) {
             this.onHover({ type: 'over', x, y });
         } else if (this.hoveredIn) {
             this.onHover({ type: 'out' });

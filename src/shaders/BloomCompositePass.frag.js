@@ -23,6 +23,8 @@ void main() {
                 uBloomFactors[3] * texture(tBlur4, vUv) +
                 uBloomFactors[4] * texture(tBlur5, vUv);
 
-    FragColor.rgb = dither(FragColor.rgb);
+    #ifdef DITHERING
+        FragColor.rgb = dither(FragColor.rgb);
+    #endif
 }
 `;

@@ -19,8 +19,6 @@ export class ImageBitmapLoader extends Loader {
     }
 
     load(path, callback) {
-        path = Assets.getPath(path);
-
         const cached = Assets.get(path);
 
         let promise;
@@ -28,9 +26,9 @@ export class ImageBitmapLoader extends Loader {
         if (cached) {
             promise = Promise.resolve(cached);
         } else if (Thread.threads) {
-            promise = ImageBitmapLoaderThread.load(path, Assets.options, this.options);
+            promise = ImageBitmapLoaderThread.load(Assets.getPath(path), Assets.options, this.options);
         } else {
-            promise = fetch(path, Assets.options).then(response => {
+            promise = fetch(Assets.getPath(path), Assets.options).then(response => {
                 return response.blob();
             }).then(blob => {
                 return createImageBitmap(blob, this.options);

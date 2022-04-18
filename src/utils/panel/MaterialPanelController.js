@@ -99,8 +99,7 @@ export class MaterialPanelController {
         ];
 
         items.forEach(data => {
-            const item = new PanelItem(data);
-            this.ui.addPanel(item);
+            this.ui.addPanel(new PanelItem(data));
         });
     }
 }

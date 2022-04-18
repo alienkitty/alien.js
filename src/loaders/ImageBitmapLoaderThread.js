@@ -3,7 +3,6 @@
  */
 
 import { Thread } from '../utils/Thread.js';
-import { Assets } from './Assets.js';
 
 import { absolute } from '../utils/Utils.js';
 
@@ -29,7 +28,7 @@ export class ImageBitmapLoaderThread {
     }
 
     static load(path, options, params) {
-        path = absolute(Assets.getPath(path));
+        path = absolute(path);
 
         return Thread.shared().loadImage({ path, options, params });
     }

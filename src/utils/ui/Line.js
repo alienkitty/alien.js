@@ -10,10 +10,9 @@ import { Stage } from '../Stage.js';
 import { clearTween, delayedCall, tween } from '../../tween/Tween.js';
 
 export class Line extends Component {
-    constructor(canvas, context) {
+    constructor(context) {
         super();
 
-        this.canvas = canvas;
         this.context = context;
 
         this.start = new Vector2();
@@ -32,6 +31,14 @@ export class Line extends Component {
     /**
      * Public methods
      */
+
+    startPoint = ({ x, y }) => {
+        this.start.set(x + 3, y - 3);
+    };
+
+    endPoint = position => {
+        this.end.copy(position);
+    };
 
     resize = () => {
         // Context properties need to be reassigned after resize
@@ -64,16 +71,6 @@ export class Line extends Component {
         this.context.moveTo(this.start.x, this.start.y);
         this.context.lineTo(this.end.x, this.end.y);
         this.context.stroke();
-    };
-
-    startPoint = position => {
-        position.x += 3;
-        position.y -= 3;
-        this.start.copy(position);
-    };
-
-    endPoint = position => {
-        this.end.copy(position);
     };
 
     animateIn = (reverse = false) => {

@@ -1,10 +1,10 @@
 import { Events, Interface } from 'alien.js';
 
 export class DetailsLink extends Interface {
-    constructor(copy, link) {
+    constructor(title, link) {
         super('.link', 'a');
 
-        this.copy = copy;
+        this.title = title;
         this.link = link;
 
         this.initHTML();
@@ -23,7 +23,7 @@ export class DetailsLink extends Interface {
             position: 'relative',
             display: 'inline-block'
         });
-        this.text.text(this.copy);
+        this.text.text(this.title);
         this.add(this.text);
 
         this.line = new Interface('.line');

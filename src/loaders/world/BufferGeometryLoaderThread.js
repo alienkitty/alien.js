@@ -3,7 +3,6 @@
  */
 
 import { Thread } from '../../utils/Thread.js';
-import { Assets } from '../Assets.js';
 
 import { absolute } from '../../utils/Utils.js';
 
@@ -33,7 +32,7 @@ export class BufferGeometryLoaderThread {
     }
 
     static load(path, options) {
-        path = absolute(Assets.getPath(path));
+        path = absolute(path);
 
         return Thread.shared().loadBufferGeometry({ path, options });
     }

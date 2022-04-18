@@ -40,7 +40,7 @@ In its design, everything is an ES module, all user interfaces and components fo
 [fps](https://alien.js.org/examples/ui_fps.html)  
 [fps panel](https://alien.js.org/examples/ui_fps_panel.html)  
 [panel](https://alien.js.org/examples/ui_panel.html) (standalone)  
-[panel tracking](https://alien.js.org/examples/3d_panel_tracking.html) (3d scene)  
+[panel tracking](https://alien.js.org/examples/3d_panel_tracking.html) (3d scene, [debug](https://alien.js.org/examples/3d_panel_tracking.html?debug))  
 [ufo](https://ufo.ai/) (2d scene, smooth scroll with skew effect)  
 
 #### 3d

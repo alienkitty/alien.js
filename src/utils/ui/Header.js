@@ -2,13 +2,14 @@
  * @author pschroen / https://ufo.ai/
  */
 
+import { Styles } from '../../config/Styles.js';
 import { Interface } from '../Interface.js';
 import { HeaderInfo } from './HeaderInfo.js';
 
 export class Header extends Interface {
     constructor({
-        styles
-    }) {
+        styles = Styles
+    } = {}) {
         super('.header');
 
         this.styles = styles;

@@ -984,8 +984,7 @@
                 ];
 
                 items.forEach(data => {
-                    const item = new PanelItem(data);
-                    this.ui.addPanel(item);
+                    this.ui.addPanel(new PanelItem(data));
                 });
             }
 
@@ -1061,7 +1060,7 @@
                 this.luminosityMaterial.uniforms.uThreshold.value = this.luminosityThreshold;
                 this.luminosityMaterial.uniforms.uSmoothing.value = this.luminositySmoothing;
 
-                // Gaussian blur materials
+                // Separable Gaussian blur materials
                 this.blurMaterials = [];
 
                 const kernelSizeArray = [3, 5, 7, 9, 11];
@@ -1071,7 +1070,7 @@
                 }
 
                 // Bloom composite material
-                this.bloomCompositeMaterial = new BloomCompositeMaterial(this.nMips);
+                this.bloomCompositeMaterial = new BloomCompositeMaterial();
                 this.bloomCompositeMaterial.uniforms.tBlur1.value = this.renderTargetsVertical[0].texture;
                 this.bloomCompositeMaterial.uniforms.tBlur2.value = this.renderTargetsVertical[1].texture;
                 this.bloomCompositeMaterial.uniforms.tBlur3.value = this.renderTargetsVertical[2].texture;
@@ -1551,6 +1550,11 @@
                 this.addListeners();
                 this.onResize();
 
+                await this.loader.ready();
+
+                WebAudio.init(Assets.filter(path => /sounds/.test(path)));
+                AudioController.init(this.view);
+
                 await Promise.all([
                     SceneController.ready(),
                     WorldController.textureLoader.ready(),
@@ -1604,7 +1608,6 @@
             static addListeners() {
                 Stage.events.on(Events.RESIZE, this.onResize);
                 ticker.add(this.onUpdate);
-                this.loader.events.on(Events.COMPLETE, this.onComplete);
             }
 
             /**
@@ -1626,13 +1629,6 @@
                 SceneController.update();
                 RenderManager.update(time, delta, frame);
                 PanelController.update();
-            };
-
-            static onComplete = () => {
-                this.loader = this.loader.destroy();
-
-                WebAudio.init(Assets.filter(path => /sounds/.test(path)));
-                AudioController.init(this.view);
             };
         }
 

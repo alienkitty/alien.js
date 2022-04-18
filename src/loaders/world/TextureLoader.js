@@ -26,8 +26,6 @@ export class TextureLoader extends Loader {
     }
 
     load(path, callback) {
-        path = Assets.getPath(path);
-
         const cached = Assets.get(path);
 
         let texture;
@@ -53,9 +51,9 @@ export class TextureLoader extends Loader {
                 };
 
                 if (Thread.threads) {
-                    promise = ImageBitmapLoaderThread.load(path, Assets.options, params);
+                    promise = ImageBitmapLoaderThread.load(Assets.getPath(path), Assets.options, params);
                 } else {
-                    promise = fetch(path, Assets.options).then(response => {
+                    promise = fetch(Assets.getPath(path), Assets.options).then(response => {
                         return response.blob();
                     }).then(blob => {
                         return createImageBitmap(blob, params);

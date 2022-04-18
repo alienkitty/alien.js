@@ -21,9 +21,9 @@ export class DetailsButton extends Interface {
         this.endAngle = Math.PI * 2;
         this.scale = 1;
         this.isOpen = false;
-        this.needsUpdate = false;
         this.animatedIn = false;
         this.hoveredIn = false;
+        this.needsUpdate = false;
 
         this.initHTML();
         this.initIndex();
@@ -191,6 +191,17 @@ export class DetailsButton extends Interface {
      * Public methods
      */
 
+    setIndex = () => {
+        if (String(Global.USERS.length) === this.index.text()) {
+            return;
+        }
+
+        this.index.tween({ y: -10, opacity: 0 }, 300, 'easeInSine', () => {
+            this.index.text(Global.USERS.length);
+            this.index.css({ y: 10 }).tween({ y: 0, opacity: 1 }, 1000, 'easeOutCubic');
+        });
+    };
+
     update = () => {
         this.context.clearRect(0, 0, this.canvas.element.width, this.canvas.element.height);
 
@@ -253,17 +264,6 @@ export class DetailsButton extends Interface {
             this.needsUpdate = false;
         });
     };
-
-    swapIndex() {
-        if (String(Global.USERS.length) === this.index.text()) {
-            return;
-        }
-
-        this.index.tween({ y: -10, opacity: 0 }, 300, 'easeInSine', () => {
-            this.index.text(Global.USERS.length);
-            this.index.css({ y: 10 }).tween({ y: 0, opacity: 1 }, 1000, 'easeOutCubic');
-        });
-    }
 
     destroy = () => {
         this.removeListeners();

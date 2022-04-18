@@ -5,14 +5,15 @@
 import { Vector2 } from 'three/src/math/Vector2.js';
 
 import { Events } from '../../config/Events.js';
+import { Styles } from '../../config/Styles.js';
 import { Interface } from '../Interface.js';
 import { Stage } from '../Stage.js';
 import { Panel } from '../panel/Panel.js';
 
 export class HeaderInfo extends Interface {
     constructor({
-        styles
-    }) {
+        styles = Styles
+    } = {}) {
         super('.info');
 
         this.styles = styles;

@@ -17,8 +17,6 @@ export class AssetLoader extends Loader {
     }
 
     load(path, callback) {
-        path = Assets.getPath(path);
-
         const cached = Assets.get(path);
 
         let promise;
@@ -27,12 +25,12 @@ export class AssetLoader extends Loader {
             promise = Promise.resolve(cached);
         } else if (/\.(jpe?g|png|gif|svg)/.test(path)) {
             promise = Assets.loadImage(path);
+        } else if (/\.json/.test(path)) {
+            promise = Assets.loadData(path);
         } else {
-            promise = fetch(path, Assets.options).then(response => {
+            promise = fetch(Assets.getPath(path), Assets.options).then(response => {
                 if (/\.(mp3|m4a|ogg|wav|aiff?)/.test(path)) {
                     return response.arrayBuffer();
-                } else if (/\.json/.test(path)) {
-                    return response.json();
                 } else {
                     return response.text();
                 }

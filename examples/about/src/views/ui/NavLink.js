@@ -1,10 +1,10 @@
 import { Events, Interface } from 'alien.js';
 
 export class NavLink extends Interface {
-    constructor(copy, link) {
+    constructor(title, link) {
         super('.link', 'a');
 
-        this.copy = copy;
+        this.title = title;
         this.link = link;
         this.letters = [];
 
@@ -21,8 +21,9 @@ export class NavLink extends Interface {
             fontWeight: '700',
             fontSize: 11,
             lineHeight: 18,
-            letterSpacing: 0.33,
+            letterSpacing: '0.03em',
             textTransform: 'uppercase',
+            textDecoration: 'none',
             whiteSpace: 'nowrap',
             pointerEvents: 'auto',
             webkitUserSelect: 'none',
@@ -32,7 +33,7 @@ export class NavLink extends Interface {
     }
 
     initText() {
-        const split = this.copy.split('');
+        const split = this.title.split('');
         split.forEach(str => {
             if (str === ' ') {
                 str = '&nbsp';

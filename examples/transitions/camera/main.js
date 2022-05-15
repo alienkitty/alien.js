@@ -450,7 +450,6 @@ const fragmentCompositeShader = /* glsl */`
     precision highp float;
 
     uniform sampler2D tScene;
-    uniform vec3 uColor;
     uniform float uFocus;
     uniform float uRotation;
     uniform float uBluriness;
@@ -471,8 +470,6 @@ const fragmentCompositeShader = /* glsl */`
 
         FragColor = getRGB(tScene, vUv, 0.1, 0.001 * uDistortion * uBluriness * t);
 
-        // FragColor = mix(FragColor, vec4(0), uBluriness * t * 8.0);
-
         FragColor.rgb = dither(FragColor.rgb);
     }
 `;
@@ -483,7 +480,6 @@ class CompositeMaterial extends RawShaderMaterial {
             glslVersion: GLSL3,
             uniforms: {
                 tScene: new Uniform(null),
-                uColor: new Uniform(new Color(0x0e0e0e)),
                 uFocus: new Uniform(0.5),
                 uRotation: new Uniform(0),
                 uBluriness: new Uniform(1),
@@ -529,8 +525,8 @@ const fragmentBlurShader = /* glsl */`
     out vec4 FragColor;
 
     ${smootherstep}
-    ${blur}
     ${rotateUV}
+    ${blur}
 
     void main() {
         float d = abs(uFocus - rotateUV(vUv, uRotation).y);
@@ -1710,7 +1706,6 @@ class RenderManager {
         this.blurFocus = Device.mobile ? 0.5 : 0.25;
         this.blurRotation = Device.mobile ? 0 : degToRad(75);
         this.blurFactor = 1;
-        // this.blurVelocityFactor = this.camera.far / 1000;
         this.blurVelocityFactor = 0.1;
         this.enabled = true;
 

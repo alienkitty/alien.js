@@ -954,23 +954,9 @@ class WorldController {
     static initWorld() {
         this.renderer = new WebGLRenderer({
             powerPreference: 'high-performance',
-            // alpha: true,
-            // antialias: true,
             stencil: false
         });
-        // this.renderer.setClearColor(0x0e0e0e, 0);
         this.element = this.renderer.domElement;
-        // this.element = new Interface(this.renderer.domElement);
-
-        // Position above content
-        /* this.element.css({
-            left: 0,
-            top: 0,
-            width: '100%',
-            height: '100%',
-            zIndex: 5,
-            pointerEvents: 'none'
-        }); */
 
         // Tone mapping
         this.renderer.toneMapping = ACESFilmicToneMapping;

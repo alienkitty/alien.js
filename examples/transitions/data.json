@@ -1,0 +1,16 @@
+{
+    "pages": [
+        {
+            "path": "dark_planet/",
+            "title": "Dark Planet"
+        },
+        {
+            "path": "floating_crystal/",
+            "title": "Floating Crystal"
+        },
+        {
+            "path": "abstract_cube/",
+            "title": "Abstract Cube"
+        }
+    ]
+}

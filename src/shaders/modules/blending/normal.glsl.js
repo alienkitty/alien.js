@@ -1,4 +1,4 @@
-// Based on https://github.com/vanruesc/postprocessing
+// Based on https://github.com/pmndrs/postprocessing
 
 export default /* glsl */`
 vec4 blendNormal(vec4 x, vec4 y, float opacity) {

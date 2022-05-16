@@ -13,7 +13,7 @@
 <body>
     <div id="root"></div>
     <script type="module">
-        import { ACESFilmicToneMapping, AmbientLight, AssetLoader, Assets, BasicShadowMap, BloomCompositeMaterial, BoxGeometry, Color, Device, DirectionalLight, EnvironmentTextureLoader, Events, FXAAMaterial, GLSL3, Group, HemisphereLight, IcosahedronGeometry, ImageBitmapLoaderThread, LuminosityMaterial, Mesh, MeshBasicMaterial, MeshPhongMaterial, MeshStandardMaterial, NoBlending, OimoPhysics, OrthographicCamera, PanelItem, PerspectiveCamera, PlaneGeometry, PointLight, RawShaderMaterial, Raycaster, Reflector, RepeatWrapping, RigidBodyConfig, RigidBodyType, Scene, ShaderChunk, ShadowMaterial, Sound3D, SphericalJointConfig, Stage, TextureLoader, Thread, UI, Uniform, UnrealBloomBlurMaterial, Vector2, Vector3, WebAudio, WebGLRenderTarget, WebGLRenderer, clamp, delayedCall, floorPowerOfTwo, getFullscreenTriangle, getKeyByValue, lerp, mapLinear, ticker } from '../build/alien.js';
+        import { ACESFilmicToneMapping, AmbientLight, AssetLoader, Assets, BasicShadowMap, BloomCompositeMaterial, BoxGeometry, Color, Device, DirectionalLight, EnvironmentTextureLoader, Events, FXAAMaterial, GLSL3, Group, HemisphereLight, IcosahedronGeometry, ImageBitmapLoaderThread, LuminosityMaterial, Mesh, MeshBasicMaterial, MeshPhongMaterial, MeshStandardMaterial, NoBlending, OimoPhysics, OrthographicCamera, PanelItem, PerspectiveCamera, PlaneGeometry, PointLight, RawShaderMaterial, Raycaster, Reflector, RepeatWrapping, RigidBodyConfig, RigidBodyType, Scene, ShaderChunk, ShadowMaterial, Sound3D, SphereGeometry, SphericalJointConfig, Stage, TextureLoader, Thread, UI, Uniform, UnrealBloomBlurMaterial, Vector2, Vector3, WebAudio, WebGLRenderTarget, WebGLRenderer, clamp, delayedCall, floorPowerOfTwo, getFullscreenTriangle, getKeyByValue, lerp, mapLinear, ticker } from '../build/alien.js';
 
         class Config {
             static LIGHT_COLOR = 0xf44336;
@@ -516,7 +516,9 @@
         }
 
         class AudioController {
-            static init(view) {
+            static init(scene, camera, view) {
+                this.scene = scene;
+                this.camera = camera;
                 this.view = view;
 
                 this.addListeners();
@@ -552,10 +554,25 @@
             static trigger = (event, force) => {
                 switch (event) {
                     case 'gong': {
-                        const gong = new Sound3D(WorldController.camera, 'gong');
+                        const gong = new Sound3D(this.camera, 'gong');
                         gong.position.copy(this.view.cube.position);
                         gong.quaternion.copy(this.view.cube.quaternion);
                         gong.updateMatrixWorld();
+
+                        let mesh;
+
+                        if (Config.DEBUG) {
+                            mesh = new Mesh(
+                                new SphereGeometry(0.0625),
+                                new MeshPhongMaterial({ color: 0x0000ff })
+                            );
+                            mesh.material.depthTest = false;
+                            mesh.material.depthWrite = false;
+                            mesh.position.copy(this.view.cube.position);
+                            mesh.quaternion.copy(this.view.cube.quaternion);
+                            mesh.updateMatrixWorld();
+                            this.scene.add(mesh);
+                        }
 
                         const strength = mapLinear(force, 0, 4, 0, 1);
                         gong.sound.gain.set(clamp(strength * 0.5, 0, 1));
@@ -564,6 +581,13 @@
 
                         delayedCall(6000, () => {
                             gong.destroy();
+
+                            if (mesh) {
+                                this.scene.remove(mesh);
+                                mesh.material.dispose();
+                                mesh.geometry.dispose();
+                                mesh = null;
+                            }
                         });
                         break;
                     }
@@ -694,8 +718,7 @@
                 ];
 
                 items.forEach(data => {
-                    const item = new PanelItem(data);
-                    this.ui.addPanel(item);
+                    this.ui.addPanel(new PanelItem(data));
                 });
             }
 
@@ -771,7 +794,7 @@
                 this.luminosityMaterial.uniforms.uThreshold.value = this.luminosityThreshold;
                 this.luminosityMaterial.uniforms.uSmoothing.value = this.luminositySmoothing;
 
-                // Gaussian blur materials
+                // Separable Gaussian blur materials
                 this.blurMaterials = [];
 
                 const kernelSizeArray = [3, 5, 7, 9, 11];
@@ -781,7 +804,7 @@
                 }
 
                 // Bloom composite material
-                this.bloomCompositeMaterial = new BloomCompositeMaterial(this.nMips);
+                this.bloomCompositeMaterial = new BloomCompositeMaterial();
                 this.bloomCompositeMaterial.uniforms.tBlur1.value = this.renderTargetsVertical[0].texture;
                 this.bloomCompositeMaterial.uniforms.tBlur2.value = this.renderTargetsVertical[1].texture;
                 this.bloomCompositeMaterial.uniforms.tBlur3.value = this.renderTargetsVertical[2].texture;
@@ -1267,6 +1290,10 @@
                 this.addListeners();
                 this.onResize();
 
+                await this.loader.ready();
+
+                this.initAudio();
+
                 await Promise.all([
                     SceneController.ready(),
                     WorldController.textureLoader.ready(),
@@ -1312,6 +1339,13 @@
                 this.loader = new AssetLoader(Config.ASSETS);
             }
 
+            static initAudio() {
+                const { scene, camera } = WorldController;
+
+                WebAudio.init(Assets.filter(path => /sounds/.test(path)));
+                AudioController.init(scene, camera, this.view);
+            }
+
             static initPanel() {
                 const { physics } = WorldController;
 
@@ -1321,7 +1355,6 @@
             static addListeners() {
                 Stage.events.on(Events.RESIZE, this.onResize);
                 ticker.add(this.onUpdate);
-                this.loader.events.on(Events.COMPLETE, this.onComplete);
             }
 
             /**
@@ -1343,13 +1376,6 @@
                 SceneController.update();
                 RenderManager.update(time, delta, frame);
                 PanelController.update();
-            };
-
-            static onComplete = () => {
-                this.loader = this.loader.destroy();
-
-                WebAudio.init(Assets.filter(path => /sounds/.test(path)));
-                AudioController.init(this.view);
             };
         }
 

@@ -176,8 +176,7 @@
                 ];
 
                 items.forEach(data => {
-                    const item = new PanelItem(data);
-                    this.ui.addPanel(item);
+                    this.ui.addPanel(new PanelItem(data));
                 });
             }
 
@@ -312,7 +311,7 @@
                 renderer.clear();
                 renderer.render(screenScene, screenCamera);
 
-                // Two pass Gaussian blur
+                // Two pass Gaussian blur (horizontal and vertical)
                 this.hBlurMaterial.uniforms.tMap.value = renderTargetB.texture;
                 this.screen.material = this.hBlurMaterial;
                 renderer.setRenderTarget(renderTargetBlurA);

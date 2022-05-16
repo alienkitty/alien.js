@@ -39,12 +39,12 @@ html, body, #root {
 }
 
 body {
-    margin: 0;
     position: fixed;
+    margin: 0;
     font-family: 'Gothic A1', sans-serif;
     font-weight: 500;
     font-size: 13px;
-    line-height: 1.6;
+    line-height: 1.5;
     background-color: var(--bg-color);
     color: var(--ui-color);
     -moz-osx-font-smoothing: grayscale;

@@ -137,10 +137,11 @@
             }
 
             async loadImage(name, path) {
-                const img = await Assets.loadImage(path);
-                this.image[name] = img;
+                const image = await Assets.loadImage(path);
 
-                return img;
+                this.image[name] = image;
+
+                return image;
             }
 
             createCanvas(name) {

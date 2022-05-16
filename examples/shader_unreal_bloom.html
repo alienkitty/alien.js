@@ -130,8 +130,7 @@
                 ];
 
                 items.forEach(data => {
-                    const item = new PanelItem(data);
-                    this.ui.addPanel(item);
+                    this.ui.addPanel(new PanelItem(data));
                 });
             }
 
@@ -208,7 +207,7 @@
                 this.luminosityMaterial.uniforms.uThreshold.value = this.luminosityThreshold;
                 this.luminosityMaterial.uniforms.uSmoothing.value = this.luminositySmoothing;
 
-                // Gaussian blur materials
+                // Separable Gaussian blur materials
                 this.blurMaterials = [];
 
                 const kernelSizeArray = [3, 5, 7, 9, 11];

@@ -3,7 +3,7 @@ class Device {
 
     static mobile = !!navigator.maxTouchPoints;
 
-    static tablet = this.mobile && Math.max(window.innerWidth, window.innerHeight) > 1000;
+    static tablet = this.mobile && Math.max(screen.width, screen.height) > 1000;
 
     static phone = this.mobile && !this.tablet;
 
@@ -30,6 +30,7 @@ class Device {
 
 class Events {
     static STATE_CHANGE = 'state_change';
+    static VIEW_CHANGE = 'view_change';
     static KEY_DOWN = 'key_down';
     static KEY_UP = 'key_up';
     static KEY_PRESS = 'key_press';
@@ -54,7 +55,7 @@ class Styles {
         fontFamily: '"Roboto Mono", monospace',
         fontSize: 11,
         lineHeight: 15,
-        letterSpacing: 0.33
+        letterSpacing: '0.03em'
     };
 
     static small = {
@@ -71,445 +72,6 @@ class Styles {
     static panel = {
         ...this.label
     };
-}
-
-/**
- * @author pschroen / https://ufo.ai/
- */
-
-class Assets {
-    static path = '';
-    static crossOrigin;
-    static options;
-    static cache = false;
-    static files = {};
-
-    static add(key, file) {
-        if (!this.cache) {
-            return;
-        }
-
-        this.files[key] = file;
-    }
-
-    static get(key) {
-        if (!this.cache) {
-            return;
-        }
-
-        return this.files[key];
-    }
-
-    static remove(key) {
-        delete this.files[key];
-    }
-
-    static clear() {
-        this.files = {};
-    }
-
-    static filter(callback) {
-        const files = Object.keys(this.files).filter(callback).reduce((object, key) => {
-            object[key] = this.files[key];
-
-            return object;
-        }, {});
-
-        return files;
-    }
-
-    static getPath(path) {
-        if (path.includes('//')) {
-            return path;
-        }
-
-        if (this.path && !path.includes(this.path)) {
-            path = this.path + path;
-        }
-
-        return path;
-    }
-
-    static loadImage(path, callback) {
-        const image = new Image();
-
-        image.crossOrigin = this.crossOrigin;
-        image.src = this.getPath(path);
-
-        const promise = new Promise((resolve, reject) => {
-            image.onload = () => {
-                resolve(image);
-
-                image.onload = null;
-            };
-
-            image.onerror = event => {
-                reject(event);
-
-                image.onerror = null;
-            };
-        });
-
-        if (callback) {
-            promise.then(callback);
-        }
-
-        return promise;
-    }
-}
-
-/**
- * @author pschroen / https://ufo.ai/
- */
-
-class EventEmitter {
-    constructor() {
-        this.callbacks = {};
-    }
-
-    on(type, callback) {
-        if (!this.callbacks[type]) {
-            this.callbacks[type] = [];
-        }
-
-        this.callbacks[type].push(callback);
-    }
-
-    off(type, callback) {
-        if (!this.callbacks[type]) {
-            return;
-        }
-
-        if (callback) {
-            const index = this.callbacks[type].indexOf(callback);
-
-            if (~index) {
-                this.callbacks[type].splice(index, 1);
-            }
-        } else {
-            delete this.callbacks[type];
-        }
-    }
-
-    emit(type, event = {}) {
-        if (!this.callbacks[type]) {
-            return;
-        }
-
-        const stack = this.callbacks[type].slice();
-
-        for (let i = 0, l = stack.length; i < l; i++) {
-            stack[i].call(this, event);
-        }
-    }
-
-    destroy() {
-        for (const prop in this) {
-            this[prop] = null;
-        }
-
-        return null;
-    }
-}
-
-/**
- * @author pschroen / https://ufo.ai/
- */
-
-class Loader$1 {
-    constructor(assets = [], callback) {
-        this.events = new EventEmitter();
-        this.total = 0;
-        this.loaded = 0;
-        this.progress = 0;
-        this.promise = new Promise(resolve => this.resolve = resolve);
-        this.assets = assets;
-        this.callback = callback;
-
-        assets.forEach(path => this.load(path));
-    }
-
-    load(/* path, callback */) {}
-
-    loadAsync(path) {
-        return new Promise(resolve => this.load(path, resolve));
-    }
-
-    increment() {
-        this.progress = ++this.loaded / this.total;
-
-        this.events.emit(Events.PROGRESS, { progress: this.progress });
-
-        if (this.loaded === this.total) {
-            this.complete();
-        }
-    }
-
-    complete() {
-        this.resolve();
-
-        this.events.emit(Events.COMPLETE);
-
-        if (this.callback) {
-            this.callback();
-        }
-    }
-
-    add(num = 1) {
-        this.total += num;
-    }
-
-    trigger(num = 1) {
-        for (let i = 0; i < num; i++) {
-            this.increment();
-        }
-    }
-
-    ready() {
-        return this.total ? this.promise : Promise.resolve();
-    }
-
-    destroy() {
-        this.events.destroy();
-
-        for (const prop in this) {
-            this[prop] = null;
-        }
-
-        return null;
-    }
-}
-
-/**
- * @author pschroen / https://ufo.ai/
- */
-
-class AssetLoader extends Loader$1 {
-    static loadAssets(assets, callback) {
-        const promise = new Promise(resolve => new AssetLoader(assets, resolve));
-
-        if (callback) {
-            promise.then(callback);
-        }
-
-        return promise;
-    }
-
-    load(path, callback) {
-        path = Assets.getPath(path);
-
-        const cached = Assets.get(path);
-
-        let promise;
-
-        if (cached) {
-            promise = Promise.resolve(cached);
-        } else if (/\.(jpe?g|png|gif|svg)/.test(path)) {
-            promise = Assets.loadImage(path);
-        } else {
-            promise = fetch(path, Assets.options).then(response => {
-                if (/\.(mp3|m4a|ogg|wav|aiff?)/.test(path)) {
-                    return response.arrayBuffer();
-                } else if (/\.json/.test(path)) {
-                    return response.json();
-                } else {
-                    return response.text();
-                }
-            });
-        }
-
-        promise.then(data => {
-            Assets.add(path, data);
-
-            this.increment();
-
-            if (callback) {
-                callback(data);
-            }
-        }).catch(event => {
-            this.increment();
-
-            if (callback) {
-                callback(event);
-            }
-        });
-
-        this.total++;
-    }
-}
-
-/**
- * @author pschroen / https://ufo.ai/
- */
-
-class FontLoader extends Loader$1 {
-    static loadFonts(fonts, callback) {
-        const promise = new Promise(resolve => new FontLoader(fonts, resolve));
-
-        if (callback) {
-            promise.then(callback);
-        }
-
-        return promise;
-    }
-
-    load(font, callback) {
-        if (typeof font !== 'object') {
-            font = {
-                style: 'normal',
-                variant: 'normal',
-                weight: 'normal',
-                family: font.replace(/"/g, '\'')
-            };
-        }
-
-        const specifier = (({ style = 'normal', variant = 'normal', weight = 'normal', family }) => {
-            return `${style} ${variant} ${weight} 12px "${family}"`;
-        })(font);
-
-        let canvas = document.createElement('canvas');
-        let context = canvas.getContext('2d');
-
-        document.fonts.load(specifier).then(list => {
-            context.font = specifier;
-            context.fillText('LOAD', 0, 0);
-
-            return list;
-        }).then(list => {
-            this.increment();
-
-            if (callback) {
-                callback(list);
-            }
-        }).catch(event => {
-            this.increment();
-
-            if (callback) {
-                callback(event);
-            }
-        }).finally(() => {
-            context = null;
-            canvas = null;
-        });
-
-        this.total++;
-    }
-}
-
-/**
- * @author pschroen / https://ufo.ai/
- */
-
-class MultiLoader extends Loader$1 {
-    constructor() {
-        super();
-
-        this.loaders = [];
-        this.weights = [];
-    }
-
-    load(loader, weight = 1) {
-        loader.events.on(Events.PROGRESS, this.onProgress);
-        loader.events.on(Events.COMPLETE, this.onComplete);
-
-        this.loaders.push(loader);
-        this.weights.push(weight);
-
-        this.total += weight;
-    }
-
-    /**
-     * Event handlers
-     */
-
-    onProgress = () => {
-        let loaded = this.loaded;
-
-        for (let i = 0, l = this.loaders.length; i < l; i++) {
-            loaded += this.weights[i] * this.loaders[i].progress;
-        }
-
-        const progress = loaded / this.total;
-
-        if (progress < 1) {
-            this.events.emit(Events.PROGRESS, { progress });
-        }
-    };
-
-    onComplete = () => {
-        this.increment();
-    };
-
-    /**
-     * Public methods
-     */
-
-    destroy = () => {
-        for (let i = this.loaders.length - 1; i >= 0; i--) {
-            if (this.loaders[i] && this.loaders[i].destroy) {
-                this.loaders[i].destroy();
-            }
-        }
-
-        return super.destroy();
-    };
-}
-
-/**
- * @author pschroen / https://ufo.ai/
- */
-
-class Cluster {
-    constructor(type, num = 10) {
-        this.type = type;
-
-        this.array = [];
-        this.index = 0;
-
-        if (type) {
-            for (let i = 0; i < num; i++) {
-                this.array.push(new type());
-            }
-        }
-    }
-
-    get() {
-        const object = this.array[this.index];
-
-        this.index++;
-
-        if (this.index === this.array.length) {
-            this.index = 0;
-        }
-
-        return object;
-    }
-
-    empty() {
-        this.array.length = 0;
-    }
-
-    push(...objects) {
-        this.array.push(...objects);
-    }
-
-    length() {
-        return this.array.length;
-    }
-
-    destroy() {
-        for (let i = this.array.length - 1; i >= 0; i--) {
-            if (this.array[i] && this.array[i].destroy) {
-                this.array[i].destroy();
-            }
-        }
-
-        for (const prop in this) {
-            this[prop] = null;
-        }
-
-        return null;
-    }
 }
 
 const _lut$1 = [];
@@ -846,9 +408,10 @@ function absolute(path) {
         return path;
     }
 
-    const port = Number(location.port) > 1000 ? ':' + location.port : '';
+    const port = Number(location.port) > 1000 ? `:${location.port}` : '';
+    const pathname = path.startsWith('/') ? path : `${location.pathname.replace(/\/[^/]*$/, '/')}${path}`;
 
-    return location.protocol + '//' + location.hostname + port + location.pathname.replace(/\/[^/]*$/, '/') + path;
+    return `${location.protocol}//${location.hostname}${port}${pathname}`;
 }
 
 function getKeyByValue(object, value) {
@@ -861,6 +424,447 @@ function getConstructor(object) {
     const name = code.match(/(?:class|function)\s([^\s{(]+)/)[1];
 
     return { name, code, isInstance };
+}
+
+/**
+ * @author pschroen / https://ufo.ai/
+ */
+
+class Assets {
+    static path = '';
+    static crossOrigin;
+    static options;
+    static cache = false;
+    static files = {};
+
+    static add(key, file) {
+        if (!this.cache) {
+            return;
+        }
+
+        this.files[key] = file;
+    }
+
+    static get(key) {
+        if (!this.cache) {
+            return;
+        }
+
+        return this.files[key];
+    }
+
+    static remove(key) {
+        delete this.files[key];
+    }
+
+    static clear() {
+        this.files = {};
+    }
+
+    static filter(callback) {
+        const files = Object.keys(this.files).filter(callback).reduce((object, key) => {
+            object[key] = this.files[key];
+
+            return object;
+        }, {});
+
+        return files;
+    }
+
+    static getPath(path) {
+        return this.path + path;
+    }
+
+    static loadImage(path, callback) {
+        const image = new Image();
+
+        image.crossOrigin = this.crossOrigin;
+        image.src = this.getPath(path);
+
+        const promise = new Promise((resolve, reject) => {
+            image.onload = () => {
+                resolve(image);
+
+                image.onload = null;
+            };
+
+            image.onerror = event => {
+                reject(event);
+
+                image.onerror = null;
+            };
+        });
+
+        if (callback) {
+            promise.then(callback);
+        }
+
+        return promise;
+    }
+
+    static loadData(path, callback) {
+        const promise = fetch(`${this.getPath(path)}?${guid()}`, this.options).then(response => {
+            return response.json();
+        });
+
+        if (callback) {
+            promise.then(callback);
+        }
+
+        return promise;
+    }
+}
+
+/**
+ * @author pschroen / https://ufo.ai/
+ */
+
+class EventEmitter {
+    constructor() {
+        this.callbacks = {};
+    }
+
+    on(type, callback) {
+        if (!this.callbacks[type]) {
+            this.callbacks[type] = [];
+        }
+
+        this.callbacks[type].push(callback);
+    }
+
+    off(type, callback) {
+        if (!this.callbacks[type]) {
+            return;
+        }
+
+        if (callback) {
+            const index = this.callbacks[type].indexOf(callback);
+
+            if (~index) {
+                this.callbacks[type].splice(index, 1);
+            }
+        } else {
+            delete this.callbacks[type];
+        }
+    }
+
+    emit(type, event = {}) {
+        if (!this.callbacks[type]) {
+            return;
+        }
+
+        const stack = this.callbacks[type].slice();
+
+        for (let i = 0, l = stack.length; i < l; i++) {
+            stack[i].call(this, event);
+        }
+    }
+
+    destroy() {
+        for (const prop in this) {
+            this[prop] = null;
+        }
+
+        return null;
+    }
+}
+
+/**
+ * @author pschroen / https://ufo.ai/
+ */
+
+class Loader$1 {
+    constructor(assets = [], callback) {
+        this.events = new EventEmitter();
+        this.total = 0;
+        this.loaded = 0;
+        this.progress = 0;
+        this.promise = new Promise(resolve => this.resolve = resolve);
+        this.assets = assets;
+        this.callback = callback;
+
+        assets.forEach(path => this.load(path));
+    }
+
+    load(/* path, callback */) {}
+
+    loadAsync(path) {
+        return new Promise(resolve => this.load(path, resolve));
+    }
+
+    increment() {
+        this.progress = ++this.loaded / this.total;
+
+        this.events.emit(Events.PROGRESS, { progress: this.progress });
+
+        if (this.loaded === this.total) {
+            this.complete();
+        }
+    }
+
+    complete() {
+        this.resolve();
+
+        this.events.emit(Events.COMPLETE);
+
+        if (this.callback) {
+            this.callback();
+        }
+    }
+
+    add(num = 1) {
+        this.total += num;
+    }
+
+    trigger(num = 1) {
+        for (let i = 0; i < num; i++) {
+            this.increment();
+        }
+    }
+
+    ready() {
+        return this.total ? this.promise : Promise.resolve();
+    }
+
+    destroy() {
+        this.events.destroy();
+
+        for (const prop in this) {
+            this[prop] = null;
+        }
+
+        return null;
+    }
+}
+
+/**
+ * @author pschroen / https://ufo.ai/
+ */
+
+class AssetLoader extends Loader$1 {
+    static loadAssets(assets, callback) {
+        const promise = new Promise(resolve => new AssetLoader(assets, resolve));
+
+        if (callback) {
+            promise.then(callback);
+        }
+
+        return promise;
+    }
+
+    load(path, callback) {
+        const cached = Assets.get(path);
+
+        let promise;
+
+        if (cached) {
+            promise = Promise.resolve(cached);
+        } else if (/\.(jpe?g|png|gif|svg)/.test(path)) {
+            promise = Assets.loadImage(path);
+        } else if (/\.json/.test(path)) {
+            promise = Assets.loadData(path);
+        } else {
+            promise = fetch(Assets.getPath(path), Assets.options).then(response => {
+                if (/\.(mp3|m4a|ogg|wav|aiff?)/.test(path)) {
+                    return response.arrayBuffer();
+                } else {
+                    return response.text();
+                }
+            });
+        }
+
+        promise.then(data => {
+            Assets.add(path, data);
+
+            this.increment();
+
+            if (callback) {
+                callback(data);
+            }
+        }).catch(event => {
+            this.increment();
+
+            if (callback) {
+                callback(event);
+            }
+        });
+
+        this.total++;
+    }
+}
+
+/**
+ * @author pschroen / https://ufo.ai/
+ */
+
+class FontLoader extends Loader$1 {
+    static loadFonts(fonts, callback) {
+        const promise = new Promise(resolve => new FontLoader(fonts, resolve));
+
+        if (callback) {
+            promise.then(callback);
+        }
+
+        return promise;
+    }
+
+    load(font, callback) {
+        if (typeof font !== 'object') {
+            font = {
+                style: 'normal',
+                variant: 'normal',
+                weight: 'normal',
+                family: font.replace(/"/g, '\'')
+            };
+        }
+
+        const specifier = (({ style = 'normal', variant = 'normal', weight = 'normal', family }) => {
+            return `${style} ${variant} ${weight} 12px "${family}"`;
+        })(font);
+
+        let canvas = document.createElement('canvas');
+        let context = canvas.getContext('2d');
+
+        document.fonts.load(specifier).then(list => {
+            context.font = specifier;
+            context.fillText('LOAD', 0, 0);
+
+            return list;
+        }).then(list => {
+            this.increment();
+
+            if (callback) {
+                callback(list);
+            }
+        }).catch(event => {
+            this.increment();
+
+            if (callback) {
+                callback(event);
+            }
+        }).finally(() => {
+            context = null;
+            canvas = null;
+        });
+
+        this.total++;
+    }
+}
+
+/**
+ * @author pschroen / https://ufo.ai/
+ */
+
+class MultiLoader extends Loader$1 {
+    constructor() {
+        super();
+
+        this.loaders = [];
+        this.weights = [];
+    }
+
+    load(loader, weight = 1) {
+        loader.events.on(Events.PROGRESS, this.onProgress);
+        loader.events.on(Events.COMPLETE, this.onComplete);
+
+        this.loaders.push(loader);
+        this.weights.push(weight);
+
+        this.total += weight;
+    }
+
+    /**
+     * Event handlers
+     */
+
+    onProgress = () => {
+        let loaded = this.loaded;
+
+        for (let i = 0, l = this.loaders.length; i < l; i++) {
+            loaded += this.weights[i] * this.loaders[i].progress;
+        }
+
+        const progress = loaded / this.total;
+
+        if (progress < 1) {
+            this.events.emit(Events.PROGRESS, { progress });
+        }
+    };
+
+    onComplete = () => {
+        this.increment();
+    };
+
+    /**
+     * Public methods
+     */
+
+    destroy = () => {
+        for (let i = this.loaders.length - 1; i >= 0; i--) {
+            if (this.loaders[i] && this.loaders[i].destroy) {
+                this.loaders[i].destroy();
+            }
+        }
+
+        return super.destroy();
+    };
+}
+
+/**
+ * @author pschroen / https://ufo.ai/
+ */
+
+class Cluster {
+    constructor(type, num = 10) {
+        this.type = type;
+
+        this.array = [];
+        this.index = 0;
+
+        if (type) {
+            for (let i = 0; i < num; i++) {
+                this.array.push(new type());
+            }
+        }
+    }
+
+    get() {
+        const object = this.array[this.index];
+
+        this.index++;
+
+        if (this.index === this.array.length) {
+            this.index = 0;
+        }
+
+        return object;
+    }
+
+    empty() {
+        this.array.length = 0;
+    }
+
+    push(...objects) {
+        this.array.push(...objects);
+    }
+
+    length() {
+        return this.array.length;
+    }
+
+    destroy() {
+        for (let i = this.array.length - 1; i >= 0; i--) {
+            if (this.array[i] && this.array[i].destroy) {
+                this.array[i].destroy();
+            }
+        }
+
+        for (const prop in this) {
+            this[prop] = null;
+        }
+
+        return null;
+    }
 }
 
 /**
@@ -902,7 +906,7 @@ class Thread extends EventEmitter {
         imports.forEach(bundle => {
             const [path, ...names] = bundle;
 
-            array.push(`import { ${names.join(', ')} } from '${absolute(Assets.getPath(path))}';`);
+            array.push(`import { ${names.join(', ')} } from '${absolute(path)}';`);
         });
 
         if (classes.length) {
@@ -1011,7 +1015,7 @@ class ImageBitmapLoaderThread {
     }
 
     static load(path, options, params) {
-        path = absolute(Assets.getPath(path));
+        path = absolute(path);
 
         return Thread.shared().loadImage({ path, options, params });
     }
@@ -1033,8 +1037,6 @@ class ImageBitmapLoader$1 extends Loader$1 {
     }
 
     load(path, callback) {
-        path = Assets.getPath(path);
-
         const cached = Assets.get(path);
 
         let promise;
@@ -1042,9 +1044,9 @@ class ImageBitmapLoader$1 extends Loader$1 {
         if (cached) {
             promise = Promise.resolve(cached);
         } else if (Thread.threads) {
-            promise = ImageBitmapLoaderThread.load(path, Assets.options, this.options);
+            promise = ImageBitmapLoaderThread.load(Assets.getPath(path), Assets.options, this.options);
         } else {
-            promise = fetch(path, Assets.options).then(response => {
+            promise = fetch(Assets.getPath(path), Assets.options).then(response => {
                 return response.blob();
             }).then(blob => {
                 return createImageBitmap(blob, this.options);
@@ -1086,7 +1088,7 @@ class ImageBitmapLoader$1 extends Loader$1 {
  * Copyright 2010-2022 Three.js Authors
  * SPDX-License-Identifier: MIT
  */
-const REVISION = '139';
+const REVISION = '140';
 const MOUSE = { LEFT: 0, MIDDLE: 1, RIGHT: 2, ROTATE: 0, DOLLY: 1, PAN: 2 };
 const TOUCH = { ROTATE: 0, PAN: 1, DOLLY_PAN: 2, DOLLY_ROTATE: 3 };
 const CullFaceNone = 0;
@@ -3206,6 +3208,14 @@ class Color$1 {
 
 	}
 
+	*[ Symbol.iterator ]() {
+
+		yield this.r;
+		yield this.g;
+		yield this.b;
+
+	}
+
 }
 
 Color$1.NAMES = _colorKeywords$1;
@@ -4491,7 +4501,8 @@ class WebGLRenderTarget extends EventDispatcher {
 
 		// ensure image object is not shared, see #20328
 
-		this.texture.image = Object.assign( {}, source.texture.image );
+		const image = Object.assign( {}, source.texture.image );
+		this.texture.source = new Source( image );
 
 		this.depthBuffer = source.depthBuffer;
 		this.stencilBuffer = source.stencilBuffer;
@@ -4663,13 +4674,15 @@ class WebGLMultipleRenderTargets extends WebGLRenderTarget {
 
 		this.depthBuffer = source.depthBuffer;
 		this.stencilBuffer = source.stencilBuffer;
-		this.depthTexture = source.depthTexture;
+
+		if ( source.depthTexture !== null ) this.depthTexture = source.depthTexture.clone();
 
 		this.texture.length = 0;
 
 		for ( let i = 0, il = source.texture.length; i < il; i ++ ) {
 
 			this.texture[ i ] = source.texture[ i ].clone();
+			this.texture[ i ].isRenderTargetTexture = true;
 
 		}
 
@@ -5362,6 +5375,15 @@ class Quaternion {
 	}
 
 	_onChangeCallback() {}
+
+	*[ Symbol.iterator ]() {
+
+		yield this._x;
+		yield this._y;
+		yield this._z;
+		yield this._w;
+
+	}
 
 }
 
@@ -8541,6 +8563,15 @@ class Euler {
 
 	_onChangeCallback() {}
 
+	*[ Symbol.iterator ]() {
+
+		yield this._x;
+		yield this._y;
+		yield this._z;
+		yield this._order;
+
+	}
+
 }
 
 Euler.prototype.isEuler = true;
@@ -9834,8 +9865,6 @@ class Material extends EventDispatcher {
 		this.name = '';
 		this.type = 'Material';
 
-		this.fog = true;
-
 		this.blending = NormalBlending;
 		this.side = FrontSide;
 		this.vertexColors = false;
@@ -10167,6 +10196,8 @@ class Material extends EventDispatcher {
 
 		if ( this.toneMapped === false ) data.toneMapped = false;
 
+		if ( this.fog === false ) data.fog = false;
+
 		if ( JSON.stringify( this.userData ) !== '{}' ) data.userData = this.userData;
 
 		// TODO: Copied from Object3D.toJSON
@@ -10210,8 +10241,6 @@ class Material extends EventDispatcher {
 	copy( source ) {
 
 		this.name = source.name;
-
-		this.fog = source.fog;
 
 		this.blending = source.blending;
 		this.side = source.side;
@@ -10342,6 +10371,8 @@ class MeshBasicMaterial extends Material {
 		this.wireframeLinecap = 'round';
 		this.wireframeLinejoin = 'round';
 
+		this.fog = true;
+
 		this.setValues( parameters );
 
 	}
@@ -10373,6 +10404,8 @@ class MeshBasicMaterial extends Material {
 		this.wireframeLinewidth = source.wireframeLinewidth;
 		this.wireframeLinecap = source.wireframeLinecap;
 		this.wireframeLinejoin = source.wireframeLinejoin;
+
+		this.fog = source.fog;
 
 		return this;
 
@@ -12712,6 +12745,7 @@ class ShaderMaterial extends Material {
 		this.wireframe = source.wireframe;
 		this.wireframeLinewidth = source.wireframeLinewidth;
 
+		this.fog = source.fog;
 		this.lights = source.lights;
 		this.clipping = source.clipping;
 
@@ -13179,11 +13213,9 @@ class CubeCamera extends Object3D {
 
 		const currentRenderTarget = renderer.getRenderTarget();
 
-		const currentOutputEncoding = renderer.outputEncoding;
 		const currentToneMapping = renderer.toneMapping;
 		const currentXrEnabled = renderer.xr.enabled;
 
-		renderer.outputEncoding = LinearEncoding;
 		renderer.toneMapping = NoToneMapping;
 		renderer.xr.enabled = false;
 
@@ -13213,7 +13245,6 @@ class CubeCamera extends Object3D {
 
 		renderer.setRenderTarget( currentRenderTarget );
 
-		renderer.outputEncoding = currentOutputEncoding;
 		renderer.toneMapping = currentToneMapping;
 		renderer.xr.enabled = currentXrEnabled;
 
@@ -14109,7 +14140,7 @@ var color_vertex = "#if defined( USE_COLOR_ALPHA )\n\tvColor = vec4( 1.0 );\n#el
 
 var common = "#define PI 3.141592653589793\n#define PI2 6.283185307179586\n#define PI_HALF 1.5707963267948966\n#define RECIPROCAL_PI 0.3183098861837907\n#define RECIPROCAL_PI2 0.15915494309189535\n#define EPSILON 1e-6\n#ifndef saturate\n#define saturate( a ) clamp( a, 0.0, 1.0 )\n#endif\n#define whiteComplement( a ) ( 1.0 - saturate( a ) )\nfloat pow2( const in float x ) { return x*x; }\nfloat pow3( const in float x ) { return x*x*x; }\nfloat pow4( const in float x ) { float x2 = x*x; return x2*x2; }\nfloat max3( const in vec3 v ) { return max( max( v.x, v.y ), v.z ); }\nfloat average( const in vec3 color ) { return dot( color, vec3( 0.3333 ) ); }\nhighp float rand( const in vec2 uv ) {\n\tconst highp float a = 12.9898, b = 78.233, c = 43758.5453;\n\thighp float dt = dot( uv.xy, vec2( a,b ) ), sn = mod( dt, PI );\n\treturn fract( sin( sn ) * c );\n}\n#ifdef HIGH_PRECISION\n\tfloat precisionSafeLength( vec3 v ) { return length( v ); }\n#else\n\tfloat precisionSafeLength( vec3 v ) {\n\t\tfloat maxComponent = max3( abs( v ) );\n\t\treturn length( v / maxComponent ) * maxComponent;\n\t}\n#endif\nstruct IncidentLight {\n\tvec3 color;\n\tvec3 direction;\n\tbool visible;\n};\nstruct ReflectedLight {\n\tvec3 directDiffuse;\n\tvec3 directSpecular;\n\tvec3 indirectDiffuse;\n\tvec3 indirectSpecular;\n};\nstruct GeometricContext {\n\tvec3 position;\n\tvec3 normal;\n\tvec3 viewDir;\n#ifdef USE_CLEARCOAT\n\tvec3 clearcoatNormal;\n#endif\n};\nvec3 transformDirection( in vec3 dir, in mat4 matrix ) {\n\treturn normalize( ( matrix * vec4( dir, 0.0 ) ).xyz );\n}\nvec3 inverseTransformDirection( in vec3 dir, in mat4 matrix ) {\n\treturn normalize( ( vec4( dir, 0.0 ) * matrix ).xyz );\n}\nmat3 transposeMat3( const in mat3 m ) {\n\tmat3 tmp;\n\ttmp[ 0 ] = vec3( m[ 0 ].x, m[ 1 ].x, m[ 2 ].x );\n\ttmp[ 1 ] = vec3( m[ 0 ].y, m[ 1 ].y, m[ 2 ].y );\n\ttmp[ 2 ] = vec3( m[ 0 ].z, m[ 1 ].z, m[ 2 ].z );\n\treturn tmp;\n}\nfloat linearToRelativeLuminance( const in vec3 color ) {\n\tvec3 weights = vec3( 0.2126, 0.7152, 0.0722 );\n\treturn dot( weights, color.rgb );\n}\nbool isPerspectiveMatrix( mat4 m ) {\n\treturn m[ 2 ][ 3 ] == - 1.0;\n}\nvec2 equirectUv( in vec3 dir ) {\n\tfloat u = atan( dir.z, dir.x ) * RECIPROCAL_PI2 + 0.5;\n\tfloat v = asin( clamp( dir.y, - 1.0, 1.0 ) ) * RECIPROCAL_PI + 0.5;\n\treturn vec2( u, v );\n}";
 
-var cube_uv_reflection_fragment = "#ifdef ENVMAP_TYPE_CUBE_UV\n\t#define cubeUV_minMipLevel 4.0\n\t#define cubeUV_minTileSize 16.0\n\tfloat getFace( vec3 direction ) {\n\t\tvec3 absDirection = abs( direction );\n\t\tfloat face = - 1.0;\n\t\tif ( absDirection.x > absDirection.z ) {\n\t\t\tif ( absDirection.x > absDirection.y )\n\t\t\t\tface = direction.x > 0.0 ? 0.0 : 3.0;\n\t\t\telse\n\t\t\t\tface = direction.y > 0.0 ? 1.0 : 4.0;\n\t\t} else {\n\t\t\tif ( absDirection.z > absDirection.y )\n\t\t\t\tface = direction.z > 0.0 ? 2.0 : 5.0;\n\t\t\telse\n\t\t\t\tface = direction.y > 0.0 ? 1.0 : 4.0;\n\t\t}\n\t\treturn face;\n\t}\n\tvec2 getUV( vec3 direction, float face ) {\n\t\tvec2 uv;\n\t\tif ( face == 0.0 ) {\n\t\t\tuv = vec2( direction.z, direction.y ) / abs( direction.x );\n\t\t} else if ( face == 1.0 ) {\n\t\t\tuv = vec2( - direction.x, - direction.z ) / abs( direction.y );\n\t\t} else if ( face == 2.0 ) {\n\t\t\tuv = vec2( - direction.x, direction.y ) / abs( direction.z );\n\t\t} else if ( face == 3.0 ) {\n\t\t\tuv = vec2( - direction.z, direction.y ) / abs( direction.x );\n\t\t} else if ( face == 4.0 ) {\n\t\t\tuv = vec2( - direction.x, direction.z ) / abs( direction.y );\n\t\t} else {\n\t\t\tuv = vec2( direction.x, direction.y ) / abs( direction.z );\n\t\t}\n\t\treturn 0.5 * ( uv + 1.0 );\n\t}\n\tvec3 bilinearCubeUV( sampler2D envMap, vec3 direction, float mipInt ) {\n\t\tfloat face = getFace( direction );\n\t\tfloat filterInt = max( cubeUV_minMipLevel - mipInt, 0.0 );\n\t\tmipInt = max( mipInt, cubeUV_minMipLevel );\n\t\tfloat faceSize = exp2( mipInt );\n\t\tvec2 uv = getUV( direction, face ) * ( faceSize - 1.0 ) + 0.5;\n\t\tif ( face > 2.0 ) {\n\t\t\tuv.y += faceSize;\n\t\t\tface -= 3.0;\n\t\t}\n\t\tuv.x += face * faceSize;\n\t\tuv.x += filterInt * 3.0 * cubeUV_minTileSize;\n\t\tuv.y += 4.0 * ( exp2( CUBEUV_MAX_MIP ) - faceSize );\n\t\tuv.x *= CUBEUV_TEXEL_WIDTH;\n\t\tuv.y *= CUBEUV_TEXEL_HEIGHT;\n\t\t#ifdef texture2DGradEXT\n\t\t\treturn texture2DGradEXT( envMap, uv, vec2( 0.0 ), vec2( 0.0 ) ).rgb;\n\t\t#else\n\t\t\treturn texture2D( envMap, uv ).rgb;\n\t\t#endif\n\t}\n\t#define r0 1.0\n\t#define v0 0.339\n\t#define m0 - 2.0\n\t#define r1 0.8\n\t#define v1 0.276\n\t#define m1 - 1.0\n\t#define r4 0.4\n\t#define v4 0.046\n\t#define m4 2.0\n\t#define r5 0.305\n\t#define v5 0.016\n\t#define m5 3.0\n\t#define r6 0.21\n\t#define v6 0.0038\n\t#define m6 4.0\n\tfloat roughnessToMip( float roughness ) {\n\t\tfloat mip = 0.0;\n\t\tif ( roughness >= r1 ) {\n\t\t\tmip = ( r0 - roughness ) * ( m1 - m0 ) / ( r0 - r1 ) + m0;\n\t\t} else if ( roughness >= r4 ) {\n\t\t\tmip = ( r1 - roughness ) * ( m4 - m1 ) / ( r1 - r4 ) + m1;\n\t\t} else if ( roughness >= r5 ) {\n\t\t\tmip = ( r4 - roughness ) * ( m5 - m4 ) / ( r4 - r5 ) + m4;\n\t\t} else if ( roughness >= r6 ) {\n\t\t\tmip = ( r5 - roughness ) * ( m6 - m5 ) / ( r5 - r6 ) + m5;\n\t\t} else {\n\t\t\tmip = - 2.0 * log2( 1.16 * roughness );\t\t}\n\t\treturn mip;\n\t}\n\tvec4 textureCubeUV( sampler2D envMap, vec3 sampleDir, float roughness ) {\n\t\tfloat mip = clamp( roughnessToMip( roughness ), m0, CUBEUV_MAX_MIP );\n\t\tfloat mipF = fract( mip );\n\t\tfloat mipInt = floor( mip );\n\t\tvec3 color0 = bilinearCubeUV( envMap, sampleDir, mipInt );\n\t\tif ( mipF == 0.0 ) {\n\t\t\treturn vec4( color0, 1.0 );\n\t\t} else {\n\t\t\tvec3 color1 = bilinearCubeUV( envMap, sampleDir, mipInt + 1.0 );\n\t\t\treturn vec4( mix( color0, color1, mipF ), 1.0 );\n\t\t}\n\t}\n#endif";
+var cube_uv_reflection_fragment = "#ifdef ENVMAP_TYPE_CUBE_UV\n\t#define cubeUV_minMipLevel 4.0\n\t#define cubeUV_minTileSize 16.0\n\tfloat getFace( vec3 direction ) {\n\t\tvec3 absDirection = abs( direction );\n\t\tfloat face = - 1.0;\n\t\tif ( absDirection.x > absDirection.z ) {\n\t\t\tif ( absDirection.x > absDirection.y )\n\t\t\t\tface = direction.x > 0.0 ? 0.0 : 3.0;\n\t\t\telse\n\t\t\t\tface = direction.y > 0.0 ? 1.0 : 4.0;\n\t\t} else {\n\t\t\tif ( absDirection.z > absDirection.y )\n\t\t\t\tface = direction.z > 0.0 ? 2.0 : 5.0;\n\t\t\telse\n\t\t\t\tface = direction.y > 0.0 ? 1.0 : 4.0;\n\t\t}\n\t\treturn face;\n\t}\n\tvec2 getUV( vec3 direction, float face ) {\n\t\tvec2 uv;\n\t\tif ( face == 0.0 ) {\n\t\t\tuv = vec2( direction.z, direction.y ) / abs( direction.x );\n\t\t} else if ( face == 1.0 ) {\n\t\t\tuv = vec2( - direction.x, - direction.z ) / abs( direction.y );\n\t\t} else if ( face == 2.0 ) {\n\t\t\tuv = vec2( - direction.x, direction.y ) / abs( direction.z );\n\t\t} else if ( face == 3.0 ) {\n\t\t\tuv = vec2( - direction.z, direction.y ) / abs( direction.x );\n\t\t} else if ( face == 4.0 ) {\n\t\t\tuv = vec2( - direction.x, direction.z ) / abs( direction.y );\n\t\t} else {\n\t\t\tuv = vec2( direction.x, direction.y ) / abs( direction.z );\n\t\t}\n\t\treturn 0.5 * ( uv + 1.0 );\n\t}\n\tvec3 bilinearCubeUV( sampler2D envMap, vec3 direction, float mipInt ) {\n\t\tfloat face = getFace( direction );\n\t\tfloat filterInt = max( cubeUV_minMipLevel - mipInt, 0.0 );\n\t\tmipInt = max( mipInt, cubeUV_minMipLevel );\n\t\tfloat faceSize = exp2( mipInt );\n\t\tvec2 uv = getUV( direction, face ) * ( faceSize - 2.0 ) + 1.0;\n\t\tif ( face > 2.0 ) {\n\t\t\tuv.y += faceSize;\n\t\t\tface -= 3.0;\n\t\t}\n\t\tuv.x += face * faceSize;\n\t\tuv.x += filterInt * 3.0 * cubeUV_minTileSize;\n\t\tuv.y += 4.0 * ( exp2( CUBEUV_MAX_MIP ) - faceSize );\n\t\tuv.x *= CUBEUV_TEXEL_WIDTH;\n\t\tuv.y *= CUBEUV_TEXEL_HEIGHT;\n\t\t#ifdef texture2DGradEXT\n\t\t\treturn texture2DGradEXT( envMap, uv, vec2( 0.0 ), vec2( 0.0 ) ).rgb;\n\t\t#else\n\t\t\treturn texture2D( envMap, uv ).rgb;\n\t\t#endif\n\t}\n\t#define r0 1.0\n\t#define v0 0.339\n\t#define m0 - 2.0\n\t#define r1 0.8\n\t#define v1 0.276\n\t#define m1 - 1.0\n\t#define r4 0.4\n\t#define v4 0.046\n\t#define m4 2.0\n\t#define r5 0.305\n\t#define v5 0.016\n\t#define m5 3.0\n\t#define r6 0.21\n\t#define v6 0.0038\n\t#define m6 4.0\n\tfloat roughnessToMip( float roughness ) {\n\t\tfloat mip = 0.0;\n\t\tif ( roughness >= r1 ) {\n\t\t\tmip = ( r0 - roughness ) * ( m1 - m0 ) / ( r0 - r1 ) + m0;\n\t\t} else if ( roughness >= r4 ) {\n\t\t\tmip = ( r1 - roughness ) * ( m4 - m1 ) / ( r1 - r4 ) + m1;\n\t\t} else if ( roughness >= r5 ) {\n\t\t\tmip = ( r4 - roughness ) * ( m5 - m4 ) / ( r4 - r5 ) + m4;\n\t\t} else if ( roughness >= r6 ) {\n\t\t\tmip = ( r5 - roughness ) * ( m6 - m5 ) / ( r5 - r6 ) + m5;\n\t\t} else {\n\t\t\tmip = - 2.0 * log2( 1.16 * roughness );\t\t}\n\t\treturn mip;\n\t}\n\tvec4 textureCubeUV( sampler2D envMap, vec3 sampleDir, float roughness ) {\n\t\tfloat mip = clamp( roughnessToMip( roughness ), m0, CUBEUV_MAX_MIP );\n\t\tfloat mipF = fract( mip );\n\t\tfloat mipInt = floor( mip );\n\t\tvec3 color0 = bilinearCubeUV( envMap, sampleDir, mipInt );\n\t\tif ( mipF == 0.0 ) {\n\t\t\treturn vec4( color0, 1.0 );\n\t\t} else {\n\t\t\tvec3 color1 = bilinearCubeUV( envMap, sampleDir, mipInt + 1.0 );\n\t\t\treturn vec4( mix( color0, color1, mipF ), 1.0 );\n\t\t}\n\t}\n#endif";
 
 var defaultnormal_vertex = "vec3 transformedNormal = objectNormal;\n#ifdef USE_INSTANCING\n\tmat3 m = mat3( instanceMatrix );\n\ttransformedNormal /= vec3( dot( m[ 0 ], m[ 0 ] ), dot( m[ 1 ], m[ 1 ] ), dot( m[ 2 ], m[ 2 ] ) );\n\ttransformedNormal = m * transformedNormal;\n#endif\ntransformedNormal = normalMatrix * transformedNormal;\n#ifdef FLIP_SIDED\n\ttransformedNormal = - transformedNormal;\n#endif\n#ifdef USE_TANGENT\n\tvec3 transformedTangent = ( modelViewMatrix * vec4( objectTangent, 0.0 ) ).xyz;\n\t#ifdef FLIP_SIDED\n\t\ttransformedTangent = - transformedTangent;\n\t#endif\n#endif";
 
@@ -14245,7 +14276,7 @@ var shadowmask_pars_fragment = "float getShadowMask() {\n\tfloat shadow = 1.0;\n
 
 var skinbase_vertex = "#ifdef USE_SKINNING\n\tmat4 boneMatX = getBoneMatrix( skinIndex.x );\n\tmat4 boneMatY = getBoneMatrix( skinIndex.y );\n\tmat4 boneMatZ = getBoneMatrix( skinIndex.z );\n\tmat4 boneMatW = getBoneMatrix( skinIndex.w );\n#endif";
 
-var skinning_pars_vertex = "#ifdef USE_SKINNING\n\tuniform mat4 bindMatrix;\n\tuniform mat4 bindMatrixInverse;\n\t#ifdef BONE_TEXTURE\n\t\tuniform highp sampler2D boneTexture;\n\t\tuniform int boneTextureSize;\n\t\tmat4 getBoneMatrix( const in float i ) {\n\t\t\tfloat j = i * 4.0;\n\t\t\tfloat x = mod( j, float( boneTextureSize ) );\n\t\t\tfloat y = floor( j / float( boneTextureSize ) );\n\t\t\tfloat dx = 1.0 / float( boneTextureSize );\n\t\t\tfloat dy = 1.0 / float( boneTextureSize );\n\t\t\ty = dy * ( y + 0.5 );\n\t\t\tvec4 v1 = texture2D( boneTexture, vec2( dx * ( x + 0.5 ), y ) );\n\t\t\tvec4 v2 = texture2D( boneTexture, vec2( dx * ( x + 1.5 ), y ) );\n\t\t\tvec4 v3 = texture2D( boneTexture, vec2( dx * ( x + 2.5 ), y ) );\n\t\t\tvec4 v4 = texture2D( boneTexture, vec2( dx * ( x + 3.5 ), y ) );\n\t\t\tmat4 bone = mat4( v1, v2, v3, v4 );\n\t\t\treturn bone;\n\t\t}\n\t#else\n\t\tuniform mat4 boneMatrices[ MAX_BONES ];\n\t\tmat4 getBoneMatrix( const in float i ) {\n\t\t\tmat4 bone = boneMatrices[ int(i) ];\n\t\t\treturn bone;\n\t\t}\n\t#endif\n#endif";
+var skinning_pars_vertex = "#ifdef USE_SKINNING\n\tuniform mat4 bindMatrix;\n\tuniform mat4 bindMatrixInverse;\n\tuniform highp sampler2D boneTexture;\n\tuniform int boneTextureSize;\n\tmat4 getBoneMatrix( const in float i ) {\n\t\tfloat j = i * 4.0;\n\t\tfloat x = mod( j, float( boneTextureSize ) );\n\t\tfloat y = floor( j / float( boneTextureSize ) );\n\t\tfloat dx = 1.0 / float( boneTextureSize );\n\t\tfloat dy = 1.0 / float( boneTextureSize );\n\t\ty = dy * ( y + 0.5 );\n\t\tvec4 v1 = texture2D( boneTexture, vec2( dx * ( x + 0.5 ), y ) );\n\t\tvec4 v2 = texture2D( boneTexture, vec2( dx * ( x + 1.5 ), y ) );\n\t\tvec4 v3 = texture2D( boneTexture, vec2( dx * ( x + 2.5 ), y ) );\n\t\tvec4 v4 = texture2D( boneTexture, vec2( dx * ( x + 3.5 ), y ) );\n\t\tmat4 bone = mat4( v1, v2, v3, v4 );\n\t\treturn bone;\n\t}\n#endif";
 
 var skinning_vertex = "#ifdef USE_SKINNING\n\tvec4 skinVertex = bindMatrix * vec4( transformed, 1.0 );\n\tvec4 skinned = vec4( 0.0 );\n\tskinned += boneMatX * skinVertex * skinWeight.x;\n\tskinned += boneMatY * skinVertex * skinWeight.y;\n\tskinned += boneMatZ * skinVertex * skinWeight.z;\n\tskinned += boneMatW * skinVertex * skinWeight.w;\n\ttransformed = ( bindMatrixInverse * skinned ).xyz;\n#endif";
 
@@ -15116,6 +15147,8 @@ function WebGLBackground( renderer, cubemaps, state, objects, alpha, premultipli
 
 			}
 
+			boxMesh.layers.enableAll();
+
 			// push to the pre-sorted opaque render list
 			renderList.unshift( boxMesh, boxMesh.geometry, boxMesh.material, 0, 0, null );
 
@@ -15176,6 +15209,7 @@ function WebGLBackground( renderer, cubemaps, state, objects, alpha, premultipli
 
 			}
 
+			planeMesh.layers.enableAll();
 
 			// push to the pre-sorted opaque render list
 			renderList.unshift( planeMesh, planeMesh.geometry, planeMesh.material, 0, 0, null );
@@ -15249,9 +15283,9 @@ function WebGLBindingStates( gl, extensions, attributes, capabilities ) {
 
 			}
 
-			updateBuffers = needsUpdate( geometry, index );
+			updateBuffers = needsUpdate( object, geometry, program, index );
 
-			if ( updateBuffers ) saveCache( geometry, index );
+			if ( updateBuffers ) saveCache( object, geometry, program, index );
 
 		} else {
 
@@ -15268,12 +15302,6 @@ function WebGLBindingStates( gl, extensions, attributes, capabilities ) {
 				updateBuffers = true;
 
 			}
-
-		}
-
-		if ( object.isInstancedMesh === true ) {
-
-			updateBuffers = true;
 
 		}
 
@@ -15390,25 +15418,40 @@ function WebGLBindingStates( gl, extensions, attributes, capabilities ) {
 
 	}
 
-	function needsUpdate( geometry, index ) {
+	function needsUpdate( object, geometry, program, index ) {
 
 		const cachedAttributes = currentState.attributes;
 		const geometryAttributes = geometry.attributes;
 
 		let attributesNum = 0;
 
-		for ( const key in geometryAttributes ) {
+		const programAttributes = program.getAttributes();
 
-			const cachedAttribute = cachedAttributes[ key ];
-			const geometryAttribute = geometryAttributes[ key ];
+		for ( const name in programAttributes ) {
 
-			if ( cachedAttribute === undefined ) return true;
+			const programAttribute = programAttributes[ name ];
 
-			if ( cachedAttribute.attribute !== geometryAttribute ) return true;
+			if ( programAttribute.location >= 0 ) {
 
-			if ( cachedAttribute.data !== geometryAttribute.data ) return true;
+				const cachedAttribute = cachedAttributes[ name ];
+				let geometryAttribute = geometryAttributes[ name ];
 
-			attributesNum ++;
+				if ( geometryAttribute === undefined ) {
+
+					if ( name === 'instanceMatrix' && object.instanceMatrix ) geometryAttribute = object.instanceMatrix;
+					if ( name === 'instanceColor' && object.instanceColor ) geometryAttribute = object.instanceColor;
+
+				}
+
+				if ( cachedAttribute === undefined ) return true;
+
+				if ( cachedAttribute.attribute !== geometryAttribute ) return true;
+
+				if ( geometryAttribute && cachedAttribute.data !== geometryAttribute.data ) return true;
+
+				attributesNum ++;
+
+			}
 
 		}
 
@@ -15420,28 +15463,43 @@ function WebGLBindingStates( gl, extensions, attributes, capabilities ) {
 
 	}
 
-	function saveCache( geometry, index ) {
+	function saveCache( object, geometry, program, index ) {
 
 		const cache = {};
 		const attributes = geometry.attributes;
 		let attributesNum = 0;
 
-		for ( const key in attributes ) {
+		const programAttributes = program.getAttributes();
 
-			const attribute = attributes[ key ];
+		for ( const name in programAttributes ) {
 
-			const data = {};
-			data.attribute = attribute;
+			const programAttribute = programAttributes[ name ];
 
-			if ( attribute.data ) {
+			if ( programAttribute.location >= 0 ) {
 
-				data.data = attribute.data;
+				let attribute = attributes[ name ];
+
+				if ( attribute === undefined ) {
+
+					if ( name === 'instanceMatrix' && object.instanceMatrix ) attribute = object.instanceMatrix;
+					if ( name === 'instanceColor' && object.instanceColor ) attribute = object.instanceColor;
+
+				}
+
+				const data = {};
+				data.attribute = attribute;
+
+				if ( attribute && attribute.data ) {
+
+					data.data = attribute.data;
+
+				}
+
+				cache[ name ] = data;
+
+				attributesNum ++;
 
 			}
-
-			cache[ key ] = data;
-
-			attributesNum ++;
 
 		}
 
@@ -16610,7 +16668,7 @@ class PMREMGenerator {
 	_allocateTargets() {
 
 		const width = 3 * Math.max( this._cubeSize, 16 * 7 );
-		const height = 4 * this._cubeSize - 32;
+		const height = 4 * this._cubeSize;
 
 		const params = {
 			magFilter: LinearFilter,
@@ -16951,9 +17009,9 @@ function _createPlanes( lodMax ) {
 
 		sigmas.push( sigma );
 
-		const texelSize = 1.0 / ( sizeLod - 1 );
-		const min = - texelSize / 2;
-		const max = 1 + texelSize / 2;
+		const texelSize = 1.0 / ( sizeLod - 2 );
+		const min = - texelSize;
+		const max = 1 + texelSize;
 		const uv1 = [ min, min, max, min, max, max, min, min, max, max, min, max ];
 
 		const cubeFaces = 6;
@@ -19024,20 +19082,6 @@ function PureArrayUniform( id, activeInfo, addr ) {
 
 }
 
-PureArrayUniform.prototype.updateCache = function ( data ) {
-
-	const cache = this.cache;
-
-	if ( data instanceof Float32Array && cache.length !== data.length ) {
-
-		this.cache = new Float32Array( data.length );
-
-	}
-
-	copyArray( cache, data );
-
-};
-
 function StructuredUniform( id ) {
 
 	this.id = id;
@@ -19259,12 +19303,20 @@ function getShaderErrors( gl, shader, type ) {
 
 	if ( status && errors === '' ) return '';
 
-	const errorLine = parseInt( /ERROR: 0:(\d+)/.exec( errors )[ 1 ] );
+	const errorMatches = /ERROR: 0:(\d+)/.exec( errors );
+	if ( errorMatches ) {
 
-	// --enable-privileged-webgl-extension
-	// console.log( '**' + type + '**', gl.getExtension( 'WEBGL_debug_shaders' ).getTranslatedShaderSource( shader ) );
+		// --enable-privileged-webgl-extension
+		// console.log( '**' + type + '**', gl.getExtension( 'WEBGL_debug_shaders' ).getTranslatedShaderSource( shader ) );
 
-	return type.toUpperCase() + '\n\n' + errors + '\n\n' + handleSource( gl.getShaderSource( shader ), errorLine );
+		const errorLine = parseInt( errorMatches[ 0 ] );
+		return type.toUpperCase() + '\n\n' + errors + '\n\n' + handleSource( gl.getShaderSource( shader ), errorLine );
+
+	} else {
+
+		return errors;
+
+	}
 
 }
 
@@ -19586,7 +19638,7 @@ function generateCubeUVSize( parameters ) {
 
 	if ( imageHeight === null ) return null;
 
-	const maxMip = Math.log2( imageHeight / 32 + 1 ) + 3;
+	const maxMip = Math.log2( imageHeight ) - 2;
 
 	const texelHeight = 1.0 / imageHeight;
 
@@ -19665,7 +19717,6 @@ function WebGLProgram( renderer, cacheKey, parameters, bindingStates ) {
 
 			parameters.supportsVertexTextures ? '#define VERTEX_TEXTURES' : '',
 
-			'#define MAX_BONES ' + parameters.maxBones,
 			( parameters.useFog && parameters.fog ) ? '#define USE_FOG' : '',
 			( parameters.useFog && parameters.fogExp2 ) ? '#define FOG_EXP2' : '',
 
@@ -19710,7 +19761,6 @@ function WebGLProgram( renderer, cacheKey, parameters, bindingStates ) {
 			parameters.flatShading ? '#define FLAT_SHADED' : '',
 
 			parameters.skinning ? '#define USE_SKINNING' : '',
-			parameters.useVertexTexture ? '#define BONE_TEXTURE' : '',
 
 			parameters.morphTargets ? '#define USE_MORPHTARGETS' : '',
 			parameters.morphNormals && parameters.flatShading === false ? '#define USE_MORPHNORMALS' : '',
@@ -19896,7 +19946,7 @@ function WebGLProgram( renderer, cacheKey, parameters, bindingStates ) {
 			ShaderChunk[ 'encodings_pars_fragment' ], // this code is required here because it is used by the various encoding/decoding function defined below
 			getTexelEncodingFunction( 'linearToOutputTexel', parameters.outputEncoding ),
 
-			parameters.depthPacking ? '#define DEPTH_PACKING ' + parameters.depthPacking : '',
+			parameters.useDepthPacking ? '#define DEPTH_PACKING ' + parameters.depthPacking : '',
 
 			'\n'
 
@@ -20230,8 +20280,6 @@ function WebGLPrograms( renderer, cubemaps, cubeuvmaps, extensions, capabilities
 
 	const isWebGL2 = capabilities.isWebGL2;
 	const logarithmicDepthBuffer = capabilities.logarithmicDepthBuffer;
-	const floatVertexTextures = capabilities.floatVertexTextures;
-	const maxVertexUniforms = capabilities.maxVertexUniforms;
 	const vertexTextures = capabilities.vertexTextures;
 	let precision = capabilities.precision;
 
@@ -20253,42 +20301,6 @@ function WebGLPrograms( renderer, cubemaps, cubeuvmaps, extensions, capabilities
 		SpriteMaterial: 'sprite'
 	};
 
-	function getMaxBones( object ) {
-
-		const skeleton = object.skeleton;
-		const bones = skeleton.bones;
-
-		if ( floatVertexTextures ) {
-
-			return 1024;
-
-		} else {
-
-			// default for when object is not specified
-			// ( for example when prebuilding shader to be used with multiple objects )
-			//
-			//  - leave some extra space for other uniforms
-			//  - limit here is ANGLE's 254 max uniform vectors
-			//    (up to 54 should be safe)
-
-			const nVertexUniforms = maxVertexUniforms;
-			const nVertexMatrices = Math.floor( ( nVertexUniforms - 20 ) / 4 );
-
-			const maxBones = Math.min( nVertexMatrices, bones.length );
-
-			if ( maxBones < bones.length ) {
-
-				console.warn( 'THREE.WebGLRenderer: Skeleton has ' + bones.length + ' bones. This GPU supports ' + maxBones + '.' );
-				return 0;
-
-			}
-
-			return maxBones;
-
-		}
-
-	}
-
 	function getParameters( material, lights, shadows, scene, object ) {
 
 		const fog = scene.fog;
@@ -20302,8 +20314,6 @@ function WebGLPrograms( renderer, cubemaps, cubeuvmaps, extensions, capabilities
 
 		// heuristics to create shader parameters according to lights in the scene
 		// (not to blow over maxLights budget)
-
-		const maxBones = object.isSkinnedMesh ? getMaxBones( object ) : 0;
 
 		if ( material.precision !== null ) {
 
@@ -20432,7 +20442,7 @@ function WebGLPrograms( renderer, cubemaps, cubeuvmaps, extensions, capabilities
 			uvsVertexOnly: ! ( !! material.map || !! material.bumpMap || !! material.normalMap || !! material.specularMap || !! material.alphaMap || !! material.emissiveMap || !! material.roughnessMap || !! material.metalnessMap || !! material.clearcoatNormalMap || material.transmission > 0 || !! material.transmissionMap || !! material.thicknessMap || !! material.specularIntensityMap || !! material.specularColorMap || material.sheen > 0 || !! material.sheenColorMap || !! material.sheenRoughnessMap ) && !! material.displacementMap,
 
 			fog: !! fog,
-			useFog: material.fog,
+			useFog: material.fog === true,
 			fogExp2: ( fog && fog.isFogExp2 ),
 
 			flatShading: !! material.flatShading,
@@ -20440,9 +20450,7 @@ function WebGLPrograms( renderer, cubemaps, cubeuvmaps, extensions, capabilities
 			sizeAttenuation: material.sizeAttenuation,
 			logarithmicDepthBuffer: logarithmicDepthBuffer,
 
-			skinning: object.isSkinnedMesh === true && maxBones > 0,
-			maxBones: maxBones,
-			useVertexTexture: floatVertexTextures,
+			skinning: object.isSkinnedMesh === true,
 
 			morphTargets: geometry.morphAttributes.position !== undefined,
 			morphNormals: geometry.morphAttributes.normal !== undefined,
@@ -20476,7 +20484,8 @@ function WebGLPrograms( renderer, cubemaps, cubeuvmaps, extensions, capabilities
 			doubleSided: material.side === DoubleSide,
 			flipSided: material.side === BackSide,
 
-			depthPacking: ( material.depthPacking !== undefined ) ? material.depthPacking : false,
+			useDepthPacking: !! material.depthPacking,
+			depthPacking: material.depthPacking || 0,
 
 			index0AttributeName: material.index0AttributeName,
 
@@ -20547,7 +20556,6 @@ function WebGLPrograms( renderer, cubemaps, cubeuvmaps, extensions, capabilities
 		array.push( parameters.vertexUvs );
 		array.push( parameters.fogExp2 );
 		array.push( parameters.sizeAttenuation );
-		array.push( parameters.maxBones );
 		array.push( parameters.morphTargetsCount );
 		array.push( parameters.morphAttributeCount );
 		array.push( parameters.numDirLights );
@@ -20562,6 +20570,7 @@ function WebGLPrograms( renderer, cubemaps, cubeuvmaps, extensions, capabilities
 		array.push( parameters.toneMapping );
 		array.push( parameters.numClippingPlanes );
 		array.push( parameters.numClipIntersection );
+		array.push( parameters.depthPacking );
 
 	}
 
@@ -20643,48 +20652,46 @@ function WebGLPrograms( renderer, cubemaps, cubeuvmaps, extensions, capabilities
 			_programLayers.enable( 2 );
 		if ( parameters.skinning )
 			_programLayers.enable( 3 );
-		if ( parameters.useVertexTexture )
-			_programLayers.enable( 4 );
 		if ( parameters.morphTargets )
-			_programLayers.enable( 5 );
+			_programLayers.enable( 4 );
 		if ( parameters.morphNormals )
-			_programLayers.enable( 6 );
+			_programLayers.enable( 5 );
 		if ( parameters.morphColors )
-			_programLayers.enable( 7 );
+			_programLayers.enable( 6 );
 		if ( parameters.premultipliedAlpha )
-			_programLayers.enable( 8 );
+			_programLayers.enable( 7 );
 		if ( parameters.shadowMapEnabled )
-			_programLayers.enable( 9 );
+			_programLayers.enable( 8 );
 		if ( parameters.physicallyCorrectLights )
-			_programLayers.enable( 10 );
+			_programLayers.enable( 9 );
 		if ( parameters.doubleSided )
-			_programLayers.enable( 11 );
+			_programLayers.enable( 10 );
 		if ( parameters.flipSided )
+			_programLayers.enable( 11 );
+		if ( parameters.useDepthPacking )
 			_programLayers.enable( 12 );
-		if ( parameters.depthPacking )
-			_programLayers.enable( 13 );
 		if ( parameters.dithering )
-			_programLayers.enable( 14 );
+			_programLayers.enable( 13 );
 		if ( parameters.specularIntensityMap )
-			_programLayers.enable( 15 );
+			_programLayers.enable( 14 );
 		if ( parameters.specularColorMap )
-			_programLayers.enable( 16 );
+			_programLayers.enable( 15 );
 		if ( parameters.transmission )
-			_programLayers.enable( 17 );
+			_programLayers.enable( 16 );
 		if ( parameters.transmissionMap )
-			_programLayers.enable( 18 );
+			_programLayers.enable( 17 );
 		if ( parameters.thicknessMap )
-			_programLayers.enable( 19 );
+			_programLayers.enable( 18 );
 		if ( parameters.sheen )
-			_programLayers.enable( 20 );
+			_programLayers.enable( 19 );
 		if ( parameters.sheenColorMap )
-			_programLayers.enable( 21 );
+			_programLayers.enable( 20 );
 		if ( parameters.sheenRoughnessMap )
-			_programLayers.enable( 22 );
+			_programLayers.enable( 21 );
 		if ( parameters.decodeVideoTexture )
-			_programLayers.enable( 23 );
+			_programLayers.enable( 22 );
 		if ( parameters.opaque )
-			_programLayers.enable( 24 );
+			_programLayers.enable( 23 );
 
 		array.push( _programLayers.mask );
 
@@ -21589,7 +21596,6 @@ function WebGLLights( extensions, capabilities ) {
 
 				uniforms.direction.setFromMatrixPosition( light.matrixWorld );
 				uniforms.direction.transformDirection( viewMatrix );
-				uniforms.direction.normalize();
 
 				hemiLength ++;
 
@@ -21730,8 +21736,6 @@ class MeshDepthMaterial extends Material {
 		this.wireframe = false;
 		this.wireframeLinewidth = 1;
 
-		this.fog = false;
-
 		this.setValues( parameters );
 
 	}
@@ -21780,8 +21784,6 @@ class MeshDistanceMaterial extends Material {
 		this.displacementMap = null;
 		this.displacementScale = 1;
 		this.displacementBias = 0;
-
-		this.fog = false;
 
 		this.setValues( parameters );
 
@@ -24077,7 +24079,7 @@ function WebGLTextures( _gl, extensions, state, properties, capabilities, utils,
 			const mipmaps = texture.mipmaps;
 
 			const useTexStorage = ( isWebGL2 && texture.isVideoTexture !== true );
-			const allocateMemory = ( textureProperties.__version === undefined );
+			const allocateMemory = ( textureProperties.__version === undefined ) || ( forceUpload === true );
 			const levels = getMipLevels( texture, image, supportsMips );
 
 			if ( texture.isDepthTexture ) {
@@ -24156,13 +24158,17 @@ function WebGLTextures( _gl, extensions, state, properties, capabilities, utils,
 
 				//
 
-				if ( useTexStorage && allocateMemory ) {
+				if ( allocateMemory ) {
 
-					state.texStorage2D( 3553, 1, glInternalFormat, image.width, image.height );
+					if ( useTexStorage ) {
 
-				} else {
+						state.texStorage2D( 3553, 1, glInternalFormat, image.width, image.height );
 
-					state.texImage2D( 3553, 0, glInternalFormat, image.width, image.height, 0, glFormat, glType, null );
+					} else {
+
+						state.texImage2D( 3553, 0, glInternalFormat, image.width, image.height, 0, glFormat, glType, null );
+
+					}
 
 				}
 
@@ -24304,13 +24310,26 @@ function WebGLTextures( _gl, extensions, state, properties, capabilities, utils,
 
 			} else if ( texture.isFramebufferTexture ) {
 
-				if ( useTexStorage && allocateMemory ) {
+				if ( allocateMemory ) {
 
-					state.texStorage2D( 3553, levels, glInternalFormat, image.width, image.height );
+					if ( useTexStorage ) {
 
-				} else {
+						state.texStorage2D( 3553, levels, glInternalFormat, image.width, image.height );
 
-					state.texImage2D( 3553, 0, glInternalFormat, image.width, image.height, 0, glFormat, glType, null );
+					} else {
+
+						let width = image.width, height = image.height;
+
+						for ( let i = 0; i < levels; i ++ ) {
+
+							state.texImage2D( 3553, i, glInternalFormat, width, height, 0, glFormat, glType, null );
+
+							width >>= 1;
+							height >>= 1;
+
+						}
+
+					}
 
 				}
 
@@ -25468,6 +25487,10 @@ function WebGLUtils( gl, extensions, capabilities ) {
 
 		}
 
+		// if "p" can't be resolved, assume the user defines a WebGL constant as a string (fallback/workaround for packed RGB formats)
+
+		return ( gl[ p ] !== undefined ) ? gl[ p ] : null;
+
 	}
 
 	return { convert: convert };
@@ -25841,6 +25864,7 @@ class WebXRManager extends EventDispatcher {
 
 		let referenceSpace = null;
 		let referenceSpaceType = 'local-floor';
+		let customReferenceSpace = null;
 
 		let pose = null;
 		let glBinding = null;
@@ -25998,7 +26022,13 @@ class WebXRManager extends EventDispatcher {
 
 		this.getReferenceSpace = function () {
 
-			return referenceSpace;
+			return customReferenceSpace || referenceSpace;
+
+		};
+
+		this.setReferenceSpace = function ( space ) {
+
+			customReferenceSpace = space;
 
 		};
 
@@ -26138,11 +26168,12 @@ class WebXRManager extends EventDispatcher {
 
 			const inputSources = session.inputSources;
 
-			// Assign inputSources to available controllers
+			// Assign controllers to available inputSources
 
-			for ( let i = 0; i < controllers.length; i ++ ) {
+			for ( let i = 0; i < inputSources.length; i ++ ) {
 
-				inputSourcesMap.set( inputSources[ i ], controllers[ i ] );
+				const index = inputSources[ i ].handedness === 'right' ? 1 : 0;
+				inputSourcesMap.set( inputSources[ i ], controllers[ index ] );
 
 			}
 
@@ -26370,7 +26401,7 @@ class WebXRManager extends EventDispatcher {
 
 		function onAnimationFrame( time, frame ) {
 
-			pose = frame.getViewerPose( referenceSpace );
+			pose = frame.getViewerPose( customReferenceSpace || referenceSpace );
 			xrFrame = frame;
 
 			if ( pose !== null ) {
@@ -26452,10 +26483,14 @@ class WebXRManager extends EventDispatcher {
 
 			for ( let i = 0; i < controllers.length; i ++ ) {
 
-				const controller = controllers[ i ];
 				const inputSource = inputSources[ i ];
+				const controller = inputSourcesMap.get( inputSource );
 
-				controller.update( inputSource, frame, referenceSpace );
+				if ( controller !== undefined ) {
+
+					controller.update( inputSource, frame, customReferenceSpace || referenceSpace );
+
+				}
 
 			}
 
@@ -27147,7 +27182,7 @@ function WebGLRenderer( parameters = {} ) {
 
 	let _alpha;
 
-	if ( parameters.context !== undefined ) {
+	if ( _context !== null ) {
 
 		_alpha = _context.getContextAttributes().alpha;
 
@@ -28279,7 +28314,7 @@ function WebGLRenderer( parameters = {} ) {
 
 			_transmissionRenderTarget = new WebGLRenderTarget( 1, 1, {
 				generateMipmaps: true,
-				type: utils.convert( HalfFloatType ) !== null ? HalfFloatType : UnsignedByteType,
+				type: extensions.has( 'EXT_color_buffer_half_float' ) ? HalfFloatType : UnsignedByteType,
 				minFilter: LinearMipmapLinearFilter,
 				samples: ( isWebGL2 && _antialias === true ) ? 4 : 0
 			} );
@@ -28581,7 +28616,7 @@ function WebGLRenderer( parameters = {} ) {
 
 				needsProgramChange = true;
 
-			} else if ( material.fog && materialProperties.fog !== fog ) {
+			} else if ( material.fog === true && materialProperties.fog !== fog ) {
 
 				needsProgramChange = true;
 
@@ -28753,7 +28788,7 @@ function WebGLRenderer( parameters = {} ) {
 
 				} else {
 
-					p_uniforms.setOptional( _gl, skeleton, 'boneMatrices' );
+					console.warn( 'THREE.WebGLRenderer: SkinnedMesh can only be used with WebGL 2. With WebGL 1 OES_texture_float and vertex textures support is required.' );
 
 				}
 
@@ -28798,7 +28833,7 @@ function WebGLRenderer( parameters = {} ) {
 
 			// refresh uniforms common to several materials
 
-			if ( fog && material.fog ) {
+			if ( fog && material.fog === true ) {
 
 				materials.refreshFogUniforms( m_uniforms, fog );
 
@@ -29818,6 +29853,8 @@ class SpriteMaterial extends Material {
 
 		this.transparent = true;
 
+		this.fog = true;
+
 		this.setValues( parameters );
 
 	}
@@ -29835,6 +29872,8 @@ class SpriteMaterial extends Material {
 		this.rotation = source.rotation;
 
 		this.sizeAttenuation = source.sizeAttenuation;
+
+		this.fog = source.fog;
 
 		return this;
 
@@ -30833,6 +30872,8 @@ class LineBasicMaterial extends Material {
 		this.linecap = 'round';
 		this.linejoin = 'round';
 
+		this.fog = true;
+
 		this.setValues( parameters );
 
 	}
@@ -30847,6 +30888,8 @@ class LineBasicMaterial extends Material {
 		this.linewidth = source.linewidth;
 		this.linecap = source.linecap;
 		this.linejoin = source.linejoin;
+
+		this.fog = source.fog;
 
 		return this;
 
@@ -31187,6 +31230,8 @@ class PointsMaterial extends Material {
 		this.size = 1;
 		this.sizeAttenuation = true;
 
+		this.fog = true;
+
 		this.setValues( parameters );
 
 	}
@@ -31203,6 +31248,8 @@ class PointsMaterial extends Material {
 
 		this.size = source.size;
 		this.sizeAttenuation = source.sizeAttenuation;
+
+		this.fog = source.fog;
 
 		return this;
 
@@ -37374,6 +37421,8 @@ class ShadowMaterial extends Material {
 		this.color = new Color$1( 0x000000 );
 		this.transparent = true;
 
+		this.fog = true;
+
 		this.setValues( parameters );
 
 	}
@@ -37383,6 +37432,8 @@ class ShadowMaterial extends Material {
 		super.copy( source );
 
 		this.color.copy( source.color );
+
+		this.fog = source.fog;
 
 		return this;
 
@@ -37459,6 +37510,8 @@ class MeshStandardMaterial extends Material {
 
 		this.flatShading = false;
 
+		this.fog = true;
+
 		this.setValues( parameters );
 
 	}
@@ -37511,6 +37564,8 @@ class MeshStandardMaterial extends Material {
 		this.wireframeLinejoin = source.wireframeLinejoin;
 
 		this.flatShading = source.flatShading;
+
+		this.fog = source.fog;
 
 		return this;
 
@@ -37733,6 +37788,8 @@ class MeshPhongMaterial extends Material {
 
 		this.flatShading = false;
 
+		this.fog = true;
+
 		this.setValues( parameters );
 
 	}
@@ -37783,6 +37840,8 @@ class MeshPhongMaterial extends Material {
 		this.wireframeLinejoin = source.wireframeLinejoin;
 
 		this.flatShading = source.flatShading;
+
+		this.fog = source.fog;
 
 		return this;
 
@@ -37835,6 +37894,8 @@ class MeshToonMaterial extends Material {
 		this.wireframeLinecap = 'round';
 		this.wireframeLinejoin = 'round';
 
+		this.fog = true;
+
 		this.setValues( parameters );
 
 	}
@@ -37876,6 +37937,8 @@ class MeshToonMaterial extends Material {
 		this.wireframeLinecap = source.wireframeLinecap;
 		this.wireframeLinejoin = source.wireframeLinejoin;
 
+		this.fog = source.fog;
+
 		return this;
 
 	}
@@ -37905,8 +37968,6 @@ class MeshNormalMaterial extends Material {
 
 		this.wireframe = false;
 		this.wireframeLinewidth = 1;
-
-		this.fog = false;
 
 		this.flatShading = false;
 
@@ -37978,6 +38039,8 @@ class MeshLambertMaterial extends Material {
 		this.wireframeLinecap = 'round';
 		this.wireframeLinejoin = 'round';
 
+		this.fog = true;
+
 		this.setValues( parameters );
 
 	}
@@ -38013,6 +38076,8 @@ class MeshLambertMaterial extends Material {
 		this.wireframeLinewidth = source.wireframeLinewidth;
 		this.wireframeLinecap = source.wireframeLinecap;
 		this.wireframeLinejoin = source.wireframeLinejoin;
+
+		this.fog = source.fog;
 
 		return this;
 
@@ -38053,6 +38118,8 @@ class MeshMatcapMaterial extends Material {
 
 		this.flatShading = false;
 
+		this.fog = true;
+
 		this.setValues( parameters );
 
 	}
@@ -38084,6 +38151,8 @@ class MeshMatcapMaterial extends Material {
 		this.alphaMap = source.alphaMap;
 
 		this.flatShading = source.flatShading;
+
+		this.fog = source.fog;
 
 		return this;
 
@@ -51698,8 +51767,6 @@ class TextureLoader extends Loader$1 {
     }
 
     load(path, callback) {
-        path = Assets.getPath(path);
-
         const cached = Assets.get(path);
 
         let texture;
@@ -51725,9 +51792,9 @@ class TextureLoader extends Loader$1 {
                 };
 
                 if (Thread.threads) {
-                    promise = ImageBitmapLoaderThread.load(path, Assets.options, params);
+                    promise = ImageBitmapLoaderThread.load(Assets.getPath(path), Assets.options, params);
                 } else {
-                    promise = fetch(path, Assets.options).then(response => {
+                    promise = fetch(Assets.getPath(path), Assets.options).then(response => {
                         return response.blob();
                     }).then(blob => {
                         return createImageBitmap(blob, params);
@@ -51805,6 +51872,10 @@ class EnvironmentTextureLoader extends Loader$1 {
 
     load(path, callback) {
         this.textureLoader.load(path, texture => {
+            if (texture instanceof Error) {
+                throw new Error(texture);
+            }
+
             const renderTargetCube = this.pmremGenerator.fromEquirectangular(texture);
 
             texture.dispose();
@@ -51857,7 +51928,7 @@ class BufferGeometryLoaderThread {
     }
 
     static load(path, options) {
-        path = absolute(Assets.getPath(path));
+        path = absolute(path);
 
         return Thread.shared().loadBufferGeometry({ path, options });
     }
@@ -51979,7 +52050,7 @@ class TextGeometry {
 
         // Set values for buffers that don't require calculation
         for (let i = 0; i < numChars; i++) {
-            this.buffers.id[i] = i;
+            this.buffers.id.set([i, i, i, i], i * 4);
             this.buffers.index.set([i * 4, i * 4 + 2, i * 4 + 1, i * 4 + 1, i * 4 + 2, i * 4 + 3], i * 6);
         }
 
@@ -52082,6 +52153,9 @@ class TextGeometry {
             }
 
             cursor++;
+
+            // Reset infinite loop catch
+            count = 0;
         }
 
         // Remove last line if empty
@@ -52098,19 +52172,15 @@ class TextGeometry {
         let y = 0.07 * this.size;
         let j = 0;
 
-        this.numLines = lines.length;
-        this.width = 0;
-        this.height = 0;
-
-        for (let lineIndex = 0; lineIndex < this.numLines; lineIndex++) {
+        for (let lineIndex = 0; lineIndex < lines.length; lineIndex++) {
             const line = lines[lineIndex];
 
-            for (let i = 0, l = line.glyphs.length; i < l; i++) {
+            for (let i = 0; i < line.glyphs.length; i++) {
                 const glyph = line.glyphs[i][0];
                 let x = line.glyphs[i][1];
 
                 if (this.align === 'center') {
-                    x -= line.width / 2;
+                    x -= line.width * 0.5;
                 } else if (this.align === 'right') {
                     x -= line.width;
                 }
@@ -52140,14 +52210,15 @@ class TextGeometry {
             }
 
             y -= this.size * this.lineHeight;
-
-            this.width = Math.max(line.width, this.width);
-            this.height += this.size * this.lineHeight;
         }
+
+        this.numLines = lines.length;
+        this.height = this.numLines * this.size * this.lineHeight;
+        this.width = Math.max(...lines.map(line => line.width));
     }
 
     getKernPairOffset(id1, id2) {
-        for (let i = 0, l = this.font.kernings.length; i < l; i++) {
+        for (let i = 0; i < this.font.kernings.length; i++) {
             const k = this.font.kernings[i];
             if (k.first < id1) continue;
             if (k.second < id2) continue;
@@ -52159,14 +52230,14 @@ class TextGeometry {
     }
 
     // Update buffers with new layout
-    resize(options) {
-        this.width = options.width;
+    resize({ width }) {
+        this.width = width;
         this.layout();
     }
 
     // Completely change text (like creating new TextGeometry)
-    update(options) {
-        this.text = options.text;
+    update({ text }) {
+        this.text = text;
         this.createGeometry();
     }
 }
@@ -52199,7 +52270,7 @@ class TextGeometryLoaderThread {
     }
 
     static load(path, options, params) {
-        path = absolute(Assets.getPath(path));
+        path = absolute(path);
 
         return Thread.shared().loadTextGeometry({ path, options, params });
     }
@@ -52979,7 +53050,7 @@ class Interface {
             }
 
             if (typeof name === 'string') {
-                if (name.charAt(0) === '.') {
+                if (name.startsWith('.')) {
                     this.element.className = name.slice(1);
                 } else {
                     this.element.id = name;
@@ -52993,11 +53064,9 @@ class Interface {
             return;
         }
 
-        if (child.destroy) {
-            this.children.push(child);
+        this.children.push(child);
 
-            child.parent = this;
-        }
+        child.parent = this;
 
         if (child.element) {
             this.element.appendChild(child.element);
@@ -53326,10 +53395,8 @@ class Interface {
     }
 
     bg(path, backgroundSize = 'contain', backgroundPosition = 'center', backgroundRepeat = 'no-repeat') {
-        path = Assets.getPath(path);
-
         const style = {
-            backgroundImage: `url(${path})`,
+            backgroundImage: `url(${Assets.getPath(path)})`,
             backgroundSize,
             backgroundPosition,
             backgroundRepeat
@@ -53355,9 +53422,7 @@ class Interface {
     }
 
     load(path) {
-        path = Assets.getPath(path);
-
-        const promise = fetch(path, Assets.options).then(response => {
+        const promise = fetch(Assets.getPath(path), Assets.options).then(response => {
             return response.text();
         }).then(str => {
             this.html(str);
@@ -53439,8 +53504,8 @@ if (typeof window !== 'undefined') {
     }
 
     function onResize(e) {
-        Stage.width = window.innerWidth;
-        Stage.height = window.innerHeight;
+        Stage.width = document.documentElement.clientWidth;
+        Stage.height = document.documentElement.clientHeight;
         Stage.dpr = window.devicePixelRatio;
         Stage.aspect = Stage.width / Stage.height;
 
@@ -53459,13 +53524,22 @@ if (typeof window !== 'undefined') {
         Stage.element = element;
 
         addListeners();
+        onPopState();
         onResize();
     };
 
     Stage.setPath = path => {
+        if (path === location.pathname) {
+            return;
+        }
+
         history.pushState(null, null, path);
 
         onPopState();
+    };
+
+    Stage.setTitle = title => {
+        document.title = title;
     };
 }
 
@@ -53485,11 +53559,9 @@ class Component {
             return;
         }
 
-        if (child.destroy) {
-            this.children.push(child);
+        this.children.push(child);
 
-            child.parent = this;
-        }
+        child.parent = this;
 
         if (this.group && this.group.isObject3D) {
             if (child.group && child.group.isObject3D) {
@@ -54902,6 +54974,14 @@ class Color {
 
 	}
 
+	*[ Symbol.iterator ]() {
+
+		yield this.r;
+		yield this.g;
+		yield this.b;
+
+	}
+
 }
 
 Color.NAMES = _colorKeywords;
@@ -55509,6 +55589,7 @@ class ColorPicker extends Interface {
         });
         this.colorRing.css({
             position: 'absolute',
+            left: 0,
             top: this.top,
             width: this.width,
             height: this.width
@@ -56701,8 +56782,7 @@ class MaterialPanelController {
         ];
 
         items.forEach(data => {
-            const item = new PanelItem(data);
-            this.ui.addPanel(item);
+            this.ui.addPanel(new PanelItem(data));
         });
     }
 }
@@ -56713,8 +56793,8 @@ class MaterialPanelController {
 
 class HeaderInfo extends Interface {
     constructor({
-        styles
-    }) {
+        styles = Styles
+    } = {}) {
         super('.info');
 
         this.styles = styles;
@@ -56893,8 +56973,8 @@ class HeaderInfo extends Interface {
 
 class Header extends Interface {
     constructor({
-        styles
-    }) {
+        styles = Styles
+    } = {}) {
         super('.header');
 
         this.styles = styles;
@@ -56970,7 +57050,7 @@ class UI extends Interface {
 
     initHTML() {
         this.css({
-            position: 'absolute',
+            position: 'fixed',
             left: 0,
             top: 0,
             width: '100%',
@@ -57052,10 +57132,9 @@ class UI extends Interface {
  */
 
 class Line extends Component {
-    constructor(canvas, context) {
+    constructor(context) {
         super();
 
-        this.canvas = canvas;
         this.context = context;
 
         this.start = new Vector2();
@@ -57074,6 +57153,14 @@ class Line extends Component {
     /**
      * Public methods
      */
+
+    startPoint = ({ x, y }) => {
+        this.start.set(x + 3, y - 3);
+    };
+
+    endPoint = position => {
+        this.end.copy(position);
+    };
 
     resize = () => {
         // Context properties need to be reassigned after resize
@@ -57106,16 +57193,6 @@ class Line extends Component {
         this.context.moveTo(this.start.x, this.start.y);
         this.context.lineTo(this.end.x, this.end.y);
         this.context.stroke();
-    };
-
-    startPoint = position => {
-        position.x += 3;
-        position.y -= 3;
-        this.start.copy(position);
-    };
-
-    endPoint = position => {
-        this.end.copy(position);
     };
 
     animateIn = (reverse = false) => {
@@ -57185,8 +57262,8 @@ class Line extends Component {
 
 class ReticleText extends Interface {
     constructor({
-        styles
-    }) {
+        styles = Styles
+    } = {}) {
         super('.text');
 
         this.styles = styles;
@@ -57196,6 +57273,7 @@ class ReticleText extends Interface {
 
     initHTML() {
         this.css({
+            position: 'absolute',
             left: 20,
             top: -3
         });
@@ -57277,6 +57355,7 @@ class Reticle extends Interface {
         this.center = new Interface('.center');
         this.center.css({
             position: 'absolute',
+            boxSizing: 'border-box',
             left: '50%',
             top: '50%',
             width: 12,
@@ -57326,13 +57405,13 @@ class Reticle extends Interface {
 
 class TargetNumber extends Interface {
     constructor({
-        styles
-    }) {
+        styles = Styles
+    } = {}) {
         super('.number');
 
         this.styles = styles;
 
-        const size = 17;
+        const size = window.devicePixelRatio > 1 ? 17 : 18;
 
         this.width = size;
         this.height = size;
@@ -57347,15 +57426,15 @@ class TargetNumber extends Interface {
             boxSizing: 'border-box',
             width: this.width,
             height: this.height,
-            border: '1.5px solid var(--ui-color)'
+            border: `${window.devicePixelRatio > 1 ? 1.5 : 1}px solid var(--ui-color)`
         });
 
         this.text = new Interface('.text');
         this.text.css({
             position: 'absolute',
-            left: 4,
+            left: window.devicePixelRatio > 1 ? 4 : 5,
             ...this.styles.number,
-            lineHeight: this.height - 3,
+            lineHeight: this.height - (window.devicePixelRatio > 1 ? 3 : 2),
             textAlign: 'center'
         });
         this.add(this.text);
@@ -57551,8 +57630,8 @@ class Tracker extends Interface {
 
 class PointText extends Interface {
     constructor({
-        styles
-    }) {
+        styles = Styles
+    } = {}) {
         super('.text');
 
         this.styles = styles;
@@ -57720,6 +57799,7 @@ class Point extends Interface {
     initHTML() {
         this.invisible();
         this.css({
+            position: 'absolute',
             pointerEvents: 'auto',
             webkitUserSelect: 'none',
             userSelect: 'none'
@@ -57957,6 +58037,23 @@ function getFrustumFromHeight(camera, height, offsetZ = 0) {
     return fov;
 }
 
+function lerpCameras(camera1, camera2, alpha) {
+    if (camera1.fov !== camera2.fov || camera1.zoom !== camera2.zoom) {
+        if (camera1.fov !== camera2.fov) {
+            camera1.fov = lerp$2(camera1.fov, camera2.fov, alpha);
+        }
+
+        if (camera1.zoom !== camera2.zoom) {
+            camera1.zoom = lerp$2(camera1.zoom, camera2.zoom, alpha);
+        }
+
+        camera1.updateProjectionMatrix();
+    }
+
+    camera1.position.lerp(camera2.position, alpha);
+    camera1.quaternion.slerp(camera2.quaternion, alpha);
+}
+
 // https://cs.nyu.edu/~perlin/noise/
 
 const _p = [ 151, 160, 137, 91, 90, 15, 131, 13, 201, 95, 96, 53, 194, 233, 7, 225, 140, 36, 103, 30, 69, 142, 8, 99, 37, 240, 21, 10,
@@ -58161,9 +58258,9 @@ class Flowmap {
         this.screenScene = new Scene();
         this.screenCamera = new OrthographicCamera(-1, 1, 1, -1, 0, 1);
 
-        this.screenGeometry = getFullscreenTriangle();
+        this.screenTriangle = getFullscreenTriangle();
 
-        this.screen = new Mesh(this.screenGeometry, this.material);
+        this.screen = new Mesh(this.screenTriangle, this.material);
         this.screen.frustumCulled = false;
         this.screenScene.add(this.screen);
     }
@@ -58194,7 +58291,7 @@ class Flowmap {
         this.renderTargetWrite.dispose();
         this.renderTargetRead.dispose();
         this.material.dispose();
-        this.screenGeometry.dispose();
+        this.screenTriangle.dispose();
 
         for (const prop in this) {
             this[prop] = null;
@@ -58205,8 +58302,8 @@ class Flowmap {
 }
 
 var vertexShader$t = /* glsl */`
-in vec2 uv;
 in vec3 position;
+in vec2 uv;
 
 out vec2 vUv;
 
@@ -58334,7 +58431,7 @@ class Reflector extends Group {
         this.renderTarget.depthBuffer = true;
 
         // Uniform containing render target textures
-        this.renderTargetUniform = this.blurIterations > 0 ? new Uniform(this.renderTargetRead.texture) : new Uniform(this.renderTarget.texture);
+        this.renderTargetUniform = new Uniform(this.blurIterations > 0 ? this.renderTargetRead.texture : this.renderTarget.texture);
 
         // Reflection blur material
         this.blurMaterial = new ReflectorBlurMaterial();
@@ -58345,9 +58442,9 @@ class Reflector extends Group {
         this.screenScene = new Scene();
         this.screenCamera = new OrthographicCamera(-1, 1, 1, -1, 0, 1);
 
-        this.screenGeometry = getFullscreenTriangle();
+        this.screenTriangle = getFullscreenTriangle();
 
-        this.screen = new Mesh(this.screenGeometry, this.blurMaterial);
+        this.screen = new Mesh(this.screenTriangle, this.blurMaterial);
         this.screen.frustumCulled = false;
         this.screenScene.add(this.screen);
     }
@@ -58499,7 +58596,7 @@ class Reflector extends Group {
         this.renderTargetRead.dispose();
         this.renderTarget.dispose();
         this.blurMaterial.dispose();
-        this.screenGeometry.dispose();
+        this.screenTriangle.dispose();
 
         for (const prop in this) {
             this[prop] = null;
@@ -58509,7 +58606,11 @@ class Reflector extends Group {
     }
 }
 
-// Based on https://threejs.org/examples/#webgl_shadowmap_pcss by spidersharma
+/**
+ * @author pschroen / https://ufo.ai/
+ *
+ * Based on https://threejs.org/examples/#webgl_shadowmap_pcss by spidersharma
+ */
 
 class SoftShadows {
     static init({
@@ -58782,22 +58883,21 @@ class Sound3D extends Group {
 
 class Point3D extends Group {
     static init(scene, camera, {
-        element = document.body,
-        stage = document.body,
+        root = document.body,
+        container = document.body,
         styles = Styles,
         debug = false
     } = {}) {
         this.scene = scene;
         this.camera = camera;
-        this.element = element;
-        this.ui = element instanceof Interface ? element : new Interface(element);
-        this.stage = stage instanceof Interface ? stage : new Interface(stage);
-        this.events = this.stage.events;
+        this.root = root instanceof Interface ? root : new Interface(root);
+        this.container = container instanceof Interface ? container : new Interface(container);
+        this.events = this.root.events;
         this.styles = styles;
         this.debug = debug;
 
         this.objects = [];
-        this.panels = [];
+        this.points = [];
         this.raycaster = new Raycaster();
         this.mouse = new Vector2$1(-1, -1);
         this.delta = new Vector2$1();
@@ -58817,8 +58917,14 @@ class Point3D extends Group {
 
     static initCanvas() {
         this.canvas = new Interface(null, 'canvas');
+        this.canvas.css({
+            position: 'absolute',
+            left: 0,
+            top: 0,
+            pointerEvents: 'none'
+        });
         this.context = this.canvas.element.getContext('2d');
-        this.ui.add(this.canvas);
+        this.container.add(this.canvas);
     }
 
     static addListeners() {
@@ -58846,8 +58952,8 @@ class Point3D extends Group {
     };
 
     static onResize = () => {
-        this.width = window.innerWidth;
-        this.height = window.innerHeight;
+        this.width = document.documentElement.clientWidth;
+        this.height = document.documentElement.clientHeight;
         this.dpr = window.devicePixelRatio;
 
         this.halfScreen.set(this.width / 2, this.height / 2);
@@ -58858,7 +58964,7 @@ class Point3D extends Group {
         this.canvas.element.style.height = this.height + 'px';
         this.context.scale(this.dpr, this.dpr);
 
-        this.panels.forEach(panel => panel.resize());
+        this.points.forEach(point => point.resize());
     };
 
     static onPointerDown = e => {
@@ -58882,22 +58988,22 @@ class Point3D extends Group {
         const intersection = this.raycaster.intersectObjects(this.objects);
 
         if (intersection.length) {
-            const panel = this.panels[this.objects.indexOf(intersection[0].object)];
+            const point = this.points[this.objects.indexOf(intersection[0].object)];
 
             if (!this.hover) {
-                this.hover = panel;
+                this.hover = point;
                 this.hover.onHover({ type: 'over' });
-                this.stage.css({ cursor: 'pointer' });
-            } else if (this.hover !== panel) {
+                this.root.css({ cursor: 'pointer' });
+            } else if (this.hover !== point) {
                 this.hover.onHover({ type: 'out' });
-                this.hover = panel;
+                this.hover = point;
                 this.hover.onHover({ type: 'over' });
-                this.stage.css({ cursor: 'pointer' });
+                this.root.css({ cursor: 'pointer' });
             }
         } else if (this.hover) {
             this.hover.onHover({ type: 'out' });
             this.hover = null;
-            this.stage.css({ cursor: '' });
+            this.root.css({ cursor: '' });
         }
     };
 
@@ -58925,21 +59031,21 @@ class Point3D extends Group {
      */
 
     static getSelected = () => {
-        return this.panels.filter(panel => panel.selected).map(panel => panel.object);
+        return this.points.filter(point => point.selected).map(point => point.object);
     };
 
     static setIndexes = () => {
-        this.panels.forEach((panel, i) => panel.setIndex(i));
+        this.points.forEach((point, i) => point.setIndex(i));
     };
 
     static invert = () => {
-        this.panels.forEach(panel => panel.resize());
+        this.points.forEach(point => point.resize());
     };
 
     static update = time => {
         this.context.clearRect(0, 0, this.canvas.element.width, this.canvas.element.height);
 
-        this.panels.forEach(panel => panel.update());
+        this.points.forEach(point => point.update());
 
         if (!Device.mobile && time - this.lastRaycast > this.raycastInterval) {
             this.onPointerMove();
@@ -58947,28 +59053,28 @@ class Point3D extends Group {
         }
     };
 
-    static add = (...panels) => {
-        panels.forEach(panel => {
-            this.objects.push(panel.object);
-            this.panels.push(panel);
+    static add = (...points) => {
+        points.forEach(point => {
+            this.objects.push(point.object);
+            this.points.push(point);
         });
 
         this.setIndexes();
     };
 
-    static remove = (...panels) => {
-        panels.forEach(panel => {
-            const index = this.panels.indexOf(panel);
+    static remove = (...points) => {
+        points.forEach(point => {
+            const index = this.points.indexOf(point);
 
             if (~index) {
                 this.objects.splice(index, 1);
-                this.panels.splice(index, 1);
+                this.points.splice(index, 1);
             }
 
-            if (panel === this.hover) {
+            if (point === this.hover) {
                 this.hover.onHover({ type: 'out' });
                 this.hover = null;
-                this.stage.css({ cursor: '' });
+                this.root.css({ cursor: '' });
             }
         });
 
@@ -58986,8 +59092,8 @@ class Point3D extends Group {
     };
 
     constructor(object, {
-        name = object.name,
-        type = object.type
+        name = object.geometry.type,
+        type = object.material.type
     } = {}) {
         super();
 
@@ -58999,7 +59105,6 @@ class Point3D extends Group {
 
         this.center = new Vector2$1();
         this.size = new Vector2$1();
-        this.box = null;
         this.selected = false;
         this.animatedIn = false;
 
@@ -59009,7 +59114,7 @@ class Point3D extends Group {
 
     initMesh() {
         this.object.geometry.computeBoundingSphere();
-        const geometry = new SphereGeometry$2(this.object.geometry.boundingSphere.radius, 32, 32);
+        const geometry = new SphereGeometry$2(this.object.geometry.boundingSphere.radius);
 
         let material;
 
@@ -59028,21 +59133,21 @@ class Point3D extends Group {
     }
 
     initViews() {
-        this.line = new Line(Point3D.canvas.element, Point3D.context);
-        Point3D.ui.add(this.line);
+        this.line = new Line(Point3D.context);
+        Point3D.container.add(this.line);
 
         this.reticle = new Reticle({ styles: Point3D.styles });
-        Point3D.ui.add(this.reticle);
+        Point3D.container.add(this.reticle);
 
         this.tracker = new Tracker({ styles: Point3D.styles });
-        Point3D.ui.add(this.tracker);
+        Point3D.container.add(this.tracker);
 
         this.point = new Point(this, this.tracker, { styles: Point3D.styles });
         this.point.setData({
             name: this.name,
             type: this.type
         });
-        Point3D.ui.add(this.point);
+        Point3D.container.add(this.point);
     }
 
     /**
@@ -59068,9 +59173,9 @@ class Point3D extends Group {
                 this.line.animateIn();
                 this.reticle.animateIn();
                 this.point.animateIn();
-            }
 
-            this.animatedIn = true;
+                this.animatedIn = true;
+            }
         } else {
             this.timeout = delayedCall(2000, () => {
                 this.line.animateOut();
@@ -59122,13 +59227,11 @@ class Point3D extends Group {
     };
 
     resize = () => {
-        this.box = null;
-
         this.line.resize();
     };
 
     update = () => {
-        this.line.startPoint(this.tracker.target);
+        this.line.startPoint(this.reticle.target);
         this.line.endPoint(this.point.originPosition);
         this.line.update();
         this.reticle.update();
@@ -59139,14 +59242,15 @@ class Point3D extends Group {
     updateMatrixWorld = force => {
         super.updateMatrixWorld(force);
 
-        this.box = getScreenSpaceBox(this.mesh, this.camera);
+        this.camera.updateMatrixWorld();
 
-        const boxCenter = this.box.getCenter(this.center).multiply(this.halfScreen);
-        const boxSize = this.box.getSize(this.size).multiply(this.halfScreen);
-        const centerX = this.halfScreen.x + boxCenter.x;
-        const centerY = this.halfScreen.y - boxCenter.y;
-        const width = Math.round(boxSize.x);
-        const height = Math.round(boxSize.y);
+        const box = getScreenSpaceBox(this.mesh, this.camera);
+        const center = box.getCenter(this.center).multiply(this.halfScreen);
+        const size = box.getSize(this.size).multiply(this.halfScreen);
+        const centerX = this.halfScreen.x + center.x;
+        const centerY = this.halfScreen.y - center.y;
+        const width = Math.round(size.x);
+        const height = Math.round(size.y);
         const halfWidth = Math.round(width / 2);
         const halfHeight = Math.round(height / 2);
 
@@ -59163,7 +59267,7 @@ class Point3D extends Group {
     };
 
     destroy = () => {
-        this.line.animateOut(() => {
+        this.line.animateOut(false, () => {
             this.point = this.point.destroy();
             this.tracker = this.tracker.destroy();
             this.reticle = this.reticle.destroy();
@@ -96326,7 +96430,7 @@ class OimoPhysics {
         this.objects = [];
         this.map = new WeakMap();
 
-        this.object = new Object3D();
+        this.object = new Group();
         this.matrix = new Matrix4();
     }
 
@@ -97058,7 +97162,7 @@ class OimoPhysicsController {
         this.objects = [];
         this.map = new WeakMap();
 
-        this.object = new Object3D();
+        this.object = new Group();
         this.matrix = new Matrix4();
     }
 
@@ -97299,21 +97403,42 @@ class OimoPhysicsController {
  */
 
 class Smooth extends Component {
-    constructor(content) {
+    constructor({
+        root,
+        container,
+        lerpSpeed = 0.1
+    } = {}) {
         super();
 
-        this.content = content;
+        this.root = root;
+        this.container = container;
+        this.lerpSpeed = lerpSpeed;
 
-        this.pos = 0;
-        this.lerpSpeed = 0.1;
+        this.position = 0;
+        this.last = 0;
+        this.delta = 0;
+        this.direction = 0;
+        this.progress = 0;
+        this.height = 0;
 
         this.initHTML();
+
+        this.enable();
     }
 
     initHTML() {
-        this.content.css({ willChange: 'transform' });
+        if (!Device.mobile) {
+            this.root.css({
+                position: 'fixed',
+                left: 0,
+                top: 0,
+                width: '100%',
+                height: '100%',
+                overflow: 'hidden'
+            });
 
-        history.scrollRestoration = 'manual';
+            this.container.css({ willChange: 'transform' });
+        }
     }
 
     addListeners() {
@@ -97333,21 +97458,318 @@ class Smooth extends Component {
     onResize = async () => {
         await defer();
 
-        document.body.style.height = `${this.content.element.getBoundingClientRect().height}px`;
+        const { height } = this.container.element.getBoundingClientRect();
 
-        this.pos = window.scrollY;
+        document.body.style.height = `${height}px`;
+
+        this.height = height;
+        this.position = document.scrollingElement.scrollTop;
     };
 
     onUpdate = () => {
-        this.pos = lerp$2(this.pos, window.scrollY, this.lerpSpeed);
-        this.pos = Math.round(this.pos * 100) / 100;
+        if (!Device.mobile) {
+            this.position = lerp$2(this.position, document.scrollingElement.scrollTop, this.lerpSpeed);
+        } else {
+            this.position = document.scrollingElement.scrollTop;
+        }
 
-        this.content.css({ y: -this.pos });
+        this.delta = this.position - this.last;
+        this.last = this.position;
+        this.direction = Math.sign(this.delta);
+
+        if (Math.abs(this.delta) < 0.001) {
+            return;
+        }
+
+        if (!Device.mobile) {
+            this.container.css({ y: -Math.round(this.position) });
+        }
+
+        this.progress = clamp$1(this.position / (this.height - Stage.height), 0, 1);
     };
 
     /**
      * Public methods
      */
+
+    setScroll = top => {
+        document.scrollingElement.scrollTop = top;
+    };
+
+    enable = () => {
+        this.addListeners();
+        this.onResize();
+    };
+
+    disable = () => {
+        this.removeListeners();
+
+        document.body.style.height = '';
+    };
+
+    destroy = () => {
+        this.disable();
+
+        return super.destroy();
+    };
+}
+
+/**
+ * @author pschroen / https://ufo.ai/
+ *
+ * Based on https://codepen.io/ReGGae/pen/pxMJLW
+ */
+
+class SmoothSkew extends Component {
+    constructor({
+        root,
+        container,
+        lerpSpeed = 0.1,
+        skew = 7.5
+    } = {}) {
+        super();
+
+        this.root = root;
+        this.container = container;
+        this.lerpSpeed = lerpSpeed;
+        this.skew = skew;
+
+        this.position = 0;
+        this.last = 0;
+        this.delta = 0;
+        this.direction = 0;
+        this.progress = 0;
+        this.height = 0;
+
+        this.initHTML();
+
+        this.enable();
+    }
+
+    initHTML() {
+        if (!Device.mobile) {
+            this.root.css({
+                position: 'fixed',
+                left: 0,
+                top: 0,
+                width: '100%',
+                height: '100%',
+                overflow: 'hidden'
+            });
+
+            this.container.css({ willChange: 'transform' });
+        }
+    }
+
+    addListeners() {
+        Stage.events.on(Events.RESIZE, this.onResize);
+        ticker.add(this.onUpdate);
+    }
+
+    removeListeners() {
+        Stage.events.off(Events.RESIZE, this.onResize);
+        ticker.remove(this.onUpdate);
+    }
+
+    /**
+     * Event handlers
+     */
+
+    onResize = async () => {
+        await defer();
+
+        const { height } = this.container.element.getBoundingClientRect();
+
+        document.body.style.height = `${height}px`;
+
+        this.height = height;
+        this.position = document.scrollingElement.scrollTop;
+    };
+
+    onUpdate = () => {
+        if (!Device.mobile) {
+            this.position = lerp$2(this.position, document.scrollingElement.scrollTop, this.lerpSpeed);
+        } else {
+            this.position = document.scrollingElement.scrollTop;
+        }
+
+        this.delta = this.position - this.last;
+        this.last = this.position;
+        this.direction = Math.sign(this.delta);
+
+        if (Math.abs(this.delta) < 0.001) {
+            return;
+        }
+
+        if (!Device.mobile) {
+            this.container.css({
+                y: -Math.round(this.position),
+                skewY: (this.delta / Stage.width) * 10 * this.skew
+            });
+        }
+
+        this.progress = clamp$1(this.position / (this.height - Stage.height), 0, 1);
+    };
+
+    /**
+     * Public methods
+     */
+
+    setScroll = top => {
+        document.scrollingElement.scrollTop = top;
+    };
+
+    enable = () => {
+        this.addListeners();
+        this.onResize();
+    };
+
+    disable = () => {
+        this.removeListeners();
+
+        document.body.style.height = '';
+    };
+
+    destroy = () => {
+        this.disable();
+
+        return super.destroy();
+    };
+}
+
+/**
+ * @author pschroen / https://ufo.ai/
+ */
+
+class SmoothViews extends Component {
+    constructor({
+        views,
+        root,
+        container,
+        sections,
+        lerpSpeed = 0.1
+    } = {}) {
+        super();
+
+        this.views = views;
+        this.root = root;
+        this.container = container;
+        this.sections = sections;
+        this.lerpSpeed = lerpSpeed;
+
+        this.position = 0;
+        this.last = 0;
+        this.delta = 0;
+        this.direction = 0;
+        this.index1 = 0;
+        this.index2 = 0;
+        this.progress = 0;
+        this.total = 0;
+        this.height = 0;
+
+        this.initHTML();
+
+        this.enable();
+    }
+
+    initHTML() {
+        if (!Device.mobile) {
+            this.root.css({
+                position: 'fixed',
+                left: 0,
+                top: 0,
+                width: '100%',
+                height: '100%',
+                overflow: 'hidden'
+            });
+
+            this.container.css({ willChange: 'transform' });
+        }
+    }
+
+    addListeners() {
+        Stage.events.on(Events.RESIZE, this.onResize);
+        ticker.add(this.onUpdate);
+    }
+
+    removeListeners() {
+        Stage.events.off(Events.RESIZE, this.onResize);
+        ticker.remove(this.onUpdate);
+    }
+
+    /**
+     * Event handlers
+     */
+
+    onResize = async () => {
+        await defer();
+
+        this.height = 0;
+
+        for (let i = 0, l = this.sections.length; i < l; i++) {
+            const view = this.views[i];
+            const section = this.sections[i];
+
+            view.top = this.height;
+            view.height = section.element.getBoundingClientRect().height;
+
+            this.height += view.height;
+        }
+
+        document.body.style.height = `${this.height}px`;
+
+        this.position = document.scrollingElement.scrollTop;
+    };
+
+    onUpdate = () => {
+        if (!Device.mobile) {
+            this.position = lerp$2(this.position, document.scrollingElement.scrollTop, this.lerpSpeed);
+        } else {
+            this.position = document.scrollingElement.scrollTop;
+        }
+
+        this.delta = this.position - this.last;
+        this.last = this.position;
+        this.direction = Math.sign(this.delta);
+
+        if (Math.abs(this.delta) < 0.001) {
+            return;
+        }
+
+        if (!Device.mobile) {
+            this.container.css({ y: -Math.round(this.position) });
+        }
+
+        let height = 0;
+
+        for (let i = 0, l = this.views.length; i < l; i++) {
+            height += this.views[i].height;
+
+            if (this.position < height) {
+                this.index1 = i;
+                this.index2 = i + 1;
+
+                if (this.index2 > l - 1) {
+                    this.index2 = l - 1;
+                }
+
+                break;
+            }
+        }
+
+        const current = this.position + this.views[this.index2].height - this.views[this.index2].top;
+        this.progress = clamp$1(current / this.views[this.index2].height, 0, 1);
+
+        this.total = clamp$1(this.position / (this.height - Stage.height), 0, 1);
+    };
+
+    /**
+     * Public methods
+     */
+
+    setScroll = index => {
+        document.scrollingElement.scrollTop = this.views[index].top;
+    };
 
     enable = () => {
         this.addListeners();
@@ -97413,12 +97835,13 @@ class Magnetic extends Component {
     };
 
     onPointerMove = ({ clientX, clientY }) => {
-        const bounds = this.object.element.getBoundingClientRect();
-        const x = clientX - (bounds.left + bounds.width / 2);
-        const y = clientY - (bounds.top + bounds.height / 2);
+        const { left, top, width, height } = this.object.element.getBoundingClientRect();
+
+        const x = clientX - (left + width / 2);
+        const y = clientY - (top + height / 2);
         const distance = Math.sqrt(x * x + y * y);
 
-        if (distance < (bounds.width + bounds.height) / 2 + this.threshold) {
+        if (distance < (width + height) / 2 + this.threshold) {
             this.onHover({ type: 'over', x, y });
         } else if (this.hoveredIn) {
             this.onHover({ type: 'out' });
@@ -97797,11 +98220,11 @@ void main() {
 `;
 
 class CopyMaterial extends RawShaderMaterial {
-    constructor() {
+    constructor(map) {
         super({
             glslVersion: GLSL3,
             uniforms: {
-                tMap: new Uniform(null)
+                tMap: new Uniform(map)
             },
             vertexShader: vertexShader$m,
             fragmentShader: fragmentShader$m,
@@ -98314,10 +98737,9 @@ void main() {
     vec4 texel = texture(tMap, vUv);
     vec3 luma = vec3(0.299, 0.587, 0.114);
     float v = dot(texel.xyz, luma);
-    vec4 outputColor = vec4(0);
     float alpha = smoothstep(uThreshold, uThreshold + uSmoothing, v);
 
-    FragColor = mix(outputColor, texel, alpha);
+    FragColor = mix(vec4(0), texel, alpha);
 }
 `;
 
@@ -98560,16 +98982,21 @@ void main() {
                 uBloomFactors[3] * texture(tBlur4, vUv) +
                 uBloomFactors[4] * texture(tBlur5, vUv);
 
-    FragColor.rgb = dither(FragColor.rgb);
+    #ifdef DITHERING
+        FragColor.rgb = dither(FragColor.rgb);
+    #endif
 }
 `;
 
 class BloomCompositeMaterial extends RawShaderMaterial {
-    constructor(nMips) {
+    constructor({
+        dithering
+    } = {}) {
         super({
             glslVersion: GLSL3,
             defines: {
-                NUM_MIPS: nMips
+                NUM_MIPS: 5,
+                DITHERING: dithering
             },
             uniforms: {
                 tBlur1: new Uniform(null),
@@ -99017,8 +99444,8 @@ class BokehBlurMaterial2 extends RawShaderMaterial {
 }
 
 var vertexShader$7 = /* glsl */`
-in vec2 uv;
 in vec3 position;
+in vec2 uv;
 
 out vec2 vUv;
 
@@ -99095,7 +99522,7 @@ void main() {
 }
 `;
 
-// Based on https://github.com/vanruesc/postprocessing
+// Based on https://github.com/pmndrs/postprocessing
 
 var blendOverlay = /* glsl */`
 float blendOverlay(float x, float y) {
@@ -104194,4 +104621,4 @@ class OrbitControls extends EventDispatcher {
 
 }
 
-export { ACESFilmicToneMapping, AddEquation, AddOperation, AdditiveAnimationBlendMode, AdditiveBlending, AfterimageMaterial, AlphaFormat, AlwaysDepth, AlwaysStencilFunc, AmbientLight, AmbientLightProbe, AnimationClip, AnimationLoader, AnimationMixer, AnimationObjectGroup, AnimationUtils, ArcCurve, ArrayCamera, ArrowHelper, AssetLoader, Assets, Audio$1 as Audio, AudioAnalyser, AudioContext$1 as AudioContext, AudioListener, AudioLoader, AxesHelper, AxisHelper, BackSide, BadTVMaterial, BasicDepthPacking, BasicMaterial, BasicShadowMap, BinaryTextureLoader, BloomCompositeMaterial, BlurMaterial, BokehBlurMaterial1, BokehBlurMaterial2, Bone, BooleanKeyframeTrack, BoundingBoxHelper, Box2, Box3, Box3Helper, BoxGeometry$2 as BoxBufferGeometry, BoxGeometry$2 as BoxGeometry, BoxHelper, BufferAttribute, BufferGeometry, BufferGeometryLoader, BufferGeometryLoaderThread, ByteType, Cache, Camera, CameraHelper, CameraMotionBlurMaterial, CanvasRenderer, CanvasTexture, CapsuleGeometry as CapsuleBufferGeometry, CapsuleGeometry, CatmullRomCurve3, ChromaticAberrationMaterial, CineonToneMapping, CircleGeometry as CircleBufferGeometry, CircleGeometry, ClampToEdgeWrapping, Clock, Cluster, Color$1 as Color, ColorKeyframeTrack, ColorManagement$1 as ColorManagement, ColorMaterial, ColorPicker, Component, CompressedTexture, CompressedTextureLoader, ConeGeometry as ConeBufferGeometry, ConeGeometry, CopyMaterial, CubeCamera, CubeReflectionMapping, CubeRefractionMapping, CubeTexture, CubeTextureLoader, CubeUVReflectionMapping, CubicBezierCurve, CubicBezierCurve3, CubicInterpolant, CullFaceBack, CullFaceFront, CullFaceFrontBack, CullFaceNone, Curve, CurvePath, CustomBlending, CustomToneMapping, CylinderGeometry as CylinderBufferGeometry, CylinderGeometry, Cylindrical, DEG2RAD$1 as DEG2RAD, Data3DTexture, DataArrayTexture, DataTexture, DataTexture2DArray, DataTexture3D, DataTextureLoader, DataUtils, DecrementStencilOp, DecrementWrapStencilOp, DefaultLoadingManager, DepthFormat, DepthMaskMaterial, DepthStencilFormat, DepthTexture, Device, DirectionalLight, DirectionalLightHelper, DiscreteInterpolant, DodecahedronGeometry as DodecahedronBufferGeometry, DodecahedronGeometry, DoubleSide, DstAlphaFactor, DstColorFactor, DynamicBufferAttribute, DynamicCopyUsage, DynamicDrawUsage, DynamicReadUsage, Easing, EdgesGeometry, EdgesHelper, EllipseCurve, EnvironmentTextureLoader, EqualDepth, EqualStencilFunc, EquirectangularReflectionMapping, EquirectangularRefractionMapping, Euler, EventDispatcher, EventEmitter, Events, ExtrudeGeometry as ExtrudeBufferGeometry, ExtrudeGeometry, FXAAMaterial, FaceColors, FastGaussianBlurMaterial, FileLoader, FlatShading, Float16BufferAttribute, Float32Attribute, Float32BufferAttribute, Float64Attribute, Float64BufferAttribute, FloatType, FlowMaterial, Flowmap, Fog, FogExp2, Font, FontLoader, FramebufferTexture, FresnelMaterial, FrontSide, Frustum, GLBufferAttribute, GLSL1, GLSL3, Global, GreaterDepth, GreaterEqualDepth, GreaterEqualStencilFunc, GreaterStencilFunc, GridHelper, Group, HalfFloatType, Header, HeaderInfo, HemisphereLight, HemisphereLightHelper, HemisphereLightProbe, IcosahedronGeometry as IcosahedronBufferGeometry, IcosahedronGeometry, ImageBitmapLoader$1 as ImageBitmapLoader, ImageBitmapLoaderThread, ImageLoader, ImageUtils, ImmediateRenderObject, ImprovedNoise, IncrementStencilOp, IncrementWrapStencilOp, InstancedBufferAttribute, InstancedBufferGeometry, InstancedInterleavedBuffer, InstancedMesh, Int16Attribute, Int16BufferAttribute, Int32Attribute, Int32BufferAttribute, Int8Attribute, Int8BufferAttribute, IntType, Interface, InterleavedBuffer, InterleavedBufferAttribute, Interpolant, InterpolateDiscrete, InterpolateLinear, InterpolateSmooth, InvertStencilOp, JSONLoader, KeepStencilOp, KeyframeTrack, LOD, LatheGeometry as LatheBufferGeometry, LatheGeometry, Layers, LensFlare, LessDepth, LessEqualDepth, LessEqualStencilFunc, LessStencilFunc, Light, LightProbe, Line, Line3, LineBasicMaterial, LineCurve, LineCurve3, LineDashedMaterial, LineLoop, LinePieces, LineSegments, LineStrip, LinearEncoding, LinearFilter, LinearInterpolant, LinearMipMapLinearFilter, LinearMipMapNearestFilter, LinearMipmapLinearFilter, LinearMipmapNearestFilter, LinearSRGBColorSpace$1 as LinearSRGBColorSpace, LinearToneMapping, LinkedList, List, ListSelect, ListToggle, Loader$1 as Loader, LoaderUtils, LoadingManager, LoopOnce, LoopPingPong, LoopRepeat, LuminanceAlphaFormat, LuminanceFormat, LuminosityMaterial, MOUSE, Magnetic, Material, MaterialLoader, MaterialPanelController, MathUtils as Math, MathUtils, Matrix3, Matrix4, MaxEquation, Mesh, MeshBasicMaterial, MeshDepthMaterial, MeshDistanceMaterial, MeshFaceMaterial, MeshLambertMaterial, MeshMatcapMaterial, MeshNormalMaterial, MeshPhongMaterial, MeshPhysicalMaterial, MeshStandardMaterial, MeshToonMaterial, MinEquation, MirroredRepeatWrapping, MixOperation, MultiLoader, MultiMaterial, MultiplyBlending, MultiplyOperation, NearestFilter, NearestMipMapLinearFilter, NearestMipMapNearestFilter, NearestMipmapLinearFilter, NearestMipmapNearestFilter, NeverDepth, NeverStencilFunc, NoBlending, NoColorSpace, NoColors, NoToneMapping, NormalAnimationBlendMode, NormalBlending, NormalMaterial, NotEqualDepth, NotEqualStencilFunc, NumberKeyframeTrack, Object3D, ObjectLoader, ObjectPool, ObjectSpaceNormalMap, OctahedronGeometry as OctahedronBufferGeometry, OctahedronGeometry, OimoPhysics, OimoPhysicsBuffer, OimoPhysicsController, OneFactor, OneMinusDstAlphaFactor, OneMinusDstColorFactor, OneMinusSrcAlphaFactor, OneMinusSrcColorFactor, OrbitControls, OrthographicCamera, PCFShadowMap, PCFSoftShadowMap, PMREMGenerator, Panel, PanelItem, ParametricGeometry, Particle, ParticleBasicMaterial, ParticleSystem, ParticleSystemMaterial, Path, PerspectiveCamera, Plane, PlaneGeometry as PlaneBufferGeometry, PlaneGeometry, PlaneHelper, Point, Point3D, PointCloud, PointCloudMaterial, PointLight, PointLightHelper, PointText, Points, PointsMaterial, PoissonDiscBlurMaterial, PolarGridHelper, PolyhedronGeometry as PolyhedronBufferGeometry, PolyhedronGeometry, PositionalAudio, PropertyBinding, PropertyMixer, QuadraticBezierCurve, QuadraticBezierCurve3, Quaternion, QuaternionKeyframeTrack, QuaternionLinearInterpolant, RAD2DEG$1 as RAD2DEG, REVISION, RGBADepthPacking, RGBAFormat, RGBAIntegerFormat, RGBA_ASTC_10x10_Format, RGBA_ASTC_10x5_Format, RGBA_ASTC_10x6_Format, RGBA_ASTC_10x8_Format, RGBA_ASTC_12x10_Format, RGBA_ASTC_12x12_Format, RGBA_ASTC_4x4_Format, RGBA_ASTC_5x4_Format, RGBA_ASTC_5x5_Format, RGBA_ASTC_6x5_Format, RGBA_ASTC_6x6_Format, RGBA_ASTC_8x5_Format, RGBA_ASTC_8x6_Format, RGBA_ASTC_8x8_Format, RGBA_BPTC_Format, RGBA_ETC2_EAC_Format, RGBA_PVRTC_2BPPV1_Format, RGBA_PVRTC_4BPPV1_Format, RGBA_S3TC_DXT1_Format, RGBA_S3TC_DXT3_Format, RGBA_S3TC_DXT5_Format, RGBFormat, RGBMaterial, RGB_ETC1_Format, RGB_ETC2_Format, RGB_PVRTC_2BPPV1_Format, RGB_PVRTC_4BPPV1_Format, RGB_S3TC_DXT1_Format, RGFormat, RGIntegerFormat, RawShaderMaterial, Ray, Raycaster, RectAreaLight, RedFormat, RedIntegerFormat, Reflector, ReflectorBlurMaterial, ReflectorDudvMaterial, ReflectorMaterial, ReinhardToneMapping, RepeatWrapping, ReplaceStencilOp, Reticle, ReticleText, ReverseSubtractEquation, RigidBodyConfig$1 as RigidBodyConfig, RigidBodyType$1 as RigidBodyType, RingGeometry as RingBufferGeometry, RingGeometry, SRGBColorSpace$1 as SRGBColorSpace, SVGLoader, Scene, SceneCompositeMaterial, SceneUtils, ShaderChunk, ShaderLib, ShaderMaterial, ShadowMaterial, ShadowTextureMaterial, Shape$2 as Shape, ShapeGeometry as ShapeBufferGeometry, ShapeGeometry, ShapePath, ShapeUtils, ShortType, SimplexNoise, Skeleton, SkeletonHelper, SkinnedMesh, Slider, Smooth, SmoothShading, SoftShadows, Sound, Sound3D, Source, Sphere, SphereGeometry$2 as SphereBufferGeometry, SphereGeometry$2 as SphereGeometry, Spherical, SphericalHarmonics3, SphericalJointConfig$1 as SphericalJointConfig, SplineCurve, SpotLight, SpotLightHelper, Sprite, SpriteMaterial, SrcAlphaFactor, SrcAlphaSaturateFactor, SrcColorFactor, Stage, StaticCopyUsage, StaticDrawUsage, StaticReadUsage, StereoCamera, StreamCopyUsage, StreamDrawUsage, StreamReadUsage, StringKeyframeTrack, Styles, SubtractEquation, SubtractiveBlending, TOUCH, TangentSpaceNormalMap, TargetNumber, TetrahedronGeometry as TetrahedronBufferGeometry, TetrahedronGeometry, TextGeometry, TextGeometryLoader, TextGeometryLoaderThread, TextMaterial, Texture, TextureLoader, Thread, Ticker, TiltShiftMaterial, TorusGeometry as TorusBufferGeometry, TorusGeometry, TorusKnotGeometry as TorusKnotBufferGeometry, TorusKnotGeometry, Tracker, Triangle, TriangleFanDrawMode, TriangleStripDrawMode, TrianglesDrawMode, TubeGeometry as TubeBufferGeometry, TubeGeometry, Tween, UI, UVMapping, Uint16Attribute, Uint16BufferAttribute, Uint32Attribute, Uint32BufferAttribute, Uint8Attribute, Uint8BufferAttribute, Uint8ClampedAttribute, Uint8ClampedBufferAttribute, Uniform, UniformsLib, UniformsUtils, UnrealBloomBlurMaterial, UnrealBloomCompositeMaterial, UnsignedByteType, UnsignedInt248Type, UnsignedIntType, UnsignedShort4444Type, UnsignedShort5551Type, UnsignedShortType, VSMShadowMap, Vector2$1 as Vector2, Vector3, Vector4, VectorKeyframeTrack, Vertex, VertexColors, VideoGlitchMaterial, VideoTexture, WebAudio, WebAudio3D, WebAudioParam, WebGL1Renderer, WebGL3DRenderTarget, WebGLArrayRenderTarget, WebGLCubeRenderTarget, WebGLMultipleRenderTargets, WebGLMultisampleRenderTarget, WebGLRenderTarget, WebGLRenderTargetCube, WebGLRenderer, WebGLUtils, WireframeGeometry, WireframeHelper, Wobble, WrapAroundEnding, XHRLoader, ZeroCurvatureEnding, ZeroFactor, ZeroSlopeEnding, ZeroStencilOp, _SRGBAFormat, absolute, basename, brightness, ceilPowerOfTwo$1 as ceilPowerOfTwo, clamp$1 as clamp, clearTween, damp$1 as damp, defer, degToRad$1 as degToRad, delayedCall, denormalize$2 as denormalize, euclideanModulo$1 as euclideanModulo, extension, floorPowerOfTwo$1 as floorPowerOfTwo, generateUUID$1 as generateUUID, getConstructor, getFrustum, getFrustumFromHeight, getFullscreenTriangle, getKeyByValue, getScreenSpaceBox, getSphericalCube, guid, headsTails, inverseLerp$1 as inverseLerp, isPowerOfTwo$1 as isPowerOfTwo, lerp$2 as lerp, mapLinear$1 as mapLinear, normalize$1 as normalize, pingpong$1 as pingpong, radToDeg$1 as radToDeg, randFloat$1 as randFloat, randFloatSpread$1 as randFloatSpread, randInt$1 as randInt, sRGBEncoding, seededRandom$1 as seededRandom, setQuaternionFromProperEuler$1 as setQuaternionFromProperEuler, shuffle, smootherstep$2 as smootherstep, smoothstep$1 as smoothstep, ticker, tween, wait };
+export { ACESFilmicToneMapping, AddEquation, AddOperation, AdditiveAnimationBlendMode, AdditiveBlending, AfterimageMaterial, AlphaFormat, AlwaysDepth, AlwaysStencilFunc, AmbientLight, AmbientLightProbe, AnimationClip, AnimationLoader, AnimationMixer, AnimationObjectGroup, AnimationUtils, ArcCurve, ArrayCamera, ArrowHelper, AssetLoader, Assets, Audio$1 as Audio, AudioAnalyser, AudioContext$1 as AudioContext, AudioListener, AudioLoader, AxesHelper, AxisHelper, BackSide, BadTVMaterial, BasicDepthPacking, BasicMaterial, BasicShadowMap, BinaryTextureLoader, BloomCompositeMaterial, BlurMaterial, BokehBlurMaterial1, BokehBlurMaterial2, Bone, BooleanKeyframeTrack, BoundingBoxHelper, Box2, Box3, Box3Helper, BoxGeometry$2 as BoxBufferGeometry, BoxGeometry$2 as BoxGeometry, BoxHelper, BufferAttribute, BufferGeometry, BufferGeometryLoader, BufferGeometryLoaderThread, ByteType, Cache, Camera, CameraHelper, CameraMotionBlurMaterial, CanvasRenderer, CanvasTexture, CapsuleGeometry as CapsuleBufferGeometry, CapsuleGeometry, CatmullRomCurve3, ChromaticAberrationMaterial, CineonToneMapping, CircleGeometry as CircleBufferGeometry, CircleGeometry, ClampToEdgeWrapping, Clock, Cluster, Color$1 as Color, ColorKeyframeTrack, ColorManagement$1 as ColorManagement, ColorMaterial, ColorPicker, Component, CompressedTexture, CompressedTextureLoader, ConeGeometry as ConeBufferGeometry, ConeGeometry, CopyMaterial, CubeCamera, CubeReflectionMapping, CubeRefractionMapping, CubeTexture, CubeTextureLoader, CubeUVReflectionMapping, CubicBezierCurve, CubicBezierCurve3, CubicInterpolant, CullFaceBack, CullFaceFront, CullFaceFrontBack, CullFaceNone, Curve, CurvePath, CustomBlending, CustomToneMapping, CylinderGeometry as CylinderBufferGeometry, CylinderGeometry, Cylindrical, DEG2RAD$1 as DEG2RAD, Data3DTexture, DataArrayTexture, DataTexture, DataTexture2DArray, DataTexture3D, DataTextureLoader, DataUtils, DecrementStencilOp, DecrementWrapStencilOp, DefaultLoadingManager, DepthFormat, DepthMaskMaterial, DepthStencilFormat, DepthTexture, Device, DirectionalLight, DirectionalLightHelper, DiscreteInterpolant, DodecahedronGeometry as DodecahedronBufferGeometry, DodecahedronGeometry, DoubleSide, DstAlphaFactor, DstColorFactor, DynamicBufferAttribute, DynamicCopyUsage, DynamicDrawUsage, DynamicReadUsage, Easing, EdgesGeometry, EdgesHelper, EllipseCurve, EnvironmentTextureLoader, EqualDepth, EqualStencilFunc, EquirectangularReflectionMapping, EquirectangularRefractionMapping, Euler, EventDispatcher, EventEmitter, Events, ExtrudeGeometry as ExtrudeBufferGeometry, ExtrudeGeometry, FXAAMaterial, FaceColors, FastGaussianBlurMaterial, FileLoader, FlatShading, Float16BufferAttribute, Float32Attribute, Float32BufferAttribute, Float64Attribute, Float64BufferAttribute, FloatType, FlowMaterial, Flowmap, Fog, FogExp2, Font, FontLoader, FramebufferTexture, FresnelMaterial, FrontSide, Frustum, GLBufferAttribute, GLSL1, GLSL3, Global, GreaterDepth, GreaterEqualDepth, GreaterEqualStencilFunc, GreaterStencilFunc, GridHelper, Group, HalfFloatType, Header, HeaderInfo, HemisphereLight, HemisphereLightHelper, HemisphereLightProbe, IcosahedronGeometry as IcosahedronBufferGeometry, IcosahedronGeometry, ImageBitmapLoader$1 as ImageBitmapLoader, ImageBitmapLoaderThread, ImageLoader, ImageUtils, ImmediateRenderObject, ImprovedNoise, IncrementStencilOp, IncrementWrapStencilOp, InstancedBufferAttribute, InstancedBufferGeometry, InstancedInterleavedBuffer, InstancedMesh, Int16Attribute, Int16BufferAttribute, Int32Attribute, Int32BufferAttribute, Int8Attribute, Int8BufferAttribute, IntType, Interface, InterleavedBuffer, InterleavedBufferAttribute, Interpolant, InterpolateDiscrete, InterpolateLinear, InterpolateSmooth, InvertStencilOp, JSONLoader, KeepStencilOp, KeyframeTrack, LOD, LatheGeometry as LatheBufferGeometry, LatheGeometry, Layers, LensFlare, LessDepth, LessEqualDepth, LessEqualStencilFunc, LessStencilFunc, Light, LightProbe, Line, Line3, LineBasicMaterial, LineCurve, LineCurve3, LineDashedMaterial, LineLoop, LinePieces, LineSegments, LineStrip, LinearEncoding, LinearFilter, LinearInterpolant, LinearMipMapLinearFilter, LinearMipMapNearestFilter, LinearMipmapLinearFilter, LinearMipmapNearestFilter, LinearSRGBColorSpace$1 as LinearSRGBColorSpace, LinearToneMapping, LinkedList, List, ListSelect, ListToggle, Loader$1 as Loader, LoaderUtils, LoadingManager, LoopOnce, LoopPingPong, LoopRepeat, LuminanceAlphaFormat, LuminanceFormat, LuminosityMaterial, MOUSE, Magnetic, Material, MaterialLoader, MaterialPanelController, MathUtils as Math, MathUtils, Matrix3, Matrix4, MaxEquation, Mesh, MeshBasicMaterial, MeshDepthMaterial, MeshDistanceMaterial, MeshFaceMaterial, MeshLambertMaterial, MeshMatcapMaterial, MeshNormalMaterial, MeshPhongMaterial, MeshPhysicalMaterial, MeshStandardMaterial, MeshToonMaterial, MinEquation, MirroredRepeatWrapping, MixOperation, MultiLoader, MultiMaterial, MultiplyBlending, MultiplyOperation, NearestFilter, NearestMipMapLinearFilter, NearestMipMapNearestFilter, NearestMipmapLinearFilter, NearestMipmapNearestFilter, NeverDepth, NeverStencilFunc, NoBlending, NoColorSpace, NoColors, NoToneMapping, NormalAnimationBlendMode, NormalBlending, NormalMaterial, NotEqualDepth, NotEqualStencilFunc, NumberKeyframeTrack, Object3D, ObjectLoader, ObjectPool, ObjectSpaceNormalMap, OctahedronGeometry as OctahedronBufferGeometry, OctahedronGeometry, OimoPhysics, OimoPhysicsBuffer, OimoPhysicsController, OneFactor, OneMinusDstAlphaFactor, OneMinusDstColorFactor, OneMinusSrcAlphaFactor, OneMinusSrcColorFactor, OrbitControls, OrthographicCamera, PCFShadowMap, PCFSoftShadowMap, PMREMGenerator, Panel, PanelItem, ParametricGeometry, Particle, ParticleBasicMaterial, ParticleSystem, ParticleSystemMaterial, Path, PerspectiveCamera, Plane, PlaneGeometry as PlaneBufferGeometry, PlaneGeometry, PlaneHelper, Point, Point3D, PointCloud, PointCloudMaterial, PointLight, PointLightHelper, PointText, Points, PointsMaterial, PoissonDiscBlurMaterial, PolarGridHelper, PolyhedronGeometry as PolyhedronBufferGeometry, PolyhedronGeometry, PositionalAudio, PropertyBinding, PropertyMixer, QuadraticBezierCurve, QuadraticBezierCurve3, Quaternion, QuaternionKeyframeTrack, QuaternionLinearInterpolant, RAD2DEG$1 as RAD2DEG, REVISION, RGBADepthPacking, RGBAFormat, RGBAIntegerFormat, RGBA_ASTC_10x10_Format, RGBA_ASTC_10x5_Format, RGBA_ASTC_10x6_Format, RGBA_ASTC_10x8_Format, RGBA_ASTC_12x10_Format, RGBA_ASTC_12x12_Format, RGBA_ASTC_4x4_Format, RGBA_ASTC_5x4_Format, RGBA_ASTC_5x5_Format, RGBA_ASTC_6x5_Format, RGBA_ASTC_6x6_Format, RGBA_ASTC_8x5_Format, RGBA_ASTC_8x6_Format, RGBA_ASTC_8x8_Format, RGBA_BPTC_Format, RGBA_ETC2_EAC_Format, RGBA_PVRTC_2BPPV1_Format, RGBA_PVRTC_4BPPV1_Format, RGBA_S3TC_DXT1_Format, RGBA_S3TC_DXT3_Format, RGBA_S3TC_DXT5_Format, RGBFormat, RGBMaterial, RGB_ETC1_Format, RGB_ETC2_Format, RGB_PVRTC_2BPPV1_Format, RGB_PVRTC_4BPPV1_Format, RGB_S3TC_DXT1_Format, RGFormat, RGIntegerFormat, RawShaderMaterial, Ray, Raycaster, RectAreaLight, RedFormat, RedIntegerFormat, Reflector, ReflectorBlurMaterial, ReflectorDudvMaterial, ReflectorMaterial, ReinhardToneMapping, RepeatWrapping, ReplaceStencilOp, Reticle, ReticleText, ReverseSubtractEquation, RigidBodyConfig$1 as RigidBodyConfig, RigidBodyType$1 as RigidBodyType, RingGeometry as RingBufferGeometry, RingGeometry, SRGBColorSpace$1 as SRGBColorSpace, SVGLoader, Scene, SceneCompositeMaterial, SceneUtils, ShaderChunk, ShaderLib, ShaderMaterial, ShadowMaterial, ShadowTextureMaterial, Shape$2 as Shape, ShapeGeometry as ShapeBufferGeometry, ShapeGeometry, ShapePath, ShapeUtils, ShortType, SimplexNoise, Skeleton, SkeletonHelper, SkinnedMesh, Slider, Smooth, SmoothShading, SmoothSkew, SmoothViews, SoftShadows, Sound, Sound3D, Source, Sphere, SphereGeometry$2 as SphereBufferGeometry, SphereGeometry$2 as SphereGeometry, Spherical, SphericalHarmonics3, SphericalJointConfig$1 as SphericalJointConfig, SplineCurve, SpotLight, SpotLightHelper, Sprite, SpriteMaterial, SrcAlphaFactor, SrcAlphaSaturateFactor, SrcColorFactor, Stage, StaticCopyUsage, StaticDrawUsage, StaticReadUsage, StereoCamera, StreamCopyUsage, StreamDrawUsage, StreamReadUsage, StringKeyframeTrack, Styles, SubtractEquation, SubtractiveBlending, TOUCH, TangentSpaceNormalMap, TargetNumber, TetrahedronGeometry as TetrahedronBufferGeometry, TetrahedronGeometry, TextGeometry, TextGeometryLoader, TextGeometryLoaderThread, TextMaterial, Texture, TextureLoader, Thread, Ticker, TiltShiftMaterial, TorusGeometry as TorusBufferGeometry, TorusGeometry, TorusKnotGeometry as TorusKnotBufferGeometry, TorusKnotGeometry, Tracker, Triangle, TriangleFanDrawMode, TriangleStripDrawMode, TrianglesDrawMode, TubeGeometry as TubeBufferGeometry, TubeGeometry, Tween, UI, UVMapping, Uint16Attribute, Uint16BufferAttribute, Uint32Attribute, Uint32BufferAttribute, Uint8Attribute, Uint8BufferAttribute, Uint8ClampedAttribute, Uint8ClampedBufferAttribute, Uniform, UniformsLib, UniformsUtils, UnrealBloomBlurMaterial, UnrealBloomCompositeMaterial, UnsignedByteType, UnsignedInt248Type, UnsignedIntType, UnsignedShort4444Type, UnsignedShort5551Type, UnsignedShortType, VSMShadowMap, Vector2$1 as Vector2, Vector3, Vector4, VectorKeyframeTrack, Vertex, VertexColors, VideoGlitchMaterial, VideoTexture, WebAudio, WebAudio3D, WebAudioParam, WebGL1Renderer, WebGL3DRenderTarget, WebGLArrayRenderTarget, WebGLCubeRenderTarget, WebGLMultipleRenderTargets, WebGLMultisampleRenderTarget, WebGLRenderTarget, WebGLRenderTargetCube, WebGLRenderer, WebGLUtils, WireframeGeometry, WireframeHelper, Wobble, WrapAroundEnding, XHRLoader, ZeroCurvatureEnding, ZeroFactor, ZeroSlopeEnding, ZeroStencilOp, _SRGBAFormat, absolute, basename, brightness, ceilPowerOfTwo$1 as ceilPowerOfTwo, clamp$1 as clamp, clearTween, damp$1 as damp, defer, degToRad$1 as degToRad, delayedCall, denormalize$2 as denormalize, euclideanModulo$1 as euclideanModulo, extension, floorPowerOfTwo$1 as floorPowerOfTwo, generateUUID$1 as generateUUID, getConstructor, getFrustum, getFrustumFromHeight, getFullscreenTriangle, getKeyByValue, getScreenSpaceBox, getSphericalCube, guid, headsTails, inverseLerp$1 as inverseLerp, isPowerOfTwo$1 as isPowerOfTwo, lerp$2 as lerp, lerpCameras, mapLinear$1 as mapLinear, normalize$1 as normalize, pingpong$1 as pingpong, radToDeg$1 as radToDeg, randFloat$1 as randFloat, randFloatSpread$1 as randFloatSpread, randInt$1 as randInt, sRGBEncoding, seededRandom$1 as seededRandom, setQuaternionFromProperEuler$1 as setQuaternionFromProperEuler, shuffle, smootherstep$2 as smootherstep, smoothstep$1 as smoothstep, ticker, tween, wait };

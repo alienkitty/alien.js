@@ -37,8 +37,7 @@
         ];
 
         items.forEach(data => {
-            const item = new PanelItem(data);
-            ui.addPanel(item);
+            ui.addPanel(new PanelItem(data));
         });
 
         function animate() {

@@ -56,8 +56,8 @@
             uniform vec3 uColor;
             uniform float uBoost;
             uniform float uReduction;
-            uniform float uDebug;
-            uniform float uLensDirt;
+            uniform bool uDebug;
+            uniform bool uLensDirt;
             uniform vec2 uResolution;
             uniform float uTime;
 
@@ -89,7 +89,7 @@
                 float noise = noise(vUv + uTime * 0.06);
                 float amount = smoothstep(0.2, 0.7, center) * noise;
 
-                if (uDebug == 1.0) {
+                if (uDebug) {
                     color += vec4(vec3(1.0, 0.0, 0.0), 1.0) * amount;
                 } else {
                     color = blendOverlay(color, vec4(uLightColor, 1.0), amount);
@@ -110,7 +110,7 @@
                 color = blendSoftLight(base, blend, 0.8);
 
                 // Dirt lens texture
-                if (uLensDirt == 1.0) {
+                if (uLensDirt) {
                     vec2 vUv2 = vUv;
 
                     float aspectRatio2 = 1.0;
@@ -150,10 +150,10 @@
                         uBlurBright: new Uniform(0.4166),
                         uLightColor: new Uniform(new Color(Config.LIGHT_COLOR)),
                         uColor: new Uniform(new Color(Config.BG_COLOR)),
-                        uBoost: new Uniform(1.0),
+                        uBoost: new Uniform(1),
                         uReduction: new Uniform(1.2),
-                        uDebug: new Uniform(Config.DEBUG ? 1 : 0),
-                        uLensDirt: new Uniform(1),
+                        uDebug: new Uniform(Config.DEBUG),
+                        uLensDirt: new Uniform(true),
                         uResolution: new Uniform(new Vector2()),
                         uTime: new Uniform(0)
                     },
@@ -370,13 +370,13 @@
                 const { hBlurMaterial, vBlurMaterial, compositeMaterial } = RenderManager;
 
                 const debugOptions = {
-                    Off: 0,
-                    Debug: 1
+                    Off: false,
+                    Debug: true
                 };
 
                 const dirtOptions = {
-                    Off: 0,
-                    Dirt: 1
+                    Off: false,
+                    Dirt: true
                 };
 
                 const items = [
@@ -390,7 +390,7 @@
                         type: 'slider',
                         label: 'Chroma',
                         min: 0,
-                        max: 1,
+                        max: 2,
                         step: 0.01,
                         value: compositeMaterial.uniforms.uDistortion.value,
                         callback: value => {
@@ -475,8 +475,7 @@
                 ];
 
                 items.forEach(data => {
-                    const item = new PanelItem(data);
-                    this.ui.addPanel(item);
+                    this.ui.addPanel(new PanelItem(data));
                 });
             }
 
@@ -600,7 +599,7 @@
                 renderer.setRenderTarget(renderTargetB);
                 renderer.render(screenScene, screenCamera);
 
-                // Two pass Gaussian blur
+                // Two pass Gaussian blur (horizontal and vertical)
                 this.hBlurMaterial.uniforms.tMap.value = renderTargetB.texture;
                 this.screen.material = this.hBlurMaterial;
                 renderer.setRenderTarget(renderTargetBlurA);

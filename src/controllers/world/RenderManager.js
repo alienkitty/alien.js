@@ -1,13 +1,13 @@
 import { Mesh, OrthographicCamera, Scene, Vector2, WebGLRenderTarget } from 'three';
 
-import { floorPowerOfTwo, lerp } from 'three/src/math/MathUtils.js';
-
 import { WorldController } from './WorldController.js';
 import { FXAAMaterial } from '../../materials/FXAAMaterial.js';
 import { LuminosityMaterial } from '../../materials/LuminosityMaterial.js';
 import { UnrealBloomBlurMaterial } from '../../materials/UnrealBloomBlurMaterial.js';
 import { BloomCompositeMaterial } from '../../materials/BloomCompositeMaterial.js';
 import { SceneCompositeMaterial } from '../../materials/SceneCompositeMaterial.js';
+
+import { floorPowerOfTwo, lerp } from '../../utils/Utils.js';
 
 const BlurDirectionX = new Vector2(1, 0);
 const BlurDirectionY = new Vector2(0, 1);

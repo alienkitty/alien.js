@@ -6,10 +6,10 @@
 
 import { Vector2 } from 'three/src/math/Vector2.js';
 
-import { clamp } from 'three/src/math/MathUtils.js';
-
 import { Events } from '../../config/Events.js';
 import { Interface } from '../Interface.js';
+
+import { clamp } from '../Utils.js';
 
 export class Slider extends Interface {
     constructor({

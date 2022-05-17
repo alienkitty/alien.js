@@ -64,7 +64,7 @@ export class Reflector extends Group {
         this.renderTarget.depthBuffer = true;
 
         // Uniform containing render target textures
-        this.renderTargetUniform = this.blurIterations > 0 ? new Uniform(this.renderTargetRead.texture) : new Uniform(this.renderTarget.texture);
+        this.renderTargetUniform = new Uniform(this.blurIterations > 0 ? this.renderTargetRead.texture : this.renderTarget.texture);
 
         // Reflection blur material
         this.blurMaterial = new ReflectorBlurMaterial();

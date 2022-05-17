@@ -34,6 +34,7 @@ export class SmoothViews extends Component {
         this.index1 = 0;
         this.index2 = 0;
         this.progress = 0;
+        this.total = 0;
         this.height = 0;
 
         this.initHTML();
@@ -128,6 +129,8 @@ export class SmoothViews extends Component {
 
         const current = this.position + this.views[this.index2].height - this.views[this.index2].top;
         this.progress = clamp(current / this.views[this.index2].height, 0, 1);
+
+        this.total = clamp(this.position / (this.height - Stage.height), 0, 1);
     };
 
     /**

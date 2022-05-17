@@ -4,12 +4,10 @@
 
 import { Group, Quaternion, Vector3 } from 'three';
 
-import { clamp, mapLinear } from 'three/src/math/MathUtils.js';
-
 import { WebAudio } from './WebAudio.js';
 import { WebAudioParam } from './WebAudioParam.js';
 
-import { guid } from '../Utils.js';
+import { clamp, guid, mapLinear } from '../Utils.js';
 
 export class Sound3D extends Group {
     constructor(camera, id, buffer) {

@@ -10,13 +10,11 @@
 import { Color } from 'three/src/math/Color.js';
 import { Vector2 } from 'three/src/math/Vector2.js';
 
-import { clamp, radToDeg } from 'three/src/math/MathUtils.js';
-
 import { Events } from '../../config/Events.js';
 import { Interface } from '../Interface.js';
 import { Stage } from '../Stage.js';
 
-import { brightness, guid } from '../Utils.js';
+import { brightness, clamp, guid, radToDeg } from '../Utils.js';
 
 const PI = Math.PI;
 const TwoPI = Math.PI * 2;

@@ -4,7 +4,7 @@
 
 import { Box2, BoxGeometry, BufferAttribute, BufferGeometry, Vector3 } from 'three';
 
-import { degToRad, lerp, radToDeg } from 'three/src/math/MathUtils.js';
+import { degToRad, lerp, radToDeg } from '../Utils.js';
 
 export function getFullscreenTriangle() {
     const geometry = new BufferGeometry();

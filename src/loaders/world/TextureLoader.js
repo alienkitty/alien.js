@@ -4,13 +4,13 @@
 
 import { LinearFilter, Texture } from 'three';
 
-import { isPowerOfTwo } from 'three/src/math/MathUtils.js';
-
 import { Device } from '../../config/Device.js';
 import { Thread } from '../../utils/Thread.js';
 import { ImageBitmapLoaderThread } from '../ImageBitmapLoaderThread.js';
 import { Assets } from '../Assets.js';
 import { Loader } from '../Loader.js';
+
+import { isPowerOfTwo } from '../../utils/Utils.js';
 
 export class TextureLoader extends Loader {
     constructor(assets, callback) {

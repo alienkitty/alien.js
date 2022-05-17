@@ -316,5 +316,5 @@ npx eslint examples/transitions
 ### See also
 
 * [Three.js](https://github.com/mrdoob/three.js)
-* [Post Processing](https://github.com/vanruesc/postprocessing)
+* [Post Processing](https://github.com/pmndrs/postprocessing)
 * [OGL](https://github.com/oframe/ogl)

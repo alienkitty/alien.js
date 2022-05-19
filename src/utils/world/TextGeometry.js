@@ -59,7 +59,7 @@ export class TextGeometry {
 
         // Set values for buffers that don't require calculation
         for (let i = 0; i < numChars; i++) {
-            this.buffers.id[i] = i;
+            this.buffers.id.set([i, i, i, i], i * 4);
             this.buffers.index.set([i * 4, i * 4 + 2, i * 4 + 1, i * 4 + 1, i * 4 + 2, i * 4 + 3], i * 6);
         }
 
@@ -162,6 +162,9 @@ export class TextGeometry {
             }
 
             cursor++;
+
+            // Reset infinite loop catch
+            count = 0;
         }
 
         // Remove last line if empty
@@ -178,19 +181,15 @@ export class TextGeometry {
         let y = 0.07 * this.size;
         let j = 0;
 
-        this.numLines = lines.length;
-        this.width = 0;
-        this.height = 0;
-
-        for (let lineIndex = 0; lineIndex < this.numLines; lineIndex++) {
+        for (let lineIndex = 0; lineIndex < lines.length; lineIndex++) {
             const line = lines[lineIndex];
 
-            for (let i = 0, l = line.glyphs.length; i < l; i++) {
+            for (let i = 0; i < line.glyphs.length; i++) {
                 const glyph = line.glyphs[i][0];
                 let x = line.glyphs[i][1];
 
                 if (this.align === 'center') {
-                    x -= line.width / 2;
+                    x -= line.width * 0.5;
                 } else if (this.align === 'right') {
                     x -= line.width;
                 }
@@ -220,14 +219,15 @@ export class TextGeometry {
             }
 
             y -= this.size * this.lineHeight;
-
-            this.width = Math.max(line.width, this.width);
-            this.height += this.size * this.lineHeight;
         }
+
+        this.numLines = lines.length;
+        this.height = this.numLines * this.size * this.lineHeight;
+        this.width = Math.max(...lines.map(line => line.width));
     }
 
     getKernPairOffset(id1, id2) {
-        for (let i = 0, l = this.font.kernings.length; i < l; i++) {
+        for (let i = 0; i < this.font.kernings.length; i++) {
             const k = this.font.kernings[i];
             if (k.first < id1) continue;
             if (k.second < id2) continue;
@@ -239,14 +239,14 @@ export class TextGeometry {
     }
 
     // Update buffers with new layout
-    resize(options) {
-        this.width = options.width;
+    resize({ width }) {
+        this.width = width;
         this.layout();
     }
 
     // Completely change text (like creating new TextGeometry)
-    update(options) {
-        this.text = options.text;
+    update({ text }) {
+        this.text = text;
         this.createGeometry();
     }
 }

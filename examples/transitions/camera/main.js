@@ -1,4 +1,4 @@
-import { ACESFilmicToneMapping, AmbientLight, Assets, BasicShadowMap, BloomCompositeMaterial, BoxGeometry, CameraMotionBlurMaterial, Color, DepthTexture, Device, DirectionalLight, EnvironmentTextureLoader, Events, FXAAMaterial, GLSL3, Global, Group, Header, HemisphereLight, IcosahedronGeometry, ImageBitmapLoaderThread, Interface, Line, LuminosityMaterial, Matrix4, Mesh, MeshBasicMaterial, MeshStandardMaterial, NoBlending, OctahedronGeometry, OrthographicCamera, PanelItem, PerspectiveCamera, PlaneGeometry, PointText, RawShaderMaterial, Raycaster, Reflector, RepeatWrapping, Reticle, Scene, SceneCompositeMaterial, ShadowMaterial, SphereGeometry, Stage, TextureLoader, Thread, Uniform, UnrealBloomBlurMaterial, Vector2, Vector3, WebGLRenderTarget, WebGLRenderer, clearTween, degToRad, delayedCall, floorPowerOfTwo, getFullscreenTriangle, getKeyByValue, getScreenSpaceBox, lerp, lerpCameras, radToDeg, shuffle, ticker, tween } from '../../../build/alien.js';
+import { ACESFilmicToneMapping, AmbientLight, Assets, BasicShadowMap, BloomCompositeMaterial, BoxGeometry, CameraMotionBlurMaterial, Color, DepthTexture, Device, DirectionalLight, EnvironmentTextureLoader, Events, FXAAMaterial, GLSL3, Global, Group, Header, HemisphereLight, IcosahedronGeometry, ImageBitmapLoaderThread, Interface, Line, LuminosityMaterial, Matrix4, Mesh, MeshBasicMaterial, MeshStandardMaterial, NearestFilter, NoBlending, OctahedronGeometry, OrthographicCamera, PanelItem, PerspectiveCamera, PlaneGeometry, PointText, RawShaderMaterial, Raycaster, Reflector, RepeatWrapping, Reticle, Scene, SceneCompositeMaterial, ShadowMaterial, SphereGeometry, Stage, TextureLoader, Thread, Uniform, UnrealBloomBlurMaterial, Vector2, Vector3, WebGLRenderTarget, WebGLRenderer, clearTween, degToRad, delayedCall, floorPowerOfTwo, getFullscreenTriangle, getKeyByValue, getScreenSpaceBox, lerp, lerpCameras, radToDeg, shuffle, ticker, tween } from '../../../build/alien.js';
 
 Global.PAGES = [];
 Global.PAGE_INDEX = 0;
@@ -495,6 +495,7 @@ class CompositeMaterial extends RawShaderMaterial {
 }
 
 import blur from '../../../src/shaders/modules/blur/blur.glsl.js';
+import blueNoise from '../../../src/shaders/modules/noise/blue-noise.glsl.js';
 
 const vertexBlurShader = /* glsl */`
     in vec3 position;
@@ -513,26 +514,36 @@ const fragmentBlurShader = /* glsl */`
     precision highp float;
 
     uniform sampler2D tMap;
+    uniform sampler2D tBlueNoise;
+    uniform vec2 uBlueNoiseTexelSize;
     uniform float uFocus;
     uniform float uRotation;
     uniform float uBluriness;
     uniform vec2 uDirection;
     uniform bool uDebug;
     uniform vec2 uResolution;
+    uniform float uTime;
 
     in vec2 vUv;
 
     out vec4 FragColor;
 
+    vec2 rot2d(vec2 p, float a) {
+        vec2 sc = vec2(sin(a), cos(a));
+        return vec2(dot(p, vec2(sc.y, -sc.x)), dot(p, sc.xy));
+    }
+
     ${smootherstep}
     ${rotateUV}
     ${blur}
+    ${blueNoise}
 
     void main() {
         float d = abs(uFocus - rotateUV(vUv, uRotation).y);
         float t = smootherstep(0.0, 1.0, d);
+        float rnd = getBlueNoise(tBlueNoise, gl_FragCoord.xy, uBlueNoiseTexelSize, vec2(fract(uTime)));
 
-        FragColor = blur(tMap, vUv, uResolution, 10.0 * uBluriness * t * uDirection);
+        FragColor = blur(tMap, vUv, uResolution, 10.0 * uBluriness * t * rot2d(uDirection, rnd));
 
         if (uDebug) {
             FragColor.rgb = mix(FragColor.rgb, vec3(t), 0.5);
@@ -542,16 +553,26 @@ const fragmentBlurShader = /* glsl */`
 
 class BlurMaterial extends RawShaderMaterial {
     constructor(direction = new Vector2(0.5, 0.5)) {
+        const texture = new TextureLoader().load('assets/textures/blue_noise.png');
+        texture.wrapS = RepeatWrapping;
+        texture.wrapT = RepeatWrapping;
+        texture.magFilter = NearestFilter;
+        texture.minFilter = NearestFilter;
+        texture.generateMipmaps = false;
+
         super({
             glslVersion: GLSL3,
             uniforms: {
                 tMap: new Uniform(null),
+                tBlueNoise: new Uniform(texture),
+                uBlueNoiseTexelSize: new Uniform(new Vector2(1 / 256, 1 / 256)),
                 uFocus: new Uniform(0.5),
                 uRotation: new Uniform(0),
                 uBluriness: new Uniform(1),
                 uDirection: new Uniform(direction),
                 uDebug: new Uniform(Config.DEBUG),
-                uResolution: new Uniform(new Vector2())
+                uResolution: new Uniform(new Vector2()),
+                uTime: new Uniform(0)
             },
             vertexShader: vertexBlurShader,
             fragmentShader: fragmentBlurShader,
@@ -1583,7 +1604,7 @@ class PanelController {
                 type: 'slider',
                 label: 'Blur',
                 min: 0,
-                max: 1,
+                max: 2,
                 step: 0.01,
                 value: RenderManager.blurFactor,
                 callback: value => {
@@ -1713,7 +1734,7 @@ class RenderManager {
     }
 
     static initRenderer() {
-        const { screenTriangle, resolution } = WorldController;
+        const { screenTriangle, resolution, time } = WorldController;
 
         // Fullscreen triangle
         this.screenScene = new Scene();
@@ -1788,12 +1809,14 @@ class RenderManager {
         this.hBlurMaterial.uniforms.uRotation.value = this.blurRotation;
         this.hBlurMaterial.uniforms.uBluriness.value = this.blurFactor;
         this.hBlurMaterial.uniforms.uResolution = resolution;
+        this.hBlurMaterial.uniforms.uTime = time;
 
         this.vBlurMaterial = new BlurMaterial(BlurDirectionY);
         this.vBlurMaterial.uniforms.uFocus.value = this.blurFocus;
         this.vBlurMaterial.uniforms.uRotation.value = this.blurRotation;
         this.vBlurMaterial.uniforms.uBluriness.value = this.blurFactor;
         this.vBlurMaterial.uniforms.uResolution = resolution;
+        this.vBlurMaterial.uniforms.uTime = time;
 
         // Composite materials
         this.sceneCompositeMaterial = new SceneCompositeMaterial();
@@ -1878,7 +1901,7 @@ class RenderManager {
         renderer.render(screenScene, screenCamera);
 
         // Camera motion blur pass
-        if (!CameraController.zoomedIn) {
+        if (!this.blurFactor) {
             this.cameraMotionBlurMaterial.uniforms.uDelta.value = delta;
             this.cameraMotionBlurMaterial.uniforms.uClipToWorldMatrix.value
                 .copy(this.camera.matrixWorldInverse).invert().multiply(this.tmpMatrix.copy(this.camera.projectionMatrix).invert());
@@ -1900,7 +1923,7 @@ class RenderManager {
         this.previousCameraPosition.copy(this.camera.position);
 
         // Extract bright areas
-        this.luminosityMaterial.uniforms.tMap.value = !CameraController.zoomedIn ? renderTargetC.texture : renderTargetB.texture;
+        this.luminosityMaterial.uniforms.tMap.value = !this.blurFactor ? renderTargetC.texture : renderTargetB.texture;
         this.screen.material = this.luminosityMaterial;
         renderer.setRenderTarget(renderTargetBright);
         renderer.render(screenScene, screenCamera);
@@ -1930,14 +1953,14 @@ class RenderManager {
         renderer.render(screenScene, screenCamera);
 
         // Scene composite pass
-        this.sceneCompositeMaterial.uniforms.tScene.value = !CameraController.zoomedIn ? renderTargetC.texture : renderTargetB.texture;
+        this.sceneCompositeMaterial.uniforms.tScene.value = !this.blurFactor ? renderTargetC.texture : renderTargetB.texture;
         this.sceneCompositeMaterial.uniforms.tBloom.value = renderTargetsHorizontal[0].texture;
         this.screen.material = this.sceneCompositeMaterial;
         renderer.setRenderTarget(renderTargetA);
         renderer.render(screenScene, screenCamera);
 
         // Two pass Gaussian blur (horizontal and vertical)
-        if (this.blurFactor > 0) {
+        if (this.blurFactor) {
             this.hBlurMaterial.uniforms.tMap.value = renderTargetA.texture;
             this.hBlurMaterial.uniforms.uBluriness.value = this.blurFactor;
             this.screen.material = this.hBlurMaterial;
@@ -1945,7 +1968,7 @@ class RenderManager {
             renderer.render(screenScene, screenCamera);
 
             this.vBlurMaterial.uniforms.tMap.value = renderTargetB.texture;
-            this.vBlurMaterial.uniforms.uBluriness.value = this.blurFactor * 0.6; // Reduce banding
+            this.vBlurMaterial.uniforms.uBluriness.value = this.blurFactor;
             this.screen.material = this.vBlurMaterial;
             renderer.setRenderTarget(renderTargetA);
             renderer.render(screenScene, screenCamera);
@@ -1963,14 +1986,18 @@ class RenderManager {
         this.blurFactor = 0;
     };
 
-    static zoomIn = callback => {
-        clearTween(this);
-        tween(this, { blurFactor: 1 }, 300, 'linear', callback);
+    static zoomIn = () => {
+        clearTween(this.timeout);
+
+        this.timeout = delayedCall(300, () => {
+            tween(this, { blurFactor: 1 }, 1000, 'easeOutBack');
+        });
     };
 
-    static zoomOut = callback => {
-        clearTween(this);
-        tween(this, { blurFactor: 0 }, 300, 'linear', callback);
+    static zoomOut = () => {
+        clearTween(this.timeout);
+
+        tween(this, { blurFactor: 0 }, 300, 'linear');
     };
 }
 
@@ -2068,10 +2095,6 @@ class CameraController {
             this.zoomedIn = true;
         }
 
-        if (this.next === this.camera) {
-            return;
-        }
-
         if (!this.animatedIn) {
             this.animatedIn = true;
 
@@ -2106,10 +2129,12 @@ class CameraController {
         this.worldCamera.quaternion.copy(this.camera.quaternion);
     };
 
-    static animateIn = () => {
+    static start = () => {
         this.worldCamera.fov = 45;
         this.worldCamera.updateProjectionMatrix();
+    };
 
+    static animateIn = () => {
         this.enabled = true;
     };
 }
@@ -2244,9 +2269,10 @@ class App {
             WorldController.environmentLoader.ready()
         ]);
 
-        RenderManager.start();
-
         this.initPanel();
+
+        CameraController.start();
+        RenderManager.start();
 
         this.animateIn();
     }

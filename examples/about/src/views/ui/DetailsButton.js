@@ -19,7 +19,6 @@ export class DetailsButton extends Interface {
         this.openRadius = size * 0.2;
         this.startAngle = 0;
         this.endAngle = Math.PI * 2;
-        this.scale = 1;
         this.isOpen = false;
         this.animatedIn = false;
         this.hoveredIn = false;
@@ -64,11 +63,7 @@ export class DetailsButton extends Interface {
         this.canvas = new Interface(null, 'canvas');
         this.canvas.css({
             left: 10,
-            top: 10,
-            // width: this.width,
-            // height: this.height,
-            transformOrigin: '0 0',
-            transform: 'scale(0.5)'
+            top: 10
         });
         this.context = this.canvas.element.getContext('2d');
 
@@ -76,8 +71,8 @@ export class DetailsButton extends Interface {
 
         this.canvas.element.width = Math.round(this.width * dpr);
         this.canvas.element.height = Math.round(this.height * dpr);
-        // this.canvas.element.style.width = this.width + 'px';
-        // this.canvas.element.style.height = this.height + 'px';
+        this.canvas.element.style.width = this.width + 'px';
+        this.canvas.element.style.height = this.height + 'px';
         this.context.scale(dpr, dpr);
 
         this.add(this.canvas);
@@ -88,7 +83,6 @@ export class DetailsButton extends Interface {
         this.circle.x = this.x;
         this.circle.y = this.y;
         this.circle.radius = this.radius;
-        this.circle.scale = 1;
         this.circle.lineWidth = 1.5;
         this.circle.strokeStyle = Stage.rootStyle.getPropertyValue('--ui-color').trim();
     }
@@ -214,10 +208,9 @@ export class DetailsButton extends Interface {
         clearTween(this.circle);
 
         this.circle.radius = 0;
-        this.scale = 0;
         this.needsUpdate = true;
 
-        tween(this.circle, { radius: this.radius, scale: 1 }, 1000, 'easeInOutExpo', () => {
+        tween(this.circle, { radius: this.radius }, 1000, 'easeInOutExpo', () => {
             this.needsUpdate = false;
             this.animatedIn = true;
         });
@@ -234,7 +227,7 @@ export class DetailsButton extends Interface {
 
         this.needsUpdate = true;
 
-        tween(this.circle, { radius: 0, scale: 0 }, 1000, 'easeInOutQuart', () => {
+        tween(this.circle, { radius: 0 }, 1000, 'easeInOutQuart', () => {
             this.needsUpdate = false;
         });
 
@@ -248,7 +241,7 @@ export class DetailsButton extends Interface {
 
         this.needsUpdate = true;
 
-        tween(this.circle, { radius: this.openRadius, scale: 0 }, 400, 'easeOutCubic', () => {
+        tween(this.circle, { radius: this.openRadius }, 400, 'easeOutCubic', () => {
             this.needsUpdate = false;
         });
     };
@@ -260,7 +253,7 @@ export class DetailsButton extends Interface {
 
         this.needsUpdate = true;
 
-        tween(this.circle, { radius: this.radius, scale: 1 }, 400, 'easeOutCubic', () => {
+        tween(this.circle, { radius: this.radius }, 400, 'easeOutCubic', () => {
             this.needsUpdate = false;
         });
     };
@@ -268,7 +261,6 @@ export class DetailsButton extends Interface {
     destroy = () => {
         this.removeListeners();
 
-        clearTween(this);
         clearTween(this.circle);
 
         return super.destroy();

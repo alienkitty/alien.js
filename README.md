@@ -118,7 +118,7 @@ In its design, everything is an ES module, all user interfaces and components fo
 
 #### audio
 
-[picking](https://alien.js.org/examples/3d_physics_picking.html) (with fast 3d audio)  
+[picking](https://alien.js.org/examples/3d_physics_picking.html) (with fast 3d audio, [debug](https://alien.js.org/examples/3d_physics_picking.html?debug))  
 
 #### thread
 

@@ -43,6 +43,7 @@ export class Point3D extends Group {
         this.raycastInterval = 1 / 10; // 10 frames per second
         this.lastRaycast = 0;
         this.halfScreen = new Vector2();
+        this.enabled = true;
 
         this.initCanvas();
 
@@ -216,6 +217,10 @@ export class Point3D extends Group {
         this.setIndexes();
     };
 
+    static animateOut = () => {
+        this.points.forEach(point => point.animateOut(true));
+    };
+
     static destroy = () => {
         this.removeListeners();
 
@@ -228,13 +233,15 @@ export class Point3D extends Group {
 
     constructor(object, {
         name = object.geometry.type,
-        type = object.material.type
+        type = object.material.type,
+        noTracker
     } = {}) {
         super();
 
         this.object = object;
         this.name = name;
         this.type = type;
+        this.noTracker = noTracker;
         this.camera = Point3D.camera;
         this.halfScreen = Point3D.halfScreen;
 
@@ -274,8 +281,10 @@ export class Point3D extends Group {
         this.reticle = new Reticle({ styles: Point3D.styles });
         Point3D.container.add(this.reticle);
 
-        this.tracker = new Tracker({ styles: Point3D.styles });
-        Point3D.container.add(this.tracker);
+        if (!this.noTracker) {
+            this.tracker = new Tracker({ styles: Point3D.styles });
+            Point3D.container.add(this.tracker);
+        }
 
         this.point = new Point(this, this.tracker, { styles: Point3D.styles });
         this.point.setData({
@@ -290,9 +299,13 @@ export class Point3D extends Group {
      */
 
     onHover = ({ type }) => {
+        if (!Point3D.enabled) {
+            return;
+        }
+
         clearTween(this.timeout);
 
-        if (this.selected) {
+        if (this.tracker && this.selected) {
             if (type === 'over') {
                 this.tracker.show();
             } else {
@@ -305,42 +318,34 @@ export class Point3D extends Group {
         if (type === 'over') {
             if (!this.animatedIn) {
                 this.resize();
-                this.line.animateIn();
-                this.reticle.animateIn();
-                this.point.animateIn();
-
-                this.animatedIn = true;
+                this.animateIn();
             }
         } else {
             this.timeout = delayedCall(2000, () => {
-                this.line.animateOut();
-                this.reticle.animateOut();
-                this.tracker.animateOut();
-                this.point.animateOut();
-
-                this.animatedIn = false;
+                this.animateOut();
             });
         }
+
+        Point3D.events.emit(Events.HOVER, { type, target: this });
     };
 
     onClick = () => {
-        this.selected = !this.selected;
+        if (!Point3D.enabled) {
+            return;
+        }
 
-        if (this.selected) {
-            this.line.animateOut(true);
-            this.reticle.animateOut();
-            this.tracker.animateIn();
-            this.point.open();
+        if (this.tracker) {
+            this.selected = !this.selected;
 
-            Point3D.events.emit(Events.SELECT, { selected: Point3D.getSelected() });
+            if (this.selected) {
+                this.toggle(true);
+            } else {
+                this.toggle(false);
+            }
+
+            Point3D.events.emit(Events.CLICK, { selected: Point3D.getSelected(), target: this });
         } else {
-            this.line.animateIn(true);
-            this.reticle.animateIn();
-            this.tracker.unlock();
-            this.tracker.animateOut();
-            this.point.close();
-
-            Point3D.events.emit(Events.SELECT, { selected: Point3D.getSelected() });
+            Point3D.events.emit(Events.CLICK, { target: this });
         }
     };
 
@@ -351,10 +356,12 @@ export class Point3D extends Group {
     setIndex = index => {
         this.index = index;
 
-        const targetNumber = index + 1;
+        if (this.tracker) {
+            const targetNumber = index + 1;
 
-        this.tracker.number.setData({ targetNumber });
-        this.point.text.number.setData({ targetNumber });
+            this.tracker.number.setData({ targetNumber });
+            this.point.text.number.setData({ targetNumber });
+        }
     };
 
     addPanel = item => {
@@ -370,7 +377,11 @@ export class Point3D extends Group {
         this.line.endPoint(this.point.originPosition);
         this.line.update();
         this.reticle.update();
-        this.tracker.update();
+
+        if (this.tracker) {
+            this.tracker.update();
+        }
+
         this.point.update();
     };
 
@@ -390,21 +401,72 @@ export class Point3D extends Group {
         const halfHeight = Math.round(height / 2);
 
         this.reticle.target.set(centerX, centerY);
-        this.tracker.target.set(centerX, centerY);
-        this.point.target.set(centerX + halfWidth, centerY - halfHeight);
 
-        this.tracker.css({
-            width,
-            height,
-            marginLeft: -halfWidth,
-            marginTop: -halfHeight
-        });
+        if (this.tracker) {
+            this.tracker.target.set(centerX, centerY);
+            this.tracker.css({
+                width,
+                height,
+                marginLeft: -halfWidth,
+                marginTop: -halfHeight
+            });
+        }
+
+        this.point.target.set(centerX + halfWidth, centerY - halfHeight);
+    };
+
+    animateIn = (reverse = false) => {
+        this.line.animateIn(reverse);
+        this.reticle.animateIn();
+        this.point.animateIn();
+
+        this.animatedIn = true;
+    };
+
+    animateOut = (fast = false, callback) => {
+        this.line.animateOut(fast, callback);
+        this.reticle.animateOut();
+
+        if (this.tracker) {
+            this.tracker.animateOut();
+        }
+
+        this.point.animateOut();
+
+        this.animatedIn = false;
+    };
+
+    toggle = show => {
+        if (show) {
+            this.line.animateOut(true);
+            this.reticle.animateOut();
+
+            if (this.tracker) {
+                this.tracker.animateIn();
+            }
+
+            this.point.open();
+        } else {
+            this.line.animateIn(true);
+            this.reticle.animateIn();
+
+            if (this.tracker) {
+                this.tracker.unlock();
+                this.tracker.animateOut();
+            }
+
+            this.point.close();
+        }
     };
 
     destroy = () => {
-        this.line.animateOut(false, () => {
+        this.animateOut(false, () => {
             this.point = this.point.destroy();
-            this.tracker = this.tracker.destroy();
+
+            if (this.tracker) {
+                this.tracker = this.tracker.destroy();
+            }
+
             this.reticle = this.reticle.destroy();
             this.line = this.line.destroy();
         });

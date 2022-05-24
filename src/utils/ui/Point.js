@@ -156,7 +156,7 @@ export class Point extends Interface {
             Stage.events.emit(Events.COLOR_PICKER, { open: false, target: this });
         }
 
-        if (this.text.container.element.contains(e.target) && this.tracker.isVisible) {
+        if (this.tracker && this.tracker.isVisible && this.text.container.element.contains(e.target)) {
             if (!this.tracker.animatedIn) {
                 this.tracker.show();
             } else if (!this.tracker.locked) {

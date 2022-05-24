@@ -34,14 +34,14 @@ export class ScenePanelController {
 
     static addListeners() {
         Point3D.add(...this.points);
-        Point3D.events.on(Events.SELECT, this.onSelect);
+        Point3D.events.on(Events.CLICK, this.onClick);
     }
 
     /**
      * Event handlers
      */
 
-    static onSelect = ({ selected }) => {
+    static onClick = ({ selected }) => {
         if (Config.ORBIT) {
             return;
         }

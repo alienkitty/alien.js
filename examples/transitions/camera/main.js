@@ -1,4 +1,4 @@
-import { ACESFilmicToneMapping, AmbientLight, Assets, BasicShadowMap, BloomCompositeMaterial, BoxGeometry, CameraMotionBlurMaterial, Color, DepthTexture, Device, DirectionalLight, EnvironmentTextureLoader, Events, FXAAMaterial, GLSL3, Global, Group, Header, HemisphereLight, IcosahedronGeometry, ImageBitmapLoaderThread, Interface, Line, LuminosityMaterial, Matrix4, Mesh, MeshBasicMaterial, MeshStandardMaterial, NearestFilter, NoBlending, OctahedronGeometry, OrthographicCamera, PanelItem, PerspectiveCamera, PlaneGeometry, PointText, RawShaderMaterial, Raycaster, Reflector, RepeatWrapping, Reticle, Scene, SceneCompositeMaterial, ShadowMaterial, SphereGeometry, Stage, TextureLoader, Thread, Uniform, UnrealBloomBlurMaterial, Vector2, Vector3, WebGLRenderTarget, WebGLRenderer, clearTween, degToRad, delayedCall, floorPowerOfTwo, getFullscreenTriangle, getKeyByValue, getScreenSpaceBox, lerp, lerpCameras, radToDeg, shuffle, ticker, tween } from '../../../build/alien.js';
+import { ACESFilmicToneMapping, AmbientLight, Assets, BasicShadowMap, BloomCompositeMaterial, BoxGeometry, CameraMotionBlurMaterial, Color, DepthTexture, Device, DirectionalLight, EnvironmentTextureLoader, Events, FXAAMaterial, GLSL3, Global, Group, Header, HemisphereLight, IcosahedronGeometry, ImageBitmapLoaderThread, Interface, LuminosityMaterial, Matrix4, Mesh, MeshStandardMaterial, NearestFilter, NoBlending, OctahedronGeometry, OrthographicCamera, PanelItem, PerspectiveCamera, PlaneGeometry, Point3D, RawShaderMaterial, Reflector, RepeatWrapping, Scene, SceneCompositeMaterial, ShadowMaterial, Stage, TextureLoader, Thread, Uniform, UnrealBloomBlurMaterial, Vector2, Vector3, WebGLRenderTarget, WebGLRenderer, clearTween, degToRad, delayedCall, floorPowerOfTwo, getFullscreenTriangle, getKeyByValue, lerp, lerpCameras, radToDeg, shuffle, ticker, tween } from '../../../build/alien.js';
 
 Global.PAGES = [];
 Global.PAGE_INDEX = 0;
@@ -1123,366 +1123,6 @@ class SceneController {
     static ready = () => this.view.ready();
 }
 
-class Point extends Interface {
-    constructor() {
-        super('.point');
-
-        this.position = new Vector2();
-        this.target = new Vector2();
-        this.lerpSpeed = 0.1;
-
-        this.initHTML();
-        this.initViews();
-    }
-
-    initHTML() {
-        this.invisible();
-        this.css({
-            pointerEvents: 'auto',
-            webkitUserSelect: 'none',
-            userSelect: 'none'
-        });
-    }
-
-    initViews() {
-        this.text = new PointText();
-        this.add(this.text);
-    }
-
-    /**
-     * Public methods
-     */
-
-    setData = data => {
-        this.text.setData(data);
-    };
-
-    update = () => {
-        this.position.lerp(this.target, this.lerpSpeed);
-        this.css({ left: Math.round(this.position.x), top: Math.round(this.position.y) });
-    };
-
-    animateIn = () => {
-        this.visible();
-        this.text.animateIn();
-    };
-
-    animateOut = () => {
-        this.text.animateOut(() => {
-            this.invisible();
-        });
-    };
-}
-
-class Point3D extends Group {
-    static init(scene, camera, {
-        root,
-        container,
-        debug = false
-    } = {}) {
-        this.scene = scene;
-        this.camera = camera;
-        this.root = root;
-        this.container = container;
-        this.events = this.root.events;
-        this.debug = debug;
-
-        this.objects = [];
-        this.points = [];
-        this.raycaster = new Raycaster();
-        this.mouse = new Vector2(-1, -1);
-        this.delta = new Vector2();
-        this.hover = null;
-        this.click = null;
-        this.lastTime = null;
-        this.lastMouse = new Vector2();
-        this.raycastInterval = 1 / 10; // 10 frames per second
-        this.lastRaycast = 0;
-        this.halfScreen = new Vector2();
-
-        this.initCanvas();
-
-        this.addListeners();
-        this.onResize();
-    }
-
-    static initCanvas() {
-        this.canvas = new Interface(null, 'canvas');
-        this.canvas.css({
-            position: 'absolute',
-            left: 0,
-            top: 0,
-            pointerEvents: 'none'
-        });
-        this.context = this.canvas.element.getContext('2d');
-        this.container.add(this.canvas);
-    }
-
-    static addListeners() {
-        window.addEventListener('resize', this.onResize);
-        window.addEventListener('pointerdown', this.onPointerDown);
-        window.addEventListener('pointermove', this.onPointerMove);
-        window.addEventListener('pointerup', this.onPointerUp);
-    }
-
-    static removeListeners() {
-        window.removeEventListener('resize', this.onResize);
-        window.removeEventListener('pointerdown', this.onPointerDown);
-        window.removeEventListener('pointermove', this.onPointerMove);
-        window.removeEventListener('pointerup', this.onPointerUp);
-    }
-
-    /**
-     * Event handlers
-     */
-
-    static onResize = () => {
-        const { width, height, dpr } = Stage;
-
-        this.width = width;
-        this.height = height;
-
-        this.halfScreen.set(this.width / 2, this.height / 2);
-
-        this.canvas.element.width = Math.round(this.width * dpr);
-        this.canvas.element.height = Math.round(this.height * dpr);
-        this.canvas.element.style.width = this.width + 'px';
-        this.canvas.element.style.height = this.height + 'px';
-        this.context.scale(dpr, dpr);
-
-        this.points.forEach(point => point.resize());
-    };
-
-    static onPointerDown = e => {
-        this.onPointerMove(e);
-
-        if (this.hover) {
-            this.click = this.hover;
-            this.lastTime = performance.now();
-            this.lastMouse.copy(this.mouse);
-        }
-    };
-
-    static onPointerMove = e => {
-        if (e) {
-            this.mouse.x = (e.clientX / this.width) * 2 - 1;
-            this.mouse.y = 1 - (e.clientY / this.height) * 2;
-        }
-
-        this.raycaster.setFromCamera(this.mouse, this.camera);
-
-        const intersection = this.raycaster.intersectObjects(this.objects);
-
-        if (intersection.length) {
-            const point = this.points[this.objects.indexOf(intersection[0].object)];
-
-            if (!this.hover) {
-                this.hover = point;
-                this.hover.onHover({ type: 'over' });
-                this.root.css({ cursor: 'pointer' });
-            } else if (this.hover !== point) {
-                this.hover.onHover({ type: 'out' });
-                this.hover = point;
-                this.hover.onHover({ type: 'over' });
-                this.root.css({ cursor: 'pointer' });
-            }
-        } else if (this.hover) {
-            this.hover.onHover({ type: 'out' });
-            this.hover = null;
-            this.root.css({ cursor: '' });
-        }
-    };
-
-    static onPointerUp = e => {
-        if (!this.click) {
-            return;
-        }
-
-        this.onPointerMove(e);
-
-        if (performance.now() - this.lastTime > 750 || this.delta.subVectors(this.mouse, this.lastMouse).length() > 50) {
-            this.click = null;
-            return;
-        }
-
-        if (this.click === this.hover) {
-            this.click.onClick();
-        }
-
-        this.click = null;
-    };
-
-    /**
-     * Public methods
-     */
-
-    static setIndexes = () => {
-        this.points.forEach((point, i) => point.setIndex(i));
-    };
-
-    static update = time => {
-        this.context.clearRect(0, 0, this.canvas.element.width, this.canvas.element.height);
-
-        this.points.forEach(point => point.update());
-
-        if (!Device.mobile && time - this.lastRaycast > this.raycastInterval) {
-            this.onPointerMove();
-            this.lastRaycast = time;
-        }
-    };
-
-    static add = (...points) => {
-        points.forEach(point => {
-            this.objects.push(point.object);
-            this.points.push(point);
-        });
-
-        this.setIndexes();
-    };
-
-    static animateOut = () => {
-        this.points.forEach(point => point.animateOut(true));
-    };
-
-    constructor(object, {
-        name = object.name
-    } = {}) {
-        super();
-
-        this.object = object;
-        this.name = name;
-        this.camera = Point3D.camera;
-        this.halfScreen = Point3D.halfScreen;
-
-        this.center = new Vector2();
-        this.size = new Vector2();
-        this.animatedIn = false;
-
-        this.initMesh();
-        this.initViews();
-    }
-
-    initMesh() {
-        this.object.geometry.computeBoundingSphere();
-        const geometry = new SphereGeometry(this.object.geometry.boundingSphere.radius);
-
-        let material;
-
-        if (Point3D.debug) {
-            material = new MeshBasicMaterial({
-                color: 0xff0000,
-                wireframe: true
-            });
-        } else {
-            material = new MeshBasicMaterial({ visible: false });
-        }
-
-        this.mesh = new Mesh(geometry, material);
-        this.mesh.scale.copy(this.object.scale);
-        this.add(this.mesh);
-    }
-
-    initViews() {
-        this.line = new Line(Point3D.context);
-        Point3D.container.add(this.line);
-
-        this.reticle = new Reticle();
-        Point3D.container.add(this.reticle);
-
-        this.point = new Point();
-        this.point.setData({ name: this.name });
-        Point3D.container.add(this.point);
-    }
-
-    /**
-     * Event handlers
-     */
-
-    onHover = ({ type }) => {
-        if (CameraController.zoomedIn) {
-            return;
-        }
-
-        clearTween(this.timeout);
-
-        if (type === 'over') {
-            if (!this.animatedIn) {
-                this.resize();
-                this.animateIn();
-
-                this.animatedIn = true;
-            }
-        } else {
-            this.timeout = delayedCall(2000, () => {
-                this.animateOut();
-
-                this.animatedIn = false;
-            });
-        }
-    };
-
-    onClick = () => {
-        if (this.animatedIn) {
-            this.animateOut(true);
-
-            this.animatedIn = false;
-        }
-
-        Point3D.events.emit(Events.SELECT, { selected: this });
-    };
-
-    /**
-     * Public methods
-     */
-
-    setIndex = index => {
-        this.index = index;
-    };
-
-    resize = () => {
-        this.line.resize();
-    };
-
-    update = () => {
-        this.line.startPoint(this.reticle.target);
-        this.line.endPoint(this.point.position);
-        this.line.update();
-        this.reticle.update();
-        this.point.update();
-    };
-
-    updateMatrixWorld = force => {
-        super.updateMatrixWorld(force);
-
-        this.camera.updateMatrixWorld();
-
-        const box = getScreenSpaceBox(this.mesh, this.camera);
-        const center = box.getCenter(this.center).multiply(this.halfScreen);
-        const size = box.getSize(this.size).multiply(this.halfScreen);
-        const centerX = this.halfScreen.x + center.x;
-        const centerY = this.halfScreen.y - center.y;
-        const width = Math.round(size.x);
-        const height = Math.round(size.y);
-        const halfWidth = Math.round(width / 2);
-        const halfHeight = Math.round(height / 2);
-
-        this.reticle.target.set(centerX, centerY);
-        this.point.target.set(centerX + halfWidth, centerY - halfHeight);
-    };
-
-    animateIn = () => {
-        this.line.animateIn();
-        this.reticle.animateIn();
-        this.point.animateIn();
-    };
-
-    animateOut = (fast = false, callback) => {
-        this.line.animateOut(fast, callback);
-        this.reticle.animateOut();
-        this.point.animateOut();
-    };
-}
-
 class ScenePanelController {
     static init(view) {
         this.view = view;
@@ -1502,7 +1142,11 @@ class ScenePanelController {
         views.forEach(view => {
             const { material } = view.mesh;
 
-            view.point = new Point3D(view.mesh, { name: material.name });
+            view.point = new Point3D(view.mesh, {
+                name: material.name,
+                type: '',
+                noTracker: true
+            });
             view.add(view.point);
             this.points.push(view.point);
         });
@@ -1514,26 +1158,21 @@ class ScenePanelController {
 
     static addListeners() {
         Point3D.add(...this.points);
-        Point3D.events.on(Events.SELECT, this.onSelect);
-        Stage.events.on(Events.STATE_CHANGE, this.onStateChange);
+        Point3D.events.on(Events.CLICK, this.onClick);
     }
 
     /**
      * Event handlers
      */
 
-    static onSelect = ({ selected }) => {
-        const item = Global.PAGES[selected.index];
+    static onClick = ({ target }) => {
+        const item = Global.PAGES[target.index];
 
         if (item && item.path) {
             const path = Data.getPath(item.path);
 
             Data.setPage(path);
         }
-    };
-
-    static onStateChange = () => {
-        Point3D.animateOut();
     };
 }
 
@@ -2053,9 +1692,14 @@ class CameraController {
                 this.ui.details.animateIn();
             });
 
+            Point3D.animateOut();
+            Point3D.enabled = false;
+
             RenderManager.zoomIn();
         } else {
             this.ui.details.animateOut();
+
+            Point3D.enabled = true;
 
             RenderManager.zoomOut();
         }

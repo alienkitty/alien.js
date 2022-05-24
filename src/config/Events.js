@@ -14,5 +14,4 @@ export class Events {
 
     static COLOR_PICKER = 'color_picker';
     static INVERT = 'invert';
-    static SELECT = 'select';
 }

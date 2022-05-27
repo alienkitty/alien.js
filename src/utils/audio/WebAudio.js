@@ -26,6 +26,10 @@ export class WebAudio {
         }
     }
 
+    static get enabled() {
+        return this.context.state === 'running';
+    }
+
     static add(parent, id, buffer, bypass) {
         if (typeof parent === 'string') {
             bypass = buffer;
@@ -55,6 +59,10 @@ export class WebAudio {
         this.sounds[id] = sound;
 
         return sound;
+    }
+
+    static get(id) {
+        return this.sounds[id];
     }
 
     static remove(id) {

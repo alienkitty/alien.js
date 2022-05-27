@@ -48,7 +48,7 @@ export class Sound {
         }
     }
 
-    play() {
+    play(startTime = this.context.currentTime + 0.01) {
         if (!this.ready) {
             this.load();
         }
@@ -58,9 +58,7 @@ export class Sound {
                 return;
             }
 
-            const startTime = this.context.currentTime;
-
-            this.output.gain.setTargetAtTime(this.gain.value, startTime + 0.01, 0.1);
+            this.output.gain.setTargetAtTime(this.gain.value, startTime, 0.1);
 
             if (this.stereo) {
                 this.stereo.pan.setValueAtTime(this.stereoPan.value, startTime);
@@ -80,7 +78,7 @@ export class Sound {
                 this.source.loop = this.loop;
                 this.source.playbackRate.setValueAtTime(this.playbackRate.value, startTime);
                 this.source.connect(this.input);
-                this.source.start();
+                this.source.start(startTime);
             }
 
             this.isPlaying = true;

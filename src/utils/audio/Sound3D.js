@@ -26,14 +26,14 @@ export class Sound3D extends Group {
             this.cameraWorldPosition = new Vector3();
             this.worldPosition = new Vector3();
 
-            this.audioDistance = 1;
+            this.audioDistance = 0;
             this.audioNearDistance = camera.near;
             this.audioFarDistance = camera.far;
 
             this.output = this.context.createGain();
             this.output.connect(WebAudio.input);
 
-            this.gain = new WebAudioParam(this, 'output', 'gain', 1);
+            this.gain = new WebAudioParam(this, 'output', 'gain', 0);
 
             this.screenSpacePosition = new Vector3();
 
@@ -82,7 +82,7 @@ export class Sound3D extends Group {
             this.cameraWorldPosition.setFromMatrixPosition(this.camera.matrixWorld);
             this.worldPosition.setFromMatrixPosition(this.matrixWorld);
 
-            this.gain.value = clamp(1 - mapLinear(this.cameraWorldPosition.distanceTo(this.worldPosition) - this.audioDistance, this.audioNearDistance, this.audioFarDistance, 0, 1), 0, 1);
+            this.gain.value = clamp(mapLinear(this.cameraWorldPosition.distanceTo(this.worldPosition) + this.audioDistance, this.audioNearDistance, this.audioFarDistance, 1, 0), 0, 1);
 
             this.screenSpacePosition.copy(this.worldPosition).project(this.camera);
 

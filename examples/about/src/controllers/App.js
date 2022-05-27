@@ -23,8 +23,7 @@ export class App {
 
         await this.loader.ready();
 
-        WebAudio.init(Assets.filter(path => /sounds/.test(path)), { sampleRate: 48000 });
-        AudioController.init(this.ui.instructions);
+        this.initAudio();
     }
 
     static initWorld() {
@@ -44,6 +43,11 @@ export class App {
         const { renderer, scene, camera, screen } = WorldController;
 
         FluidController.init(renderer, scene, camera, screen, this.trackers);
+    }
+
+    static initAudio() {
+        WebAudio.init(Assets.filter(path => /sounds/.test(path)), { sampleRate: 48000 });
+        AudioController.init(this.ui.instructions);
     }
 
     static addListeners() {

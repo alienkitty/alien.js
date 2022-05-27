@@ -28,8 +28,7 @@ export class App {
 
         await this.loader.ready();
 
-        WebAudio.init(Assets.filter(path => /sounds/.test(path)));
-        AudioController.init();
+        this.initAudio();
 
         await Promise.all([
             SceneController.ready(),
@@ -62,6 +61,11 @@ export class App {
         SceneController.init(this.view);
         InputManager.init(camera);
         RenderManager.init(renderer, scene, camera);
+    }
+
+    static initAudio() {
+        WebAudio.init(Assets.filter(path => /sounds/.test(path)), { sampleRate: 48000 });
+        AudioController.init();
     }
 
     static initPanel() {

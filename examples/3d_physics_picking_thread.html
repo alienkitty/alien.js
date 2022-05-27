@@ -1627,7 +1627,7 @@
             static initAudio() {
                 const { scene, camera } = WorldController;
 
-                WebAudio.init(Assets.filter(path => /sounds/.test(path)));
+                WebAudio.init(Assets.filter(path => /sounds/.test(path)), { sampleRate: 48000 });
                 AudioController.init(scene, camera, this.view);
             }
 

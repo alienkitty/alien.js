@@ -10,7 +10,7 @@ export class ProgressCanvas extends Interface {
     constructor() {
         super(null, 'canvas');
 
-        const size = 90;
+        const size = 32;
 
         this.width = size;
         this.height = size;
@@ -98,7 +98,7 @@ export class ProgressCanvas extends Interface {
     };
 
     animateOut = () => {
-        this.tween({ scale: 0.9, opacity: 0 }, 400, 'easeInCubic');
+        this.tween({ scale: 1.1, opacity: 0 }, 400, 'easeInCubic');
     };
 
     destroy = () => {

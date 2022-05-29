@@ -453,13 +453,12 @@ class FloatingCrystal extends Group {
         geometry.attributes.uv2 = geometry.attributes.uv;
 
         // Textures
-        const [map, normalMap, ormMap, thicknessMap] = await Promise.all([
+        const [map, normalMap, ormMap] = await Promise.all([
             // loadTexture('assets/textures/uv.jpg'),
             loadTexture('assets/textures/pbr/pitted_metal_basecolor.jpg'),
             loadTexture('assets/textures/pbr/pitted_metal_normal.jpg'),
             // https://occlusion-roughness-metalness.glitch.me/
-            loadTexture('assets/textures/pbr/pitted_metal_orm.jpg'),
-            loadTexture('assets/textures/pbr/pitted_metal_height.jpg')
+            loadTexture('assets/textures/pbr/pitted_metal_orm.jpg')
         ]);
 
         map.anisotropy = anisotropy;
@@ -476,11 +475,6 @@ class FloatingCrystal extends Group {
         ormMap.wrapS = RepeatWrapping;
         ormMap.wrapT = RepeatWrapping;
         ormMap.repeat.set(2, 1);
-
-        thicknessMap.anisotropy = anisotropy;
-        thicknessMap.wrapS = RepeatWrapping;
-        thicknessMap.wrapT = RepeatWrapping;
-        thicknessMap.repeat.set(2, 1);
 
         const material = new MeshStandardMaterial({
             color: new Color().offsetHSL(0, 0, -0.65),
@@ -531,13 +525,12 @@ class DarkPlanet extends Group {
         geometry.attributes.uv2 = geometry.attributes.uv;
 
         // Textures
-        const [map, normalMap, ormMap, thicknessMap] = await Promise.all([
+        const [map, normalMap, ormMap] = await Promise.all([
             // loadTexture('assets/textures/uv.jpg'),
             loadTexture('assets/textures/pbr/pitted_metal_basecolor.jpg'),
             loadTexture('assets/textures/pbr/pitted_metal_normal.jpg'),
             // https://occlusion-roughness-metalness.glitch.me/
-            loadTexture('assets/textures/pbr/pitted_metal_orm.jpg'),
-            loadTexture('assets/textures/pbr/pitted_metal_height.jpg')
+            loadTexture('assets/textures/pbr/pitted_metal_orm.jpg')
         ]);
 
         map.anisotropy = anisotropy;
@@ -554,11 +547,6 @@ class DarkPlanet extends Group {
         ormMap.wrapS = RepeatWrapping;
         ormMap.wrapT = RepeatWrapping;
         ormMap.repeat.set(2, 1);
-
-        thicknessMap.anisotropy = anisotropy;
-        thicknessMap.wrapS = RepeatWrapping;
-        thicknessMap.wrapT = RepeatWrapping;
-        thicknessMap.repeat.set(2, 1);
 
         const material = new MeshStandardMaterial({
             color: new Color().offsetHSL(0, 0, -0.65),

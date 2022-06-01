@@ -67,7 +67,7 @@
                 this.text = new Interface('.text');
                 this.text.css({
                     position: 'relative',
-                    fontFamily: '"Gothic A1", sans-serif',
+                    fontFamily: 'Gothic A1, sans-serif',
                     fontWeight: '700',
                     fontSize: 10,
                     lineHeight: '1.5',
@@ -86,7 +86,8 @@
 
             toggle = (show, delay = 0) => {
                 if (show) {
-                    this.visible().tween({ opacity: 1 }, 800, 'easeInOutSine', delay);
+                    this.visible();
+                    this.tween({ opacity: 1 }, 800, 'easeInOutSine', delay);
                     this.text.css({ y: 10 }).tween({ y: 0 }, 1200, 'easeOutCubic', delay);
                 } else {
                     this.tween({ opacity: 0 }, 300, 'easeOutSine', () => {

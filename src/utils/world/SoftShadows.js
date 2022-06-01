@@ -21,13 +21,13 @@ export class SoftShadows {
             /* glsl */`
             #ifdef USE_SHADOWMAP
 
-            #define LIGHT_WORLD_SIZE ${size}
-            #define LIGHT_FRUSTUM_WIDTH ${frustum}
+            #define LIGHT_WORLD_SIZE ${size.toFixed(3)}
+            #define LIGHT_FRUSTUM_WIDTH ${frustum.toFixed(2)}
             #define LIGHT_SIZE_UV (LIGHT_WORLD_SIZE / LIGHT_FRUSTUM_WIDTH)
-            #define NEAR_PLANE ${near}
+            #define NEAR_PLANE ${near.toFixed(1)}
 
-            #define NUM_SAMPLES ${samples}
-            #define NUM_RINGS ${rings}
+            #define NUM_SAMPLES ${samples.toFixed(0)}
+            #define NUM_RINGS ${rings.toFixed(0)}
             #define BLOCKER_SEARCH_NUM_SAMPLES NUM_SAMPLES
 
             vec2 poissonDisk[NUM_SAMPLES];
@@ -76,18 +76,18 @@ export class SoftShadows {
                 float sum = 0.0;
                 float depth;
                 #pragma unroll_loop_start
-                for (int i = 0; i < 17; i++) {
+                for (int i = 0; i < NUM_SAMPLES; i++) {
                     depth = unpackRGBAToDepth(texture2D(shadowMap, uv + poissonDisk[i] * filterRadius));
                     if (zReceiver <= depth) sum += 1.0;
                 }
                 #pragma unroll_loop_end
                 #pragma unroll_loop_start
-                for (int i = 0; i < 17; i++) {
+                for (int i = 0; i < NUM_SAMPLES; i++) {
                     depth = unpackRGBAToDepth(texture2D(shadowMap, uv + -poissonDisk[i].yx * filterRadius));
                     if (zReceiver <= depth) sum += 1.0;
                 }
                 #pragma unroll_loop_end
-                return sum / (2.0 * float(17));
+                return sum / (2.0 * float(NUM_SAMPLES));
             }
 
             float PCSS(sampler2D shadowMap, vec4 coords) {

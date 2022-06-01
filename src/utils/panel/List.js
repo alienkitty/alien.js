@@ -31,7 +31,7 @@ export class List extends Interface {
         this.css({
             position: 'relative',
             width: '100%',
-            height: 15
+            height: 18
         });
     }
 

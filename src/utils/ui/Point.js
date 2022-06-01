@@ -204,6 +204,7 @@ export class Point extends Interface {
 
     animateIn = () => {
         this.visible();
+        this.css({ opacity: 1 });
         this.text.animateIn();
     };
 
@@ -211,6 +212,11 @@ export class Point extends Interface {
         this.text.animateOut(() => {
             this.invisible();
         });
+    };
+
+    inactive = () => {
+        this.tween({ opacity: 0 }, 300, 'easeOutSine');
+        this.close();
     };
 
     destroy = () => {

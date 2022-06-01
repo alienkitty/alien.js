@@ -1,6 +1,6 @@
 export class Styles {
     static label = {
-        fontFamily: '"Roboto Mono", monospace',
+        fontFamily: 'Roboto Mono, monospace',
         fontSize: 11,
         lineHeight: 15,
         letterSpacing: '0.03em'

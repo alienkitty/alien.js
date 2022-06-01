@@ -44,7 +44,8 @@ export class Instructions extends Interface {
 
     toggle = (show, delay = 0) => {
         if (show) {
-            this.visible().tween({ opacity: 1 }, 800, 'easeInOutSine', delay);
+            this.visible();
+            this.tween({ opacity: 1 }, 800, 'easeInOutSine', delay);
             this.text.css({ y: 10 }).tween({ y: 0 }, 1200, 'easeOutCubic', delay);
         } else {
             this.tween({ opacity: 0 }, 300, 'easeOutSine', () => {

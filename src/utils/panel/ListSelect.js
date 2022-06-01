@@ -28,9 +28,9 @@ export class ListSelect extends Interface {
         this.css({
             position: 'relative',
             width: '100%',
-            height: 15,
-            ...this.styles.panel,
+            height: 18,
             textTransform: 'uppercase',
+            ...this.styles.panel,
             whiteSpace: 'nowrap',
             overflow: 'hidden',
             cursor: 'pointer'

@@ -44,6 +44,7 @@ export { Sound } from './src/utils/audio/Sound.js';
 // Panel
 export { Panel } from './src/utils/panel/Panel.js';
 export { PanelItem } from './src/utils/panel/PanelItem.js';
+export { Link } from './src/utils/panel/Link.js';
 export { List } from './src/utils/panel/List.js';
 export { ListToggle } from './src/utils/panel/ListToggle.js';
 export { ListSelect } from './src/utils/panel/ListSelect.js';

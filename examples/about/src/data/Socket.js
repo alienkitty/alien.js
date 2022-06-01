@@ -159,8 +159,6 @@ export class Socket extends EventEmitter {
     };
 
     close = () => {
-        this.removeListeners();
-
         this.socket.close();
     };
 }

@@ -4,9 +4,10 @@
 
 import { Styles } from '../../config/Styles.js';
 import { Interface } from '../Interface.js';
-import { ColorPicker } from './ColorPicker.js';
+import { Link } from './Link.js';
 import { List } from './List.js';
 import { Slider } from './Slider.js';
+import { ColorPicker } from './ColorPicker.js';
 
 export class PanelItem extends Interface {
     static styles = Styles;
@@ -37,8 +38,8 @@ export class PanelItem extends Interface {
             this.text = new Interface('.text');
             this.text.css({
                 position: 'relative',
-                ...this.data.styles.panel,
                 textTransform: 'uppercase',
+                ...this.data.styles.panel,
                 whiteSpace: 'nowrap'
             });
             this.text.text(this.data.label);
@@ -68,6 +69,41 @@ export class PanelItem extends Interface {
                 transformOrigin: 'left center'
             });
             this.add(this.line);
+        } else if (this.data.type === 'link') {
+            this.css({
+                position: 'relative',
+                boxSizing: 'border-box',
+                width,
+                padding: '2px 10px 0'
+            });
+
+            this.link = new Link(this.data);
+            this.add(this.link);
+        } else if (this.data.type === 'list') {
+            this.css({
+                position: 'relative',
+                boxSizing: 'border-box',
+                width,
+                padding: '2px 10px 0'
+            });
+
+            const list = Object.keys(this.data.list);
+            const index = list.indexOf(this.data.value);
+            const callback = this.data.callback;
+            const styles = this.data.styles;
+
+            this.list = new List({ list, index, callback, styles });
+            this.add(this.list);
+        } else if (this.data.type === 'slider') {
+            this.css({
+                position: 'relative',
+                boxSizing: 'border-box',
+                width,
+                padding: '0 10px'
+            });
+
+            this.slider = new Slider(this.data);
+            this.add(this.slider);
         } else if (this.data.type === 'color') {
             this.css({
                 position: 'relative',
@@ -80,31 +116,6 @@ export class PanelItem extends Interface {
 
             this.color = new ColorPicker(this.data);
             this.add(this.color);
-        } else if (this.data.type === 'list') {
-            this.css({
-                position: 'relative',
-                boxSizing: 'border-box',
-                width,
-                padding: '2px 10px 3px'
-            });
-
-            const list = Object.keys(this.data.list);
-            const index = list.indexOf(this.data.value);
-            const callback = this.data.callback;
-            const styles = this.data.styles;
-
-            this.text = new List({ list, index, callback, styles });
-            this.add(this.text);
-        } else if (this.data.type === 'slider') {
-            this.css({
-                position: 'relative',
-                boxSizing: 'border-box',
-                width,
-                padding: '0 10px'
-            });
-
-            this.text = new Slider(this.data);
-            this.add(this.text);
         }
     }
 

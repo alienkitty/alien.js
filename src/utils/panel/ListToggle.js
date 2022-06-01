@@ -29,9 +29,9 @@ export class ListToggle extends Interface {
             position: 'relative',
             cssFloat: 'left',
             width: 54,
-            height: 15,
-            ...this.styles.panel,
+            height: 18,
             textTransform: 'uppercase',
+            ...this.styles.panel,
             whiteSpace: 'nowrap',
             overflow: 'hidden',
             cursor: 'pointer'

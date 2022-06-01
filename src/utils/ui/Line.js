@@ -7,7 +7,7 @@ import { Vector2 } from 'three/src/math/Vector2.js';
 import { Component } from '../Component.js';
 import { Stage } from '../Stage.js';
 
-import { clearTween, delayedCall, tween } from '../../tween/Tween.js';
+import { clearTween, tween } from '../../tween/Tween.js';
 
 export class Line extends Component {
     constructor(context) {
@@ -17,8 +17,6 @@ export class Line extends Component {
 
         this.start = new Vector2();
         this.end = new Vector2();
-        this.animatedIn = false;
-        this.hoveredIn = false;
 
         this.props = {
             alpha: 0,
@@ -74,29 +72,23 @@ export class Line extends Component {
     };
 
     animateIn = (reverse = false) => {
-        if (!this.animatedIn) {
-            clearTween(this.props);
+        clearTween(this.props);
 
-            tween(this.props, { alpha: 1 }, 500, 'easeOutSine');
+        tween(this.props, { alpha: 1 }, 500, 'easeOutSine');
 
-            if (reverse) {
-                this.props.start = 1;
-                this.props.progress = 0;
+        if (reverse) {
+            this.props.start = 1;
+            this.props.progress = 0;
 
-                tween(this.props, { start: 0 }, 500, 'easeInCubic', null, () => {
-                    this.props.progress = 1 - this.props.start;
-                });
-            } else {
-                this.props.start = 0;
-                this.props.progress = 0;
+            tween(this.props, { start: 0 }, 500, 'easeInCubic', null, () => {
+                this.props.progress = 1 - this.props.start;
+            });
+        } else {
+            this.props.start = 0;
+            this.props.progress = 0;
 
-                tween(this.props, { progress: 1 }, 400, 'easeOutCubic');
-            }
-
-            this.animatedIn = true;
+            tween(this.props, { progress: 1 }, 400, 'easeOutCubic');
         }
-
-        this.hoveredIn = true;
     };
 
     animateOut = (fast = false, callback) => {
@@ -117,19 +109,15 @@ export class Line extends Component {
             this.props.alpha = 0;
             this.props.start = 0;
 
-            this.animatedIn = false;
-
-            delayedCall(500, () => {
-                if (this.hoveredIn) {
-                    this.animateIn();
-                } else if (callback) {
-                    callback();
-                }
-            });
+            if (callback) {
+                callback();
+            }
         }, () => {
             this.props.progress = 1 - this.props.start;
         });
+    };
 
-        this.hoveredIn = false;
+    inactive = () => {
+        tween(this.props, { alpha: 0 }, 300, 'easeOutSine');
     };
 }

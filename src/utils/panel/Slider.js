@@ -62,9 +62,9 @@ export class Slider extends Interface {
             position: 'relative',
             cssFloat: 'left',
             marginRight: 10,
+            textTransform: 'uppercase',
             ...this.styles.panel,
             lineHeight: 20,
-            textTransform: 'uppercase',
             whiteSpace: 'nowrap'
         });
         this.text.text(this.label);
@@ -74,7 +74,7 @@ export class Slider extends Interface {
         this.number.css({
             position: 'relative',
             cssFloat: 'right',
-            ...this.styles.panel,
+            ...this.styles.number,
             lineHeight: 20,
             letterSpacing: 0.5,
             whiteSpace: 'nowrap'

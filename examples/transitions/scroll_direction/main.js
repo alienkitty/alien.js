@@ -55,7 +55,7 @@ class UINext extends Interface {
             position: 'relative',
             display: 'inline-block',
             padding: 10,
-            fontFamily: '"Gothic A1", sans-serif',
+            fontFamily: 'Gothic A1, sans-serif',
             fontWeight: '400',
             fontSize: 13,
             lineHeight: '1.4',
@@ -122,7 +122,7 @@ class UITitle extends Interface {
         this.css({
             position: 'relative',
             margin: 0,
-            fontFamily: '"Roboto", sans-serif',
+            fontFamily: 'Roboto, sans-serif',
             fontWeight: '300',
             fontSize: 23,
             lineHeight: '1.3',

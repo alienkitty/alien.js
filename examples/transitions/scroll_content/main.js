@@ -23,7 +23,7 @@ class DetailsLink extends Interface {
 
     initHTML() {
         this.css({
-            fontFamily: '"Gothic A1", sans-serif',
+            fontFamily: 'Gothic A1, sans-serif',
             fontWeight: '400',
             fontSize: 13,
             lineHeight: 22,
@@ -80,7 +80,7 @@ class DetailsTitle extends Interface {
             position: 'relative',
             left: -1,
             margin: '0 0 6px',
-            fontFamily: '"Roboto", sans-serif',
+            fontFamily: 'Roboto, sans-serif',
             fontWeight: '300',
             fontSize: 23,
             lineHeight: '1.3',
@@ -175,7 +175,7 @@ class Details extends Interface {
             width: 'fit-content',
             position: 'relative',
             margin: '6px 0',
-            fontFamily: '"Gothic A1", sans-serif',
+            fontFamily: 'Gothic A1, sans-serif',
             fontWeight: '400',
             fontSize: 13,
             lineHeight: '1.5',

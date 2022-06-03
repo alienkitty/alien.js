@@ -51,7 +51,7 @@ class Global {
 
 class Styles {
     static label = {
-        fontFamily: '"Roboto Mono", monospace',
+        fontFamily: 'Roboto Mono, monospace',
         fontSize: 11,
         lineHeight: 15,
         letterSpacing: '0.03em'
@@ -21736,7 +21736,7 @@ function WebGLRenderStates( extensions, capabilities ) {
 
 	let renderStates = new WeakMap();
 
-	function get( scene, renderCallDepth ) {
+	function get( scene, renderCallDepth = 0 ) {
 
 		let renderState;
 
@@ -27634,7 +27634,7 @@ function WebGLRenderer( parameters = {} ) {
 
 		state = new WebGLState( _gl, extensions, capabilities );
 
-		info = new WebGLInfo( _gl );
+		info = new WebGLInfo();
 		properties = new WebGLProperties();
 		textures = new WebGLTextures( _gl, extensions, state, properties, capabilities, utils, info );
 		cubemaps = new WebGLCubeMaps( _this );
@@ -54202,9 +54202,9 @@ class ListToggle extends Interface {
             position: 'relative',
             cssFloat: 'left',
             width: 54,
-            height: 15,
-            ...this.styles.panel,
+            height: 18,
             textTransform: 'uppercase',
+            ...this.styles.panel,
             whiteSpace: 'nowrap',
             overflow: 'hidden',
             cursor: 'pointer'
@@ -54315,9 +54315,9 @@ class ListSelect extends Interface {
         this.css({
             position: 'relative',
             width: '100%',
-            height: 15,
-            ...this.styles.panel,
+            height: 18,
             textTransform: 'uppercase',
+            ...this.styles.panel,
             whiteSpace: 'nowrap',
             overflow: 'hidden',
             cursor: 'pointer'
@@ -54426,7 +54426,7 @@ class List extends Interface {
         this.css({
             position: 'relative',
             width: '100%',
-            height: 15
+            height: 18
         });
     }
 
@@ -54538,9 +54538,9 @@ class Slider extends Interface {
             position: 'relative',
             cssFloat: 'left',
             marginRight: 10,
+            textTransform: 'uppercase',
             ...this.styles.panel,
             lineHeight: 20,
-            textTransform: 'uppercase',
             whiteSpace: 'nowrap'
         });
         this.text.text(this.label);
@@ -54550,7 +54550,7 @@ class Slider extends Interface {
         this.number.css({
             position: 'relative',
             cssFloat: 'right',
-            ...this.styles.panel,
+            ...this.styles.number,
             lineHeight: 20,
             letterSpacing: 0.5,
             whiteSpace: 'nowrap'
@@ -54665,6 +54665,100 @@ class Slider extends Interface {
 
 /**
  * @author pschroen / https://ufo.ai/
+ *
+ * Based on https://github.com/lo-th/uil
+ */
+
+class Link extends Interface {
+    constructor({
+        value = '',
+        callback,
+        styles
+    }) {
+        super('.link');
+
+        this.value = value;
+        this.callback = callback;
+        this.styles = styles;
+
+        this.initHTML();
+
+        this.addListeners();
+    }
+
+    initHTML() {
+        this.css({
+            position: 'relative',
+            width: 'fit-content',
+            height: 20,
+            textTransform: 'uppercase',
+            ...this.styles.panel,
+            whiteSpace: 'nowrap',
+            cursor: 'pointer'
+        });
+        this.text(this.value);
+
+        this.line = new Interface('.line');
+        this.line.css({
+            left: 0,
+            right: 0,
+            bottom: 1,
+            height: 1,
+            backgroundColor: 'var(--ui-color)',
+            scaleX: 0
+        });
+        this.add(this.line);
+    }
+
+    addListeners() {
+        this.element.addEventListener('mouseenter', this.onHover);
+        this.element.addEventListener('mouseleave', this.onHover);
+        this.element.addEventListener('click', this.onClick);
+    }
+
+    removeListeners() {
+        this.element.removeEventListener('mouseenter', this.onHover);
+        this.element.removeEventListener('mouseleave', this.onHover);
+        this.element.removeEventListener('click', this.onClick);
+    }
+
+    /**
+     * Event handlers
+     */
+
+    onHover = ({ type }) => {
+        this.line.clearTween();
+
+        if (type === 'mouseenter') {
+            this.line.css({ transformOrigin: 'left center', scaleX: 0 }).tween({ scaleX: 1 }, 800, 'easeOutQuint');
+        } else {
+            this.line.css({ transformOrigin: 'right center' }).tween({ scaleX: 0 }, 500, 'easeOutQuint');
+        }
+    };
+
+    onClick = () => {
+        const value = this.value;
+
+        this.events.emit(Events.UPDATE, value);
+
+        if (this.callback) {
+            this.callback(value);
+        }
+    };
+
+    /**
+     * Public methods
+     */
+
+    destroy = () => {
+        this.removeListeners();
+
+        return super.destroy();
+    };
+}
+
+/**
+ * @author pschroen / https://ufo.ai/
  */
 
 class PanelItem extends Interface {
@@ -54696,8 +54790,8 @@ class PanelItem extends Interface {
             this.text = new Interface('.text');
             this.text.css({
                 position: 'relative',
-                ...this.data.styles.panel,
                 textTransform: 'uppercase',
+                ...this.data.styles.panel,
                 whiteSpace: 'nowrap'
             });
             this.text.text(this.data.label);
@@ -54744,7 +54838,7 @@ class PanelItem extends Interface {
                 position: 'relative',
                 boxSizing: 'border-box',
                 width,
-                padding: '2px 10px 3px'
+                padding: '2px 10px 0'
             });
 
             const list = Object.keys(this.data.list);
@@ -54763,6 +54857,16 @@ class PanelItem extends Interface {
             });
 
             this.text = new Slider(this.data);
+            this.add(this.text);
+        } else if (this.data.type === 'link') {
+            this.css({
+                position: 'relative',
+                boxSizing: 'border-box',
+                width,
+                padding: '2px 10px 0'
+            });
+
+            this.text = new Link(this.data);
             this.add(this.text);
         }
     }
@@ -55246,8 +55350,6 @@ class Line extends Component {
 
         this.start = new Vector2();
         this.end = new Vector2();
-        this.animatedIn = false;
-        this.hoveredIn = false;
 
         this.props = {
             alpha: 0,
@@ -55303,29 +55405,23 @@ class Line extends Component {
     };
 
     animateIn = (reverse = false) => {
-        if (!this.animatedIn) {
-            clearTween(this.props);
+        clearTween(this.props);
 
-            tween(this.props, { alpha: 1 }, 500, 'easeOutSine');
+        tween(this.props, { alpha: 1 }, 500, 'easeOutSine');
 
-            if (reverse) {
-                this.props.start = 1;
-                this.props.progress = 0;
+        if (reverse) {
+            this.props.start = 1;
+            this.props.progress = 0;
 
-                tween(this.props, { start: 0 }, 500, 'easeInCubic', null, () => {
-                    this.props.progress = 1 - this.props.start;
-                });
-            } else {
-                this.props.start = 0;
-                this.props.progress = 0;
+            tween(this.props, { start: 0 }, 500, 'easeInCubic', null, () => {
+                this.props.progress = 1 - this.props.start;
+            });
+        } else {
+            this.props.start = 0;
+            this.props.progress = 0;
 
-                tween(this.props, { progress: 1 }, 400, 'easeOutCubic');
-            }
-
-            this.animatedIn = true;
+            tween(this.props, { progress: 1 }, 400, 'easeOutCubic');
         }
-
-        this.hoveredIn = true;
     };
 
     animateOut = (fast = false, callback) => {
@@ -55346,20 +55442,16 @@ class Line extends Component {
             this.props.alpha = 0;
             this.props.start = 0;
 
-            this.animatedIn = false;
-
-            delayedCall(500, () => {
-                if (this.hoveredIn) {
-                    this.animateIn();
-                } else if (callback) {
-                    callback();
-                }
-            });
+            if (callback) {
+                callback();
+            }
         }, () => {
             this.props.progress = 1 - this.props.start;
         });
+    };
 
-        this.hoveredIn = false;
+    inactive = () => {
+        tween(this.props, { alpha: 0 }, 300, 'easeOutSine');
     };
 }
 
@@ -56064,6 +56156,7 @@ class Point extends Interface {
 
     animateIn = () => {
         this.visible();
+        this.css({ opacity: 1 });
         this.text.animateIn();
     };
 
@@ -56071,6 +56164,11 @@ class Point extends Interface {
         this.text.animateOut(() => {
             this.invisible();
         });
+    };
+
+    inactive = () => {
+        this.tween({ opacity: 0 }, 300, 'easeOutSine');
+        this.close();
     };
 
     destroy = () => {
@@ -56734,13 +56832,13 @@ class SoftShadows {
             /* glsl */`
             #ifdef USE_SHADOWMAP
 
-            #define LIGHT_WORLD_SIZE ${size}
-            #define LIGHT_FRUSTUM_WIDTH ${frustum}
+            #define LIGHT_WORLD_SIZE ${size.toFixed(3)}
+            #define LIGHT_FRUSTUM_WIDTH ${frustum.toFixed(2)}
             #define LIGHT_SIZE_UV (LIGHT_WORLD_SIZE / LIGHT_FRUSTUM_WIDTH)
-            #define NEAR_PLANE ${near}
+            #define NEAR_PLANE ${near.toFixed(1)}
 
-            #define NUM_SAMPLES ${samples}
-            #define NUM_RINGS ${rings}
+            #define NUM_SAMPLES ${samples.toFixed(0)}
+            #define NUM_RINGS ${rings.toFixed(0)}
             #define BLOCKER_SEARCH_NUM_SAMPLES NUM_SAMPLES
 
             vec2 poissonDisk[NUM_SAMPLES];
@@ -56789,18 +56887,18 @@ class SoftShadows {
                 float sum = 0.0;
                 float depth;
                 #pragma unroll_loop_start
-                for (int i = 0; i < 17; i++) {
+                for (int i = 0; i < NUM_SAMPLES; i++) {
                     depth = unpackRGBAToDepth(texture2D(shadowMap, uv + poissonDisk[i] * filterRadius));
                     if (zReceiver <= depth) sum += 1.0;
                 }
                 #pragma unroll_loop_end
                 #pragma unroll_loop_start
-                for (int i = 0; i < 17; i++) {
+                for (int i = 0; i < NUM_SAMPLES; i++) {
                     depth = unpackRGBAToDepth(texture2D(shadowMap, uv + -poissonDisk[i].yx * filterRadius));
                     if (zReceiver <= depth) sum += 1.0;
                 }
                 #pragma unroll_loop_end
-                return sum / (2.0 * float(17));
+                return sum / (2.0 * float(NUM_SAMPLES));
             }
 
             float PCSS(sampler2D shadowMap, vec4 coords) {
@@ -57076,6 +57174,10 @@ class Point3D extends Group {
     };
 
     static onPointerDown = e => {
+        if (!this.enabled) {
+            return;
+        }
+
         this.onPointerMove(e);
 
         if (this.hover) {
@@ -57086,6 +57188,10 @@ class Point3D extends Group {
     };
 
     static onPointerMove = e => {
+        if (!this.enabled) {
+            return;
+        }
+
         if (e) {
             this.mouse.x = (e.clientX / this.width) * 2 - 1;
             this.mouse.y = 1 - (e.clientY / this.height) * 2;
@@ -57116,7 +57222,7 @@ class Point3D extends Group {
     };
 
     static onPointerUp = e => {
-        if (!this.click) {
+        if (!this.enabled || !this.click) {
             return;
         }
 
@@ -57190,11 +57296,20 @@ class Point3D extends Group {
     };
 
     static animateOut = () => {
-        this.points.forEach(point => point.animateOut(true));
+        this.points.forEach(point => {
+            point.animateOut(true);
+            point.inactive();
+        });
     };
 
     static destroy = () => {
         this.removeListeners();
+
+        for (let i = this.points.length - 1; i >= 0; i--) {
+            if (this.points[i] && this.points[i].destroy) {
+                this.points[i].destroy();
+            }
+        }
 
         for (const prop in this) {
             this[prop] = null;
@@ -57247,18 +57362,20 @@ class Point3D extends Group {
     }
 
     initViews() {
-        this.line = new Line(Point3D.context);
+        const { context, styles } = Point3D;
+
+        this.line = new Line(context);
         Point3D.container.add(this.line);
 
-        this.reticle = new Reticle({ styles: Point3D.styles });
+        this.reticle = new Reticle({ styles });
         Point3D.container.add(this.reticle);
 
         if (!this.noTracker) {
-            this.tracker = new Tracker({ styles: Point3D.styles });
+            this.tracker = new Tracker({ styles });
             Point3D.container.add(this.tracker);
         }
 
-        this.point = new Point(this, this.tracker, { styles: Point3D.styles });
+        this.point = new Point(this, this.tracker, { styles });
         this.point.setData({
             name: this.name,
             type: this.type
@@ -57271,10 +57388,6 @@ class Point3D extends Group {
      */
 
     onHover = ({ type }) => {
-        if (!Point3D.enabled) {
-            return;
-        }
-
         clearTween(this.timeout);
 
         if (this.tracker && this.selected) {
@@ -57302,9 +57415,7 @@ class Point3D extends Group {
     };
 
     onClick = () => {
-        if (!Point3D.enabled) {
-            return;
-        }
+        clearTween(this.timeout);
 
         if (this.tracker) {
             this.selected = !this.selected;
@@ -57423,12 +57534,17 @@ class Point3D extends Group {
             this.reticle.animateIn();
 
             if (this.tracker) {
-                this.tracker.unlock();
                 this.tracker.animateOut();
             }
 
             this.point.close();
         }
+    };
+
+    inactive = () => {
+        this.selected = false;
+        this.line.inactive();
+        this.point.inactive();
     };
 
     destroy = () => {

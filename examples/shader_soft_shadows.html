@@ -21,7 +21,7 @@
 <body>
     <div id="root"></div>
     <script type="module">
-        import { AmbientLight, BasicShadowMap, BufferGeometryLoader, BufferGeometryLoaderThread, Color, Device, DirectionalLight, Events, FXAAMaterial, Group, HemisphereLight, ImageBitmapLoaderThread, Mesh, MeshPhongMaterial, NoBlending, OrbitControls, OrthographicCamera, PerspectiveCamera, PlaneGeometry, Reflector, RepeatWrapping, Scene, ShadowMaterial, SoftShadows, SphereGeometry, Stage, TextureLoader, Thread, Uniform, Vector2, WebGLRenderTarget, WebGLRenderer, getFullscreenTriangle, ticker } from '../build/alien.js';
+        import { AmbientLight, BasicShadowMap, BufferGeometryLoader, BufferGeometryLoaderThread, Color, Device, DirectionalLight, Events, FXAAMaterial, Group, HemisphereLight, ImageBitmapLoaderThread, Mesh, MeshPhongMaterial, NoBlending, OrbitControls, OrthographicCamera, PanelItem, PerspectiveCamera, PlaneGeometry, Reflector, RepeatWrapping, Scene, ShadowMaterial, SoftShadows, SphereGeometry, Stage, TextureLoader, Thread, UI, Uniform, Vector2, WebGLRenderTarget, WebGLRenderer, getFullscreenTriangle, ticker } from '../build/alien.js';
 
         // Based on https://threejs.org/examples/#webgl_shadowmap_pcss by spidersharma
 
@@ -65,6 +65,10 @@
             }
 
             initReflector() {
+                const { light } = WorldController;
+
+                this.light = light;
+
                 this.reflector = new Reflector();
             }
 
@@ -164,7 +168,9 @@
 
                 mesh.onBeforeRender = (renderer, scene, camera) => {
                     this.visible = false;
+                    this.light.position.y *= -1;
                     this.reflector.update(renderer, scene, camera);
+                    this.light.position.y *= -1;
                     this.visible = true;
                 };
 
@@ -244,6 +250,60 @@
             };
 
             static ready = () => this.view.ready();
+        }
+
+        class PanelController {
+            static init(light) {
+                this.light = light;
+
+                this.initViews();
+                this.initPanel();
+            }
+
+            static initViews() {
+                this.ui = new UI({ fps: true });
+                this.ui.animateIn();
+                Stage.add(this.ui);
+            }
+
+            static initPanel() {
+                const items = [
+                    {
+                        label: 'FPS'
+                    },
+                    {
+                        type: 'divider'
+                    },
+                    {
+                        type: 'slider',
+                        label: 'Penumbra',
+                        min: 20,
+                        max: 108,
+                        step: 1,
+                        value: this.light.shadow.camera.far,
+                        callback: value => {
+                            this.light.shadow.camera.far = value;
+                            this.light.shadow.camera.updateProjectionMatrix();
+                        }
+                    }
+                ];
+
+                items.forEach(data => {
+                    this.ui.addPanel(new PanelItem(data));
+                });
+            }
+
+            /**
+             * Public methods
+             */
+
+            static update = () => {
+                if (!this.ui) {
+                    return;
+                }
+
+                this.ui.update();
+            };
         }
 
         class RenderManager {
@@ -346,7 +406,7 @@
                 this.camera = new PerspectiveCamera(30);
                 this.camera.near = 0.5;
                 this.camera.far = 40;
-                this.camera.position.set(0, 2.4, 8);
+                this.camera.position.set(0, 3, 8);
                 this.camera.lookAt(this.scene.position);
 
                 // Global geometries
@@ -382,8 +442,11 @@
                 light.castShadow = true;
                 light.shadow.mapSize.width = 1024;
                 light.shadow.mapSize.height = 1024;
+                light.shadow.camera.near = 0.1;
                 light.shadow.camera.far = 50;
                 this.scene.add(light);
+
+                this.light = light;
             }
 
             static initLoaders() {
@@ -462,6 +525,8 @@
 
                 await SceneController.ready();
                 SceneController.animateIn();
+
+                this.initPanel();
             }
 
             static initThread() {
@@ -492,6 +557,12 @@
                 RenderManager.init(renderer, scene, camera);
             }
 
+            static initPanel() {
+                const { light } = WorldController;
+
+                PanelController.init(light);
+            }
+
             static addListeners() {
                 Stage.events.on(Events.RESIZE, this.onResize);
                 ticker.add(this.onUpdate);
@@ -513,6 +584,7 @@
                 WorldController.update(time, delta, frame);
                 SceneController.update(time);
                 RenderManager.update(time, delta, frame);
+                PanelController.update();
             };
         }
 

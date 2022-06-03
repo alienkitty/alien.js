@@ -98,6 +98,7 @@ In its design, everything is an ES module, all user interfaces and components fo
 [baked spherical cube](https://alien.js.org/examples/shader_baked_spherical_cube.html)  
 [baked spherical cube](https://alien.js.org/examples/shader_baked_spherical_cube_dudv.html) (DuDv)  
 [baked spherical cube](https://alien.js.org/examples/shader_baked_spherical_cube_sss.html) (SSS, [debug](https://alien.js.org/examples/shader_baked_spherical_cube_sss.html?debug))  
+[soft shadows](https://alien.js.org/examples/shader_soft_shadows.html)  
 [text](https://alien.js.org/examples/shader_text.html) (MSDF text)  
 [afterimage](https://alien.js.org/examples/shader_afterimage.html)  
 [transition](https://alien.js.org/examples/transitions/shader/) (mask)  

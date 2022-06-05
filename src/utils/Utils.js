@@ -11,6 +11,10 @@ export function shuffle(array) {
 }
 
 export function headsTails(heads, tails) {
+    if (typeof heads === 'undefined') {
+        return randInt(0, 1);
+    }
+
     return randInt(0, 1) ? tails : heads;
 }
 

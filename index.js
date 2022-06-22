@@ -18,6 +18,7 @@ export { BufferGeometryLoader } from './src/loaders/world/BufferGeometryLoader.j
 export { BufferGeometryLoaderThread } from './src/loaders/world/BufferGeometryLoaderThread.js';
 export { TextGeometryLoader } from './src/loaders/world/TextGeometryLoader.js';
 export { TextGeometryLoaderThread } from './src/loaders/world/TextGeometryLoaderThread.js';
+export { BufferLoader } from './src/loaders/audio/BufferLoader.js';
 
 // Tween
 export * from './src/tween/Ticker.js';

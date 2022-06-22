@@ -38,12 +38,7 @@ export class Preloader {
         this.view.animateIn();
 
         this.loader = new MultiLoader();
-        this.loader.load(new FontLoader([
-            { family: 'D-DIN', style: 'normal', weight: '400' },
-            { family: 'Gothic A1', style: 'normal', weight: '500' },
-            { family: 'Gothic A1', style: 'normal', weight: '700' },
-            { family: 'Roboto Mono', style: 'normal', weight: '500' }
-        ]));
+        this.loader.load(new FontLoader());
         this.loader.load(new AssetLoader(Config.ASSETS));
         this.loader.add(2);
 

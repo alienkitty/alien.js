@@ -55,8 +55,7 @@ export class Preloader {
         }
 
         this.loader = new MultiLoader();
-        // this.loader.load(new FontLoader(['Roboto Mono'])); // document.fonts.load()
-        this.loader.load(new FontLoader()); // document.fonts.ready
+        this.loader.load(new FontLoader());
         this.loader.load(new AssetLoader(assets));
         this.loader.add(2);
 

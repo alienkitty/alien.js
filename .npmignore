@@ -1,5 +1,4 @@
 .DS_Store
-.babelrc.json
 .eslintignore
 .eslintrc.json
 build

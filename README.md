@@ -304,7 +304,7 @@ npm start
 ### With ESLint
 
 ```sh
-npm i -D eslint eslint-plugin-html @babel/eslint-parser
+npm i -D eslint eslint-plugin-html
 npx eslint src
 npx eslint examples/*.html
 npx eslint examples/about/src

@@ -36,9 +36,7 @@ export class Sound {
 
     load() {
         if (this.buffer instanceof ArrayBuffer) {
-            const promise = new Promise((resolve, reject) => {
-                this.context.decodeAudioData(this.buffer.slice(), buffer => resolve(buffer), reject);
-            }).then(buffer => {
+            const promise = this.context.decodeAudioData(this.buffer.slice()).then(buffer => {
                 this.buffer = buffer;
             });
 

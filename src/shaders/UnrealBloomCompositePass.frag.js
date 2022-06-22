@@ -1,4 +1,4 @@
-// Based on {@link module:three/examples/jsm/postprocessing/UnrealBloomPass.js} by spidersharma and bhouston
+// Based on {@link module:three/examples/jsm/postprocessing/UnrealBloomPass.js} by spidersharma03 and bhouston
 
 export default /* glsl */`
 precision highp float;

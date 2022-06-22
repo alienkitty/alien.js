@@ -1,4 +1,4 @@
-// Based on https://github.com/pmndrs/postprocessing
+// Based on https://github.com/pmndrs/postprocessing by vanruesc
 
 export default /* glsl */`
 float blendSoftLight(float x, float y) {

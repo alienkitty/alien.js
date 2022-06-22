@@ -6,16 +6,6 @@ import { Assets } from './Assets.js';
 import { Loader } from './Loader.js';
 
 export class AssetLoader extends Loader {
-    static loadAssets(assets, callback) {
-        const promise = new Promise(resolve => new AssetLoader(assets, resolve));
-
-        if (callback) {
-            promise.then(callback);
-        }
-
-        return promise;
-    }
-
     load(path, callback) {
         const cached = Assets.get(path);
 

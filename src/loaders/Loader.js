@@ -7,13 +7,13 @@ import { EventEmitter } from '../utils/EventEmitter.js';
 
 export class Loader {
     constructor(assets = [], callback) {
+        this.assets = assets;
+        this.callback = callback;
         this.events = new EventEmitter();
         this.total = 0;
         this.loaded = 0;
         this.progress = 0;
         this.promise = new Promise(resolve => this.resolve = resolve);
-        this.assets = assets;
-        this.callback = callback;
 
         assets.forEach(path => this.load(path));
     }

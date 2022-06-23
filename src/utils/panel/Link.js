@@ -43,6 +43,7 @@ export class Link extends Interface {
             bottom: 1,
             height: 1,
             backgroundColor: 'var(--ui-color)',
+            transformOrigin: 'left center',
             scaleX: 0
         });
         this.add(this.line);
@@ -87,6 +88,14 @@ export class Link extends Interface {
     /**
      * Public methods
      */
+
+    setValue = value => {
+        this.value = value;
+
+        this.element.childNodes[0].nodeValue = this.value;
+
+        return this;
+    };
 
     destroy = () => {
         this.removeListeners();

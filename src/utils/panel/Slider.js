@@ -163,6 +163,16 @@ export class Slider extends Interface {
      * Public methods
      */
 
+    setValue = value => {
+        this.value = typeof value === 'string' ? parseFloat(value) : value;
+        this.value = this.getValue(this.value);
+        this.lastValue = this.value;
+
+        this.update();
+
+        return this;
+    };
+
     update = () => {
         const scaleX = (this.value - this.min) / this.range;
 

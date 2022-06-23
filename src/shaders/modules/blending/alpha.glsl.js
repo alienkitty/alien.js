@@ -1,4 +1,4 @@
-// Based on https://github.com/pmndrs/postprocessing
+// Based on https://github.com/pmndrs/postprocessing by vanruesc
 
 export default /* glsl */`
 vec3 blendAlpha(vec3 x, vec3 y, float opacity) {

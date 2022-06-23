@@ -381,6 +381,10 @@ function shuffle(array) {
 }
 
 function headsTails(heads, tails) {
+    if (typeof heads === 'undefined') {
+        return randInt$1(0, 1);
+    }
+
     return randInt$1(0, 1) ? tails : heads;
 }
 
@@ -574,13 +578,13 @@ class EventEmitter {
 
 class Loader$1 {
     constructor(assets = [], callback) {
+        this.assets = assets;
+        this.callback = callback;
         this.events = new EventEmitter();
         this.total = 0;
         this.loaded = 0;
         this.progress = 0;
         this.promise = new Promise(resolve => this.resolve = resolve);
-        this.assets = assets;
-        this.callback = callback;
 
         assets.forEach(path => this.load(path));
     }
@@ -641,16 +645,6 @@ class Loader$1 {
  */
 
 class AssetLoader extends Loader$1 {
-    static loadAssets(assets, callback) {
-        const promise = new Promise(resolve => new AssetLoader(assets, resolve));
-
-        if (callback) {
-            promise.then(callback);
-        }
-
-        return promise;
-    }
-
     load(path, callback) {
         const cached = Assets.get(path);
 
@@ -697,53 +691,17 @@ class AssetLoader extends Loader$1 {
  */
 
 class FontLoader extends Loader$1 {
-    static loadFonts(fonts, callback) {
-        const promise = new Promise(resolve => new FontLoader(fonts, resolve));
+    constructor() {
+        super();
 
-        if (callback) {
-            promise.then(callback);
-        }
-
-        return promise;
+        this.load();
     }
 
-    load(font, callback) {
-        if (typeof font !== 'object') {
-            font = {
-                style: 'normal',
-                variant: 'normal',
-                weight: 'normal',
-                family: font.replace(/"/g, '\'')
-            };
-        }
-
-        const specifier = (({ style = 'normal', variant = 'normal', weight = 'normal', family }) => {
-            return `${style} ${variant} ${weight} 12px "${family}"`;
-        })(font);
-
-        let canvas = document.createElement('canvas');
-        let context = canvas.getContext('2d');
-
-        document.fonts.load(specifier).then(list => {
-            context.font = specifier;
-            context.fillText('LOAD', 0, 0);
-
-            return list;
-        }).then(list => {
+    load() {
+        document.fonts.ready.then(() => {
             this.increment();
-
-            if (callback) {
-                callback(list);
-            }
-        }).catch(event => {
+        }).catch(() => {
             this.increment();
-
-            if (callback) {
-                callback(event);
-            }
-        }).finally(() => {
-            context = null;
-            canvas = null;
         });
 
         this.total++;
@@ -50445,6 +50403,52 @@ class TextGeometryLoader extends Loader$1 {
  * @author pschroen / https://ufo.ai/
  */
 
+class BufferLoader extends Loader$1 {
+    constructor(context, assets, callback) {
+        super(assets, callback);
+
+        this.context = context;
+    }
+
+    load(path, callback) {
+        const cached = Assets.get(path);
+
+        let promise;
+
+        if (cached) {
+            promise = Promise.resolve(cached);
+        } else {
+            promise = fetch(Assets.getPath(path), Assets.options).then(response => {
+                return response.arrayBuffer();
+            }).then(buffer => {
+                return this.context.decodeAudioData(buffer);
+            });
+        }
+
+        promise.then(buffer => {
+            Assets.add(path, buffer);
+
+            this.increment();
+
+            if (callback) {
+                callback(buffer);
+            }
+        }).catch(event => {
+            this.increment();
+
+            if (callback) {
+                callback(event);
+            }
+        });
+
+        this.total++;
+    }
+}
+
+/**
+ * @author pschroen / https://ufo.ai/
+ */
+
 var RequestFrame;
 var CancelFrame;
 
@@ -52016,9 +52020,7 @@ class Sound {
 
     load() {
         if (this.buffer instanceof ArrayBuffer) {
-            const promise = new Promise((resolve, reject) => {
-                this.context.decodeAudioData(this.buffer.slice(), buffer => resolve(buffer), reject);
-            }).then(buffer => {
+            const promise = this.context.decodeAudioData(this.buffer.slice()).then(buffer => {
                 this.buffer = buffer;
             });
 
@@ -52403,6 +52405,1072 @@ class Panel extends Interface {
                 }
             });
         });
+    };
+
+    destroy = () => {
+        this.removeListeners();
+
+        return super.destroy();
+    };
+}
+
+/**
+ * @author pschroen / https://ufo.ai/
+ *
+ * Based on https://github.com/lo-th/uil
+ */
+
+class Link extends Interface {
+    constructor({
+        value = '',
+        callback,
+        styles
+    }) {
+        super('.link');
+
+        this.value = value;
+        this.callback = callback;
+        this.styles = styles;
+
+        this.initHTML();
+
+        this.addListeners();
+    }
+
+    initHTML() {
+        this.css({
+            position: 'relative',
+            width: 'fit-content',
+            height: 20,
+            textTransform: 'uppercase',
+            ...this.styles.panel,
+            whiteSpace: 'nowrap',
+            cursor: 'pointer'
+        });
+        this.text(this.value);
+
+        this.line = new Interface('.line');
+        this.line.css({
+            left: 0,
+            right: 0,
+            bottom: 1,
+            height: 1,
+            backgroundColor: 'var(--ui-color)',
+            scaleX: 0
+        });
+        this.add(this.line);
+    }
+
+    addListeners() {
+        this.element.addEventListener('mouseenter', this.onHover);
+        this.element.addEventListener('mouseleave', this.onHover);
+        this.element.addEventListener('click', this.onClick);
+    }
+
+    removeListeners() {
+        this.element.removeEventListener('mouseenter', this.onHover);
+        this.element.removeEventListener('mouseleave', this.onHover);
+        this.element.removeEventListener('click', this.onClick);
+    }
+
+    /**
+     * Event handlers
+     */
+
+    onHover = ({ type }) => {
+        this.line.clearTween();
+
+        if (type === 'mouseenter') {
+            this.line.css({ transformOrigin: 'left center', scaleX: 0 }).tween({ scaleX: 1 }, 800, 'easeOutQuint');
+        } else {
+            this.line.css({ transformOrigin: 'right center' }).tween({ scaleX: 0 }, 500, 'easeOutQuint');
+        }
+    };
+
+    onClick = () => {
+        const value = this.value;
+
+        this.events.emit(Events.UPDATE, value);
+
+        if (this.callback) {
+            this.callback(value);
+        }
+    };
+
+    /**
+     * Public methods
+     */
+
+    destroy = () => {
+        this.removeListeners();
+
+        return super.destroy();
+    };
+}
+
+/**
+ * @author pschroen / https://ufo.ai/
+ */
+
+class ListToggle extends Interface {
+    constructor({
+        label,
+        index,
+        styles
+    }) {
+        super('.list-toggle');
+
+        this.label = label;
+        this.index = index;
+        this.styles = styles;
+
+        this.clicked = false;
+
+        this.initHTML();
+
+        this.addListeners();
+    }
+
+    initHTML() {
+        this.css({
+            position: 'relative',
+            cssFloat: 'left',
+            width: 54,
+            height: 18,
+            textTransform: 'uppercase',
+            ...this.styles.panel,
+            whiteSpace: 'nowrap',
+            overflow: 'hidden',
+            cursor: 'pointer'
+        });
+
+        this.text = new Interface('.text');
+        this.text.css({
+            position: 'absolute',
+            width: '100%',
+            height: '100%',
+            opacity: 0.35
+        });
+        this.text.text(this.label);
+        this.add(this.text);
+
+        this.over = new Interface('.over');
+        this.over.css({
+            position: 'absolute',
+            width: '100%',
+            height: '100%',
+            opacity: 0
+        });
+        this.over.text(this.label);
+        this.add(this.over);
+    }
+
+    addListeners() {
+        this.element.addEventListener('mouseenter', this.onHover);
+        this.element.addEventListener('mouseleave', this.onHover);
+        this.element.addEventListener('click', this.onClick);
+    }
+
+    removeListeners() {
+        this.element.removeEventListener('mouseenter', this.onHover);
+        this.element.removeEventListener('mouseleave', this.onHover);
+        this.element.removeEventListener('click', this.onClick);
+    }
+
+    /**
+     * Event handlers
+     */
+
+    onHover = ({ type }) => {
+        if (this.clicked) {
+            return;
+        }
+
+        this.text.clearTween();
+        this.over.clearTween();
+
+        if (type === 'mouseenter') {
+            this.text.tween({ y: -8, opacity: 0 }, 100, 'easeOutCubic');
+            this.over.css({ y: 8, opacity: 0 }).tween({ y: 0, opacity: 1 }, 175, 'easeOutCubic', 50);
+        } else {
+            this.text.tween({ y: 0, opacity: 0.35 }, 300, 'easeOutCubic', 50);
+            this.over.tween({ y: 8, opacity: 0 }, 175, 'easeOutCubic');
+        }
+    };
+
+    onClick = () => {
+        this.events.emit(Events.CLICK, { target: this });
+    };
+
+    /**
+     * Public methods
+     */
+
+    active = () => {
+        this.clicked = true;
+    };
+
+    inactive = () => {
+        this.clicked = false;
+        this.onHover({ type: 'mouseleave' });
+    };
+
+    destroy = () => {
+        this.removeListeners();
+
+        return super.destroy();
+    };
+}
+
+/**
+ * @author pschroen / https://ufo.ai/
+ */
+
+class ListSelect extends Interface {
+    constructor({
+        list,
+        index,
+        styles
+    }) {
+        super('.list-select');
+
+        this.list = list;
+        this.index = index;
+        this.styles = styles;
+
+        this.clicked = false;
+
+        this.initHTML();
+
+        this.addListeners();
+    }
+
+    initHTML() {
+        this.css({
+            position: 'relative',
+            width: '100%',
+            height: 18,
+            textTransform: 'uppercase',
+            ...this.styles.panel,
+            whiteSpace: 'nowrap',
+            overflow: 'hidden',
+            cursor: 'pointer'
+        });
+
+        this.text = new Interface('.text');
+        this.text.css({
+            position: 'absolute',
+            width: '100%',
+            height: '100%'
+        });
+        this.text.text(this.list[this.index]);
+        this.add(this.text);
+
+        this.over = new Interface('.over');
+        this.over.css({
+            position: 'absolute',
+            width: '100%',
+            height: '100%',
+            opacity: 0
+        });
+        this.over.text(this.list[this.getNextIndex()]);
+        this.add(this.over);
+    }
+
+    getNextIndex = () => {
+        this.next = this.index + 1;
+
+        if (this.next >= this.list.length) {
+            this.next = 0;
+        }
+
+        return this.next;
+    };
+
+    addListeners() {
+        this.element.addEventListener('click', this.onClick);
+    }
+
+    removeListeners() {
+        this.element.removeEventListener('click', this.onClick);
+    }
+
+    /**
+     * Event handlers
+     */
+
+    onClick = () => {
+        if (this.clicked) {
+            return;
+        }
+
+        this.clicked = true;
+
+        this.index = this.next;
+
+        this.text.tween({ y: -8, opacity: 0 }, 100, 'easeOutCubic');
+        this.over.css({ y: 8, opacity: 0 }).tween({ y: 0, opacity: 1 }, 175, 'easeOutCubic', 50, () => {
+            this.text.text(this.list[this.index]);
+            this.text.css({ y: 0, opacity: 1 });
+            this.over.css({ y: 8, opacity: 0 });
+            this.over.text(this.list[this.getNextIndex()]);
+
+            this.clicked = false;
+        });
+
+        this.events.emit(Events.CLICK, { target: this });
+    };
+
+    /**
+     * Public methods
+     */
+
+    destroy = () => {
+        this.removeListeners();
+
+        return super.destroy();
+    };
+}
+
+/**
+ * @author pschroen / https://ufo.ai/
+ */
+
+class List extends Interface {
+    constructor({
+        list,
+        index,
+        callback,
+        styles
+    }) {
+        super('.list');
+
+        this.list = list;
+        this.index = index;
+        this.callback = callback;
+        this.styles = styles;
+
+        this.items = [];
+
+        this.initHTML();
+        this.initViews();
+    }
+
+    initHTML() {
+        this.css({
+            position: 'relative',
+            width: '100%',
+            height: 18
+        });
+    }
+
+    initViews() {
+        if (this.list.length > 2) {
+            const item = new ListSelect({ list: this.list, index: this.index, styles: this.styles });
+            item.events.on(Events.CLICK, this.onClick);
+            this.add(item);
+            this.items.push(item);
+        } else {
+            this.list.forEach((label, i) => {
+                const item = new ListToggle({ label, index: i, styles: this.styles });
+                item.events.on(Events.CLICK, this.onClick);
+
+                if (this.index === i) {
+                    item.onHover({ type: 'mouseenter' });
+                    item.active();
+                }
+
+                this.add(item);
+                this.items.push(item);
+            });
+        }
+    }
+
+    /**
+     * Event handlers
+     */
+
+    onClick = ({ target }) => {
+        const value = this.list[target.index];
+
+        this.events.emit(Events.UPDATE, value);
+
+        if (this.callback) {
+            this.callback(value);
+        }
+
+        if (this.list.length > 2) {
+            return;
+        }
+
+        if (!target.clicked) {
+            target.active();
+        }
+
+        this.items.forEach(item => {
+            if (item !== target && item.clicked) {
+                item.inactive();
+            }
+        });
+    };
+}
+
+class Vector2 {
+
+	constructor( x = 0, y = 0 ) {
+
+		this.isVector2 = true;
+
+		this.x = x;
+		this.y = y;
+
+	}
+
+	get width() {
+
+		return this.x;
+
+	}
+
+	set width( value ) {
+
+		this.x = value;
+
+	}
+
+	get height() {
+
+		return this.y;
+
+	}
+
+	set height( value ) {
+
+		this.y = value;
+
+	}
+
+	set( x, y ) {
+
+		this.x = x;
+		this.y = y;
+
+		return this;
+
+	}
+
+	setScalar( scalar ) {
+
+		this.x = scalar;
+		this.y = scalar;
+
+		return this;
+
+	}
+
+	setX( x ) {
+
+		this.x = x;
+
+		return this;
+
+	}
+
+	setY( y ) {
+
+		this.y = y;
+
+		return this;
+
+	}
+
+	setComponent( index, value ) {
+
+		switch ( index ) {
+
+			case 0: this.x = value; break;
+			case 1: this.y = value; break;
+			default: throw new Error( 'index is out of range: ' + index );
+
+		}
+
+		return this;
+
+	}
+
+	getComponent( index ) {
+
+		switch ( index ) {
+
+			case 0: return this.x;
+			case 1: return this.y;
+			default: throw new Error( 'index is out of range: ' + index );
+
+		}
+
+	}
+
+	clone() {
+
+		return new this.constructor( this.x, this.y );
+
+	}
+
+	copy( v ) {
+
+		this.x = v.x;
+		this.y = v.y;
+
+		return this;
+
+	}
+
+	add( v, w ) {
+
+		if ( w !== undefined ) {
+
+			console.warn( 'THREE.Vector2: .add() now only accepts one argument. Use .addVectors( a, b ) instead.' );
+			return this.addVectors( v, w );
+
+		}
+
+		this.x += v.x;
+		this.y += v.y;
+
+		return this;
+
+	}
+
+	addScalar( s ) {
+
+		this.x += s;
+		this.y += s;
+
+		return this;
+
+	}
+
+	addVectors( a, b ) {
+
+		this.x = a.x + b.x;
+		this.y = a.y + b.y;
+
+		return this;
+
+	}
+
+	addScaledVector( v, s ) {
+
+		this.x += v.x * s;
+		this.y += v.y * s;
+
+		return this;
+
+	}
+
+	sub( v, w ) {
+
+		if ( w !== undefined ) {
+
+			console.warn( 'THREE.Vector2: .sub() now only accepts one argument. Use .subVectors( a, b ) instead.' );
+			return this.subVectors( v, w );
+
+		}
+
+		this.x -= v.x;
+		this.y -= v.y;
+
+		return this;
+
+	}
+
+	subScalar( s ) {
+
+		this.x -= s;
+		this.y -= s;
+
+		return this;
+
+	}
+
+	subVectors( a, b ) {
+
+		this.x = a.x - b.x;
+		this.y = a.y - b.y;
+
+		return this;
+
+	}
+
+	multiply( v ) {
+
+		this.x *= v.x;
+		this.y *= v.y;
+
+		return this;
+
+	}
+
+	multiplyScalar( scalar ) {
+
+		this.x *= scalar;
+		this.y *= scalar;
+
+		return this;
+
+	}
+
+	divide( v ) {
+
+		this.x /= v.x;
+		this.y /= v.y;
+
+		return this;
+
+	}
+
+	divideScalar( scalar ) {
+
+		return this.multiplyScalar( 1 / scalar );
+
+	}
+
+	applyMatrix3( m ) {
+
+		const x = this.x, y = this.y;
+		const e = m.elements;
+
+		this.x = e[ 0 ] * x + e[ 3 ] * y + e[ 6 ];
+		this.y = e[ 1 ] * x + e[ 4 ] * y + e[ 7 ];
+
+		return this;
+
+	}
+
+	min( v ) {
+
+		this.x = Math.min( this.x, v.x );
+		this.y = Math.min( this.y, v.y );
+
+		return this;
+
+	}
+
+	max( v ) {
+
+		this.x = Math.max( this.x, v.x );
+		this.y = Math.max( this.y, v.y );
+
+		return this;
+
+	}
+
+	clamp( min, max ) {
+
+		// assumes min < max, componentwise
+
+		this.x = Math.max( min.x, Math.min( max.x, this.x ) );
+		this.y = Math.max( min.y, Math.min( max.y, this.y ) );
+
+		return this;
+
+	}
+
+	clampScalar( minVal, maxVal ) {
+
+		this.x = Math.max( minVal, Math.min( maxVal, this.x ) );
+		this.y = Math.max( minVal, Math.min( maxVal, this.y ) );
+
+		return this;
+
+	}
+
+	clampLength( min, max ) {
+
+		const length = this.length();
+
+		return this.divideScalar( length || 1 ).multiplyScalar( Math.max( min, Math.min( max, length ) ) );
+
+	}
+
+	floor() {
+
+		this.x = Math.floor( this.x );
+		this.y = Math.floor( this.y );
+
+		return this;
+
+	}
+
+	ceil() {
+
+		this.x = Math.ceil( this.x );
+		this.y = Math.ceil( this.y );
+
+		return this;
+
+	}
+
+	round() {
+
+		this.x = Math.round( this.x );
+		this.y = Math.round( this.y );
+
+		return this;
+
+	}
+
+	roundToZero() {
+
+		this.x = ( this.x < 0 ) ? Math.ceil( this.x ) : Math.floor( this.x );
+		this.y = ( this.y < 0 ) ? Math.ceil( this.y ) : Math.floor( this.y );
+
+		return this;
+
+	}
+
+	negate() {
+
+		this.x = - this.x;
+		this.y = - this.y;
+
+		return this;
+
+	}
+
+	dot( v ) {
+
+		return this.x * v.x + this.y * v.y;
+
+	}
+
+	cross( v ) {
+
+		return this.x * v.y - this.y * v.x;
+
+	}
+
+	lengthSq() {
+
+		return this.x * this.x + this.y * this.y;
+
+	}
+
+	length() {
+
+		return Math.sqrt( this.x * this.x + this.y * this.y );
+
+	}
+
+	manhattanLength() {
+
+		return Math.abs( this.x ) + Math.abs( this.y );
+
+	}
+
+	normalize() {
+
+		return this.divideScalar( this.length() || 1 );
+
+	}
+
+	angle() {
+
+		// computes the angle in radians with respect to the positive x-axis
+
+		const angle = Math.atan2( - this.y, - this.x ) + Math.PI;
+
+		return angle;
+
+	}
+
+	distanceTo( v ) {
+
+		return Math.sqrt( this.distanceToSquared( v ) );
+
+	}
+
+	distanceToSquared( v ) {
+
+		const dx = this.x - v.x, dy = this.y - v.y;
+		return dx * dx + dy * dy;
+
+	}
+
+	manhattanDistanceTo( v ) {
+
+		return Math.abs( this.x - v.x ) + Math.abs( this.y - v.y );
+
+	}
+
+	setLength( length ) {
+
+		return this.normalize().multiplyScalar( length );
+
+	}
+
+	lerp( v, alpha ) {
+
+		this.x += ( v.x - this.x ) * alpha;
+		this.y += ( v.y - this.y ) * alpha;
+
+		return this;
+
+	}
+
+	lerpVectors( v1, v2, alpha ) {
+
+		this.x = v1.x + ( v2.x - v1.x ) * alpha;
+		this.y = v1.y + ( v2.y - v1.y ) * alpha;
+
+		return this;
+
+	}
+
+	equals( v ) {
+
+		return ( ( v.x === this.x ) && ( v.y === this.y ) );
+
+	}
+
+	fromArray( array, offset = 0 ) {
+
+		this.x = array[ offset ];
+		this.y = array[ offset + 1 ];
+
+		return this;
+
+	}
+
+	toArray( array = [], offset = 0 ) {
+
+		array[ offset ] = this.x;
+		array[ offset + 1 ] = this.y;
+
+		return array;
+
+	}
+
+	fromBufferAttribute( attribute, index, offset ) {
+
+		if ( offset !== undefined ) {
+
+			console.warn( 'THREE.Vector2: offset has been removed from .fromBufferAttribute().' );
+
+		}
+
+		this.x = attribute.getX( index );
+		this.y = attribute.getY( index );
+
+		return this;
+
+	}
+
+	rotateAround( center, angle ) {
+
+		const c = Math.cos( angle ), s = Math.sin( angle );
+
+		const x = this.x - center.x;
+		const y = this.y - center.y;
+
+		this.x = x * c - y * s + center.x;
+		this.y = x * s + y * c + center.y;
+
+		return this;
+
+	}
+
+	random() {
+
+		this.x = Math.random();
+		this.y = Math.random();
+
+		return this;
+
+	}
+
+	*[ Symbol.iterator ]() {
+
+		yield this.x;
+		yield this.y;
+
+	}
+
+}
+
+/**
+ * @author pschroen / https://ufo.ai/
+ *
+ * Based on https://github.com/lo-th/uil
+ */
+
+class Slider extends Interface {
+    constructor({
+        label = '',
+        min = 0,
+        max = 1,
+        step = 0.01,
+        value = 0,
+        callback,
+        styles
+    }) {
+        super('.slider');
+
+        this.label = label;
+        this.min = min;
+        this.max = max;
+        this.step = step;
+        this.precision = this.getPrecision(this.step);
+        this.value = typeof value === 'string' ? parseFloat(value) : value;
+        this.callback = callback;
+        this.styles = styles;
+
+        this.range = this.max - this.min;
+        this.value = this.getValue(this.value);
+        this.lastValue = this.value;
+
+        this.origin = new Vector2();
+        this.mouse = new Vector2();
+        this.delta = new Vector2();
+        this.firstDown = false;
+        this.lastMouse = new Vector2();
+        this.lastOrigin = new Vector2();
+
+        this.initHTML();
+
+        this.addListeners();
+        this.update();
+    }
+
+    initHTML() {
+        this.css({
+            position: 'relative',
+            width: '100%',
+            height: 28,
+            cursor: 'w-resize'
+        });
+
+        this.text = new Interface('.text');
+        this.text.css({
+            position: 'relative',
+            cssFloat: 'left',
+            marginRight: 10,
+            textTransform: 'uppercase',
+            ...this.styles.panel,
+            lineHeight: 20,
+            whiteSpace: 'nowrap'
+        });
+        this.text.text(this.label);
+        this.add(this.text);
+
+        this.number = new Interface('.number');
+        this.number.css({
+            position: 'relative',
+            cssFloat: 'right',
+            ...this.styles.number,
+            lineHeight: 20,
+            letterSpacing: 0.5,
+            whiteSpace: 'nowrap'
+        });
+        this.add(this.number);
+
+        this.line = new Interface('.line');
+        this.line.css({
+            position: 'relative',
+            clear: 'both',
+            width: '100%',
+            height: 1,
+            backgroundColor: 'var(--ui-color)',
+            transformOrigin: 'left center'
+        });
+        this.add(this.line);
+    }
+
+    addListeners() {
+        this.element.addEventListener('pointerdown', this.onPointerDown);
+    }
+
+    removeListeners() {
+        this.element.removeEventListener('pointerdown', this.onPointerDown);
+    }
+
+    getPrecision(value) {
+        const str = String(value);
+        const delimiter = str.indexOf('.') + 1;
+
+        return !delimiter ? 0 : str.length - delimiter;
+    }
+
+    getValue(value) {
+        return parseFloat(clamp$1(value, this.min, this.max).toFixed(this.precision));
+    }
+
+    /**
+     * Event handlers
+     */
+
+    onPointerDown = e => {
+        this.firstDown = true;
+
+        this.onPointerMove(e);
+
+        window.addEventListener('pointermove', this.onPointerMove);
+        window.addEventListener('pointerup', this.onPointerUp);
+    };
+
+    onPointerMove = ({ clientX, clientY }) => {
+        const bounds = this.element.getBoundingClientRect();
+
+        const event = {
+            x: clientX,
+            y: clientY
+        };
+
+        this.mouse.copy(event);
+
+        if (this.firstDown) {
+            this.firstDown = false;
+            this.lastMouse.copy(event);
+            this.lastOrigin.subVectors(event, bounds);
+            this.lastValue = this.value;
+        }
+
+        this.delta.subVectors(this.mouse, this.lastMouse);
+        this.origin.addVectors(this.lastOrigin, this.delta);
+
+        let value = ((this.origin.x / bounds.width) * this.range + this.min) - this.lastValue;
+        value = Math.floor(value / this.step);
+        this.value = this.getValue(this.lastValue + value * this.step);
+
+        this.update();
+    };
+
+    onPointerUp = e => {
+        window.removeEventListener('pointerup', this.onPointerUp);
+        window.removeEventListener('pointermove', this.onPointerMove);
+
+        this.onPointerMove(e);
+    };
+
+    /**
+     * Public methods
+     */
+
+    update = () => {
+        const scaleX = (this.value - this.min) / this.range;
+
+        this.line.css({ scaleX });
+        this.number.text(this.value);
+
+        if (this.value !== this.lastValue) {
+            this.lastValue = this.value;
+
+            this.events.emit(Events.UPDATE, this.value);
+
+            if (this.callback) {
+                this.callback(this.value);
+            }
+        }
     };
 
     destroy = () => {
@@ -53098,489 +54166,6 @@ class Color {
 
 Color.NAMES = _colorKeywords;
 
-class Vector2 {
-
-	constructor( x = 0, y = 0 ) {
-
-		this.isVector2 = true;
-
-		this.x = x;
-		this.y = y;
-
-	}
-
-	get width() {
-
-		return this.x;
-
-	}
-
-	set width( value ) {
-
-		this.x = value;
-
-	}
-
-	get height() {
-
-		return this.y;
-
-	}
-
-	set height( value ) {
-
-		this.y = value;
-
-	}
-
-	set( x, y ) {
-
-		this.x = x;
-		this.y = y;
-
-		return this;
-
-	}
-
-	setScalar( scalar ) {
-
-		this.x = scalar;
-		this.y = scalar;
-
-		return this;
-
-	}
-
-	setX( x ) {
-
-		this.x = x;
-
-		return this;
-
-	}
-
-	setY( y ) {
-
-		this.y = y;
-
-		return this;
-
-	}
-
-	setComponent( index, value ) {
-
-		switch ( index ) {
-
-			case 0: this.x = value; break;
-			case 1: this.y = value; break;
-			default: throw new Error( 'index is out of range: ' + index );
-
-		}
-
-		return this;
-
-	}
-
-	getComponent( index ) {
-
-		switch ( index ) {
-
-			case 0: return this.x;
-			case 1: return this.y;
-			default: throw new Error( 'index is out of range: ' + index );
-
-		}
-
-	}
-
-	clone() {
-
-		return new this.constructor( this.x, this.y );
-
-	}
-
-	copy( v ) {
-
-		this.x = v.x;
-		this.y = v.y;
-
-		return this;
-
-	}
-
-	add( v, w ) {
-
-		if ( w !== undefined ) {
-
-			console.warn( 'THREE.Vector2: .add() now only accepts one argument. Use .addVectors( a, b ) instead.' );
-			return this.addVectors( v, w );
-
-		}
-
-		this.x += v.x;
-		this.y += v.y;
-
-		return this;
-
-	}
-
-	addScalar( s ) {
-
-		this.x += s;
-		this.y += s;
-
-		return this;
-
-	}
-
-	addVectors( a, b ) {
-
-		this.x = a.x + b.x;
-		this.y = a.y + b.y;
-
-		return this;
-
-	}
-
-	addScaledVector( v, s ) {
-
-		this.x += v.x * s;
-		this.y += v.y * s;
-
-		return this;
-
-	}
-
-	sub( v, w ) {
-
-		if ( w !== undefined ) {
-
-			console.warn( 'THREE.Vector2: .sub() now only accepts one argument. Use .subVectors( a, b ) instead.' );
-			return this.subVectors( v, w );
-
-		}
-
-		this.x -= v.x;
-		this.y -= v.y;
-
-		return this;
-
-	}
-
-	subScalar( s ) {
-
-		this.x -= s;
-		this.y -= s;
-
-		return this;
-
-	}
-
-	subVectors( a, b ) {
-
-		this.x = a.x - b.x;
-		this.y = a.y - b.y;
-
-		return this;
-
-	}
-
-	multiply( v ) {
-
-		this.x *= v.x;
-		this.y *= v.y;
-
-		return this;
-
-	}
-
-	multiplyScalar( scalar ) {
-
-		this.x *= scalar;
-		this.y *= scalar;
-
-		return this;
-
-	}
-
-	divide( v ) {
-
-		this.x /= v.x;
-		this.y /= v.y;
-
-		return this;
-
-	}
-
-	divideScalar( scalar ) {
-
-		return this.multiplyScalar( 1 / scalar );
-
-	}
-
-	applyMatrix3( m ) {
-
-		const x = this.x, y = this.y;
-		const e = m.elements;
-
-		this.x = e[ 0 ] * x + e[ 3 ] * y + e[ 6 ];
-		this.y = e[ 1 ] * x + e[ 4 ] * y + e[ 7 ];
-
-		return this;
-
-	}
-
-	min( v ) {
-
-		this.x = Math.min( this.x, v.x );
-		this.y = Math.min( this.y, v.y );
-
-		return this;
-
-	}
-
-	max( v ) {
-
-		this.x = Math.max( this.x, v.x );
-		this.y = Math.max( this.y, v.y );
-
-		return this;
-
-	}
-
-	clamp( min, max ) {
-
-		// assumes min < max, componentwise
-
-		this.x = Math.max( min.x, Math.min( max.x, this.x ) );
-		this.y = Math.max( min.y, Math.min( max.y, this.y ) );
-
-		return this;
-
-	}
-
-	clampScalar( minVal, maxVal ) {
-
-		this.x = Math.max( minVal, Math.min( maxVal, this.x ) );
-		this.y = Math.max( minVal, Math.min( maxVal, this.y ) );
-
-		return this;
-
-	}
-
-	clampLength( min, max ) {
-
-		const length = this.length();
-
-		return this.divideScalar( length || 1 ).multiplyScalar( Math.max( min, Math.min( max, length ) ) );
-
-	}
-
-	floor() {
-
-		this.x = Math.floor( this.x );
-		this.y = Math.floor( this.y );
-
-		return this;
-
-	}
-
-	ceil() {
-
-		this.x = Math.ceil( this.x );
-		this.y = Math.ceil( this.y );
-
-		return this;
-
-	}
-
-	round() {
-
-		this.x = Math.round( this.x );
-		this.y = Math.round( this.y );
-
-		return this;
-
-	}
-
-	roundToZero() {
-
-		this.x = ( this.x < 0 ) ? Math.ceil( this.x ) : Math.floor( this.x );
-		this.y = ( this.y < 0 ) ? Math.ceil( this.y ) : Math.floor( this.y );
-
-		return this;
-
-	}
-
-	negate() {
-
-		this.x = - this.x;
-		this.y = - this.y;
-
-		return this;
-
-	}
-
-	dot( v ) {
-
-		return this.x * v.x + this.y * v.y;
-
-	}
-
-	cross( v ) {
-
-		return this.x * v.y - this.y * v.x;
-
-	}
-
-	lengthSq() {
-
-		return this.x * this.x + this.y * this.y;
-
-	}
-
-	length() {
-
-		return Math.sqrt( this.x * this.x + this.y * this.y );
-
-	}
-
-	manhattanLength() {
-
-		return Math.abs( this.x ) + Math.abs( this.y );
-
-	}
-
-	normalize() {
-
-		return this.divideScalar( this.length() || 1 );
-
-	}
-
-	angle() {
-
-		// computes the angle in radians with respect to the positive x-axis
-
-		const angle = Math.atan2( - this.y, - this.x ) + Math.PI;
-
-		return angle;
-
-	}
-
-	distanceTo( v ) {
-
-		return Math.sqrt( this.distanceToSquared( v ) );
-
-	}
-
-	distanceToSquared( v ) {
-
-		const dx = this.x - v.x, dy = this.y - v.y;
-		return dx * dx + dy * dy;
-
-	}
-
-	manhattanDistanceTo( v ) {
-
-		return Math.abs( this.x - v.x ) + Math.abs( this.y - v.y );
-
-	}
-
-	setLength( length ) {
-
-		return this.normalize().multiplyScalar( length );
-
-	}
-
-	lerp( v, alpha ) {
-
-		this.x += ( v.x - this.x ) * alpha;
-		this.y += ( v.y - this.y ) * alpha;
-
-		return this;
-
-	}
-
-	lerpVectors( v1, v2, alpha ) {
-
-		this.x = v1.x + ( v2.x - v1.x ) * alpha;
-		this.y = v1.y + ( v2.y - v1.y ) * alpha;
-
-		return this;
-
-	}
-
-	equals( v ) {
-
-		return ( ( v.x === this.x ) && ( v.y === this.y ) );
-
-	}
-
-	fromArray( array, offset = 0 ) {
-
-		this.x = array[ offset ];
-		this.y = array[ offset + 1 ];
-
-		return this;
-
-	}
-
-	toArray( array = [], offset = 0 ) {
-
-		array[ offset ] = this.x;
-		array[ offset + 1 ] = this.y;
-
-		return array;
-
-	}
-
-	fromBufferAttribute( attribute, index, offset ) {
-
-		if ( offset !== undefined ) {
-
-			console.warn( 'THREE.Vector2: offset has been removed from .fromBufferAttribute().' );
-
-		}
-
-		this.x = attribute.getX( index );
-		this.y = attribute.getY( index );
-
-		return this;
-
-	}
-
-	rotateAround( center, angle ) {
-
-		const c = Math.cos( angle ), s = Math.sin( angle );
-
-		const x = this.x - center.x;
-		const y = this.y - center.y;
-
-		this.x = x * c - y * s + center.x;
-		this.y = x * s + y * c + center.y;
-
-		return this;
-
-	}
-
-	random() {
-
-		this.x = Math.random();
-		this.y = Math.random();
-
-		return this;
-
-	}
-
-	*[ Symbol.iterator ]() {
-
-		yield this.x;
-		yield this.y;
-
-	}
-
-}
-
 /**
  * @author pschroen / https://ufo.ai/
  *
@@ -54178,589 +54763,6 @@ class ColorPicker extends Interface {
  * @author pschroen / https://ufo.ai/
  */
 
-class ListToggle extends Interface {
-    constructor({
-        label,
-        index,
-        styles
-    }) {
-        super('.list-toggle');
-
-        this.label = label;
-        this.index = index;
-        this.styles = styles;
-
-        this.clicked = false;
-
-        this.initHTML();
-
-        this.addListeners();
-    }
-
-    initHTML() {
-        this.css({
-            position: 'relative',
-            cssFloat: 'left',
-            width: 54,
-            height: 18,
-            textTransform: 'uppercase',
-            ...this.styles.panel,
-            whiteSpace: 'nowrap',
-            overflow: 'hidden',
-            cursor: 'pointer'
-        });
-
-        this.text = new Interface('.text');
-        this.text.css({
-            position: 'absolute',
-            width: '100%',
-            height: '100%',
-            opacity: 0.35
-        });
-        this.text.text(this.label);
-        this.add(this.text);
-
-        this.over = new Interface('.over');
-        this.over.css({
-            position: 'absolute',
-            width: '100%',
-            height: '100%',
-            opacity: 0
-        });
-        this.over.text(this.label);
-        this.add(this.over);
-    }
-
-    addListeners() {
-        this.element.addEventListener('mouseenter', this.onHover);
-        this.element.addEventListener('mouseleave', this.onHover);
-        this.element.addEventListener('click', this.onClick);
-    }
-
-    removeListeners() {
-        this.element.removeEventListener('mouseenter', this.onHover);
-        this.element.removeEventListener('mouseleave', this.onHover);
-        this.element.removeEventListener('click', this.onClick);
-    }
-
-    /**
-     * Event handlers
-     */
-
-    onHover = ({ type }) => {
-        if (this.clicked) {
-            return;
-        }
-
-        this.text.clearTween();
-        this.over.clearTween();
-
-        if (type === 'mouseenter') {
-            this.text.tween({ y: -8, opacity: 0 }, 100, 'easeOutCubic');
-            this.over.css({ y: 8, opacity: 0 }).tween({ y: 0, opacity: 1 }, 175, 'easeOutCubic', 50);
-        } else {
-            this.text.tween({ y: 0, opacity: 0.35 }, 300, 'easeOutCubic', 50);
-            this.over.tween({ y: 8, opacity: 0 }, 175, 'easeOutCubic');
-        }
-    };
-
-    onClick = () => {
-        this.events.emit(Events.CLICK, { target: this });
-    };
-
-    /**
-     * Public methods
-     */
-
-    active = () => {
-        this.clicked = true;
-    };
-
-    inactive = () => {
-        this.clicked = false;
-        this.onHover({ type: 'mouseleave' });
-    };
-
-    destroy = () => {
-        this.removeListeners();
-
-        return super.destroy();
-    };
-}
-
-/**
- * @author pschroen / https://ufo.ai/
- */
-
-class ListSelect extends Interface {
-    constructor({
-        list,
-        index,
-        styles
-    }) {
-        super('.list-select');
-
-        this.list = list;
-        this.index = index;
-        this.styles = styles;
-
-        this.clicked = false;
-
-        this.initHTML();
-
-        this.addListeners();
-    }
-
-    initHTML() {
-        this.css({
-            position: 'relative',
-            width: '100%',
-            height: 18,
-            textTransform: 'uppercase',
-            ...this.styles.panel,
-            whiteSpace: 'nowrap',
-            overflow: 'hidden',
-            cursor: 'pointer'
-        });
-
-        this.text = new Interface('.text');
-        this.text.css({
-            position: 'absolute',
-            width: '100%',
-            height: '100%'
-        });
-        this.text.text(this.list[this.index]);
-        this.add(this.text);
-
-        this.over = new Interface('.over');
-        this.over.css({
-            position: 'absolute',
-            width: '100%',
-            height: '100%',
-            opacity: 0
-        });
-        this.over.text(this.list[this.getNextIndex()]);
-        this.add(this.over);
-    }
-
-    getNextIndex = () => {
-        this.next = this.index + 1;
-
-        if (this.next >= this.list.length) {
-            this.next = 0;
-        }
-
-        return this.next;
-    };
-
-    addListeners() {
-        this.element.addEventListener('click', this.onClick);
-    }
-
-    removeListeners() {
-        this.element.removeEventListener('click', this.onClick);
-    }
-
-    /**
-     * Event handlers
-     */
-
-    onClick = () => {
-        if (this.clicked) {
-            return;
-        }
-
-        this.clicked = true;
-
-        this.index = this.next;
-
-        this.text.tween({ y: -8, opacity: 0 }, 100, 'easeOutCubic');
-        this.over.css({ y: 8, opacity: 0 }).tween({ y: 0, opacity: 1 }, 175, 'easeOutCubic', 50, () => {
-            this.text.text(this.list[this.index]);
-            this.text.css({ y: 0, opacity: 1 });
-            this.over.css({ y: 8, opacity: 0 });
-            this.over.text(this.list[this.getNextIndex()]);
-
-            this.clicked = false;
-        });
-
-        this.events.emit(Events.CLICK, { target: this });
-    };
-
-    /**
-     * Public methods
-     */
-
-    destroy = () => {
-        this.removeListeners();
-
-        return super.destroy();
-    };
-}
-
-/**
- * @author pschroen / https://ufo.ai/
- */
-
-class List extends Interface {
-    constructor({
-        list,
-        index,
-        callback,
-        styles
-    }) {
-        super('.list');
-
-        this.list = list;
-        this.index = index;
-        this.callback = callback;
-        this.styles = styles;
-
-        this.items = [];
-
-        this.initHTML();
-        this.initViews();
-    }
-
-    initHTML() {
-        this.css({
-            position: 'relative',
-            width: '100%',
-            height: 18
-        });
-    }
-
-    initViews() {
-        if (this.list.length > 2) {
-            const item = new ListSelect({ list: this.list, index: this.index, styles: this.styles });
-            item.events.on(Events.CLICK, this.onClick);
-            this.add(item);
-            this.items.push(item);
-        } else {
-            this.list.forEach((label, i) => {
-                const item = new ListToggle({ label, index: i, styles: this.styles });
-                item.events.on(Events.CLICK, this.onClick);
-
-                if (this.index === i) {
-                    item.onHover({ type: 'mouseenter' });
-                    item.active();
-                }
-
-                this.add(item);
-                this.items.push(item);
-            });
-        }
-    }
-
-    /**
-     * Event handlers
-     */
-
-    onClick = ({ target }) => {
-        const value = this.list[target.index];
-
-        this.events.emit(Events.UPDATE, value);
-
-        if (this.callback) {
-            this.callback(value);
-        }
-
-        if (this.list.length > 2) {
-            return;
-        }
-
-        if (!target.clicked) {
-            target.active();
-        }
-
-        this.items.forEach(item => {
-            if (item !== target && item.clicked) {
-                item.inactive();
-            }
-        });
-    };
-}
-
-/**
- * @author pschroen / https://ufo.ai/
- *
- * Based on https://github.com/lo-th/uil
- */
-
-class Slider extends Interface {
-    constructor({
-        label = '',
-        min = 0,
-        max = 1,
-        step = 0.01,
-        value = 0,
-        callback,
-        styles
-    }) {
-        super('.slider');
-
-        this.label = label;
-        this.min = min;
-        this.max = max;
-        this.step = step;
-        this.precision = this.getPrecision(this.step);
-        this.value = typeof value === 'string' ? parseFloat(value) : value;
-        this.callback = callback;
-        this.styles = styles;
-
-        this.range = this.max - this.min;
-        this.value = this.getValue(this.value);
-        this.lastValue = this.value;
-
-        this.origin = new Vector2();
-        this.mouse = new Vector2();
-        this.delta = new Vector2();
-        this.firstDown = false;
-        this.lastMouse = new Vector2();
-        this.lastOrigin = new Vector2();
-
-        this.initHTML();
-
-        this.addListeners();
-        this.update();
-    }
-
-    initHTML() {
-        this.css({
-            position: 'relative',
-            width: '100%',
-            height: 28,
-            cursor: 'w-resize'
-        });
-
-        this.text = new Interface('.text');
-        this.text.css({
-            position: 'relative',
-            cssFloat: 'left',
-            marginRight: 10,
-            textTransform: 'uppercase',
-            ...this.styles.panel,
-            lineHeight: 20,
-            whiteSpace: 'nowrap'
-        });
-        this.text.text(this.label);
-        this.add(this.text);
-
-        this.number = new Interface('.number');
-        this.number.css({
-            position: 'relative',
-            cssFloat: 'right',
-            ...this.styles.number,
-            lineHeight: 20,
-            letterSpacing: 0.5,
-            whiteSpace: 'nowrap'
-        });
-        this.add(this.number);
-
-        this.line = new Interface('.line');
-        this.line.css({
-            position: 'relative',
-            clear: 'both',
-            width: '100%',
-            height: 1,
-            backgroundColor: 'var(--ui-color)',
-            transformOrigin: 'left center'
-        });
-        this.add(this.line);
-    }
-
-    addListeners() {
-        this.element.addEventListener('pointerdown', this.onPointerDown);
-    }
-
-    removeListeners() {
-        this.element.removeEventListener('pointerdown', this.onPointerDown);
-    }
-
-    getPrecision(value) {
-        const str = String(value);
-        const delimiter = str.indexOf('.') + 1;
-
-        return !delimiter ? 0 : str.length - delimiter;
-    }
-
-    getValue(value) {
-        return parseFloat(clamp$1(value, this.min, this.max).toFixed(this.precision));
-    }
-
-    /**
-     * Event handlers
-     */
-
-    onPointerDown = e => {
-        this.firstDown = true;
-
-        this.onPointerMove(e);
-
-        window.addEventListener('pointermove', this.onPointerMove);
-        window.addEventListener('pointerup', this.onPointerUp);
-    };
-
-    onPointerMove = ({ clientX, clientY }) => {
-        const bounds = this.element.getBoundingClientRect();
-
-        const event = {
-            x: clientX,
-            y: clientY
-        };
-
-        this.mouse.copy(event);
-
-        if (this.firstDown) {
-            this.firstDown = false;
-            this.lastMouse.copy(event);
-            this.lastOrigin.subVectors(event, bounds);
-            this.lastValue = this.value;
-        }
-
-        this.delta.subVectors(this.mouse, this.lastMouse);
-        this.origin.addVectors(this.lastOrigin, this.delta);
-
-        let value = ((this.origin.x / bounds.width) * this.range + this.min) - this.lastValue;
-        value = Math.floor(value / this.step);
-        this.value = this.getValue(this.lastValue + value * this.step);
-
-        this.update();
-    };
-
-    onPointerUp = e => {
-        window.removeEventListener('pointerup', this.onPointerUp);
-        window.removeEventListener('pointermove', this.onPointerMove);
-
-        this.onPointerMove(e);
-    };
-
-    /**
-     * Public methods
-     */
-
-    update = () => {
-        const scaleX = (this.value - this.min) / this.range;
-
-        this.line.css({ scaleX });
-        this.number.text(this.value);
-
-        if (this.value !== this.lastValue) {
-            this.lastValue = this.value;
-
-            this.events.emit(Events.UPDATE, this.value);
-
-            if (this.callback) {
-                this.callback(this.value);
-            }
-        }
-    };
-
-    destroy = () => {
-        this.removeListeners();
-
-        return super.destroy();
-    };
-}
-
-/**
- * @author pschroen / https://ufo.ai/
- *
- * Based on https://github.com/lo-th/uil
- */
-
-class Link extends Interface {
-    constructor({
-        value = '',
-        callback,
-        styles
-    }) {
-        super('.link');
-
-        this.value = value;
-        this.callback = callback;
-        this.styles = styles;
-
-        this.initHTML();
-
-        this.addListeners();
-    }
-
-    initHTML() {
-        this.css({
-            position: 'relative',
-            width: 'fit-content',
-            height: 20,
-            textTransform: 'uppercase',
-            ...this.styles.panel,
-            whiteSpace: 'nowrap',
-            cursor: 'pointer'
-        });
-        this.text(this.value);
-
-        this.line = new Interface('.line');
-        this.line.css({
-            left: 0,
-            right: 0,
-            bottom: 1,
-            height: 1,
-            backgroundColor: 'var(--ui-color)',
-            scaleX: 0
-        });
-        this.add(this.line);
-    }
-
-    addListeners() {
-        this.element.addEventListener('mouseenter', this.onHover);
-        this.element.addEventListener('mouseleave', this.onHover);
-        this.element.addEventListener('click', this.onClick);
-    }
-
-    removeListeners() {
-        this.element.removeEventListener('mouseenter', this.onHover);
-        this.element.removeEventListener('mouseleave', this.onHover);
-        this.element.removeEventListener('click', this.onClick);
-    }
-
-    /**
-     * Event handlers
-     */
-
-    onHover = ({ type }) => {
-        this.line.clearTween();
-
-        if (type === 'mouseenter') {
-            this.line.css({ transformOrigin: 'left center', scaleX: 0 }).tween({ scaleX: 1 }, 800, 'easeOutQuint');
-        } else {
-            this.line.css({ transformOrigin: 'right center' }).tween({ scaleX: 0 }, 500, 'easeOutQuint');
-        }
-    };
-
-    onClick = () => {
-        const value = this.value;
-
-        this.events.emit(Events.UPDATE, value);
-
-        if (this.callback) {
-            this.callback(value);
-        }
-    };
-
-    /**
-     * Public methods
-     */
-
-    destroy = () => {
-        this.removeListeners();
-
-        return super.destroy();
-    };
-}
-
-/**
- * @author pschroen / https://ufo.ai/
- */
-
 class PanelItem extends Interface {
     static styles = Styles;
 
@@ -54821,18 +54823,16 @@ class PanelItem extends Interface {
                 transformOrigin: 'left center'
             });
             this.add(this.line);
-        } else if (this.data.type === 'color') {
+        } else if (this.data.type === 'link') {
             this.css({
                 position: 'relative',
                 boxSizing: 'border-box',
                 width,
-                height: 19,
-                padding: '0 10px',
-                marginBottom: 7
+                padding: '2px 10px 0'
             });
 
-            this.color = new ColorPicker(this.data);
-            this.add(this.color);
+            this.link = new Link(this.data);
+            this.add(this.link);
         } else if (this.data.type === 'list') {
             this.css({
                 position: 'relative',
@@ -54846,8 +54846,8 @@ class PanelItem extends Interface {
             const callback = this.data.callback;
             const styles = this.data.styles;
 
-            this.text = new List({ list, index, callback, styles });
-            this.add(this.text);
+            this.list = new List({ list, index, callback, styles });
+            this.add(this.list);
         } else if (this.data.type === 'slider') {
             this.css({
                 position: 'relative',
@@ -54856,18 +54856,20 @@ class PanelItem extends Interface {
                 padding: '0 10px'
             });
 
-            this.text = new Slider(this.data);
-            this.add(this.text);
-        } else if (this.data.type === 'link') {
+            this.slider = new Slider(this.data);
+            this.add(this.slider);
+        } else if (this.data.type === 'color') {
             this.css({
                 position: 'relative',
                 boxSizing: 'border-box',
                 width,
-                padding: '2px 10px 0'
+                height: 19,
+                padding: '0 10px',
+                marginBottom: 7
             });
 
-            this.text = new Link(this.data);
-            this.add(this.text);
+            this.color = new ColorPicker(this.data);
+            this.add(this.color);
         }
     }
 
@@ -56814,7 +56816,7 @@ class Reflector extends Group {
 /**
  * @author pschroen / https://ufo.ai/
  *
- * Based on https://threejs.org/examples/#webgl_shadowmap_pcss by spidersharma
+ * Based on https://threejs.org/examples/#webgl_shadowmap_pcss by spidersharma03
  */
 
 class SoftShadows {
@@ -57381,6 +57383,8 @@ class Point3D extends Group {
             type: this.type
         });
         Point3D.container.add(this.point);
+
+        this.panel = this.point.text.panel;
     }
 
     /**
@@ -57448,7 +57452,7 @@ class Point3D extends Group {
     };
 
     addPanel = item => {
-        this.point.text.panel.add(item);
+        this.panel.add(item);
     };
 
     resize = () => {
@@ -97059,7 +97063,7 @@ void main() {
 }
 `;
 
-// Based on {@link module:three/examples/jsm/postprocessing/UnrealBloomPass.js} by spidersharma and bhouston
+// Based on {@link module:three/examples/jsm/postprocessing/UnrealBloomPass.js} by spidersharma03 and bhouston
 
 var blur$1 = /* glsl */`
 float gaussianPdf(float x, float sigma) {
@@ -97139,7 +97143,7 @@ void main() {
 }
 `;
 
-// Based on {@link module:three/examples/jsm/postprocessing/UnrealBloomPass.js} by spidersharma and bhouston
+// Based on {@link module:three/examples/jsm/postprocessing/UnrealBloomPass.js} by spidersharma03 and bhouston
 
 var fragmentShader$e = /* glsl */`
 precision highp float;
@@ -97807,7 +97811,7 @@ void main() {
 }
 `;
 
-// Based on https://github.com/pmndrs/postprocessing
+// Based on https://github.com/pmndrs/postprocessing by vanruesc
 
 var blendOverlay = /* glsl */`
 float blendOverlay(float x, float y) {
@@ -102906,4 +102910,4 @@ class OrbitControls extends EventDispatcher {
 
 }
 
-export { ACESFilmicToneMapping, AddEquation, AddOperation, AdditiveAnimationBlendMode, AdditiveBlending, AfterimageMaterial, AlphaFormat, AlwaysDepth, AlwaysStencilFunc, AmbientLight, AmbientLightProbe, AnimationClip, AnimationLoader, AnimationMixer, AnimationObjectGroup, AnimationUtils, ArcCurve, ArrayCamera, ArrowHelper, AssetLoader, Assets, Audio$1 as Audio, AudioAnalyser, AudioContext$1 as AudioContext, AudioListener, AudioLoader, AxesHelper, BackSide, BadTVMaterial, BasicDepthPacking, BasicMaterial, BasicShadowMap, BloomCompositeMaterial, BlurMaterial, BokehBlurMaterial1, BokehBlurMaterial2, Bone, BooleanKeyframeTrack, Box2, Box3, Box3Helper, BoxGeometry$2 as BoxBufferGeometry, BoxGeometry$2 as BoxGeometry, BoxHelper, BufferAttribute, BufferGeometry, BufferGeometryLoader, BufferGeometryLoaderThread, ByteType, Cache, Camera, CameraHelper, CameraMotionBlurMaterial, CanvasTexture, CapsuleGeometry as CapsuleBufferGeometry, CapsuleGeometry, CatmullRomCurve3, ChromaticAberrationMaterial, CineonToneMapping, CircleGeometry as CircleBufferGeometry, CircleGeometry, ClampToEdgeWrapping, Clock, Cluster, Color$1 as Color, ColorKeyframeTrack, ColorManagement$1 as ColorManagement, ColorMaterial, ColorPicker, Component, CompressedTexture, CompressedTextureLoader, ConeGeometry as ConeBufferGeometry, ConeGeometry, CopyMaterial, CubeCamera, CubeReflectionMapping, CubeRefractionMapping, CubeTexture, CubeTextureLoader, CubeUVReflectionMapping, CubicBezierCurve, CubicBezierCurve3, CubicInterpolant, CullFaceBack, CullFaceFront, CullFaceFrontBack, CullFaceNone, Curve, CurvePath, CustomBlending, CustomToneMapping, CylinderGeometry as CylinderBufferGeometry, CylinderGeometry, Cylindrical, DEG2RAD$1 as DEG2RAD, Data3DTexture, DataArrayTexture, DataTexture, DataTexture2DArray, DataTexture3D, DataTextureLoader, DataUtils, DecrementStencilOp, DecrementWrapStencilOp, DefaultLoadingManager, DepthFormat, DepthMaskMaterial, DepthStencilFormat, DepthTexture, Device, DirectionalLight, DirectionalLightHelper, DiscreteInterpolant, DodecahedronGeometry as DodecahedronBufferGeometry, DodecahedronGeometry, DoubleSide, DstAlphaFactor, DstColorFactor, DynamicCopyUsage, DynamicDrawUsage, DynamicReadUsage, Easing, EdgesGeometry, EllipseCurve, EnvironmentTextureLoader, EqualDepth, EqualStencilFunc, EquirectangularReflectionMapping, EquirectangularRefractionMapping, Euler, EventDispatcher, EventEmitter, Events, ExtrudeGeometry as ExtrudeBufferGeometry, ExtrudeGeometry, FXAAMaterial, FastGaussianBlurMaterial, FileLoader, FlatShading, Float16BufferAttribute, Float32BufferAttribute, Float64BufferAttribute, FloatType, FlowMaterial, Flowmap, Fog, FogExp2, Font, FontLoader, FramebufferTexture, FresnelMaterial, FrontSide, Frustum, GLBufferAttribute, GLSL1, GLSL3, Global, GreaterDepth, GreaterEqualDepth, GreaterEqualStencilFunc, GreaterStencilFunc, GridHelper, Group, HalfFloatType, Header, HeaderInfo, HemisphereLight, HemisphereLightHelper, HemisphereLightProbe, IcosahedronGeometry as IcosahedronBufferGeometry, IcosahedronGeometry, ImageBitmapLoader, ImageBitmapLoaderThread, ImageLoader, ImageUtils, ImmediateRenderObject, ImprovedNoise, IncrementStencilOp, IncrementWrapStencilOp, InstancedBufferAttribute, InstancedBufferGeometry, InstancedInterleavedBuffer, InstancedMesh, Int16BufferAttribute, Int32BufferAttribute, Int8BufferAttribute, IntType, Interface, InterleavedBuffer, InterleavedBufferAttribute, Interpolant, InterpolateDiscrete, InterpolateLinear, InterpolateSmooth, InvertStencilOp, KeepStencilOp, KeyframeTrack, LOD, LatheGeometry as LatheBufferGeometry, LatheGeometry, Layers, LessDepth, LessEqualDepth, LessEqualStencilFunc, LessStencilFunc, Light, LightProbe, Line, Line3, LineBasicMaterial, LineCurve, LineCurve3, LineDashedMaterial, LineLoop, LineSegments, LinearEncoding, LinearFilter, LinearInterpolant, LinearMipMapLinearFilter, LinearMipMapNearestFilter, LinearMipmapLinearFilter, LinearMipmapNearestFilter, LinearSRGBColorSpace$1 as LinearSRGBColorSpace, LinearToneMapping, LinkedList, List, ListSelect, ListToggle, Loader$1 as Loader, LoaderUtils, LoadingManager, LoopOnce, LoopPingPong, LoopRepeat, LuminanceAlphaFormat, LuminanceFormat, LuminosityMaterial, MOUSE, Magnetic, Material, MaterialLoader, MaterialPanelController, MathUtils, Matrix3, Matrix4, MaxEquation, Mesh, MeshBasicMaterial, MeshDepthMaterial, MeshDistanceMaterial, MeshLambertMaterial, MeshMatcapMaterial, MeshNormalMaterial, MeshPhongMaterial, MeshPhysicalMaterial, MeshStandardMaterial, MeshToonMaterial, MinEquation, MirroredRepeatWrapping, MixOperation, MultiLoader, MultiplyBlending, MultiplyOperation, NearestFilter, NearestMipMapLinearFilter, NearestMipMapNearestFilter, NearestMipmapLinearFilter, NearestMipmapNearestFilter, NeverDepth, NeverStencilFunc, NoBlending, NoColorSpace, NoToneMapping, NormalAnimationBlendMode, NormalBlending, NormalMaterial, NotEqualDepth, NotEqualStencilFunc, NumberKeyframeTrack, Object3D, ObjectLoader, ObjectPool, ObjectSpaceNormalMap, OctahedronGeometry as OctahedronBufferGeometry, OctahedronGeometry, OimoPhysics, OimoPhysicsBuffer, OimoPhysicsController, OneFactor, OneMinusDstAlphaFactor, OneMinusDstColorFactor, OneMinusSrcAlphaFactor, OneMinusSrcColorFactor, OrbitControls, OrthographicCamera, PCFShadowMap, PCFSoftShadowMap, PMREMGenerator, Panel, PanelItem, ParametricGeometry, Path, PerspectiveCamera, Plane, PlaneGeometry as PlaneBufferGeometry, PlaneGeometry, PlaneHelper, Point, Point3D, PointLight, PointLightHelper, PointText, Points, PointsMaterial, PoissonDiscBlurMaterial, PolarGridHelper, PolyhedronGeometry as PolyhedronBufferGeometry, PolyhedronGeometry, PositionalAudio, PropertyBinding, PropertyMixer, QuadraticBezierCurve, QuadraticBezierCurve3, Quaternion, QuaternionKeyframeTrack, QuaternionLinearInterpolant, RAD2DEG$1 as RAD2DEG, REVISION, RGBADepthPacking, RGBAFormat, RGBAIntegerFormat, RGBA_ASTC_10x10_Format, RGBA_ASTC_10x5_Format, RGBA_ASTC_10x6_Format, RGBA_ASTC_10x8_Format, RGBA_ASTC_12x10_Format, RGBA_ASTC_12x12_Format, RGBA_ASTC_4x4_Format, RGBA_ASTC_5x4_Format, RGBA_ASTC_5x5_Format, RGBA_ASTC_6x5_Format, RGBA_ASTC_6x6_Format, RGBA_ASTC_8x5_Format, RGBA_ASTC_8x6_Format, RGBA_ASTC_8x8_Format, RGBA_BPTC_Format, RGBA_ETC2_EAC_Format, RGBA_PVRTC_2BPPV1_Format, RGBA_PVRTC_4BPPV1_Format, RGBA_S3TC_DXT1_Format, RGBA_S3TC_DXT3_Format, RGBA_S3TC_DXT5_Format, RGBFormat, RGBMaterial, RGB_ETC1_Format, RGB_ETC2_Format, RGB_PVRTC_2BPPV1_Format, RGB_PVRTC_4BPPV1_Format, RGB_S3TC_DXT1_Format, RGFormat, RGIntegerFormat, RawShaderMaterial, Ray, Raycaster, RectAreaLight, RedFormat, RedIntegerFormat, Reflector, ReflectorBlurMaterial, ReflectorDudvMaterial, ReflectorMaterial, ReinhardToneMapping, RepeatWrapping, ReplaceStencilOp, Reticle, ReticleText, ReverseSubtractEquation, RigidBodyConfig$1 as RigidBodyConfig, RigidBodyType$1 as RigidBodyType, RingGeometry as RingBufferGeometry, RingGeometry, SRGBColorSpace$1 as SRGBColorSpace, SVGLoader, Scene, SceneCompositeMaterial, ShaderChunk, ShaderLib, ShaderMaterial, ShadowMaterial, ShadowTextureMaterial, Shape$2 as Shape, ShapeGeometry as ShapeBufferGeometry, ShapeGeometry, ShapePath, ShapeUtils, ShortType, SimplexNoise, Skeleton, SkeletonHelper, SkinnedMesh, Slider, Smooth, SmoothShading, SmoothSkew, SmoothViews, SoftShadows, Sound, Sound3D, Source, Sphere, SphereGeometry$2 as SphereBufferGeometry, SphereGeometry$2 as SphereGeometry, Spherical, SphericalHarmonics3, SphericalJointConfig$1 as SphericalJointConfig, SplineCurve, SpotLight, SpotLightHelper, Sprite, SpriteMaterial, SrcAlphaFactor, SrcAlphaSaturateFactor, SrcColorFactor, Stage, StaticCopyUsage, StaticDrawUsage, StaticReadUsage, StereoCamera, StreamCopyUsage, StreamDrawUsage, StreamReadUsage, StringKeyframeTrack, Styles, SubtractEquation, SubtractiveBlending, TOUCH, TangentSpaceNormalMap, TargetNumber, TetrahedronGeometry as TetrahedronBufferGeometry, TetrahedronGeometry, TextGeometry, TextGeometryLoader, TextGeometryLoaderThread, TextMaterial, Texture, TextureLoader, Thread, Ticker, TiltShiftMaterial, TorusGeometry as TorusBufferGeometry, TorusGeometry, TorusKnotGeometry as TorusKnotBufferGeometry, TorusKnotGeometry, Tracker, Triangle, TriangleFanDrawMode, TriangleStripDrawMode, TrianglesDrawMode, TubeGeometry as TubeBufferGeometry, TubeGeometry, Tween, UI, UVMapping, Uint16BufferAttribute, Uint32BufferAttribute, Uint8BufferAttribute, Uint8ClampedBufferAttribute, Uniform, UniformsLib, UniformsUtils, UnrealBloomBlurMaterial, UnrealBloomCompositeMaterial, UnsignedByteType, UnsignedInt248Type, UnsignedIntType, UnsignedShort4444Type, UnsignedShort5551Type, UnsignedShortType, VSMShadowMap, Vector2$1 as Vector2, Vector3, Vector4, VectorKeyframeTrack, VideoGlitchMaterial, VideoTexture, WebAudio, WebAudio3D, WebAudioParam, WebGL1Renderer, WebGL3DRenderTarget, WebGLArrayRenderTarget, WebGLCubeRenderTarget, WebGLMultipleRenderTargets, WebGLMultisampleRenderTarget, WebGLRenderTarget, WebGLRenderer, WebGLUtils, WireframeGeometry, Wobble, WrapAroundEnding, ZeroCurvatureEnding, ZeroFactor, ZeroSlopeEnding, ZeroStencilOp, _SRGBAFormat, absolute, basename, brightness, ceilPowerOfTwo$1 as ceilPowerOfTwo, clamp$1 as clamp, clearTween, damp$1 as damp, defer, degToRad$1 as degToRad, delayedCall, denormalize$2 as denormalize, euclideanModulo$1 as euclideanModulo, extension, floorPowerOfTwo$1 as floorPowerOfTwo, generateUUID$1 as generateUUID, getConstructor, getFrustum, getFrustumFromHeight, getFullscreenTriangle, getKeyByValue, getScreenSpaceBox, getSphericalCube, guid, headsTails, inverseLerp$1 as inverseLerp, isPowerOfTwo$1 as isPowerOfTwo, lerp$2 as lerp, lerpCameras, mapLinear$1 as mapLinear, normalize$1 as normalize, pingpong$1 as pingpong, radToDeg$1 as radToDeg, randFloat$1 as randFloat, randFloatSpread$1 as randFloatSpread, randInt$1 as randInt, sRGBEncoding, seededRandom$1 as seededRandom, setQuaternionFromProperEuler$1 as setQuaternionFromProperEuler, shuffle, smootherstep$2 as smootherstep, smoothstep$1 as smoothstep, ticker, tween, wait };
+export { ACESFilmicToneMapping, AddEquation, AddOperation, AdditiveAnimationBlendMode, AdditiveBlending, AfterimageMaterial, AlphaFormat, AlwaysDepth, AlwaysStencilFunc, AmbientLight, AmbientLightProbe, AnimationClip, AnimationLoader, AnimationMixer, AnimationObjectGroup, AnimationUtils, ArcCurve, ArrayCamera, ArrowHelper, AssetLoader, Assets, Audio$1 as Audio, AudioAnalyser, AudioContext$1 as AudioContext, AudioListener, AudioLoader, AxesHelper, BackSide, BadTVMaterial, BasicDepthPacking, BasicMaterial, BasicShadowMap, BloomCompositeMaterial, BlurMaterial, BokehBlurMaterial1, BokehBlurMaterial2, Bone, BooleanKeyframeTrack, Box2, Box3, Box3Helper, BoxGeometry$2 as BoxBufferGeometry, BoxGeometry$2 as BoxGeometry, BoxHelper, BufferAttribute, BufferGeometry, BufferGeometryLoader, BufferGeometryLoaderThread, BufferLoader, ByteType, Cache, Camera, CameraHelper, CameraMotionBlurMaterial, CanvasTexture, CapsuleGeometry as CapsuleBufferGeometry, CapsuleGeometry, CatmullRomCurve3, ChromaticAberrationMaterial, CineonToneMapping, CircleGeometry as CircleBufferGeometry, CircleGeometry, ClampToEdgeWrapping, Clock, Cluster, Color$1 as Color, ColorKeyframeTrack, ColorManagement$1 as ColorManagement, ColorMaterial, ColorPicker, Component, CompressedTexture, CompressedTextureLoader, ConeGeometry as ConeBufferGeometry, ConeGeometry, CopyMaterial, CubeCamera, CubeReflectionMapping, CubeRefractionMapping, CubeTexture, CubeTextureLoader, CubeUVReflectionMapping, CubicBezierCurve, CubicBezierCurve3, CubicInterpolant, CullFaceBack, CullFaceFront, CullFaceFrontBack, CullFaceNone, Curve, CurvePath, CustomBlending, CustomToneMapping, CylinderGeometry as CylinderBufferGeometry, CylinderGeometry, Cylindrical, DEG2RAD$1 as DEG2RAD, Data3DTexture, DataArrayTexture, DataTexture, DataTexture2DArray, DataTexture3D, DataTextureLoader, DataUtils, DecrementStencilOp, DecrementWrapStencilOp, DefaultLoadingManager, DepthFormat, DepthMaskMaterial, DepthStencilFormat, DepthTexture, Device, DirectionalLight, DirectionalLightHelper, DiscreteInterpolant, DodecahedronGeometry as DodecahedronBufferGeometry, DodecahedronGeometry, DoubleSide, DstAlphaFactor, DstColorFactor, DynamicCopyUsage, DynamicDrawUsage, DynamicReadUsage, Easing, EdgesGeometry, EllipseCurve, EnvironmentTextureLoader, EqualDepth, EqualStencilFunc, EquirectangularReflectionMapping, EquirectangularRefractionMapping, Euler, EventDispatcher, EventEmitter, Events, ExtrudeGeometry as ExtrudeBufferGeometry, ExtrudeGeometry, FXAAMaterial, FastGaussianBlurMaterial, FileLoader, FlatShading, Float16BufferAttribute, Float32BufferAttribute, Float64BufferAttribute, FloatType, FlowMaterial, Flowmap, Fog, FogExp2, Font, FontLoader, FramebufferTexture, FresnelMaterial, FrontSide, Frustum, GLBufferAttribute, GLSL1, GLSL3, Global, GreaterDepth, GreaterEqualDepth, GreaterEqualStencilFunc, GreaterStencilFunc, GridHelper, Group, HalfFloatType, Header, HeaderInfo, HemisphereLight, HemisphereLightHelper, HemisphereLightProbe, IcosahedronGeometry as IcosahedronBufferGeometry, IcosahedronGeometry, ImageBitmapLoader, ImageBitmapLoaderThread, ImageLoader, ImageUtils, ImmediateRenderObject, ImprovedNoise, IncrementStencilOp, IncrementWrapStencilOp, InstancedBufferAttribute, InstancedBufferGeometry, InstancedInterleavedBuffer, InstancedMesh, Int16BufferAttribute, Int32BufferAttribute, Int8BufferAttribute, IntType, Interface, InterleavedBuffer, InterleavedBufferAttribute, Interpolant, InterpolateDiscrete, InterpolateLinear, InterpolateSmooth, InvertStencilOp, KeepStencilOp, KeyframeTrack, LOD, LatheGeometry as LatheBufferGeometry, LatheGeometry, Layers, LessDepth, LessEqualDepth, LessEqualStencilFunc, LessStencilFunc, Light, LightProbe, Line, Line3, LineBasicMaterial, LineCurve, LineCurve3, LineDashedMaterial, LineLoop, LineSegments, LinearEncoding, LinearFilter, LinearInterpolant, LinearMipMapLinearFilter, LinearMipMapNearestFilter, LinearMipmapLinearFilter, LinearMipmapNearestFilter, LinearSRGBColorSpace$1 as LinearSRGBColorSpace, LinearToneMapping, Link, LinkedList, List, ListSelect, ListToggle, Loader$1 as Loader, LoaderUtils, LoadingManager, LoopOnce, LoopPingPong, LoopRepeat, LuminanceAlphaFormat, LuminanceFormat, LuminosityMaterial, MOUSE, Magnetic, Material, MaterialLoader, MaterialPanelController, MathUtils, Matrix3, Matrix4, MaxEquation, Mesh, MeshBasicMaterial, MeshDepthMaterial, MeshDistanceMaterial, MeshLambertMaterial, MeshMatcapMaterial, MeshNormalMaterial, MeshPhongMaterial, MeshPhysicalMaterial, MeshStandardMaterial, MeshToonMaterial, MinEquation, MirroredRepeatWrapping, MixOperation, MultiLoader, MultiplyBlending, MultiplyOperation, NearestFilter, NearestMipMapLinearFilter, NearestMipMapNearestFilter, NearestMipmapLinearFilter, NearestMipmapNearestFilter, NeverDepth, NeverStencilFunc, NoBlending, NoColorSpace, NoToneMapping, NormalAnimationBlendMode, NormalBlending, NormalMaterial, NotEqualDepth, NotEqualStencilFunc, NumberKeyframeTrack, Object3D, ObjectLoader, ObjectPool, ObjectSpaceNormalMap, OctahedronGeometry as OctahedronBufferGeometry, OctahedronGeometry, OimoPhysics, OimoPhysicsBuffer, OimoPhysicsController, OneFactor, OneMinusDstAlphaFactor, OneMinusDstColorFactor, OneMinusSrcAlphaFactor, OneMinusSrcColorFactor, OrbitControls, OrthographicCamera, PCFShadowMap, PCFSoftShadowMap, PMREMGenerator, Panel, PanelItem, ParametricGeometry, Path, PerspectiveCamera, Plane, PlaneGeometry as PlaneBufferGeometry, PlaneGeometry, PlaneHelper, Point, Point3D, PointLight, PointLightHelper, PointText, Points, PointsMaterial, PoissonDiscBlurMaterial, PolarGridHelper, PolyhedronGeometry as PolyhedronBufferGeometry, PolyhedronGeometry, PositionalAudio, PropertyBinding, PropertyMixer, QuadraticBezierCurve, QuadraticBezierCurve3, Quaternion, QuaternionKeyframeTrack, QuaternionLinearInterpolant, RAD2DEG$1 as RAD2DEG, REVISION, RGBADepthPacking, RGBAFormat, RGBAIntegerFormat, RGBA_ASTC_10x10_Format, RGBA_ASTC_10x5_Format, RGBA_ASTC_10x6_Format, RGBA_ASTC_10x8_Format, RGBA_ASTC_12x10_Format, RGBA_ASTC_12x12_Format, RGBA_ASTC_4x4_Format, RGBA_ASTC_5x4_Format, RGBA_ASTC_5x5_Format, RGBA_ASTC_6x5_Format, RGBA_ASTC_6x6_Format, RGBA_ASTC_8x5_Format, RGBA_ASTC_8x6_Format, RGBA_ASTC_8x8_Format, RGBA_BPTC_Format, RGBA_ETC2_EAC_Format, RGBA_PVRTC_2BPPV1_Format, RGBA_PVRTC_4BPPV1_Format, RGBA_S3TC_DXT1_Format, RGBA_S3TC_DXT3_Format, RGBA_S3TC_DXT5_Format, RGBFormat, RGBMaterial, RGB_ETC1_Format, RGB_ETC2_Format, RGB_PVRTC_2BPPV1_Format, RGB_PVRTC_4BPPV1_Format, RGB_S3TC_DXT1_Format, RGFormat, RGIntegerFormat, RawShaderMaterial, Ray, Raycaster, RectAreaLight, RedFormat, RedIntegerFormat, Reflector, ReflectorBlurMaterial, ReflectorDudvMaterial, ReflectorMaterial, ReinhardToneMapping, RepeatWrapping, ReplaceStencilOp, Reticle, ReticleText, ReverseSubtractEquation, RigidBodyConfig$1 as RigidBodyConfig, RigidBodyType$1 as RigidBodyType, RingGeometry as RingBufferGeometry, RingGeometry, SRGBColorSpace$1 as SRGBColorSpace, SVGLoader, Scene, SceneCompositeMaterial, ShaderChunk, ShaderLib, ShaderMaterial, ShadowMaterial, ShadowTextureMaterial, Shape$2 as Shape, ShapeGeometry as ShapeBufferGeometry, ShapeGeometry, ShapePath, ShapeUtils, ShortType, SimplexNoise, Skeleton, SkeletonHelper, SkinnedMesh, Slider, Smooth, SmoothShading, SmoothSkew, SmoothViews, SoftShadows, Sound, Sound3D, Source, Sphere, SphereGeometry$2 as SphereBufferGeometry, SphereGeometry$2 as SphereGeometry, Spherical, SphericalHarmonics3, SphericalJointConfig$1 as SphericalJointConfig, SplineCurve, SpotLight, SpotLightHelper, Sprite, SpriteMaterial, SrcAlphaFactor, SrcAlphaSaturateFactor, SrcColorFactor, Stage, StaticCopyUsage, StaticDrawUsage, StaticReadUsage, StereoCamera, StreamCopyUsage, StreamDrawUsage, StreamReadUsage, StringKeyframeTrack, Styles, SubtractEquation, SubtractiveBlending, TOUCH, TangentSpaceNormalMap, TargetNumber, TetrahedronGeometry as TetrahedronBufferGeometry, TetrahedronGeometry, TextGeometry, TextGeometryLoader, TextGeometryLoaderThread, TextMaterial, Texture, TextureLoader, Thread, Ticker, TiltShiftMaterial, TorusGeometry as TorusBufferGeometry, TorusGeometry, TorusKnotGeometry as TorusKnotBufferGeometry, TorusKnotGeometry, Tracker, Triangle, TriangleFanDrawMode, TriangleStripDrawMode, TrianglesDrawMode, TubeGeometry as TubeBufferGeometry, TubeGeometry, Tween, UI, UVMapping, Uint16BufferAttribute, Uint32BufferAttribute, Uint8BufferAttribute, Uint8ClampedBufferAttribute, Uniform, UniformsLib, UniformsUtils, UnrealBloomBlurMaterial, UnrealBloomCompositeMaterial, UnsignedByteType, UnsignedInt248Type, UnsignedIntType, UnsignedShort4444Type, UnsignedShort5551Type, UnsignedShortType, VSMShadowMap, Vector2$1 as Vector2, Vector3, Vector4, VectorKeyframeTrack, VideoGlitchMaterial, VideoTexture, WebAudio, WebAudio3D, WebAudioParam, WebGL1Renderer, WebGL3DRenderTarget, WebGLArrayRenderTarget, WebGLCubeRenderTarget, WebGLMultipleRenderTargets, WebGLMultisampleRenderTarget, WebGLRenderTarget, WebGLRenderer, WebGLUtils, WireframeGeometry, Wobble, WrapAroundEnding, ZeroCurvatureEnding, ZeroFactor, ZeroSlopeEnding, ZeroStencilOp, _SRGBAFormat, absolute, basename, brightness, ceilPowerOfTwo$1 as ceilPowerOfTwo, clamp$1 as clamp, clearTween, damp$1 as damp, defer, degToRad$1 as degToRad, delayedCall, denormalize$2 as denormalize, euclideanModulo$1 as euclideanModulo, extension, floorPowerOfTwo$1 as floorPowerOfTwo, generateUUID$1 as generateUUID, getConstructor, getFrustum, getFrustumFromHeight, getFullscreenTriangle, getKeyByValue, getScreenSpaceBox, getSphericalCube, guid, headsTails, inverseLerp$1 as inverseLerp, isPowerOfTwo$1 as isPowerOfTwo, lerp$2 as lerp, lerpCameras, mapLinear$1 as mapLinear, normalize$1 as normalize, pingpong$1 as pingpong, radToDeg$1 as radToDeg, randFloat$1 as randFloat, randFloatSpread$1 as randFloatSpread, randInt$1 as randInt, sRGBEncoding, seededRandom$1 as seededRandom, setQuaternionFromProperEuler$1 as setQuaternionFromProperEuler, shuffle, smootherstep$2 as smootherstep, smoothstep$1 as smoothstep, ticker, tween, wait };

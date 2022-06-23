@@ -24,7 +24,7 @@
 <body>
     <div id="root"></div>
     <script type="module">
-        import { AssetLoader, Assets, Device, Events, Interface, Panel, PanelItem, Stage, WebAudio, randInt } from '../build/alien.js';
+        import { AssetLoader, Assets, Device, Events, Interface, Panel, PanelItem, Stage, WebAudio, headsTails } from '../build/alien.js';
 
         class Config {
             static ASSETS = [
@@ -212,7 +212,7 @@
                 bells.play(startTime + eighthNoteTime);
 
                 // Play the accents on bar 2, beat 4
-                if (randInt(0, 1)) {
+                if (headsTails()) {
                     accent1.play(startTime + barLength + 6 * eighthNoteTime);
                 } else {
                     accent2.play(startTime + barLength + 6 * eighthNoteTime);

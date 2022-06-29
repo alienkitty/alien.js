@@ -17,7 +17,7 @@
 
         import rgbshift from '../src/shaders/modules/rgbshift/rgbshift.glsl.js';
 
-        const vertexCompositeShader = /* glsl */`
+        const vertexCompositeShader = /* glsl */ `
             in vec3 position;
             in vec2 uv;
 
@@ -30,7 +30,7 @@
             }
         `;
 
-        const fragmentCompositeShader = /* glsl */`
+        const fragmentCompositeShader = /* glsl */ `
             precision highp float;
 
             uniform sampler2D tScene;
@@ -171,7 +171,7 @@
 
                     shader.vertexShader = shader.vertexShader.replace(
                         'void main() {',
-                        /* glsl */`
+                        /* glsl */ `
                         uniform mat4 textureMatrix;
                         out vec4 vCoord;
 
@@ -181,7 +181,7 @@
 
                     shader.vertexShader = shader.vertexShader.replace(
                         '#include <project_vertex>',
-                        /* glsl */`
+                        /* glsl */ `
                         #include <project_vertex>
 
                         vCoord = textureMatrix * vec4(transformed, 1.0);
@@ -190,7 +190,7 @@
 
                     shader.fragmentShader = shader.fragmentShader.replace(
                         'void main() {',
-                        /* glsl */`
+                        /* glsl */ `
                         uniform sampler2D reflectMap;
                         in vec4 vCoord;
 
@@ -200,7 +200,7 @@
 
                     shader.fragmentShader = shader.fragmentShader.replace(
                         'vec3 totalEmissiveRadiance = emissive;',
-                        /* glsl */`
+                        /* glsl */ `
                         vec3 totalEmissiveRadiance = emissive;
 
                         totalEmissiveRadiance += textureProj(reflectMap, vCoord).rgb * 0.2;

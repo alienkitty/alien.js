@@ -1,6 +1,6 @@
 // From https://github.com/mattdesl/glsl-random
 
-export default /* glsl */`
+export default /* glsl */ `
 float random(vec2 co) {
     float a = 12.9898;
     float b = 78.233;

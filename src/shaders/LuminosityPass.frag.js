@@ -1,6 +1,6 @@
 // Based on {@link module:three/examples/jsm/shaders/LuminosityHighPassShader.js} by bhouston
 
-export default /* glsl */`
+export default /* glsl */ `
 precision highp float;
 
 uniform sampler2D tMap;

@@ -1,6 +1,6 @@
 // From https://oframe.github.io/ogl/examples/?src=mouse-flowmap.html by gordonnl
 
-export default /* glsl */`
+export default /* glsl */ `
 precision highp float;
 
 uniform sampler2D tMap;

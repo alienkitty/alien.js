@@ -4,7 +4,7 @@
 import smootherstep from './modules/smootherstep/smootherstep.glsl.js';
 import blur from './modules/blur/blur.glsl.js';
 
-export default /* glsl */`
+export default /* glsl */ `
 precision highp float;
 
 uniform sampler2D tMap;

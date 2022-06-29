@@ -1,6 +1,6 @@
 import blur13 from './modules/blur/blur13.glsl.js';
 
-export default /* glsl */`
+export default /* glsl */ `
 precision highp float;
 
 uniform sampler2D tMap;

@@ -1,6 +1,6 @@
 // From https://github.com/mattdesl/glsl-fxaa
 
-export default /* glsl */`
+export default /* glsl */ `
 #ifndef FXAA_REDUCE_MIN
     #define FXAA_REDUCE_MIN   (1.0/ 128.0)
 #endif

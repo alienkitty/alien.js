@@ -2,7 +2,7 @@
 // Based on https://github.com/spite/Wagner
 // Based on https://github.com/spite/codevember-2016
 
-export default /* glsl */`
+export default /* glsl */ `
 const int NUM_TAPS = 27;
 const float rcp_maxdist = 1.0 / 4.22244;
 

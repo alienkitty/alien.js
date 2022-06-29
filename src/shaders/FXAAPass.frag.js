@@ -2,7 +2,7 @@
 
 import fxaa from './modules/fxaa/fxaa.glsl.js';
 
-export default /* glsl */`
+export default /* glsl */ `
 precision highp float;
 
 uniform sampler2D tMap;

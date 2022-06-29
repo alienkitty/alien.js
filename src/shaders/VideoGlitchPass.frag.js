@@ -2,7 +2,7 @@
 
 import simplex2d from './modules/noise/simplex2d.glsl.js';
 
-export default /* glsl */`
+export default /* glsl */ `
 precision highp float;
 
 uniform sampler2D tMap;

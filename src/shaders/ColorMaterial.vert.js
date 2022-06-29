@@ -1,4 +1,4 @@
-export default /* glsl */`
+export default /* glsl */ `
 in vec3 position;
 
 uniform mat4 modelViewMatrix;

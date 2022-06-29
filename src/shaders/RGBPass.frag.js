@@ -1,6 +1,6 @@
 import rgbshift from './modules/rgbshift/rgbshift.glsl.js';
 
-export default /* glsl */`
+export default /* glsl */ `
 precision highp float;
 
 uniform sampler2D tMap;

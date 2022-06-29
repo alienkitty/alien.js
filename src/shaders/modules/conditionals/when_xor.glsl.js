@@ -1,6 +1,6 @@
 // From https://github.com/dmnsgn/glsl-conditionals
 
-export default /* glsl */`
+export default /* glsl */ `
 float when_xor(float a, float b) {
   return (a + b) % 2.0;
 }

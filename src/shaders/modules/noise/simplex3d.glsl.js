@@ -1,6 +1,6 @@
 // From https://github.com/hughsk/glsl-noise
 
-export default /* glsl */`
+export default /* glsl */ `
 //
 // Description : Array and textureless GLSL 2D/3D/4D simplex
 //               noise functions.

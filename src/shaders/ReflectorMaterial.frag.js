@@ -1,7 +1,7 @@
 import blendOverlay from './modules/blending/overlay.glsl.js';
 import dither from './modules/dither/dither.glsl.js';
 
-export default /* glsl */`
+export default /* glsl */ `
 precision highp float;
 
 uniform sampler2D tMap;

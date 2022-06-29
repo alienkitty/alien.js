@@ -408,7 +408,7 @@ class UI extends Interface {
 
 // Based on https://codepen.io/ReGGae/pen/rNxpVEd
 
-const vertexTransitionShader = /* glsl */`
+const vertexTransitionShader = /* glsl */ `
     in vec3 position;
     in vec2 uv;
 
@@ -421,7 +421,7 @@ const vertexTransitionShader = /* glsl */`
     }
 `;
 
-const fragmentTransitionShader = /* glsl */`
+const fragmentTransitionShader = /* glsl */ `
     precision highp float;
 
     #define PI 3.1415926535897932384626433832795

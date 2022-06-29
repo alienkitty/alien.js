@@ -1,6 +1,6 @@
 // From https://github.com/glslify/glsl-easings
 
-export default /* glsl */`
+export default /* glsl */ `
 float quarticInOut(float t) {
   return t < 0.5
     ? +8.0 * pow(t, 4.0)

@@ -2,7 +2,7 @@
 
 import when_gt from './modules/conditionals/when_gt.glsl.js';
 
-export default /* glsl */`
+export default /* glsl */ `
 precision highp float;
 
 uniform sampler2D tOld;

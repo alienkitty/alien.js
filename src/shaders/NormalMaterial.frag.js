@@ -1,4 +1,4 @@
-export default /* glsl */`
+export default /* glsl */ `
 precision highp float;
 
 in vec3 vNormal;

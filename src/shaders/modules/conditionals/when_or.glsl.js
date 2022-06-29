@@ -1,6 +1,6 @@
 // From https://github.com/dmnsgn/glsl-conditionals
 
-export default /* glsl */`
+export default /* glsl */ `
 float when_or(float a, float b) {
   return min(a + b, 1.0);
 }

@@ -344,7 +344,7 @@ class Container extends Interface {
 import rgbshift from '../../../src/shaders/modules/rgbshift/rgbshift.glsl.js';
 import dither from '../../../src/shaders/modules/dither/dither.glsl.js';
 
-const vertexCompositeShader = /* glsl */`
+const vertexCompositeShader = /* glsl */ `
     in vec3 position;
     in vec2 uv;
 
@@ -357,7 +357,7 @@ const vertexCompositeShader = /* glsl */`
     }
 `;
 
-const fragmentCompositeShader = /* glsl */`
+const fragmentCompositeShader = /* glsl */ `
     precision highp float;
 
     uniform sampler2D tScene;

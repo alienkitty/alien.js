@@ -1,6 +1,6 @@
 // Based on {@link module:three/examples/jsm/postprocessing/UnrealBloomPass.js} by spidersharma03 and bhouston
 
-export default /* glsl */`
+export default /* glsl */ `
 float gaussianPdf(float x, float sigma) {
     return 0.39894 * exp(-0.5 * x * x / (sigma * sigma)) / sigma;
 }

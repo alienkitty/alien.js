@@ -1,6 +1,6 @@
 // Based on https://www.shadertoy.com/view/4lVfDt by battlebottle
 
-export default /* glsl */`
+export default /* glsl */ `
 precision highp float;
 
 #define PI          3.14

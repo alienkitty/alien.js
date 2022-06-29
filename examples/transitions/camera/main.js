@@ -433,7 +433,7 @@ import rotateUV from '../../../src/shaders/modules/transformUV/rotateUV.glsl.js'
 import rgbshift from '../../../src/shaders/modules/rgbshift/rgbshift.glsl.js';
 import dither from '../../../src/shaders/modules/dither/dither.glsl.js';
 
-const vertexCompositeShader = /* glsl */`
+const vertexCompositeShader = /* glsl */ `
     in vec3 position;
     in vec2 uv;
 
@@ -446,7 +446,7 @@ const vertexCompositeShader = /* glsl */`
     }
 `;
 
-const fragmentCompositeShader = /* glsl */`
+const fragmentCompositeShader = /* glsl */ `
     precision highp float;
 
     uniform sampler2D tScene;
@@ -497,7 +497,7 @@ class CompositeMaterial extends RawShaderMaterial {
 import blur from '../../../src/shaders/modules/blur/blur.glsl.js';
 import blueNoise from '../../../src/shaders/modules/noise/blue-noise.glsl.js';
 
-const vertexBlurShader = /* glsl */`
+const vertexBlurShader = /* glsl */ `
     in vec3 position;
     in vec2 uv;
 
@@ -510,7 +510,7 @@ const vertexBlurShader = /* glsl */`
     }
 `;
 
-const fragmentBlurShader = /* glsl */`
+const fragmentBlurShader = /* glsl */ `
     precision highp float;
 
     uniform sampler2D tMap;
@@ -920,7 +920,7 @@ class Floor extends Group {
 
             shader.vertexShader = shader.vertexShader.replace(
                 'void main() {',
-                /* glsl */`
+                /* glsl */ `
                 uniform mat3 uvTransform;
                 uniform mat4 textureMatrix;
                 out vec2 vUv;
@@ -932,7 +932,7 @@ class Floor extends Group {
 
             shader.vertexShader = shader.vertexShader.replace(
                 '#include <project_vertex>',
-                /* glsl */`
+                /* glsl */ `
                 #include <project_vertex>
 
                 vUv = (uvTransform * vec3(uv, 1)).xy;
@@ -942,7 +942,7 @@ class Floor extends Group {
 
             shader.fragmentShader = shader.fragmentShader.replace(
                 'void main() {',
-                /* glsl */`
+                /* glsl */ `
                 uniform sampler2D map;
                 uniform sampler2D reflectMap;
                 uniform sampler2D reflectMapBlur;
@@ -957,7 +957,7 @@ class Floor extends Group {
 
             shader.fragmentShader = shader.fragmentShader.replace(
                 'gl_FragColor = vec4( color, opacity * ( 1.0 - getShadowMask() ) );',
-                /* glsl */`
+                /* glsl */ `
                 vec2 reflectionUv = vCoord.xy / vCoord.w;
 
                 vec4 dudv = texture(map, vUv);

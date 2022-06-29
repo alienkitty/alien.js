@@ -1,6 +1,6 @@
 // Based on {@link module:three/examples/jsm/postprocessing/UnrealBloomPass.js} by spidersharma03 and bhouston
 
-export default /* glsl */`
+export default /* glsl */ `
 precision highp float;
 
 uniform sampler2D tBlur1;

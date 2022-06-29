@@ -1,7 +1,7 @@
 import blur from './modules/blur/poisson-disc-blur12.glsl.js';
 import blueNoise from './modules/noise/blue-noise.glsl.js';
 
-export default /* glsl */`
+export default /* glsl */ `
 precision highp float;
 
 uniform sampler2D tMap;

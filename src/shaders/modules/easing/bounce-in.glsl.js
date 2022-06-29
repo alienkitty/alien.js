@@ -2,7 +2,7 @@
 
 import bounceOut from './bounce-out.glsl.js';
 
-export default /* glsl */`
+export default /* glsl */ `
 ${bounceOut}
 
 float bounceIn(float t) {

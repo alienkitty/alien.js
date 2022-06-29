@@ -1,6 +1,6 @@
 // From https://github.com/glslify/glsl-easings
 
-export default /* glsl */`
+export default /* glsl */ `
 float cubicInOut(float t) {
   return t < 0.5
     ? 4.0 * t * t * t

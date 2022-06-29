@@ -1,6 +1,6 @@
 // Based on https://www.shadertoy.com/view/ltKBDd by battlebottle
 
-export default /* glsl */`
+export default /* glsl */ `
 precision highp float;
 
 uniform sampler2D tMap;

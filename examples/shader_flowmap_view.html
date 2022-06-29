@@ -19,7 +19,7 @@
 
         // Based on https://oframe.github.io/ogl/examples/?src=mouse-flowmap.html by gordonnl
 
-        const vertexFlowShader = /* glsl */`
+        const vertexFlowShader = /* glsl */ `
             in vec3 position;
             in vec2 uv;
 
@@ -35,7 +35,7 @@
             }
         `;
 
-        const fragmentFlowShader = /* glsl */`
+        const fragmentFlowShader = /* glsl */ `
             precision highp float;
 
             uniform sampler2D tMap;
@@ -79,7 +79,7 @@
             }
         }
 
-        const vertexCompositeShader = /* glsl */`
+        const vertexCompositeShader = /* glsl */ `
             in vec3 position;
             in vec2 uv;
 
@@ -92,7 +92,7 @@
             }
         `;
 
-        const fragmentCompositeShader = /* glsl */`
+        const fragmentCompositeShader = /* glsl */ `
             precision highp float;
 
             uniform sampler2D tScene;

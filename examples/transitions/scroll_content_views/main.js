@@ -338,7 +338,7 @@ class Container extends Interface {
     }
 }
 
-const vertexTransitionShader = /* glsl */`
+const vertexTransitionShader = /* glsl */ `
     in vec3 position;
     in vec2 uv;
 
@@ -351,7 +351,7 @@ const vertexTransitionShader = /* glsl */`
     }
 `;
 
-const fragmentTransitionShader = /* glsl */`
+const fragmentTransitionShader = /* glsl */ `
     precision highp float;
 
     uniform sampler2D tMap1;

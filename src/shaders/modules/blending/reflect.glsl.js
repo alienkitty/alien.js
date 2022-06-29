@@ -1,6 +1,6 @@
 // Based on https://github.com/pmndrs/postprocessing by vanruesc
 
-export default /* glsl */`
+export default /* glsl */ `
 float blendReflect(float x, float y) {
     return (y == 1.0) ? y : min(x * x / (1.0 - y), 1.0);
 }

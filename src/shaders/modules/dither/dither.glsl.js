@@ -2,7 +2,7 @@
 
 import random from '../random/random.glsl.js';
 
-export default /* glsl */`
+export default /* glsl */ `
 ${random}
 
 vec3 dither(vec3 color) {

@@ -1,6 +1,6 @@
 // Based on https://github.com/blaze33/droneWorld by blaze33
 
-export default /* glsl */`
+export default /* glsl */ `
 precision highp float;
 
 uniform vec3 cameraPosition;

@@ -1,6 +1,6 @@
 // Based on https://github.com/mattdesl/glsl-fxaa
 
-export default /* glsl */`
+export default /* glsl */ `
 in vec3 position;
 in vec2 uv;
 

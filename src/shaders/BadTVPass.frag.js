@@ -1,6 +1,6 @@
 import badtv from './modules/badtv/badtv.glsl.js';
 
-export default /* glsl */`
+export default /* glsl */ `
 precision highp float;
 
 uniform sampler2D tMap;

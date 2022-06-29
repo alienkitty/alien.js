@@ -18,7 +18,7 @@ export class SoftShadows {
 
         shader = shader.replace(
             '#ifdef USE_SHADOWMAP',
-            /* glsl */`
+            /* glsl */ `
             #ifdef USE_SHADOWMAP
 
             #define LIGHT_WORLD_SIZE ${size.toFixed(3)}
@@ -114,7 +114,7 @@ export class SoftShadows {
 
         shader = shader.replace(
             '#if defined( SHADOWMAP_TYPE_PCF )',
-            /* glsl */`
+            /* glsl */ `
             return PCSS(shadowMap, shadowCoord);
 
             #if defined( SHADOWMAP_TYPE_PCF )

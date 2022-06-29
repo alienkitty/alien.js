@@ -1,6 +1,6 @@
 // From https://github.com/hughsk/glsl-noise
 
-export default /* glsl */`
+export default /* glsl */ `
 //
 // GLSL textureless classic 3D noise "cnoise",
 // with an RSL-style periodic variant "pnoise".

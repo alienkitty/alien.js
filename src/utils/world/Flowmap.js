@@ -8,6 +8,7 @@ import {
     GLSL3,
     HalfFloatType,
     Mesh,
+    NoBlending,
     OrthographicCamera,
     RawShaderMaterial,
     Scene,
@@ -61,6 +62,8 @@ export class Flowmap {
             },
             vertexShader,
             fragmentShader,
+            blending: NoBlending,
+            depthWrite: false,
             depthTest: false
         });
 

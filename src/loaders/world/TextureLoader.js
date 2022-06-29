@@ -85,8 +85,6 @@ export class TextureLoader extends Loader {
                     texture.onUpdate = null;
                 };
 
-                Assets.add(path, texture);
-
                 this.increment();
 
                 if (callback) {
@@ -99,6 +97,8 @@ export class TextureLoader extends Loader {
                     callback(event);
                 }
             });
+
+            Assets.add(path, texture);
         }
 
         this.total++;

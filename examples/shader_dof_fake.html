@@ -181,7 +181,11 @@
                     }
                 }
 
-                FragColor = vec4(mix(colAcum, vec3(amount), uDebug ? 0.5 : 0.0), 1.0);
+                FragColor = vec4(colAcum, 1.0);
+
+                if (uDebug) {
+                    FragColor.rgb = mix(FragColor.rgb, mix(FragColor.rgb, vec3(1), 0.5), vec3(amount));
+                }
             }
         `;
 

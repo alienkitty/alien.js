@@ -1183,6 +1183,7 @@ class RenderManager {
                 start();
             }
         } else {
+            // First view
             view.scene.visible = true;
             this.transitionMaterial.uniforms.tMap1.value = view.renderTarget.texture;
             this.view = view;

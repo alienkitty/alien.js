@@ -230,6 +230,12 @@ export class Point3D extends Group {
             point.animateOut(true);
             point.inactive();
         });
+
+        if (this.hover) {
+            this.hover.onHover({ type: 'out' });
+            this.hover = null;
+            this.root.css({ cursor: '' });
+        }
     };
 
     static destroy = () => {

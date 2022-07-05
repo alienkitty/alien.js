@@ -21,7 +21,7 @@
 
         import rgbshift from '../src/shaders/modules/rgbshift/rgbshift.glsl.js';
 
-        const vertexCompositeShader = /* glsl */`
+        const vertexCompositeShader = /* glsl */ `
             in vec3 position;
             in vec2 uv;
 
@@ -34,7 +34,7 @@
             }
         `;
 
-        const fragmentCompositeShader = /* glsl */`
+        const fragmentCompositeShader = /* glsl */ `
             precision highp float;
 
             uniform sampler2D tScene;
@@ -155,7 +155,7 @@
 
                     shader.fragmentShader = shader.fragmentShader.replace(
                         'void main() {',
-                        /* glsl */`
+                        /* glsl */ `
                         uniform sampler2D thicknessMap;
                         uniform float thicknessDistortion;
                         uniform float thicknessAmbient;
@@ -179,7 +179,7 @@
                         '#include <lights_fragment_begin>',
                         ShaderChunk.lights_fragment_begin.replaceAll(
                             'RE_Direct( directLight, geometry, material, reflectedLight );',
-                            /* glsl */`
+                            /* glsl */ `
                             RE_Direct( directLight, geometry, material, reflectedLight );
                             RE_Direct_Scattering(directLight, vUv2, geometry, reflectedLight);
                             `
@@ -277,7 +277,7 @@
 
                     shader.fragmentShader = shader.fragmentShader.replace(
                         'void main() {',
-                        /* glsl */`
+                        /* glsl */ `
                         uniform sampler2D thicknessMap;
                         uniform float thicknessDistortion;
                         uniform float thicknessAmbient;
@@ -301,7 +301,7 @@
                         '#include <lights_fragment_begin>',
                         ShaderChunk.lights_fragment_begin.replaceAll(
                             'RE_Direct( directLight, geometry, material, reflectedLight );',
-                            /* glsl */`
+                            /* glsl */ `
                             RE_Direct( directLight, geometry, material, reflectedLight );
                             RE_Direct_Scattering(directLight, vUv2, geometry, material, reflectedLight);
                             `

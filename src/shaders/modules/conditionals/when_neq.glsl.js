@@ -1,6 +1,6 @@
 // From https://github.com/dmnsgn/glsl-conditionals
 
-export default /* glsl */`
+export default /* glsl */ `
 float when_neq(float x, float y) {
   return abs(sign(x - y));
 }

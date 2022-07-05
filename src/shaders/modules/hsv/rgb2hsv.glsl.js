@@ -1,6 +1,6 @@
 // From http://lolengine.net/blog/2013/07/27/rgb-to-hsv-in-glsl by sam
 
-export default /* glsl */`
+export default /* glsl */ `
 vec3 rgb2hsv(vec3 c) {
     vec4 K = vec4(0.0, -1.0 / 3.0, 2.0 / 3.0, -1.0);
     vec4 p = c.g < c.b ? vec4(c.bg, K.wz) : vec4(c.gb, K.xy);

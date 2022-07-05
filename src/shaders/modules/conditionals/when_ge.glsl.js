@@ -2,7 +2,7 @@ import when_lt from './when_lt.glsl.js';
 
 // From https://github.com/dmnsgn/glsl-conditionals
 
-export default /* glsl */`
+export default /* glsl */ `
 ${when_lt}
 
 float when_ge(float x, float y) {

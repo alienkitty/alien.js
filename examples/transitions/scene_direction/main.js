@@ -421,7 +421,7 @@ class UI extends Interface {
     };
 }
 
-const vertexTransitionShader = /* glsl */`
+const vertexTransitionShader = /* glsl */ `
     in vec3 position;
     in vec2 uv;
 
@@ -434,7 +434,7 @@ const vertexTransitionShader = /* glsl */`
     }
 `;
 
-const fragmentTransitionShader = /* glsl */`
+const fragmentTransitionShader = /* glsl */ `
     precision highp float;
 
     uniform sampler2D tMap1;
@@ -1204,6 +1204,7 @@ class RenderManager {
                 start();
             }
         } else {
+            // First view
             view.scene.visible = true;
             this.transitionMaterial.uniforms.tMap1.value = view.renderTarget.texture;
             this.view = view;

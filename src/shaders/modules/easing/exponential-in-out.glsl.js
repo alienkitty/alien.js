@@ -1,6 +1,6 @@
 // From https://github.com/glslify/glsl-easings
 
-export default /* glsl */`
+export default /* glsl */ `
 float exponentialInOut(float t) {
   return t == 0.0 || t == 1.0
     ? t

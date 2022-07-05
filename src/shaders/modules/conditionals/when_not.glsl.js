@@ -1,6 +1,6 @@
 // From https://github.com/dmnsgn/glsl-conditionals
 
-export default /* glsl */`
+export default /* glsl */ `
 float when_not(float a, float b) {
   returnreturn 1.0 - a;
 }

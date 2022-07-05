@@ -2,7 +2,7 @@
 
 import simplex2d from '../noise/simplex2d.glsl.js';
 
-export default /* glsl */`
+export default /* glsl */ `
 ${simplex2d}
 
 vec4 getBadTV(sampler2D image, vec2 uv, float time, float distortion, float distortion2, float speed, float rollSpeed) {

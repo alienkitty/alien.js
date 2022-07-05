@@ -1,6 +1,6 @@
 // Based on https://github.com/pmndrs/postprocessing by vanruesc
 
-export default /* glsl */`
+export default /* glsl */ `
 float blendColorBurn(float x, float y) {
     return (y == 0.0) ? y : max(1.0 - (1.0 - x) / y, 0.0);
 }

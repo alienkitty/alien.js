@@ -1,6 +1,6 @@
 // Based on {@link module:three/examples/jsm/shaders/RGBShiftShader.js} by felixturner
 
-export default /* glsl */`
+export default /* glsl */ `
 vec4 getRGB(sampler2D image, vec2 uv, float angle, float amount) {
     vec2 offset = vec2(cos(angle), sin(angle)) * amount;
     vec4 r = texture(image, uv + offset);

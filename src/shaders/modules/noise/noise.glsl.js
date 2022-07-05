@@ -2,7 +2,7 @@
 
 import random from '../random/random.glsl.js';
 
-export default /* glsl */`
+export default /* glsl */ `
 ${random}
 
 float noise(vec2 st) {

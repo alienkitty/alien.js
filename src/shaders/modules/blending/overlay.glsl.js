@@ -1,6 +1,6 @@
 // Based on https://github.com/pmndrs/postprocessing by vanruesc
 
-export default /* glsl */`
+export default /* glsl */ `
 float blendOverlay(float x, float y) {
     return (x < 0.5) ? (2.0 * x * y) : (1.0 - 2.0 * (1.0 - x) * (1.0 - y));
 }

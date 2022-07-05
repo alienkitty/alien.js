@@ -1,4 +1,4 @@
-export default /* glsl */`
+export default /* glsl */ `
 vec2 scaleUV(vec2 uv, float scale, vec2 mid) {
     uv -= mid;
     uv *= 1.0 / scale;

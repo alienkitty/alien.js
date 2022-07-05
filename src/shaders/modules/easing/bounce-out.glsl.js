@@ -1,6 +1,6 @@
 // From https://github.com/glslify/glsl-easings
 
-export default /* glsl */`
+export default /* glsl */ `
 #ifndef PI
 #define PI 3.141592653589793
 #endif

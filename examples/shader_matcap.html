@@ -41,7 +41,7 @@
 
                     shader.vertexShader = shader.vertexShader.replace(
                         'void main() {',
-                        /* glsl */`
+                        /* glsl */ `
                         uniform float time;
 
                         ${periodic3d}
@@ -52,7 +52,7 @@
 
                     shader.vertexShader = shader.vertexShader.replace(
                         '#include <begin_vertex>',
-                        /* glsl */`
+                        /* glsl */ `
                         float f = 0.05 * pnoise(vec3(2.0 * normal + time), vec3(10.0));
                         vec3 transformed = position + f * normal;
                         `

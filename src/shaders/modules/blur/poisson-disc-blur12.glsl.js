@@ -2,7 +2,7 @@
 // Based on https://github.com/spite/Wagner
 // Based on https://github.com/spite/codevember-2016
 
-export default /* glsl */`
+export default /* glsl */ `
 const int NUM_TAPS = 12;
 
 vec4 poissonSample(sampler2D image, vec2 uv, vec2 resolution, float radius, vec4 basis) {

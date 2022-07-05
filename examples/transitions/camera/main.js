@@ -433,7 +433,7 @@ import rotateUV from '../../../src/shaders/modules/transformUV/rotateUV.glsl.js'
 import rgbshift from '../../../src/shaders/modules/rgbshift/rgbshift.glsl.js';
 import dither from '../../../src/shaders/modules/dither/dither.glsl.js';
 
-const vertexCompositeShader = /* glsl */`
+const vertexCompositeShader = /* glsl */ `
     in vec3 position;
     in vec2 uv;
 
@@ -446,7 +446,7 @@ const vertexCompositeShader = /* glsl */`
     }
 `;
 
-const fragmentCompositeShader = /* glsl */`
+const fragmentCompositeShader = /* glsl */ `
     precision highp float;
 
     uniform sampler2D tScene;
@@ -497,7 +497,7 @@ class CompositeMaterial extends RawShaderMaterial {
 import blur from '../../../src/shaders/modules/blur/blur.glsl.js';
 import blueNoise from '../../../src/shaders/modules/noise/blue-noise.glsl.js';
 
-const vertexBlurShader = /* glsl */`
+const vertexBlurShader = /* glsl */ `
     in vec3 position;
     in vec2 uv;
 
@@ -510,7 +510,7 @@ const vertexBlurShader = /* glsl */`
     }
 `;
 
-const fragmentBlurShader = /* glsl */`
+const fragmentBlurShader = /* glsl */ `
     precision highp float;
 
     uniform sampler2D tMap;
@@ -543,17 +543,19 @@ const fragmentBlurShader = /* glsl */`
         float t = smootherstep(0.0, 1.0, d);
         float rnd = getBlueNoise(tBlueNoise, gl_FragCoord.xy, uBlueNoiseTexelSize, vec2(fract(uTime)));
 
-        FragColor = blur(tMap, vUv, uResolution, 10.0 * uBluriness * t * rot2d(uDirection, rnd));
+        FragColor = blur(tMap, vUv, uResolution, 20.0 * uBluriness * t * rot2d(uDirection, rnd));
 
         if (uDebug) {
-            FragColor.rgb = mix(FragColor.rgb, vec3(t), 0.5);
+            FragColor.rgb = mix(FragColor.rgb, mix(FragColor.rgb, vec3(1), 0.5), vec3(uBluriness * t));
         }
     }
 `;
 
 class BlurMaterial extends RawShaderMaterial {
     constructor(direction = new Vector2(0.5, 0.5)) {
-        const texture = new TextureLoader().load('assets/textures/blue_noise.png');
+        const { getTexture } = WorldController;
+
+        const texture = getTexture('assets/textures/blue_noise.png');
         texture.wrapS = RepeatWrapping;
         texture.wrapT = RepeatWrapping;
         texture.magFilter = NearestFilter;
@@ -920,7 +922,7 @@ class Floor extends Group {
 
             shader.vertexShader = shader.vertexShader.replace(
                 'void main() {',
-                /* glsl */`
+                /* glsl */ `
                 uniform mat3 uvTransform;
                 uniform mat4 textureMatrix;
                 out vec2 vUv;
@@ -932,7 +934,7 @@ class Floor extends Group {
 
             shader.vertexShader = shader.vertexShader.replace(
                 '#include <project_vertex>',
-                /* glsl */`
+                /* glsl */ `
                 #include <project_vertex>
 
                 vUv = (uvTransform * vec3(uv, 1)).xy;
@@ -942,7 +944,7 @@ class Floor extends Group {
 
             shader.fragmentShader = shader.fragmentShader.replace(
                 'void main() {',
-                /* glsl */`
+                /* glsl */ `
                 uniform sampler2D map;
                 uniform sampler2D reflectMap;
                 uniform sampler2D reflectMapBlur;
@@ -957,7 +959,7 @@ class Floor extends Group {
 
             shader.fragmentShader = shader.fragmentShader.replace(
                 'gl_FragColor = vec4( color, opacity * ( 1.0 - getShadowMask() ) );',
-                /* glsl */`
+                /* glsl */ `
                 vec2 reflectionUv = vCoord.xy / vCoord.w;
 
                 vec4 dudv = texture(map, vUv);
@@ -1160,6 +1162,7 @@ class ScenePanelController {
             const path = Data.getPath(item.path);
 
             Data.setPage(path);
+            Point3D.animateOut();
         }
     };
 }
@@ -1634,15 +1637,14 @@ class CameraController {
         this.ui = ui;
 
         // Start position
-        this.originCamera = this.worldCamera.clone();
-        this.camera = this.originCamera;
-
+        this.camera = this.worldCamera.clone();
         this.mouse = new Vector2();
         this.lookAt = new Vector3();
         this.origin = new Vector3();
         this.target = new Vector3();
         this.targetXY = new Vector2(8, 4);
         this.origin.copy(this.camera.position);
+        this.camera.lookAt(this.lookAt);
 
         this.progress = 0;
         this.lerpSpeed = 0.07;
@@ -1660,19 +1662,24 @@ class CameraController {
     }
 
     static transition() {
+        Point3D.enabled = false;
+
         const next = this.next;
 
-        tween(this, { progress: 1 }, 1000, 'easeInOutCubic', () => {
-            this.progress = 0;
-            this.camera = next;
+        this.progress = 0;
 
-            if (this.next !== this.camera) {
+        tween(this, { progress: 1 }, 1000, 'easeInOutCubic', () => {
+            this.view = next;
+
+            if (this.next !== this.view) {
                 this.transition();
             } else {
                 this.animatedIn = false;
+
+                Point3D.enabled = true;
             }
         }, () => {
-            lerpCameras(this.worldCamera, next, this.progress);
+            lerpCameras(this.worldCamera, next.camera, this.progress);
         });
 
         if (this.zoomedIn) {
@@ -1680,14 +1687,9 @@ class CameraController {
                 this.ui.details.animateIn();
             });
 
-            Point3D.animateOut();
-            Point3D.enabled = false;
-
             RenderManager.zoomIn();
         } else {
             this.ui.details.animateOut();
-
-            Point3D.enabled = true;
 
             RenderManager.zoomOut();
         }
@@ -1719,11 +1721,11 @@ class CameraController {
      */
 
     static setView = view => {
-        if (!Device.mobile && (!view || view.camera === this.next)) {
-            this.next = this.originCamera;
+        if (!Device.mobile && (!view || view === this.next)) {
+            this.next = this;
             this.zoomedIn = false;
         } else {
-            this.next = view.camera;
+            this.next = view;
             this.zoomedIn = true;
         }
 
@@ -1748,8 +1750,8 @@ class CameraController {
         this.target.y = this.origin.y + this.targetXY.y * this.mouse.y;
         this.target.z = this.origin.z;
 
-        this.originCamera.position.lerp(this.target, this.lerpSpeed);
-        this.originCamera.lookAt(this.lookAt);
+        this.camera.position.lerp(this.target, this.lerpSpeed);
+        this.camera.lookAt(this.lookAt);
 
         if (!this.animatedIn) {
             this.updateCamera();
@@ -1757,8 +1759,8 @@ class CameraController {
     };
 
     static updateCamera = () => {
-        this.worldCamera.position.copy(this.camera.position);
-        this.worldCamera.quaternion.copy(this.camera.quaternion);
+        this.worldCamera.position.copy(this.view.camera.position);
+        this.worldCamera.quaternion.copy(this.view.camera.quaternion);
     };
 
     static start = () => {

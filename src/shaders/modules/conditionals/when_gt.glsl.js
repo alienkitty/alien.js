@@ -1,6 +1,6 @@
 // From https://github.com/dmnsgn/glsl-conditionals
 
-export default /* glsl */`
+export default /* glsl */ `
 float when_gt(float x, float y) {
   return max(sign(x - y), 0.0);
 }

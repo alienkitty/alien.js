@@ -104,7 +104,7 @@
 
                     shader.vertexShader = shader.vertexShader.replace(
                         'void main() {',
-                        /* glsl */`
+                        /* glsl */ `
                         out vec3 vWorldNormal;
                         out vec3 vViewDirection;
 
@@ -114,7 +114,7 @@
 
                     shader.vertexShader = shader.vertexShader.replace(
                         '#include <project_vertex>',
-                        /* glsl */`
+                        /* glsl */ `
                         #include <project_vertex>
 
                         vWorldNormal = normalize(modelMatrix * vec4(normal, 0.0)).xyz;
@@ -124,7 +124,7 @@
 
                     shader.fragmentShader = shader.fragmentShader.replace(
                         'void main() {',
-                        /* glsl */`
+                        /* glsl */ `
                         uniform vec3 fresnelColor;
                         uniform float fresnelPower;
 
@@ -154,7 +154,7 @@
 
                     shader.fragmentShader = shader.fragmentShader.replace(
                         'vec3 totalEmissiveRadiance = emissive;',
-                        /* glsl */`
+                        /* glsl */ `
                         vec3 totalEmissiveRadiance = emissive;
 
                         float fresnel = getFresnel(vViewDirection, vWorldNormal, fresnelPower);
@@ -166,7 +166,7 @@
                         '#include <lights_fragment_begin>',
                         ShaderChunk.lights_fragment_begin.replaceAll(
                             'RE_Direct( directLight, geometry, material, reflectedLight );',
-                            /* glsl */`
+                            /* glsl */ `
                             RE_Direct( directLight, geometry, material, reflectedLight );
                             RE_Direct_Scattering(directLight, vUv2, geometry, material, reflectedLight);
                             `

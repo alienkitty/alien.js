@@ -69,8 +69,19 @@ body {
     display: inline-block;
 }
 
-#root a, #root a:hover, #root a:focus {
+#root a, #root button, #root input, #root select {
+    pointer-events: auto;
+}
+
+#root a {
     color: var(--ui-color);
+    text-decoration: none;
+    text-underline-offset: 3px;
+}
+
+#root a:hover, #root a:focus {
+    color: var(--ui-color);
+    text-decoration: underline;
 }
 
 ::selection {

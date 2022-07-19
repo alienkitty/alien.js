@@ -29,6 +29,7 @@ export class Instructions extends Interface {
             position: 'relative',
             fontWeight: '700',
             fontSize: 10,
+            lineHeight: 20,
             letterSpacing: 0.8,
             textAlign: 'center',
             textTransform: 'uppercase',

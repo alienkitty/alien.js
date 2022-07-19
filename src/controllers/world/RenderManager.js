@@ -21,7 +21,7 @@ export class RenderManager {
         this.luminosityThreshold = 0.1;
         this.luminositySmoothing = 1;
         this.bloomStrength = 0.3;
-        this.bloomRadius = 0.75;
+        this.bloomRadius = 0.2;
 
         this.initRenderer();
     }

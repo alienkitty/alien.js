@@ -795,7 +795,7 @@ class PanelController {
                 type: 'slider',
                 label: 'Strength',
                 min: 0,
-                max: 1,
+                max: 2,
                 step: 0.01,
                 value: RenderManager.bloomStrength,
                 callback: value => {
@@ -860,7 +860,7 @@ class RenderManager {
         this.luminosityThreshold = 0.1;
         this.luminositySmoothing = 1;
         this.bloomStrength = 0.3;
-        this.bloomRadius = 0.75;
+        this.bloomRadius = 0.2;
         this.blurFactor = 10;
         this.enabled = true;
 

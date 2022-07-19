@@ -126,4 +126,6 @@ export * from 'three';
 export { ImprovedNoise } from 'three/examples/jsm/math/ImprovedNoise.js';
 export { SimplexNoise } from 'three/examples/jsm/math/SimplexNoise.js';
 export { SVGLoader } from 'three/examples/jsm/loaders/SVGLoader.js';
+export { OBJLoader } from 'three/examples/jsm/loaders/OBJLoader.js';
+export { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 export { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';

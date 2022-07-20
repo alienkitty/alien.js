@@ -64,6 +64,8 @@ In its design, everything is an ES module, all user interfaces and components fo
 [camera wobble](https://alien.js.org/examples/3d_camera_wobble.html)  
 [camera transition](https://alien.js.org/examples/transitions/camera/) (with motion blur and tilt shift effect, [debug](https://alien.js.org/examples/transitions/camera/?debug))  
 [panel tracking](https://alien.js.org/examples/3d_panel_tracking.html) ([debug](https://alien.js.org/examples/3d_panel_tracking.html?debug))  
+[panel tracking crystals](https://alien.js.org/examples/3d_panel_tracking_crystals.html) ([debug](https://alien.js.org/examples/3d_panel_tracking_crystals.html?debug))  
+[crystals](https://alien.js.org/examples/3d_crystals.html) ([orbit controls](https://alien.js.org/examples/3d_crystals.html?orbit))  
 
 #### shader
 

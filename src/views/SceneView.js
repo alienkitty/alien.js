@@ -19,8 +19,8 @@ export class SceneView extends Group {
 
         this.material = new MeshStandardMaterial({
             name: 'Hello World',
-            roughness: 0.3,
             metalness: 0.9,
+            roughness: 0.3,
             flatShading: true
         });
 

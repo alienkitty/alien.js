@@ -69,24 +69,24 @@
 
                 const material = new MeshPhysicalMaterial({
                     color: new Color(Config.ICE_COLOR),
-                    roughness: 0.1,
                     metalness: 0.65,
+                    roughness: 0.1,
                     reflectivity: 0.5,
                     transmission: 0.3,
                     thickness: 1,
                     // map,
+                    metalnessMap: ormMap,
+                    roughnessMap: ormMap,
                     aoMap: ormMap,
                     aoMapIntensity: 0.5,
-                    roughnessMap: ormMap,
-                    metalnessMap: ormMap,
                     normalMap,
                     normalScale: new Vector2(1, 1),
+                    envMapIntensity: 0.1,
                     clearcoat: 0.9,
                     clearcoatRoughness: 1,
                     clearcoatRoughnessMap: ormMap,
                     clearcoatNormalMap: normalMap,
                     clearcoatNormalScale: new Vector2(2, -2),
-                    envMapIntensity: 0.1,
                     specularColor: new Color(Config.FRESNEL_COLOR),
                     specularIntensity: 1
                 });
@@ -218,13 +218,13 @@
 
                 const material = new MeshStandardMaterial({
                     color: new Color(0x0e0e0e),
-                    roughness: 1,
                     metalness: 1,
+                    roughness: 1,
                     map,
+                    metalnessMap: ormMap,
+                    roughnessMap: ormMap,
                     aoMap: ormMap,
                     aoMapIntensity: 1,
-                    roughnessMap: ormMap,
-                    metalnessMap: ormMap,
                     normalMap,
                     normalScale: new Vector2(1, 1),
                     envMapIntensity: 0.5
@@ -276,13 +276,13 @@
 
                 const material = new MeshStandardMaterial({
                     color: new Color(),
-                    roughness: 1,
                     metalness: 1,
+                    roughness: 1,
                     map,
+                    metalnessMap: ormMap,
+                    roughnessMap: ormMap,
                     aoMap: ormMap,
                     aoMapIntensity: 1,
-                    roughnessMap: ormMap,
-                    metalnessMap: ormMap,
                     normalMap,
                     normalScale: new Vector2(1, 1),
                     envMapIntensity: 0.5
@@ -678,7 +678,7 @@
             }
 
             static async initEnvironment() {
-                this.scene.environment = await this.loadEnvironmentTexture('assets/textures/env.jpg');
+                this.scene.environment = await this.loadEnvironmentTexture('assets/textures/env/jewelry_black_contrast.jpg');
             }
 
             static initControls() {

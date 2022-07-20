@@ -16,7 +16,7 @@
         import { ACESFilmicToneMapping, AdditiveBlending, AmbientLight, BloomCompositeMaterial, BufferAttribute, BufferGeometry, Color, CopyMaterial, DepthTexture, Device, DirectionalLight, EnvironmentTextureLoader, Events, FXAAMaterial, GLSL3, Group, HemisphereLight, ImageBitmapLoaderThread, LuminosityMaterial, Mesh, MeshStandardMaterial, NoBlending, OrbitControls, OrthographicCamera, PanelItem, PerspectiveCamera, Points, RawShaderMaterial, RepeatWrapping, Scene, SceneCompositeMaterial, SphereGeometry, Stage, TextureLoader, Thread, UI, Uniform, UnrealBloomBlurMaterial, Vector2, WebGLRenderTarget, WebGLRenderer, floorPowerOfTwo, getFullscreenTriangle, getKeyByValue, lerp, randFloatSpread, ticker } from '../build/alien.js';
 
         class Config {
-            static DEBUG = location.search === '?debug';
+            static DEBUG = /[?&]debug/.test(location.search);
         }
 
         // Based on https://www.shadertoy.com/view/4lVfDt by battlebottle
@@ -389,13 +389,13 @@
 
                 const material = new MeshStandardMaterial({
                     color: new Color(0x0e0e0e),
-                    roughness: 1,
                     metalness: 1,
+                    roughness: 1,
                     map,
+                    metalnessMap: ormMap,
+                    roughnessMap: ormMap,
                     aoMap: ormMap,
                     aoMapIntensity: 1,
-                    roughnessMap: ormMap,
-                    metalnessMap: ormMap,
                     normalMap,
                     normalScale: new Vector2(1, 1),
                     envMapIntensity: 0.5
@@ -836,7 +836,7 @@
             }
 
             static async initEnvironment() {
-                this.scene.environment = await this.loadEnvironmentTexture('assets/textures/env.jpg');
+                this.scene.environment = await this.loadEnvironmentTexture('assets/textures/env/jewelry_black_contrast.jpg');
             }
 
             static initControls() {

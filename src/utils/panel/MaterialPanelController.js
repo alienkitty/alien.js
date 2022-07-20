@@ -47,17 +47,6 @@ export class MaterialPanelController {
             },
             {
                 type: 'slider',
-                label: 'Rough',
-                min: 0,
-                max: 2,
-                step: 0.01,
-                value: material.roughness,
-                callback: value => {
-                    material.roughness = value;
-                }
-            },
-            {
-                type: 'slider',
                 label: 'Metal',
                 min: 0,
                 max: 2,
@@ -65,6 +54,17 @@ export class MaterialPanelController {
                 value: material.metalness,
                 callback: value => {
                     material.metalness = value;
+                }
+            },
+            {
+                type: 'slider',
+                label: 'Rough',
+                min: 0,
+                max: 2,
+                step: 0.01,
+                value: material.roughness,
+                callback: value => {
+                    material.roughness = value;
                 }
             },
             {
@@ -89,8 +89,8 @@ export class MaterialPanelController {
                 type: 'slider',
                 label: 'Env Int',
                 min: 0,
-                max: 2,
-                step: 0.01,
+                max: 10,
+                step: 0.1,
                 value: material.envMapIntensity,
                 callback: value => {
                     material.envMapIntensity = value;

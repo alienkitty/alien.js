@@ -153,13 +153,13 @@
 
                 const material = new MeshStandardMaterial({
                     color: new Color().offsetHSL(0, 0, -0.65),
-                    roughness: 0.35,
                     metalness: 0.18,
+                    roughness: 0.35,
                     map,
+                    metalnessMap: ormMap,
+                    roughnessMap: ormMap,
                     aoMap: ormMap,
                     aoMapIntensity: 1,
-                    roughnessMap: ormMap,
-                    metalnessMap: ormMap,
                     normalMap,
                     normalScale: new Vector2(3, 3),
                     dithering: true

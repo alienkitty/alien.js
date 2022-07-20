@@ -17,7 +17,6 @@
 
         class Config {
             static ICE_COLOR = 0x547691;
-            static FRESNEL_COLOR = 0xd3e0e7;
 
             static LIGHT_COLOR = 0x00ffff;
             static ERROR_COLOR = 0xff0000;
@@ -138,13 +137,13 @@
 
                 const material = new MeshPhysicalMaterial({
                     color: new Color(Config.ICE_COLOR).offsetHSL(0, 0, -0.3),
-                    roughness: 0.1,
                     metalness: 0.65,
+                    roughness: 0.1,
                     map,
+                    metalnessMap: ormMap,
+                    roughnessMap: ormMap,
                     aoMap: ormMap,
                     aoMapIntensity: 0.5,
-                    roughnessMap: ormMap,
-                    metalnessMap: ormMap,
                     normalMap,
                     normalScale: new Vector2(1, 1),
                     envMapIntensity: 0.1,
@@ -277,13 +276,13 @@
 
                 const material = new MeshStandardMaterial({
                     color: new Color(0x0e0e0e),
-                    roughness: 1,
                     metalness: 1,
+                    roughness: 1,
                     map,
+                    metalnessMap: ormMap,
+                    roughnessMap: ormMap,
                     aoMap: ormMap,
                     aoMapIntensity: 1,
-                    roughnessMap: ormMap,
-                    metalnessMap: ormMap,
                     normalMap,
                     normalScale: new Vector2(1, 1),
                     envMapIntensity: 0.5
@@ -335,13 +334,13 @@
 
                 const material = new MeshStandardMaterial({
                     color: new Color(),
-                    roughness: 1,
                     metalness: 1,
+                    roughness: 1,
                     map,
+                    metalnessMap: ormMap,
+                    roughnessMap: ormMap,
                     aoMap: ormMap,
                     aoMapIntensity: 1,
-                    roughnessMap: ormMap,
-                    metalnessMap: ormMap,
                     normalMap,
                     normalScale: new Vector2(1, 1),
                     envMapIntensity: 0.5,
@@ -1109,7 +1108,7 @@
             }
 
             static async initEnvironment() {
-                this.scene.environment = await this.loadEnvironmentTexture('assets/textures/env.jpg');
+                this.scene.environment = await this.loadEnvironmentTexture('assets/textures/env/jewelry_black_contrast.jpg');
             }
 
             static initControls() {

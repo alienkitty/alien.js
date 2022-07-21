@@ -520,7 +520,7 @@ class RenderScene {
     async initEnvironment() {
         const { loadEnvironmentTexture } = WorldController;
 
-        this.scene.environment = await loadEnvironmentTexture('assets/textures/env.jpg');
+        this.scene.environment = await loadEnvironmentTexture('assets/textures/env/jewelry_black_contrast.jpg');
     }
 
     /**
@@ -574,13 +574,13 @@ class AbstractCube extends Group {
 
         const material = new MeshStandardMaterial({
             color: new Color().offsetHSL(0, 0, -0.65),
-            roughness: 0.7,
             metalness: 0.6,
+            roughness: 0.7,
             map,
+            metalnessMap: ormMap,
+            roughnessMap: ormMap,
             aoMap: ormMap,
             aoMapIntensity: 1,
-            roughnessMap: ormMap,
-            metalnessMap: ormMap,
             normalMap,
             normalScale: new Vector2(1, 1),
             envMapIntensity: 1,
@@ -682,13 +682,13 @@ class FloatingCrystal extends Group {
 
         const material = new MeshStandardMaterial({
             color: new Color().offsetHSL(0, 0, -0.65),
-            roughness: 0.7,
             metalness: 0.6,
+            roughness: 0.7,
             map,
+            metalnessMap: ormMap,
+            roughnessMap: ormMap,
             aoMap: ormMap,
             aoMapIntensity: 1,
-            roughnessMap: ormMap,
-            metalnessMap: ormMap,
             normalMap,
             normalScale: new Vector2(1, 1),
             envMapIntensity: 1,
@@ -793,13 +793,13 @@ class DarkPlanet extends Group {
 
         const material = new MeshStandardMaterial({
             color: new Color().offsetHSL(0, 0, -0.65),
-            roughness: 2,
             metalness: 0.6,
+            roughness: 2,
             map,
+            metalnessMap: ormMap,
+            roughnessMap: ormMap,
             aoMap: ormMap,
             aoMapIntensity: 1,
-            roughnessMap: ormMap,
-            metalnessMap: ormMap,
             normalMap,
             normalScale: new Vector2(3, 3),
             envMapIntensity: 1

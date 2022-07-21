@@ -83,9 +83,9 @@
                 map.repeat.set(6, 3);
 
                 const material = new ShadowMaterial({
+                    transparent: false,
                     blending: NoBlending,
-                    toneMapped: false,
-                    transparent: false
+                    toneMapped: false
                 });
 
                 material.onBeforeCompile = shader => {

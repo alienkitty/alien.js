@@ -195,13 +195,13 @@
 
                 const material = new MeshStandardMaterial({
                     color: new Color(0x0e0e0e),
-                    roughness: 1,
                     metalness: 1,
+                    roughness: 1,
                     map,
+                    metalnessMap: ormMap,
+                    roughnessMap: ormMap,
                     aoMap: ormMap,
                     aoMapIntensity: 1,
-                    roughnessMap: ormMap,
-                    metalnessMap: ormMap,
                     normalMap,
                     normalScale: new Vector2(1, 1),
                     envMapIntensity: 0.5
@@ -637,7 +637,7 @@
             }
 
             static async initEnvironment() {
-                this.scene.environment = await this.loadEnvironmentTexture('assets/textures/env.jpg');
+                this.scene.environment = await this.loadEnvironmentTexture('assets/textures/env/jewelry_black_contrast.jpg');
             }
 
             static initControls() {

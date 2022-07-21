@@ -209,7 +209,7 @@
                 super();
             }
 
-            async initResource() {
+            async initMesh() {
                 const { loadResource } = WorldController;
 
                 // https://forum.sketchfab.com/t/download-sketchfab-model-as-single-glb-or-gltf-file/38769
@@ -233,7 +233,7 @@
              * Public methods
              */
 
-            ready = () => this.initResource();
+            ready = () => this.initMesh();
         }
 
         class SceneView extends Group {
@@ -800,7 +800,7 @@
             }
 
             static async initEnvironment() {
-                this.scene.environment = await this.loadEnvironmentTexture('assets/textures/env.jpg');
+                this.scene.environment = await this.loadEnvironmentTexture('assets/textures/env/jewelry_black_contrast.jpg');
             }
 
             static initControls() {

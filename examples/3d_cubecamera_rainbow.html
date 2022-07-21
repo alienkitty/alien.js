@@ -20,7 +20,7 @@
             static LIGHT_COLOR = new Color(0xff8dfc);
             static PARTICLE_COLOR = new Color(0x8080ff);
 
-            static DEBUG = location.search === '?debug';
+            static DEBUG = /[?&]debug/.test(location.search);
         }
 
         // Based on https://github.com/yuichiroharai/glsl-y-hsv
@@ -223,8 +223,8 @@
                 const material = new SpriteMaterial({
                     map: getTexture('assets/textures/particle2.png'),
                     color: Config.PARTICLE_COLOR,
-                    blending: AdditiveBlending,
                     transparent: true,
+                    blending: AdditiveBlending,
                     depthWrite: false
                 });
 
@@ -263,26 +263,26 @@
                 for (let i = 0; i < this.numParticles; i++) {
                     const distance = randFloat(10, 40);
 
-                    this.sprite = new Sprite(material);
-                    this.sprite.position.x = Math.random() * 2 - 1;
-                    this.sprite.position.y = Math.random() * 2 - 1;
-                    this.sprite.position.z = Math.random() * 2 - 1;
-                    this.sprite.position.normalize();
-                    this.sprite.position.multiplyScalar(distance);
-                    this.sprite.scale.set(0.3, 0.3, 1);
+                    const sprite = new Sprite(material);
+                    sprite.position.x = Math.random() * 2 - 1;
+                    sprite.position.y = Math.random() * 2 - 1;
+                    sprite.position.z = Math.random() * 2 - 1;
+                    sprite.position.normalize();
+                    sprite.position.multiplyScalar(distance);
+                    sprite.scale.set(0.3, 0.3, 1);
 
-                    this.sprite.random = Math.random();
+                    sprite.random = Math.random();
 
-                    this.sprite.origin = new Vector3();
-                    this.sprite.near = new Vector3();
-                    this.sprite.origin.copy(this.sprite.position);
-                    this.sprite.near.copy(this.sprite.origin).multiplyScalar(this.nearScale);
+                    sprite.origin = new Vector3();
+                    sprite.near = new Vector3();
+                    sprite.origin.copy(sprite.position);
+                    sprite.near.copy(sprite.origin).multiplyScalar(this.nearScale);
 
-                    this.sprite.wobble = new Wobble(this.sprite.origin);
-                    this.sprite.wobble.scale = 0.3;
+                    sprite.wobble = new Wobble(sprite.origin);
+                    sprite.wobble.scale = 0.3;
 
-                    this.add(this.sprite);
-                    this.sprites.push(this.sprite);
+                    this.add(sprite);
+                    this.sprites.push(sprite);
                 }
             }
 

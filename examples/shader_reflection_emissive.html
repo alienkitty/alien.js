@@ -13,7 +13,7 @@
 <body>
     <div id="root"></div>
     <script type="module">
-        import { ACESFilmicToneMapping, BloomCompositeMaterial, Color, DirectionalLight, Events, FXAAMaterial, Fog, GLSL3, Group, HemisphereLight, LuminosityMaterial, Mesh, MeshStandardMaterial, NoBlending, OrthographicCamera, PanelItem, PerspectiveCamera, PlaneGeometry, RawShaderMaterial, Reflector, RepeatWrapping, SVGLoader, Scene, Stage, TextureLoader, UI, Uniform, UnrealBloomBlurMaterial, Vector2, Vector3, WebGLRenderTarget, WebGLRenderer, floorPowerOfTwo, getFullscreenTriangle, lerp, ticker } from '../build/alien.js';
+        import { ACESFilmicToneMapping, BloomCompositeMaterial, Color, DirectionalLight, Events, FXAAMaterial, Fog, GLSL3, Group, HemisphereLight, LuminosityMaterial, Mesh, MeshBasicMaterial, MeshStandardMaterial, NoBlending, OrthographicCamera, PanelItem, PerspectiveCamera, PlaneGeometry, RawShaderMaterial, Reflector, RepeatWrapping, SVGLoader, Scene, Stage, TextureLoader, UI, Uniform, UnrealBloomBlurMaterial, Vector2, Vector3, WebGLRenderTarget, WebGLRenderer, floorPowerOfTwo, getFullscreenTriangle, lerp, ticker } from '../build/alien.js';
 
         import rgbshift from '../src/shaders/modules/rgbshift/rgbshift.glsl.js';
 
@@ -92,7 +92,7 @@
                 for (let i = 0, l = paths.length; i < l; i++) {
                     const path = paths[i];
 
-                    const material = new MeshStandardMaterial({ emissive: 0xffffff });
+                    const material = new MeshBasicMaterial();
 
                     for (let j = 0, jl = path.subPaths.length; j < jl; j++) {
                         const subPath = path.subPaths[j];
@@ -119,7 +119,7 @@
             }
 
             initReflector() {
-                this.reflector = new Reflector();
+                this.reflector = new Reflector({ blurFactor: 0.8 });
             }
 
             async initMesh() {
@@ -153,21 +153,26 @@
 
                 const material = new MeshStandardMaterial({
                     color: new Color().offsetHSL(0, 0, -0.65),
-                    metalness: 0.18,
-                    roughness: 0.35,
+                    metalness: 1,
+                    roughness: 1,
                     map,
                     metalnessMap: ormMap,
                     roughnessMap: ormMap,
                     aoMap: ormMap,
                     aoMapIntensity: 1,
                     normalMap,
-                    normalScale: new Vector2(3, 3),
-                    dithering: true
+                    normalScale: new Vector2(-3, -3)
                 });
+
+                const uniforms = {
+                    reflectAmount: new Uniform(0.2)
+                };
 
                 material.onBeforeCompile = shader => {
                     shader.uniforms.reflectMap = this.reflector.renderTargetUniform;
                     shader.uniforms.textureMatrix = this.reflector.textureMatrixUniform;
+
+                    shader.uniforms = Object.assign(shader.uniforms, uniforms);
 
                     shader.vertexShader = shader.vertexShader.replace(
                         'void main() {',
@@ -192,6 +197,7 @@
                         'void main() {',
                         /* glsl */ `
                         uniform sampler2D reflectMap;
+                        uniform float reflectAmount;
                         in vec4 vCoord;
 
                         void main() {
@@ -199,13 +205,16 @@
                     );
 
                     shader.fragmentShader = shader.fragmentShader.replace(
-                        'vec3 totalEmissiveRadiance = emissive;',
+                        'vec3 outgoingLight = totalDiffuse + totalSpecular + totalEmissiveRadiance;',
                         /* glsl */ `
-                        vec3 totalEmissiveRadiance = emissive;
+                        vec3 totalReflect = textureProj(reflectMap, vCoord).rgb;
+                        totalReflect *= reflectAmount;
 
-                        totalEmissiveRadiance += textureProj(reflectMap, vCoord).rgb * 0.2;
+                        vec3 outgoingLight = totalDiffuse + totalSpecular + totalEmissiveRadiance + totalReflect;
                         `
                     );
+
+                    // console.log(shader.fragmentShader);
                 };
 
                 const mesh = new Mesh(geometry, material);
@@ -220,6 +229,8 @@
                 };
 
                 this.add(mesh);
+
+                this.uniforms = uniforms;
             }
 
             /**
@@ -289,7 +300,9 @@
         }
 
         class PanelController {
-            static init() {
+            static init(view) {
+                this.view = view;
+
                 this.initViews();
                 this.initPanel();
             }
@@ -301,11 +314,27 @@
             }
 
             static initPanel() {
+                const { floor } = this.view;
+
                 const { luminosityMaterial, bloomCompositeMaterial, compositeMaterial } = RenderManager;
 
                 const items = [
                     {
                         label: 'FPS'
+                    },
+                    {
+                        type: 'divider'
+                    },
+                    {
+                        type: 'slider',
+                        label: 'Amount',
+                        min: 0,
+                        max: 1,
+                        step: 0.01,
+                        value: floor.uniforms.reflectAmount.value,
+                        callback: value => {
+                            floor.uniforms.reflectAmount.value = value;
+                        }
                     },
                     {
                         type: 'divider'
@@ -790,7 +819,7 @@
             }
 
             static initPanel() {
-                PanelController.init();
+                PanelController.init(this.view);
             }
 
             static addListeners() {

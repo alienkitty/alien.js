@@ -13,7 +13,7 @@
 <body>
     <div id="root"></div>
     <script type="module">
-        import { ACESFilmicToneMapping, BloomCompositeMaterial, Color, DirectionalLight, EnvironmentTextureLoader, Events, FXAAMaterial, Fog, GLSL3, Group, HemisphereLight, LuminosityMaterial, Mesh, MeshBasicMaterial, MeshStandardMaterial, NoBlending, OrthographicCamera, PanelItem, PerspectiveCamera, PlaneGeometry, RawShaderMaterial, Reflector, RepeatWrapping, SVGLoader, Scene, Stage, TextureLoader, UI, Uniform, UnrealBloomBlurMaterial, Vector2, Vector3, WebGLRenderTarget, WebGLRenderer, floorPowerOfTwo, getFullscreenTriangle, lerp, ticker } from '../build/alien.js';
+        import { ACESFilmicToneMapping, BloomCompositeMaterial, Color, DirectionalLight, EnvironmentTextureLoader, Events, FXAAMaterial, Fog, GLSL3, Group, HemisphereLight, LuminosityMaterial, MaterialPanelController, Mesh, MeshBasicMaterial, MeshStandardMaterial, NoBlending, OrthographicCamera, PanelItem, PerspectiveCamera, PlaneGeometry, RawShaderMaterial, Reflector, RepeatWrapping, SVGLoader, Scene, Stage, TextureLoader, UI, Uniform, UnrealBloomBlurMaterial, Vector2, Vector3, WebGLRenderTarget, WebGLRenderer, floorPowerOfTwo, getFullscreenTriangle, lerp, ticker } from '../build/alien.js';
 
         import rgbshift from '../src/shaders/modules/rgbshift/rgbshift.glsl.js';
 
@@ -123,7 +123,7 @@
             }
 
             async initMesh() {
-                const { /* renderer, camera, */ loadTexture } = WorldController;
+                const { loadTexture } = WorldController;
 
                 const geometry = new PlaneGeometry(100, 100);
 
@@ -214,8 +214,6 @@
                         vec3 outgoingLight = totalDiffuse + totalSpecular + totalEmissiveRadiance + totalReflect;
                         `
                     );
-
-                    // console.log(shader.fragmentShader);
                 };
 
                 const mesh = new Mesh(geometry, material);
@@ -231,13 +229,8 @@
 
                 this.add(mesh);
 
+                this.material = material;
                 this.uniforms = uniforms;
-
-                /* renderer.compile(mesh, camera);
-                const programs = renderer.properties.get(material).programs;
-                for (const program of programs.values()) {
-                    console.log(renderer.getContext().getShaderSource(program.fragmentShader));
-                } */
             }
 
             /**
@@ -325,7 +318,7 @@
 
                 const { luminosityMaterial, bloomCompositeMaterial, compositeMaterial } = RenderManager;
 
-                const items = [
+                [
                     {
                         label: 'FPS'
                     },
@@ -342,7 +335,14 @@
                         callback: value => {
                             floor.uniforms.reflectAmount.value = value;
                         }
-                    },
+                    }
+                ].forEach(data => {
+                    this.ui.addPanel(new PanelItem(data));
+                });
+
+                MaterialPanelController.init(this.ui, floor.material);
+
+                [
                     {
                         type: 'divider'
                     },
@@ -403,9 +403,7 @@
                             compositeMaterial.uniforms.uBloomDistortion.value = value;
                         }
                     }
-                ];
-
-                items.forEach(data => {
+                ].forEach(data => {
                     this.ui.addPanel(new PanelItem(data));
                 });
             }

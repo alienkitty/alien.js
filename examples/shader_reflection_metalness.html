@@ -13,7 +13,7 @@
 <body>
     <div id="root"></div>
     <script type="module">
-        import { ACESFilmicToneMapping, BloomCompositeMaterial, Color, DirectionalLight, Events, FXAAMaterial, Fog, GLSL3, Group, HemisphereLight, LuminosityMaterial, Mesh, MeshBasicMaterial, MeshStandardMaterial, NoBlending, OrthographicCamera, PanelItem, PerspectiveCamera, PlaneGeometry, RawShaderMaterial, Reflector, RepeatWrapping, SVGLoader, Scene, Stage, TextureLoader, UI, Uniform, UnrealBloomBlurMaterial, Vector2, Vector3, WebGLRenderTarget, WebGLRenderer, floorPowerOfTwo, getFullscreenTriangle, lerp, ticker } from '../build/alien.js';
+        import { ACESFilmicToneMapping, BloomCompositeMaterial, Color, DirectionalLight, EnvironmentTextureLoader, Events, FXAAMaterial, Fog, GLSL3, Group, HemisphereLight, LuminosityMaterial, MaterialPanelController, Mesh, MeshBasicMaterial, MeshStandardMaterial, NoBlending, OrthographicCamera, PanelItem, PerspectiveCamera, PlaneGeometry, RawShaderMaterial, Reflector, RepeatWrapping, SVGLoader, Scene, Stage, TextureLoader, UI, Uniform, UnrealBloomBlurMaterial, Vector2, Vector3, WebGLRenderTarget, WebGLRenderer, floorPowerOfTwo, getFullscreenTriangle, lerp, ticker } from '../build/alien.js';
 
         import rgbshift from '../src/shaders/modules/rgbshift/rgbshift.glsl.js';
 
@@ -133,10 +133,10 @@
                 // Textures
                 const [map, normalMap, ormMap] = await Promise.all([
                     // loadTexture('assets/textures/uv.jpg'),
-                    loadTexture('assets/textures/pbr/polished_concrete_basecolor.jpg'),
-                    loadTexture('assets/textures/pbr/polished_concrete_normal.jpg'),
+                    loadTexture('assets/textures/pbr/concrete_wet_floor_basecolor.jpg'),
+                    loadTexture('assets/textures/pbr/concrete_wet_floor_normal.jpg'),
                     // https://occlusion-roughness-metalness.glitch.me/
-                    loadTexture('assets/textures/pbr/polished_concrete_orm.jpg')
+                    loadTexture('assets/textures/pbr/concrete_wet_floor_orm.jpg')
                 ]);
 
                 map.wrapS = RepeatWrapping;
@@ -158,14 +158,15 @@
                     map,
                     metalnessMap: ormMap,
                     roughnessMap: ormMap,
-                    aoMap: ormMap,
-                    aoMapIntensity: 1,
+                    // aoMap: ormMap,
+                    // aoMapIntensity: 0.5,
                     normalMap,
-                    normalScale: new Vector2(-3, -3)
+                    normalScale: new Vector2(-3, -3),
+                    envMapIntensity: 1
                 });
 
                 const uniforms = {
-                    reflectAmount: new Uniform(0.2)
+                    reflectAmount: new Uniform(1)
                 };
 
                 material.onBeforeCompile = shader => {
@@ -208,7 +209,7 @@
                         'vec3 outgoingLight = totalDiffuse + totalSpecular + totalEmissiveRadiance;',
                         /* glsl */ `
                         vec3 totalReflect = textureProj(reflectMap, vCoord).rgb;
-                        totalReflect *= reflectAmount;
+                        totalReflect *= metalnessFactor * reflectAmount;
 
                         vec3 outgoingLight = totalDiffuse + totalSpecular + totalEmissiveRadiance + totalReflect;
                         `
@@ -228,6 +229,7 @@
 
                 this.add(mesh);
 
+                this.material = material;
                 this.uniforms = uniforms;
             }
 
@@ -316,7 +318,7 @@
 
                 const { luminosityMaterial, bloomCompositeMaterial, compositeMaterial } = RenderManager;
 
-                const items = [
+                [
                     {
                         label: 'FPS'
                     },
@@ -333,7 +335,14 @@
                         callback: value => {
                             floor.uniforms.reflectAmount.value = value;
                         }
-                    },
+                    }
+                ].forEach(data => {
+                    this.ui.addPanel(new PanelItem(data));
+                });
+
+                MaterialPanelController.init(this.ui, floor.material);
+
+                [
                     {
                         type: 'divider'
                     },
@@ -394,9 +403,7 @@
                             compositeMaterial.uniforms.uBloomDistortion.value = value;
                         }
                     }
-                ];
-
-                items.forEach(data => {
+                ].forEach(data => {
                     this.ui.addPanel(new PanelItem(data));
                 });
             }
@@ -692,6 +699,7 @@
                 this.initWorld();
                 this.initLights();
                 this.initLoaders();
+                this.initEnvironment();
 
                 this.addListeners();
             }
@@ -737,7 +745,12 @@
 
             static initLoaders() {
                 this.textureLoader = new TextureLoader();
+                this.environmentLoader = new EnvironmentTextureLoader(this.renderer);
                 this.svgLoader = new SVGLoader();
+            }
+
+            static async initEnvironment() {
+                this.scene.environment = await this.loadEnvironmentTexture('assets/textures/env/arches_pinetree.jpg');
             }
 
             static addListeners() {
@@ -773,6 +786,8 @@
 
             static loadTexture = path => this.textureLoader.loadAsync(path);
 
+            static loadEnvironmentTexture = path => this.environmentLoader.loadAsync(path);
+
             static loadSVG = path => this.svgLoader.loadAsync(path);
         }
 
@@ -786,7 +801,11 @@
                 this.addListeners();
                 this.onResize();
 
-                await SceneController.ready();
+                await Promise.all([
+                    SceneController.ready(),
+                    WorldController.textureLoader.ready(),
+                    WorldController.environmentLoader.ready()
+                ]);
 
                 this.initPanel();
 

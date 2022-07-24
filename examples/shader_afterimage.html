@@ -94,7 +94,7 @@
             }
 
             initReflector() {
-                this.reflector = new Reflector({ blurFactor: 0.8 });
+                this.reflector = new Reflector();
             }
 
             async initMesh() {
@@ -102,15 +102,28 @@
 
                 const geometry = new PlaneGeometry(100, 100);
 
-                const map = await loadTexture('assets/textures/pbr/polished_concrete_basecolor.jpg');
+                // Textures
+                const [map, normalMap] = await Promise.all([
+                    // loadTexture('assets/textures/uv.jpg'),
+                    loadTexture('assets/textures/pbr/concrete_wet_floor_basecolor.jpg'),
+                    // loadTexture('assets/textures/waternormals.jpg')
+                    loadTexture('assets/textures/pbr/concrete_wet_floor_normal.jpg')
+                ]);
+
                 map.wrapS = RepeatWrapping;
                 map.wrapT = RepeatWrapping;
-                map.repeat.set(16, 16);
+
+                normalMap.wrapS = RepeatWrapping;
+                normalMap.wrapT = RepeatWrapping;
 
                 const { fog } = scene;
 
                 const material = new ReflectorMaterial({
                     map,
+                    normalMap,
+                    normalScale: new Vector2(5, 5),
+                    mirror: 1,
+                    mixStrength: 4,
                     fog,
                     dithering: true
                 });

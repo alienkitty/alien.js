@@ -119,7 +119,7 @@
             }
 
             initReflector() {
-                this.reflector = new Reflector({ blurFactor: 0.8 });
+                this.reflector = new Reflector();
             }
 
             async initMesh() {
@@ -127,15 +127,28 @@
 
                 const geometry = new PlaneGeometry(100, 100);
 
-                const map = await loadTexture('assets/textures/pbr/polished_concrete_basecolor.jpg');
+                // Textures
+                const [map, normalMap] = await Promise.all([
+                    // loadTexture('assets/textures/uv.jpg'),
+                    loadTexture('assets/textures/pbr/concrete_wet_floor_basecolor.jpg'),
+                    // loadTexture('assets/textures/waternormals.jpg')
+                    loadTexture('assets/textures/pbr/concrete_wet_floor_normal.jpg')
+                ]);
+
                 map.wrapS = RepeatWrapping;
                 map.wrapT = RepeatWrapping;
-                map.repeat.set(16, 16);
+
+                normalMap.wrapS = RepeatWrapping;
+                normalMap.wrapT = RepeatWrapping;
 
                 const { fog } = scene;
 
                 const material = new ReflectorMaterial({
                     map,
+                    normalMap,
+                    normalScale: new Vector2(5, 5),
+                    mirror: 1,
+                    mixStrength: 4,
                     fog,
                     dithering: true
                 });
@@ -154,6 +167,8 @@
                 };
 
                 this.add(mesh);
+
+                this.material = material;
             }
 
             /**
@@ -223,7 +238,9 @@
         }
 
         class PanelController {
-            static init() {
+            static init(view) {
+                this.view = view;
+
                 this.initViews();
                 this.initPanel();
             }
@@ -235,11 +252,49 @@
             }
 
             static initPanel() {
+                const { floor } = this.view;
+
                 const { luminosityMaterial, bloomCompositeMaterial, compositeMaterial } = RenderManager;
 
                 const items = [
                     {
                         label: 'FPS'
+                    },
+                    {
+                        type: 'divider'
+                    },
+                    {
+                        type: 'slider',
+                        label: 'Reflect',
+                        min: 0,
+                        max: 1,
+                        step: 0.01,
+                        value: floor.material.uniforms.uReflectivity.value,
+                        callback: value => {
+                            floor.material.uniforms.uReflectivity.value = value;
+                        }
+                    },
+                    {
+                        type: 'slider',
+                        label: 'Mirror',
+                        min: 0,
+                        max: 1,
+                        step: 0.01,
+                        value: floor.material.uniforms.uMirror.value,
+                        callback: value => {
+                            floor.material.uniforms.uMirror.value = value;
+                        }
+                    },
+                    {
+                        type: 'slider',
+                        label: 'Strength',
+                        min: 0,
+                        max: 10,
+                        step: 0.1,
+                        value: floor.material.uniforms.uMixStrength.value,
+                        callback: value => {
+                            floor.material.uniforms.uMixStrength.value = value;
+                        }
                     },
                     {
                         type: 'divider'
@@ -724,7 +779,7 @@
             }
 
             static initPanel() {
-                PanelController.init();
+                PanelController.init(this.view);
             }
 
             static addListeners() {

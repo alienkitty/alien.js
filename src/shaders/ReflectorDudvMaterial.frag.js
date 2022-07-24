@@ -6,9 +6,12 @@ precision highp float;
 uniform sampler2D tMap;
 uniform sampler2D tReflect;
 uniform sampler2D tReflectBlur;
+uniform float uReflectivity;
 
 in vec2 vUv;
 in vec4 vCoord;
+in vec3 vNormal;
+in vec3 vToEye;
 
 out vec4 FragColor;
 
@@ -30,7 +33,17 @@ void main() {
 
     FragColor = color * mix(0.6, 0.75, dudv.g);
 
-    FragColor.rgb = dither(FragColor.rgb);
+    // Fresnel term
+    vec3 toEye = normalize(vToEye);
+    float theta = max(dot(toEye, vNormal), 0.0);
+    float reflectance = uReflectivity + (1.0 - uReflectivity) * pow((1.0 - theta), 5.0);
+
+    FragColor = mix(vec4(0), FragColor, reflectance);
+
+    #ifdef DITHERING
+        FragColor.rgb = dither(FragColor.rgb);
+    #endif
+
     FragColor.a = 1.0;
 }
 `;

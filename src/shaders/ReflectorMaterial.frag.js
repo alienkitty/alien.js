@@ -1,12 +1,24 @@
-import blendOverlay from './modules/blending/overlay.glsl.js';
+// Based on {@link module:three/examples/jsm/objects/Water2.js} by Mugen87
+
 import dither from './modules/dither/dither.glsl.js';
 
 export default /* glsl */ `
 precision highp float;
 
-uniform sampler2D tMap;
 uniform sampler2D tReflect;
 uniform vec3 uColor;
+uniform float uReflectivity;
+uniform float uMirror;
+uniform float uMixStrength;
+
+#ifdef USE_MAP
+    uniform sampler2D tMap;
+#endif
+
+#ifdef USE_NORMALMAP
+    uniform sampler2D tNormalMap;
+    uniform vec2 uNormalScale;
+#endif
 
 #ifdef USE_FOG
     uniform vec3 uFogColor;
@@ -16,22 +28,39 @@ uniform vec3 uColor;
 
 in vec2 vUv;
 in vec4 vCoord;
+in vec3 vNormal;
+in vec3 vToEye;
 
 out vec4 FragColor;
 
-${blendOverlay}
 ${dither}
 
 void main() {
-    vec4 base = texture(tMap, vUv);
-    vec4 blend = textureProj(tReflect, vCoord);
+    #ifdef USE_MAP
+        vec4 color = texture(tMap, vUv);
+    #else
+        vec4 color = vec4(uColor, 1.0);
+    #endif
 
-    FragColor = base * blend;
+    #ifdef USE_NORMALMAP
+        vec4 normalColor = texture(tNormalMap, vUv * uNormalScale);
+        vec3 normal = normalize(vec3(normalColor.r * 2.0 - 1.0, normalColor.b, normalColor.g * 2.0 - 1.0));
+        vec3 coord = vCoord.xyz / vCoord.w;
+        vec2 uv = coord.xy + coord.z * normal.xz * 0.05;
+        vec4 reflectColor = texture(tReflect, uv);
+    #else
+        vec3 normal = vNormal;
+        vec4 reflectColor = textureProj(tReflect, vCoord);
+    #endif
 
-    base = FragColor;
-    blend = vec4(uColor, 1.0);
+    // Fresnel term
+    vec3 toEye = normalize(vToEye);
+    float theta = max(dot(toEye, normal), 0.0);
+    float reflectance = uReflectivity + (1.0 - uReflectivity) * pow((1.0 - theta), 5.0);
 
-    FragColor = blendOverlay(base, blend, 1.0);
+    reflectColor = mix(vec4(0), reflectColor, reflectance);
+
+    FragColor.rgb = color.rgb * ((1.0 - min(1.0, uMirror)) + reflectColor.rgb * uMixStrength);
 
     #ifdef USE_FOG
         float fogDepth = gl_FragCoord.z / gl_FragCoord.w;

@@ -210,14 +210,14 @@
             }
 
             async initMesh() {
-                const { loadResource } = WorldController;
+                const { loadGLTF } = WorldController;
 
                 // https://forum.sketchfab.com/t/download-sketchfab-model-as-single-glb-or-gltf-file/38769
                 // https://sbtron.github.io/makeglb/
-                const resource = await loadResource('assets/models/gltf/crystal.glb');
+                const gltf = await loadGLTF('assets/models/gltf/crystal.glb');
 
                 // Sketchfab model
-                const model = resource.scene.children[0];
+                const model = gltf.scene.children[0];
                 model.rotation.z = degToRad(200);
                 model.scale.multiplyScalar(0.01);
 
@@ -226,7 +226,7 @@
                 mesh.position.x = 20; // Centre the axis
                 mesh.material.side = FrontSide;
 
-                this.add(resource.scene);
+                this.add(gltf.scene);
             }
 
             /**
@@ -847,9 +847,9 @@
 
             static loadEnvironmentTexture = path => this.environmentLoader.loadAsync(path);
 
-            static getResource = (path, callback) => this.gltfLoader.load(path, callback);
+            static getGLTF = (path, callback) => this.gltfLoader.load(path, callback);
 
-            static loadResource = path => this.gltfLoader.loadAsync(path);
+            static loadGLTF = path => this.gltfLoader.loadAsync(path);
 
             static getFrustum = offsetZ => getFrustum(this.camera, offsetZ);
         }

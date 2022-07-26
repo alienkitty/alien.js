@@ -13,7 +13,7 @@
 <body>
     <div id="root"></div>
     <script type="module">
-        import { ACESFilmicToneMapping, BloomCompositeMaterial, Color, DirectionalLight, EnvironmentTextureLoader, Events, FXAAMaterial, Fog, GLSL3, Group, HemisphereLight, LuminosityMaterial, MaterialPanelController, Mesh, MeshBasicMaterial, MeshStandardMaterial, NoBlending, OrthographicCamera, PanelItem, PerspectiveCamera, PlaneGeometry, RawShaderMaterial, Reflector, RepeatWrapping, SVGLoader, Scene, Stage, TextureLoader, UI, Uniform, UnrealBloomBlurMaterial, Vector2, Vector3, WebGLRenderTarget, WebGLRenderer, floorPowerOfTwo, getFullscreenTriangle, lerp, ticker } from '../build/alien.js';
+        import { ACESFilmicToneMapping, BloomCompositeMaterial, Color, DirectionalLight, Events, FXAAMaterial, Fog, GLSL3, Group, HemisphereLight, LuminosityMaterial, Mesh, MeshBasicMaterial, MeshStandardMaterial, NoBlending, OrthographicCamera, PanelItem, PerspectiveCamera, PlaneGeometry, RawShaderMaterial, Reflector, RepeatWrapping, SVGLoader, Scene, Stage, TextureLoader, UI, Uniform, UnrealBloomBlurMaterial, Vector2, Vector3, WebGLRenderTarget, WebGLRenderer, floorPowerOfTwo, getFullscreenTriangle, lerp, ticker } from '../build/alien.js';
 
         import rgbshift from '../src/shaders/modules/rgbshift/rgbshift.glsl.js';
 
@@ -130,42 +130,28 @@
                 // 2nd set of UV's for aoMap and lightMap
                 geometry.attributes.uv2 = geometry.attributes.uv;
 
-                // Textures
-                const [map, normalMap, ormMap] = await Promise.all([
-                    // loadTexture('assets/textures/uv.jpg'),
-                    loadTexture('assets/textures/pbr/concrete_wet_floor_basecolor.jpg'),
-                    loadTexture('assets/textures/pbr/concrete_wet_floor_normal.jpg'),
-                    // https://occlusion-roughness-metalness.glitch.me/
-                    loadTexture('assets/textures/pbr/concrete_wet_floor_orm.jpg')
-                ]);
-
-                map.wrapS = RepeatWrapping;
-                map.wrapT = RepeatWrapping;
-                map.repeat.set(16, 16);
-
+                const normalMap = await loadTexture('assets/textures/pbr/polished_concrete_normal.jpg');
                 normalMap.wrapS = RepeatWrapping;
                 normalMap.wrapT = RepeatWrapping;
-                normalMap.repeat.set(16, 16);
-
-                ormMap.wrapS = RepeatWrapping;
-                ormMap.wrapT = RepeatWrapping;
-                ormMap.repeat.set(16, 16);
 
                 const material = new MeshStandardMaterial({
-                    color: new Color().offsetHSL(0, 0, -0.65),
-                    metalness: 1,
+                    color: new Color(0x111111),
+                    metalness: 0,
                     roughness: 1,
-                    map,
-                    metalnessMap: ormMap,
-                    roughnessMap: ormMap,
                     normalMap,
-                    normalScale: new Vector2(-3, -3),
-                    envMapIntensity: 1
+                    normalScale: new Vector2(5, 5)
                 });
+
+                const uniforms = {
+                    mirror: new Uniform(1),
+                    mixStrength: new Uniform(10)
+                };
 
                 material.onBeforeCompile = shader => {
                     shader.uniforms.reflectMap = this.reflector.renderTargetUniform;
                     shader.uniforms.textureMatrix = this.reflector.textureMatrixUniform;
+
+                    shader.uniforms = Object.assign(shader.uniforms, uniforms);
 
                     shader.vertexShader = shader.vertexShader.replace(
                         'void main() {',
@@ -192,6 +178,8 @@
                         'void main() {',
                         /* glsl */ `
                         uniform sampler2D reflectMap;
+                        uniform float mirror;
+                        uniform float mixStrength;
                         in vec4 vCoord;
                         in vec3 vToEye;
 
@@ -217,7 +205,7 @@
 
                         reflectColor = mix(vec4(0), reflectColor, reflectance);
 
-                        totalEmissiveRadiance += reflectColor.rgb * metalnessFactor;
+                        diffuseColor.rgb = diffuseColor.rgb * ((1.0 - min(1.0, mirror)) + reflectColor.rgb * mixStrength);
                         `
                     );
                 };
@@ -235,7 +223,7 @@
 
                 this.add(mesh);
 
-                this.material = material;
+                this.uniforms = uniforms;
             }
 
             /**
@@ -323,17 +311,35 @@
 
                 const { luminosityMaterial, bloomCompositeMaterial, compositeMaterial } = RenderManager;
 
-                [
+                const items = [
                     {
                         label: 'FPS'
                     },
-                ].forEach(data => {
-                    this.ui.addPanel(new PanelItem(data));
-                });
-
-                MaterialPanelController.init(this.ui, floor.material);
-
-                [
+                    {
+                        type: 'divider'
+                    },
+                    {
+                        type: 'slider',
+                        label: 'Mirror',
+                        min: 0,
+                        max: 1,
+                        step: 0.01,
+                        value: floor.uniforms.mirror.value,
+                        callback: value => {
+                            floor.uniforms.mirror.value = value;
+                        }
+                    },
+                    {
+                        type: 'slider',
+                        label: 'Strength',
+                        min: 0,
+                        max: 10,
+                        step: 0.1,
+                        value: floor.uniforms.mixStrength.value,
+                        callback: value => {
+                            floor.uniforms.mixStrength.value = value;
+                        }
+                    },
                     {
                         type: 'divider'
                     },
@@ -394,7 +400,9 @@
                             compositeMaterial.uniforms.uBloomDistortion.value = value;
                         }
                     }
-                ].forEach(data => {
+                ];
+
+                items.forEach(data => {
                     this.ui.addPanel(new PanelItem(data));
                 });
             }
@@ -690,7 +698,6 @@
                 this.initWorld();
                 this.initLights();
                 this.initLoaders();
-                this.initEnvironment();
 
                 this.addListeners();
             }
@@ -736,12 +743,7 @@
 
             static initLoaders() {
                 this.textureLoader = new TextureLoader();
-                this.environmentLoader = new EnvironmentTextureLoader(this.renderer);
                 this.svgLoader = new SVGLoader();
-            }
-
-            static async initEnvironment() {
-                this.scene.environment = await this.loadEnvironmentTexture('assets/textures/env/arches_pinetree.jpg');
             }
 
             static addListeners() {
@@ -777,8 +779,6 @@
 
             static loadTexture = path => this.textureLoader.loadAsync(path);
 
-            static loadEnvironmentTexture = path => this.environmentLoader.loadAsync(path);
-
             static loadSVG = path => this.svgLoader.loadAsync(path);
         }
 
@@ -792,11 +792,7 @@
                 this.addListeners();
                 this.onResize();
 
-                await Promise.all([
-                    SceneController.ready(),
-                    WorldController.textureLoader.ready(),
-                    WorldController.environmentLoader.ready()
-                ]);
+                await SceneController.ready();
 
                 this.initPanel();
 

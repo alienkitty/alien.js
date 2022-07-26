@@ -406,7 +406,10 @@
                 map.wrapT = RepeatWrapping;
                 map.repeat.set(6, 6);
 
-                const material = new ReflectorDudvMaterial(map);
+                const material = new ReflectorDudvMaterial({
+                    map,
+                    reflectivity: 0.8
+                });
                 material.uniforms.tReflect = new Uniform(this.reflector.renderTarget.texture);
                 material.uniforms.tReflectBlur = this.reflector.renderTargetUniform;
                 material.uniforms.uMatrix = this.reflector.textureMatrixUniform;
@@ -423,6 +426,8 @@
                 };
 
                 this.add(mesh);
+
+                this.material = material;
             }
 
             /**
@@ -512,7 +517,9 @@
         }
 
         class PanelController {
-            static init() {
+            static init(view) {
+                this.view = view;
+
                 this.initViews();
                 this.initPanel();
             }
@@ -524,6 +531,8 @@
             }
 
             static initPanel() {
+                const { floor } = this.view;
+
                 const { luminosityMaterial, bloomCompositeMaterial, compositeMaterial } = RenderManager;
 
                 const postOptions = {
@@ -534,6 +543,20 @@
                 const items = [
                     {
                         label: 'FPS'
+                    },
+                    {
+                        type: 'divider'
+                    },
+                    {
+                        type: 'slider',
+                        label: 'Reflect',
+                        min: 0,
+                        max: 1,
+                        step: 0.01,
+                        value: floor.material.uniforms.uReflectivity.value,
+                        callback: value => {
+                            floor.material.uniforms.uReflectivity.value = value;
+                        }
                     },
                     {
                         type: 'divider'
@@ -1067,7 +1090,7 @@
             }
 
             static initPanel() {
-                PanelController.init();
+                PanelController.init(this.view);
             }
 
             static addListeners() {

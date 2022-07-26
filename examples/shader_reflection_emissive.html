@@ -119,7 +119,7 @@
             }
 
             initReflector() {
-                this.reflector = new Reflector({ blurFactor: 0.8 });
+                this.reflector = new Reflector();
             }
 
             async initMesh() {
@@ -161,11 +161,12 @@
                     aoMap: ormMap,
                     aoMapIntensity: 1,
                     normalMap,
-                    normalScale: new Vector2(-3, -3)
+                    normalScale: new Vector2(3, 3)
                 });
 
                 const uniforms = {
-                    reflectAmount: new Uniform(0.2)
+                    mirror: new Uniform(0),
+                    mixStrength: new Uniform(10)
                 };
 
                 material.onBeforeCompile = shader => {
@@ -179,6 +180,7 @@
                         /* glsl */ `
                         uniform mat4 textureMatrix;
                         out vec4 vCoord;
+                        out vec3 vToEye;
 
                         void main() {
                         `
@@ -190,6 +192,7 @@
                         #include <project_vertex>
 
                         vCoord = textureMatrix * vec4(transformed, 1.0);
+                        vToEye = cameraPosition - (modelMatrix * vec4(transformed, 1.0)).xyz;
                         `
                     );
 
@@ -197,20 +200,34 @@
                         'void main() {',
                         /* glsl */ `
                         uniform sampler2D reflectMap;
-                        uniform float reflectAmount;
+                        uniform float mirror;
+                        uniform float mixStrength;
                         in vec4 vCoord;
+                        in vec3 vToEye;
 
                         void main() {
                         `
                     );
 
                     shader.fragmentShader = shader.fragmentShader.replace(
-                        'vec3 outgoingLight = totalDiffuse + totalSpecular + totalEmissiveRadiance;',
+                        '#include <emissivemap_fragment>',
                         /* glsl */ `
-                        vec3 totalReflect = textureProj(reflectMap, vCoord).rgb;
-                        totalReflect *= reflectAmount;
+                        #include <emissivemap_fragment>
 
-                        vec3 outgoingLight = totalDiffuse + totalSpecular + totalEmissiveRadiance + totalReflect;
+                        vec4 normalColor = texture2D(normalMap, vUv * normalScale);
+                        vec3 reflectNormal = normalize(vec3(normalColor.r * 2.0 - 1.0, normalColor.b, normalColor.g * 2.0 - 1.0));
+                        vec3 reflectCoord = vCoord.xyz / vCoord.w;
+                        vec2 reflectUv = reflectCoord.xy + reflectCoord.z * reflectNormal.xz * 0.05;
+                        vec4 reflectColor = texture2D(reflectMap, reflectUv);
+
+                        // Fresnel term
+                        vec3 toEye = normalize(vToEye);
+                        float theta = max(dot(toEye, normal), 0.0);
+                        float reflectance = pow((1.0 - theta), 5.0);
+
+                        reflectColor = mix(vec4(0), reflectColor, reflectance);
+
+                        diffuseColor.rgb = diffuseColor.rgb * ((1.0 - min(1.0, mirror)) + reflectColor.rgb * mixStrength);
                         `
                     );
                 };
@@ -325,13 +342,24 @@
                     },
                     {
                         type: 'slider',
-                        label: 'Amount',
+                        label: 'Mirror',
                         min: 0,
                         max: 1,
                         step: 0.01,
-                        value: floor.uniforms.reflectAmount.value,
+                        value: floor.uniforms.mirror.value,
                         callback: value => {
-                            floor.uniforms.reflectAmount.value = value;
+                            floor.uniforms.mirror.value = value;
+                        }
+                    },
+                    {
+                        type: 'slider',
+                        label: 'Strength',
+                        min: 0,
+                        max: 10,
+                        step: 0.1,
+                        value: floor.uniforms.mixStrength.value,
+                        callback: value => {
+                            floor.uniforms.mixStrength.value = value;
                         }
                     },
                     {

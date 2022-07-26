@@ -242,7 +242,10 @@
                 map.wrapT = RepeatWrapping;
                 map.repeat.set(6, 6);
 
-                const material = new ReflectorDudvMaterial(map);
+                const material = new ReflectorDudvMaterial({
+                    map,
+                    reflectivity: 0.8
+                });
                 material.uniforms.tReflect = new Uniform(this.reflector.renderTarget.texture);
                 material.uniforms.tReflectBlur = this.reflector.renderTargetUniform;
                 material.uniforms.uMatrix = this.reflector.textureMatrixUniform;

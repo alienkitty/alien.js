@@ -98047,44 +98047,55 @@ class TiltShiftMaterial extends RawShaderMaterial {
 
 var vertexShader$6 = /* glsl */ `
 in vec3 position;
+in vec3 normal;
 in vec2 uv;
 
-uniform mat4 modelViewMatrix;
+uniform mat4 modelMatrix;
 uniform mat4 projectionMatrix;
+uniform mat4 viewMatrix;
+uniform mat3 normalMatrix;
+uniform vec3 cameraPosition;
 
 uniform mat3 uMapTransform;
 uniform mat4 uMatrix;
 
 out vec2 vUv;
 out vec4 vCoord;
+out vec3 vNormal;
+out vec3 vToEye;
 
 void main() {
     vUv = (uMapTransform * vec3(uv, 1.0)).xy;
     vCoord = uMatrix * vec4(position, 1.0);
+    vNormal = normalMatrix * normal;
 
-    gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+    vec4 worldPosition = modelMatrix * vec4(position, 1.0);
+    vToEye = cameraPosition - worldPosition.xyz;
+
+    vec4 mvPosition = viewMatrix * worldPosition;
+    gl_Position = projectionMatrix * mvPosition;
 }
 `;
 
-// Based on https://github.com/pmndrs/postprocessing by vanruesc
-
-var blendOverlay = /* glsl */ `
-float blendOverlay(float x, float y) {
-    return (x < 0.5) ? (2.0 * x * y) : (1.0 - 2.0 * (1.0 - x) * (1.0 - y));
-}
-
-vec4 blendOverlay(vec4 x, vec4 y, float opacity) {
-    vec4 z = vec4(blendOverlay(x.r, y.r), blendOverlay(x.g, y.g), blendOverlay(x.b, y.b), blendOverlay(x.a, y.a));
-    return z * opacity + x * (1.0 - opacity);
-}
-`;
+// Based on {@link module:three/examples/jsm/objects/Water2.js} by Mugen87
 
 var fragmentShader$6 = /* glsl */ `
 precision highp float;
 
-uniform sampler2D tMap;
 uniform sampler2D tReflect;
 uniform vec3 uColor;
+uniform float uReflectivity;
+uniform float uMirror;
+uniform float uMixStrength;
+
+#ifdef USE_MAP
+    uniform sampler2D tMap;
+#endif
+
+#ifdef USE_NORMALMAP
+    uniform sampler2D tNormalMap;
+    uniform vec2 uNormalScale;
+#endif
 
 #ifdef USE_FOG
     uniform vec3 uFogColor;
@@ -98094,22 +98105,39 @@ uniform vec3 uColor;
 
 in vec2 vUv;
 in vec4 vCoord;
+in vec3 vNormal;
+in vec3 vToEye;
 
 out vec4 FragColor;
 
-${blendOverlay}
 ${dither}
 
 void main() {
-    vec4 base = texture(tMap, vUv);
-    vec4 blend = textureProj(tReflect, vCoord);
+    #ifdef USE_MAP
+        vec4 color = texture(tMap, vUv);
+    #else
+        vec4 color = vec4(uColor, 1.0);
+    #endif
 
-    FragColor = base * blend;
+    #ifdef USE_NORMALMAP
+        vec4 normalColor = texture(tNormalMap, vUv * uNormalScale);
+        vec3 normal = normalize(vec3(normalColor.r * 2.0 - 1.0, normalColor.b, normalColor.g * 2.0 - 1.0));
+        vec3 coord = vCoord.xyz / vCoord.w;
+        vec2 uv = coord.xy + coord.z * normal.xz * 0.05;
+        vec4 reflectColor = texture(tReflect, uv);
+    #else
+        vec3 normal = vNormal;
+        vec4 reflectColor = textureProj(tReflect, vCoord);
+    #endif
 
-    base = FragColor;
-    blend = vec4(uColor, 1.0);
+    // Fresnel term
+    vec3 toEye = normalize(vToEye);
+    float theta = max(dot(toEye, normal), 0.0);
+    float reflectance = uReflectivity + (1.0 - uReflectivity) * pow((1.0 - theta), 5.0);
 
-    FragColor = blendOverlay(base, blend, 1.0);
+    reflectColor = mix(vec4(0), reflectColor, reflectance);
+
+    FragColor.rgb = color.rgb * ((1.0 - min(1.0, uMirror)) + reflectColor.rgb * uMixStrength);
 
     #ifdef USE_FOG
         float fogDepth = gl_FragCoord.z / gl_FragCoord.w;
@@ -98128,8 +98156,13 @@ void main() {
 
 class ReflectorMaterial extends RawShaderMaterial {
     constructor({
-        color = new Color$1(0x7f7f7f),
+        color = new Color$1(0x101010),
         map = null,
+        normalMap = null,
+        normalScale = new Vector2$1(1, 1),
+        reflectivity = 0,
+        mirror = 0,
+        mixStrength = 10,
         fog = null,
         dithering = false
     } = {}) {
@@ -98138,11 +98171,13 @@ class ReflectorMaterial extends RawShaderMaterial {
             defines: {
             },
             uniforms: {
-                tMap: new Uniform(null),
                 tReflect: new Uniform(null),
                 uMapTransform: new Uniform(new Matrix3()),
                 uMatrix: new Uniform(new Matrix4()),
-                uColor: new Uniform(color instanceof Color$1 ? color : new Color$1(color))
+                uColor: new Uniform(color instanceof Color$1 ? color : new Color$1(color)),
+                uReflectivity: new Uniform(reflectivity),
+                uMirror: new Uniform(mirror),
+                uMixStrength: new Uniform(mixStrength)
             },
             vertexShader: vertexShader$6,
             fragmentShader: fragmentShader$6,
@@ -98152,10 +98187,33 @@ class ReflectorMaterial extends RawShaderMaterial {
         if (map) {
             map.updateMatrix();
 
+            parameters.defines = Object.assign(parameters.defines, {
+                USE_MAP: ''
+            });
+
             parameters.uniforms = Object.assign(parameters.uniforms, {
                 tMap: new Uniform(map),
                 uMapTransform: new Uniform(map.matrix)
             });
+        }
+
+        if (normalMap) {
+            parameters.defines = Object.assign(parameters.defines, {
+                USE_NORMALMAP: ''
+            });
+
+            parameters.uniforms = Object.assign(parameters.uniforms, {
+                tNormalMap: new Uniform(normalMap),
+                uNormalScale: new Uniform(normalScale)
+            });
+
+            if (!map) {
+                normalMap.updateMatrix();
+
+                parameters.uniforms = Object.assign(parameters.uniforms, {
+                    uMapTransform: new Uniform(normalMap.matrix)
+                });
+            }
         }
 
         if (fog) {
@@ -98182,22 +98240,33 @@ class ReflectorMaterial extends RawShaderMaterial {
 
 var vertexShader$5 = /* glsl */ `
 in vec3 position;
+in vec3 normal;
 in vec2 uv;
 
-uniform mat4 modelViewMatrix;
+uniform mat4 modelMatrix;
 uniform mat4 projectionMatrix;
+uniform mat4 viewMatrix;
+uniform mat3 normalMatrix;
+uniform vec3 cameraPosition;
 
 uniform mat3 uMapTransform;
 uniform mat4 uMatrix;
 
 out vec2 vUv;
 out vec4 vCoord;
+out vec3 vNormal;
+out vec3 vToEye;
 
 void main() {
     vUv = (uMapTransform * vec3(uv, 1.0)).xy;
     vCoord = uMatrix * vec4(position, 1.0);
+    vNormal = normalMatrix * normal;
 
-    gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+    vec4 worldPosition = modelMatrix * vec4(position, 1.0);
+    vToEye = cameraPosition - worldPosition.xyz;
+
+    vec4 mvPosition = viewMatrix * worldPosition;
+    gl_Position = projectionMatrix * mvPosition;
 }
 `;
 
@@ -98207,9 +98276,12 @@ precision highp float;
 uniform sampler2D tMap;
 uniform sampler2D tReflect;
 uniform sampler2D tReflectBlur;
+uniform float uReflectivity;
 
 in vec2 vUv;
 in vec4 vCoord;
+in vec3 vNormal;
+in vec3 vToEye;
 
 out vec4 FragColor;
 
@@ -98231,23 +98303,41 @@ void main() {
 
     FragColor = color * mix(0.6, 0.75, dudv.g);
 
-    FragColor.rgb = dither(FragColor.rgb);
+    // Fresnel term
+    vec3 toEye = normalize(vToEye);
+    float theta = max(dot(toEye, vNormal), 0.0);
+    float reflectance = uReflectivity + (1.0 - uReflectivity) * pow((1.0 - theta), 5.0);
+
+    FragColor = mix(vec4(0), FragColor, reflectance);
+
+    #ifdef DITHERING
+        FragColor.rgb = dither(FragColor.rgb);
+    #endif
+
     FragColor.a = 1.0;
 }
 `;
 
 class ReflectorDudvMaterial extends RawShaderMaterial {
-    constructor(map) {
+    constructor({
+        map = null,
+        reflectivity = 0,
+        dithering = false
+    } = {}) {
         map.updateMatrix();
 
         super({
             glslVersion: GLSL3,
+            defines: {
+                DITHERING: dithering
+            },
             uniforms: {
                 tMap: new Uniform(map),
                 tReflect: new Uniform(null),
                 tReflectBlur: new Uniform(null),
                 uMapTransform: new Uniform(map.matrix),
-                uMatrix: new Uniform(new Matrix4())
+                uMatrix: new Uniform(new Matrix4()),
+                uReflectivity: new Uniform(reflectivity)
             },
             vertexShader: vertexShader$5,
             fragmentShader: fragmentShader$5,

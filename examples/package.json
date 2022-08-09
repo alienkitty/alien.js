@@ -1,5 +1,4 @@
 {
-  "name": "alien-examples",
   "private": true,
   "scripts": {
     "build": "rollup -c",

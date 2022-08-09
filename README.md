@@ -160,8 +160,6 @@ In its design, everything is an ES module, all user interfaces and components fo
 [scroll](https://alien.js.org/examples/transitions/scroll_content_views/) (smooth scroll with scroll direction and camera parallax, [debug](https://alien.js.org/examples/transitions/scroll_content_views/?debug))  
 [camera](https://alien.js.org/examples/transitions/camera/) (with motion blur and tilt shift effect, [debug](https://alien.js.org/examples/transitions/camera/?debug))  
 
-<br>
-
 ### Class structure
 
 ```js
@@ -265,6 +263,69 @@ class Logo extends Interface {
         return super.destroy();
     };
 }
+```
+
+### Class hierarchy
+
+```mermaid
+classDiagram
+class Preloader {
+  init()
+  onComplete()
+}
+class App {
+  init()
+  onResize()
+  onUpdate(time, delta, frame)
+}
+class WorldController {
+  renderer
+  scene
+  camera
+  resolution
+  aspect
+  time
+  frame
+  init()
+  resize(width, height, dpr)
+  update(time, delta, frame)
+}
+class CameraController {
+  init(camera)
+  resize(width, height)
+  update()
+}
+class SceneController {
+  init(view)
+  resize()
+  update()
+}
+class InputManager {
+  init(camera)
+  update(time)
+  add(...objects)
+  remove(...objects)
+}
+class RenderManager {
+  init(renderer, scene, camera)
+  resize(width, height, dpr)
+  update()
+}
+class AudioController {
+  init()
+  trigger(event, ...params)
+}
+Preloader --> App
+App --> WorldController
+App --> CameraController
+App --> SceneController
+App --> InputManager
+App --> RenderManager
+SceneController --> SceneView
+App --> SceneView
+SceneView --> "many" View : Contains
+Group <|-- SceneView
+Group <|-- View
 ```
 
 ### Getting started

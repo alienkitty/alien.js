@@ -11,7 +11,6 @@ import {
     OrthographicCamera,
     PerspectiveCamera,
     Plane,
-    Scene,
     Uniform,
     Vector3,
     Vector4,
@@ -72,14 +71,12 @@ export class Reflector extends Group {
         this.blurMaterial.uniforms.uResolution.value.set(width, height);
 
         // Fullscreen triangle
-        this.screenScene = new Scene();
         this.screenCamera = new OrthographicCamera(-1, 1, 1, -1, 0, 1);
 
         this.screenTriangle = getFullscreenTriangle();
 
         this.screen = new Mesh(this.screenTriangle, this.blurMaterial);
         this.screen.frustumCulled = false;
-        this.screenScene.add(this.screen);
     }
 
     setSize(width, height) {
@@ -207,7 +204,7 @@ export class Reflector extends Group {
                 renderer.clear();
             }
 
-            renderer.render(this.screenScene, this.screenCamera);
+            renderer.render(this.screen, this.screenCamera);
 
             // Swap render targets
             const temp = this.renderTargetRead;

@@ -26,15 +26,14 @@ export class App {
         this.addListeners();
         this.onResize();
 
-        await this.loader.ready();
-
-        this.initAudio();
-
         await Promise.all([
             SceneController.ready(),
             WorldController.textureLoader.ready(),
-            WorldController.environmentLoader.ready()
+            WorldController.environmentLoader.ready(),
+            this.loader.ready()
         ]);
+
+        this.initAudio();
 
         if (Config.GUI) {
             this.initPanel();

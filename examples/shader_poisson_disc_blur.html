@@ -129,12 +129,9 @@
                 const { screenTriangle, resolution, time } = WorldController;
 
                 // Fullscreen triangle
-                this.screenScene = new Scene();
                 this.screenCamera = new OrthographicCamera(-1, 1, 1, -1, 0, 1);
-
                 this.screen = new Mesh(screenTriangle);
                 this.screen.frustumCulled = false;
-                this.screenScene.add(this.screen);
 
                 // Render targets
                 this.renderTargetA = new WebGLRenderTarget(1, 1, {
@@ -187,9 +184,6 @@
                     return;
                 }
 
-                const screenScene = this.screenScene;
-                const screenCamera = this.screenCamera;
-
                 const renderTargetA = this.renderTargetA;
                 const renderTargetB = this.renderTargetB;
 
@@ -201,13 +195,13 @@
                 this.fxaaMaterial.uniforms.tMap.value = renderTargetA.texture;
                 this.screen.material = this.fxaaMaterial;
                 renderer.setRenderTarget(renderTargetB);
-                renderer.render(screenScene, screenCamera);
+                renderer.render(this.screen, this.screenCamera);
 
                 // Poisson-disc blur pass (render to screen)
                 this.blurMaterial.uniforms.tMap.value = renderTargetB.texture;
                 this.screen.material = this.blurMaterial;
                 renderer.setRenderTarget(null);
-                renderer.render(screenScene, screenCamera);
+                renderer.render(this.screen, this.screenCamera);
             };
         }
 

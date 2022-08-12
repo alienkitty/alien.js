@@ -696,7 +696,7 @@
                 this.glitchDistortion2 = 0.04;
                 this.glitchSpeed = 0.01;
                 this.blurResolutionScale = 0.25;
-                this.blurFactor = 3.5;
+                this.blurFactor = 6;
                 this.luminosityThreshold = 0.1;
                 this.luminositySmoothing = 1;
                 this.bloomStrength = 0.3;
@@ -716,12 +716,9 @@
                 this.renderer.autoClear = false;
 
                 // Fullscreen triangle
-                this.screenScene = new Scene();
                 this.screenCamera = new OrthographicCamera(-1, 1, 1, -1, 0, 1);
-
                 this.screen = new Mesh(screenTriangle);
                 this.screen.frustumCulled = false;
-                this.screenScene.add(this.screen);
 
                 // Render targets
                 this.renderTargetA = new WebGLRenderTarget(1, 1, {
@@ -749,9 +746,8 @@
                 this.renderTargetHologram.depthBuffer = true;
                 this.renderTargetBlurA.depthBuffer = true;
 
-                // Background scene
-                this.backgroundScene = new Scene();
-                this.backgroundScene.background = new Color(0x0e0e0e);
+                // Mask materials
+                this.blackoutMaterial = new MeshBasicMaterial({ color: 0x000000 });
 
                 // Video glitch material
                 this.videoGlitchMaterial = new VideoGlitchMaterial();
@@ -760,17 +756,9 @@
                 this.videoGlitchMaterial.uniforms.uSpeed.value = this.glitchSpeed;
                 this.videoGlitchMaterial.uniforms.uTime = time;
 
-                // Mask materials
-                this.blackoutMaterial = new MeshBasicMaterial({ color: 0x000000 });
-
                 // FXAA material
                 this.fxaaMaterial = new FXAAMaterial();
                 this.fxaaMaterial.uniforms.uResolution = resolution;
-
-                // Luminosity high pass material
-                this.luminosityMaterial = new LuminosityMaterial();
-                this.luminosityMaterial.uniforms.uThreshold.value = this.luminosityThreshold;
-                this.luminosityMaterial.uniforms.uSmoothing.value = this.luminositySmoothing;
 
                 // Gaussian blur materials
                 this.hBlurMaterial = new BlurMaterial(BlurDirectionX);
@@ -781,6 +769,12 @@
                 this.vBlurMaterial.uniforms.uBluriness.value = this.blurFactor;
                 this.vBlurMaterial.uniforms.uResolution = resolution;
 
+                // Luminosity high pass material
+                this.luminosityMaterial = new LuminosityMaterial();
+                this.luminosityMaterial.uniforms.uThreshold.value = this.luminosityThreshold;
+                this.luminosityMaterial.uniforms.uSmoothing.value = this.luminositySmoothing;
+
+                // Separable Gaussian blur materials
                 this.blurMaterials = [];
 
                 const kernelSizeArray = [3, 5, 7, 9, 11];
@@ -871,9 +865,6 @@
                     return;
                 }
 
-                const screenScene = this.screenScene;
-                const screenCamera = this.screenCamera;
-
                 const renderTargetA = this.renderTargetA;
                 const renderTargetB = this.renderTargetB;
                 const renderTargetC = this.renderTargetC;
@@ -885,19 +876,20 @@
                 const renderTargetsVertical = this.renderTargetsVertical;
 
                 const currentOverrideMaterial = scene.overrideMaterial;
+                const currentBackground = scene.background;
+                const currentClearAlpha = renderer.getClearAlpha();
 
                 camera.layers.set(Layer.DEFAULT);
 
-                // Background scene
-                renderer.setRenderTarget(renderTargetA);
-                renderer.clear();
-                renderer.render(this.backgroundScene, camera);
-
                 // Scene layer
                 renderer.setRenderTarget(renderTargetA);
+                renderer.clear();
                 renderer.render(scene, camera);
 
                 // Hologram layer
+                scene.background = null;
+                renderer.setClearAlpha(0);
+
                 scene.overrideMaterial = this.blackoutMaterial;
                 renderer.setRenderTarget(renderTargetHologram);
                 renderer.clear();
@@ -912,7 +904,7 @@
                 this.screen.material = this.videoGlitchMaterial;
                 renderer.setRenderTarget(renderTargetB);
                 renderer.clear();
-                renderer.render(screenScene, screenCamera);
+                renderer.render(this.screen, this.screenCamera);
 
                 // Glow layer
                 camera.layers.set(Layer.DEFAULT);
@@ -927,47 +919,26 @@
 
                 renderer.render(scene, camera);
 
-                this.hBlurMaterial.uniforms.tMap.value = renderTargetBlurA.texture;
-                this.screen.material = this.hBlurMaterial;
-                renderer.setRenderTarget(renderTargetBlurB);
-                renderer.clear();
-                renderer.render(screenScene, screenCamera);
-
-                this.vBlurMaterial.uniforms.tMap.value = renderTargetBlurB.texture;
-                this.screen.material = this.vBlurMaterial;
-                renderer.setRenderTarget(renderTargetBlurA);
-                renderer.clear();
-                renderer.render(screenScene, screenCamera);
+                renderer.setClearAlpha(currentClearAlpha);
+                scene.background = currentBackground;
 
                 this.hBlurMaterial.uniforms.tMap.value = renderTargetBlurA.texture;
                 this.screen.material = this.hBlurMaterial;
                 renderer.setRenderTarget(renderTargetBlurB);
                 renderer.clear();
-                renderer.render(screenScene, screenCamera);
+                renderer.render(this.screen, this.screenCamera);
 
                 this.vBlurMaterial.uniforms.tMap.value = renderTargetBlurB.texture;
                 this.screen.material = this.vBlurMaterial;
                 renderer.setRenderTarget(renderTargetBlurA);
                 renderer.clear();
-                renderer.render(screenScene, screenCamera);
-
-                this.hBlurMaterial.uniforms.tMap.value = renderTargetBlurA.texture;
-                this.screen.material = this.hBlurMaterial;
-                renderer.setRenderTarget(renderTargetBlurB);
-                renderer.clear();
-                renderer.render(screenScene, screenCamera);
-
-                this.vBlurMaterial.uniforms.tMap.value = renderTargetBlurB.texture;
-                this.screen.material = this.vBlurMaterial;
-                renderer.setRenderTarget(renderTargetBlurA);
-                renderer.clear();
-                renderer.render(screenScene, screenCamera);
+                renderer.render(this.screen, this.screenCamera);
 
                 this.videoGlitchMaterial.uniforms.tMap.value = renderTargetBlurA.texture;
                 this.screen.material = this.videoGlitchMaterial;
                 renderer.setRenderTarget(renderTargetBlurB);
                 renderer.clear();
-                renderer.render(screenScene, screenCamera);
+                renderer.render(this.screen, this.screenCamera);
 
                 // Scene composite pass
                 this.sceneCompositeMaterial.uniforms.tScene.value = renderTargetA.texture;
@@ -976,23 +947,21 @@
                 this.screen.material = this.sceneCompositeMaterial;
                 renderer.setRenderTarget(renderTargetC);
                 renderer.clear();
-                renderer.render(screenScene, screenCamera);
-
-                camera.layers.set(Layer.DEFAULT);
+                renderer.render(this.screen, this.screenCamera);
 
                 // FXAA pass
                 this.fxaaMaterial.uniforms.tMap.value = renderTargetC.texture;
                 this.screen.material = this.fxaaMaterial;
                 renderer.setRenderTarget(renderTargetA);
                 renderer.clear();
-                renderer.render(screenScene, screenCamera);
+                renderer.render(this.screen, this.screenCamera);
 
                 // Extract bright areas
                 this.luminosityMaterial.uniforms.tMap.value = renderTargetA.texture;
                 this.screen.material = this.luminosityMaterial;
                 renderer.setRenderTarget(renderTargetBright);
                 renderer.clear();
-                renderer.render(screenScene, screenCamera);
+                renderer.render(this.screen, this.screenCamera);
 
                 // Blur all the mips progressively
                 let inputRenderTarget = renderTargetBright;
@@ -1004,13 +973,13 @@
                     this.blurMaterials[i].uniforms.uDirection.value = BlurDirectionX;
                     renderer.setRenderTarget(renderTargetsHorizontal[i]);
                     renderer.clear();
-                    renderer.render(screenScene, screenCamera);
+                    renderer.render(this.screen, this.screenCamera);
 
                     this.blurMaterials[i].uniforms.tMap.value = this.renderTargetsHorizontal[i].texture;
                     this.blurMaterials[i].uniforms.uDirection.value = BlurDirectionY;
                     renderer.setRenderTarget(renderTargetsVertical[i]);
                     renderer.clear();
-                    renderer.render(screenScene, screenCamera);
+                    renderer.render(this.screen, this.screenCamera);
 
                     inputRenderTarget = renderTargetsVertical[i];
                 }
@@ -1019,7 +988,7 @@
                 this.screen.material = this.bloomCompositeMaterial;
                 renderer.setRenderTarget(renderTargetsHorizontal[0]);
                 renderer.clear();
-                renderer.render(screenScene, screenCamera);
+                renderer.render(this.screen, this.screenCamera);
 
                 // Composite pass
                 this.compositeMaterial.uniforms.tScene.value = renderTargetA.texture;
@@ -1027,14 +996,14 @@
                 this.screen.material = this.compositeMaterial;
                 renderer.setRenderTarget(renderTargetB);
                 renderer.clear();
-                renderer.render(screenScene, screenCamera);
+                renderer.render(this.screen, this.screenCamera);
 
                 // Chromatic aberration pass (render to screen)
                 this.chromaticAberrationMaterial.uniforms.tMap.value = renderTargetB.texture;
                 this.screen.material = this.chromaticAberrationMaterial;
                 renderer.setRenderTarget(null);
                 renderer.clear();
-                renderer.render(screenScene, screenCamera);
+                renderer.render(this.screen, this.screenCamera);
             };
         }
 
@@ -1062,6 +1031,7 @@
 
                 // 3D scene
                 this.scene = new Scene();
+                this.scene.background = new Color(0x0e0e0e);
                 this.camera = new PerspectiveCamera(30);
                 this.camera.near = 0.5;
                 this.camera.far = 40;

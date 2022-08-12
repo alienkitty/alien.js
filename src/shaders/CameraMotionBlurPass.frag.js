@@ -1,4 +1,4 @@
-// Based on https://github.com/blaze33/droneWorld by blaze33
+// Based on https://github.com/blaze33/droneWorld
 
 export default /* glsl */ `
 precision highp float;
@@ -17,6 +17,8 @@ uniform vec3 uCameraMove;
 in vec2 vUv;
 
 out vec4 FragColor;
+
+const int samples = 20;
 
 void main() {
     float fragCoordZ = texture(tDepth, vUv).x;
@@ -39,18 +41,16 @@ void main() {
     velocity *= clamp(length(worldPosition.xyz - cameraPosition) / 1000.0, 0.0, 1.0);
     velocity += uVelocityFactor * (clipPosition - translatedClipPosition).xy / uDelta * 16.67;
 
-    vec4 finalColor = vec4(0.0);
-    vec2 offset = vec2(0.0);
-    float weight = 0.0;
-    const int samples = 20;
+    vec4 color = vec4(0);
+    vec2 offset = vec2(0);
 
     for (int i = 0; i < samples; i++) {
         offset = velocity * (float(i) / (float(samples) - 1.0) - 0.5);
-        finalColor += texture(tMap, vUv + offset);
+        color += texture(tMap, vUv + offset);
     }
 
-    finalColor /= float(samples);
+    color /= float(samples);
 
-    FragColor = vec4(finalColor.rgb, 1.0);
+    FragColor = vec4(color.rgb, 1.0);
 }
 `;

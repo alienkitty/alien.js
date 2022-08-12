@@ -11,7 +11,6 @@ import {
     NoBlending,
     OrthographicCamera,
     RawShaderMaterial,
-    Scene,
     Uniform,
     Vector2,
     WebGLRenderTarget
@@ -68,14 +67,12 @@ export class Flowmap {
         });
 
         // Fullscreen triangle
-        this.screenScene = new Scene();
         this.screenCamera = new OrthographicCamera(-1, 1, 1, -1, 0, 1);
 
         this.screenTriangle = getFullscreenTriangle();
 
         this.screen = new Mesh(this.screenTriangle, this.material);
         this.screen.frustumCulled = false;
-        this.screenScene.add(this.screen);
     }
 
     update() {
@@ -85,7 +82,7 @@ export class Flowmap {
         this.renderer.autoClear = false;
 
         this.renderer.setRenderTarget(this.renderTargetWrite);
-        this.renderer.render(this.screenScene, this.screenCamera);
+        this.renderer.render(this.screen, this.screenCamera);
 
         // Swap render targets
         const temp = this.renderTargetRead;

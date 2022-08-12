@@ -2,17 +2,14 @@
  * @author pschroen / https://ufo.ai/
  */
 
-import { Box2, BoxGeometry, BufferAttribute, BufferGeometry, Vector3 } from 'three';
+import { Box2, BoxGeometry, BufferGeometry, Float32BufferAttribute, Vector3 } from 'three';
 
 import { degToRad, lerp, radToDeg } from '../Utils.js';
 
 export function getFullscreenTriangle() {
     const geometry = new BufferGeometry();
-    const vertices = new Float32Array([-1, -1, 3, -1, -1, 3]);
-    const uvs = new Float32Array([0, 0, 2, 0, 0, 2]);
-
-    geometry.setAttribute('position', new BufferAttribute(vertices, 2));
-    geometry.setAttribute('uv', new BufferAttribute(uvs, 2));
+    geometry.setAttribute('position', new Float32BufferAttribute([-1, -1, 3, -1, -1, 3], 2));
+    geometry.setAttribute('uv', new Float32BufferAttribute([0, 0, 2, 0, 0, 2], 2));
 
     return geometry;
 }

@@ -132,12 +132,9 @@
                 const { screenTriangle, resolution } = WorldController;
 
                 // Fullscreen triangle
-                this.screenScene = new Scene();
                 this.screenCamera = new OrthographicCamera(-1, 1, 1, -1, 0, 1);
-
                 this.screen = new Mesh(screenTriangle);
                 this.screen.frustumCulled = false;
-                this.screenScene.add(this.screen);
 
                 // Render targets
                 this.renderTargetA = new WebGLRenderTarget(1, 1, {
@@ -199,9 +196,6 @@
                     return;
                 }
 
-                const screenScene = this.screenScene;
-                const screenCamera = this.screenCamera;
-
                 const renderTargetA = this.renderTargetA;
                 const renderTargetB = this.renderTargetB;
                 const renderTargetBlurA = this.renderTargetBlurA;
@@ -215,24 +209,24 @@
                 this.fxaaMaterial.uniforms.tMap.value = renderTargetA.texture;
                 this.screen.material = this.fxaaMaterial;
                 renderer.setRenderTarget(renderTargetB);
-                renderer.render(screenScene, screenCamera);
+                renderer.render(this.screen, this.screenCamera);
 
                 // Bokeh blur pass
                 this.bokehBlurMaterial1.uniforms.tMap.value = renderTargetB.texture;
                 this.screen.material = this.bokehBlurMaterial1;
                 renderer.setRenderTarget(renderTargetBlurA);
-                renderer.render(screenScene, screenCamera);
+                renderer.render(this.screen, this.screenCamera);
 
                 this.bokehBlurMaterial2.uniforms.tMap.value = renderTargetBlurA.texture;
                 this.screen.material = this.bokehBlurMaterial2;
                 renderer.setRenderTarget(renderTargetBlurB);
-                renderer.render(screenScene, screenCamera);
+                renderer.render(this.screen, this.screenCamera);
 
                 // Copy pass (render to screen)
                 this.copyMaterial.uniforms.tMap.value = renderTargetBlurB.texture;
                 this.screen.material = this.copyMaterial;
                 renderer.setRenderTarget(null);
-                renderer.render(screenScene, screenCamera);
+                renderer.render(this.screen, this.screenCamera);
             };
         }
 

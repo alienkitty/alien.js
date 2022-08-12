@@ -279,7 +279,8 @@ export class Point3D extends Group {
 
     initMesh() {
         this.object.geometry.computeBoundingSphere();
-        const geometry = new SphereGeometry(this.object.geometry.boundingSphere.radius);
+        const { center, radius } = this.object.geometry.boundingSphere;
+        const geometry = new SphereGeometry(radius);
 
         let material;
 
@@ -293,6 +294,10 @@ export class Point3D extends Group {
         }
 
         this.mesh = new Mesh(geometry, material);
+        this.mesh.position.copy(this.object.position);
+        this.mesh.position.x = this.mesh.position.x + center.x;
+        this.mesh.position.y = this.mesh.position.y - center.y; // Y flipped
+        this.mesh.position.z = this.mesh.position.z + center.z;
         this.mesh.scale.copy(this.object.scale);
         this.add(this.mesh);
     }

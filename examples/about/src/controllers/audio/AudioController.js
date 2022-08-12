@@ -76,6 +76,8 @@ export class AudioController {
 
         window.removeEventListener('pointerdown', this.onPointerDown);
 
+        WebAudio.resume();
+
         this.instructions.toggle(false);
 
         this.trigger('bass_drum');

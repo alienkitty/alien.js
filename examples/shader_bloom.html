@@ -215,12 +215,9 @@
                 this.renderer.autoClear = false;
 
                 // Fullscreen triangle
-                this.screenScene = new Scene();
                 this.screenCamera = new OrthographicCamera(-1, 1, 1, -1, 0, 1);
-
                 this.screen = new Mesh(screenTriangle);
                 this.screen.frustumCulled = false;
-                this.screenScene.add(this.screen);
 
                 // Background scene
                 this.backgroundScene = new Scene();
@@ -287,9 +284,6 @@
                     return;
                 }
 
-                const screenScene = this.screenScene;
-                const screenCamera = this.screenCamera;
-
                 const renderTargetA = this.renderTargetA;
                 const renderTargetB = this.renderTargetB;
                 const renderTargetBlurA = this.renderTargetBlurA;
@@ -309,20 +303,20 @@
                 this.screen.material = this.fxaaMaterial;
                 renderer.setRenderTarget(renderTargetB);
                 renderer.clear();
-                renderer.render(screenScene, screenCamera);
+                renderer.render(this.screen, this.screenCamera);
 
                 // Two pass Gaussian blur (horizontal and vertical)
                 this.hBlurMaterial.uniforms.tMap.value = renderTargetB.texture;
                 this.screen.material = this.hBlurMaterial;
                 renderer.setRenderTarget(renderTargetBlurA);
                 renderer.clear();
-                renderer.render(screenScene, screenCamera);
+                renderer.render(this.screen, this.screenCamera);
 
                 this.vBlurMaterial.uniforms.tMap.value = renderTargetBlurA.texture;
                 this.screen.material = this.vBlurMaterial;
                 renderer.setRenderTarget(renderTargetBlurB);
                 renderer.clear();
-                renderer.render(screenScene, screenCamera);
+                renderer.render(this.screen, this.screenCamera);
 
                 // Composite pass (render to screen)
                 this.compositeMaterial.uniforms.tScene.value = renderTargetB.texture;
@@ -330,7 +324,7 @@
                 this.screen.material = this.compositeMaterial;
                 renderer.setRenderTarget(null);
                 renderer.clear();
-                renderer.render(screenScene, screenCamera);
+                renderer.render(this.screen, this.screenCamera);
             };
         }
 

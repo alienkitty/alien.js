@@ -861,12 +861,9 @@ class RenderManager {
         const { screenTriangle, resolution } = WorldController;
 
         // Fullscreen triangle
-        this.screenScene = new Scene();
         this.screenCamera = new OrthographicCamera(-1, 1, 1, -1, 0, 1);
-
         this.screen = new Mesh(screenTriangle);
         this.screen.frustumCulled = false;
-        this.screenScene.add(this.screen);
 
         // Render targets
         this.renderTargetA = new WebGLRenderTarget(1, 1, {
@@ -1017,9 +1014,6 @@ class RenderManager {
             return;
         }
 
-        const screenScene = this.screenScene;
-        const screenCamera = this.screenCamera;
-
         const renderTargetA = this.renderTargetA;
         const renderTargetB = this.renderTargetB;
         const renderTargetBright = this.renderTargetBright;
@@ -1034,13 +1028,13 @@ class RenderManager {
         this.fxaaMaterial.uniforms.tMap.value = renderTargetA.texture;
         this.screen.material = this.fxaaMaterial;
         renderer.setRenderTarget(renderTargetB);
-        renderer.render(screenScene, screenCamera);
+        renderer.render(this.screen, this.screenCamera);
 
         // Extract bright areas
         this.luminosityMaterial.uniforms.tMap.value = renderTargetB.texture;
         this.screen.material = this.luminosityMaterial;
         renderer.setRenderTarget(renderTargetBright);
-        renderer.render(screenScene, screenCamera);
+        renderer.render(this.screen, this.screenCamera);
 
         // Blur all the mips progressively
         let inputRenderTarget = renderTargetBright;
@@ -1051,12 +1045,12 @@ class RenderManager {
             this.blurMaterials[i].uniforms.tMap.value = inputRenderTarget.texture;
             this.blurMaterials[i].uniforms.uDirection.value = BlurDirectionX;
             renderer.setRenderTarget(renderTargetsHorizontal[i]);
-            renderer.render(screenScene, screenCamera);
+            renderer.render(this.screen, this.screenCamera);
 
             this.blurMaterials[i].uniforms.tMap.value = this.renderTargetsHorizontal[i].texture;
             this.blurMaterials[i].uniforms.uDirection.value = BlurDirectionY;
             renderer.setRenderTarget(renderTargetsVertical[i]);
-            renderer.render(screenScene, screenCamera);
+            renderer.render(this.screen, this.screenCamera);
 
             inputRenderTarget = renderTargetsVertical[i];
         }
@@ -1064,14 +1058,14 @@ class RenderManager {
         // Composite all the mips
         this.screen.material = this.bloomCompositeMaterial;
         renderer.setRenderTarget(renderTargetsHorizontal[0]);
-        renderer.render(screenScene, screenCamera);
+        renderer.render(this.screen, this.screenCamera);
 
         // Scene composite pass
         this.sceneCompositeMaterial.uniforms.tScene.value = renderTargetB.texture;
         this.sceneCompositeMaterial.uniforms.tBloom.value = renderTargetsHorizontal[0].texture;
         this.screen.material = this.sceneCompositeMaterial;
         renderer.setRenderTarget(renderTargetA);
-        renderer.render(screenScene, screenCamera);
+        renderer.render(this.screen, this.screenCamera);
 
         // Two pass Gaussian blur (horizontal and vertical)
         const blurFactor = clamp(inverseLerp(0.5, 0, this.compositeMaterial.uniforms.uOpacity.value), 0, 1);
@@ -1081,20 +1075,20 @@ class RenderManager {
             this.hBlurMaterial.uniforms.uBluriness.value = this.blurFactor * blurFactor;
             this.screen.material = this.hBlurMaterial;
             renderer.setRenderTarget(renderTargetB);
-            renderer.render(screenScene, screenCamera);
+            renderer.render(this.screen, this.screenCamera);
 
             this.vBlurMaterial.uniforms.tMap.value = renderTargetB.texture;
             this.vBlurMaterial.uniforms.uBluriness.value = this.blurFactor * blurFactor;
             this.screen.material = this.vBlurMaterial;
             renderer.setRenderTarget(renderTargetA);
-            renderer.render(screenScene, screenCamera);
+            renderer.render(this.screen, this.screenCamera);
         }
 
         // Composite pass (render to screen)
         this.compositeMaterial.uniforms.tScene.value = renderTargetA.texture;
         this.screen.material = this.compositeMaterial;
         renderer.setRenderTarget(null);
-        renderer.render(screenScene, screenCamera);
+        renderer.render(this.screen, this.screenCamera);
     };
 
     static animateOut = callback => {

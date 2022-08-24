@@ -96,12 +96,9 @@
                 const { screenTriangle, resolution } = WorldController;
 
                 // Fullscreen triangle
-                this.screenScene = new Scene();
                 this.screenCamera = new OrthographicCamera(-1, 1, 1, -1, 0, 1);
-
                 this.screen = new Mesh(screenTriangle);
                 this.screen.frustumCulled = false;
-                this.screenScene.add(this.screen);
 
                 // Render targets
                 this.renderTarget = new WebGLRenderTarget(1, 1);
@@ -138,9 +135,6 @@
                     return;
                 }
 
-                const screenScene = this.screenScene;
-                const screenCamera = this.screenCamera;
-
                 const renderTarget = this.renderTarget;
 
                 // Scene pass
@@ -149,7 +143,7 @@
 
                 // FXAA pass (render to screen)
                 renderer.setRenderTarget(null);
-                renderer.render(screenScene, screenCamera);
+                renderer.render(this.screen, this.screenCamera);
             };
         }
 

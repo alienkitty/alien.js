@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
 
-    <title>Reflection Shader DuDv — Alien.js</title>
+    <title>3D Crystals — Alien.js</title>
 
     <link rel="preconnect" href="https://fonts.gstatic.com">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto+Mono">
@@ -13,7 +13,14 @@
 <body>
     <div id="root"></div>
     <script type="module">
-        import { ACESFilmicToneMapping, BloomCompositeMaterial, Color, DirectionalLight, Events, FXAAMaterial, GLSL3, Group, HemisphereLight, LuminosityMaterial, Mesh, MeshBasicMaterial, NoBlending, OrthographicCamera, PanelItem, PerspectiveCamera, PlaneGeometry, RawShaderMaterial, Reflector, ReflectorDudvMaterial, RepeatWrapping, SVGLoader, Scene, Stage, TextureLoader, UI, Uniform, UnrealBloomBlurMaterial, Vector2, Vector3, WebGLRenderTarget, WebGLRenderer, floorPowerOfTwo, getFullscreenTriangle, lerp, ticker } from '../build/alien.js';
+        import { ACESFilmicToneMapping, BloomCompositeMaterial, Color, Device, DoubleSide, EnvironmentTextureLoader, Events, FXAAMaterial, GLSL3, Group, ImageBitmapLoaderThread, LuminosityMaterial, Mesh, MeshPhysicalMaterial, NoBlending, OrbitControls, OrthographicCamera, PanelItem, PerspectiveCamera, PlaneGeometry, PolyhedronGeometry, RawShaderMaterial, Reflector, ReflectorDudvMaterial, RepeatWrapping, Scene, Stage, TetrahedronGeometry, TextureLoader, Thread, UI, Uniform, UnrealBloomBlurMaterial, Vector2, Vector3, WebGLRenderTarget, WebGLRenderer, degToRad, floorPowerOfTwo, getFullscreenTriangle, getKeyByValue, lerp, ticker } from '../build/alien.js';
+
+        class Config {
+            static CRYSTAL_COLOR = 0x090909;
+            static SPECULAR_COLOR = 0xff2998;
+
+            static ORBIT = /[?&]orbit/.test(location.search);
+        }
 
         import rgbshift from '../src/shaders/modules/rgbshift/rgbshift.glsl.js';
 
@@ -71,44 +78,194 @@
             }
         }
 
-        // https://vimeo.com/69949278
-
-        class Triangle extends Group {
+        class FloatingCrystal extends Group {
             constructor() {
                 super();
+
+                this.position.x = 2.5;
+                this.position.y = 0.7;
+
+                this.random = Math.random();
             }
 
             async initMesh() {
-                const { camera, loadSVG } = WorldController;
+                // https://observablehq.com/@sxywu/three-js-exploration-shapes
+                const vertices = [
+                    -1, 1, 1,   // 0: left top front
+                    -1, -1, 1,  // 1: left bottom front
+                    1, -1, 1,   // 2: right bottom front
+                    1, 1, 1,    // 3: right top front
+                    1, -1, -1,  // 4: right bottom back
+                    1, 1, -1,   // 5: right top back
+                    -1, -1, -1, // 6: left bottom back
+                    -1, 1, -1,  // 7: left top back
+                    0, 1, 0,    // 8: top middle
+                    0, -1, 0    // 9: bottom middle
+                ];
+                const faces = [
+                    0, 1, 2, // front 1
+                    0, 2, 3, // front 2
+                    3, 2, 4, // right 1
+                    3, 4, 5, // right 2
+                    5, 4, 6, // back 1
+                    5, 6, 7, // back 2
+                    7, 6, 1, // left 1
+                    7, 1, 0, // left 2
+                    8, 0, 3, // top front
+                    8, 3, 5, // top right
+                    8, 5, 7, // top back
+                    8, 7, 0, // top left
+                    9, 2, 1, // bottom front
+                    9, 4, 2, // bottom right
+                    9, 6, 4, // bottom back
+                    9, 1, 6  // bottom left
+                ];
+                const geometry = new PolyhedronGeometry(vertices, faces);
 
-                const data = await loadSVG('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg"><path stroke-width="0.25" d="M 3 0 L 0 5 H 6 Z"/></svg>');
-                const paths = data.paths;
+                const material = new MeshPhysicalMaterial({
+                    color: new Color(Config.CRYSTAL_COLOR),
+                    metalness: 0.96,
+                    roughness: 0.16,
+                    envMapIntensity: 3,
+                    ior: 1.5,
+                    transmission: 1,
+                    thickness: 5,
+                    specularColor: new Color(Config.SPECULAR_COLOR),
+                    specularIntensity: 31,
+                    clearcoat: 0.44,
+                    clearcoatRoughness: 0.73,
+                    side: DoubleSide,
+                    transparent: true,
+                    opacity: 0.8,
+                    flatShading: true
+                });
 
-                const group = new Group();
-                group.position.set(0, 1.4, -11);
-                group.scale.y *= -1;
-                group.lookAt(camera.position);
+                const mesh = new Mesh(geometry, material);
+                mesh.scale.set(0.5, 1, 0.5);
+                this.add(mesh);
 
-                for (let i = 0, l = paths.length; i < l; i++) {
-                    const path = paths[i];
-
-                    const material = new MeshBasicMaterial();
-
-                    for (let j = 0, jl = path.subPaths.length; j < jl; j++) {
-                        const subPath = path.subPaths[j];
-                        const geometry = SVGLoader.pointsToStroke(subPath.getPoints(), path.userData.style);
-
-                        if (geometry) {
-                            geometry.center();
-
-                            const mesh = new Mesh(geometry, material);
-                            group.add(mesh);
-                        }
-                    }
-                }
-
-                this.add(group);
+                this.mesh = mesh;
             }
+
+            /**
+             * Public methods
+             */
+
+            update = time => {
+                this.mesh.position.y = Math.sin(this.random + time) * 0.1;
+                this.mesh.rotation.y += 0.01;
+            };
+        }
+
+        class FloatingDiamond extends Group {
+            constructor() {
+                super();
+
+                this.position.y = 0.7;
+
+                this.random = Math.random();
+            }
+
+            async initMesh() {
+                // https://observablehq.com/@sxywu/three-js-exploration-shapes
+                const front = Math.tan(Math.PI / 6);
+                const back = Math.cos(Math.PI / 6);
+                const vertices = [
+                    0, 1, 0,      // 0: top
+                    1, 0, front,  // 1: right
+                    -1, 0, front, // 2: left
+                    0, 0, -back,  // 3: back middle
+                    0, -1, 0      // 4: bottom
+                ];
+                const faces = [
+                    2, 1, 0, // left, right, top
+                    1, 3, 0, // right, back, top
+                    3, 2, 0, // back, left, top
+                    2, 4, 1, // left, bottom, right
+                    1, 4, 3, // right, bottom, back
+                    3, 4, 2  // back, bottom, left
+                ];
+                const geometry = new PolyhedronGeometry(vertices, faces);
+
+                const material = new MeshPhysicalMaterial({
+                    color: new Color(Config.CRYSTAL_COLOR),
+                    metalness: 0.96,
+                    roughness: 0.16,
+                    envMapIntensity: 3,
+                    ior: 1.5,
+                    transmission: 1,
+                    thickness: 5,
+                    specularColor: new Color(Config.SPECULAR_COLOR),
+                    specularIntensity: 31,
+                    clearcoat: 0.44,
+                    clearcoatRoughness: 0.73,
+                    side: DoubleSide,
+                    transparent: true,
+                    opacity: 0.8,
+                    flatShading: true
+                });
+
+                const mesh = new Mesh(geometry, material);
+                mesh.scale.set(0.5, 1, 0.5);
+                this.add(mesh);
+
+                this.mesh = mesh;
+            }
+
+            /**
+             * Public methods
+             */
+
+            update = time => {
+                this.mesh.position.y = Math.sin(this.random + time) * 0.1;
+                this.mesh.rotation.y += 0.01;
+            };
+        }
+
+        class Pyramid extends Group {
+            constructor() {
+                super();
+
+                this.position.x = -2.5;
+                this.position.y = -0.57;
+            }
+
+            async initMesh() {
+                const geometry = new TetrahedronGeometry();
+
+                const material = new MeshPhysicalMaterial({
+                    color: new Color(Config.CRYSTAL_COLOR),
+                    metalness: 0.96,
+                    roughness: 0.16,
+                    envMapIntensity: 3,
+                    ior: 1.5,
+                    transmission: 1,
+                    thickness: 5,
+                    specularColor: new Color(Config.SPECULAR_COLOR),
+                    specularIntensity: 31,
+                    clearcoat: 0.44,
+                    clearcoatRoughness: 0.73,
+                    side: DoubleSide,
+                    transparent: true,
+                    opacity: 0.8,
+                    flatShading: true
+                });
+
+                const mesh = new Mesh(geometry, material);
+                mesh.rotation.x = degToRad(54.8);
+                mesh.rotation.y = degToRad(-45);
+                mesh.scale.multiplyScalar(0.9);
+                this.add(mesh);
+
+                this.mesh = mesh;
+            }
+
+            /**
+             * Public methods
+             */
+
+            update = () => {
+            };
         }
 
         class Floor extends Group {
@@ -119,7 +276,7 @@
             }
 
             initReflector() {
-                this.reflector = new Reflector({ blurIterations: 4 });
+                this.reflector = new Reflector({ blurIterations: 6 });
             }
 
             async initMesh() {
@@ -130,7 +287,7 @@
                 const map = await loadTexture('assets/textures/waterdudv.jpg');
                 map.wrapS = RepeatWrapping;
                 map.wrapT = RepeatWrapping;
-                map.repeat.set(6, 3);
+                map.repeat.set(6, 6);
 
                 const material = new ReflectorDudvMaterial({
                     map,
@@ -141,7 +298,7 @@
                 material.uniforms.uMatrix = this.reflector.textureMatrixUniform;
 
                 const mesh = new Mesh(geometry, material);
-                mesh.position.y = -1.6;
+                mesh.position.y = -0.86;
                 mesh.rotation.x = -Math.PI / 2;
                 mesh.add(this.reflector);
 
@@ -165,6 +322,8 @@
 
                 this.reflector.setSize(width, height);
             };
+
+            ready = () => this.initMesh();
         }
 
         class SceneView extends Group {
@@ -180,8 +339,14 @@
                 this.floor = new Floor();
                 this.add(this.floor);
 
-                this.triangle = new Triangle();
-                this.add(this.triangle);
+                this.pyramid = new Pyramid();
+                this.add(this.pyramid);
+
+                this.floatingDiamond = new FloatingDiamond();
+                this.add(this.floatingDiamond);
+
+                this.floatingCrystal = new FloatingCrystal();
+                this.add(this.floatingCrystal);
             }
 
             /**
@@ -192,9 +357,17 @@
                 this.floor.resize(width, height);
             };
 
+            update = time => {
+                this.pyramid.update(time);
+                this.floatingDiamond.update(time);
+                this.floatingCrystal.update(time);
+            };
+
             ready = () => Promise.all([
                 this.floor.initMesh(),
-                this.triangle.initMesh()
+                this.pyramid.initMesh(),
+                this.floatingDiamond.initMesh(),
+                this.floatingCrystal.initMesh()
             ]);
         }
 
@@ -211,7 +384,12 @@
                 this.view.resize(width, height);
             };
 
-            static update = () => {
+            static update = time => {
+                if (!this.view.visible) {
+                    return;
+                }
+
+                this.view.update(time);
             };
 
             static animateIn = () => {
@@ -240,6 +418,11 @@
 
                 const { luminosityMaterial, bloomCompositeMaterial, compositeMaterial } = RenderManager;
 
+                const postOptions = {
+                    Off: false,
+                    Post: true
+                };
+
                 const items = [
                     {
                         label: 'FPS'
@@ -256,6 +439,17 @@
                         value: floor.material.uniforms.uReflectivity.value,
                         callback: value => {
                             floor.material.uniforms.uReflectivity.value = value;
+                        }
+                    },
+                    {
+                        type: 'divider'
+                    },
+                    {
+                        type: 'list',
+                        list: postOptions,
+                        value: getKeyByValue(postOptions, RenderManager.enabled),
+                        callback: value => {
+                            RenderManager.enabled = postOptions[value];
                         }
                     },
                     {
@@ -351,7 +545,7 @@
                 this.luminositySmoothing = 1;
                 this.bloomStrength = 0.3;
                 this.bloomRadius = 0.2;
-                this.bloomDistortion = 1.45;
+                this.bloomDistortion = 2;
                 this.enabled = true;
 
                 this.initRenderer();
@@ -529,19 +723,23 @@
                 this.camera = camera;
 
                 this.mouse = new Vector2();
-                this.lookAt = new Vector3(0, 0, -2);
+                this.lookAt = new Vector3();
                 this.origin = new Vector3();
                 this.target = new Vector3();
-                this.targetXY = new Vector2(5, 1);
+                this.targetXY = new Vector2(8, 4);
                 this.origin.copy(this.camera.position);
 
-                this.lerpSpeed = 0.02;
+                this.lerpSpeed = 0.07;
                 this.enabled = false;
 
                 this.addListeners();
             }
 
             static addListeners() {
+                if (Config.ORBIT) {
+                    return;
+                }
+
                 window.addEventListener('pointerdown', this.onPointerDown);
                 window.addEventListener('pointermove', this.onPointerMove);
                 window.addEventListener('pointerup', this.onPointerUp);
@@ -575,16 +773,6 @@
             static resize = (width, height) => {
                 this.camera.aspect = width / height;
                 this.camera.updateProjectionMatrix();
-
-                if (width < height) {
-                    this.camera.position.z = 14;
-                } else {
-                    this.camera.position.z = 10;
-                }
-
-                this.origin.z = this.camera.position.z;
-
-                this.camera.lookAt(this.lookAt);
             };
 
             static update = () => {
@@ -601,6 +789,10 @@
             };
 
             static animateIn = () => {
+                if (Config.ORBIT) {
+                    return;
+                }
+
                 this.enabled = true;
             };
         }
@@ -610,6 +802,8 @@
                 this.initWorld();
                 this.initLights();
                 this.initLoaders();
+                this.initEnvironment();
+                this.initControls();
 
                 this.addListeners();
             }
@@ -631,7 +825,7 @@
                 this.camera = new PerspectiveCamera(30);
                 this.camera.near = 0.5;
                 this.camera.far = 40;
-                this.camera.position.z = 10;
+                this.camera.position.set(0, 6, 8);
                 this.camera.lookAt(this.scene.position);
 
                 // Global geometries
@@ -642,19 +836,30 @@
                 this.aspect = new Uniform(1);
                 this.time = new Uniform(0);
                 this.frame = new Uniform(0);
+
+                // Global settings
+                this.anisotropy = this.renderer.capabilities.getMaxAnisotropy();
             }
 
             static initLights() {
-                this.scene.add(new HemisphereLight(0x606060, 0x404040));
-
-                const light = new DirectionalLight(0xffffff);
-                light.position.set(1, 1, 1);
-                this.scene.add(light);
             }
 
             static initLoaders() {
                 this.textureLoader = new TextureLoader();
-                this.svgLoader = new SVGLoader();
+                this.environmentLoader = new EnvironmentTextureLoader(this.renderer);
+            }
+
+            static async initEnvironment() {
+                this.scene.environment = await this.loadEnvironmentTexture('assets/textures/env/2294472375_24a3b8ef46_o.jpg');
+            }
+
+            static initControls() {
+                if (!Config.ORBIT) {
+                    return;
+                }
+
+                this.controls = new OrbitControls(this.camera, this.renderer.domElement);
+                this.controls.enableDamping = true;
             }
 
             static addListeners() {
@@ -684,17 +889,25 @@
             static update = (time, delta, frame) => {
                 this.time.value = time;
                 this.frame.value = frame;
+
+                if (this.controls && this.controls.enabled) {
+                    this.controls.update();
+                }
             };
 
             static getTexture = (path, callback) => this.textureLoader.load(path, callback);
 
             static loadTexture = path => this.textureLoader.loadAsync(path);
 
-            static loadSVG = path => this.svgLoader.loadAsync(path);
+            static loadEnvironmentTexture = path => this.environmentLoader.loadAsync(path);
         }
 
         class App {
             static async init() {
+                if (!Device.agent.includes('firefox')) {
+                    this.initThread();
+                }
+
                 this.initStage();
                 this.initWorld();
                 this.initViews();
@@ -703,12 +916,22 @@
                 this.addListeners();
                 this.onResize();
 
-                await SceneController.ready();
+                await Promise.all([
+                    SceneController.ready(),
+                    WorldController.textureLoader.ready(),
+                    WorldController.environmentLoader.ready()
+                ]);
 
                 this.initPanel();
 
                 CameraController.animateIn();
                 SceneController.animateIn();
+            }
+
+            static initThread() {
+                ImageBitmapLoaderThread.init();
+
+                Thread.shared();
             }
 
             static initStage() {
@@ -758,7 +981,7 @@
             static onUpdate = (time, delta, frame) => {
                 WorldController.update(time, delta, frame);
                 CameraController.update();
-                SceneController.update();
+                SceneController.update(time);
                 RenderManager.update(time, delta, frame);
                 PanelController.update();
             };

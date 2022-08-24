@@ -66,6 +66,7 @@ In its design, everything is an ES module, all user interfaces and components fo
 [panel tracking](https://alien.js.org/examples/3d_panel_tracking.html) ([debug](https://alien.js.org/examples/3d_panel_tracking.html?debug))  
 [panel tracking crystals](https://alien.js.org/examples/3d_panel_tracking_crystals.html) ([debug](https://alien.js.org/examples/3d_panel_tracking_crystals.html?debug))  
 [crystals](https://alien.js.org/examples/3d_crystals.html) ([orbit controls](https://alien.js.org/examples/3d_crystals.html?orbit))  
+[dark crystals](https://alien.js.org/examples/3d_dark_crystals.html) ([orbit controls](https://alien.js.org/examples/3d_dark_crystals.html?orbit))  
 
 #### shader
 

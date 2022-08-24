@@ -617,6 +617,8 @@
                 this.camera = camera;
                 this.view = view;
 
+                this.lightPosition = new Vector3();
+
                 this.vlExposure = 0.15;
                 this.vlDecay = 1.0;
                 this.vlDensity = 0.96;
@@ -729,11 +731,10 @@
             }
 
             static setLightPosition() {
-                this.view.ball.updateMatrixWorld();
-                const p = this.view.ball.position.clone();
-                const vector = p.project(this.camera);
-                const x = (vector.x + 1) / 2;
-                const y = (vector.y + 1) / 2;
+                this.lightPosition.copy(this.view.ball.position).project(this.camera);
+
+                const x = (this.lightPosition.x + 1) / 2;
+                const y = (this.lightPosition.y + 1) / 2;
 
                 this.vlMaterial.uniforms.uLightPosition.value.set(x, y);
             }

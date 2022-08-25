@@ -427,6 +427,64 @@
                     },
                     {
                         type: 'slider',
+                        label: 'Exp',
+                        min: 0,
+                        max: 1,
+                        step: 0.01,
+                        value: vlMaterial.uniforms.uExposure.value,
+                        callback: value => {
+                            vlMaterial.uniforms.uExposure.value = value;
+                        }
+                    },
+                    {
+                        type: 'slider',
+                        label: 'Decay',
+                        min: 0.6,
+                        max: 1,
+                        step: 0.01,
+                        value: vlMaterial.uniforms.uDecay.value,
+                        callback: value => {
+                            vlMaterial.uniforms.uDecay.value = value;
+                        }
+                    },
+                    {
+                        type: 'slider',
+                        label: 'Density',
+                        min: 0,
+                        max: 1,
+                        step: 0.01,
+                        value: vlMaterial.uniforms.uDensity.value,
+                        callback: value => {
+                            vlMaterial.uniforms.uDensity.value = value;
+                        }
+                    },
+                    {
+                        type: 'slider',
+                        label: 'Weight',
+                        min: 0,
+                        max: 1,
+                        step: 0.01,
+                        value: vlMaterial.uniforms.uWeight.value,
+                        callback: value => {
+                            vlMaterial.uniforms.uWeight.value = value;
+                        }
+                    },
+                    {
+                        type: 'slider',
+                        label: 'Clamp',
+                        min: 0,
+                        max: 1,
+                        step: 0.01,
+                        value: vlMaterial.uniforms.uClamp.value,
+                        callback: value => {
+                            vlMaterial.uniforms.uClamp.value = value;
+                        }
+                    },
+                    {
+                        type: 'divider'
+                    },
+                    {
+                        type: 'slider',
                         label: 'Distort',
                         min: 0,
                         max: 1,
@@ -489,7 +547,7 @@
                         min: 0,
                         max: 1,
                         step: 0.01,
-                        value: RenderManager.luminosityThreshold,
+                        value: luminosityMaterial.uniforms.uThreshold.value,
                         callback: value => {
                             luminosityMaterial.uniforms.uThreshold.value = value;
                         }
@@ -500,7 +558,7 @@
                         min: 0,
                         max: 1,
                         step: 0.01,
-                        value: RenderManager.luminositySmoothing,
+                        value: luminosityMaterial.uniforms.uSmoothing.value,
                         callback: value => {
                             luminosityMaterial.uniforms.uSmoothing.value = value;
                         }
@@ -527,64 +585,6 @@
                         callback: value => {
                             RenderManager.bloomRadius = value;
                             bloomCompositeMaterial.uniforms.uBloomFactors.value = RenderManager.bloomFactors();
-                        }
-                    },
-                    {
-                        type: 'divider'
-                    },
-                    {
-                        type: 'slider',
-                        label: 'Exp',
-                        min: 0,
-                        max: 1,
-                        step: 0.01,
-                        value: vlMaterial.uniforms.uExposure.value,
-                        callback: value => {
-                            vlMaterial.uniforms.uExposure.value = value;
-                        }
-                    },
-                    {
-                        type: 'slider',
-                        label: 'Decay',
-                        min: 0.6,
-                        max: 1,
-                        step: 0.01,
-                        value: vlMaterial.uniforms.uDecay.value,
-                        callback: value => {
-                            vlMaterial.uniforms.uDecay.value = value;
-                        }
-                    },
-                    {
-                        type: 'slider',
-                        label: 'Density',
-                        min: 0,
-                        max: 1,
-                        step: 0.01,
-                        value: vlMaterial.uniforms.uDensity.value,
-                        callback: value => {
-                            vlMaterial.uniforms.uDensity.value = value;
-                        }
-                    },
-                    {
-                        type: 'slider',
-                        label: 'Weight',
-                        min: 0,
-                        max: 1,
-                        step: 0.01,
-                        value: vlMaterial.uniforms.uWeight.value,
-                        callback: value => {
-                            vlMaterial.uniforms.uWeight.value = value;
-                        }
-                    },
-                    {
-                        type: 'slider',
-                        label: 'Clamp',
-                        min: 0,
-                        max: 1,
-                        step: 0.01,
-                        value: vlMaterial.uniforms.uClamp.value,
-                        callback: value => {
-                            vlMaterial.uniforms.uClamp.value = value;
                         }
                     }
                 ];
@@ -679,10 +679,6 @@
                 this.vlMaterial.uniforms.uWeight.value = this.vlWeight;
                 this.vlMaterial.uniforms.uClamp.value = this.vlClamp;
 
-                // FXAA material
-                this.fxaaMaterial = new FXAAMaterial();
-                this.fxaaMaterial.uniforms.uResolution = resolution;
-
                 // Gaussian blur materials
                 this.hBlurMaterial = new BlurMaterial(BlurDirectionX);
                 this.hBlurMaterial.uniforms.uBluriness.value = this.blurFactor;
@@ -691,6 +687,10 @@
                 this.vBlurMaterial = new BlurMaterial(BlurDirectionY);
                 this.vBlurMaterial.uniforms.uBluriness.value = this.blurFactor;
                 this.vBlurMaterial.uniforms.uResolution = resolution;
+
+                // FXAA material
+                this.fxaaMaterial = new FXAAMaterial();
+                this.fxaaMaterial.uniforms.uResolution = resolution;
 
                 // Luminosity high pass material
                 this.luminosityMaterial = new LuminosityMaterial();
@@ -770,8 +770,8 @@
 
                     this.blurMaterials[i].uniforms.uResolution.value.set(width, height);
 
-                    width = width / 2;
-                    height = height / 2;
+                    width /= 2;
+                    height /= 2;
                 }
             };
 

@@ -498,7 +498,7 @@
             static initPanel() {
                 const { pittedMetalSphere, polishedConcreteSphere } = this.view;
 
-                const { hBlurMaterial, vBlurMaterial, videoGlitchMaterial, luminosityMaterial, bloomCompositeMaterial, chromaticAberrationMaterial } = RenderManager;
+                const { hBlurMaterial, vBlurMaterial, videoGlitchMaterial, luminosityMaterial, bloomCompositeMaterial, caMaterial } = RenderManager;
 
                 const items = [
                     {
@@ -525,7 +525,7 @@
                         min: 0,
                         max: 10,
                         step: 0.1,
-                        value: RenderManager.blurFactor,
+                        value: hBlurMaterial.uniforms.uBluriness.value,
                         callback: value => {
                             hBlurMaterial.uniforms.uBluriness.value = value;
                             vBlurMaterial.uniforms.uBluriness.value = value;
@@ -540,7 +540,7 @@
                         min: 0,
                         max: 2,
                         step: 0.01,
-                        value: RenderManager.glitchDistortion,
+                        value: videoGlitchMaterial.uniforms.uDistortion.value,
                         callback: value => {
                             videoGlitchMaterial.uniforms.uDistortion.value = value;
                         }
@@ -551,7 +551,7 @@
                         min: 0,
                         max: 1,
                         step: 0.01,
-                        value: RenderManager.glitchDistortion2,
+                        value: videoGlitchMaterial.uniforms.uDistortion2.value,
                         callback: value => {
                             videoGlitchMaterial.uniforms.uDistortion2.value = value;
                         }
@@ -562,7 +562,7 @@
                         min: 0,
                         max: 2,
                         step: 0.01,
-                        value: RenderManager.glitchSpeed,
+                        value: videoGlitchMaterial.uniforms.uSpeed.value,
                         callback: value => {
                             videoGlitchMaterial.uniforms.uSpeed.value = value;
                         }
@@ -576,7 +576,7 @@
                         min: 0,
                         max: 1,
                         step: 0.01,
-                        value: RenderManager.luminosityThreshold,
+                        value: luminosityMaterial.uniforms.uThreshold.value,
                         callback: value => {
                             luminosityMaterial.uniforms.uThreshold.value = value;
                         }
@@ -587,7 +587,7 @@
                         min: 0,
                         max: 1,
                         step: 0.01,
-                        value: RenderManager.luminositySmoothing,
+                        value: luminosityMaterial.uniforms.uSmoothing.value,
                         callback: value => {
                             luminosityMaterial.uniforms.uSmoothing.value = value;
                         }
@@ -625,9 +625,9 @@
                         min: -4,
                         max: 4,
                         step: 0.05,
-                        value: RenderManager.caRedOffset,
+                        value: caMaterial.uniforms.uRedOffset.value,
                         callback: value => {
-                            chromaticAberrationMaterial.uniforms.uRedOffset.value = value;
+                            caMaterial.uniforms.uRedOffset.value = value;
                         }
                     },
                     {
@@ -636,9 +636,9 @@
                         min: -4,
                         max: 4,
                         step: 0.05,
-                        value: RenderManager.caGreenOffset,
+                        value: caMaterial.uniforms.uGreenOffset.value,
                         callback: value => {
-                            chromaticAberrationMaterial.uniforms.uGreenOffset.value = value;
+                            caMaterial.uniforms.uGreenOffset.value = value;
                         }
                     },
                     {
@@ -647,9 +647,9 @@
                         min: -4,
                         max: 4,
                         step: 0.05,
-                        value: RenderManager.caBlueOffset,
+                        value: caMaterial.uniforms.uBlueOffset.value,
                         callback: value => {
-                            chromaticAberrationMaterial.uniforms.uBlueOffset.value = value;
+                            caMaterial.uniforms.uBlueOffset.value = value;
                         }
                     },
                     {
@@ -658,9 +658,9 @@
                         min: 0,
                         max: 3,
                         step: 0.01,
-                        value: RenderManager.caIntensity,
+                        value: caMaterial.uniforms.uIntensity.value,
                         callback: value => {
-                            chromaticAberrationMaterial.uniforms.uIntensity.value = value;
+                            caMaterial.uniforms.uIntensity.value = value;
                         }
                     }
                 ];
@@ -756,10 +756,6 @@
                 this.videoGlitchMaterial.uniforms.uSpeed.value = this.glitchSpeed;
                 this.videoGlitchMaterial.uniforms.uTime = time;
 
-                // FXAA material
-                this.fxaaMaterial = new FXAAMaterial();
-                this.fxaaMaterial.uniforms.uResolution = resolution;
-
                 // Gaussian blur materials
                 this.hBlurMaterial = new BlurMaterial(BlurDirectionX);
                 this.hBlurMaterial.uniforms.uBluriness.value = this.blurFactor;
@@ -768,6 +764,10 @@
                 this.vBlurMaterial = new BlurMaterial(BlurDirectionY);
                 this.vBlurMaterial.uniforms.uBluriness.value = this.blurFactor;
                 this.vBlurMaterial.uniforms.uResolution = resolution;
+
+                // FXAA material
+                this.fxaaMaterial = new FXAAMaterial();
+                this.fxaaMaterial.uniforms.uResolution = resolution;
 
                 // Luminosity high pass material
                 this.luminosityMaterial = new LuminosityMaterial();
@@ -797,11 +797,11 @@
                 this.compositeMaterial = new SceneCompositeMaterial();
 
                 // Chromatic aberration material
-                this.chromaticAberrationMaterial = new ChromaticAberrationMaterial();
-                this.chromaticAberrationMaterial.uniforms.uRedOffset.value = this.caRedOffset;
-                this.chromaticAberrationMaterial.uniforms.uGreenOffset.value = this.caGreenOffset;
-                this.chromaticAberrationMaterial.uniforms.uBlueOffset.value = this.caBlueOffset;
-                this.chromaticAberrationMaterial.uniforms.uIntensity.value = this.caIntensity;
+                this.caMaterial = new ChromaticAberrationMaterial();
+                this.caMaterial.uniforms.uRedOffset.value = this.caRedOffset;
+                this.caMaterial.uniforms.uGreenOffset.value = this.caGreenOffset;
+                this.caMaterial.uniforms.uBlueOffset.value = this.caBlueOffset;
+                this.caMaterial.uniforms.uIntensity.value = this.caIntensity;
             }
 
             static bloomFactors() {
@@ -848,8 +848,8 @@
 
                     this.blurMaterials[i].uniforms.uResolution.value.set(width, height);
 
-                    width = width / 2;
-                    height = height / 2;
+                    width /= 2;
+                    height /= 2;
                 }
             };
 
@@ -999,8 +999,8 @@
                 renderer.render(this.screen, this.screenCamera);
 
                 // Chromatic aberration pass (render to screen)
-                this.chromaticAberrationMaterial.uniforms.tMap.value = renderTargetB.texture;
-                this.screen.material = this.chromaticAberrationMaterial;
+                this.caMaterial.uniforms.tMap.value = renderTargetB.texture;
+                this.screen.material = this.caMaterial;
                 renderer.setRenderTarget(null);
                 renderer.clear();
                 renderer.render(this.screen, this.screenCamera);

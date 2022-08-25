@@ -225,7 +225,7 @@
             }
 
             static initPanel() {
-                const { luminosityMaterial, bloomCompositeMaterial, chromaticAberrationMaterial } = RenderManager;
+                const { caMaterial, luminosityMaterial, bloomCompositeMaterial } = RenderManager;
 
                 const items = [
                     {
@@ -236,11 +236,58 @@
                     },
                     {
                         type: 'slider',
+                        label: 'Red',
+                        min: -4,
+                        max: 4,
+                        step: 0.05,
+                        value: caMaterial.uniforms.uRedOffset.value,
+                        callback: value => {
+                            caMaterial.uniforms.uRedOffset.value = value;
+                        }
+                    },
+                    {
+                        type: 'slider',
+                        label: 'Green',
+                        min: -4,
+                        max: 4,
+                        step: 0.05,
+                        value: caMaterial.uniforms.uGreenOffset.value,
+                        callback: value => {
+                            caMaterial.uniforms.uGreenOffset.value = value;
+                        }
+                    },
+                    {
+                        type: 'slider',
+                        label: 'Blue',
+                        min: -4,
+                        max: 4,
+                        step: 0.05,
+                        value: caMaterial.uniforms.uBlueOffset.value,
+                        callback: value => {
+                            caMaterial.uniforms.uBlueOffset.value = value;
+                        }
+                    },
+                    {
+                        type: 'slider',
+                        label: 'Int',
+                        min: 0,
+                        max: 3,
+                        step: 0.01,
+                        value: caMaterial.uniforms.uIntensity.value,
+                        callback: value => {
+                            caMaterial.uniforms.uIntensity.value = value;
+                        }
+                    },
+                    {
+                        type: 'divider'
+                    },
+                    {
+                        type: 'slider',
                         label: 'Thresh',
                         min: 0,
                         max: 1,
                         step: 0.01,
-                        value: RenderManager.luminosityThreshold,
+                        value: luminosityMaterial.uniforms.uThreshold.value,
                         callback: value => {
                             luminosityMaterial.uniforms.uThreshold.value = value;
                         }
@@ -251,7 +298,7 @@
                         min: 0,
                         max: 1,
                         step: 0.01,
-                        value: RenderManager.luminositySmoothing,
+                        value: luminosityMaterial.uniforms.uSmoothing.value,
                         callback: value => {
                             luminosityMaterial.uniforms.uSmoothing.value = value;
                         }
@@ -278,53 +325,6 @@
                         callback: value => {
                             RenderManager.bloomRadius = value;
                             bloomCompositeMaterial.uniforms.uBloomFactors.value = RenderManager.bloomFactors();
-                        }
-                    },
-                    {
-                        type: 'divider'
-                    },
-                    {
-                        type: 'slider',
-                        label: 'Red',
-                        min: -4,
-                        max: 4,
-                        step: 0.05,
-                        value: RenderManager.caRedOffset,
-                        callback: value => {
-                            chromaticAberrationMaterial.uniforms.uRedOffset.value = value;
-                        }
-                    },
-                    {
-                        type: 'slider',
-                        label: 'Green',
-                        min: -4,
-                        max: 4,
-                        step: 0.05,
-                        value: RenderManager.caGreenOffset,
-                        callback: value => {
-                            chromaticAberrationMaterial.uniforms.uGreenOffset.value = value;
-                        }
-                    },
-                    {
-                        type: 'slider',
-                        label: 'Blue',
-                        min: -4,
-                        max: 4,
-                        step: 0.05,
-                        value: RenderManager.caBlueOffset,
-                        callback: value => {
-                            chromaticAberrationMaterial.uniforms.uBlueOffset.value = value;
-                        }
-                    },
-                    {
-                        type: 'slider',
-                        label: 'Int',
-                        min: 0,
-                        max: 3,
-                        step: 0.01,
-                        value: RenderManager.caIntensity,
-                        callback: value => {
-                            chromaticAberrationMaterial.uniforms.uIntensity.value = value;
                         }
                     }
                 ];
@@ -357,14 +357,14 @@
                 this.camera = camera;
                 this.dust = dust;
 
-                this.luminosityThreshold = 0.1;
-                this.luminositySmoothing = 1;
-                this.bloomStrength = 0.3;
-                this.bloomRadius = 0.2;
                 this.caRedOffset = 0;
                 this.caGreenOffset = 4;
                 this.caBlueOffset = 0;
                 this.caIntensity = 1.5;
+                this.luminosityThreshold = 0.1;
+                this.luminositySmoothing = 1;
+                this.bloomStrength = 0.3;
+                this.bloomRadius = 0.2;
                 this.enabled = true;
 
                 this.initRenderer();
@@ -401,6 +401,13 @@
                 this.renderTargetA.depthBuffer = true;
                 this.renderTargetA.depthTexture = new DepthTexture();
 
+                // Chromatic aberration material
+                this.caMaterial = new ChromaticAberrationMaterial();
+                this.caMaterial.uniforms.uRedOffset.value = this.caRedOffset;
+                this.caMaterial.uniforms.uGreenOffset.value = this.caGreenOffset;
+                this.caMaterial.uniforms.uBlueOffset.value = this.caBlueOffset;
+                this.caMaterial.uniforms.uIntensity.value = this.caIntensity;
+
                 // FXAA material
                 this.fxaaMaterial = new FXAAMaterial();
                 this.fxaaMaterial.uniforms.uResolution = resolution;
@@ -436,13 +443,6 @@
 
                 // Composite material
                 this.compositeMaterial = new SceneCompositeMaterial();
-
-                // Chromatic aberration material
-                this.chromaticAberrationMaterial = new ChromaticAberrationMaterial();
-                this.chromaticAberrationMaterial.uniforms.uRedOffset.value = this.caRedOffset;
-                this.chromaticAberrationMaterial.uniforms.uGreenOffset.value = this.caGreenOffset;
-                this.chromaticAberrationMaterial.uniforms.uBlueOffset.value = this.caBlueOffset;
-                this.chromaticAberrationMaterial.uniforms.uIntensity.value = this.caIntensity;
             }
 
             static bloomFactors() {
@@ -481,8 +481,8 @@
 
                     this.blurMaterials[i].uniforms.uResolution.value.set(width, height);
 
-                    width = width / 2;
-                    height = height / 2;
+                    width /= 2;
+                    height /= 2;
                 }
             };
 
@@ -563,8 +563,8 @@
                 renderer.render(this.screen, this.screenCamera);
 
                 // Chromatic aberration pass (render to screen)
-                this.chromaticAberrationMaterial.uniforms.tMap.value = renderTargetA.texture;
-                this.screen.material = this.chromaticAberrationMaterial;
+                this.caMaterial.uniforms.tMap.value = renderTargetA.texture;
+                this.screen.material = this.caMaterial;
                 renderer.setRenderTarget(null);
                 renderer.clear();
                 renderer.render(this.screen, this.screenCamera);

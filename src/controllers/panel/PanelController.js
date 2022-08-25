@@ -107,7 +107,7 @@ export class PanelController {
                 min: 0,
                 max: 1,
                 step: 0.01,
-                value: RenderManager.luminosityThreshold,
+                value: luminosityMaterial.uniforms.uThreshold.value,
                 callback: value => {
                     luminosityMaterial.uniforms.uThreshold.value = value;
                 }
@@ -118,7 +118,7 @@ export class PanelController {
                 min: 0,
                 max: 1,
                 step: 0.01,
-                value: RenderManager.luminositySmoothing,
+                value: luminosityMaterial.uniforms.uSmoothing.value,
                 callback: value => {
                     luminosityMaterial.uniforms.uSmoothing.value = value;
                 }

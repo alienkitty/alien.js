@@ -988,7 +988,7 @@ class PanelController {
                 min: 0,
                 max: 1,
                 step: 0.01,
-                value: RenderManager.luminosityThreshold,
+                value: luminosityMaterial.uniforms.uThreshold.value,
                 callback: value => {
                     luminosityMaterial.uniforms.uThreshold.value = value;
                 }
@@ -999,7 +999,7 @@ class PanelController {
                 min: 0,
                 max: 1,
                 step: 0.01,
-                value: RenderManager.luminositySmoothing,
+                value: luminosityMaterial.uniforms.uSmoothing.value,
                 callback: value => {
                     luminosityMaterial.uniforms.uSmoothing.value = value;
                 }
@@ -1229,8 +1229,8 @@ class RenderManager {
 
             this.blurMaterials[i].uniforms.uResolution.value.set(width, height);
 
-            width = width / 2;
-            height = height / 2;
+            width /= 2;
+            height /= 2;
         }
     };
 

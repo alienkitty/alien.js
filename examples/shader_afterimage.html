@@ -256,7 +256,7 @@
                         min: 0,
                         max: 1,
                         step: 0.01,
-                        value: RenderManager.afterimageDamping,
+                        value: afterimageMaterial.uniforms.uDamping.value,
                         callback: value => {
                             afterimageMaterial.uniforms.uDamping.value = value;
                         }
@@ -270,7 +270,7 @@
                         min: 0,
                         max: 1,
                         step: 0.01,
-                        value: RenderManager.luminosityThreshold,
+                        value: luminosityMaterial.uniforms.uThreshold.value,
                         callback: value => {
                             luminosityMaterial.uniforms.uThreshold.value = value;
                         }
@@ -281,7 +281,7 @@
                         min: 0,
                         max: 1,
                         step: 0.01,
-                        value: RenderManager.luminositySmoothing,
+                        value: luminosityMaterial.uniforms.uSmoothing.value,
                         callback: value => {
                             luminosityMaterial.uniforms.uSmoothing.value = value;
                         }
@@ -379,13 +379,13 @@
 
                 this.renderTargetA.depthBuffer = true;
 
-                // FXAA material
-                this.fxaaMaterial = new FXAAMaterial();
-                this.fxaaMaterial.uniforms.uResolution = resolution;
-
                 // Afterimage material
                 this.afterimageMaterial = new AfterimageMaterial();
                 this.afterimageMaterial.uniforms.uDamping.value = this.afterimageDamping;
+
+                // FXAA material
+                this.fxaaMaterial = new FXAAMaterial();
+                this.fxaaMaterial.uniforms.uResolution = resolution;
 
                 // Luminosity high pass material
                 this.luminosityMaterial = new LuminosityMaterial();
@@ -452,8 +452,8 @@
 
                     this.blurMaterials[i].uniforms.uResolution.value.set(width, height);
 
-                    width = width / 2;
-                    height = height / 2;
+                    width /= 2;
+                    height /= 2;
                 }
             };
 

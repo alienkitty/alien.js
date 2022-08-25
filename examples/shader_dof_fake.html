@@ -439,7 +439,7 @@
                         min: 0,
                         max: 6,
                         step: 0.05,
-                        value: bokehBlurMaterial2.uniforms.uPower.value,
+                        value: bokehBlurMaterial1.uniforms.uPower.value,
                         callback: value => {
                             bokehBlurMaterial1.uniforms.uPower.value = value;
                             bokehBlurMaterial2.uniforms.uPower.value = value;
@@ -451,7 +451,7 @@
                         min: 0,
                         max: 1,
                         step: 0.01,
-                        value: bokehBlurMaterial2.uniforms.uAmount.value,
+                        value: bokehBlurMaterial1.uniforms.uAmount.value,
                         callback: value => {
                             bokehBlurMaterial1.uniforms.uAmount.value = value;
                             bokehBlurMaterial2.uniforms.uAmount.value = value;
@@ -474,7 +474,7 @@
                         min: 0,
                         max: 1,
                         step: 0.01,
-                        value: RenderManager.luminosityThreshold,
+                        value: luminosityMaterial.uniforms.uThreshold.value,
                         callback: value => {
                             luminosityMaterial.uniforms.uThreshold.value = value;
                         }
@@ -485,7 +485,7 @@
                         min: 0,
                         max: 1,
                         step: 0.01,
-                        value: RenderManager.luminositySmoothing,
+                        value: luminosityMaterial.uniforms.uSmoothing.value,
                         callback: value => {
                             luminosityMaterial.uniforms.uSmoothing.value = value;
                         }
@@ -667,8 +667,8 @@
 
                     this.blurMaterials[i].uniforms.uResolution.value.set(width, height);
 
-                    width = width / 2;
-                    height = height / 2;
+                    width /= 2;
+                    height /= 2;
                 }
             };
 

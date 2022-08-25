@@ -57205,7 +57205,6 @@ var fragmentShader$u = /* glsl */ `
 precision highp float;
 
 uniform sampler2D tMap;
-uniform float uBluriness;
 uniform vec2 uDirection;
 uniform vec2 uResolution;
 
@@ -57217,7 +57216,7 @@ ${smootherstep}
 ${blur13}
 
 void main() {
-    FragColor = blur13(tMap, vUv, uResolution, smootherstep(uBluriness, 0.0, vUv.y) * uDirection);
+    FragColor = blur13(tMap, vUv, uResolution, smootherstep(1.0, 0.0, vUv.y) * uDirection);
 }
 `;
 
@@ -57227,7 +57226,6 @@ class ReflectorBlurMaterial extends RawShaderMaterial {
             glslVersion: GLSL3,
             uniforms: {
                 tMap: new Uniform(null),
-                uBluriness: new Uniform(1),
                 uDirection: new Uniform(new Vector2$1(1, 0)),
                 uResolution: new Uniform(new Vector2$1())
             },
@@ -57251,8 +57249,7 @@ class Reflector extends Group {
         width = 512,
         height = 512,
         clipBias = 0,
-        blurIterations = 8,
-        blurFactor = 1
+        blurIterations = 8
     } = {}) {
         super();
 
@@ -57292,7 +57289,6 @@ class Reflector extends Group {
 
         // Reflection blur material
         this.blurMaterial = new ReflectorBlurMaterial();
-        this.blurMaterial.uniforms.uBluriness.value = blurFactor;
         this.blurMaterial.uniforms.uResolution.value.set(width, height);
 
         // Fullscreen triangle
@@ -98982,6 +98978,8 @@ precision highp float;
 
 uniform sampler2D tMap;
 uniform vec2 uLightPosition;
+uniform vec2 uScale;
+uniform float uSwizzle;
 uniform float uExposure;
 uniform float uDecay;
 uniform float uDensity;
@@ -99002,7 +99000,7 @@ void main() {
     float illuminationDecay = 1.0;
 
     for (int i = 0; i < samples; i++) {
-        texCoord -= deltaTextCoord;
+        texCoord -= ((deltaTextCoord.xy * (1.0 - uSwizzle)) + (deltaTextCoord.xx * uSwizzle)) * uScale;
         vec4 texel = texture(tMap, texCoord);
         texel *= illuminationDecay * uWeight;
         color += texel;
@@ -99023,6 +99021,8 @@ class VolumetricLightMaterial extends RawShaderMaterial {
             uniforms: {
                 tMap: new Uniform(null),
                 uLightPosition: new Uniform(new Vector2$1(0.5, 0.5)),
+                uScale: new Uniform(new Vector2$1(1, 1)),
+                uSwizzle: new Uniform(0),
                 uExposure: new Uniform(0.6),
                 uDecay: new Uniform(0.93),
                 uDensity: new Uniform(0.96),

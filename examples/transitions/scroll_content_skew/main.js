@@ -733,7 +733,7 @@ class PanelController {
                 min: 0,
                 max: 1,
                 step: 0.01,
-                value: RenderManager.luminosityThreshold,
+                value: luminosityMaterial.uniforms.uThreshold.value,
                 callback: value => {
                     luminosityMaterial.uniforms.uThreshold.value = value;
                 }
@@ -744,7 +744,7 @@ class PanelController {
                 min: 0,
                 max: 1,
                 step: 0.01,
-                value: RenderManager.luminositySmoothing,
+                value: luminosityMaterial.uniforms.uSmoothing.value,
                 callback: value => {
                     luminosityMaterial.uniforms.uSmoothing.value = value;
                 }
@@ -855,11 +855,11 @@ class RenderManager {
         this.container = container;
         this.sections = container.children;
 
+        this.blurFactor = 10;
         this.luminosityThreshold = 0.1;
         this.luminositySmoothing = 1;
         this.bloomStrength = 0.3;
         this.bloomRadius = 0.2;
-        this.blurFactor = 10;
         this.enabled = true;
         this.animatedIn = false;
 
@@ -896,6 +896,15 @@ class RenderManager {
 
         this.renderTargetA.depthBuffer = true;
 
+        // Gaussian blur materials
+        this.hBlurMaterial = new BlurMaterial(BlurDirectionX);
+        this.hBlurMaterial.uniforms.uBluriness.value = this.blurFactor;
+        this.hBlurMaterial.uniforms.uResolution = resolution;
+
+        this.vBlurMaterial = new BlurMaterial(BlurDirectionY);
+        this.vBlurMaterial.uniforms.uBluriness.value = this.blurFactor;
+        this.vBlurMaterial.uniforms.uResolution = resolution;
+
         // FXAA material
         this.fxaaMaterial = new FXAAMaterial();
         this.fxaaMaterial.uniforms.uResolution = resolution;
@@ -922,15 +931,6 @@ class RenderManager {
         this.bloomCompositeMaterial.uniforms.tBlur4.value = this.renderTargetsVertical[3].texture;
         this.bloomCompositeMaterial.uniforms.tBlur5.value = this.renderTargetsVertical[4].texture;
         this.bloomCompositeMaterial.uniforms.uBloomFactors.value = this.bloomFactors();
-
-        // Gaussian blur materials
-        this.hBlurMaterial = new BlurMaterial(BlurDirectionX);
-        this.hBlurMaterial.uniforms.uBluriness.value = this.blurFactor;
-        this.hBlurMaterial.uniforms.uResolution = resolution;
-
-        this.vBlurMaterial = new BlurMaterial(BlurDirectionY);
-        this.vBlurMaterial.uniforms.uBluriness.value = this.blurFactor;
-        this.vBlurMaterial.uniforms.uResolution = resolution;
 
         // Composite materials
         this.sceneCompositeMaterial = new SceneCompositeMaterial();
@@ -1010,8 +1010,8 @@ class RenderManager {
 
             this.blurMaterials[i].uniforms.uResolution.value.set(width, height);
 
-            width = width / 2;
-            height = height / 2;
+            width /= 2;
+            height /= 2;
         }
     };
 

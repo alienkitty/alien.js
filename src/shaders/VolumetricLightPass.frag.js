@@ -7,6 +7,8 @@ precision highp float;
 
 uniform sampler2D tMap;
 uniform vec2 uLightPosition;
+uniform vec2 uScale;
+uniform float uSwizzle;
 uniform float uExposure;
 uniform float uDecay;
 uniform float uDensity;
@@ -27,7 +29,7 @@ void main() {
     float illuminationDecay = 1.0;
 
     for (int i = 0; i < samples; i++) {
-        texCoord -= deltaTextCoord;
+        texCoord -= ((deltaTextCoord.xy * (1.0 - uSwizzle)) + (deltaTextCoord.xx * uSwizzle)) * uScale;
         vec4 texel = texture(tMap, texCoord);
         texel *= illuminationDecay * uWeight;
         color += texel;

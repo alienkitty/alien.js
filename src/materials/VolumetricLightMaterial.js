@@ -10,6 +10,8 @@ export class VolumetricLightMaterial extends RawShaderMaterial {
             uniforms: {
                 tMap: new Uniform(null),
                 uLightPosition: new Uniform(new Vector2(0.5, 0.5)),
+                uScale: new Uniform(new Vector2(1, 1)),
+                uSwizzle: new Uniform(0),
                 uExposure: new Uniform(0.6),
                 uDecay: new Uniform(0.93),
                 uDensity: new Uniform(0.96),

@@ -26,8 +26,7 @@ export class Reflector extends Group {
         width = 512,
         height = 512,
         clipBias = 0,
-        blurIterations = 8,
-        blurFactor = 1
+        blurIterations = 8
     } = {}) {
         super();
 
@@ -67,7 +66,6 @@ export class Reflector extends Group {
 
         // Reflection blur material
         this.blurMaterial = new ReflectorBlurMaterial();
-        this.blurMaterial.uniforms.uBluriness.value = blurFactor;
         this.blurMaterial.uniforms.uResolution.value.set(width, height);
 
         // Fullscreen triangle

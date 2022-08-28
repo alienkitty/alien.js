@@ -438,39 +438,6 @@
                     },
                     {
                         type: 'slider',
-                        label: 'Decay',
-                        min: 0.6,
-                        max: 1,
-                        step: 0.01,
-                        value: lensflareMaterial.uniforms.uDecay.value,
-                        callback: value => {
-                            lensflareMaterial.uniforms.uDecay.value = value;
-                        }
-                    },
-                    {
-                        type: 'slider',
-                        label: 'Density',
-                        min: 0,
-                        max: 1,
-                        step: 0.01,
-                        value: lensflareMaterial.uniforms.uDensity.value,
-                        callback: value => {
-                            lensflareMaterial.uniforms.uDensity.value = value;
-                        }
-                    },
-                    {
-                        type: 'slider',
-                        label: 'Weight',
-                        min: 0,
-                        max: 1,
-                        step: 0.01,
-                        value: lensflareMaterial.uniforms.uWeight.value,
-                        callback: value => {
-                            lensflareMaterial.uniforms.uWeight.value = value;
-                        }
-                    },
-                    {
-                        type: 'slider',
                         label: 'Clamp',
                         min: 0,
                         max: 1,
@@ -620,9 +587,6 @@
                 this.lightPosition = new Vector3();
 
                 this.lensflareExposure = 0.15;
-                this.lensflareDecay = 1.0;
-                this.lensflareDensity = 0.96;
-                this.lensflareWeight = 0.4;
                 this.lensflareClamp = 1;
                 this.blurResolutionScale = 0.25;
                 this.blurFactor = 10;
@@ -672,11 +636,10 @@
                 this.blackoutMaterial = new MeshBasicMaterial({ color: 0x000000 });
 
                 // Lens flare material
-                this.lensflareMaterial = new LensflareMaterial();
+                this.lensflareMaterial = new LensflareMaterial({
+                    color: new Color(Config.LIGHT_COLOR).multiply(new Color(0.55, 0.55, 1)) // Blue tint
+                });
                 this.lensflareMaterial.uniforms.uExposure.value = this.lensflareExposure;
-                this.lensflareMaterial.uniforms.uDecay.value = this.lensflareDecay;
-                this.lensflareMaterial.uniforms.uDensity.value = this.lensflareDensity;
-                this.lensflareMaterial.uniforms.uWeight.value = this.lensflareWeight;
                 this.lensflareMaterial.uniforms.uClamp.value = this.lensflareClamp;
                 this.lensflareMaterial.uniforms.uResolution = resolution;
 
@@ -824,19 +787,6 @@
                 renderer.setClearAlpha(currentClearAlpha);
                 scene.background = currentBackground;
 
-                this.hBlurMaterial.uniforms.tMap.value = renderTargetBlurA.texture;
-                this.screen.material = this.hBlurMaterial;
-                renderer.setRenderTarget(renderTargetBlurB);
-                renderer.clear();
-                renderer.render(this.screen, this.screenCamera);
-
-                this.vBlurMaterial.uniforms.tMap.value = renderTargetBlurB.texture;
-                this.screen.material = this.vBlurMaterial;
-                renderer.setRenderTarget(renderTargetBlurA);
-                renderer.clear();
-                renderer.render(this.screen, this.screenCamera);
-
-                this.lensflareMaterial.uniforms.tMap.value = renderTargetBlurA.texture;
                 this.setLightPosition();
                 this.screen.material = this.lensflareMaterial;
                 renderer.setRenderTarget(renderTargetBlurB);

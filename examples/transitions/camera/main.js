@@ -515,7 +515,7 @@ const fragmentBlurShader = /* glsl */ `
 
     uniform sampler2D tMap;
     uniform sampler2D tBlueNoise;
-    uniform vec2 uBlueNoiseTexelSize;
+    uniform vec2 uBlueNoiseResolution;
     uniform float uFocus;
     uniform float uRotation;
     uniform float uBluriness;
@@ -541,7 +541,7 @@ const fragmentBlurShader = /* glsl */ `
     void main() {
         float d = abs(uFocus - rotateUV(vUv, uRotation).y);
         float t = smootherstep(0.0, 1.0, d);
-        float rnd = getBlueNoise(tBlueNoise, gl_FragCoord.xy, uBlueNoiseTexelSize, vec2(fract(uTime)));
+        float rnd = getBlueNoise(tBlueNoise, gl_FragCoord.xy, uBlueNoiseResolution, vec2(fract(uTime)));
 
         FragColor = blur(tMap, vUv, uResolution, 20.0 * uBluriness * t * rot2d(uDirection, rnd));
 
@@ -567,7 +567,7 @@ class BlurMaterial extends RawShaderMaterial {
             uniforms: {
                 tMap: new Uniform(null),
                 tBlueNoise: new Uniform(texture),
-                uBlueNoiseTexelSize: new Uniform(new Vector2(1 / 256, 1 / 256)),
+                uBlueNoiseResolution: new Uniform(new Vector2(256, 256)),
                 uFocus: new Uniform(0.5),
                 uRotation: new Uniform(0),
                 uBluriness: new Uniform(1),

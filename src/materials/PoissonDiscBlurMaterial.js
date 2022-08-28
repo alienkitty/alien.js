@@ -21,7 +21,7 @@ export class PoissonDiscBlurMaterial extends RawShaderMaterial {
             uniforms: {
                 tMap: new Uniform(null),
                 tBlueNoise: new Uniform(texture),
-                uBlueNoiseTexelSize: new Uniform(new Vector2(1 / 256, 1 / 256)),
+                uBlueNoiseResolution: new Uniform(new Vector2(256, 256)),
                 uRadius: new Uniform(42),
                 uResolution: new Uniform(new Vector2()),
                 uTime: new Uniform(0)

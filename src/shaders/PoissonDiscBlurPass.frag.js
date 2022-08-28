@@ -6,7 +6,7 @@ precision highp float;
 
 uniform sampler2D tMap;
 uniform sampler2D tBlueNoise;
-uniform vec2 uBlueNoiseTexelSize;
+uniform vec2 uBlueNoiseResolution;
 uniform float uRadius;
 uniform vec2 uResolution;
 uniform float uTime;
@@ -24,7 +24,7 @@ ${blur}
 ${blueNoise}
 
 void main() {
-    float rnd = getBlueNoise(tBlueNoise, gl_FragCoord.xy, uBlueNoiseTexelSize, vec2(fract(uTime)));
+    float rnd = getBlueNoise(tBlueNoise, gl_FragCoord.xy, uBlueNoiseResolution, vec2(fract(uTime)));
     vec4 basis = vec4(rot2d(vec2(1, 0), rnd), rot2d(vec2(0, 1), rnd));
 
     FragColor = poissonSample(tMap, vUv, uResolution, uRadius, basis);

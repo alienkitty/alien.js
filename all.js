@@ -119,6 +119,7 @@ export { ChromaticAberrationMaterial } from './src/materials/ChromaticAberration
 export { VideoGlitchMaterial } from './src/materials/VideoGlitchMaterial.js';
 export { AfterimageMaterial } from './src/materials/AfterimageMaterial.js';
 export { VolumetricLightMaterial } from './src/materials/VolumetricLightMaterial.js';
+export { LensflareMaterial } from './src/materials/LensflareMaterial.js';
 export { DepthMaskMaterial } from './src/materials/DepthMaskMaterial.js';
 export { TextMaterial } from './src/materials/TextMaterial.js';
 

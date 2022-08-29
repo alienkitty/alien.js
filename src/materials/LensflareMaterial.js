@@ -1,4 +1,4 @@
-import { Color, GLSL3, NoBlending, RawShaderMaterial, Uniform, Vector2 } from 'three';
+import { AdditiveBlending, Color, GLSL3, RawShaderMaterial, Uniform, Vector2 } from 'three';
 
 import vertexShader from '../shaders/LensflarePass.vert.js';
 import fragmentShader from '../shaders/LensflarePass.frag.js';
@@ -10,15 +10,16 @@ export class LensflareMaterial extends RawShaderMaterial {
         super({
             glslVersion: GLSL3,
             uniforms: {
+                tMap: new Uniform(null),
                 uLightPosition: new Uniform(new Vector2(0.5, 0.5)),
                 uColor: new Uniform(color instanceof Color ? color : new Color(color)),
-                uExposure: new Uniform(0.6),
+                uExposure: new Uniform(1),
                 uClamp: new Uniform(1),
                 uResolution: new Uniform(new Vector2())
             },
             vertexShader,
             fragmentShader,
-            blending: NoBlending,
+            blending: AdditiveBlending,
             depthWrite: false,
             depthTest: false
         });

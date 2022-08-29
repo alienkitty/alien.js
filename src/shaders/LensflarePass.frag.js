@@ -4,6 +4,7 @@
 export default /* glsl */ `
 precision highp float;
 
+uniform sampler2D tMap;
 uniform vec2 uLightPosition;
 uniform vec3 uColor;
 uniform float uExposure;
@@ -50,6 +51,6 @@ void main() {
     color *= uExposure;
     color = clamp(color, 0.0, uClamp);
 
-    FragColor = vec4(color, 1.0);
+    FragColor = vec4(color * texture(tMap, uLightPosition).r, 1.0);
 }
 `;

@@ -769,9 +769,7 @@
                 this.vlMaterial.uniforms.uClamp.value = this.vlClamp;
 
                 // Lens flare material
-                this.lensflareMaterial = new LensflareMaterial({
-                    color: new Color(Config.LIGHT_COLOR).multiply(new Color(0.55, 0.55, 1)) // Blue tint
-                });
+                this.lensflareMaterial = new LensflareMaterial();
                 this.lensflareMaterial.uniforms.uScale.value = this.lensflareScale;
                 this.lensflareMaterial.uniforms.uExposure.value = this.lensflareExposure;
                 this.lensflareMaterial.uniforms.uClamp.value = this.lensflareClamp;

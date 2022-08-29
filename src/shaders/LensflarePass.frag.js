@@ -9,7 +9,6 @@ precision highp float;
 uniform sampler2D tMap;
 uniform vec2 uLightPosition;
 uniform vec2 uScale;
-uniform vec3 uColor;
 uniform float uExposure;
 uniform float uClamp;
 uniform vec2 uResolution;
@@ -30,11 +29,11 @@ void main() {
     uv *= uScale;
     pos *= uScale;
 
-    vec3 color = lensflare(uv, pos) * uColor * 2.0;
+    vec3 color = lensflare(uv, pos) * texture(tMap, uLightPosition).rgb * 2.0;
     color = pow(color, vec3(0.5));
     color *= uExposure;
     color = clamp(color, 0.0, uClamp);
 
-    FragColor = vec4(color * texture(tMap, uLightPosition).r, 1.0);
+    FragColor = vec4(color, 1.0);
 }
 `;

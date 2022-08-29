@@ -429,6 +429,28 @@
                     },
                     {
                         type: 'slider',
+                        label: 'ScaleX',
+                        min: 0,
+                        max: 4,
+                        step: 0.02,
+                        value: lensflareMaterial.uniforms.uScale.value.x,
+                        callback: value => {
+                            lensflareMaterial.uniforms.uScale.value.x = value;
+                        }
+                    },
+                    {
+                        type: 'slider',
+                        label: 'ScaleY',
+                        min: 0,
+                        max: 4,
+                        step: 0.02,
+                        value: lensflareMaterial.uniforms.uScale.value.y,
+                        callback: value => {
+                            lensflareMaterial.uniforms.uScale.value.y = value;
+                        }
+                    },
+                    {
+                        type: 'slider',
                         label: 'Exp',
                         min: 0,
                         max: 1,
@@ -686,6 +708,7 @@
                 this.vlDensity = 0.96;
                 this.vlWeight = 0.4;
                 this.vlClamp = 1;
+                this.lensflareScale = new Vector2(1.5, 1.5);
                 this.lensflareExposure = 1;
                 this.lensflareClamp = 1;
                 this.blurResolutionScale = 0.25;
@@ -749,6 +772,7 @@
                 this.lensflareMaterial = new LensflareMaterial({
                     color: new Color(Config.LIGHT_COLOR).multiply(new Color(0.55, 0.55, 1)) // Blue tint
                 });
+                this.lensflareMaterial.uniforms.uScale.value = this.lensflareScale;
                 this.lensflareMaterial.uniforms.uExposure.value = this.lensflareExposure;
                 this.lensflareMaterial.uniforms.uClamp.value = this.lensflareClamp;
                 this.lensflareMaterial.uniforms.uResolution = resolution;

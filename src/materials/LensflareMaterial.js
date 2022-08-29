@@ -12,6 +12,7 @@ export class LensflareMaterial extends RawShaderMaterial {
             uniforms: {
                 tMap: new Uniform(null),
                 uLightPosition: new Uniform(new Vector2(0.5, 0.5)),
+                uScale: new Uniform(new Vector2(1.5, 1.5)),
                 uColor: new Uniform(color instanceof Color ? color : new Color(color)),
                 uExposure: new Uniform(1),
                 uClamp: new Uniform(1),

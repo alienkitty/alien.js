@@ -6,6 +6,7 @@ precision highp float;
 
 uniform sampler2D tMap;
 uniform vec2 uLightPosition;
+uniform vec2 uScale;
 uniform vec3 uColor;
 uniform float uExposure;
 uniform float uClamp;
@@ -42,11 +43,15 @@ vec3 lensflare(vec2 uv, vec2 pos) {
 
 void main() {
     vec2 uv = vUv - 0.5;
-    uv.x *= uResolution.x / uResolution.y;
     vec2 pos = uLightPosition - 0.5;
+
+    uv.x *= uResolution.x / uResolution.y;
     pos.x *= uResolution.x / uResolution.y;
 
-    vec3 color = lensflare(uv * 1.5, pos * 1.5) * uColor * 2.0;
+    uv *= uScale;
+    pos *= uScale;
+
+    vec3 color = lensflare(uv, pos) * uColor * 2.0;
     color = pow(color, vec3(0.5));
     color *= uExposure;
     color = clamp(color, 0.0, uClamp);

@@ -100,6 +100,7 @@ In its design, everything is an ES module, all user interfaces and components fo
 [volumetric light](https://alien.js.org/examples/shader_volumetric_light.html) (god rays)  
 [anamorphic light](https://alien.js.org/examples/shader_anamorphic_light.html) (fast anamorphic lens flares)  
 [lensflare](https://alien.js.org/examples/shader_lensflare.html)  
+[lensflare](https://alien.js.org/examples/shader_anamorphic_light_lensflare.html) (with anamorphic light)  
 [baked cube](https://alien.js.org/examples/shader_baked_cube.html)  
 [baked cube](https://alien.js.org/examples/shader_baked_cube_dudv.html) (DuDv)  
 [baked cube](https://alien.js.org/examples/shader_baked_cube_sss.html) (SSS, [debug](https://alien.js.org/examples/shader_baked_cube_sss.html?debug))  

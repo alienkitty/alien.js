@@ -13,7 +13,7 @@
 <body>
     <div id="root"></div>
     <script type="module">
-        import { ACESFilmicToneMapping, AmbientLight, BloomCompositeMaterial, BlurMaterial, Color, Device, EnvironmentTextureLoader, Events, FXAAMaterial, GLSL3, Group, HemisphereLight, IcosahedronGeometry, ImageBitmapLoaderThread, LuminosityMaterial, Mesh, MeshBasicMaterial, MeshStandardMaterial, NoBlending, OrthographicCamera, PanelItem, PerspectiveCamera, PointLight, RawShaderMaterial, RepeatWrapping, Scene, ShaderChunk, Stage, TextureLoader, Thread, UI, Uniform, UnrealBloomBlurMaterial, Vector2, Vector3, VolumetricLightLensflareMaterial, WebGLRenderTarget, WebGLRenderer, floorPowerOfTwo, getFullscreenTriangle, lerp, ticker } from '../build/alien.js';
+        import { ACESFilmicToneMapping, AmbientLight, BloomCompositeMaterial, BlurMaterial, Color, Device, EnvironmentTextureLoader, Events, FXAAMaterial, GLSL3, Group, HemisphereLight, IcosahedronGeometry, ImageBitmapLoaderThread, LuminosityMaterial, Mesh, MeshBasicMaterial, MeshStandardMaterial, NoBlending, OrthographicCamera, PanelItem, PerspectiveCamera, PointLight, RawShaderMaterial, RepeatWrapping, Scene, ShaderChunk, Stage, TextureLoader, Thread, UI, Uniform, UnrealBloomBlurMaterial, Vector2, Vector3, VolumetricLightLensflareMaterial, WebGLRenderTarget, WebGLRenderer, floorPowerOfTwo, getFrustum, getFullscreenTriangle, lerp, ticker } from '../build/alien.js';
 
         class Config {
             static LIGHT_COLOR = 0xf44336;
@@ -88,9 +88,7 @@
             constructor() {
                 super();
 
-                this.frameRotation = 0;
-                this.position.x = 0;
-                this.position.z = 1;
+                this.position.z = -1;
 
                 this.initLight();
             }
@@ -218,12 +216,6 @@
             /**
              * Public methods
              */
-
-            update = () => {
-                this.frameRotation += 0.01;
-                this.position.x = 1 * Math.sin(this.frameRotation);
-                this.position.z = 1 * Math.cos(this.frameRotation);
-            };
 
             ready = () => this.initMesh();
         }
@@ -380,18 +372,65 @@
         class SceneController {
             static init(view) {
                 this.view = view;
+
+                this.mouse = new Vector2();
+                this.target = new Vector2();
+                this.lightPosition = new Vector3();
+                this.lerpSpeed = 0.25;
+
+                this.addListeners();
             }
+
+            static addListeners() {
+                window.addEventListener('pointerdown', this.onPointerDown);
+                window.addEventListener('pointermove', this.onPointerMove);
+                window.addEventListener('pointerup', this.onPointerUp);
+            }
+
+            /**
+             * Event handlers
+             */
+
+            static onPointerDown = e => {
+                this.onPointerMove(e);
+            };
+
+            static onPointerMove = ({ clientX, clientY }) => {
+                if (!this.view.visible) {
+                    return;
+                }
+
+                this.target.x = (clientX / Stage.width) * 2 - 1;
+                this.target.y = 1 - (clientY / Stage.height) * 2;
+            };
+
+            static onPointerUp = e => {
+                this.onPointerMove(e);
+            };
 
             /**
              * Public methods
              */
+
+            static resize = () => {
+                const { width, height } = WorldController.getFrustum(this.view.ball.position.z);
+
+                this.halfWidth = width / 2;
+                this.halfHeight = height / 2;
+            };
 
             static update = () => {
                 if (!this.view.visible) {
                     return;
                 }
 
-                this.view.update();
+                this.mouse.lerp(this.target, this.lerpSpeed);
+
+                this.lightPosition.x = this.mouse.x * this.halfWidth;
+                this.lightPosition.y = this.mouse.y * this.halfHeight;
+                this.lightPosition.z = this.view.ball.position.z;
+
+                this.view.ball.position.copy(this.lightPosition);
             };
 
             static animateIn = () => {
@@ -1150,6 +1189,8 @@
             static loadTexture = path => this.textureLoader.loadAsync(path);
 
             static loadEnvironmentTexture = path => this.environmentLoader.loadAsync(path);
+
+            static getFrustum = offsetZ => getFrustum(this.camera, offsetZ);
         }
 
         class App {
@@ -1224,6 +1265,7 @@
 
                 WorldController.resize(width, height, dpr);
                 CameraController.resize(width, height);
+                SceneController.resize();
                 RenderManager.resize(width, height, dpr);
             };
 

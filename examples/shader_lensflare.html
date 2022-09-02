@@ -13,7 +13,7 @@
 <body>
     <div id="root"></div>
     <script type="module">
-        import { ACESFilmicToneMapping, AmbientLight, BloomCompositeMaterial, BlurMaterial, Color, Device, EnvironmentTextureLoader, Events, FXAAMaterial, GLSL3, Group, HemisphereLight, IcosahedronGeometry, ImageBitmapLoaderThread, LensflareMaterial, LuminosityMaterial, Mesh, MeshBasicMaterial, MeshStandardMaterial, NoBlending, OrthographicCamera, PanelItem, PerspectiveCamera, PointLight, RawShaderMaterial, RepeatWrapping, Scene, ShaderChunk, Stage, TextureLoader, Thread, UI, Uniform, UnrealBloomBlurMaterial, Vector2, Vector3, VolumetricLightMaterial, WebGLRenderTarget, WebGLRenderer, floorPowerOfTwo, getFullscreenTriangle, lerp, ticker } from '../build/alien.js';
+        import { ACESFilmicToneMapping, AmbientLight, BloomCompositeMaterial, BlurMaterial, Color, Device, EnvironmentTextureLoader, Events, FXAAMaterial, GLSL3, Group, HemisphereLight, IcosahedronGeometry, ImageBitmapLoaderThread, LensflareMaterial, LuminosityMaterial, Mesh, MeshBasicMaterial, MeshStandardMaterial, NoBlending, OrthographicCamera, PanelItem, PerspectiveCamera, PointLight, RawShaderMaterial, RepeatWrapping, Scene, ShaderChunk, Stage, TextureLoader, Thread, UI, Uniform, UnrealBloomBlurMaterial, Vector2, Vector3, WebGLRenderTarget, WebGLRenderer, floorPowerOfTwo, getFullscreenTriangle, lerp, ticker } from '../build/alien.js';
 
         class Config {
             static LIGHT_COLOR = 0xf44336;
@@ -418,7 +418,7 @@
             static initPanel() {
                 const { sphere } = this.view;
 
-                const { vlMaterial, lensflareMaterial, luminosityMaterial, bloomCompositeMaterial } = RenderManager;
+                const { lensflareMaterial, luminosityMaterial, bloomCompositeMaterial } = RenderManager;
 
                 const items = [
                     {
@@ -469,97 +469,6 @@
                         value: lensflareMaterial.uniforms.uClamp.value,
                         callback: value => {
                             lensflareMaterial.uniforms.uClamp.value = value;
-                        }
-                    },
-                    {
-                        type: 'divider'
-                    },
-                    {
-                        type: 'slider',
-                        label: 'ScaleX',
-                        min: -2,
-                        max: 2,
-                        step: 0.02,
-                        value: vlMaterial.uniforms.uScale.value.x,
-                        callback: value => {
-                            vlMaterial.uniforms.uScale.value.x = value;
-                        }
-                    },
-                    {
-                        type: 'slider',
-                        label: 'ScaleY',
-                        min: -2,
-                        max: 2,
-                        step: 0.02,
-                        value: vlMaterial.uniforms.uScale.value.y,
-                        callback: value => {
-                            vlMaterial.uniforms.uScale.value.y = value;
-                        }
-                    },
-                    {
-                        type: 'slider',
-                        label: 'Swizzle',
-                        min: -2,
-                        max: 2,
-                        step: 0.02,
-                        value: vlMaterial.uniforms.uSwizzle.value,
-                        callback: value => {
-                            vlMaterial.uniforms.uSwizzle.value = value;
-                        }
-                    },
-                    {
-                        type: 'slider',
-                        label: 'Exp',
-                        min: 0,
-                        max: 1,
-                        step: 0.01,
-                        value: vlMaterial.uniforms.uExposure.value,
-                        callback: value => {
-                            vlMaterial.uniforms.uExposure.value = value;
-                        }
-                    },
-                    {
-                        type: 'slider',
-                        label: 'Decay',
-                        min: 0.6,
-                        max: 1,
-                        step: 0.01,
-                        value: vlMaterial.uniforms.uDecay.value,
-                        callback: value => {
-                            vlMaterial.uniforms.uDecay.value = value;
-                        }
-                    },
-                    {
-                        type: 'slider',
-                        label: 'Density',
-                        min: 0,
-                        max: 1,
-                        step: 0.01,
-                        value: vlMaterial.uniforms.uDensity.value,
-                        callback: value => {
-                            vlMaterial.uniforms.uDensity.value = value;
-                        }
-                    },
-                    {
-                        type: 'slider',
-                        label: 'Weight',
-                        min: 0,
-                        max: 1,
-                        step: 0.01,
-                        value: vlMaterial.uniforms.uWeight.value,
-                        callback: value => {
-                            vlMaterial.uniforms.uWeight.value = value;
-                        }
-                    },
-                    {
-                        type: 'slider',
-                        label: 'Clamp',
-                        min: 0,
-                        max: 1,
-                        step: 0.01,
-                        value: vlMaterial.uniforms.uClamp.value,
-                        callback: value => {
-                            vlMaterial.uniforms.uClamp.value = value;
                         }
                     },
                     {
@@ -701,13 +610,6 @@
 
                 this.lightPosition = new Vector3();
 
-                this.vlScale = new Vector2(1, -2);
-                this.vlSwizzle = 0;
-                this.vlExposure = 0.15;
-                this.vlDecay = 1.0;
-                this.vlDensity = 0.96;
-                this.vlWeight = 0.4;
-                this.vlClamp = 1;
                 this.lensflareScale = new Vector2(1.5, 1.5);
                 this.lensflareExposure = 1;
                 this.lensflareClamp = 1;
@@ -757,16 +659,6 @@
 
                 // Mask materials
                 this.blackoutMaterial = new MeshBasicMaterial({ color: 0x000000 });
-
-                // Volumetric light material
-                this.vlMaterial = new VolumetricLightMaterial();
-                this.vlMaterial.uniforms.uScale.value = this.vlScale;
-                this.vlMaterial.uniforms.uSwizzle.value = this.vlSwizzle;
-                this.vlMaterial.uniforms.uExposure.value = this.vlExposure;
-                this.vlMaterial.uniforms.uDecay.value = this.vlDecay;
-                this.vlMaterial.uniforms.uDensity.value = this.vlDensity;
-                this.vlMaterial.uniforms.uWeight.value = this.vlWeight;
-                this.vlMaterial.uniforms.uClamp.value = this.vlClamp;
 
                 // Lens flare material
                 this.lensflareMaterial = new LensflareMaterial();
@@ -832,7 +724,6 @@
                 const x = (this.lightPosition.x + 1) / 2;
                 const y = (this.lightPosition.y + 1) / 2;
 
-                this.vlMaterial.uniforms.uLightPosition.value.set(x, y);
                 this.lensflareMaterial.uniforms.uLightPosition.value.set(x, y);
             }
 
@@ -932,16 +823,11 @@
                 renderer.clear();
                 renderer.render(this.screen, this.screenCamera);
 
+                this.lensflareMaterial.uniforms.tMap.value = renderTargetBlurA.texture;
                 this.setLightPosition();
-
-                this.vlMaterial.uniforms.tMap.value = renderTargetBlurA.texture;
-                this.screen.material = this.vlMaterial;
+                this.screen.material = this.lensflareMaterial;
                 renderer.setRenderTarget(renderTargetBlurB);
                 renderer.clear();
-                renderer.render(this.screen, this.screenCamera);
-
-                this.lensflareMaterial.uniforms.tMap.value = renderTargetBlurA.texture;
-                this.screen.material = this.lensflareMaterial;
                 renderer.render(this.screen, this.screenCamera);
 
                 // FXAA pass

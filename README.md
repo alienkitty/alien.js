@@ -8,8 +8,8 @@
     <a href="https://www.npmjs.com/package/alien.js">
         <img src="https://img.shields.io/npm/v/alien.js" alt="NPM Package">
     </a>
-    <a href="https://lgtm.com/projects/g/pschroen/alien.js">
-        <img src="https://img.shields.io/lgtm/alerts/github/pschroen/alien.js" alt="Security Status">
+    <a href="https://deepscan.io/dashboard#view=project&tid=20020&pid=23464&bid=712438">
+        <img src="https://deepscan.io/api/teams/20020/projects/23464/branches/712438/badge/grade.svg" alt="DeepScan grade">
     </a>
 </p>
 

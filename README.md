@@ -21,7 +21,15 @@ Alien.js is a [MVC](https://en.wikipedia.org/wiki/Model%E2%80%93view%E2%80%93con
 
 The post-processing workflow takes a more linear approach, so instead of abstracting with an effect composer, you work directly with the render targets, making it easier to build custom effects.
 
-The idea is to keep it simple, with minimal abstraction, and to build websites more like a framework, which is why [rollup.js](https://rollupjs.org/) is used instead for bundling.
+The idea is to build a self-contained framework with minimal dependencies, only [rollup.js](https://rollupjs.org/) is used for bundling, and can also be used as a [library](index.js).
+
+```sh
+npm i alien.js
+```
+
+```js
+import { Events, Interface, Stage } from 'alien.js';
+```
 
 In its design, everything is an ES module, all user interfaces and components follow the same class structure, making it easy to copy-paste from examples and between projects.
 

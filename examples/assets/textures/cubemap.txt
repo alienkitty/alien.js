@@ -1,2 +1,2 @@
 Cubemap Nvidia Layout
-https://docs.unrealengine.com/4.26/en-US/RenderingAndGraphics/Textures/Cubemaps/CreatingCubemaps/
+https://docs.unrealengine.com/4.27/en-US/RenderingAndGraphics/Textures/Cubemaps/CreatingCubemaps/

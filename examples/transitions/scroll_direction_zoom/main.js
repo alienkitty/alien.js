@@ -1,4 +1,4 @@
-import { ACESFilmicToneMapping, AmbientLight, Assets, BloomCompositeMaterial, BlurMaterial, BoxGeometry, Color, Device, DirectionalLight, EnvironmentTextureLoader, Events, FXAAMaterial, GLSL3, Global, Group, HemisphereLight, IcosahedronGeometry, ImageBitmapLoaderThread, Interface, LuminosityMaterial, Mesh, MeshStandardMaterial, NoBlending, OctahedronGeometry, OrthographicCamera, PanelItem, PerspectiveCamera, RawShaderMaterial, RepeatWrapping, Scene, SceneCompositeMaterial, SmoothSkew, Stage, TextureLoader, Thread, UI, Uniform, UnrealBloomBlurMaterial, Vector2, WebGLRenderTarget, WebGLRenderer, clamp, clearTween, defer, degToRad, floorPowerOfTwo, getFullscreenTriangle, inverseLerp, lerp, shuffle, ticker, tween } from '../../../build/alien.js';
+import { ACESFilmicToneMapping, AmbientLight, Assets, BloomCompositeMaterial, BoxGeometry, Color, Component, Device, DirectionalLight, EnvironmentTextureLoader, Events, FXAAMaterial, GLSL3, Global, Group, Header, HemisphereLight, IcosahedronGeometry, ImageBitmapLoaderThread, Interface, LuminosityMaterial, Mesh, MeshStandardMaterial, NoBlending, OctahedronGeometry, OrthographicCamera, PanelItem, PerspectiveCamera, RawShaderMaterial, RepeatWrapping, Scene, SceneCompositeMaterial, SmoothViews, Stage, TextureLoader, Thread, Uniform, UnrealBloomBlurMaterial, Vector2, WebGLRenderTarget, WebGLRenderer, defer, degToRad, floorPowerOfTwo, getFullscreenTriangle, lerp, shuffle, ticker } from '../../../build/alien.js';
 
 Global.SECTIONS = [];
 Global.SECTION_INDEX = 0;
@@ -9,12 +9,41 @@ class Config {
     static DEBUG = /[?&]debug/.test(location.search);
 }
 
-class DetailsLink extends Interface {
-    constructor(title, link) {
-        super('.link', 'a');
+class Data {
+    static init() {
+        this.setIndexes();
+    }
 
-        this.title = title;
-        this.link = link;
+    static setIndexes() {
+        Global.SECTIONS.forEach((item, i) => item.index = i);
+    }
+
+    /**
+     * Public methods
+     */
+
+    static setSection = index => {
+        if (index !== Global.SECTION_INDEX) {
+            Global.SECTION_INDEX = index;
+
+            RenderManager.setView(index);
+        }
+    };
+
+    static getNext = () => {
+        let index = Global.SECTION_INDEX + 1;
+
+        if (index > Global.SECTIONS.length - 1) {
+            index = 0;
+        }
+
+        return Global.SECTIONS[index];
+    };
+}
+
+class UINext extends Interface {
+    constructor() {
+        super('.next');
 
         this.initHTML();
 
@@ -23,36 +52,35 @@ class DetailsLink extends Interface {
 
     initHTML() {
         this.css({
+            position: 'relative',
+            display: 'inline-block',
+            padding: 10,
             fontFamily: 'Gothic A1, sans-serif',
             fontWeight: '400',
             fontSize: 13,
-            lineHeight: 22,
-            letterSpacing: 'normal'
+            lineHeight: '1.4',
+            letterSpacing: '0.03em',
+            textTransform: 'uppercase',
+            cursor: 'pointer'
         });
-        this.attr({ href: this.link });
-
-        this.text = new Interface('.text');
-        this.text.css({
-            position: 'relative',
-            display: 'inline-block'
-        });
-        this.text.text(this.title);
-        this.add(this.text);
+        this.text('Next');
 
         this.line = new Interface('.line');
         this.line.css({
-            position: 'relative',
-            display: 'inline-block',
-            fontWeight: '700',
-            verticalAlign: 'middle'
+            left: 10,
+            right: 10,
+            bottom: 10,
+            height: 1,
+            backgroundColor: 'var(--ui-color)',
+            scaleX: 0
         });
-        this.line.html('&nbsp;&nbsp;―');
         this.add(this.line);
     }
 
     addListeners() {
         this.element.addEventListener('mouseenter', this.onHover);
         this.element.addEventListener('mouseleave', this.onHover);
+        this.element.addEventListener('click', this.onClick);
     }
 
     /**
@@ -60,11 +88,25 @@ class DetailsLink extends Interface {
      */
 
     onHover = ({ type }) => {
-        this.line.tween({ x: type === 'mouseenter' ? 10 : 0 }, 200, 'easeOutCubic');
+        this.line.clearTween();
+
+        if (type === 'mouseenter') {
+            this.line.css({ transformOrigin: 'left center', scaleX: 0 }).tween({ scaleX: 1 }, 800, 'easeOutQuint');
+        } else {
+            this.line.css({ transformOrigin: 'right center' }).tween({ scaleX: 0 }, 500, 'easeOutQuint');
+        }
+    };
+
+    onClick = e => {
+        e.preventDefault();
+
+        const item = Data.getNext();
+
+        Data.setSection(item.index);
     };
 }
 
-class DetailsTitle extends Interface {
+class UITitle extends Interface {
     constructor(title) {
         super('.title', 'h1');
 
@@ -76,21 +118,23 @@ class DetailsTitle extends Interface {
     }
 
     initHTML() {
+        this.invisible();
         this.css({
             position: 'relative',
-            left: -1,
-            margin: '0 0 6px',
+            margin: 0,
             fontFamily: 'Roboto, sans-serif',
             fontWeight: '300',
             fontSize: 23,
             lineHeight: '1.3',
             letterSpacing: 'normal',
-            textTransform: 'uppercase'
+            textTransform: 'uppercase',
+            pointerEvents: 'none',
+            opacity: 0
         });
     }
 
     initText() {
-        const split = this.title.split('');
+        const split = this.title.replace(/[\s.]+/g, '_').split('');
 
         split.forEach(str => {
             if (str === ' ') {
@@ -109,29 +153,63 @@ class DetailsTitle extends Interface {
      * Public methods
      */
 
+    setTitle = (title, direction = 1) => {
+        this.title = title;
+        this.letters = [];
+
+        this.clearTween().tween({ y: -10 * direction, opacity: 0 }, 300, 'easeInSine', () => {
+            this.empty();
+            this.initText();
+            this.animateIn();
+            this.css({ y: 10 * direction }).tween({ y: 0, opacity: 1 }, 1000, 'easeOutCubic');
+        });
+    };
+
     animateIn = () => {
+        this.visible();
+        this.css({ pointerEvents: 'auto' });
+
         shuffle(this.letters);
 
         const underscores = this.letters.filter(letter => letter === '_');
 
         underscores.forEach((letter, i) => {
+            if (!letter.element) {
+                return;
+            }
+
             letter.css({ opacity: 0 }).tween({ opacity: 1 }, 2000, 'easeOutCubic', i * 15);
         });
 
         const letters = this.letters.filter(letter => letter !== '_').slice(0, 2);
 
         letters.forEach((letter, i) => {
+            if (!letter.element) {
+                return;
+            }
+
             letter.css({ opacity: 0 }).tween({ opacity: 1 }, 2000, 'easeOutCubic', 100 + i * 15);
+        });
+
+        this.clearTween().tween({ opacity: 1 }, 1000, 'easeOutSine');
+    };
+
+    animateOut = callback => {
+        this.css({ pointerEvents: 'none' });
+
+        this.clearTween().tween({ opacity: 0 }, 300, 'easeInSine', () => {
+            this.invisible();
+
+            if (callback) {
+                callback();
+            }
         });
     };
 }
 
-class Details extends Interface {
-    constructor(title) {
-        super('.details');
-
-        this.title = title;
-        this.texts = [];
+class UI extends Interface {
+    constructor() {
+        super('.ui');
 
         this.initHTML();
         this.initViews();
@@ -143,12 +221,11 @@ class Details extends Interface {
     initHTML() {
         this.invisible();
         this.css({
+            position: 'fixed',
             left: 0,
             top: 0,
             width: '100%',
             height: '100%',
-            display: 'flex',
-            alignItems: 'center',
             pointerEvents: 'none',
             opacity: 0
         });
@@ -156,54 +233,25 @@ class Details extends Interface {
         this.container = new Interface('.container');
         this.container.css({
             position: 'relative',
-            width: 400,
-            margin: '10% 10% 13%'
+            margin: '23px 0 0',
+            textAlign: 'center'
         });
         this.add(this.container);
     }
 
     initViews() {
-        this.title = new DetailsTitle(this.title.replace(/[\s.]+/g, '_'));
-        this.title.css({
-            width: 'fit-content'
-        });
+        this.header = new Header();
+        this.add(this.header);
+
+        this.title = new UITitle(Global.SECTIONS[Global.SECTION_INDEX].title);
         this.container.add(this.title);
-        this.texts.push(this.title);
 
-        this.text = new Interface('.text', 'p');
-        this.text.css({
-            width: 'fit-content',
-            position: 'relative',
-            margin: '6px 0',
-            fontFamily: 'Gothic A1, sans-serif',
-            fontWeight: '400',
-            fontSize: 13,
-            lineHeight: '1.5',
-            letterSpacing: 'normal'
-        });
-        this.text.html('Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.');
-        this.container.add(this.text);
-        this.texts.push(this.text);
-
-        const items = [
-            {
-                title: 'Lorem ipsum',
-                link: 'https://en.wikipedia.org/wiki/Lorem_ipsum'
-            }
-        ];
-
-        items.forEach(data => {
-            const link = new DetailsLink(data.title, data.link);
-            link.css({
-                display: 'block',
-                width: 'fit-content'
-            });
-            this.container.add(link);
-            this.texts.push(link);
-        });
+        this.link = new UINext();
+        this.container.add(this.link);
     }
 
     addListeners() {
+        Stage.events.on(Events.VIEW_CHANGE, this.onViewChange);
         Stage.events.on(Events.RESIZE, this.onResize);
     }
 
@@ -211,20 +259,30 @@ class Details extends Interface {
      * Event handlers
      */
 
+    onViewChange = ({ index }) => {
+        this.clearTimeout(this.timeout);
+
+        this.timeout = this.delayedCall(300, () => {
+            this.title.setTitle(Global.SECTIONS[index].title, RenderManager.smooth.direction);
+        });
+    };
+
     onResize = () => {
         if (Stage.width < Config.BREAKPOINT) {
-            this.css({ display: '' });
-
             this.container.css({
-                width: '',
-                margin: '24px 20px 0'
+                margin: '24px 0 0'
+            });
+
+            this.link.css({
+                marginTop: Stage.height - 24 * 2 - 70
             });
         } else {
-            this.css({ display: 'flex' });
-
             this.container.css({
-                width: 400,
-                margin: '10% 10% 13%'
+                margin: '55px 0 0'
+            });
+
+            this.link.css({
+                marginTop: Stage.height - 55 * 2 - 70
             });
         }
     };
@@ -232,6 +290,14 @@ class Details extends Interface {
     /**
      * Public methods
      */
+
+    addPanel = item => {
+        this.header.info.panel.add(item);
+    };
+
+    update = () => {
+        this.header.info.update();
+    };
 
     animateIn = () => {
         this.visible();
@@ -243,13 +309,11 @@ class Details extends Interface {
         const duration = 2000;
         const stagger = 175;
 
-        this.texts.forEach((text, i) => {
-            const delay = i === 0 ? 0 : duration;
-
-            text.css({ opacity: 0 }).tween({ opacity: 1 }, duration, 'easeOutCubic', delay + i * stagger);
+        this.children.forEach((view, i) => {
+            view.css({ opacity: 0 }).tween({ opacity: 1 }, duration, 'easeOutCubic', i * stagger);
         });
 
-        this.title.animateIn();
+        this.header.animateIn();
     };
 }
 
@@ -259,7 +323,6 @@ class Section extends Interface {
 
         this.title = title;
         this.index = index;
-        this.animatedIn = false;
 
         this.initHTML();
         this.initViews();
@@ -287,8 +350,6 @@ class Section extends Interface {
     }
 
     initViews() {
-        this.details = new Details(this.title);
-        this.add(this.details);
     }
 
     async addListeners() {
@@ -307,12 +368,6 @@ class Section extends Interface {
     onIntersect = ([entry]) => {
         if (entry.isIntersecting) {
             Stage.events.emit(Events.VIEW_CHANGE, { index: this.index });
-
-            if (!this.animatedIn) {
-                this.animatedIn = true;
-
-                this.details.animateIn();
-            }
         }
     };
 }
@@ -341,10 +396,7 @@ class Container extends Interface {
     }
 }
 
-import rgbshift from '../../../src/shaders/modules/rgbshift/rgbshift.glsl.js';
-import dither from '../../../src/shaders/modules/dither/dither.glsl.js';
-
-const vertexCompositeShader = /* glsl */ `
+const vertexTransitionShader = /* glsl */ `
     in vec3 position;
     in vec2 uv;
 
@@ -357,46 +409,129 @@ const vertexCompositeShader = /* glsl */ `
     }
 `;
 
-const fragmentCompositeShader = /* glsl */ `
+const fragmentTransitionShader = /* glsl */ `
     precision highp float;
 
-    uniform sampler2D tScene;
-    uniform vec3 uColor;
-    uniform float uDistortion;
-    uniform float uOpacity;
+    uniform sampler2D tMap1;
+    uniform sampler2D tMap2;
+    uniform float uProgress;
+    uniform vec2 uResolution;
+    uniform float uTime;
 
     in vec2 vUv;
 
     out vec4 FragColor;
 
-    ${rgbshift}
-    ${dither}
+    // Based on https://gl-transitions.com/editor/flyeye by gre
+
+    uniform float uSize;
+    uniform float uZoom;
+    uniform float uColorSeparation;
 
     void main() {
-        FragColor = getRGB(tScene, vUv, 0.1, 0.001 * uDistortion * (1.0 - uOpacity));
+        if (uProgress == 0.0) {
+            FragColor = texture(tMap1, vUv);
+            return;
+        } else if (uProgress == 1.0) {
+            FragColor = texture(tMap2, vUv);
+            return;
+        }
 
-        FragColor.rgb = mix(uColor, FragColor.rgb, uOpacity);
+        float inv = 1.0 - uProgress;
+        vec2 disp = uSize * vec2(cos(uZoom * vUv.x), sin(uZoom * vUv.y));
 
-        FragColor.rgb = dither(FragColor.rgb);
+        vec4 texTo = texture(tMap2, vUv + inv * disp);
+        vec4 texFrom = vec4(
+            texture(tMap1, vUv + uProgress * disp * (1.0 - uColorSeparation)).r,
+            texture(tMap1, vUv + uProgress * disp).g,
+            texture(tMap1, vUv + uProgress * disp * (1.0 + uColorSeparation)).b,
+            1.0
+        );
+
+        FragColor = texTo * uProgress + texFrom * inv;
     }
 `;
 
-class CompositeMaterial extends RawShaderMaterial {
+class TransitionMaterial extends RawShaderMaterial {
     constructor() {
         super({
             glslVersion: GLSL3,
             uniforms: {
-                tScene: new Uniform(null),
-                uColor: new Uniform(new Color(0x0e0e0e)),
-                uDistortion: new Uniform(1.45),
-                uOpacity: new Uniform(0)
+                tMap1: new Uniform(null),
+                tMap2: new Uniform(null),
+                uProgress: new Uniform(0),
+                uSize: new Uniform(0.04),
+                uZoom: new Uniform(50),
+                uColorSeparation: new Uniform(0.3),
+                uResolution: new Uniform(new Vector2()),
+                uTime: new Uniform(0)
             },
-            vertexShader: vertexCompositeShader,
-            fragmentShader: fragmentCompositeShader,
+            vertexShader: vertexTransitionShader,
+            fragmentShader: fragmentTransitionShader,
             blending: NoBlending,
             depthWrite: false,
             depthTest: false
         });
+    }
+}
+
+class RenderScene {
+    constructor() {
+        this.initRenderer();
+        this.initLights();
+        this.initEnvironment();
+    }
+
+    initRenderer() {
+        const { renderer, camera } = WorldController;
+
+        this.renderer = renderer;
+        this.camera = camera;
+
+        // 3D scene
+        this.scene = new Scene();
+        this.scene.background = new Color(0x0e0e0e);
+
+        // Render targets
+        this.renderTarget = new WebGLRenderTarget(1, 1);
+    }
+
+    initLights() {
+        this.scene.add(new AmbientLight(0xffffff, 0.2));
+
+        this.scene.add(new HemisphereLight(0x606060, 0x404040));
+
+        const light = new DirectionalLight(0xffffff, 0.4);
+        light.position.set(0.6, 0.5, 1);
+        this.scene.add(light);
+    }
+
+    async initEnvironment() {
+        const { loadEnvironmentTexture } = WorldController;
+
+        this.scene.environment = await loadEnvironmentTexture('assets/textures/env/jewelry_black_contrast.jpg');
+    }
+
+    /**
+     * Public methods
+     */
+
+    resize(width, height, dpr) {
+        width = Math.round(width * dpr);
+        height = Math.round(height * dpr);
+
+        this.renderTarget.setSize(width, height);
+    }
+
+    update() {
+        const currentRenderTarget = this.renderer.getRenderTarget();
+
+        // Scene pass
+        this.renderer.setRenderTarget(this.renderTarget);
+        this.renderer.render(this.scene, this.camera);
+
+        // Restore renderer settings
+        this.renderer.setRenderTarget(currentRenderTarget);
     }
 }
 
@@ -456,6 +591,45 @@ class AbstractCube extends Group {
 
     update = () => {
         this.mesh.rotation.y -= 0.005;
+    };
+}
+
+class AbstractCubeScene extends RenderScene {
+    constructor() {
+        super();
+
+        this.scene.visible = false;
+
+        this.initViews();
+    }
+
+    initViews() {
+        this.abstractCube = new AbstractCube();
+        this.scene.add(this.abstractCube);
+    }
+
+    /**
+     * Public methods
+     */
+
+    update = time => {
+        if (!this.scene.visible) {
+            return;
+        }
+
+        this.abstractCube.update(time);
+
+        super.update();
+    };
+
+    ready = async () => {
+        await Promise.all([
+            this.abstractCube.initMesh()
+        ]);
+
+        this.scene.visible = true;
+        super.update();
+        this.scene.visible = false;
     };
 }
 
@@ -526,6 +700,45 @@ class FloatingCrystal extends Group {
     update = time => {
         this.mesh.position.y = Math.sin(time) * 0.1;
         this.mesh.rotation.y += 0.01;
+    };
+}
+
+class FloatingCrystalScene extends RenderScene {
+    constructor() {
+        super();
+
+        this.scene.visible = false;
+
+        this.initViews();
+    }
+
+    initViews() {
+        this.floatingCrystal = new FloatingCrystal();
+        this.scene.add(this.floatingCrystal);
+    }
+
+    /**
+     * Public methods
+     */
+
+    update = time => {
+        if (!this.scene.visible) {
+            return;
+        }
+
+        this.floatingCrystal.update(time);
+
+        super.update();
+    };
+
+    ready = async () => {
+        await Promise.all([
+            this.floatingCrystal.initMesh()
+        ]);
+
+        this.scene.visible = true;
+        super.update();
+        this.scene.visible = false;
     };
 }
 
@@ -600,29 +813,72 @@ class DarkPlanet extends Group {
     };
 }
 
-class SceneView extends Group {
+class DarkPlanetScene extends RenderScene {
     constructor() {
         super();
 
-        this.visible = false;
+        this.scene.visible = false;
 
         this.initViews();
     }
 
     initViews() {
         this.darkPlanet = new DarkPlanet();
+        this.scene.add(this.darkPlanet);
+    }
+
+    /**
+     * Public methods
+     */
+
+    update = time => {
+        if (!this.scene.visible) {
+            return;
+        }
+
+        this.darkPlanet.update(time);
+
+        super.update();
+    };
+
+    ready = async () => {
+        await Promise.all([
+            this.darkPlanet.initMesh()
+        ]);
+
+        this.scene.visible = true;
+        super.update();
+        this.scene.visible = false;
+    };
+}
+
+class SceneView extends Component {
+    constructor() {
+        super();
+
+        this.initViews();
+    }
+
+    initViews() {
+        this.darkPlanet = new DarkPlanetScene();
         this.add(this.darkPlanet);
 
-        this.floatingCrystal = new FloatingCrystal();
+        this.floatingCrystal = new FloatingCrystalScene();
         this.add(this.floatingCrystal);
 
-        this.abstractCube = new AbstractCube();
+        this.abstractCube = new AbstractCubeScene();
         this.add(this.abstractCube);
     }
 
     /**
      * Public methods
      */
+
+    resize = (width, height, dpr) => {
+        this.darkPlanet.resize(width, height, dpr);
+        this.floatingCrystal.resize(width, height, dpr);
+        this.abstractCube.resize(width, height, dpr);
+    };
 
     update = time => {
         this.darkPlanet.update(time);
@@ -631,97 +887,44 @@ class SceneView extends Group {
     };
 
     ready = () => Promise.all([
-        this.darkPlanet.initMesh(),
-        this.floatingCrystal.initMesh(),
-        this.abstractCube.initMesh()
+        this.darkPlanet.ready(),
+        this.floatingCrystal.ready(),
+        this.abstractCube.ready()
     ]);
 }
 
 class SceneController {
     static init(view) {
         this.view = view;
-
-        this.addListeners();
     }
-
-    static addListeners() {
-        Stage.events.on(Events.VIEW_CHANGE, this.onViewChange);
-    }
-
-    /**
-     * Event handlers
-     */
-
-    static onViewChange = ({ index }) => {
-        if (index !== Global.SECTION_INDEX) {
-            Global.SECTION_INDEX = index;
-
-            RenderManager.setView(index);
-        }
-    };
 
     /**
      * Public methods
      */
 
-    static setView = index => {
-        this.view.darkPlanet.visible = false;
-        this.view.floatingCrystal.visible = false;
-        this.view.abstractCube.visible = false;
-
-        switch (index) {
-            case 0:
-                this.view.darkPlanet.visible = true;
-                break;
-            case 1:
-                this.view.floatingCrystal.visible = true;
-                break;
-            case 2:
-                this.view.abstractCube.visible = true;
-                break;
-        }
-    };
-
-    static resize = () => {
+    static resize = (width, height, dpr) => {
+        this.view.resize(width, height, dpr);
     };
 
     static update = time => {
-        if (!this.view.visible) {
-            return;
-        }
-
         this.view.update(time);
     };
 
     static animateIn = () => {
-        this.setView(Global.SECTION_INDEX);
-
-        this.view.visible = true;
     };
 
-    static ready = async () => {
-        await this.view.ready();
-
-        this.view.visible = true;
-        RenderManager.update();
-        this.view.visible = false;
-    };
+    static ready = () => this.view.ready();
 }
 
 class PanelController {
-    static init() {
-        this.initViews();
+    static init(ui) {
+        this.ui = ui;
+
         this.initPanel();
     }
 
-    static initViews() {
-        this.ui = new UI({ fps: true });
-        this.ui.animateIn();
-        Stage.add(this.ui);
-    }
-
     static initPanel() {
-        const { luminosityMaterial, bloomCompositeMaterial, compositeMaterial } = RenderManager;
+        const { luminosityMaterial, bloomCompositeMaterial, transitionMaterial } = RenderManager;
 
         const items = [
             {
@@ -781,24 +984,35 @@ class PanelController {
             },
             {
                 type: 'slider',
-                label: 'Blur',
+                label: 'Size',
                 min: 0,
-                max: 10,
-                step: 0.1,
-                value: RenderManager.blurFactor,
+                max: 1,
+                step: 0.01,
+                value: transitionMaterial.uniforms.uSize.value,
                 callback: value => {
-                    RenderManager.blurFactor = value;
+                    transitionMaterial.uniforms.uSize.value = value;
                 }
             },
             {
                 type: 'slider',
-                label: 'Opacity',
+                label: 'Zoom',
                 min: 0,
-                max: 1,
-                step: 0.01,
-                value: 1,
+                max: 100,
+                step: 0.2,
+                value: transitionMaterial.uniforms.uZoom.value,
                 callback: value => {
-                    compositeMaterial.uniforms.uOpacity.value = value;
+                    transitionMaterial.uniforms.uZoom.value = value;
+                }
+            },
+            {
+                type: 'slider',
+                label: 'Chroma',
+                min: 0,
+                max: 2,
+                step: 0.01,
+                value: transitionMaterial.uniforms.uColorSeparation.value,
+                callback: value => {
+                    transitionMaterial.uniforms.uColorSeparation.value = value;
                 }
             },
             {
@@ -814,17 +1028,6 @@ class PanelController {
                 callback: value => {
                     RenderManager.smooth.lerpSpeed = value;
                 }
-            },
-            {
-                type: 'slider',
-                label: 'Skew',
-                min: 0,
-                max: 10,
-                step: 0.1,
-                value: RenderManager.smooth.skew,
-                callback: value => {
-                    RenderManager.smooth.skew = value;
-                }
             }
         ];
 
@@ -832,38 +1035,22 @@ class PanelController {
             this.ui.addPanel(new PanelItem(data));
         });
     }
-
-    /**
-     * Public methods
-     */
-
-    static update = () => {
-        if (!this.ui) {
-            return;
-        }
-
-        this.ui.update();
-    };
 }
 
 const BlurDirectionX = new Vector2(1, 0);
 const BlurDirectionY = new Vector2(0, 1);
 
 class RenderManager {
-    static init(renderer, scene, camera, view, container) {
+    static init(renderer, view, container) {
         this.renderer = renderer;
-        this.scene = scene;
-        this.camera = camera;
         this.views = view.children;
         this.container = container;
         this.sections = container.children;
 
-        this.blurFactor = 10;
         this.luminosityThreshold = 0.1;
         this.luminositySmoothing = 1;
         this.bloomStrength = 0.3;
         this.bloomRadius = 0.2;
-        this.enabled = true;
         this.animatedIn = false;
 
         this.initRenderer();
@@ -899,14 +1086,8 @@ class RenderManager {
 
         this.renderTargetA.depthBuffer = true;
 
-        // Gaussian blur materials
-        this.hBlurMaterial = new BlurMaterial(BlurDirectionX);
-        this.hBlurMaterial.uniforms.uBluriness.value = this.blurFactor;
-        this.hBlurMaterial.uniforms.uResolution = resolution;
-
-        this.vBlurMaterial = new BlurMaterial(BlurDirectionY);
-        this.vBlurMaterial.uniforms.uBluriness.value = this.blurFactor;
-        this.vBlurMaterial.uniforms.uResolution = resolution;
+        // Transition material
+        this.transitionMaterial = new TransitionMaterial();
 
         // FXAA material
         this.fxaaMaterial = new FXAAMaterial();
@@ -935,9 +1116,8 @@ class RenderManager {
         this.bloomCompositeMaterial.uniforms.tBlur5.value = this.renderTargetsVertical[4].texture;
         this.bloomCompositeMaterial.uniforms.uBloomFactors.value = this.bloomFactors();
 
-        // Composite materials
-        this.sceneCompositeMaterial = new SceneCompositeMaterial();
-        this.compositeMaterial = new CompositeMaterial();
+        // Composite material
+        this.compositeMaterial = new SceneCompositeMaterial();
     }
 
     static bloomFactors() {
@@ -952,11 +1132,12 @@ class RenderManager {
     }
 
     static addListeners() {
-        this.smooth = new SmoothSkew({
+        this.smooth = new SmoothViews({
+            views: this.views,
             root: Stage,
             container: this.container,
-            lerpSpeed: 0.075,
-            skew: 5
+            sections: this.sections,
+            lerpSpeed: 0.075
         });
     }
 
@@ -965,31 +1146,7 @@ class RenderManager {
      */
 
     static setView = index => {
-        this.next = index;
-
-        const start = () => {
-            const next = this.next;
-
-            this.animateOut(() => {
-                SceneController.setView(next);
-
-                this.animateIn(() => {
-                    this.index = next;
-
-                    if (this.next !== this.index) {
-                        start();
-                    } else {
-                        this.animatedIn = false;
-                    }
-                });
-            });
-        };
-
-        if (!this.animatedIn) {
-            this.animatedIn = true;
-
-            start();
-        }
+        this.smooth.setScroll(index);
     };
 
     static resize = (width, height, dpr) => {
@@ -1019,15 +1176,11 @@ class RenderManager {
     };
 
     static update = () => {
-        const renderer = this.renderer;
-        const scene = this.scene;
-        const camera = this.camera;
-
-        if (!this.enabled) {
-            renderer.setRenderTarget(null);
-            renderer.render(scene, camera);
+        if (!this.animatedIn) {
             return;
         }
+
+        const renderer = this.renderer;
 
         const renderTargetA = this.renderTargetA;
         const renderTargetB = this.renderTargetB;
@@ -1035,9 +1188,29 @@ class RenderManager {
         const renderTargetsHorizontal = this.renderTargetsHorizontal;
         const renderTargetsVertical = this.renderTargetsVertical;
 
-        // Scene pass
+        // Toggle visibility when switching sections
+        if (this.index1 !== this.smooth.index1) {
+            this.views[this.index1].scene.visible = false;
+            this.views[this.index2].scene.visible = false;
+
+            this.index1 = this.smooth.index1;
+            this.index2 = this.smooth.index2;
+
+            this.views[this.index1].scene.visible = true;
+            this.views[this.index2].scene.visible = true;
+        }
+
+        // Camera parallax by moving the entire scene
+        this.views[this.index1].scene.position.z = -15 * this.smooth.progress;
+        this.views[this.index2].scene.position.z = 15 * (1 - this.smooth.progress);
+
+        // Scene composite pass
+        this.transitionMaterial.uniforms.tMap1.value = this.views[this.index1].renderTarget.texture;
+        this.transitionMaterial.uniforms.tMap2.value = this.views[this.index2].renderTarget.texture;
+        this.transitionMaterial.uniforms.uProgress.value = this.smooth.progress;
+        this.screen.material = this.transitionMaterial;
         renderer.setRenderTarget(renderTargetA);
-        renderer.render(scene, camera);
+        renderer.render(this.screen, this.screenCamera);
 
         // FXAA pass
         this.fxaaMaterial.uniforms.tMap.value = renderTargetA.texture;
@@ -1075,56 +1248,27 @@ class RenderManager {
         renderer.setRenderTarget(renderTargetsHorizontal[0]);
         renderer.render(this.screen, this.screenCamera);
 
-        // Scene composite pass
-        this.sceneCompositeMaterial.uniforms.tScene.value = renderTargetB.texture;
-        this.sceneCompositeMaterial.uniforms.tBloom.value = renderTargetsHorizontal[0].texture;
-        this.screen.material = this.sceneCompositeMaterial;
-        renderer.setRenderTarget(renderTargetA);
-        renderer.render(this.screen, this.screenCamera);
-
-        // Two pass Gaussian blur (horizontal and vertical)
-        const blurFactor = clamp(inverseLerp(0.5, 0, this.compositeMaterial.uniforms.uOpacity.value), 0, 1);
-
-        if (blurFactor > 0) {
-            this.hBlurMaterial.uniforms.tMap.value = renderTargetA.texture;
-            this.hBlurMaterial.uniforms.uBluriness.value = this.blurFactor * blurFactor;
-            this.screen.material = this.hBlurMaterial;
-            renderer.setRenderTarget(renderTargetB);
-            renderer.render(this.screen, this.screenCamera);
-
-            this.vBlurMaterial.uniforms.tMap.value = renderTargetB.texture;
-            this.vBlurMaterial.uniforms.uBluriness.value = this.blurFactor * blurFactor;
-            this.screen.material = this.vBlurMaterial;
-            renderer.setRenderTarget(renderTargetA);
-            renderer.render(this.screen, this.screenCamera);
-        }
-
         // Composite pass (render to screen)
-        this.compositeMaterial.uniforms.tScene.value = renderTargetA.texture;
+        this.compositeMaterial.uniforms.tScene.value = renderTargetB.texture;
+        this.compositeMaterial.uniforms.tBloom.value = renderTargetsHorizontal[0].texture;
         this.screen.material = this.compositeMaterial;
         renderer.setRenderTarget(null);
         renderer.render(this.screen, this.screenCamera);
     };
 
-    static animateOut = callback => {
-        clearTween(this.compositeMaterial.uniforms.uOpacity);
-        this.compositeMaterial.uniforms.uOpacity.value = 1;
-        tween(this.compositeMaterial.uniforms.uOpacity, { value: 0 }, 300, 'linear', callback);
-    };
-
-    static animateIn = callback => {
-        clearTween(this.compositeMaterial.uniforms.uOpacity);
-        this.compositeMaterial.uniforms.uOpacity.value = 0;
-        tween(this.compositeMaterial.uniforms.uOpacity, { value: 1 }, 300, 'linear', callback);
+    static animateIn = () => {
+        this.index1 = 0;
+        this.index2 = 1;
+        this.views[this.index1].scene.visible = true;
+        this.views[this.index2].scene.visible = true;
+        this.animatedIn = true;
     };
 }
 
 class WorldController {
     static init() {
         this.initWorld();
-        this.initLights();
         this.initLoaders();
-        this.initEnvironment();
 
         this.addListeners();
     }
@@ -1140,15 +1284,11 @@ class WorldController {
         this.renderer.toneMapping = ACESFilmicToneMapping;
         this.renderer.toneMappingExposure = 1;
 
-        // 3D scene
-        this.scene = new Scene();
-        this.scene.background = new Color(0x0e0e0e);
+        // Global 3D camera
         this.camera = new PerspectiveCamera(30);
         this.camera.near = 0.5;
         this.camera.far = 40;
         this.camera.position.z = 8;
-        this.camera.lookAt(-1.5, 0, -2);
-        this.camera.zoom = 1.5;
 
         // Global geometries
         this.screenTriangle = getFullscreenTriangle();
@@ -1163,23 +1303,9 @@ class WorldController {
         this.anisotropy = this.renderer.capabilities.getMaxAnisotropy();
     }
 
-    static initLights() {
-        this.scene.add(new AmbientLight(0xffffff, 0.2));
-
-        this.scene.add(new HemisphereLight(0x606060, 0x404040));
-
-        const light = new DirectionalLight(0xffffff, 0.4);
-        light.position.set(0.6, 0.5, 1);
-        this.scene.add(light);
-    }
-
     static initLoaders() {
         this.textureLoader = new TextureLoader();
         this.environmentLoader = new EnvironmentTextureLoader(this.renderer);
-    }
-
-    static async initEnvironment() {
-        this.scene.environment = await this.loadEnvironmentTexture('assets/textures/env/jewelry_black_contrast.jpg');
     }
 
     static addListeners() {
@@ -1200,15 +1326,6 @@ class WorldController {
 
     static resize = (width, height, dpr) => {
         this.camera.aspect = width / height;
-
-        if (width < Config.BREAKPOINT) {
-            this.camera.lookAt(0, 0.5, -2);
-            this.camera.zoom = 1;
-        } else {
-            this.camera.lookAt(-1.5, 0, -2);
-            this.camera.zoom = 1.5;
-        }
-
         this.camera.updateProjectionMatrix();
 
         width = Math.round(width * dpr);
@@ -1278,31 +1395,33 @@ class App {
 
     static initViews() {
         this.view = new SceneView();
-        WorldController.scene.add(this.view);
 
         this.container = new Container();
         Stage.add(this.container);
+
+        this.ui = new UI();
+        Stage.add(this.ui);
     }
 
     static initControllers() {
-        const { renderer, scene, camera } = WorldController;
+        const { renderer } = WorldController;
 
         SceneController.init(this.view);
-        RenderManager.init(renderer, scene, camera, this.view, this.container);
+        RenderManager.init(renderer, this.view, this.container);
     }
 
     static initPanel() {
-        PanelController.init();
+        PanelController.init(this.ui);
     }
 
     static async loadData() {
         const data = await Assets.loadData('transitions/data.json');
 
-        data.pages.forEach((item, i) => {
-            item.index = i;
-
+        data.pages.forEach(item => {
             Global.SECTIONS.push(item);
         });
+
+        Data.init();
     }
 
     static addListeners() {
@@ -1326,7 +1445,7 @@ class App {
         WorldController.update(time, delta, frame);
         SceneController.update(time);
         RenderManager.update(time, delta, frame);
-        PanelController.update();
+        this.ui.update();
     };
 
     /**
@@ -1336,6 +1455,7 @@ class App {
     static animateIn = () => {
         SceneController.animateIn();
         RenderManager.animateIn();
+        this.ui.animateIn();
 
         Stage.tween({ opacity: 1 }, 1000, 'linear', () => {
             Stage.css({ opacity: '' });

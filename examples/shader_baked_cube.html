@@ -33,7 +33,8 @@
 
                 const geometry = await loadBufferGeometry('assets/geometry/cube.json');
 
-                // Use 2nd set of UV's for cubemap row layout
+                // Use second set of UVs for cubemap row layout
+                // https://docs.unrealengine.com/4.27/en-US/RenderingAndGraphics/Textures/Cubemaps/CreatingCubemaps/
                 geometry.attributes.uv = geometry.attributes.uv2;
 
                 this.geometry = geometry;

@@ -1,4 +1,4 @@
-// Based on {@link module:three/examples/jsm/postprocessing/UnrealBloomPass.js} by spidersharma03 and bhouston
+// Based on https://github.com/mrdoob/three.js/blob/dev/examples/jsm/postprocessing/UnrealBloomPass.js by spidersharma03 and bhouston
 
 export default /* glsl */ `
 float gaussianPdf(float x, float sigma) {

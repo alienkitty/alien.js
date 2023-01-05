@@ -694,7 +694,7 @@
 
             static getTextGeometry = (path, options = {}, callback) => {
                 this.textGeometryLoader.setOptions(options);
-                this.textGeometryLoader.load(path, callback);
+                return this.textGeometryLoader.load(path, callback);
             };
 
             static loadTextGeometry = (path, options = {}) => {

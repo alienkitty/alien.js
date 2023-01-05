@@ -119,6 +119,7 @@ In its design, everything is an ES module, all user interfaces and components fo
 [transition](https://alien.js.org/examples/transitions/scene_direction/) (scene with page direction and camera parallax)  
 [transition](https://alien.js.org/examples/transitions/scroll/) (scroll, [debug](https://alien.js.org/examples/transitions/scroll/?debug))  
 [transition](https://alien.js.org/examples/transitions/scroll_direction/) (scroll direction and camera parallax, [debug](https://alien.js.org/examples/transitions/scroll_direction/?debug))  
+[transition](https://alien.js.org/examples/transitions/scroll_direction_zoom/) (scroll direction and camera zoom, [debug](https://alien.js.org/examples/transitions/scroll_direction_zoom/?debug))  
 [camera transition](https://alien.js.org/examples/transitions/camera/) (with motion blur and tilt shift effect, [debug](https://alien.js.org/examples/transitions/camera/?debug))  
 [alienkitty](https://alienkitty.com/) (2d scene, flowmap with RGB shift, MSDF text)  
 
@@ -160,6 +161,7 @@ In its design, everything is an ES module, all user interfaces and components fo
 [scene](https://alien.js.org/examples/transitions/scene_direction/) (page direction and camera parallax)  
 [scroll](https://alien.js.org/examples/transitions/scroll/) ([debug](https://alien.js.org/examples/transitions/scroll/?debug))  
 [scroll](https://alien.js.org/examples/transitions/scroll_direction/) (scroll direction and camera parallax, [debug](https://alien.js.org/examples/transitions/scroll_direction/?debug))  
+[scroll](https://alien.js.org/examples/transitions/scroll_direction_zoom/) (scroll direction and camera zoom, [debug](https://alien.js.org/examples/transitions/scroll_direction_zoom/?debug))  
 [scroll](https://alien.js.org/examples/transitions/scroll_content/) (smooth scroll, [debug](https://alien.js.org/examples/transitions/scroll_content/?debug))  
 [scroll](https://alien.js.org/examples/transitions/scroll_content_skew/) (smooth scroll with skew effect, [debug](https://alien.js.org/examples/transitions/scroll_content_skew/?debug))  
 [scroll](https://alien.js.org/examples/transitions/scroll_content_views/) (smooth scroll with scroll direction and camera parallax, [debug](https://alien.js.org/examples/transitions/scroll_content_views/?debug))  

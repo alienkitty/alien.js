@@ -415,7 +415,7 @@
                     color: new Color(Config.LIGHT_COLOR).offsetHSL(0, 0, -0.3)
                 });
 
-                // Based on {@link module:three/examples/jsm/shaders/SubsurfaceScatteringShader.js} by daoshengmu
+                // Based on https://github.com/mrdoob/three.js/blob/dev/examples/jsm/shaders/SubsurfaceScatteringShader.js by daoshengmu
 
                 material.onBeforeCompile = shader => {
                     shader.uniforms.thicknessDistortion = new Uniform(0.1);
@@ -487,7 +487,8 @@
 
                 const geometry = new BoxGeometry(this.size.x, this.size.y, this.size.z);
 
-                // 2nd set of UV's for aoMap and lightMap
+                // Second set of UVs for aoMap and lightMap
+                // https://threejs.org/docs/#api/en/materials/MeshStandardMaterial.aoMap
                 geometry.attributes.uv2 = geometry.attributes.uv;
 
                 // Textures
@@ -519,7 +520,7 @@
                     envMapIntensity: 1
                 });
 
-                // Based on {@link module:three/examples/jsm/shaders/SubsurfaceScatteringShader.js} by daoshengmu
+                // Based on https://github.com/mrdoob/three.js/blob/dev/examples/jsm/shaders/SubsurfaceScatteringShader.js by daoshengmu
 
                 material.onBeforeCompile = shader => {
                     shader.uniforms.thicknessMap = new Uniform(thicknessMap);

@@ -1,4 +1,4 @@
-// Based on {@link module:three/examples/jsm/shaders/HorizontalTiltShiftShader.js} by alteredq
+// Based on https://github.com/mrdoob/three.js/blob/dev/examples/jsm/shaders/HorizontalTiltShiftShader.js by alteredq
 // Based on https://github.com/spite/codevember-2016
 
 import smootherstep from './modules/smootherstep/smootherstep.glsl.js';

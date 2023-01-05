@@ -1,4 +1,4 @@
-// Based on {@link module:three/examples/jsm/shaders/LuminosityHighPassShader.js} by bhouston
+// Based on https://github.com/mrdoob/three.js/blob/dev/examples/jsm/shaders/LuminosityHighPassShader.js by bhouston
 
 export default /* glsl */ `
 precision highp float;

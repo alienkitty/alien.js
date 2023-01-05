@@ -1,4 +1,4 @@
-// Based on {@link module:three/examples/jsm/shaders/HorizontalBlurShader.js} by zz85
+// Based on https://github.com/mrdoob/three.js/blob/dev/examples/jsm/shaders/HorizontalBlurShader.js by zz85
 
 export default /* glsl */ `
 vec4 blur(sampler2D image, vec2 uv, vec2 resolution, vec2 direction) {

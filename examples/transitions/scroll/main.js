@@ -226,7 +226,6 @@ class UI extends Interface {
             top: 0,
             width: '100%',
             height: '100%',
-            textAlign: 'center',
             pointerEvents: 'none',
             opacity: 0
         });
@@ -546,7 +545,8 @@ class AbstractCube extends Group {
 
         const geometry = new BoxGeometry();
 
-        // 2nd set of UV's for aoMap and lightMap
+        // Second set of UVs for aoMap and lightMap
+        // https://threejs.org/docs/#api/en/materials/MeshStandardMaterial.aoMap
         geometry.attributes.uv2 = geometry.attributes.uv;
 
         // Textures
@@ -643,7 +643,8 @@ class FloatingCrystal extends Group {
 
         const geometry = new OctahedronGeometry();
 
-        // 2nd set of UV's for aoMap and lightMap
+        // Second set of UVs for aoMap and lightMap
+        // https://threejs.org/docs/#api/en/materials/MeshStandardMaterial.aoMap
         geometry.attributes.uv2 = geometry.attributes.uv;
 
         // Textures
@@ -754,7 +755,8 @@ class DarkPlanet extends Group {
 
         const geometry = new IcosahedronGeometry(0.6, 12);
 
-        // 2nd set of UV's for aoMap and lightMap
+        // Second set of UVs for aoMap and lightMap
+        // https://threejs.org/docs/#api/en/materials/MeshStandardMaterial.aoMap
         geometry.attributes.uv2 = geometry.attributes.uv;
 
         // Textures

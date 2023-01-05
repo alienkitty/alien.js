@@ -1,4 +1,4 @@
-// Based on {@link module:three/examples/jsm/shaders/AfterimageShader.js} by HypnosNova
+// Based on https://github.com/mrdoob/three.js/blob/dev/examples/jsm/shaders/AfterimageShader.js by HypnosNova
 
 import when_gt from './modules/conditionals/when_gt.glsl.js';
 

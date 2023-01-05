@@ -1,7 +1,7 @@
 /**
  * @author pschroen / https://ufo.ai/
  *
- * Based on {@link module:three/examples/jsm/objects/Reflector.js} by Slayvin
+ * Based on https://github.com/mrdoob/three.js/blob/dev/examples/jsm/objects/Reflector.js by Slayvin
  */
 
 import {
@@ -171,7 +171,8 @@ export class Reflector extends Group {
 
         renderer.setRenderTarget(this.renderTarget);
 
-        // Make sure the depth buffer is writable so it can be properly cleared, see mrdoob/three.js#18897
+        // Make sure the depth buffer is writable so it can be properly cleared
+        // https://github.com/mrdoob/three.js/issues/18897
         renderer.state.buffers.depth.setMask(true);
 
         if (renderer.autoClear === false) {

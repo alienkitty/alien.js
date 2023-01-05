@@ -1,7 +1,7 @@
 /**
  * @author pschroen / https://ufo.ai/
  *
- * Based on {@link module:three/examples/jsm/physics/OimoPhysics.js} by VBT-YTokan
+ * Based on https://github.com/mrdoob/three.js/blob/dev/examples/jsm/physics/OimoPhysics.js by VBT-YTokan
  * Based on https://github.com/lo-th/phy
  */
 

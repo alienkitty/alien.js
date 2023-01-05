@@ -1,4 +1,4 @@
-// Based on {@link module:three/examples/jsm/objects/Water2.js} by Mugen87
+// Based on https://github.com/mrdoob/three.js/blob/dev/examples/jsm/objects/Water2.js by Mugen87
 
 import dither from './modules/dither/dither.glsl.js';
 

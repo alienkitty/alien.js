@@ -20,6 +20,7 @@ export class ReflectorMaterial extends RawShaderMaterial {
             defines: {
             },
             uniforms: {
+                tMap: new Uniform(null),
                 tReflect: new Uniform(null),
                 uMapTransform: new Uniform(new Matrix3()),
                 uMatrix: new Uniform(new Matrix4()),

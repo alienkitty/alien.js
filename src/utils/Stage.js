@@ -49,7 +49,6 @@ if (typeof window !== 'undefined') {
         Stage.width = document.documentElement.clientWidth;
         Stage.height = document.documentElement.clientHeight;
         Stage.dpr = window.devicePixelRatio;
-        Stage.aspect = Stage.width / Stage.height;
 
         Stage.events.emit(Events.RESIZE, e);
     }

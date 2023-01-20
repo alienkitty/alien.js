@@ -11,7 +11,7 @@
     <link rel="stylesheet" href="assets/css/style.css">
 
     <script type="module">
-        import { ACESFilmicToneMapping, AdditiveBlending, BackSide, BlurMaterial, Color, CubeCamera, Device, Events, FXAAMaterial, GLSL3, Group, IcosahedronGeometry, ImageBitmapLoaderThread, LinearMipmapLinearFilter, Mesh, MeshBasicMaterial, MultiplyOperation, NoBlending, OrthographicCamera, PanelItem, PerspectiveCamera, RawShaderMaterial, Scene, SphereGeometry, Sprite, SpriteMaterial, Stage, TextureLoader, Thread, UI, Uniform, Vector2, Vector3, WebGLCubeRenderTarget, WebGLRenderTarget, WebGLRenderer, Wobble, degToRad, getFullscreenTriangle, getKeyByValue, randFloat, ticker, tween } from '../build/alien.js';
+        import { ACESFilmicToneMapping, AdditiveBlending, BackSide, BlurMaterial, Color, CubeCamera, Device, Events, FXAAMaterial, GLSL3, Group, IcosahedronGeometry, ImageBitmapLoaderThread, LinearMipmapLinearFilter, Mesh, MeshBasicMaterial, MultiplyOperation, NoBlending, OrthographicCamera, PanelItem, PerspectiveCamera, RawShaderMaterial, Scene, SphereGeometry, Sprite, SpriteMaterial, Stage, TextureLoader, Thread, UI, Vector2, Vector3, WebGLCubeRenderTarget, WebGLRenderTarget, WebGLRenderer, Wobble, degToRad, getFullscreenTriangle, getKeyByValue, randFloat, ticker, tween } from '../build/alien.js';
 
         class Config {
             static BG_COLOR = new Color(0x030627);
@@ -154,21 +154,21 @@
                 super({
                     glslVersion: GLSL3,
                     uniforms: {
-                        tScene: new Uniform(null),
-                        tBloom: new Uniform(null),
-                        tLensDirt: new Uniform(getTexture('assets/textures/lens_dirt.jpg')),
-                        uDistortion: new Uniform(0.2),
-                        uMinBright: new Uniform(0.07),
-                        uBlurBright: new Uniform(0.4166),
-                        uLightColor: new Uniform(Config.LIGHT_COLOR),
-                        uColor: new Uniform(Config.BG_COLOR),
-                        uHue: new Uniform(0),
-                        uBoost: new Uniform(1),
-                        uReduction: new Uniform(1.2),
-                        uDebug: new Uniform(Config.DEBUG),
-                        uLensDirt: new Uniform(true),
-                        uResolution: new Uniform(new Vector2()),
-                        uTime: new Uniform(0)
+                        tScene: { value: null },
+                        tBloom: { value: null },
+                        tLensDirt: { value: getTexture('assets/textures/lens_dirt.jpg') },
+                        uDistortion: { value: 0.2 },
+                        uMinBright: { value: 0.07 },
+                        uBlurBright: { value: 0.4166 },
+                        uLightColor: { value: Config.LIGHT_COLOR },
+                        uColor: { value: Config.BG_COLOR },
+                        uHue: { value: 0 },
+                        uBoost: { value: 1 },
+                        uReduction: { value: 1.2 },
+                        uDebug: { value: Config.DEBUG },
+                        uLensDirt: { value: true },
+                        uResolution: { value: new Vector2() },
+                        uTime: { value: 0 }
                     },
                     vertexShader: vertexCompositeShader,
                     fragmentShader: fragmentCompositeShader,
@@ -812,11 +812,11 @@
                 this.screenTriangle = getFullscreenTriangle();
 
                 // Global uniforms
-                this.hue = new Uniform(this.color.h);
-                this.resolution = new Uniform(new Vector2());
-                this.aspect = new Uniform(1);
-                this.time = new Uniform(0);
-                this.frame = new Uniform(0);
+                this.hue = { value: this.color.h };
+                this.resolution = { value: new Vector2() };
+                this.aspect = { value: 1 };
+                this.time = { value: 0 };
+                this.frame = { value: 0 };
             }
 
             static initLights() {

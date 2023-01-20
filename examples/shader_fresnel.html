@@ -19,7 +19,7 @@
     </style>
 
     <script type="module">
-        import { Color, Events, FXAAMaterial, GLSL3, Group, Mesh, OrbitControls, OrthographicCamera, PanelItem, PerspectiveCamera, RawShaderMaterial, Scene, SphereGeometry, Stage, UI, Uniform, Vector2, WebGLRenderTarget, WebGLRenderer, brightness, getFullscreenTriangle, ticker } from '../build/alien.js';
+        import { Color, Events, FXAAMaterial, GLSL3, Group, Mesh, OrbitControls, OrthographicCamera, PanelItem, PerspectiveCamera, RawShaderMaterial, Scene, SphereGeometry, Stage, UI, Vector2, WebGLRenderTarget, WebGLRenderer, brightness, getFullscreenTriangle, ticker } from '../build/alien.js';
 
         import periodic3d from '../src/shaders/modules/noise/periodic3d.glsl.js';
 
@@ -93,9 +93,9 @@
                 super({
                     glslVersion: GLSL3,
                     uniforms: {
-                        uBaseColor: new Uniform(new Color('#b6d8f2')),
-                        uFresnelColor: new Uniform(new Color('#f7f6cf')),
-                        uFresnelPower: new Uniform(1.5),
+                        uBaseColor: { value: new Color('#b6d8f2') },
+                        uFresnelColor: { value: new Color('#f7f6cf') },
+                        uFresnelPower: { value: 1.5 },
                         uTime: WorldController.time
                     },
                     vertexShader,
@@ -309,10 +309,10 @@
                 this.screenTriangle = getFullscreenTriangle();
 
                 // Global uniforms
-                this.resolution = new Uniform(new Vector2());
-                this.aspect = new Uniform(1);
-                this.time = new Uniform(0);
-                this.frame = new Uniform(0);
+                this.resolution = { value: new Vector2() };
+                this.aspect = { value: 1 };
+                this.time = { value: 0 };
+                this.frame = { value: 0 };
             }
 
             static initControls() {

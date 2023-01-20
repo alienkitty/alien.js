@@ -1,4 +1,4 @@
-import { GLSL3, NoBlending, RawShaderMaterial, Uniform } from 'three';
+import { GLSL3, NoBlending, RawShaderMaterial } from 'three';
 
 import vertexShader from '../shaders/UnrealBloomCompositePass.vert.js';
 import fragmentShader from '../shaders/UnrealBloomCompositePass.frag.js';
@@ -11,15 +11,15 @@ export class UnrealBloomCompositeMaterial extends RawShaderMaterial {
                 NUM_MIPS: nMips
             },
             uniforms: {
-                tBlur1: new Uniform(null),
-                tBlur2: new Uniform(null),
-                tBlur3: new Uniform(null),
-                tBlur4: new Uniform(null),
-                tBlur5: new Uniform(null),
-                uBloomStrength: new Uniform(1),
-                uBloomRadius: new Uniform(0),
-                uBloomFactors: new Uniform(null),
-                uBloomTintColors: new Uniform(null)
+                tBlur1: { value: null },
+                tBlur2: { value: null },
+                tBlur3: { value: null },
+                tBlur4: { value: null },
+                tBlur5: { value: null },
+                uBloomStrength: { value: 1 },
+                uBloomRadius: { value: 0 },
+                uBloomFactors: { value: null },
+                uBloomTintColors: { value: null }
             },
             vertexShader,
             fragmentShader,

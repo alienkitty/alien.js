@@ -11,7 +11,7 @@
     <link rel="stylesheet" href="assets/css/style.css">
 
     <script type="module">
-        import { ACESFilmicToneMapping, AmbientLight, Assets, BloomCompositeMaterial, Color, Device, DirectionalLight, EnvironmentTextureLoader, Events, FXAAMaterial, Group, HemisphereLight, ImageBitmapLoaderThread, LuminosityMaterial, Mesh, MeshPhysicalMaterial, MeshStandardMaterial, OrbitControls, OrthographicCamera, PanelItem, PerspectiveCamera, RepeatWrapping, Scene, SceneCompositeMaterial, ShaderChunk, SphereGeometry, Stage, TextureLoader, Thread, UI, Uniform, UnrealBloomBlurMaterial, Vector2, WebGLRenderTarget, WebGLRenderer, floorPowerOfTwo, getFullscreenTriangle, lerp, ticker } from '../build/alien.js';
+        import { ACESFilmicToneMapping, AmbientLight, Assets, BloomCompositeMaterial, Color, Device, DirectionalLight, EnvironmentTextureLoader, Events, FXAAMaterial, Group, HemisphereLight, ImageBitmapLoaderThread, LuminosityMaterial, Mesh, MeshPhysicalMaterial, MeshStandardMaterial, OrbitControls, OrthographicCamera, PanelItem, PerspectiveCamera, RepeatWrapping, Scene, SceneCompositeMaterial, ShaderChunk, SphereGeometry, Stage, TextureLoader, Thread, UI, UnrealBloomBlurMaterial, Vector2, WebGLRenderTarget, WebGLRenderer, floorPowerOfTwo, getFullscreenTriangle, lerp, ticker } from '../build/alien.js';
 
         class Config {
             static ICE_COLOR = 0x547691;
@@ -91,15 +91,15 @@
                 });
 
                 material.onBeforeCompile = shader => {
-                    shader.uniforms.fresnelColor = new Uniform(new Color(Config.FRESNEL_COLOR));
-                    shader.uniforms.fresnelPower = new Uniform(1.5);
+                    shader.uniforms.fresnelColor = { value: new Color(Config.FRESNEL_COLOR) };
+                    shader.uniforms.fresnelPower = { value: 1.5 };
 
-                    shader.uniforms.thicknessMap = new Uniform(thicknessMap);
-                    shader.uniforms.thicknessDistortion = new Uniform(0.185);
-                    shader.uniforms.thicknessAmbient = new Uniform(0);
-                    shader.uniforms.thicknessAttenuation = new Uniform(1);
-                    shader.uniforms.thicknessPower = new Uniform(20);
-                    shader.uniforms.thicknessScale = new Uniform(4);
+                    shader.uniforms.thicknessMap = { value: thicknessMap };
+                    shader.uniforms.thicknessDistortion = { value: 0.185 };
+                    shader.uniforms.thicknessAmbient = { value: 0 };
+                    shader.uniforms.thicknessAttenuation = { value: 1 };
+                    shader.uniforms.thicknessPower = { value: 20 };
+                    shader.uniforms.thicknessScale = { value: 4 };
 
                     shader.vertexShader = shader.vertexShader.replace(
                         'void main() {',
@@ -648,10 +648,10 @@
                 this.screenTriangle = getFullscreenTriangle();
 
                 // Global uniforms
-                this.resolution = new Uniform(new Vector2());
-                this.aspect = new Uniform(1);
-                this.time = new Uniform(0);
-                this.frame = new Uniform(0);
+                this.resolution = { value: new Vector2() };
+                this.aspect = { value: 1 };
+                this.time = { value: 0 };
+                this.frame = { value: 0 };
 
                 // Global settings
                 this.anisotropy = this.renderer.capabilities.getMaxAnisotropy();

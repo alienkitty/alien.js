@@ -11,7 +11,7 @@
     <link rel="stylesheet" href="assets/css/style.css">
 
     <script type="module">
-        import { ACESFilmicToneMapping, AmbientLight, BloomCompositeMaterial, BlurMaterial, Color, Device, EnvironmentTextureLoader, Events, FXAAMaterial, GLSL3, Group, HemisphereLight, IcosahedronGeometry, ImageBitmapLoaderThread, LuminosityMaterial, Mesh, MeshBasicMaterial, MeshStandardMaterial, NoBlending, OrthographicCamera, PanelItem, PerspectiveCamera, PointLight, RawShaderMaterial, RepeatWrapping, Scene, ShaderChunk, Stage, TextureLoader, Thread, UI, Uniform, UnrealBloomBlurMaterial, Vector2, Vector3, VolumetricLightMaterial, WebGLRenderTarget, WebGLRenderer, floorPowerOfTwo, getFullscreenTriangle, lerp, ticker } from '../build/alien.js';
+        import { ACESFilmicToneMapping, AmbientLight, BloomCompositeMaterial, BlurMaterial, Color, Device, EnvironmentTextureLoader, Events, FXAAMaterial, GLSL3, Group, HemisphereLight, IcosahedronGeometry, ImageBitmapLoaderThread, LuminosityMaterial, Mesh, MeshBasicMaterial, MeshStandardMaterial, NoBlending, OrthographicCamera, PanelItem, PerspectiveCamera, PointLight, RawShaderMaterial, RepeatWrapping, Scene, ShaderChunk, Stage, TextureLoader, Thread, UI, UnrealBloomBlurMaterial, Vector2, Vector3, VolumetricLightMaterial, WebGLRenderTarget, WebGLRenderer, floorPowerOfTwo, getFullscreenTriangle, lerp, ticker } from '../build/alien.js';
 
         class Config {
             static LIGHT_COLOR = 0xf44336;
@@ -69,9 +69,9 @@
                 super({
                     glslVersion: GLSL3,
                     uniforms: {
-                        tScene: new Uniform(null),
-                        tBloom: new Uniform(null),
-                        tAdd: new Uniform(null)
+                        tScene: { value: null },
+                        tBloom: { value: null },
+                        tAdd: { value: null }
                     },
                     vertexShader: vertexCompositeShader,
                     fragmentShader: fragmentCompositeShader,
@@ -154,12 +154,12 @@
                 // Based on https://github.com/mrdoob/three.js/blob/dev/examples/jsm/shaders/SubsurfaceScatteringShader.js by daoshengmu
 
                 material.onBeforeCompile = shader => {
-                    shader.uniforms.thicknessMap = new Uniform(thicknessMap);
-                    shader.uniforms.thicknessDistortion = new Uniform(0.1);
-                    shader.uniforms.thicknessAmbient = new Uniform(0);
-                    shader.uniforms.thicknessAttenuation = new Uniform(0.2);
-                    shader.uniforms.thicknessPower = new Uniform(2);
-                    shader.uniforms.thicknessScale = new Uniform(16);
+                    shader.uniforms.thicknessMap = { value: thicknessMap };
+                    shader.uniforms.thicknessDistortion = { value: 0.1 };
+                    shader.uniforms.thicknessAmbient = { value: 0 };
+                    shader.uniforms.thicknessAttenuation = { value: 0.2 };
+                    shader.uniforms.thicknessPower = { value: 2 };
+                    shader.uniforms.thicknessScale = { value: 16 };
 
                     shader.fragmentShader = shader.fragmentShader.replace(
                         'void main() {',
@@ -286,12 +286,12 @@
                 // Based on https://github.com/mrdoob/three.js/blob/dev/examples/jsm/shaders/SubsurfaceScatteringShader.js by daoshengmu
 
                 const uniforms = {
-                    thicknessMap: new Uniform(thicknessMap),
-                    thicknessDistortion: new Uniform(0.185),
-                    thicknessAmbient: new Uniform(0),
-                    thicknessAttenuation: new Uniform(1),
-                    thicknessPower: new Uniform(20),
-                    thicknessScale: new Uniform(16)
+                    thicknessMap: { value: thicknessMap },
+                    thicknessDistortion: { value: 0.185 },
+                    thicknessAmbient: { value: 0 },
+                    thicknessAttenuation: { value: 1 },
+                    thicknessPower: { value: 20 },
+                    thicknessScale: { value: 16 }
                 };
 
                 material.onBeforeCompile = shader => {
@@ -999,10 +999,10 @@
                 this.screenTriangle = getFullscreenTriangle();
 
                 // Global uniforms
-                this.resolution = new Uniform(new Vector2());
-                this.aspect = new Uniform(1);
-                this.time = new Uniform(0);
-                this.frame = new Uniform(0);
+                this.resolution = { value: new Vector2() };
+                this.aspect = { value: 1 };
+                this.time = { value: 0 };
+                this.frame = { value: 0 };
 
                 // Global settings
                 this.anisotropy = this.renderer.capabilities.getMaxAnisotropy();

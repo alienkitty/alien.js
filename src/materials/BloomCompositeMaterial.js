@@ -1,4 +1,4 @@
-import { GLSL3, NoBlending, RawShaderMaterial, Uniform } from 'three';
+import { GLSL3, NoBlending, RawShaderMaterial } from 'three';
 
 import vertexShader from '../shaders/BloomCompositePass.vert.js';
 import fragmentShader from '../shaders/BloomCompositePass.frag.js';
@@ -14,12 +14,12 @@ export class BloomCompositeMaterial extends RawShaderMaterial {
                 DITHERING: dithering
             },
             uniforms: {
-                tBlur1: new Uniform(null),
-                tBlur2: new Uniform(null),
-                tBlur3: new Uniform(null),
-                tBlur4: new Uniform(null),
-                tBlur5: new Uniform(null),
-                uBloomFactors: new Uniform(null)
+                tBlur1: { value: null },
+                tBlur2: { value: null },
+                tBlur3: { value: null },
+                tBlur4: { value: null },
+                tBlur5: { value: null },
+                uBloomFactors: { value: null }
             },
             vertexShader,
             fragmentShader,

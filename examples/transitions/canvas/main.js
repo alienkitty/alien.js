@@ -1,4 +1,4 @@
-import { ACESFilmicToneMapping, AmbientLight, Assets, BloomCompositeMaterial, BoxGeometry, Color, Device, DirectionalLight, EnvironmentTextureLoader, Events, FXAAMaterial, Global, Group, Header, HemisphereLight, IcosahedronGeometry, ImageBitmapLoaderThread, Interface, LuminosityMaterial, Mesh, MeshStandardMaterial, OctahedronGeometry, OrthographicCamera, PanelItem, PerspectiveCamera, RepeatWrapping, Scene, SceneCompositeMaterial, Stage, TextureLoader, Thread, Uniform, UnrealBloomBlurMaterial, Vector2, WebGLRenderTarget, WebGLRenderer, clearTween, degToRad, floorPowerOfTwo, getFullscreenTriangle, lerp, shuffle, ticker, tween } from '../../../build/alien.js';
+import { ACESFilmicToneMapping, AmbientLight, Assets, BloomCompositeMaterial, BoxGeometry, Color, Device, DirectionalLight, EnvironmentTextureLoader, Events, FXAAMaterial, Global, Group, Header, HemisphereLight, IcosahedronGeometry, ImageBitmapLoaderThread, Interface, LuminosityMaterial, Mesh, MeshStandardMaterial, OctahedronGeometry, OrthographicCamera, PanelItem, PerspectiveCamera, RepeatWrapping, Scene, SceneCompositeMaterial, Stage, TextureLoader, Thread, UnrealBloomBlurMaterial, Vector2, WebGLRenderTarget, WebGLRenderer, clearTween, degToRad, floorPowerOfTwo, getFullscreenTriangle, lerp, shuffle, ticker, tween } from '../../../build/alien.js';
 
 Global.PAGES = [];
 Global.PAGE_INDEX = 0;
@@ -1149,10 +1149,10 @@ class WorldController {
         this.screenTriangle = getFullscreenTriangle();
 
         // Global uniforms
-        this.resolution = new Uniform(new Vector2());
-        this.aspect = new Uniform(1);
-        this.time = new Uniform(0);
-        this.frame = new Uniform(0);
+        this.resolution = { value: new Vector2() };
+        this.aspect = { value: 1 };
+        this.time = { value: 0 };
+        this.frame = { value: 0 };
 
         // Global settings
         this.anisotropy = this.renderer.capabilities.getMaxAnisotropy();

@@ -1,4 +1,4 @@
-import { Color, GLSL3, Matrix3, Matrix4, NoBlending, RawShaderMaterial, Uniform, Vector2 } from 'three';
+import { Color, GLSL3, Matrix3, Matrix4, NoBlending, RawShaderMaterial, Vector2 } from 'three';
 
 import vertexShader from '../shaders/ReflectorMaterial.vert.js';
 import fragmentShader from '../shaders/ReflectorMaterial.frag.js';
@@ -20,14 +20,14 @@ export class ReflectorMaterial extends RawShaderMaterial {
             defines: {
             },
             uniforms: {
-                tMap: new Uniform(null),
-                tReflect: new Uniform(null),
-                uMapTransform: new Uniform(new Matrix3()),
-                uMatrix: new Uniform(new Matrix4()),
-                uColor: new Uniform(color instanceof Color ? color : new Color(color)),
-                uReflectivity: new Uniform(reflectivity),
-                uMirror: new Uniform(mirror),
-                uMixStrength: new Uniform(mixStrength)
+                tMap: { value: null },
+                tReflect: { value: null },
+                uMapTransform: { value: new Matrix3() },
+                uMatrix: { value: new Matrix4() },
+                uColor: { value: color instanceof Color ? color : new Color(color) },
+                uReflectivity: { value: reflectivity },
+                uMirror: { value: mirror },
+                uMixStrength: { value: mixStrength }
             },
             vertexShader,
             fragmentShader,
@@ -42,8 +42,8 @@ export class ReflectorMaterial extends RawShaderMaterial {
             });
 
             parameters.uniforms = Object.assign(parameters.uniforms, {
-                tMap: new Uniform(map),
-                uMapTransform: new Uniform(map.matrix)
+                tMap: { value: map },
+                uMapTransform: { value: map.matrix }
             });
         }
 
@@ -53,15 +53,15 @@ export class ReflectorMaterial extends RawShaderMaterial {
             });
 
             parameters.uniforms = Object.assign(parameters.uniforms, {
-                tNormalMap: new Uniform(normalMap),
-                uNormalScale: new Uniform(normalScale)
+                tNormalMap: { value: normalMap },
+                uNormalScale: { value: normalScale }
             });
 
             if (!map) {
                 normalMap.updateMatrix();
 
                 parameters.uniforms = Object.assign(parameters.uniforms, {
-                    uMapTransform: new Uniform(normalMap.matrix)
+                    uMapTransform: { value: normalMap.matrix }
                 });
             }
         }
@@ -72,9 +72,9 @@ export class ReflectorMaterial extends RawShaderMaterial {
             });
 
             parameters.uniforms = Object.assign(parameters.uniforms, {
-                uFogColor: new Uniform(fog.color),
-                uFogNear: new Uniform(fog.near),
-                uFogFar: new Uniform(fog.far)
+                uFogColor: { value: fog.color },
+                uFogNear: { value: fog.near },
+                uFogFar: { value: fog.far }
             });
         }
 

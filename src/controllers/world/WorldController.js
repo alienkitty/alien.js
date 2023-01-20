@@ -1,4 +1,4 @@
-import { ACESFilmicToneMapping, AmbientLight, Color, DirectionalLight, HemisphereLight, PerspectiveCamera, Scene, Uniform, Vector2, WebGLRenderer } from 'three';
+import { ACESFilmicToneMapping, AmbientLight, Color, DirectionalLight, HemisphereLight, PerspectiveCamera, Scene, Vector2, WebGLRenderer } from 'three';
 
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 
@@ -48,10 +48,10 @@ export class WorldController {
         this.screenTriangle = getFullscreenTriangle();
 
         // Global uniforms
-        this.resolution = new Uniform(new Vector2());
-        this.aspect = new Uniform(1);
-        this.time = new Uniform(0);
-        this.frame = new Uniform(0);
+        this.resolution = { value: new Vector2() };
+        this.aspect = { value: 1 };
+        this.time = { value: 0 };
+        this.frame = { value: 0 };
     }
 
     static initLights() {

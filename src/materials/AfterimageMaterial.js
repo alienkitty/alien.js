@@ -1,4 +1,4 @@
-import { GLSL3, NoBlending, RawShaderMaterial, Uniform } from 'three';
+import { GLSL3, NoBlending, RawShaderMaterial } from 'three';
 
 import vertexShader from '../shaders/AfterimagePass.vert.js';
 import fragmentShader from '../shaders/AfterimagePass.frag.js';
@@ -8,9 +8,9 @@ export class AfterimageMaterial extends RawShaderMaterial {
         super({
             glslVersion: GLSL3,
             uniforms: {
-                tOld: new Uniform(null),
-                tNew: new Uniform(null),
-                uDamping: new Uniform(0.96)
+                tOld: { value: null },
+                tNew: { value: null },
+                uDamping: { value: 0.96 }
             },
             vertexShader,
             fragmentShader,

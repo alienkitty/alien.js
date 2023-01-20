@@ -1,4 +1,4 @@
-import { GLSL3, RawShaderMaterial, Uniform } from 'three';
+import { GLSL3, RawShaderMaterial } from 'three';
 
 import vertexShader from '../shaders/BasicMaterial.vert.js';
 import fragmentShader from '../shaders/BasicMaterial.frag.js';
@@ -8,8 +8,8 @@ export class BasicMaterial extends RawShaderMaterial {
         super({
             glslVersion: GLSL3,
             uniforms: {
-                tMap: new Uniform(map),
-                uAlpha: new Uniform(1)
+                tMap: { value: map },
+                uAlpha: { value: 1 }
             },
             vertexShader,
             fragmentShader,

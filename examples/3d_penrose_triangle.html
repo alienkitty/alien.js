@@ -11,7 +11,7 @@
     <link rel="stylesheet" href="assets/css/style.css">
 
     <script type="module">
-        import { ACESFilmicToneMapping, AmbientLight, BloomCompositeMaterial, BoxGeometry, BufferGeometry, Color, DirectionalLight, Events, FXAAMaterial, Float32BufferAttribute, GLSL3, Group, HemisphereLight, LuminosityMaterial, Mesh, MeshStandardMaterial, NoBlending, OrthographicCamera, PanelItem, PlaneGeometry, RawShaderMaterial, Scene, Stage, UI, Uniform, UnrealBloomBlurMaterial, Vector2, WebGLRenderTarget, WebGLRenderer, degToRad, floorPowerOfTwo, getFullscreenTriangle, lerp, ticker } from '../build/alien.js';
+        import { ACESFilmicToneMapping, AmbientLight, BloomCompositeMaterial, BoxGeometry, BufferGeometry, Color, DirectionalLight, Events, FXAAMaterial, Float32BufferAttribute, GLSL3, Group, HemisphereLight, LuminosityMaterial, Mesh, MeshStandardMaterial, NoBlending, OrthographicCamera, PanelItem, PlaneGeometry, RawShaderMaterial, Scene, Stage, UI, UnrealBloomBlurMaterial, Vector2, WebGLRenderTarget, WebGLRenderer, degToRad, floorPowerOfTwo, getFullscreenTriangle, lerp, ticker } from '../build/alien.js';
 
         class Config {
             static BREAKPOINT = 1000;
@@ -60,9 +60,9 @@
                 super({
                     glslVersion: GLSL3,
                     uniforms: {
-                        tScene: new Uniform(null),
-                        tBloom: new Uniform(null),
-                        uBloomDistortion: new Uniform(1.45)
+                        tScene: { value: null },
+                        tBloom: { value: null },
+                        uBloomDistortion: { value: 1.45 }
                     },
                     vertexShader: vertexCompositeShader,
                     fragmentShader: fragmentCompositeShader,
@@ -435,10 +435,10 @@
                 this.screenTriangle = getFullscreenTriangle();
 
                 // Global uniforms
-                this.resolution = new Uniform(new Vector2());
-                this.aspect = new Uniform(1);
-                this.time = new Uniform(0);
-                this.frame = new Uniform(0);
+                this.resolution = { value: new Vector2() };
+                this.aspect = { value: 1 };
+                this.time = { value: 0 };
+                this.frame = { value: 0 };
             }
 
             static initLights() {

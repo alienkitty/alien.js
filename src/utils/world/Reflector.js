@@ -11,7 +11,6 @@ import {
     OrthographicCamera,
     PerspectiveCamera,
     Plane,
-    Uniform,
     Vector3,
     Vector4,
     WebGLRenderTarget
@@ -49,7 +48,7 @@ export class Reflector extends Group {
         this.virtualCamera = new PerspectiveCamera();
 
         // Uniform containing texture matrix
-        this.textureMatrixUniform = new Uniform(this.textureMatrix);
+        this.textureMatrixUniform = { value: this.textureMatrix };
 
         // Render targets
         this.renderTarget = new WebGLRenderTarget(width, height, {
@@ -62,7 +61,7 @@ export class Reflector extends Group {
         this.renderTarget.depthBuffer = true;
 
         // Uniform containing render target textures
-        this.renderTargetUniform = new Uniform(this.blurIterations > 0 ? this.renderTargetRead.texture : this.renderTarget.texture);
+        this.renderTargetUniform = { value: this.blurIterations > 0 ? this.renderTargetRead.texture : this.renderTarget.texture };
 
         // Reflection blur material
         this.blurMaterial = new ReflectorBlurMaterial();

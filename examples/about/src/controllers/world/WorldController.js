@@ -1,4 +1,4 @@
-import { Mesh, OrthographicCamera, Scene, Uniform, Vector2, WebGLRenderer } from 'three';
+import { Mesh, OrthographicCamera, Scene, Vector2, WebGLRenderer } from 'three';
 
 import { getFullscreenTriangle } from 'alien.js';
 
@@ -31,10 +31,10 @@ export class WorldController {
         this.scene.add(this.screen);
 
         // Global uniforms
-        this.resolution = new Uniform(new Vector2());
-        this.aspect = new Uniform(1);
-        this.time = new Uniform(0);
-        this.frame = new Uniform(0);
+        this.resolution = { value: new Vector2() };
+        this.aspect = { value: 1 };
+        this.time = { value: 0 };
+        this.frame = { value: 0 };
     }
 
     static addListeners() {

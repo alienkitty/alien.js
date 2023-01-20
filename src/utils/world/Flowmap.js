@@ -11,7 +11,6 @@ import {
     NoBlending,
     OrthographicCamera,
     RawShaderMaterial,
-    Uniform,
     Vector2,
     WebGLRenderTarget
 } from 'three';
@@ -42,7 +41,7 @@ export class Flowmap {
         this.renderTargetWrite = this.renderTargetRead.clone();
 
         // Output uniform containing render target textures
-        this.uniform = new Uniform(this.renderTargetRead.texture);
+        this.uniform = { value: this.renderTargetRead.texture };
 
         // Flowmap material
         this.material = new RawShaderMaterial({
@@ -50,14 +49,14 @@ export class Flowmap {
             uniforms: {
                 tMap: this.uniform,
 
-                uFalloff: new Uniform(falloff),
-                uAlpha: new Uniform(alpha),
-                uDissipation: new Uniform(dissipation),
+                uFalloff: { value: falloff },
+                uAlpha: { value: alpha },
+                uDissipation: { value: dissipation },
 
                 // User needs to update these
-                uAspect: new Uniform(1),
-                uMouse: new Uniform(this.mouse),
-                uVelocity: new Uniform(this.velocity)
+                uAspect: { value: 1 },
+                uMouse: { value: this.mouse },
+                uVelocity: { value: this.velocity }
             },
             vertexShader,
             fragmentShader,

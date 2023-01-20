@@ -1,4 +1,4 @@
-import { GLSL3, NoBlending, RawShaderMaterial, Uniform, Vector2 } from 'three';
+import { GLSL3, NoBlending, RawShaderMaterial, Vector2 } from 'three';
 
 import vertexShader from '../shaders/VolumetricLightPass.vert.js';
 import fragmentShader from '../shaders/VolumetricLightPass.frag.js';
@@ -8,15 +8,15 @@ export class VolumetricLightMaterial extends RawShaderMaterial {
         super({
             glslVersion: GLSL3,
             uniforms: {
-                tMap: new Uniform(null),
-                uLightPosition: new Uniform(new Vector2(0.5, 0.5)),
-                uScale: new Uniform(new Vector2(1, 1)),
-                uSwizzle: new Uniform(0),
-                uExposure: new Uniform(0.6),
-                uDecay: new Uniform(0.93),
-                uDensity: new Uniform(0.96),
-                uWeight: new Uniform(0.4),
-                uClamp: new Uniform(1)
+                tMap: { value: null },
+                uLightPosition: { value: new Vector2(0.5, 0.5) },
+                uScale: { value: new Vector2(1, 1) },
+                uSwizzle: { value: 0 },
+                uExposure: { value: 0.6 },
+                uDecay: { value: 0.93 },
+                uDensity: { value: 0.96 },
+                uWeight: { value: 0.4 },
+                uClamp: { value: 1 }
             },
             vertexShader,
             fragmentShader,

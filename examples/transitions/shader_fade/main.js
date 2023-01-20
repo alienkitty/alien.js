@@ -1,4 +1,4 @@
-import { ACESFilmicToneMapping, AmbientLight, Assets, BloomCompositeMaterial, BlurMaterial, BoxGeometry, Color, Device, DirectionalLight, EnvironmentTextureLoader, Events, FXAAMaterial, GLSL3, Global, Group, Header, HemisphereLight, IcosahedronGeometry, ImageBitmapLoaderThread, Interface, LuminosityMaterial, Mesh, MeshStandardMaterial, NoBlending, OctahedronGeometry, OrthographicCamera, PanelItem, PerspectiveCamera, RawShaderMaterial, RepeatWrapping, Scene, SceneCompositeMaterial, Stage, TextureLoader, Thread, Uniform, UnrealBloomBlurMaterial, Vector2, WebGLRenderTarget, WebGLRenderer, clamp, clearTween, degToRad, floorPowerOfTwo, getFullscreenTriangle, inverseLerp, lerp, shuffle, ticker, tween } from '../../../build/alien.js';
+import { ACESFilmicToneMapping, AmbientLight, Assets, BloomCompositeMaterial, BlurMaterial, BoxGeometry, Color, Device, DirectionalLight, EnvironmentTextureLoader, Events, FXAAMaterial, GLSL3, Global, Group, Header, HemisphereLight, IcosahedronGeometry, ImageBitmapLoaderThread, Interface, LuminosityMaterial, Mesh, MeshStandardMaterial, NoBlending, OctahedronGeometry, OrthographicCamera, PanelItem, PerspectiveCamera, RawShaderMaterial, RepeatWrapping, Scene, SceneCompositeMaterial, Stage, TextureLoader, Thread, UnrealBloomBlurMaterial, Vector2, WebGLRenderTarget, WebGLRenderer, clamp, clearTween, degToRad, floorPowerOfTwo, getFullscreenTriangle, inverseLerp, lerp, shuffle, ticker, tween } from '../../../build/alien.js';
 
 Global.PAGES = [];
 Global.PAGE_INDEX = 0;
@@ -450,10 +450,10 @@ class CompositeMaterial extends RawShaderMaterial {
         super({
             glslVersion: GLSL3,
             uniforms: {
-                tScene: new Uniform(null),
-                uColor: new Uniform(new Color(0x0e0e0e)),
-                uDistortion: new Uniform(1.45),
-                uOpacity: new Uniform(0)
+                tScene: { value: null },
+                uColor: { value: new Color(0x0e0e0e) },
+                uDistortion: { value: 1.45 },
+                uOpacity: { value: 0 }
             },
             vertexShader: vertexCompositeShader,
             fragmentShader: fragmentCompositeShader,
@@ -1114,10 +1114,10 @@ class WorldController {
         this.screenTriangle = getFullscreenTriangle();
 
         // Global uniforms
-        this.resolution = new Uniform(new Vector2());
-        this.aspect = new Uniform(1);
-        this.time = new Uniform(0);
-        this.frame = new Uniform(0);
+        this.resolution = { value: new Vector2() };
+        this.aspect = { value: 1 };
+        this.time = { value: 0 };
+        this.frame = { value: 0 };
 
         // Global settings
         this.anisotropy = this.renderer.capabilities.getMaxAnisotropy();

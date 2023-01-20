@@ -11,7 +11,7 @@
     <link rel="stylesheet" href="assets/css/style.css">
 
     <script type="module">
-        import { ACESFilmicToneMapping, AdditiveBlending, AmbientLight, BloomCompositeMaterial, BufferGeometry, Color, CopyMaterial, DepthTexture, Device, DirectionalLight, EnvironmentTextureLoader, Events, FXAAMaterial, Float32BufferAttribute, GLSL3, Group, HemisphereLight, ImageBitmapLoaderThread, LuminosityMaterial, Mesh, MeshStandardMaterial, NoBlending, OrbitControls, OrthographicCamera, PanelItem, PerspectiveCamera, Points, RawShaderMaterial, RepeatWrapping, Scene, SceneCompositeMaterial, SphereGeometry, Stage, TextureLoader, Thread, UI, Uniform, UnrealBloomBlurMaterial, Vector2, WebGLRenderTarget, WebGLRenderer, floorPowerOfTwo, getFullscreenTriangle, getKeyByValue, lerp, randFloatSpread, ticker } from '../build/alien.js';
+        import { ACESFilmicToneMapping, AdditiveBlending, AmbientLight, BloomCompositeMaterial, BufferGeometry, Color, CopyMaterial, DepthTexture, Device, DirectionalLight, EnvironmentTextureLoader, Events, FXAAMaterial, Float32BufferAttribute, GLSL3, Group, HemisphereLight, ImageBitmapLoaderThread, LuminosityMaterial, Mesh, MeshStandardMaterial, NoBlending, OrbitControls, OrthographicCamera, PanelItem, PerspectiveCamera, Points, RawShaderMaterial, RepeatWrapping, Scene, SceneCompositeMaterial, SphereGeometry, Stage, TextureLoader, Thread, UI, UnrealBloomBlurMaterial, Vector2, WebGLRenderTarget, WebGLRenderer, floorPowerOfTwo, getFullscreenTriangle, getKeyByValue, lerp, randFloatSpread, ticker } from '../build/alien.js';
 
         class Config {
             static DEBUG = /[?&]debug/.test(location.search);
@@ -96,10 +96,10 @@
                 super({
                     glslVersion: GLSL3,
                     uniforms: {
-                        tMap: new Uniform(null),
-                        uPower: new Uniform(3),
-                        uAmount: new Uniform(1),
-                        uResolution: new Uniform(new Vector2())
+                        tMap: { value: null },
+                        uPower: { value: 3 },
+                        uAmount: { value: 1 },
+                        uResolution: { value: new Vector2() }
                     },
                     vertexShader: vertexBokehBlur1Shader,
                     fragmentShader: fragmentBokehBlur1Shader,
@@ -192,11 +192,11 @@
                 super({
                     glslVersion: GLSL3,
                     uniforms: {
-                        tMap: new Uniform(null),
-                        uPower: new Uniform(3),
-                        uAmount: new Uniform(1),
-                        uDebug: new Uniform(Config.DEBUG),
-                        uResolution: new Uniform(new Vector2())
+                        tMap: { value: null },
+                        uPower: { value: 3 },
+                        uAmount: { value: 1 },
+                        uDebug: { value: Config.DEBUG },
+                        uResolution: { value: new Vector2() }
                     },
                     vertexShader: vertexBokehBlur2Shader,
                     fragmentShader: fragmentBokehBlur2Shader,
@@ -322,12 +322,12 @@
                 const material = new RawShaderMaterial({
                     glslVersion: GLSL3,
                     uniforms: {
-                        tMap: new Uniform(getTexture('assets/textures/particle.png')),
-                        tDepth: new Uniform(null),
-                        uScale: new Uniform(Stage.dpr / 2),
-                        uAlpha: new Uniform(1),
-                        uCameraNear: new Uniform(camera.near),
-                        uCameraFar: new Uniform(camera.far),
+                        tMap: { value: getTexture('assets/textures/particle.png') },
+                        tDepth: { value: null },
+                        uScale: { value: Stage.dpr / 2 },
+                        uAlpha: { value: 1 },
+                        uCameraNear: { value: camera.near },
+                        uCameraFar: { value: camera.far },
                         uResolution: resolution,
                         uTime: time
                     },
@@ -804,10 +804,10 @@
                 this.screenTriangle = getFullscreenTriangle();
 
                 // Global uniforms
-                this.resolution = new Uniform(new Vector2());
-                this.aspect = new Uniform(1);
-                this.time = new Uniform(0);
-                this.frame = new Uniform(0);
+                this.resolution = { value: new Vector2() };
+                this.aspect = { value: 1 };
+                this.time = { value: 0 };
+                this.frame = { value: 0 };
 
                 // Global settings
                 this.anisotropy = this.renderer.capabilities.getMaxAnisotropy();

@@ -11,7 +11,7 @@
     <link rel="stylesheet" href="assets/css/style.css">
 
     <script type="module">
-        import { ACESFilmicToneMapping, AmbientLight, Assets, BloomCompositeMaterial, BlurMaterial, ChromaticAberrationMaterial, Color, Device, DirectionalLight, EdgesGeometry, EnvironmentTextureLoader, Events, FXAAMaterial, GLSL3, Group, HemisphereLight, ImageBitmapLoaderThread, LineBasicMaterial, LineSegments, LuminosityMaterial, Mesh, MeshBasicMaterial, MeshPhysicalMaterial, MeshStandardMaterial, NoBlending, OrbitControls, OrthographicCamera, PanelItem, PerspectiveCamera, RawShaderMaterial, RepeatWrapping, Scene, SceneCompositeMaterial, SphereGeometry, Stage, TextureLoader, Thread, UI, Uniform, UnrealBloomBlurMaterial, Vector2, VideoGlitchMaterial, WebGLRenderTarget, WebGLRenderer, floorPowerOfTwo, getFullscreenTriangle, lerp, ticker } from '../build/alien.js';
+        import { ACESFilmicToneMapping, AmbientLight, Assets, BloomCompositeMaterial, BlurMaterial, ChromaticAberrationMaterial, Color, Device, DirectionalLight, EdgesGeometry, EnvironmentTextureLoader, Events, FXAAMaterial, GLSL3, Group, HemisphereLight, ImageBitmapLoaderThread, LineBasicMaterial, LineSegments, LuminosityMaterial, Mesh, MeshBasicMaterial, MeshPhysicalMaterial, MeshStandardMaterial, NoBlending, OrbitControls, OrthographicCamera, PanelItem, PerspectiveCamera, RawShaderMaterial, RepeatWrapping, Scene, SceneCompositeMaterial, SphereGeometry, Stage, TextureLoader, Thread, UI, UnrealBloomBlurMaterial, Vector2, VideoGlitchMaterial, WebGLRenderTarget, WebGLRenderer, floorPowerOfTwo, getFullscreenTriangle, lerp, ticker } from '../build/alien.js';
 
         class Config {
             static ICE_COLOR = 0x547691;
@@ -79,9 +79,9 @@
                 super({
                     glslVersion: GLSL3,
                     uniforms: {
-                        tScene: new Uniform(null),
-                        tHologram: new Uniform(null),
-                        tGlow: new Uniform(null)
+                        tScene: { value: null },
+                        tHologram: { value: null },
+                        tGlow: { value: null }
                     },
                     vertexShader: vertexCompositeShader,
                     fragmentShader: fragmentCompositeShader,
@@ -160,8 +160,8 @@
                 glowMaterial.emissiveIntensity = 0.125;
 
                 const uniforms = {
-                    fresnelColor: new Uniform(new Color(Config.ERROR_COLOR).offsetHSL(0, 0, 0.25)),
-                    fresnelPower: new Uniform(1.5)
+                    fresnelColor: { value: new Color(Config.ERROR_COLOR).offsetHSL(0, 0, 0.25) },
+                    fresnelPower: { value: 1.5 }
                 };
 
                 glowMaterial.onBeforeCompile = shader => {
@@ -359,8 +359,8 @@
                 glowMaterial.emissiveIntensity = 0.125;
 
                 const uniforms = {
-                    fresnelColor: new Uniform(new Color(Config.LIGHT_COLOR).offsetHSL(0, 0, 0.25)),
-                    fresnelPower: new Uniform(1.5)
+                    fresnelColor: { value: new Color(Config.LIGHT_COLOR).offsetHSL(0, 0, 0.25) },
+                    fresnelPower: { value: 1.5 }
                 };
 
                 glowMaterial.onBeforeCompile = shader => {
@@ -1043,10 +1043,10 @@
                 this.screenTriangle = getFullscreenTriangle();
 
                 // Global uniforms
-                this.resolution = new Uniform(new Vector2());
-                this.aspect = new Uniform(1);
-                this.time = new Uniform(0);
-                this.frame = new Uniform(0);
+                this.resolution = { value: new Vector2() };
+                this.aspect = { value: 1 };
+                this.time = { value: 0 };
+                this.frame = { value: 0 };
 
                 // Global settings
                 this.anisotropy = this.renderer.capabilities.getMaxAnisotropy();

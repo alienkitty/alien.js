@@ -19,7 +19,7 @@
     </style>
 
     <script type="module">
-        import { AmbientLight, BasicShadowMap, BufferGeometryLoader, BufferGeometryLoaderThread, Color, Device, DirectionalLight, Events, FXAAMaterial, Group, HemisphereLight, ImageBitmapLoaderThread, Mesh, MeshPhongMaterial, NoBlending, OrbitControls, OrthographicCamera, PanelItem, PerspectiveCamera, PlaneGeometry, Reflector, RepeatWrapping, Scene, ShadowMaterial, SoftShadows, SphereGeometry, Stage, TextureLoader, Thread, UI, Uniform, Vector2, WebGLRenderTarget, WebGLRenderer, getFullscreenTriangle, ticker } from '../build/alien.js';
+        import { AmbientLight, BasicShadowMap, BufferGeometryLoader, BufferGeometryLoaderThread, Color, Device, DirectionalLight, Events, FXAAMaterial, Group, HemisphereLight, ImageBitmapLoaderThread, Mesh, MeshPhongMaterial, NoBlending, OrbitControls, OrthographicCamera, PanelItem, PerspectiveCamera, PlaneGeometry, Reflector, RepeatWrapping, Scene, ShadowMaterial, SoftShadows, SphereGeometry, Stage, TextureLoader, Thread, UI, Vector2, WebGLRenderTarget, WebGLRenderer, getFullscreenTriangle, ticker } from '../build/alien.js';
 
         // Based on https://threejs.org/examples/#webgl_shadowmap_pcss by spidersharma03
 
@@ -89,10 +89,10 @@
                 material.onBeforeCompile = shader => {
                     map.updateMatrix();
 
-                    shader.uniforms.map = new Uniform(map);
-                    shader.uniforms.reflectMap = new Uniform(this.reflector.renderTarget.texture);
+                    shader.uniforms.map = { value: map };
+                    shader.uniforms.reflectMap = { value: this.reflector.renderTarget.texture };
                     shader.uniforms.reflectMapBlur = this.reflector.renderTargetUniform;
-                    shader.uniforms.uvTransform = new Uniform(map.matrix);
+                    shader.uniforms.uvTransform = { value: map.matrix };
                     shader.uniforms.textureMatrix = this.reflector.textureMatrixUniform;
 
                     shader.vertexShader = shader.vertexShader.replace(
@@ -401,10 +401,10 @@
                 this.screenTriangle = getFullscreenTriangle();
 
                 // Global uniforms
-                this.resolution = new Uniform(new Vector2());
-                this.aspect = new Uniform(1);
-                this.time = new Uniform(0);
-                this.frame = new Uniform(0);
+                this.resolution = { value: new Vector2() };
+                this.aspect = { value: 1 };
+                this.time = { value: 0 };
+                this.frame = { value: 0 };
 
                 // Global settings
                 this.anisotropy = this.renderer.capabilities.getMaxAnisotropy();

@@ -1,4 +1,4 @@
-import { ACESFilmicToneMapping, AmbientLight, Assets, BasicShadowMap, BloomCompositeMaterial, BoxGeometry, CameraMotionBlurMaterial, Color, DepthTexture, Device, DirectionalLight, EnvironmentTextureLoader, Events, FXAAMaterial, GLSL3, Global, Group, Header, HemisphereLight, IcosahedronGeometry, ImageBitmapLoaderThread, Interface, LuminosityMaterial, Matrix4, Mesh, MeshStandardMaterial, NearestFilter, NoBlending, OctahedronGeometry, OrthographicCamera, PanelItem, PerspectiveCamera, PlaneGeometry, Point3D, RawShaderMaterial, Reflector, RepeatWrapping, Scene, SceneCompositeMaterial, ShadowMaterial, Stage, TextureLoader, Thread, Uniform, UnrealBloomBlurMaterial, Vector2, Vector3, WebGLRenderTarget, WebGLRenderer, clearTween, degToRad, delayedCall, floorPowerOfTwo, getFullscreenTriangle, getKeyByValue, lerp, lerpCameras, radToDeg, shuffle, ticker, tween } from '../../../build/alien.js';
+import { ACESFilmicToneMapping, AmbientLight, Assets, BasicShadowMap, BloomCompositeMaterial, BoxGeometry, CameraMotionBlurMaterial, Color, DepthTexture, Device, DirectionalLight, EnvironmentTextureLoader, Events, FXAAMaterial, GLSL3, Global, Group, Header, HemisphereLight, IcosahedronGeometry, ImageBitmapLoaderThread, Interface, LuminosityMaterial, Matrix4, Mesh, MeshStandardMaterial, NearestFilter, NoBlending, OctahedronGeometry, OrthographicCamera, PanelItem, PerspectiveCamera, PlaneGeometry, Point3D, RawShaderMaterial, Reflector, RepeatWrapping, Scene, SceneCompositeMaterial, ShadowMaterial, Stage, TextureLoader, Thread, UnrealBloomBlurMaterial, Vector2, Vector3, WebGLRenderTarget, WebGLRenderer, clearTween, degToRad, delayedCall, floorPowerOfTwo, getFullscreenTriangle, getKeyByValue, lerp, lerpCameras, radToDeg, shuffle, ticker, tween } from '../../../build/alien.js';
 
 Global.PAGES = [];
 Global.PAGE_INDEX = 0;
@@ -479,11 +479,11 @@ class CompositeMaterial extends RawShaderMaterial {
         super({
             glslVersion: GLSL3,
             uniforms: {
-                tScene: new Uniform(null),
-                uFocus: new Uniform(0.5),
-                uRotation: new Uniform(0),
-                uBluriness: new Uniform(1),
-                uDistortion: new Uniform(1.45)
+                tScene: { value: null },
+                uFocus: { value: 0.5 },
+                uRotation: { value: 0 },
+                uBluriness: { value: 1 },
+                uDistortion: { value: 1.45 }
             },
             vertexShader: vertexCompositeShader,
             fragmentShader: fragmentCompositeShader,
@@ -565,16 +565,16 @@ class BlurMaterial extends RawShaderMaterial {
         super({
             glslVersion: GLSL3,
             uniforms: {
-                tMap: new Uniform(null),
-                tBlueNoise: new Uniform(texture),
-                uBlueNoiseResolution: new Uniform(new Vector2(256, 256)),
-                uFocus: new Uniform(0.5),
-                uRotation: new Uniform(0),
-                uBluriness: new Uniform(1),
-                uDirection: new Uniform(direction),
-                uDebug: new Uniform(Config.DEBUG),
-                uResolution: new Uniform(new Vector2()),
-                uTime: new Uniform(0)
+                tMap: { value: null },
+                tBlueNoise: { value: texture },
+                uBlueNoiseResolution: { value: new Vector2(256, 256) },
+                uFocus: { value: 0.5 },
+                uRotation: { value: 0 },
+                uBluriness: { value: 1 },
+                uDirection: { value: direction },
+                uDebug: { value: Config.DEBUG },
+                uResolution: { value: new Vector2() },
+                uTime: { value: 0 }
             },
             vertexShader: vertexBlurShader,
             fragmentShader: fragmentBlurShader,
@@ -917,10 +917,10 @@ class Floor extends Group {
         material.onBeforeCompile = shader => {
             map.updateMatrix();
 
-            shader.uniforms.map = new Uniform(map);
-            shader.uniforms.reflectMap = new Uniform(this.reflector.renderTarget.texture);
+            shader.uniforms.map = { value: map };
+            shader.uniforms.reflectMap = { value: this.reflector.renderTarget.texture };
             shader.uniforms.reflectMapBlur = this.reflector.renderTargetUniform;
-            shader.uniforms.uvTransform = new Uniform(map.matrix);
+            shader.uniforms.uvTransform = { value: map.matrix };
             shader.uniforms.textureMatrix = this.reflector.textureMatrixUniform;
 
             shader.vertexShader = shader.vertexShader.replace(
@@ -1808,10 +1808,10 @@ class WorldController {
         this.screenTriangle = getFullscreenTriangle();
 
         // Global uniforms
-        this.resolution = new Uniform(new Vector2());
-        this.aspect = new Uniform(1);
-        this.time = new Uniform(0);
-        this.frame = new Uniform(0);
+        this.resolution = { value: new Vector2() };
+        this.aspect = { value: 1 };
+        this.time = { value: 0 };
+        this.frame = { value: 0 };
 
         // Global settings
         this.anisotropy = this.renderer.capabilities.getMaxAnisotropy();

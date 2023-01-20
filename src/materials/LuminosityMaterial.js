@@ -1,4 +1,4 @@
-import { GLSL3, NoBlending, RawShaderMaterial, Uniform } from 'three';
+import { GLSL3, NoBlending, RawShaderMaterial } from 'three';
 
 import vertexShader from '../shaders/LuminosityPass.vert.js';
 import fragmentShader from '../shaders/LuminosityPass.frag.js';
@@ -8,9 +8,9 @@ export class LuminosityMaterial extends RawShaderMaterial {
         super({
             glslVersion: GLSL3,
             uniforms: {
-                tMap: new Uniform(null),
-                uThreshold: new Uniform(1),
-                uSmoothing: new Uniform(1)
+                tMap: { value: null },
+                uThreshold: { value: 1 },
+                uSmoothing: { value: 1 }
             },
             vertexShader,
             fragmentShader,

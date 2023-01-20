@@ -11,7 +11,7 @@
     <link rel="stylesheet" href="assets/css/style.css">
 
     <script type="module">
-        import { BlurMaterial, Color, DirectionalLight, Events, FXAAMaterial, GLSL3, Group, HemisphereLight, Mesh, MeshStandardMaterial, NoBlending, OrthographicCamera, PanelItem, PerspectiveCamera, RawShaderMaterial, Scene, SphereGeometry, Stage, UI, Uniform, Vector2, WebGLRenderTarget, WebGLRenderer, getFullscreenTriangle, ticker } from '../build/alien.js';
+        import { BlurMaterial, Color, DirectionalLight, Events, FXAAMaterial, GLSL3, Group, HemisphereLight, Mesh, MeshStandardMaterial, NoBlending, OrthographicCamera, PanelItem, PerspectiveCamera, RawShaderMaterial, Scene, SphereGeometry, Stage, UI, Vector2, WebGLRenderTarget, WebGLRenderer, getFullscreenTriangle, ticker } from '../build/alien.js';
 
         const vertexCompositeShader = /* glsl */ `
             in vec3 position;
@@ -55,10 +55,10 @@
                 super({
                     glslVersion: GLSL3,
                     uniforms: {
-                        tScene: new Uniform(null),
-                        tBloom: new Uniform(null),
-                        uMinBright: new Uniform(0.1247),
-                        uBlurBright: new Uniform(0.4166)
+                        tScene: { value: null },
+                        tBloom: { value: null },
+                        uMinBright: { value: 0.1247 },
+                        uBlurBright: { value: 0.4166 }
                     },
                     vertexShader: vertexCompositeShader,
                     fragmentShader: fragmentCompositeShader,
@@ -353,10 +353,10 @@
                 this.screenTriangle = getFullscreenTriangle();
 
                 // Global uniforms
-                this.resolution = new Uniform(new Vector2());
-                this.aspect = new Uniform(1);
-                this.time = new Uniform(0);
-                this.frame = new Uniform(0);
+                this.resolution = { value: new Vector2() };
+                this.aspect = { value: 1 };
+                this.time = { value: 0 };
+                this.frame = { value: 0 };
             }
 
             static initLights() {

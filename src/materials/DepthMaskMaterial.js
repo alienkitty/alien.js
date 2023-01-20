@@ -1,4 +1,4 @@
-import { GLSL3, NoBlending, RawShaderMaterial, Uniform } from 'three';
+import { GLSL3, NoBlending, RawShaderMaterial } from 'three';
 
 import vertexShader from '../shaders/DepthMaskPass.vert.js';
 import fragmentShader from '../shaders/DepthMaskPass.frag.js';
@@ -8,9 +8,9 @@ export class DepthMaskMaterial extends RawShaderMaterial {
         super({
             glslVersion: GLSL3,
             uniforms: {
-                tMap: new Uniform(null),
-                tDepth1: new Uniform(null),
-                tDepth2: new Uniform(null)
+                tMap: { value: null },
+                tDepth1: { value: null },
+                tDepth2: { value: null }
             },
             vertexShader,
             fragmentShader,

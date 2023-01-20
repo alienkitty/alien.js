@@ -1,4 +1,4 @@
-import { GLSL3, Matrix3, Matrix4, NoBlending, RawShaderMaterial, Uniform } from 'three';
+import { GLSL3, Matrix3, Matrix4, NoBlending, RawShaderMaterial } from 'three';
 
 import vertexShader from '../shaders/ReflectorDudvMaterial.vert.js';
 import fragmentShader from '../shaders/ReflectorDudvMaterial.frag.js';
@@ -15,12 +15,12 @@ export class ReflectorDudvMaterial extends RawShaderMaterial {
                 DITHERING: dithering
             },
             uniforms: {
-                tMap: new Uniform(null),
-                tReflect: new Uniform(null),
-                tReflectBlur: new Uniform(null),
-                uMapTransform: new Uniform(new Matrix3()),
-                uMatrix: new Uniform(new Matrix4()),
-                uReflectivity: new Uniform(reflectivity)
+                tMap: { value: null },
+                tReflect: { value: null },
+                tReflectBlur: { value: null },
+                uMapTransform: { value: new Matrix3() },
+                uMatrix: { value: new Matrix4() },
+                uReflectivity: { value: reflectivity }
             },
             vertexShader,
             fragmentShader,
@@ -31,8 +31,8 @@ export class ReflectorDudvMaterial extends RawShaderMaterial {
             map.updateMatrix();
 
             parameters.uniforms = Object.assign(parameters.uniforms, {
-                tMap: new Uniform(map),
-                uMapTransform: new Uniform(map.matrix)
+                tMap: { value: map },
+                uMapTransform: { value: map.matrix }
             });
         }
 

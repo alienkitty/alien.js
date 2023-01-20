@@ -1,4 +1,4 @@
-import { GLSL3, NoBlending, RawShaderMaterial, Uniform } from 'three';
+import { GLSL3, NoBlending, RawShaderMaterial } from 'three';
 
 import vertexShader from '../shaders/RGBPass.vert.js';
 import fragmentShader from '../shaders/RGBPass.frag.js';
@@ -8,9 +8,9 @@ export class RGBMaterial extends RawShaderMaterial {
         super({
             glslVersion: GLSL3,
             uniforms: {
-                tMap: new Uniform(null),
-                uAngle: new Uniform(0),
-                uAmount: new Uniform(0.005)
+                tMap: { value: null },
+                uAngle: { value: 0 },
+                uAmount: { value: 0.005 }
             },
             vertexShader,
             fragmentShader,

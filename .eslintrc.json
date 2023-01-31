@@ -14,6 +14,7 @@
   "rules": {
     "arrow-parens": ["error", "as-needed"],
     "arrow-spacing": ["error", { "before": true, "after": true }],
+    "comma-dangle": ["error", "never"],
     "comma-spacing": ["error", { "before": false, "after": true }],
     "curly": ["error", "multi-line"],
     "eqeqeq": ["error", "always"],
@@ -36,6 +37,8 @@
     "semi": ["error", "always"],
     "sort-imports": ["error", { "ignoreDeclarationSort": true }],
     "space-before-blocks": ["error", "always"],
-    "space-before-function-paren": ["error", { "anonymous": "always", "named": "never", "asyncArrow": "always" }]
+    "space-before-function-paren": ["error", { "anonymous": "always", "named": "never", "asyncArrow": "always" }],
+    "space-in-parens": ["error", "never"],
+    "space-unary-ops": ["error", { "words": true, "nonwords": false }]
   }
 }

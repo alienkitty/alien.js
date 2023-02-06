@@ -22,6 +22,15 @@
     <link rel="stylesheet" href="assets/css/style.css">
     <link rel="icon" type="image/svg+xml" href="assets/meta/favicon.svg">
 
+    <script type="module">
+        import { Preloader } from './assets/js/loader.js';
+
+        Preloader.init();
+    </script>
+    <script nomodule>
+        location.href = 'unsupported.html';
+    </script>
+
     <!-- Global site tag (gtag.js) - Google Analytics -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=UA-51047442-9"></script>
     <script>
@@ -34,13 +43,5 @@
 </head>
 <body>
     <div id="root"></div>
-    <script type="module">
-        import { Preloader } from './assets/js/loader.js';
-
-        Preloader.init();
-    </script>
-    <script nomodule>
-        location.href = 'unsupported.html';
-    </script>
 </body>
 </html>

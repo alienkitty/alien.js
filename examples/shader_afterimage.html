@@ -9,11 +9,9 @@
     <link rel="preconnect" href="https://fonts.gstatic.com">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto+Mono">
     <link rel="stylesheet" href="assets/css/style.css">
-</head>
-<body>
-    <div id="root"></div>
+
     <script type="module">
-        import { ACESFilmicToneMapping, AfterimageMaterial, BloomCompositeMaterial, BufferAttribute, BufferGeometry, Color, DirectionalLight, Events, FXAAMaterial, Fog, Group, HemisphereLight, LinearFilter, LuminosityMaterial, Mesh, OrthographicCamera, PanelItem, PerspectiveCamera, PlaneGeometry, Reflector, ReflectorMaterial, RepeatWrapping, Scene, SceneCompositeMaterial, Stage, TextGeometry, TextGeometryLoader, TextMaterial, TextureLoader, UI, Uniform, UnrealBloomBlurMaterial, Vector2, Vector3, WebGLRenderTarget, WebGLRenderer, floorPowerOfTwo, getFullscreenTriangle, getKeyByValue, lerp, ticker } from '../build/alien.js';
+        import { ACESFilmicToneMapping, AfterimageMaterial, BloomCompositeMaterial, BufferAttribute, BufferGeometry, Color, DirectionalLight, Events, FXAAMaterial, Fog, Group, HemisphereLight, LinearFilter, LuminosityMaterial, Mesh, OrthographicCamera, PanelItem, PerspectiveCamera, PlaneGeometry, Reflector, ReflectorMaterial, RepeatWrapping, Scene, SceneCompositeMaterial, Stage, TextGeometry, TextGeometryLoader, TextMaterial, TextureLoader, UI, UnrealBloomBlurMaterial, Vector2, Vector3, WebGLRenderTarget, WebGLRenderer, floorPowerOfTwo, getFullscreenTriangle, getKeyByValue, lerp, ticker } from '../build/alien.js';
 
         class Text extends Group {
             constructor() {
@@ -640,10 +638,10 @@
                 this.screenTriangle = getFullscreenTriangle();
 
                 // Global uniforms
-                this.resolution = new Uniform(new Vector2());
-                this.aspect = new Uniform(1);
-                this.time = new Uniform(0);
-                this.frame = new Uniform(0);
+                this.resolution = { value: new Vector2() };
+                this.aspect = { value: 1 };
+                this.time = { value: 0 };
+                this.frame = { value: 0 };
             }
 
             static initLights() {
@@ -776,5 +774,8 @@
 
         App.init();
     </script>
+</head>
+<body>
+    <div id="root"></div>
 </body>
 </html>

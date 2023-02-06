@@ -9,11 +9,9 @@
     <link rel="preconnect" href="https://fonts.gstatic.com">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto+Mono&family=Roboto:wght@300&family=Gothic+A1:wght@400;700">
     <link rel="stylesheet" href="assets/css/style.css">
-</head>
-<body>
-    <div id="root"></div>
+
     <script type="module">
-        import { ACESFilmicToneMapping, AmbientLight, BloomCompositeMaterial, Color, DirectionalLight, EnvironmentTextureLoader, Events, FXAAMaterial, FrontSide, GLSL3, GLTFLoader, Group, Header, HemisphereLight, Interface, LuminosityMaterial, Mesh, MeshBasicMaterial, NoBlending, OrbitControls, OrthographicCamera, PanelItem, PerspectiveCamera, PointLight, RawShaderMaterial, Scene, SphereGeometry, Stage, Uniform, UnrealBloomBlurMaterial, Vector2, Vector3, WebGLRenderTarget, WebGLRenderer, degToRad, floorPowerOfTwo, getFrustum, getFullscreenTriangle, getKeyByValue, lerp, ticker, tween } from '../build/alien.js';
+        import { ACESFilmicToneMapping, AmbientLight, BloomCompositeMaterial, Color, DirectionalLight, EnvironmentTextureLoader, Events, FXAAMaterial, FrontSide, GLSL3, GLTFLoader, Group, Header, HemisphereLight, Interface, LuminosityMaterial, Mesh, MeshBasicMaterial, NoBlending, OrbitControls, OrthographicCamera, PanelItem, PerspectiveCamera, PointLight, RawShaderMaterial, Scene, SphereGeometry, Stage, UnrealBloomBlurMaterial, Vector2, Vector3, WebGLRenderTarget, WebGLRenderer, degToRad, floorPowerOfTwo, getFrustum, getFullscreenTriangle, getKeyByValue, lerp, ticker, tween } from '../build/alien.js';
 
         class Config {
             static DEBUG = /[?&]debug/.test(location.search);
@@ -160,9 +158,9 @@
                 super({
                     glslVersion: GLSL3,
                     uniforms: {
-                        tScene: new Uniform(null),
-                        tBloom: new Uniform(null),
-                        uBloomDistortion: new Uniform(1.45)
+                        tScene: { value: null },
+                        tBloom: { value: null },
+                        uBloomDistortion: { value: 1.45 }
                     },
                     vertexShader: vertexCompositeShader,
                     fragmentShader: fragmentCompositeShader,
@@ -214,7 +212,7 @@
 
                 // https://forum.sketchfab.com/t/download-sketchfab-model-as-single-glb-or-gltf-file/38769
                 // https://sbtron.github.io/makeglb/
-                const gltf = await loadGLTF('assets/models/gltf/crystal.glb');
+                const gltf = await loadGLTF('assets/gltf/crystal.glb');
 
                 // Sketchfab model
                 const model = gltf.scene.children[0];
@@ -769,10 +767,10 @@
                 this.screenTriangle = getFullscreenTriangle();
 
                 // Global uniforms
-                this.resolution = new Uniform(new Vector2());
-                this.aspect = new Uniform(1);
-                this.time = new Uniform(0);
-                this.frame = new Uniform(0);
+                this.resolution = { value: new Vector2() };
+                this.aspect = { value: 1 };
+                this.time = { value: 0 };
+                this.frame = { value: 0 };
 
                 // Global settings
                 this.anisotropy = this.renderer.capabilities.getMaxAnisotropy();
@@ -932,5 +930,8 @@
 
         App.init();
     </script>
+</head>
+<body>
+    <div id="root"></div>
 </body>
 </html>

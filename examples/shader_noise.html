@@ -9,11 +9,9 @@
     <link rel="preconnect" href="https://fonts.gstatic.com">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto+Mono">
     <link rel="stylesheet" href="assets/css/style.css">
-</head>
-<body>
-    <div id="root"></div>
+
     <script type="module">
-        import { Events, GLSL3, Mesh, NoBlending, OrthographicCamera, PanelItem, RawShaderMaterial, Scene, Stage, UI, Uniform, Vector2, WebGLRenderer, getFullscreenTriangle, ticker } from '../build/alien.js';
+        import { Events, GLSL3, Mesh, NoBlending, OrthographicCamera, PanelItem, RawShaderMaterial, Scene, Stage, UI, Vector2, WebGLRenderer, getFullscreenTriangle, ticker } from '../build/alien.js';
 
         import simplex2d from '../src/shaders/modules/noise/simplex2d.glsl.js';
 
@@ -82,8 +80,8 @@
                 super({
                     glslVersion: GLSL3,
                     uniforms: {
-                        uMultiplier: new Uniform(2),
-                        uSpeed: new Uniform(0.5),
+                        uMultiplier: { value: 2 },
+                        uSpeed: { value: 0.5 },
                         uTime: WorldController.time
                     },
                     vertexShader,
@@ -215,10 +213,10 @@
                 this.scene.add(this.screen);
 
                 // Global uniforms
-                this.resolution = new Uniform(new Vector2());
-                this.aspect = new Uniform(1);
-                this.time = new Uniform(0);
-                this.frame = new Uniform(0);
+                this.resolution = { value: new Vector2() };
+                this.aspect = { value: 1 };
+                this.time = { value: 0 };
+                this.frame = { value: 0 };
             }
 
             static addListeners() {
@@ -307,5 +305,8 @@
 
         App.init();
     </script>
+</head>
+<body>
+    <div id="root"></div>
 </body>
 </html>

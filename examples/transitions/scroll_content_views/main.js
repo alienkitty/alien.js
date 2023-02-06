@@ -1,4 +1,4 @@
-import { ACESFilmicToneMapping, AmbientLight, Assets, BloomCompositeMaterial, BoxGeometry, Color, Component, Device, DirectionalLight, EnvironmentTextureLoader, Events, FXAAMaterial, GLSL3, Global, Group, HemisphereLight, IcosahedronGeometry, ImageBitmapLoaderThread, Interface, LuminosityMaterial, Mesh, MeshStandardMaterial, NoBlending, OctahedronGeometry, OrthographicCamera, PanelItem, PerspectiveCamera, RawShaderMaterial, RepeatWrapping, Scene, SceneCompositeMaterial, SmoothViews, Stage, TextureLoader, Thread, UI, Uniform, UnrealBloomBlurMaterial, Vector2, WebGLRenderTarget, WebGLRenderer, defer, degToRad, floorPowerOfTwo, getFullscreenTriangle, lerp, shuffle, ticker } from '../../../build/alien.js';
+import { ACESFilmicToneMapping, AmbientLight, Assets, BloomCompositeMaterial, BoxGeometry, Color, Component, Device, DirectionalLight, EnvironmentTextureLoader, Events, FXAAMaterial, GLSL3, Global, Group, HemisphereLight, IcosahedronGeometry, ImageBitmapLoaderThread, Interface, LuminosityMaterial, Mesh, MeshStandardMaterial, NoBlending, OctahedronGeometry, OrthographicCamera, PanelItem, PerspectiveCamera, RawShaderMaterial, RepeatWrapping, Scene, SceneCompositeMaterial, SmoothViews, Stage, TextureLoader, Thread, UI, UnrealBloomBlurMaterial, Vector2, WebGLRenderTarget, WebGLRenderer, defer, degToRad, floorPowerOfTwo, getFullscreenTriangle, lerp, shuffle, ticker } from '../../../build/alien.js';
 
 Global.SECTIONS = [];
 
@@ -399,14 +399,14 @@ class TransitionMaterial extends RawShaderMaterial {
         super({
             glslVersion: GLSL3,
             uniforms: {
-                tMap1: new Uniform(null),
-                tMap2: new Uniform(null),
-                uProgress: new Uniform(0),
-                uSize: new Uniform(0.04),
-                uZoom: new Uniform(50),
-                uColorSeparation: new Uniform(0.3),
-                uResolution: new Uniform(new Vector2()),
-                uTime: new Uniform(0)
+                tMap1: { value: null },
+                tMap2: { value: null },
+                uProgress: { value: 0 },
+                uSize: { value: 0.04 },
+                uZoom: { value: 50 },
+                uColorSeparation: { value: 0.3 },
+                uResolution: { value: new Vector2() },
+                uTime: { value: 0 }
             },
             vertexShader: vertexTransitionShader,
             fragmentShader: fragmentTransitionShader,
@@ -1255,10 +1255,10 @@ class WorldController {
         this.screenTriangle = getFullscreenTriangle();
 
         // Global uniforms
-        this.resolution = new Uniform(new Vector2());
-        this.aspect = new Uniform(1);
-        this.time = new Uniform(0);
-        this.frame = new Uniform(0);
+        this.resolution = { value: new Vector2() };
+        this.aspect = { value: 1 };
+        this.time = { value: 0 };
+        this.frame = { value: 0 };
 
         // Global settings
         this.anisotropy = this.renderer.capabilities.getMaxAnisotropy();

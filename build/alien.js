@@ -1036,10 +1036,10 @@ class ImageBitmapLoader$1 extends Loader$1 {
 
 /**
  * @license
- * Copyright 2010-2022 Three.js Authors
+ * Copyright 2010-2023 Three.js Authors
  * SPDX-License-Identifier: MIT
  */
-const REVISION = '148';
+const REVISION = '149';
 const MOUSE = { LEFT: 0, MIDDLE: 1, RIGHT: 2, ROTATE: 0, DOLLY: 1, PAN: 2 };
 const TOUCH = { ROTATE: 0, PAN: 1, DOLLY_PAN: 2, DOLLY_ROTATE: 3 };
 const CullFaceNone = 0;
@@ -1053,7 +1053,7 @@ const VSMShadowMap = 3;
 const FrontSide = 0;
 const BackSide = 1;
 const DoubleSide = 2;
-const TwoPassDoubleSide = 3;
+const TwoPassDoubleSide = 2; // r149
 const NoBlending = 0;
 const NormalBlending = 1;
 const AdditiveBlending = 2;
@@ -1125,7 +1125,6 @@ const UnsignedShort4444Type = 1017;
 const UnsignedShort5551Type = 1018;
 const UnsignedInt248Type = 1020;
 const AlphaFormat = 1021;
-const RGBFormat = 1022; // @deprecated since r137
 const RGBAFormat = 1023;
 const LuminanceFormat = 1024;
 const LuminanceAlphaFormat = 1025;
@@ -1163,6 +1162,10 @@ const RGBA_ASTC_10x10_Format = 37819;
 const RGBA_ASTC_12x10_Format = 37820;
 const RGBA_ASTC_12x12_Format = 37821;
 const RGBA_BPTC_Format = 36492;
+const RED_RGTC1_Format = 36283;
+const SIGNED_RED_RGTC1_Format = 36284;
+const RED_GREEN_RGTC2_Format = 36285;
+const SIGNED_RED_GREEN_RGTC2_Format = 36286;
 const LoopOnce = 2200;
 const LoopRepeat = 2201;
 const LoopPingPong = 2202;
@@ -1604,28 +1607,28 @@ var MathUtils = /*#__PURE__*/Object.freeze({
 	__proto__: null,
 	DEG2RAD: DEG2RAD,
 	RAD2DEG: RAD2DEG,
-	generateUUID: generateUUID,
+	ceilPowerOfTwo: ceilPowerOfTwo,
 	clamp: clamp,
-	euclideanModulo: euclideanModulo,
-	mapLinear: mapLinear,
-	inverseLerp: inverseLerp,
-	lerp: lerp$1,
 	damp: damp,
+	degToRad: degToRad,
+	denormalize: denormalize,
+	euclideanModulo: euclideanModulo,
+	floorPowerOfTwo: floorPowerOfTwo,
+	generateUUID: generateUUID,
+	inverseLerp: inverseLerp,
+	isPowerOfTwo: isPowerOfTwo,
+	lerp: lerp$1,
+	mapLinear: mapLinear,
+	normalize: normalize,
 	pingpong: pingpong,
-	smoothstep: smoothstep,
-	smootherstep: smootherstep$1,
-	randInt: randInt,
+	radToDeg: radToDeg,
 	randFloat: randFloat,
 	randFloatSpread: randFloatSpread,
+	randInt: randInt,
 	seededRandom: seededRandom,
-	degToRad: degToRad,
-	radToDeg: radToDeg,
-	isPowerOfTwo: isPowerOfTwo,
-	ceilPowerOfTwo: ceilPowerOfTwo,
-	floorPowerOfTwo: floorPowerOfTwo,
 	setQuaternionFromProperEuler: setQuaternionFromProperEuler,
-	normalize: normalize,
-	denormalize: denormalize
+	smootherstep: smootherstep$1,
+	smoothstep: smoothstep
 });
 
 class Vector2$1 {
@@ -8126,7 +8129,7 @@ const _quaternion$3 = /*@__PURE__*/ new Quaternion();
 
 class Euler {
 
-	constructor( x = 0, y = 0, z = 0, order = Euler.DefaultOrder ) {
+	constructor( x = 0, y = 0, z = 0, order = Euler.DEFAULT_ORDER ) {
 
 		this.isEuler = true;
 
@@ -8427,18 +8430,9 @@ class Euler {
 
 	}
 
-	// @deprecated since r138, 02cf0df1cb4575d5842fef9c85bb5a89fe020d53
-
-	toVector3() {
-
-		console.error( 'THREE.Euler: .toVector3() has been removed. Use Vector3.setFromEuler() instead' );
-
-	}
-
 }
 
-Euler.DefaultOrder = 'XYZ';
-Euler.RotationOrders = [ 'XYZ', 'YZX', 'ZXY', 'XZY', 'YXZ', 'ZYX' ];
+Euler.DEFAULT_ORDER = 'XYZ';
 
 class Layers {
 
@@ -8534,7 +8528,7 @@ class Object3D extends EventDispatcher {
 		this.parent = null;
 		this.children = [];
 
-		this.up = Object3D.DefaultUp.clone();
+		this.up = Object3D.DEFAULT_UP.clone();
 
 		const position = new Vector3();
 		const rotation = new Euler();
@@ -8588,10 +8582,10 @@ class Object3D extends EventDispatcher {
 		this.matrix = new Matrix4();
 		this.matrixWorld = new Matrix4();
 
-		this.matrixAutoUpdate = Object3D.DefaultMatrixAutoUpdate;
+		this.matrixAutoUpdate = Object3D.DEFAULT_MATRIX_AUTO_UPDATE;
 		this.matrixWorldNeedsUpdate = false;
 
-		this.matrixWorldAutoUpdate = Object3D.DefaultMatrixWorldAutoUpdate; // checked by the renderer
+		this.matrixWorldAutoUpdate = Object3D.DEFAULT_MATRIX_WORLD_AUTO_UPDATE; // checked by the renderer
 
 		this.layers = new Layers();
 		this.visible = true;
@@ -9454,9 +9448,9 @@ class Object3D extends EventDispatcher {
 
 }
 
-Object3D.DefaultUp = /*@__PURE__*/ new Vector3( 0, 1, 0 );
-Object3D.DefaultMatrixAutoUpdate = true;
-Object3D.DefaultMatrixWorldAutoUpdate = true;
+Object3D.DEFAULT_UP = /*@__PURE__*/ new Vector3( 0, 1, 0 );
+Object3D.DEFAULT_MATRIX_AUTO_UPDATE = true;
+Object3D.DEFAULT_MATRIX_WORLD_AUTO_UPDATE = true;
 
 const _v0$1 = /*@__PURE__*/ new Vector3();
 const _v1$3 = /*@__PURE__*/ new Vector3();
@@ -9816,6 +9810,7 @@ class Material extends EventDispatcher {
 
 		this.alphaToCoverage = false;
 		this.premultipliedAlpha = false;
+		this.forceSinglePass = false;
 
 		this.visible = true;
 
@@ -10097,6 +10092,7 @@ class Material extends EventDispatcher {
 		if ( this.alphaTest > 0 ) data.alphaTest = this.alphaTest;
 		if ( this.alphaToCoverage === true ) data.alphaToCoverage = this.alphaToCoverage;
 		if ( this.premultipliedAlpha === true ) data.premultipliedAlpha = this.premultipliedAlpha;
+		if ( this.forceSinglePass === true ) data.forceSinglePass = this.forceSinglePass;
 
 		if ( this.wireframe === true ) data.wireframe = this.wireframe;
 		if ( this.wireframeLinewidth > 1 ) data.wireframeLinewidth = this.wireframeLinewidth;
@@ -10217,6 +10213,7 @@ class Material extends EventDispatcher {
 		this.alphaTest = source.alphaTest;
 		this.alphaToCoverage = source.alphaToCoverage;
 		this.premultipliedAlpha = source.premultipliedAlpha;
+		this.forceSinglePass = source.forceSinglePass;
 
 		this.visible = source.visible;
 
@@ -11959,14 +11956,14 @@ class Mesh extends Object3D {
 
 	}
 
-	getVertexPosition( vert, target ) {
+	getVertexPosition( index, target ) {
 
 		const geometry = this.geometry;
 		const position = geometry.attributes.position;
 		const morphPosition = geometry.morphAttributes.position;
 		const morphTargetsRelative = geometry.morphTargetsRelative;
 
-		target.fromBufferAttribute( position, vert );
+		target.fromBufferAttribute( position, index );
 
 		const morphInfluences = this.morphTargetInfluences;
 
@@ -11981,7 +11978,7 @@ class Mesh extends Object3D {
 
 				if ( influence === 0 ) continue;
 
-				_tempA.fromBufferAttribute( morphAttribute, vert );
+				_tempA.fromBufferAttribute( morphAttribute, index );
 
 				if ( morphTargetsRelative ) {
 
@@ -12001,7 +11998,7 @@ class Mesh extends Object3D {
 
 		if ( this.isSkinnedMesh ) {
 
-			this.boneTransform( vert, target );
+			this.boneTransform( index, target );
 
 		}
 
@@ -14105,7 +14102,7 @@ var shadowmap_pars_fragment = "#if NUM_SPOT_LIGHT_COORDS > 0\n  varying vec4 vSp
 
 var shadowmap_pars_vertex = "#if NUM_SPOT_LIGHT_COORDS > 0\n  uniform mat4 spotLightMatrix[ NUM_SPOT_LIGHT_COORDS ];\n  varying vec4 vSpotLightCoord[ NUM_SPOT_LIGHT_COORDS ];\n#endif\n#ifdef USE_SHADOWMAP\n\t#if NUM_DIR_LIGHT_SHADOWS > 0\n\t\tuniform mat4 directionalShadowMatrix[ NUM_DIR_LIGHT_SHADOWS ];\n\t\tvarying vec4 vDirectionalShadowCoord[ NUM_DIR_LIGHT_SHADOWS ];\n\t\tstruct DirectionalLightShadow {\n\t\t\tfloat shadowBias;\n\t\t\tfloat shadowNormalBias;\n\t\t\tfloat shadowRadius;\n\t\t\tvec2 shadowMapSize;\n\t\t};\n\t\tuniform DirectionalLightShadow directionalLightShadows[ NUM_DIR_LIGHT_SHADOWS ];\n\t#endif\n\t#if NUM_SPOT_LIGHT_SHADOWS > 0\n\t\tstruct SpotLightShadow {\n\t\t\tfloat shadowBias;\n\t\t\tfloat shadowNormalBias;\n\t\t\tfloat shadowRadius;\n\t\t\tvec2 shadowMapSize;\n\t\t};\n\t\tuniform SpotLightShadow spotLightShadows[ NUM_SPOT_LIGHT_SHADOWS ];\n\t#endif\n\t#if NUM_POINT_LIGHT_SHADOWS > 0\n\t\tuniform mat4 pointShadowMatrix[ NUM_POINT_LIGHT_SHADOWS ];\n\t\tvarying vec4 vPointShadowCoord[ NUM_POINT_LIGHT_SHADOWS ];\n\t\tstruct PointLightShadow {\n\t\t\tfloat shadowBias;\n\t\t\tfloat shadowNormalBias;\n\t\t\tfloat shadowRadius;\n\t\t\tvec2 shadowMapSize;\n\t\t\tfloat shadowCameraNear;\n\t\t\tfloat shadowCameraFar;\n\t\t};\n\t\tuniform PointLightShadow pointLightShadows[ NUM_POINT_LIGHT_SHADOWS ];\n\t#endif\n#endif";
 
-var shadowmap_vertex = "#if defined( USE_SHADOWMAP ) || ( NUM_SPOT_LIGHT_COORDS > 0 )\n\t#if NUM_DIR_LIGHT_SHADOWS > 0 || NUM_SPOT_LIGHT_COORDS > 0 || NUM_POINT_LIGHT_SHADOWS > 0\n\t\tvec3 shadowWorldNormal = inverseTransformDirection( transformedNormal, viewMatrix );\n\t\tvec4 shadowWorldPosition;\n\t#endif\n\t#if NUM_DIR_LIGHT_SHADOWS > 0\n\t#pragma unroll_loop_start\n\tfor ( int i = 0; i < NUM_DIR_LIGHT_SHADOWS; i ++ ) {\n\t\tshadowWorldPosition = worldPosition + vec4( shadowWorldNormal * directionalLightShadows[ i ].shadowNormalBias, 0 );\n\t\tvDirectionalShadowCoord[ i ] = directionalShadowMatrix[ i ] * shadowWorldPosition;\n\t}\n\t#pragma unroll_loop_end\n\t#endif\n\t#if NUM_SPOT_LIGHT_COORDS > 0\n\t#pragma unroll_loop_start\n\tfor ( int i = 0; i < NUM_SPOT_LIGHT_COORDS; i ++ ) {\n\t\tshadowWorldPosition = worldPosition;\n\t\t#if ( defined( USE_SHADOWMAP ) && UNROLLED_LOOP_INDEX < NUM_SPOT_LIGHT_SHADOWS )\n\t\t\tshadowWorldPosition.xyz += shadowWorldNormal * spotLightShadows[ i ].shadowNormalBias;\n\t\t#endif\n\t\tvSpotLightCoord[ i ] = spotLightMatrix[ i ] * shadowWorldPosition;\n\t}\n\t#pragma unroll_loop_end\n\t#endif\n\t#if NUM_POINT_LIGHT_SHADOWS > 0\n\t#pragma unroll_loop_start\n\tfor ( int i = 0; i < NUM_POINT_LIGHT_SHADOWS; i ++ ) {\n\t\tshadowWorldPosition = worldPosition + vec4( shadowWorldNormal * pointLightShadows[ i ].shadowNormalBias, 0 );\n\t\tvPointShadowCoord[ i ] = pointShadowMatrix[ i ] * shadowWorldPosition;\n\t}\n\t#pragma unroll_loop_end\n\t#endif\n#endif";
+var shadowmap_vertex = "#if ( defined( USE_SHADOWMAP ) && ( NUM_DIR_LIGHT_SHADOWS > 0 || NUM_POINT_LIGHT_SHADOWS > 0 ) ) || ( NUM_SPOT_LIGHT_COORDS > 0 )\n\tvec3 shadowWorldNormal = inverseTransformDirection( transformedNormal, viewMatrix );\n\tvec4 shadowWorldPosition;\n#endif\n#if defined( USE_SHADOWMAP )\n\t#if NUM_DIR_LIGHT_SHADOWS > 0\n\t\t#pragma unroll_loop_start\n\t\tfor ( int i = 0; i < NUM_DIR_LIGHT_SHADOWS; i ++ ) {\n\t\t\tshadowWorldPosition = worldPosition + vec4( shadowWorldNormal * directionalLightShadows[ i ].shadowNormalBias, 0 );\n\t\t\tvDirectionalShadowCoord[ i ] = directionalShadowMatrix[ i ] * shadowWorldPosition;\n\t\t}\n\t\t#pragma unroll_loop_end\n\t#endif\n\t#if NUM_POINT_LIGHT_SHADOWS > 0\n\t\t#pragma unroll_loop_start\n\t\tfor ( int i = 0; i < NUM_POINT_LIGHT_SHADOWS; i ++ ) {\n\t\t\tshadowWorldPosition = worldPosition + vec4( shadowWorldNormal * pointLightShadows[ i ].shadowNormalBias, 0 );\n\t\t\tvPointShadowCoord[ i ] = pointShadowMatrix[ i ] * shadowWorldPosition;\n\t\t}\n\t\t#pragma unroll_loop_end\n\t#endif\n#endif\n#if NUM_SPOT_LIGHT_COORDS > 0\n\t#pragma unroll_loop_start\n\tfor ( int i = 0; i < NUM_SPOT_LIGHT_COORDS; i ++ ) {\n\t\tshadowWorldPosition = worldPosition;\n\t\t#if ( defined( USE_SHADOWMAP ) && UNROLLED_LOOP_INDEX < NUM_SPOT_LIGHT_SHADOWS )\n\t\t\tshadowWorldPosition.xyz += shadowWorldNormal * spotLightShadows[ i ].shadowNormalBias;\n\t\t#endif\n\t\tvSpotLightCoord[ i ] = spotLightMatrix[ i ] * shadowWorldPosition;\n\t}\n\t#pragma unroll_loop_end\n#endif";
 
 var shadowmask_pars_fragment = "float getShadowMask() {\n\tfloat shadow = 1.0;\n\t#ifdef USE_SHADOWMAP\n\t#if NUM_DIR_LIGHT_SHADOWS > 0\n\tDirectionalLightShadow directionalLight;\n\t#pragma unroll_loop_start\n\tfor ( int i = 0; i < NUM_DIR_LIGHT_SHADOWS; i ++ ) {\n\t\tdirectionalLight = directionalLightShadows[ i ];\n\t\tshadow *= receiveShadow ? getShadow( directionalShadowMap[ i ], directionalLight.shadowMapSize, directionalLight.shadowBias, directionalLight.shadowRadius, vDirectionalShadowCoord[ i ] ) : 1.0;\n\t}\n\t#pragma unroll_loop_end\n\t#endif\n\t#if NUM_SPOT_LIGHT_SHADOWS > 0\n\tSpotLightShadow spotLight;\n\t#pragma unroll_loop_start\n\tfor ( int i = 0; i < NUM_SPOT_LIGHT_SHADOWS; i ++ ) {\n\t\tspotLight = spotLightShadows[ i ];\n\t\tshadow *= receiveShadow ? getShadow( spotShadowMap[ i ], spotLight.shadowMapSize, spotLight.shadowBias, spotLight.shadowRadius, vSpotLightCoord[ i ] ) : 1.0;\n\t}\n\t#pragma unroll_loop_end\n\t#endif\n\t#if NUM_POINT_LIGHT_SHADOWS > 0\n\tPointLightShadow pointLight;\n\t#pragma unroll_loop_start\n\tfor ( int i = 0; i < NUM_POINT_LIGHT_SHADOWS; i ++ ) {\n\t\tpointLight = pointLightShadows[ i ];\n\t\tshadow *= receiveShadow ? getPointShadow( pointShadowMap[ i ], pointLight.shadowMapSize, pointLight.shadowBias, pointLight.shadowRadius, vPointShadowCoord[ i ], pointLight.shadowCameraNear, pointLight.shadowCameraFar ) : 1.0;\n\t}\n\t#pragma unroll_loop_end\n\t#endif\n\t#endif\n\treturn shadow;\n}";
 
@@ -15864,8 +15861,7 @@ function WebGLCapabilities( gl, extensions, parameters ) {
 
 	}
 
-	const isWebGL2 = ( typeof WebGL2RenderingContext !== 'undefined' && gl instanceof WebGL2RenderingContext ) ||
-		( typeof WebGL2ComputeRenderingContext !== 'undefined' && gl instanceof WebGL2ComputeRenderingContext );
+	const isWebGL2 = typeof WebGL2RenderingContext !== 'undefined' && gl instanceof WebGL2RenderingContext;
 
 	let precision = parameters.precision !== undefined ? parameters.precision : 'highp';
 	const maxPrecision = getMaxPrecision( precision );
@@ -15947,7 +15943,7 @@ function WebGLClipping( properties ) {
 	this.numPlanes = 0;
 	this.numIntersection = 0;
 
-	this.init = function ( planes, enableLocalClipping, camera ) {
+	this.init = function ( planes, enableLocalClipping ) {
 
 		const enabled =
 			planes.length !== 0 ||
@@ -15959,7 +15955,6 @@ function WebGLClipping( properties ) {
 
 		localClippingEnabled = enableLocalClipping;
 
-		globalState = projectPlanes( planes, camera, 0 );
 		numGlobalPlanes = planes.length;
 
 		return enabled;
@@ -15976,7 +15971,12 @@ function WebGLClipping( properties ) {
 	this.endShadows = function () {
 
 		renderingShadows = false;
-		resetGlobalState();
+
+	};
+
+	this.setGlobalState = function ( planes, camera ) {
+
+		globalState = projectPlanes( planes, camera, 0 );
 
 	};
 
@@ -16557,7 +16557,7 @@ class PMREMGenerator {
 
 		const cubeUVRenderTarget = _createRenderTarget( width, height, params );
 
-		if ( this._pingPongRenderTarget === null || this._pingPongRenderTarget.width !== width ) {
+		if ( this._pingPongRenderTarget === null || this._pingPongRenderTarget.width !== width || this._pingPongRenderTarget.height !== height ) {
 
 			if ( this._pingPongRenderTarget !== null ) {
 
@@ -21872,7 +21872,7 @@ function WebGLShadowMap( _renderer, _objects, _capabilities ) {
 
 		_maxTextureSize = _capabilities.maxTextureSize;
 
-	const shadowSide = { 0: BackSide, 1: FrontSide, 2: DoubleSide };
+	const shadowSide = { [ FrontSide ]: BackSide, [ BackSide ]: FrontSide, [ DoubleSide ]: DoubleSide };
 
 	const shadowMaterialVertical = new ShaderMaterial( {
 		defines: {
@@ -25541,15 +25541,6 @@ function WebGLUtils( gl, extensions, capabilities ) {
 		if ( p === DepthFormat ) return 6402;
 		if ( p === DepthStencilFormat ) return 34041;
 
-		// @deprecated since r137
-
-		if ( p === RGBFormat ) {
-
-			console.warn( 'THREE.WebGLRenderer: THREE.RGBFormat has been removed. Use THREE.RGBAFormat instead. https://github.com/mrdoob/three.js/pull/23228' );
-			return 6408;
-
-		}
-
 		// WebGL 1 sRGB fallback
 
 		if ( p === _SRGBAFormat ) {
@@ -25720,6 +25711,27 @@ function WebGLUtils( gl, extensions, capabilities ) {
 			if ( extension !== null ) {
 
 				if ( p === RGBA_BPTC_Format ) return ( encoding === sRGBEncoding ) ? extension.COMPRESSED_SRGB_ALPHA_BPTC_UNORM_EXT : extension.COMPRESSED_RGBA_BPTC_UNORM_EXT;
+
+			} else {
+
+				return null;
+
+			}
+
+		}
+
+		// RGTC
+
+		if ( p === RED_RGTC1_Format || p === SIGNED_RED_RGTC1_Format || p === RED_GREEN_RGTC2_Format || p === SIGNED_RED_GREEN_RGTC2_Format ) {
+
+			extension = extensions.get( 'EXT_texture_compression_rgtc' );
+
+			if ( extension !== null ) {
+
+				if ( p === RGBA_BPTC_Format ) return extension.COMPRESSED_RED_RGTC1_EXT;
+				if ( p === SIGNED_RED_RGTC1_Format ) return extension.COMPRESSED_SIGNED_RED_RGTC1_EXT;
+				if ( p === RED_GREEN_RGTC2_Format ) return extension.COMPRESSED_RED_GREEN_RGTC2_EXT;
+				if ( p === SIGNED_RED_GREEN_RGTC2_Format ) return extension.COMPRESSED_SIGNED_RED_GREEN_RGTC2_EXT;
 
 			} else {
 
@@ -26167,6 +26179,8 @@ class WebXRManager extends EventDispatcher {
 
 		let referenceSpace = null;
 		let referenceSpaceType = 'local-floor';
+		// Set default foveation to maximum.
+		let foveation = 1.0;
 		let customReferenceSpace = null;
 
 		let pose = null;
@@ -26476,8 +26490,7 @@ class WebXRManager extends EventDispatcher {
 
 				newRenderTarget.isXRRenderTarget = true; // TODO Remove this when possible, see #23278
 
-				// Set foveation to maximum.
-				this.setFoveation( 1.0 );
+				this.setFoveation( foveation );
 
 				customReferenceSpace = null;
 				referenceSpace = await session.requestReferenceSpace( referenceSpaceType );
@@ -26706,36 +26719,32 @@ class WebXRManager extends EventDispatcher {
 
 		this.getFoveation = function () {
 
-			if ( glProjLayer !== null ) {
+			if ( glProjLayer === null && glBaseLayer === null ) {
 
-				return glProjLayer.fixedFoveation;
-
-			}
-
-			if ( glBaseLayer !== null ) {
-
-				return glBaseLayer.fixedFoveation;
+				return undefined;
 
 			}
 
-			return undefined;
+			return foveation;
 
 		};
 
-		this.setFoveation = function ( foveation ) {
+		this.setFoveation = function ( value ) {
 
 			// 0 = no foveation = full resolution
 			// 1 = maximum foveation = the edges render at lower resolution
 
+			foveation = value;
+
 			if ( glProjLayer !== null ) {
 
-				glProjLayer.fixedFoveation = foveation;
+				glProjLayer.fixedFoveation = value;
 
 			}
 
 			if ( glBaseLayer !== null && glBaseLayer.fixedFoveation !== undefined ) {
 
-				glBaseLayer.fixedFoveation = foveation;
+				glBaseLayer.fixedFoveation = value;
 
 			}
 
@@ -28800,7 +28809,7 @@ function WebGLRenderer( parameters = {} ) {
 
 		function prepare( material, scene, object ) {
 
-			if ( material.transparent === true && material.side === TwoPassDoubleSide ) {
+			if ( material.transparent === true && material.side === DoubleSide && material.forceSinglePass === false ) {
 
 				material.side = BackSide;
 				material.needsUpdate = true;
@@ -28810,7 +28819,7 @@ function WebGLRenderer( parameters = {} ) {
 				material.needsUpdate = true;
 				getProgram( material, scene, object );
 
-				material.side = TwoPassDoubleSide;
+				material.side = DoubleSide;
 
 			} else {
 
@@ -28954,7 +28963,7 @@ function WebGLRenderer( parameters = {} ) {
 		_frustum.setFromProjectionMatrix( _projScreenMatrix );
 
 		_localClippingEnabled = this.localClippingEnabled;
-		_clippingEnabled = clipping.init( this.clippingPlanes, _localClippingEnabled, camera );
+		_clippingEnabled = clipping.init( this.clippingPlanes, _localClippingEnabled );
 
 		currentRenderList = renderLists.get( scene, renderListStack.length );
 		currentRenderList.init();
@@ -29183,6 +29192,8 @@ function WebGLRenderer( parameters = {} ) {
 
 		currentRenderState.setupLightsView( camera );
 
+		if ( _clippingEnabled === true ) clipping.setGlobalState( _this.clippingPlanes, camera );
+
 		if ( transmissiveObjects.length > 0 ) renderTransmissionPass( opaqueObjects, scene, camera );
 
 		if ( viewport ) state.viewport( _currentViewport.copy( viewport ) );
@@ -29282,7 +29293,7 @@ function WebGLRenderer( parameters = {} ) {
 
 		material.onBeforeRender( _this, scene, camera, geometry, object, group );
 
-		if ( material.transparent === true && material.side === TwoPassDoubleSide ) {
+		if ( material.transparent === true && material.side === DoubleSide && material.forceSinglePass === false ) {
 
 			material.side = BackSide;
 			material.needsUpdate = true;
@@ -29292,7 +29303,7 @@ function WebGLRenderer( parameters = {} ) {
 			material.needsUpdate = true;
 			_this.renderBufferDirect( camera, scene, geometry, material, object, group );
 
-			material.side = TwoPassDoubleSide;
+			material.side = DoubleSide;
 
 		} else {
 
@@ -30343,8 +30354,8 @@ class Scene extends Object3D {
 		const data = super.toJSON( meta );
 
 		if ( this.fog !== null ) data.object.fog = this.fog.toJSON();
-		if ( this.backgroundBlurriness > 0 ) data.backgroundBlurriness = this.backgroundBlurriness;
-		if ( this.backgroundIntensity !== 1 ) data.backgroundIntensity = this.backgroundIntensity;
+		if ( this.backgroundBlurriness > 0 ) data.object.backgroundBlurriness = this.backgroundBlurriness;
+		if ( this.backgroundIntensity !== 1 ) data.object.backgroundIntensity = this.backgroundIntensity;
 
 		return data;
 
@@ -39559,12 +39570,12 @@ var AnimationUtils = /*#__PURE__*/Object.freeze({
 	__proto__: null,
 	arraySlice: arraySlice,
 	convertArray: convertArray,
-	isTypedArray: isTypedArray,
-	getKeyframeOrder: getKeyframeOrder,
-	sortedArray: sortedArray,
 	flattenJSON: flattenJSON,
-	subclip: subclip,
-	makeClipAdditive: makeClipAdditive
+	getKeyframeOrder: getKeyframeOrder,
+	isTypedArray: isTypedArray,
+	makeClipAdditive: makeClipAdditive,
+	sortedArray: sortedArray,
+	subclip: subclip
 });
 
 /**
@@ -42071,7 +42082,7 @@ class HemisphereLight extends Light {
 
 		this.type = 'HemisphereLight';
 
-		this.position.copy( Object3D.DefaultUp );
+		this.position.copy( Object3D.DEFAULT_UP );
 		this.updateMatrix();
 
 		this.groundColor = new Color$1( groundColor );
@@ -42285,7 +42296,7 @@ class SpotLight extends Light {
 
 		this.type = 'SpotLight';
 
-		this.position.copy( Object3D.DefaultUp );
+		this.position.copy( Object3D.DEFAULT_UP );
 		this.updateMatrix();
 
 		this.target = new Object3D();
@@ -42504,7 +42515,7 @@ class DirectionalLight extends Light {
 
 		this.type = 'DirectionalLight';
 
-		this.position.copy( Object3D.DefaultUp );
+		this.position.copy( Object3D.DEFAULT_UP );
 		this.updateMatrix();
 
 		this.target = new Object3D();
@@ -43007,6 +43018,7 @@ class MaterialLoader extends Loader {
 
 		if ( json.alphaToCoverage !== undefined ) material.alphaToCoverage = json.alphaToCoverage;
 		if ( json.premultipliedAlpha !== undefined ) material.premultipliedAlpha = json.premultipliedAlpha;
+		if ( json.forceSinglePass !== undefined ) material.forceSinglePass = json.forceSinglePass;
 
 		if ( json.visible !== undefined ) material.visible = json.visible;
 
@@ -44253,6 +44265,7 @@ class ObjectLoader extends Loader {
 				}
 
 				if ( data.backgroundBlurriness !== undefined ) object.backgroundBlurriness = data.backgroundBlurriness;
+				if ( data.backgroundIntensity !== undefined ) object.backgroundIntensity = data.backgroundIntensity;
 
 				break;
 
@@ -48649,6 +48662,8 @@ class GLBufferAttribute {
 
 		this.isGLBufferAttribute = true;
 
+		this.name = '';
+
 		this.buffer = buffer;
 		this.type = type;
 		this.itemSize = itemSize;
@@ -50928,57 +50943,9 @@ function fromHalfFloat( val ) {
 
 var DataUtils = /*#__PURE__*/Object.freeze({
 	__proto__: null,
-	toHalfFloat: toHalfFloat,
-	fromHalfFloat: fromHalfFloat
+	fromHalfFloat: fromHalfFloat,
+	toHalfFloat: toHalfFloat
 });
-
-// r134, d65e0af06644fe5a84a6fc0e372f4318f95a04c0
-
-function ImmediateRenderObject() {
-
-	console.error( 'THREE.ImmediateRenderObject has been removed.' );
-
-}
-
-// r138, 48b05d3500acc084df50be9b4c90781ad9b8cb17
-
-class WebGLMultisampleRenderTarget extends WebGLRenderTarget {
-
-	constructor( width, height, options ) {
-
-		console.error( 'THREE.WebGLMultisampleRenderTarget has been removed. Use a normal render target and set the "samples" property to greater 0 to enable multisampling.' );
-		super( width, height, options );
-		this.samples = 4;
-
-	}
-
-}
-
-// r138, f9cd9cab03b7b64244e304900a3a2eeaa3a588ce
-
-class DataTexture2DArray extends DataArrayTexture {
-
-	constructor( data, width, height, depth ) {
-
-		console.warn( 'THREE.DataTexture2DArray has been renamed to DataArrayTexture.' );
-		super( data, width, height, depth );
-
-	}
-
-}
-
-// r138, f9cd9cab03b7b64244e304900a3a2eeaa3a588ce
-
-class DataTexture3D extends Data3DTexture {
-
-	constructor( data, width, height, depth ) {
-
-		console.warn( 'THREE.DataTexture3D has been renamed to Data3DTexture.' );
-		super( data, width, height, depth );
-
-	}
-
-}
 
 // r144
 
@@ -53054,7 +53021,6 @@ if (typeof window !== 'undefined') {
         Stage.width = document.documentElement.clientWidth;
         Stage.height = document.documentElement.clientHeight;
         Stage.dpr = window.devicePixelRatio;
-        Stage.aspect = Stage.width / Stage.height;
 
         Stage.events.emit(Events.RESIZE, e);
     }
@@ -57794,7 +57760,9 @@ class Wobble {
     }
 }
 
-var vertexShader$x = /* glsl */ `
+// From https://oframe.github.io/ogl/examples/?src=mouse-flowmap.html by gordonnl
+
+const vertexShader$x = /* glsl */ `
 in vec3 position;
 in vec2 uv;
 
@@ -57807,9 +57775,7 @@ void main() {
 }
 `;
 
-// From https://oframe.github.io/ogl/examples/?src=mouse-flowmap.html by gordonnl
-
-var fragmentShader$x = /* glsl */ `
+const fragmentShader$x = /* glsl */ `
 precision highp float;
 
 uniform sampler2D tMap;
@@ -57868,7 +57834,7 @@ class Flowmap {
         this.renderTargetWrite = this.renderTargetRead.clone();
 
         // Output uniform containing render target textures
-        this.uniform = new Uniform(this.renderTargetRead.texture);
+        this.uniform = { value: this.renderTargetRead.texture };
 
         // Flowmap material
         this.material = new RawShaderMaterial({
@@ -57876,14 +57842,14 @@ class Flowmap {
             uniforms: {
                 tMap: this.uniform,
 
-                uFalloff: new Uniform(falloff),
-                uAlpha: new Uniform(alpha),
-                uDissipation: new Uniform(dissipation),
+                uFalloff: { value: falloff },
+                uAlpha: { value: alpha },
+                uDissipation: { value: dissipation },
 
                 // User needs to update these
-                uAspect: new Uniform(1),
-                uMouse: new Uniform(this.mouse),
-                uVelocity: new Uniform(this.velocity)
+                uAspect: { value: 1 },
+                uMouse: { value: this.mouse },
+                uVelocity: { value: this.velocity }
             },
             vertexShader: vertexShader$x,
             fragmentShader: fragmentShader$x,
@@ -57937,19 +57903,6 @@ class Flowmap {
     }
 }
 
-var vertexShader$w = /* glsl */ `
-in vec3 position;
-in vec2 uv;
-
-out vec2 vUv;
-
-void main() {
-    vUv = uv;
-
-    gl_Position = vec4(position, 1.0);
-}
-`;
-
 // From https://www.shadertoy.com/view/MlyBWK by v_coda
 
 var smootherstep = /* glsl */ `
@@ -57980,7 +57933,20 @@ vec4 blur13(sampler2D image, vec2 uv, vec2 resolution, vec2 direction) {
 
 // Based on https://github.com/mrdoob/three.js/blob/dev/examples/jsm/shaders/HorizontalTiltShiftShader.js by alteredq
 
-var fragmentShader$w = /* glsl */ `
+const vertexShader$w = /* glsl */ `
+in vec3 position;
+in vec2 uv;
+
+out vec2 vUv;
+
+void main() {
+    vUv = uv;
+
+    gl_Position = vec4(position, 1.0);
+}
+`;
+
+const fragmentShader$w = /* glsl */ `
 precision highp float;
 
 uniform sampler2D tMap;
@@ -58004,9 +57970,9 @@ class ReflectorBlurMaterial extends RawShaderMaterial {
         super({
             glslVersion: GLSL3,
             uniforms: {
-                tMap: new Uniform(null),
-                uDirection: new Uniform(new Vector2$1(1, 0)),
-                uResolution: new Uniform(new Vector2$1())
+                tMap: { value: null },
+                uDirection: { value: new Vector2$1(1, 0) },
+                uResolution: { value: new Vector2$1() }
             },
             vertexShader: vertexShader$w,
             fragmentShader: fragmentShader$w,
@@ -58051,7 +58017,7 @@ class Reflector extends Group {
         this.virtualCamera = new PerspectiveCamera();
 
         // Uniform containing texture matrix
-        this.textureMatrixUniform = new Uniform(this.textureMatrix);
+        this.textureMatrixUniform = { value: this.textureMatrix };
 
         // Render targets
         this.renderTarget = new WebGLRenderTarget(width, height, {
@@ -58064,7 +58030,7 @@ class Reflector extends Group {
         this.renderTarget.depthBuffer = true;
 
         // Uniform containing render target textures
-        this.renderTargetUniform = new Uniform(this.blurIterations > 0 ? this.renderTargetRead.texture : this.renderTarget.texture);
+        this.renderTargetUniform = { value: this.blurIterations > 0 ? this.renderTargetRead.texture : this.renderTarget.texture };
 
         // Reflection blur material
         this.blurMaterial = new ReflectorBlurMaterial();
@@ -97627,7 +97593,7 @@ class Magnetic extends Component {
     };
 }
 
-var vertexShader$v = /* glsl */ `
+const vertexShader$v = /* glsl */ `
 in vec3 position;
 in vec3 normal;
 
@@ -97644,7 +97610,7 @@ void main() {
 }
 `;
 
-var fragmentShader$v = /* glsl */ `
+const fragmentShader$v = /* glsl */ `
 precision highp float;
 
 in vec3 vNormal;
@@ -97665,7 +97631,7 @@ class NormalMaterial extends RawShaderMaterial {
     }
 }
 
-var vertexShader$u = /* glsl */ `
+const vertexShader$u = /* glsl */ `
 in vec3 position;
 
 uniform mat4 modelViewMatrix;
@@ -97676,7 +97642,7 @@ void main() {
 }
 `;
 
-var fragmentShader$u = /* glsl */ `
+const fragmentShader$u = /* glsl */ `
 precision highp float;
 
 uniform vec3 uColor;
@@ -97693,7 +97659,7 @@ class ColorMaterial extends RawShaderMaterial {
         super({
             glslVersion: GLSL3,
             uniforms: {
-                uColor: new Uniform(color instanceof Color$1 ? color : new Color$1(color))
+                uColor: { value: color instanceof Color$1 ? color : new Color$1(color) }
             },
             vertexShader: vertexShader$u,
             fragmentShader: fragmentShader$u
@@ -97701,7 +97667,7 @@ class ColorMaterial extends RawShaderMaterial {
     }
 }
 
-var vertexShader$t = /* glsl */ `
+const vertexShader$t = /* glsl */ `
 in vec3 position;
 in vec2 uv;
 
@@ -97717,7 +97683,7 @@ void main() {
 }
 `;
 
-var fragmentShader$t = /* glsl */ `
+const fragmentShader$t = /* glsl */ `
 precision highp float;
 
 uniform sampler2D tMap;
@@ -97738,8 +97704,8 @@ class BasicMaterial extends RawShaderMaterial {
         super({
             glslVersion: GLSL3,
             uniforms: {
-                tMap: new Uniform(map),
-                uAlpha: new Uniform(1)
+                tMap: { value: map },
+                uAlpha: { value: 1 }
             },
             vertexShader: vertexShader$t,
             fragmentShader: fragmentShader$t,
@@ -97748,7 +97714,7 @@ class BasicMaterial extends RawShaderMaterial {
     }
 }
 
-var vertexShader$s = /* glsl */ `
+const vertexShader$s = /* glsl */ `
 in vec3 position;
 in vec2 uv;
 
@@ -97764,7 +97730,7 @@ void main() {
 }
 `;
 
-var fragmentShader$s = /* glsl */ `
+const fragmentShader$s = /* glsl */ `
 precision highp float;
 
 uniform sampler2D tMap;
@@ -97787,8 +97753,8 @@ class ShadowTextureMaterial extends RawShaderMaterial {
         super({
             glslVersion: GLSL3,
             uniforms: {
-                tMap: new Uniform(map),
-                uAlpha: new Uniform(1)
+                tMap: { value: map },
+                uAlpha: { value: 1 }
             },
             vertexShader: vertexShader$s,
             fragmentShader: fragmentShader$s,
@@ -97797,7 +97763,7 @@ class ShadowTextureMaterial extends RawShaderMaterial {
     }
 }
 
-var vertexShader$r = /* glsl */ `
+const vertexShader$r = /* glsl */ `
 in vec3 position;
 in vec3 normal;
 
@@ -97818,7 +97784,7 @@ void main() {
 }
 `;
 
-var fragmentShader$r = /* glsl */ `
+const fragmentShader$r = /* glsl */ `
 precision highp float;
 
 uniform vec3 uBaseColor;
@@ -97851,9 +97817,9 @@ class FresnelMaterial extends RawShaderMaterial {
         super({
             glslVersion: GLSL3,
             uniforms: {
-                uBaseColor: new Uniform(baseColor instanceof Color$1 ? baseColor : new Color$1(baseColor)),
-                uFresnelColor: new Uniform(fresnelColor instanceof Color$1 ? fresnelColor : new Color$1(fresnelColor)),
-                uFresnelPower: new Uniform(fresnelPower)
+                uBaseColor: { value: baseColor instanceof Color$1 ? baseColor : new Color$1(baseColor) },
+                uFresnelColor: { value: fresnelColor instanceof Color$1 ? fresnelColor : new Color$1(fresnelColor) },
+                uFresnelPower: { value: fresnelPower }
             },
             vertexShader: vertexShader$r,
             fragmentShader: fragmentShader$r
@@ -97861,7 +97827,9 @@ class FresnelMaterial extends RawShaderMaterial {
     }
 }
 
-var vertexShader$q = /* glsl */ `
+// Based on https://oframe.github.io/ogl/examples/?src=mouse-flowmap.html by gordonnl
+
+const vertexShader$q = /* glsl */ `
 in vec3 position;
 in vec2 uv;
 
@@ -97874,9 +97842,7 @@ void main() {
 }
 `;
 
-// Based on https://oframe.github.io/ogl/examples/?src=mouse-flowmap.html by gordonnl
-
-var fragmentShader$q = /* glsl */ `
+const fragmentShader$q = /* glsl */ `
 precision highp float;
 
 uniform sampler2D tMap;
@@ -97904,8 +97870,8 @@ class FlowMaterial extends RawShaderMaterial {
         super({
             glslVersion: GLSL3,
             uniforms: {
-                tMap: new Uniform(null),
-                tFlow: new Uniform(null)
+                tMap: { value: null },
+                tFlow: { value: null }
             },
             vertexShader: vertexShader$q,
             fragmentShader: fragmentShader$q,
@@ -97916,7 +97882,7 @@ class FlowMaterial extends RawShaderMaterial {
     }
 }
 
-var vertexShader$p = /* glsl */ `
+const vertexShader$p = /* glsl */ `
 in vec3 position;
 in vec2 uv;
 
@@ -97929,7 +97895,7 @@ void main() {
 }
 `;
 
-var fragmentShader$p = /* glsl */ `
+const fragmentShader$p = /* glsl */ `
 precision highp float;
 
 uniform sampler2D tMap;
@@ -97948,7 +97914,7 @@ class CopyMaterial extends RawShaderMaterial {
         super({
             glslVersion: GLSL3,
             uniforms: {
-                tMap: new Uniform(map)
+                tMap: { value: map }
             },
             vertexShader: vertexShader$p,
             fragmentShader: fragmentShader$p,
@@ -97958,37 +97924,6 @@ class CopyMaterial extends RawShaderMaterial {
         });
     }
 }
-
-// Based on https://github.com/mattdesl/glsl-fxaa
-
-var vertexShader$o = /* glsl */ `
-in vec3 position;
-in vec2 uv;
-
-uniform vec2 uResolution;
-
-out vec2 v_rgbNW;
-out vec2 v_rgbNE;
-out vec2 v_rgbSW;
-out vec2 v_rgbSE;
-out vec2 v_rgbM;
-
-out vec2 vUv;
-
-void main() {
-    vUv = uv;
-
-    vec2 fragCoord = uv * uResolution;
-    vec2 inverseVP = 1.0 / uResolution.xy;
-    v_rgbNW = (fragCoord + vec2(-1.0, -1.0)) * inverseVP;
-    v_rgbNE = (fragCoord + vec2(1.0, -1.0)) * inverseVP;
-    v_rgbSW = (fragCoord + vec2(-1.0, 1.0)) * inverseVP;
-    v_rgbSE = (fragCoord + vec2(1.0, 1.0)) * inverseVP;
-    v_rgbM = vec2(fragCoord * inverseVP);
-
-    gl_Position = vec4(position, 1.0);
-}
-`;
 
 // From https://github.com/mattdesl/glsl-fxaa
 
@@ -98054,7 +97989,36 @@ vec4 fxaa(sampler2D tex, vec2 fragCoord, vec2 resolution,
 
 // Based on https://github.com/mattdesl/glsl-fxaa
 
-var fragmentShader$o = /* glsl */ `
+const vertexShader$o = /* glsl */ `
+in vec3 position;
+in vec2 uv;
+
+uniform vec2 uResolution;
+
+out vec2 v_rgbNW;
+out vec2 v_rgbNE;
+out vec2 v_rgbSW;
+out vec2 v_rgbSE;
+out vec2 v_rgbM;
+
+out vec2 vUv;
+
+void main() {
+    vUv = uv;
+
+    vec2 fragCoord = uv * uResolution;
+    vec2 inverseVP = 1.0 / uResolution.xy;
+    v_rgbNW = (fragCoord + vec2(-1.0, -1.0)) * inverseVP;
+    v_rgbNE = (fragCoord + vec2(1.0, -1.0)) * inverseVP;
+    v_rgbSW = (fragCoord + vec2(-1.0, 1.0)) * inverseVP;
+    v_rgbSE = (fragCoord + vec2(1.0, 1.0)) * inverseVP;
+    v_rgbM = vec2(fragCoord * inverseVP);
+
+    gl_Position = vec4(position, 1.0);
+}
+`;
+
+const fragmentShader$o = /* glsl */ `
 precision highp float;
 
 uniform sampler2D tMap;
@@ -98082,8 +98046,8 @@ class FXAAMaterial extends RawShaderMaterial {
         super({
             glslVersion: GLSL3,
             uniforms: {
-                tMap: new Uniform(null),
-                uResolution: new Uniform(new Vector2$1())
+                tMap: { value: null },
+                uResolution: { value: new Vector2$1() }
             },
             vertexShader: vertexShader$o,
             fragmentShader: fragmentShader$o,
@@ -98093,19 +98057,6 @@ class FXAAMaterial extends RawShaderMaterial {
         });
     }
 }
-
-var vertexShader$n = /* glsl */ `
-in vec3 position;
-in vec2 uv;
-
-out vec2 vUv;
-
-void main() {
-    vUv = uv;
-
-    gl_Position = vec4(position, 1.0);
-}
-`;
 
 // From https://github.com/hughsk/glsl-noise
 
@@ -98206,7 +98157,20 @@ vec4 getBadTV(sampler2D image, vec2 uv, float time, float distortion, float dist
 }
 `;
 
-var fragmentShader$n = /* glsl */ `
+const vertexShader$n = /* glsl */ `
+in vec3 position;
+in vec2 uv;
+
+out vec2 vUv;
+
+void main() {
+    vUv = uv;
+
+    gl_Position = vec4(position, 1.0);
+}
+`;
+
+const fragmentShader$n = /* glsl */ `
 precision highp float;
 
 uniform sampler2D tMap;
@@ -98232,12 +98196,12 @@ class BadTVMaterial extends RawShaderMaterial {
         super({
             glslVersion: GLSL3,
             uniforms: {
-                tMap: new Uniform(null),
-                uDistortion: new Uniform(3),
-                uDistortion2: new Uniform(5),
-                uSpeed: new Uniform(0.2),
-                uRollSpeed: new Uniform(0.1),
-                uTime: new Uniform(0)
+                tMap: { value: null },
+                uDistortion: { value: 3 },
+                uDistortion2: { value: 5 },
+                uSpeed: { value: 0.2 },
+                uRollSpeed: { value: 0.1 },
+                uTime: { value: 0 }
             },
             vertexShader: vertexShader$n,
             fragmentShader: fragmentShader$n,
@@ -98247,19 +98211,6 @@ class BadTVMaterial extends RawShaderMaterial {
         });
     }
 }
-
-var vertexShader$m = /* glsl */ `
-in vec3 position;
-in vec2 uv;
-
-out vec2 vUv;
-
-void main() {
-    vUv = uv;
-
-    gl_Position = vec4(position, 1.0);
-}
-`;
 
 // Based on https://github.com/mrdoob/three.js/blob/dev/examples/jsm/shaders/RGBShiftShader.js by felixturner
 
@@ -98273,7 +98224,20 @@ vec4 getRGB(sampler2D image, vec2 uv, float angle, float amount) {
 }
 `;
 
-var fragmentShader$m = /* glsl */ `
+const vertexShader$m = /* glsl */ `
+in vec3 position;
+in vec2 uv;
+
+out vec2 vUv;
+
+void main() {
+    vUv = uv;
+
+    gl_Position = vec4(position, 1.0);
+}
+`;
+
+const fragmentShader$m = /* glsl */ `
 precision highp float;
 
 uniform sampler2D tMap;
@@ -98296,9 +98260,9 @@ class RGBMaterial extends RawShaderMaterial {
         super({
             glslVersion: GLSL3,
             uniforms: {
-                tMap: new Uniform(null),
-                uAngle: new Uniform(0),
-                uAmount: new Uniform(0.005)
+                tMap: { value: null },
+                uAngle: { value: 0 },
+                uAmount: { value: 0.005 }
             },
             vertexShader: vertexShader$m,
             fragmentShader: fragmentShader$m,
@@ -98308,19 +98272,6 @@ class RGBMaterial extends RawShaderMaterial {
         });
     }
 }
-
-var vertexShader$l = /* glsl */ `
-in vec3 position;
-in vec2 uv;
-
-out vec2 vUv;
-
-void main() {
-    vUv = uv;
-
-    gl_Position = vec4(position, 1.0);
-}
-`;
 
 // Based on https://github.com/mrdoob/three.js/blob/dev/examples/jsm/shaders/HorizontalBlurShader.js by zz85
 
@@ -98344,7 +98295,20 @@ vec4 blur(sampler2D image, vec2 uv, vec2 resolution, vec2 direction) {
 }
 `;
 
-var fragmentShader$l = /* glsl */ `
+const vertexShader$l = /* glsl */ `
+in vec3 position;
+in vec2 uv;
+
+out vec2 vUv;
+
+void main() {
+    vUv = uv;
+
+    gl_Position = vec4(position, 1.0);
+}
+`;
+
+const fragmentShader$l = /* glsl */ `
 precision highp float;
 
 uniform sampler2D tMap;
@@ -98368,10 +98332,10 @@ class BlurMaterial extends RawShaderMaterial {
         super({
             glslVersion: GLSL3,
             uniforms: {
-                tMap: new Uniform(null),
-                uBluriness: new Uniform(1),
-                uDirection: new Uniform(direction),
-                uResolution: new Uniform(new Vector2$1())
+                tMap: { value: null },
+                uBluriness: { value: 1 },
+                uDirection: { value: direction },
+                uResolution: { value: new Vector2$1() }
             },
             vertexShader: vertexShader$l,
             fragmentShader: fragmentShader$l,
@@ -98382,7 +98346,7 @@ class BlurMaterial extends RawShaderMaterial {
     }
 }
 
-var vertexShader$k = /* glsl */ `
+const vertexShader$k = /* glsl */ `
 in vec3 position;
 in vec2 uv;
 
@@ -98395,7 +98359,7 @@ void main() {
 }
 `;
 
-var fragmentShader$k = /* glsl */ `
+const fragmentShader$k = /* glsl */ `
 precision highp float;
 
 uniform sampler2D tMap;
@@ -98418,9 +98382,9 @@ class FastGaussianBlurMaterial extends RawShaderMaterial {
         super({
             glslVersion: GLSL3,
             uniforms: {
-                tMap: new Uniform(null),
-                uDirection: new Uniform(new Vector2$1(1, 0)),
-                uResolution: new Uniform(new Vector2$1())
+                tMap: { value: null },
+                uDirection: { value: new Vector2$1(1, 0) },
+                uResolution: { value: new Vector2$1() }
             },
             vertexShader: vertexShader$k,
             fragmentShader: fragmentShader$k,
@@ -98431,7 +98395,9 @@ class FastGaussianBlurMaterial extends RawShaderMaterial {
     }
 }
 
-var vertexShader$j = /* glsl */ `
+// Based on https://github.com/mrdoob/three.js/blob/dev/examples/jsm/shaders/LuminosityHighPassShader.js by bhouston
+
+const vertexShader$j = /* glsl */ `
 in vec3 position;
 in vec2 uv;
 
@@ -98444,9 +98410,7 @@ void main() {
 }
 `;
 
-// Based on https://github.com/mrdoob/three.js/blob/dev/examples/jsm/shaders/LuminosityHighPassShader.js by bhouston
-
-var fragmentShader$j = /* glsl */ `
+const fragmentShader$j = /* glsl */ `
 precision highp float;
 
 uniform sampler2D tMap;
@@ -98472,9 +98436,9 @@ class LuminosityMaterial extends RawShaderMaterial {
         super({
             glslVersion: GLSL3,
             uniforms: {
-                tMap: new Uniform(null),
-                uThreshold: new Uniform(1),
-                uSmoothing: new Uniform(1)
+                tMap: { value: null },
+                uThreshold: { value: 1 },
+                uSmoothing: { value: 1 }
             },
             vertexShader: vertexShader$j,
             fragmentShader: fragmentShader$j,
@@ -98484,19 +98448,6 @@ class LuminosityMaterial extends RawShaderMaterial {
         });
     }
 }
-
-var vertexShader$i = /* glsl */ `
-in vec3 position;
-in vec2 uv;
-
-out vec2 vUv;
-
-void main() {
-    vUv = uv;
-
-    gl_Position = vec4(position, 1.0);
-}
-`;
 
 // Based on https://github.com/mrdoob/three.js/blob/dev/examples/jsm/postprocessing/UnrealBloomPass.js by spidersharma03 and bhouston
 
@@ -98525,7 +98476,20 @@ vec4 blur(sampler2D image, vec2 uv, vec2 resolution, vec2 direction) {
 }
 `;
 
-var fragmentShader$i = /* glsl */ `
+const vertexShader$i = /* glsl */ `
+in vec3 position;
+in vec2 uv;
+
+out vec2 vUv;
+
+void main() {
+    vUv = uv;
+
+    gl_Position = vec4(position, 1.0);
+}
+`;
+
+const fragmentShader$i = /* glsl */ `
 precision highp float;
 
 uniform sampler2D tMap;
@@ -98552,9 +98516,9 @@ class UnrealBloomBlurMaterial extends RawShaderMaterial {
                 SIGMA: kernelRadius
             },
             uniforms: {
-                tMap: new Uniform(null),
-                uDirection: new Uniform(new Vector2$1(0.5, 0.5)),
-                uResolution: new Uniform(new Vector2$1())
+                tMap: { value: null },
+                uDirection: { value: new Vector2$1(0.5, 0.5) },
+                uResolution: { value: new Vector2$1() }
             },
             vertexShader: vertexShader$i,
             fragmentShader: fragmentShader$i,
@@ -98565,7 +98529,9 @@ class UnrealBloomBlurMaterial extends RawShaderMaterial {
     }
 }
 
-var vertexShader$h = /* glsl */ `
+// Based on https://github.com/mrdoob/three.js/blob/dev/examples/jsm/postprocessing/UnrealBloomPass.js by spidersharma03 and bhouston
+
+const vertexShader$h = /* glsl */ `
 in vec3 position;
 in vec2 uv;
 
@@ -98578,9 +98544,7 @@ void main() {
 }
 `;
 
-// Based on https://github.com/mrdoob/three.js/blob/dev/examples/jsm/postprocessing/UnrealBloomPass.js by spidersharma03 and bhouston
-
-var fragmentShader$h = /* glsl */ `
+const fragmentShader$h = /* glsl */ `
 precision highp float;
 
 uniform sampler2D tBlur1;
@@ -98618,15 +98582,15 @@ class UnrealBloomCompositeMaterial extends RawShaderMaterial {
                 NUM_MIPS: nMips
             },
             uniforms: {
-                tBlur1: new Uniform(null),
-                tBlur2: new Uniform(null),
-                tBlur3: new Uniform(null),
-                tBlur4: new Uniform(null),
-                tBlur5: new Uniform(null),
-                uBloomStrength: new Uniform(1),
-                uBloomRadius: new Uniform(0),
-                uBloomFactors: new Uniform(null),
-                uBloomTintColors: new Uniform(null)
+                tBlur1: { value: null },
+                tBlur2: { value: null },
+                tBlur3: { value: null },
+                tBlur4: { value: null },
+                tBlur5: { value: null },
+                uBloomStrength: { value: 1 },
+                uBloomRadius: { value: 0 },
+                uBloomFactors: { value: null },
+                uBloomTintColors: { value: null }
             },
             vertexShader: vertexShader$h,
             fragmentShader: fragmentShader$h,
@@ -98636,19 +98600,6 @@ class UnrealBloomCompositeMaterial extends RawShaderMaterial {
         });
     }
 }
-
-var vertexShader$g = /* glsl */ `
-in vec3 position;
-in vec2 uv;
-
-out vec2 vUv;
-
-void main() {
-    vUv = uv;
-
-    gl_Position = vec4(position, 1.0);
-}
-`;
 
 // From https://github.com/mattdesl/glsl-random
 
@@ -98683,7 +98634,20 @@ vec3 dither(vec3 color) {
 }
 `;
 
-var fragmentShader$g = /* glsl */ `
+const vertexShader$g = /* glsl */ `
+in vec3 position;
+in vec2 uv;
+
+out vec2 vUv;
+
+void main() {
+    vUv = uv;
+
+    gl_Position = vec4(position, 1.0);
+}
+`;
+
+const fragmentShader$g = /* glsl */ `
 precision highp float;
 
 uniform sampler2D tBlur1;
@@ -98723,12 +98687,12 @@ class BloomCompositeMaterial extends RawShaderMaterial {
                 DITHERING: dithering
             },
             uniforms: {
-                tBlur1: new Uniform(null),
-                tBlur2: new Uniform(null),
-                tBlur3: new Uniform(null),
-                tBlur4: new Uniform(null),
-                tBlur5: new Uniform(null),
-                uBloomFactors: new Uniform(null)
+                tBlur1: { value: null },
+                tBlur2: { value: null },
+                tBlur3: { value: null },
+                tBlur4: { value: null },
+                tBlur5: { value: null },
+                uBloomFactors: { value: null }
             },
             vertexShader: vertexShader$g,
             fragmentShader: fragmentShader$g,
@@ -98739,7 +98703,7 @@ class BloomCompositeMaterial extends RawShaderMaterial {
     }
 }
 
-var vertexShader$f = /* glsl */ `
+const vertexShader$f = /* glsl */ `
 in vec3 position;
 in vec2 uv;
 
@@ -98752,7 +98716,7 @@ void main() {
 }
 `;
 
-var fragmentShader$f = /* glsl */ `
+const fragmentShader$f = /* glsl */ `
 precision highp float;
 
 uniform sampler2D tScene;
@@ -98774,8 +98738,8 @@ class SceneCompositeMaterial extends RawShaderMaterial {
         super({
             glslVersion: GLSL3,
             uniforms: {
-                tScene: new Uniform(null),
-                tBloom: new Uniform(null)
+                tScene: { value: null },
+                tBloom: { value: null }
             },
             vertexShader: vertexShader$f,
             fragmentShader: fragmentShader$f,
@@ -98785,19 +98749,6 @@ class SceneCompositeMaterial extends RawShaderMaterial {
         });
     }
 }
-
-var vertexShader$e = /* glsl */ `
-in vec3 position;
-in vec2 uv;
-
-out vec2 vUv;
-
-void main() {
-    vUv = uv;
-
-    gl_Position = vec4(position, 1.0);
-}
-`;
 
 // Based on https://www.shadertoy.com/view/lsfGWn by hornet
 // Based on https://github.com/spite/Wagner
@@ -98850,7 +98801,20 @@ float getBlueNoise(sampler2D tex, float t, vec2 resolution) {
 }
 `;
 
-var fragmentShader$e = /* glsl */ `
+const vertexShader$e = /* glsl */ `
+in vec3 position;
+in vec2 uv;
+
+out vec2 vUv;
+
+void main() {
+    vUv = uv;
+
+    gl_Position = vec4(position, 1.0);
+}
+`;
+
+const fragmentShader$e = /* glsl */ `
 precision highp float;
 
 uniform sampler2D tMap;
@@ -98894,12 +98858,12 @@ class PoissonDiscBlurMaterial extends RawShaderMaterial {
         super({
             glslVersion: GLSL3,
             uniforms: {
-                tMap: new Uniform(null),
-                tBlueNoise: new Uniform(texture),
-                uBlueNoiseResolution: new Uniform(new Vector2$1(256, 256)),
-                uRadius: new Uniform(42),
-                uResolution: new Uniform(new Vector2$1()),
-                uTime: new Uniform(0)
+                tMap: { value: null },
+                tBlueNoise: { value: texture },
+                uBlueNoiseResolution: { value: new Vector2$1(256, 256) },
+                uRadius: { value: 42 },
+                uResolution: { value: new Vector2$1() },
+                uTime: { value: 0 }
             },
             vertexShader: vertexShader$e,
             fragmentShader: fragmentShader$e,
@@ -98910,7 +98874,9 @@ class PoissonDiscBlurMaterial extends RawShaderMaterial {
     }
 }
 
-var vertexShader$d = /* glsl */ `
+// Based on https://github.com/blaze33/droneWorld
+
+const vertexShader$d = /* glsl */ `
 in vec3 position;
 in vec2 uv;
 
@@ -98923,9 +98889,7 @@ void main() {
 }
 `;
 
-// Based on https://github.com/blaze33/droneWorld
-
-var fragmentShader$d = /* glsl */ `
+const fragmentShader$d = /* glsl */ `
 precision highp float;
 
 uniform vec3 cameraPosition;
@@ -98985,14 +98949,14 @@ class CameraMotionBlurMaterial extends RawShaderMaterial {
         super({
             glslVersion: GLSL3,
             uniforms: {
-                tMap: new Uniform(null),
-                tDepth: new Uniform(null),
-                uVelocityFactor: new Uniform(1),
-                uDelta: new Uniform(16.67),
-                uClipToWorldMatrix: new Uniform(new Matrix4()),
-                uWorldToClipMatrix: new Uniform(new Matrix4()),
-                uPreviousWorldToClipMatrix: new Uniform(new Matrix4()),
-                uCameraMove: new Uniform(new Vector3())
+                tMap: { value: null },
+                tDepth: { value: null },
+                uVelocityFactor: { value: 1 },
+                uDelta: { value: 16.67 },
+                uClipToWorldMatrix: { value: new Matrix4() },
+                uWorldToClipMatrix: { value: new Matrix4() },
+                uPreviousWorldToClipMatrix: { value: new Matrix4() },
+                uCameraMove: { value: new Vector3() }
             },
             vertexShader: vertexShader$d,
             fragmentShader: fragmentShader$d,
@@ -99003,7 +98967,9 @@ class CameraMotionBlurMaterial extends RawShaderMaterial {
     }
 }
 
-var vertexShader$c = /* glsl */ `
+// Based on https://www.shadertoy.com/view/4lVfDt by battlebottle
+
+const vertexShader$c = /* glsl */ `
 in vec3 position;
 in vec2 uv;
 
@@ -99016,9 +98982,7 @@ void main() {
 }
 `;
 
-// Based on https://www.shadertoy.com/view/4lVfDt by battlebottle
-
-var fragmentShader$c = /* glsl */ `
+const fragmentShader$c = /* glsl */ `
 precision highp float;
 
 #define PI          3.14
@@ -99073,9 +99037,9 @@ class BokehBlurMaterial1 extends RawShaderMaterial {
         super({
             glslVersion: GLSL3,
             uniforms: {
-                tMap: new Uniform(null),
-                uScale: new Uniform(1),
-                uResolution: new Uniform(new Vector2$1())
+                tMap: { value: null },
+                uScale: { value: 1 },
+                uResolution: { value: new Vector2$1() }
             },
             vertexShader: vertexShader$c,
             fragmentShader: fragmentShader$c,
@@ -99086,7 +99050,9 @@ class BokehBlurMaterial1 extends RawShaderMaterial {
     }
 }
 
-var vertexShader$b = /* glsl */ `
+// Based on https://www.shadertoy.com/view/4lVfDt by battlebottle
+
+const vertexShader$b = /* glsl */ `
 in vec3 position;
 in vec2 uv;
 
@@ -99099,9 +99065,7 @@ void main() {
 }
 `;
 
-// Based on https://www.shadertoy.com/view/4lVfDt by battlebottle
-
-var fragmentShader$b = /* glsl */ `
+const fragmentShader$b = /* glsl */ `
 precision highp float;
 
 #define PI          3.14
@@ -99156,9 +99120,9 @@ class BokehBlurMaterial2 extends RawShaderMaterial {
         super({
             glslVersion: GLSL3,
             uniforms: {
-                tMap: new Uniform(null),
-                uScale: new Uniform(1),
-                uResolution: new Uniform(new Vector2$1())
+                tMap: { value: null },
+                uScale: { value: 1 },
+                uResolution: { value: new Vector2$1() }
             },
             vertexShader: vertexShader$b,
             fragmentShader: fragmentShader$b,
@@ -99169,7 +99133,9 @@ class BokehBlurMaterial2 extends RawShaderMaterial {
     }
 }
 
-var vertexShader$a = /* glsl */ `
+// Based on https://github.com/mrdoob/three.js/blob/dev/examples/jsm/shaders/HorizontalTiltShiftShader.js by alteredq
+
+const vertexShader$a = /* glsl */ `
 in vec3 position;
 in vec2 uv;
 
@@ -99182,9 +99148,7 @@ void main() {
 }
 `;
 
-// Based on https://github.com/mrdoob/three.js/blob/dev/examples/jsm/shaders/HorizontalTiltShiftShader.js by alteredq
-
-var fragmentShader$a = /* glsl */ `
+const fragmentShader$a = /* glsl */ `
 precision highp float;
 
 uniform sampler2D tMap;
@@ -99212,11 +99176,11 @@ class TiltShiftMaterial extends RawShaderMaterial {
         super({
             glslVersion: GLSL3,
             uniforms: {
-                tMap: new Uniform(null),
-                uFocus: new Uniform(0.5),
-                uBluriness: new Uniform(1),
-                uDirection: new Uniform(direction),
-                uResolution: new Uniform(new Vector2$1())
+                tMap: { value: null },
+                uFocus: { value: 0.5 },
+                uBluriness: { value: 1 },
+                uDirection: { value: direction },
+                uResolution: { value: new Vector2$1() }
             },
             vertexShader: vertexShader$a,
             fragmentShader: fragmentShader$a,
@@ -99227,7 +99191,9 @@ class TiltShiftMaterial extends RawShaderMaterial {
     }
 }
 
-var vertexShader$9 = /* glsl */ `
+// Based on https://github.com/mrdoob/three.js/blob/dev/examples/jsm/objects/Water2.js by Mugen87
+
+const vertexShader$9 = /* glsl */ `
 in vec3 position;
 in vec3 normal;
 in vec2 uv;
@@ -99259,9 +99225,7 @@ void main() {
 }
 `;
 
-// Based on https://github.com/mrdoob/three.js/blob/dev/examples/jsm/objects/Water2.js by Mugen87
-
-var fragmentShader$9 = /* glsl */ `
+const fragmentShader$9 = /* glsl */ `
 precision highp float;
 
 uniform sampler2D tReflect;
@@ -99353,13 +99317,14 @@ class ReflectorMaterial extends RawShaderMaterial {
             defines: {
             },
             uniforms: {
-                tReflect: new Uniform(null),
-                uMapTransform: new Uniform(new Matrix3()),
-                uMatrix: new Uniform(new Matrix4()),
-                uColor: new Uniform(color instanceof Color$1 ? color : new Color$1(color)),
-                uReflectivity: new Uniform(reflectivity),
-                uMirror: new Uniform(mirror),
-                uMixStrength: new Uniform(mixStrength)
+                tMap: { value: null },
+                tReflect: { value: null },
+                uMapTransform: { value: new Matrix3() },
+                uMatrix: { value: new Matrix4() },
+                uColor: { value: color instanceof Color$1 ? color : new Color$1(color) },
+                uReflectivity: { value: reflectivity },
+                uMirror: { value: mirror },
+                uMixStrength: { value: mixStrength }
             },
             vertexShader: vertexShader$9,
             fragmentShader: fragmentShader$9,
@@ -99374,8 +99339,8 @@ class ReflectorMaterial extends RawShaderMaterial {
             });
 
             parameters.uniforms = Object.assign(parameters.uniforms, {
-                tMap: new Uniform(map),
-                uMapTransform: new Uniform(map.matrix)
+                tMap: { value: map },
+                uMapTransform: { value: map.matrix }
             });
         }
 
@@ -99385,15 +99350,15 @@ class ReflectorMaterial extends RawShaderMaterial {
             });
 
             parameters.uniforms = Object.assign(parameters.uniforms, {
-                tNormalMap: new Uniform(normalMap),
-                uNormalScale: new Uniform(normalScale)
+                tNormalMap: { value: normalMap },
+                uNormalScale: { value: normalScale }
             });
 
             if (!map) {
                 normalMap.updateMatrix();
 
                 parameters.uniforms = Object.assign(parameters.uniforms, {
-                    uMapTransform: new Uniform(normalMap.matrix)
+                    uMapTransform: { value: normalMap.matrix }
                 });
             }
         }
@@ -99404,9 +99369,9 @@ class ReflectorMaterial extends RawShaderMaterial {
             });
 
             parameters.uniforms = Object.assign(parameters.uniforms, {
-                uFogColor: new Uniform(fog.color),
-                uFogNear: new Uniform(fog.near),
-                uFogFar: new Uniform(fog.far)
+                uFogColor: { value: fog.color },
+                uFogNear: { value: fog.near },
+                uFogFar: { value: fog.far }
             });
         }
 
@@ -99420,7 +99385,9 @@ class ReflectorMaterial extends RawShaderMaterial {
     }
 }
 
-var vertexShader$8 = /* glsl */ `
+// Based on https://github.com/mrdoob/three.js/blob/dev/examples/jsm/objects/Water2.js by Mugen87
+
+const vertexShader$8 = /* glsl */ `
 in vec3 position;
 in vec3 normal;
 in vec2 uv;
@@ -99452,7 +99419,7 @@ void main() {
 }
 `;
 
-var fragmentShader$8 = /* glsl */ `
+const fragmentShader$8 = /* glsl */ `
 precision highp float;
 
 uniform sampler2D tMap;
@@ -99506,29 +99473,40 @@ class ReflectorDudvMaterial extends RawShaderMaterial {
         reflectivity = 0,
         dithering = false
     } = {}) {
-        map.updateMatrix();
-
-        super({
+        const parameters = {
             glslVersion: GLSL3,
             defines: {
                 DITHERING: dithering
             },
             uniforms: {
-                tMap: new Uniform(map),
-                tReflect: new Uniform(null),
-                tReflectBlur: new Uniform(null),
-                uMapTransform: new Uniform(map.matrix),
-                uMatrix: new Uniform(new Matrix4()),
-                uReflectivity: new Uniform(reflectivity)
+                tMap: { value: null },
+                tReflect: { value: null },
+                tReflectBlur: { value: null },
+                uMapTransform: { value: new Matrix3() },
+                uMatrix: { value: new Matrix4() },
+                uReflectivity: { value: reflectivity }
             },
             vertexShader: vertexShader$8,
             fragmentShader: fragmentShader$8,
             blending: NoBlending
-        });
+        };
+
+        if (map) {
+            map.updateMatrix();
+
+            parameters.uniforms = Object.assign(parameters.uniforms, {
+                tMap: { value: map },
+                uMapTransform: { value: map.matrix }
+            });
+        }
+
+        super(parameters);
     }
 }
 
-var vertexShader$7 = /* glsl */ `
+// Based on https://www.shadertoy.com/view/ltKBDd by battlebottle
+
+const vertexShader$7 = /* glsl */ `
 in vec3 position;
 in vec2 uv;
 
@@ -99541,9 +99519,7 @@ void main() {
 }
 `;
 
-// Based on https://www.shadertoy.com/view/ltKBDd by battlebottle
-
-var fragmentShader$7 = /* glsl */ `
+const fragmentShader$7 = /* glsl */ `
 precision highp float;
 
 uniform sampler2D tMap;
@@ -99574,11 +99550,11 @@ class ChromaticAberrationMaterial extends RawShaderMaterial {
         super({
             glslVersion: GLSL3,
             uniforms: {
-                tMap: new Uniform(null),
-                uRedOffset: new Uniform(-4),
-                uGreenOffset: new Uniform(1.5),
-                uBlueOffset: new Uniform(0),
-                uIntensity: new Uniform(1.5)
+                tMap: { value: null },
+                uRedOffset: { value: -4 },
+                uGreenOffset: { value: 1.5 },
+                uBlueOffset: { value: 0 },
+                uIntensity: { value: 1.5 }
             },
             vertexShader: vertexShader$7,
             fragmentShader: fragmentShader$7,
@@ -99589,7 +99565,9 @@ class ChromaticAberrationMaterial extends RawShaderMaterial {
     }
 }
 
-var vertexShader$6 = /* glsl */ `
+// Based on https://www.shadertoy.com/view/XtK3W3 by dyvoid
+
+const vertexShader$6 = /* glsl */ `
 in vec3 position;
 in vec2 uv;
 
@@ -99602,9 +99580,7 @@ void main() {
 }
 `;
 
-// Based on https://www.shadertoy.com/view/XtK3W3 by dyvoid
-
-var fragmentShader$6 = /* glsl */ `
+const fragmentShader$6 = /* glsl */ `
 precision highp float;
 
 uniform sampler2D tMap;
@@ -99647,11 +99623,11 @@ class VideoGlitchMaterial extends RawShaderMaterial {
         super({
             glslVersion: GLSL3,
             uniforms: {
-                tMap: new Uniform(null),
-                uDistortion: new Uniform(1.43),
-                uDistortion2: new Uniform(0.15),
-                uSpeed: new Uniform(1),
-                uTime: new Uniform(0)
+                tMap: { value: null },
+                uDistortion: { value: 1.43 },
+                uDistortion2: { value: 0.15 },
+                uSpeed: { value: 1 },
+                uTime: { value: 0 }
             },
             vertexShader: vertexShader$6,
             fragmentShader: fragmentShader$6,
@@ -99661,19 +99637,6 @@ class VideoGlitchMaterial extends RawShaderMaterial {
         });
     }
 }
-
-var vertexShader$5 = /* glsl */ `
-in vec3 position;
-in vec2 uv;
-
-out vec2 vUv;
-
-void main() {
-    vUv = uv;
-
-    gl_Position = vec4(position, 1.0);
-}
-`;
 
 // From https://github.com/dmnsgn/glsl-conditionals
 
@@ -99697,7 +99660,20 @@ vec4 when_gt(vec4 x, vec4 y) {
 
 // Based on https://github.com/mrdoob/three.js/blob/dev/examples/jsm/shaders/AfterimageShader.js by HypnosNova
 
-var fragmentShader$5 = /* glsl */ `
+const vertexShader$5 = /* glsl */ `
+in vec3 position;
+in vec2 uv;
+
+out vec2 vUv;
+
+void main() {
+    vUv = uv;
+
+    gl_Position = vec4(position, 1.0);
+}
+`;
+
+const fragmentShader$5 = /* glsl */ `
 precision highp float;
 
 uniform sampler2D tOld;
@@ -99725,9 +99701,9 @@ class AfterimageMaterial extends RawShaderMaterial {
         super({
             glslVersion: GLSL3,
             uniforms: {
-                tOld: new Uniform(null),
-                tNew: new Uniform(null),
-                uDamping: new Uniform(0.96)
+                tOld: { value: null },
+                tNew: { value: null },
+                uDamping: { value: 0.96 }
             },
             vertexShader: vertexShader$5,
             fragmentShader: fragmentShader$5,
@@ -99738,7 +99714,11 @@ class AfterimageMaterial extends RawShaderMaterial {
     }
 }
 
-var vertexShader$4 = /* glsl */ `
+// Based on https://github.com/BKcore/Three.js-experiments-pool
+// Based on https://github.com/netpraxis/volumetric_light_example
+// Based on https://codepen.io/peterhry/pen/egzjGR
+
+const vertexShader$4 = /* glsl */ `
 in vec3 position;
 in vec2 uv;
 
@@ -99751,11 +99731,7 @@ void main() {
 }
 `;
 
-// Based on https://github.com/BKcore/Three.js-experiments-pool
-// Based on https://github.com/netpraxis/volumetric_light_example
-// Based on https://codepen.io/peterhry/pen/egzjGR
-
-var fragmentShader$4 = /* glsl */ `
+const fragmentShader$4 = /* glsl */ `
 precision highp float;
 
 uniform sampler2D tMap;
@@ -99801,15 +99777,15 @@ class VolumetricLightMaterial extends RawShaderMaterial {
         super({
             glslVersion: GLSL3,
             uniforms: {
-                tMap: new Uniform(null),
-                uLightPosition: new Uniform(new Vector2$1(0.5, 0.5)),
-                uScale: new Uniform(new Vector2$1(1, 1)),
-                uSwizzle: new Uniform(0),
-                uExposure: new Uniform(0.6),
-                uDecay: new Uniform(0.93),
-                uDensity: new Uniform(0.96),
-                uWeight: new Uniform(0.4),
-                uClamp: new Uniform(1)
+                tMap: { value: null },
+                uLightPosition: { value: new Vector2$1(0.5, 0.5) },
+                uScale: { value: new Vector2$1(1, 1) },
+                uSwizzle: { value: 0 },
+                uExposure: { value: 0.6 },
+                uDecay: { value: 0.93 },
+                uDensity: { value: 0.96 },
+                uWeight: { value: 0.4 },
+                uClamp: { value: 1 }
             },
             vertexShader: vertexShader$4,
             fragmentShader: fragmentShader$4,
@@ -99819,19 +99795,6 @@ class VolumetricLightMaterial extends RawShaderMaterial {
         });
     }
 }
-
-var vertexShader$3 = /* glsl */ `
-in vec3 position;
-in vec2 uv;
-
-out vec2 vUv;
-
-void main() {
-    vUv = uv;
-
-    gl_Position = vec4(position, 1.0);
-}
-`;
 
 // Based on https://www.shadertoy.com/view/4sX3Rs by mu6k
 
@@ -99864,7 +99827,20 @@ vec3 lensflare(vec2 uv, vec2 pos) {
 
 // Based on https://github.com/BKcore/Three.js-experiments-pool
 
-var fragmentShader$3 = /* glsl */ `
+const vertexShader$3 = /* glsl */ `
+in vec3 position;
+in vec2 uv;
+
+out vec2 vUv;
+
+void main() {
+    vUv = uv;
+
+    gl_Position = vec4(position, 1.0);
+}
+`;
+
+const fragmentShader$3 = /* glsl */ `
 precision highp float;
 
 uniform sampler2D tMap;
@@ -99931,19 +99907,19 @@ class VolumetricLightLensflareMaterial extends RawShaderMaterial {
         super({
             glslVersion: GLSL3,
             uniforms: {
-                tMap: new Uniform(null),
-                uLightPosition: new Uniform(new Vector2$1(0.5, 0.5)),
-                uScale: new Uniform(new Vector2$1(1, 1)),
-                uSwizzle: new Uniform(0),
-                uExposure: new Uniform(0.6),
-                uDecay: new Uniform(0.93),
-                uDensity: new Uniform(0.96),
-                uWeight: new Uniform(0.4),
-                uClamp: new Uniform(1),
-                uLensflareScale: new Uniform(new Vector2$1(1.5, 1.5)),
-                uLensflareExposure: new Uniform(1),
-                uLensflareClamp: new Uniform(1),
-                uResolution: new Uniform(new Vector2$1())
+                tMap: { value: null },
+                uLightPosition: { value: new Vector2$1(0.5, 0.5) },
+                uScale: { value: new Vector2$1(1, 1) },
+                uSwizzle: { value: 0 },
+                uExposure: { value: 0.6 },
+                uDecay: { value: 0.93 },
+                uDensity: { value: 0.96 },
+                uWeight: { value: 0.4 },
+                uClamp: { value: 1 },
+                uLensflareScale: { value: new Vector2$1(1.5, 1.5) },
+                uLensflareExposure: { value: 1 },
+                uLensflareClamp: { value: 1 },
+                uResolution: { value: new Vector2$1() }
             },
             vertexShader: vertexShader$3,
             fragmentShader: fragmentShader$3,
@@ -99954,7 +99930,9 @@ class VolumetricLightLensflareMaterial extends RawShaderMaterial {
     }
 }
 
-var vertexShader$2 = /* glsl */ `
+// Based on https://www.shadertoy.com/view/4sX3Rs by mu6k
+
+const vertexShader$2 = /* glsl */ `
 in vec3 position;
 in vec2 uv;
 
@@ -99967,9 +99945,7 @@ void main() {
 }
 `;
 
-// Based on https://www.shadertoy.com/view/4sX3Rs by mu6k
-
-var fragmentShader$2 = /* glsl */ `
+const fragmentShader$2 = /* glsl */ `
 precision highp float;
 
 uniform sampler2D tMap;
@@ -100009,12 +99985,12 @@ class LensflareMaterial extends RawShaderMaterial {
         super({
             glslVersion: GLSL3,
             uniforms: {
-                tMap: new Uniform(null),
-                uLightPosition: new Uniform(new Vector2$1(0.5, 0.5)),
-                uScale: new Uniform(new Vector2$1(1.5, 1.5)),
-                uExposure: new Uniform(1),
-                uClamp: new Uniform(1),
-                uResolution: new Uniform(new Vector2$1())
+                tMap: { value: null },
+                uLightPosition: { value: new Vector2$1(0.5, 0.5) },
+                uScale: { value: new Vector2$1(1.5, 1.5) },
+                uExposure: { value: 1 },
+                uClamp: { value: 1 },
+                uResolution: { value: new Vector2$1() }
             },
             vertexShader: vertexShader$2,
             fragmentShader: fragmentShader$2,
@@ -100025,7 +100001,7 @@ class LensflareMaterial extends RawShaderMaterial {
     }
 }
 
-var vertexShader$1 = /* glsl */ `
+const vertexShader$1 = /* glsl */ `
 in vec3 position;
 in vec2 uv;
 
@@ -100038,7 +100014,7 @@ void main() {
 }
 `;
 
-var fragmentShader$1 = /* glsl */ `
+const fragmentShader$1 = /* glsl */ `
 precision highp float;
 
 uniform sampler2D tMap;
@@ -100066,9 +100042,9 @@ class DepthMaskMaterial extends RawShaderMaterial {
         super({
             glslVersion: GLSL3,
             uniforms: {
-                tMap: new Uniform(null),
-                tDepth1: new Uniform(null),
-                tDepth2: new Uniform(null)
+                tMap: { value: null },
+                tDepth1: { value: null },
+                tDepth2: { value: null }
             },
             vertexShader: vertexShader$1,
             fragmentShader: fragmentShader$1,
@@ -100079,7 +100055,9 @@ class DepthMaskMaterial extends RawShaderMaterial {
     }
 }
 
-var vertexShader = /* glsl */ `
+// Based on https://oframe.github.io/ogl/examples/?src=msdf-text.html by gordonnl
+
+const vertexShader = /* glsl */ `
 in vec3 position;
 in vec2 uv;
 
@@ -100095,9 +100073,7 @@ void main() {
 }
 `;
 
-// Based on https://oframe.github.io/ogl/examples/?src=msdf-text.html by gordonnl
-
-var fragmentShader = /* glsl */ `
+const fragmentShader = /* glsl */ `
 precision highp float;
 
 uniform sampler2D tMap;
@@ -100116,7 +100092,9 @@ void main() {
 
     alpha *= uAlpha;
 
-    if (alpha < 0.01) discard;
+    if (alpha < 0.01) {
+        discard;
+    }
 
     FragColor.rgb = uColor;
     FragColor.a = alpha;
@@ -100131,9 +100109,9 @@ class TextMaterial extends RawShaderMaterial {
         super({
             glslVersion: GLSL3,
             uniforms: {
-                tMap: new Uniform(map),
-                uColor: new Uniform(color instanceof Color$1 ? color : new Color$1(color)),
-                uAlpha: new Uniform(1)
+                tMap: { value: map },
+                uColor: { value: color instanceof Color$1 ? color : new Color$1(color) },
+                uAlpha: { value: 1 }
             },
             vertexShader,
             fragmentShader,
@@ -101436,7 +101414,7 @@ class SVGLoader extends Loader {
 
 			}
 
-			const regex = /(-?[\d\.?]+)[,|\s](-?[\d\.?]+)/g;
+			const regex = /([+-]?\d*\.?\d+(?:e[+-]?\d+)?)(?:,|\s)([+-]?\d*\.?\d+(?:e[+-]?\d+)?)/g;
 
 			const path = new ShapePath();
 
@@ -101471,7 +101449,7 @@ class SVGLoader extends Loader {
 
 			}
 
-			const regex = /(-?[\d\.?]+)[,|\s](-?[\d\.?]+)/g;
+			const regex = /([+-]?\d*\.?\d+(?:e[+-]?\d+)?)(?:,|\s)([+-]?\d*\.?\d+(?:e[+-]?\d+)?)/g;
 
 			const path = new ShapePath();
 
@@ -102170,7 +102148,7 @@ class SVGLoader extends Loader {
 				const sinTheta = Math.sin( curve.aRotation );
 
 				const v1 = new Vector3( a * cosTheta, a * sinTheta, 0 );
-				const v2 = new Vector3( -b * sinTheta, b * cosTheta, 0 );
+				const v2 = new Vector3( - b * sinTheta, b * cosTheta, 0 );
 
 				const f1 = v1.applyMatrix3( m );
 				const f2 = v2.applyMatrix3( m );
@@ -102178,7 +102156,7 @@ class SVGLoader extends Loader {
 				const mF = tempTransform0.set(
 					f1.x, f2.x, 0,
 					f1.y, f2.y, 0,
-					0,    0,    1,
+					0, 0, 1,
 				);
 
 				const mFInv = tempTransform1.copy( mF ).invert();
@@ -102186,7 +102164,7 @@ class SVGLoader extends Loader {
 				const mQ = mFInvT.multiply( mFInv );
 				const mQe = mQ.elements;
 
-				const ed = eigenDecomposition( mQe[0], mQe[1], mQe[4] );
+				const ed = eigenDecomposition( mQe[ 0 ], mQe[ 1 ], mQe[ 4 ] );
 				const rt1sqrt = Math.sqrt( ed.rt1 );
 				const rt2sqrt = Math.sqrt( ed.rt2 );
 
@@ -102200,18 +102178,18 @@ class SVGLoader extends Loader {
 				// Do not touch angles of a full ellipse because after transformation they
 				// would converge to a sinle value effectively removing the whole curve
 
-				if ( !isFullEllipse ) {
+				if ( ! isFullEllipse ) {
 
 					const mDsqrt = tempTransform1.set(
 						rt1sqrt, 0, 0,
 						0, rt2sqrt, 0,
-						0, 0,       1,
+						0, 0, 1,
 					);
 
 					const mRT = tempTransform2.set(
-						ed.cs,  ed.sn, 0,
-						-ed.sn, ed.cs, 0,
-						0,      0,     1,
+						ed.cs, ed.sn, 0,
+						- ed.sn, ed.cs, 0,
+						0, 0, 1,
 					);
 
 					const mDRF = mDsqrt.multiply( mRT ).multiply( mF );
@@ -102230,7 +102208,7 @@ class SVGLoader extends Loader {
 
 					if ( isTransformFlipped( m ) ) {
 
-						curve.aClockwise = !curve.aClockwise;
+						curve.aClockwise = ! curve.aClockwise;
 
 					}
 
@@ -102258,16 +102236,16 @@ class SVGLoader extends Loader {
 				// `sx`, `sy`, or both might be zero.
 				const theta =
 					sx > Number.EPSILON
-					? Math.atan2( m.elements[ 1 ], m.elements[ 0 ] )
-					: Math.atan2( - m.elements[ 3 ], m.elements[ 4 ] );
+						? Math.atan2( m.elements[ 1 ], m.elements[ 0 ] )
+						: Math.atan2( - m.elements[ 3 ], m.elements[ 4 ] );
 
 				curve.aRotation += theta;
 
 				if ( isTransformFlipped( m ) ) {
 
-					curve.aStartAngle *= -1;
-					curve.aEndAngle *= -1;
-					curve.aClockwise = !curve.aClockwise;
+					curve.aStartAngle *= - 1;
+					curve.aEndAngle *= - 1;
+					curve.aClockwise = ! curve.aClockwise;
 
 				}
 
@@ -102399,7 +102377,7 @@ class SVGLoader extends Loader {
 				// This case needs to be treated separately to avoid div by 0
 
 				rt1 = 0.5 * rt;
-				rt2 = -0.5 * rt;
+				rt2 = - 0.5 * rt;
 
 			}
 
@@ -102417,7 +102395,7 @@ class SVGLoader extends Loader {
 
 			if ( Math.abs( cs ) > 2 * Math.abs( B ) ) {
 
-				t = -2 * B / cs;
+				t = - 2 * B / cs;
 				sn = 1 / Math.sqrt( 1 + t * t );
 				cs = t * sn;
 
@@ -102428,7 +102406,7 @@ class SVGLoader extends Loader {
 
 			} else {
 
-				t = -0.5 * cs / B;
+				t = - 0.5 * cs / B;
 				cs = 1 / Math.sqrt( 1 + t * t );
 				sn = t * cs;
 
@@ -102437,7 +102415,7 @@ class SVGLoader extends Loader {
 			if ( df > 0 ) {
 
 				t = cs;
-				cs = -sn;
+				cs = - sn;
 				sn = t;
 
 			}
@@ -102881,20 +102859,20 @@ class SVGLoader extends Loader {
 
 			}
 
-			return { curves: p.curves, points: points, isCW: ShapeUtils.isClockWise( points ), identifier: -1, boundingBox: new Box2( new Vector2$1( minX, minY ), new Vector2$1( maxX, maxY ) ) };
+			return { curves: p.curves, points: points, isCW: ShapeUtils.isClockWise( points ), identifier: - 1, boundingBox: new Box2( new Vector2$1( minX, minY ), new Vector2$1( maxX, maxY ) ) };
 
 		} );
 
 		simplePaths = simplePaths.filter( sp => sp.points.length > 1 );
 
-		for ( let identifier = 0; identifier < simplePaths.length; identifier++ ) {
+		for ( let identifier = 0; identifier < simplePaths.length; identifier ++ ) {
 
-			simplePaths[identifier].identifier = identifier;
+			simplePaths[ identifier ].identifier = identifier;
 
 		}
 
 		// check if path is solid or a hole
-		const isAHole = simplePaths.map( p => isHoleTo( p, simplePaths, scanlineMinX, scanlineMaxX, shapePath.userData?.style.fillRule ) );
+		const isAHole = simplePaths.map( p => isHoleTo( p, simplePaths, scanlineMinX, scanlineMaxX, ( shapePath.userData ? shapePath.userData.style.fillRule : undefined ) ) );
 
 
 		const shapesToReturn = [];
@@ -104615,6 +104593,116 @@ class OBJLoader extends Loader {
 
 }
 
+/**
+ * @param {BufferGeometry} geometry
+ * @param {number} drawMode
+ * @return {BufferGeometry}
+ */
+function toTrianglesDrawMode( geometry, drawMode ) {
+
+	if ( drawMode === TrianglesDrawMode ) {
+
+		console.warn( 'THREE.BufferGeometryUtils.toTrianglesDrawMode(): Geometry already defined as triangles.' );
+		return geometry;
+
+	}
+
+	if ( drawMode === TriangleFanDrawMode || drawMode === TriangleStripDrawMode ) {
+
+		let index = geometry.getIndex();
+
+		// generate index if not present
+
+		if ( index === null ) {
+
+			const indices = [];
+
+			const position = geometry.getAttribute( 'position' );
+
+			if ( position !== undefined ) {
+
+				for ( let i = 0; i < position.count; i ++ ) {
+
+					indices.push( i );
+
+				}
+
+				geometry.setIndex( indices );
+				index = geometry.getIndex();
+
+			} else {
+
+				console.error( 'THREE.BufferGeometryUtils.toTrianglesDrawMode(): Undefined position attribute. Processing not possible.' );
+				return geometry;
+
+			}
+
+		}
+
+		//
+
+		const numberOfTriangles = index.count - 2;
+		const newIndices = [];
+
+		if ( drawMode === TriangleFanDrawMode ) {
+
+			// gl.TRIANGLE_FAN
+
+			for ( let i = 1; i <= numberOfTriangles; i ++ ) {
+
+				newIndices.push( index.getX( 0 ) );
+				newIndices.push( index.getX( i ) );
+				newIndices.push( index.getX( i + 1 ) );
+
+			}
+
+		} else {
+
+			// gl.TRIANGLE_STRIP
+
+			for ( let i = 0; i < numberOfTriangles; i ++ ) {
+
+				if ( i % 2 === 0 ) {
+
+					newIndices.push( index.getX( i ) );
+					newIndices.push( index.getX( i + 1 ) );
+					newIndices.push( index.getX( i + 2 ) );
+
+				} else {
+
+					newIndices.push( index.getX( i + 2 ) );
+					newIndices.push( index.getX( i + 1 ) );
+					newIndices.push( index.getX( i ) );
+
+				}
+
+			}
+
+		}
+
+		if ( ( newIndices.length / 3 ) !== numberOfTriangles ) {
+
+			console.error( 'THREE.BufferGeometryUtils.toTrianglesDrawMode(): Unable to generate correct amount of triangles.' );
+
+		}
+
+		// build final geometry
+
+		const newGeometry = geometry.clone();
+		newGeometry.setIndex( newIndices );
+		newGeometry.clearGroups();
+
+		return newGeometry;
+
+	} else {
+
+		console.error( 'THREE.BufferGeometryUtils.toTrianglesDrawMode(): Unknown draw mode:', drawMode );
+		return geometry;
+
+	}
+
+}
+
 class GLTFLoader extends Loader {
 
 	constructor( manager ) {
@@ -104838,6 +104926,7 @@ class GLTFLoader extends Loader {
 		let json;
 		const extensions = {};
 		const plugins = {};
+		const textDecoder = new TextDecoder();
 
 		if ( typeof data === 'string' ) {
 
@@ -104845,7 +104934,7 @@ class GLTFLoader extends Loader {
 
 		} else if ( data instanceof ArrayBuffer ) {
 
-			const magic = LoaderUtils.decodeText( new Uint8Array( data, 0, 4 ) );
+			const magic = textDecoder.decode( new Uint8Array( data, 0, 4 ) );
 
 			if ( magic === BINARY_EXTENSION_HEADER_MAGIC ) {
 
@@ -104864,7 +104953,7 @@ class GLTFLoader extends Loader {
 
 			} else {
 
-				json = JSON.parse( LoaderUtils.decodeText( new Uint8Array( data ) ) );
+				json = JSON.parse( textDecoder.decode( data ) );
 
 			}
 
@@ -105136,7 +105225,7 @@ class GLTFLightsExtension {
 
 	}
 
-	getDependency( type, index ) {	
+	getDependency( type, index ) {
 
 		if ( type !== 'light' ) return;
 
@@ -106118,9 +106207,10 @@ class GLTFBinaryExtension {
 		this.body = null;
 
 		const headerView = new DataView( data, 0, BINARY_EXTENSION_HEADER_LENGTH );
+		const textDecoder = new TextDecoder();
 
 		this.header = {
-			magic: LoaderUtils.decodeText( new Uint8Array( data.slice( 0, 4 ) ) ),
+			magic: textDecoder.decode( new Uint8Array( data.slice( 0, 4 ) ) ),
 			version: headerView.getUint32( 4, true ),
 			length: headerView.getUint32( 8, true )
 		};
@@ -106150,7 +106240,7 @@ class GLTFBinaryExtension {
 			if ( chunkType === BINARY_EXTENSION_CHUNK_TYPES.JSON ) {
 
 				const contentArray = new Uint8Array( data, BINARY_EXTENSION_HEADER_LENGTH + chunkIndex, chunkLength );
-				this.content = LoaderUtils.decodeText( contentArray );
+				this.content = textDecoder.decode( contentArray );
 
 			} else if ( chunkType === BINARY_EXTENSION_CHUNK_TYPES.BIN ) {
 
@@ -106816,7 +106906,7 @@ class GLTFParser {
 
 		// Use an ImageBitmapLoader if imageBitmaps are supported. Moves much of the
 		// expensive work of uploading a texture to the GPU off the main thread.
-		
+
 		let isSafari = false;
 		let isFirefox = false;
 		let firefoxVersion = - 1;
@@ -108857,100 +108947,6 @@ function addPrimitiveAttributes( geometry, primitiveDef, parser ) {
 
 }
 
-/**
- * @param {BufferGeometry} geometry
- * @param {Number} drawMode
- * @return {BufferGeometry}
- */
-function toTrianglesDrawMode( geometry, drawMode ) {
-
-	let index = geometry.getIndex();
-
-	// generate index if not present
-
-	if ( index === null ) {
-
-		const indices = [];
-
-		const position = geometry.getAttribute( 'position' );
-
-		if ( position !== undefined ) {
-
-			for ( let i = 0; i < position.count; i ++ ) {
-
-				indices.push( i );
-
-			}
-
-			geometry.setIndex( indices );
-			index = geometry.getIndex();
-
-		} else {
-
-			console.error( 'THREE.GLTFLoader.toTrianglesDrawMode(): Undefined position attribute. Processing not possible.' );
-			return geometry;
-
-		}
-
-	}
-
-	//
-
-	const numberOfTriangles = index.count - 2;
-	const newIndices = [];
-
-	if ( drawMode === TriangleFanDrawMode ) {
-
-		// gl.TRIANGLE_FAN
-
-		for ( let i = 1; i <= numberOfTriangles; i ++ ) {
-
-			newIndices.push( index.getX( 0 ) );
-			newIndices.push( index.getX( i ) );
-			newIndices.push( index.getX( i + 1 ) );
-
-		}
-
-	} else {
-
-		// gl.TRIANGLE_STRIP
-
-		for ( let i = 0; i < numberOfTriangles; i ++ ) {
-
-			if ( i % 2 === 0 ) {
-
-				newIndices.push( index.getX( i ) );
-				newIndices.push( index.getX( i + 1 ) );
-				newIndices.push( index.getX( i + 2 ) );
-
-
-			} else {
-
-				newIndices.push( index.getX( i + 2 ) );
-				newIndices.push( index.getX( i + 1 ) );
-				newIndices.push( index.getX( i ) );
-
-			}
-
-		}
-
-	}
-
-	if ( ( newIndices.length / 3 ) !== numberOfTriangles ) {
-
-		console.error( 'THREE.GLTFLoader.toTrianglesDrawMode(): Unable to generate correct amount of triangles.' );
-
-	}
-
-	// build final geometry
-
-	const newGeometry = geometry.clone();
-	newGeometry.setIndex( newIndices );
-
-	return newGeometry;
-
-}
-
 // This set of controls performs orbiting, dollying (zooming), and panning.
 // Unlike TrackballControls, it maintains the "up" direction object.up (+Y by default).
 //
@@ -110200,4 +110196,4 @@ class OrbitControls extends EventDispatcher {
 
 }
 
-export { ACESFilmicToneMapping, AddEquation, AddOperation, AdditiveAnimationBlendMode, AdditiveBlending, AfterimageMaterial, AlphaFormat, AlwaysDepth, AlwaysStencilFunc, AmbientLight, AmbientLightProbe, AnimationClip, AnimationLoader, AnimationMixer, AnimationObjectGroup, AnimationUtils, ArcCurve, ArrayCamera, ArrowHelper, AssetLoader, Assets, Audio$1 as Audio, AudioAnalyser, AudioContext$1 as AudioContext, AudioListener, AudioLoader, AxesHelper, BackSide, BadTVMaterial, BasicDepthPacking, BasicMaterial, BasicShadowMap, BloomCompositeMaterial, BlurMaterial, BokehBlurMaterial1, BokehBlurMaterial2, Bone, BooleanKeyframeTrack, Box2, Box3, Box3Helper, BoxBufferGeometry, BoxGeometry$2 as BoxGeometry, BoxHelper, BufferAttribute, BufferGeometry, BufferGeometryLoader, BufferGeometryLoaderThread, BufferLoader, ByteType, Cache, Camera, CameraHelper, CameraMotionBlurMaterial, CanvasTexture, CapsuleBufferGeometry, CapsuleGeometry, CatmullRomCurve3, ChromaticAberrationMaterial, CineonToneMapping, CircleBufferGeometry, CircleGeometry, ClampToEdgeWrapping, Clock, Cluster, Color$1 as Color, ColorKeyframeTrack, ColorManagement$1 as ColorManagement, ColorMaterial, ColorPicker, Component, CompressedArrayTexture, CompressedTexture, CompressedTextureLoader, ConeBufferGeometry, ConeGeometry, CopyMaterial, CubeCamera, CubeReflectionMapping, CubeRefractionMapping, CubeTexture, CubeTextureLoader, CubeUVReflectionMapping, CubicBezierCurve, CubicBezierCurve3, CubicInterpolant, CullFaceBack, CullFaceFront, CullFaceFrontBack, CullFaceNone, Curve, CurvePath, CustomBlending, CustomToneMapping, CylinderBufferGeometry, CylinderGeometry, Cylindrical, DEG2RAD$1 as DEG2RAD, Data3DTexture, DataArrayTexture, DataTexture, DataTexture2DArray, DataTexture3D, DataTextureLoader, DataUtils, DecrementStencilOp, DecrementWrapStencilOp, DefaultLoadingManager, DepthFormat, DepthMaskMaterial, DepthStencilFormat, DepthTexture, Device, DirectionalLight, DirectionalLightHelper, DiscreteInterpolant, DodecahedronBufferGeometry, DodecahedronGeometry, DoubleSide, DstAlphaFactor, DstColorFactor, DynamicCopyUsage, DynamicDrawUsage, DynamicReadUsage, Easing, EdgesGeometry, EllipseCurve, EnvironmentTextureLoader, EqualDepth, EqualStencilFunc, EquirectangularReflectionMapping, EquirectangularRefractionMapping, Euler, EventDispatcher, EventEmitter, Events, ExtrudeBufferGeometry, ExtrudeGeometry, FXAAMaterial, FastGaussianBlurMaterial, FileLoader, Float16BufferAttribute, Float32BufferAttribute, Float64BufferAttribute, FloatType, FlowMaterial, Flowmap, Fog, FogExp2, FontLoader, FramebufferTexture, FresnelMaterial, FrontSide, Frustum, GLBufferAttribute, GLSL1, GLSL3, GLTFLoader, Global, GreaterDepth, GreaterEqualDepth, GreaterEqualStencilFunc, GreaterStencilFunc, GridHelper, Group, HalfFloatType, Header, HeaderInfo, HemisphereLight, HemisphereLightHelper, HemisphereLightProbe, IcosahedronBufferGeometry, IcosahedronGeometry, ImageBitmapLoader$1 as ImageBitmapLoader, ImageBitmapLoaderThread, ImageLoader, ImageUtils, ImmediateRenderObject, ImprovedNoise, IncrementStencilOp, IncrementWrapStencilOp, InstancedBufferAttribute, InstancedBufferGeometry, InstancedInterleavedBuffer, InstancedMesh, Int16BufferAttribute, Int32BufferAttribute, Int8BufferAttribute, IntType, Interface, InterleavedBuffer, InterleavedBufferAttribute, Interpolant, InterpolateDiscrete, InterpolateLinear, InterpolateSmooth, InvertStencilOp, KeepStencilOp, KeyframeTrack, LOD, LatheBufferGeometry, LatheGeometry, Layers, LensflareMaterial, LessDepth, LessEqualDepth, LessEqualStencilFunc, LessStencilFunc, Light, LightProbe, Line, Line3, LineBasicMaterial, LineCurve, LineCurve3, LineDashedMaterial, LineLoop, LineSegments, LinearEncoding, LinearFilter, LinearInterpolant, LinearMipMapLinearFilter, LinearMipMapNearestFilter, LinearMipmapLinearFilter, LinearMipmapNearestFilter, LinearSRGBColorSpace$1 as LinearSRGBColorSpace, LinearToneMapping, Link, LinkedList, List, ListSelect, ListToggle, Loader$1 as Loader, LoaderUtils, LoadingManager, LoopOnce, LoopPingPong, LoopRepeat, LuminanceAlphaFormat, LuminanceFormat, LuminosityMaterial, MOUSE, Magnetic, Material, MaterialLoader, MaterialPanelController, MathUtils, Matrix3, Matrix4, MaxEquation, Mesh, MeshBasicMaterial, MeshDepthMaterial, MeshDistanceMaterial, MeshLambertMaterial, MeshMatcapMaterial, MeshNormalMaterial, MeshPhongMaterial, MeshPhysicalMaterial, MeshStandardMaterial, MeshToonMaterial, MinEquation, MirroredRepeatWrapping, MixOperation, MultiLoader, MultiplyBlending, MultiplyOperation, NearestFilter, NearestMipMapLinearFilter, NearestMipMapNearestFilter, NearestMipmapLinearFilter, NearestMipmapNearestFilter, NeverDepth, NeverStencilFunc, NoBlending, NoColorSpace, NoToneMapping, NormalAnimationBlendMode, NormalBlending, NormalMaterial, NotEqualDepth, NotEqualStencilFunc, NumberKeyframeTrack, OBJLoader, Object3D, ObjectLoader, ObjectPool, ObjectSpaceNormalMap, OctahedronBufferGeometry, OctahedronGeometry, OimoPhysics, OimoPhysicsBuffer, OimoPhysicsController, OneFactor, OneMinusDstAlphaFactor, OneMinusDstColorFactor, OneMinusSrcAlphaFactor, OneMinusSrcColorFactor, OrbitControls, OrthographicCamera, PCFShadowMap, PCFSoftShadowMap, PMREMGenerator, Panel, PanelItem, Path, PerspectiveCamera, Plane, PlaneBufferGeometry, PlaneGeometry, PlaneHelper, Point, Point3D, PointLight, PointLightHelper, PointText, Points, PointsMaterial, PoissonDiscBlurMaterial, PolarGridHelper, PolyhedronBufferGeometry, PolyhedronGeometry, PositionalAudio, PropertyBinding, PropertyMixer, QuadraticBezierCurve, QuadraticBezierCurve3, Quaternion, QuaternionKeyframeTrack, QuaternionLinearInterpolant, RAD2DEG$1 as RAD2DEG, REVISION, RGBADepthPacking, RGBAFormat, RGBAIntegerFormat, RGBA_ASTC_10x10_Format, RGBA_ASTC_10x5_Format, RGBA_ASTC_10x6_Format, RGBA_ASTC_10x8_Format, RGBA_ASTC_12x10_Format, RGBA_ASTC_12x12_Format, RGBA_ASTC_4x4_Format, RGBA_ASTC_5x4_Format, RGBA_ASTC_5x5_Format, RGBA_ASTC_6x5_Format, RGBA_ASTC_6x6_Format, RGBA_ASTC_8x5_Format, RGBA_ASTC_8x6_Format, RGBA_ASTC_8x8_Format, RGBA_BPTC_Format, RGBA_ETC2_EAC_Format, RGBA_PVRTC_2BPPV1_Format, RGBA_PVRTC_4BPPV1_Format, RGBA_S3TC_DXT1_Format, RGBA_S3TC_DXT3_Format, RGBA_S3TC_DXT5_Format, RGBFormat, RGBMaterial, RGB_ETC1_Format, RGB_ETC2_Format, RGB_PVRTC_2BPPV1_Format, RGB_PVRTC_4BPPV1_Format, RGB_S3TC_DXT1_Format, RGFormat, RGIntegerFormat, RawShaderMaterial, Ray, Raycaster, RectAreaLight, RedFormat, RedIntegerFormat, Reflector, ReflectorBlurMaterial, ReflectorDudvMaterial, ReflectorMaterial, ReinhardToneMapping, RepeatWrapping, ReplaceStencilOp, Reticle, ReticleText, ReverseSubtractEquation, RigidBodyConfig$1 as RigidBodyConfig, RigidBodyType$1 as RigidBodyType, RingBufferGeometry, RingGeometry, SRGBColorSpace$1 as SRGBColorSpace, SVGLoader, Scene, SceneCompositeMaterial, ShaderChunk, ShaderLib, ShaderMaterial, ShadowMaterial, ShadowTextureMaterial, Shape$2 as Shape, ShapeBufferGeometry, ShapeGeometry, ShapePath, ShapeUtils, ShortType, SimplexNoise, Skeleton, SkeletonHelper, SkinnedMesh, Slider, Smooth, SmoothSkew, SmoothViews, SoftShadows, Sound, Sound3D, Source, Sphere, SphereBufferGeometry, SphereGeometry$2 as SphereGeometry, Spherical, SphericalHarmonics3, SphericalJointConfig$1 as SphericalJointConfig, SplineCurve, SpotLight, SpotLightHelper, Sprite, SpriteMaterial, SrcAlphaFactor, SrcAlphaSaturateFactor, SrcColorFactor, Stage, StaticCopyUsage, StaticDrawUsage, StaticReadUsage, StereoCamera, StreamCopyUsage, StreamDrawUsage, StreamReadUsage, StringKeyframeTrack, Styles, SubtractEquation, SubtractiveBlending, TOUCH, TangentSpaceNormalMap, TargetNumber, TetrahedronBufferGeometry, TetrahedronGeometry, TextGeometry, TextGeometryLoader, TextGeometryLoaderThread, TextMaterial, Texture, TextureLoader, Thread, Ticker, TiltShiftMaterial, TorusBufferGeometry, TorusGeometry, TorusKnotBufferGeometry, TorusKnotGeometry, Tracker, Triangle, TriangleFanDrawMode, TriangleStripDrawMode, TrianglesDrawMode, TubeBufferGeometry, TubeGeometry, Tween, TwoPassDoubleSide, UI, UVMapping, Uint16BufferAttribute, Uint32BufferAttribute, Uint8BufferAttribute, Uint8ClampedBufferAttribute, Uniform, UniformsGroup, UniformsLib, UniformsUtils, UnrealBloomBlurMaterial, UnrealBloomCompositeMaterial, UnsignedByteType, UnsignedInt248Type, UnsignedIntType, UnsignedShort4444Type, UnsignedShort5551Type, UnsignedShortType, VSMShadowMap, Vector2$1 as Vector2, Vector3, Vector4, VectorKeyframeTrack, VideoGlitchMaterial, VideoTexture, VolumetricLightLensflareMaterial, VolumetricLightMaterial, WebAudio, WebAudio3D, WebAudioParam, WebGL1Renderer, WebGL3DRenderTarget, WebGLArrayRenderTarget, WebGLCubeRenderTarget, WebGLMultipleRenderTargets, WebGLMultisampleRenderTarget, WebGLRenderTarget, WebGLRenderer, WebGLUtils, WireframeGeometry, Wobble, WrapAroundEnding, ZeroCurvatureEnding, ZeroFactor, ZeroSlopeEnding, ZeroStencilOp, _SRGBAFormat, absolute, basename, brightness, ceilPowerOfTwo$1 as ceilPowerOfTwo, clamp$1 as clamp, clearTween, damp$1 as damp, defer, degToRad$1 as degToRad, delayedCall, denormalize$1 as denormalize, euclideanModulo$1 as euclideanModulo, extension, floorPowerOfTwo$1 as floorPowerOfTwo, generateUUID$1 as generateUUID, getConstructor, getFrustum, getFrustumFromHeight, getFullscreenTriangle, getKeyByValue, getScreenSpaceBox, getSphericalCube, guid, headsTails, inverseLerp$1 as inverseLerp, isPowerOfTwo$1 as isPowerOfTwo, lerp$2 as lerp, lerpCameras, mapLinear$1 as mapLinear, normalize$1 as normalize, pingpong$1 as pingpong, radToDeg$1 as radToDeg, randFloat$1 as randFloat, randFloatSpread$1 as randFloatSpread, randInt$1 as randInt, sRGBEncoding, seededRandom$1 as seededRandom, setQuaternionFromProperEuler$1 as setQuaternionFromProperEuler, shuffle, smootherstep$2 as smootherstep, smoothstep$1 as smoothstep, ticker, tween, wait };
+export { ACESFilmicToneMapping, AddEquation, AddOperation, AdditiveAnimationBlendMode, AdditiveBlending, AfterimageMaterial, AlphaFormat, AlwaysDepth, AlwaysStencilFunc, AmbientLight, AmbientLightProbe, AnimationClip, AnimationLoader, AnimationMixer, AnimationObjectGroup, AnimationUtils, ArcCurve, ArrayCamera, ArrowHelper, AssetLoader, Assets, Audio$1 as Audio, AudioAnalyser, AudioContext$1 as AudioContext, AudioListener, AudioLoader, AxesHelper, BackSide, BadTVMaterial, BasicDepthPacking, BasicMaterial, BasicShadowMap, BloomCompositeMaterial, BlurMaterial, BokehBlurMaterial1, BokehBlurMaterial2, Bone, BooleanKeyframeTrack, Box2, Box3, Box3Helper, BoxBufferGeometry, BoxGeometry$2 as BoxGeometry, BoxHelper, BufferAttribute, BufferGeometry, BufferGeometryLoader, BufferGeometryLoaderThread, BufferLoader, ByteType, Cache, Camera, CameraHelper, CameraMotionBlurMaterial, CanvasTexture, CapsuleBufferGeometry, CapsuleGeometry, CatmullRomCurve3, ChromaticAberrationMaterial, CineonToneMapping, CircleBufferGeometry, CircleGeometry, ClampToEdgeWrapping, Clock, Cluster, Color$1 as Color, ColorKeyframeTrack, ColorManagement$1 as ColorManagement, ColorMaterial, ColorPicker, Component, CompressedArrayTexture, CompressedTexture, CompressedTextureLoader, ConeBufferGeometry, ConeGeometry, CopyMaterial, CubeCamera, CubeReflectionMapping, CubeRefractionMapping, CubeTexture, CubeTextureLoader, CubeUVReflectionMapping, CubicBezierCurve, CubicBezierCurve3, CubicInterpolant, CullFaceBack, CullFaceFront, CullFaceFrontBack, CullFaceNone, Curve, CurvePath, CustomBlending, CustomToneMapping, CylinderBufferGeometry, CylinderGeometry, Cylindrical, DEG2RAD$1 as DEG2RAD, Data3DTexture, DataArrayTexture, DataTexture, DataTextureLoader, DataUtils, DecrementStencilOp, DecrementWrapStencilOp, DefaultLoadingManager, DepthFormat, DepthMaskMaterial, DepthStencilFormat, DepthTexture, Device, DirectionalLight, DirectionalLightHelper, DiscreteInterpolant, DodecahedronBufferGeometry, DodecahedronGeometry, DoubleSide, DstAlphaFactor, DstColorFactor, DynamicCopyUsage, DynamicDrawUsage, DynamicReadUsage, Easing, EdgesGeometry, EllipseCurve, EnvironmentTextureLoader, EqualDepth, EqualStencilFunc, EquirectangularReflectionMapping, EquirectangularRefractionMapping, Euler, EventDispatcher, EventEmitter, Events, ExtrudeBufferGeometry, ExtrudeGeometry, FXAAMaterial, FastGaussianBlurMaterial, FileLoader, Float16BufferAttribute, Float32BufferAttribute, Float64BufferAttribute, FloatType, FlowMaterial, Flowmap, Fog, FogExp2, FontLoader, FramebufferTexture, FresnelMaterial, FrontSide, Frustum, GLBufferAttribute, GLSL1, GLSL3, GLTFLoader, Global, GreaterDepth, GreaterEqualDepth, GreaterEqualStencilFunc, GreaterStencilFunc, GridHelper, Group, HalfFloatType, Header, HeaderInfo, HemisphereLight, HemisphereLightHelper, HemisphereLightProbe, IcosahedronBufferGeometry, IcosahedronGeometry, ImageBitmapLoader$1 as ImageBitmapLoader, ImageBitmapLoaderThread, ImageLoader, ImageUtils, ImprovedNoise, IncrementStencilOp, IncrementWrapStencilOp, InstancedBufferAttribute, InstancedBufferGeometry, InstancedInterleavedBuffer, InstancedMesh, Int16BufferAttribute, Int32BufferAttribute, Int8BufferAttribute, IntType, Interface, InterleavedBuffer, InterleavedBufferAttribute, Interpolant, InterpolateDiscrete, InterpolateLinear, InterpolateSmooth, InvertStencilOp, KeepStencilOp, KeyframeTrack, LOD, LatheBufferGeometry, LatheGeometry, Layers, LensflareMaterial, LessDepth, LessEqualDepth, LessEqualStencilFunc, LessStencilFunc, Light, LightProbe, Line, Line3, LineBasicMaterial, LineCurve, LineCurve3, LineDashedMaterial, LineLoop, LineSegments, LinearEncoding, LinearFilter, LinearInterpolant, LinearMipMapLinearFilter, LinearMipMapNearestFilter, LinearMipmapLinearFilter, LinearMipmapNearestFilter, LinearSRGBColorSpace$1 as LinearSRGBColorSpace, LinearToneMapping, Link, LinkedList, List, ListSelect, ListToggle, Loader$1 as Loader, LoaderUtils, LoadingManager, LoopOnce, LoopPingPong, LoopRepeat, LuminanceAlphaFormat, LuminanceFormat, LuminosityMaterial, MOUSE, Magnetic, Material, MaterialLoader, MaterialPanelController, MathUtils, Matrix3, Matrix4, MaxEquation, Mesh, MeshBasicMaterial, MeshDepthMaterial, MeshDistanceMaterial, MeshLambertMaterial, MeshMatcapMaterial, MeshNormalMaterial, MeshPhongMaterial, MeshPhysicalMaterial, MeshStandardMaterial, MeshToonMaterial, MinEquation, MirroredRepeatWrapping, MixOperation, MultiLoader, MultiplyBlending, MultiplyOperation, NearestFilter, NearestMipMapLinearFilter, NearestMipMapNearestFilter, NearestMipmapLinearFilter, NearestMipmapNearestFilter, NeverDepth, NeverStencilFunc, NoBlending, NoColorSpace, NoToneMapping, NormalAnimationBlendMode, NormalBlending, NormalMaterial, NotEqualDepth, NotEqualStencilFunc, NumberKeyframeTrack, OBJLoader, Object3D, ObjectLoader, ObjectPool, ObjectSpaceNormalMap, OctahedronBufferGeometry, OctahedronGeometry, OimoPhysics, OimoPhysicsBuffer, OimoPhysicsController, OneFactor, OneMinusDstAlphaFactor, OneMinusDstColorFactor, OneMinusSrcAlphaFactor, OneMinusSrcColorFactor, OrbitControls, OrthographicCamera, PCFShadowMap, PCFSoftShadowMap, PMREMGenerator, Panel, PanelItem, Path, PerspectiveCamera, Plane, PlaneBufferGeometry, PlaneGeometry, PlaneHelper, Point, Point3D, PointLight, PointLightHelper, PointText, Points, PointsMaterial, PoissonDiscBlurMaterial, PolarGridHelper, PolyhedronBufferGeometry, PolyhedronGeometry, PositionalAudio, PropertyBinding, PropertyMixer, QuadraticBezierCurve, QuadraticBezierCurve3, Quaternion, QuaternionKeyframeTrack, QuaternionLinearInterpolant, RAD2DEG$1 as RAD2DEG, RED_GREEN_RGTC2_Format, RED_RGTC1_Format, REVISION, RGBADepthPacking, RGBAFormat, RGBAIntegerFormat, RGBA_ASTC_10x10_Format, RGBA_ASTC_10x5_Format, RGBA_ASTC_10x6_Format, RGBA_ASTC_10x8_Format, RGBA_ASTC_12x10_Format, RGBA_ASTC_12x12_Format, RGBA_ASTC_4x4_Format, RGBA_ASTC_5x4_Format, RGBA_ASTC_5x5_Format, RGBA_ASTC_6x5_Format, RGBA_ASTC_6x6_Format, RGBA_ASTC_8x5_Format, RGBA_ASTC_8x6_Format, RGBA_ASTC_8x8_Format, RGBA_BPTC_Format, RGBA_ETC2_EAC_Format, RGBA_PVRTC_2BPPV1_Format, RGBA_PVRTC_4BPPV1_Format, RGBA_S3TC_DXT1_Format, RGBA_S3TC_DXT3_Format, RGBA_S3TC_DXT5_Format, RGBMaterial, RGB_ETC1_Format, RGB_ETC2_Format, RGB_PVRTC_2BPPV1_Format, RGB_PVRTC_4BPPV1_Format, RGB_S3TC_DXT1_Format, RGFormat, RGIntegerFormat, RawShaderMaterial, Ray, Raycaster, RectAreaLight, RedFormat, RedIntegerFormat, Reflector, ReflectorBlurMaterial, ReflectorDudvMaterial, ReflectorMaterial, ReinhardToneMapping, RepeatWrapping, ReplaceStencilOp, Reticle, ReticleText, ReverseSubtractEquation, RigidBodyConfig$1 as RigidBodyConfig, RigidBodyType$1 as RigidBodyType, RingBufferGeometry, RingGeometry, SIGNED_RED_GREEN_RGTC2_Format, SIGNED_RED_RGTC1_Format, SRGBColorSpace$1 as SRGBColorSpace, SVGLoader, Scene, SceneCompositeMaterial, ShaderChunk, ShaderLib, ShaderMaterial, ShadowMaterial, ShadowTextureMaterial, Shape$2 as Shape, ShapeBufferGeometry, ShapeGeometry, ShapePath, ShapeUtils, ShortType, SimplexNoise, Skeleton, SkeletonHelper, SkinnedMesh, Slider, Smooth, SmoothSkew, SmoothViews, SoftShadows, Sound, Sound3D, Source, Sphere, SphereBufferGeometry, SphereGeometry$2 as SphereGeometry, Spherical, SphericalHarmonics3, SphericalJointConfig$1 as SphericalJointConfig, SplineCurve, SpotLight, SpotLightHelper, Sprite, SpriteMaterial, SrcAlphaFactor, SrcAlphaSaturateFactor, SrcColorFactor, Stage, StaticCopyUsage, StaticDrawUsage, StaticReadUsage, StereoCamera, StreamCopyUsage, StreamDrawUsage, StreamReadUsage, StringKeyframeTrack, Styles, SubtractEquation, SubtractiveBlending, TOUCH, TangentSpaceNormalMap, TargetNumber, TetrahedronBufferGeometry, TetrahedronGeometry, TextGeometry, TextGeometryLoader, TextGeometryLoaderThread, TextMaterial, Texture, TextureLoader, Thread, Ticker, TiltShiftMaterial, TorusBufferGeometry, TorusGeometry, TorusKnotBufferGeometry, TorusKnotGeometry, Tracker, Triangle, TriangleFanDrawMode, TriangleStripDrawMode, TrianglesDrawMode, TubeBufferGeometry, TubeGeometry, Tween, TwoPassDoubleSide, UI, UVMapping, Uint16BufferAttribute, Uint32BufferAttribute, Uint8BufferAttribute, Uint8ClampedBufferAttribute, Uniform, UniformsGroup, UniformsLib, UniformsUtils, UnrealBloomBlurMaterial, UnrealBloomCompositeMaterial, UnsignedByteType, UnsignedInt248Type, UnsignedIntType, UnsignedShort4444Type, UnsignedShort5551Type, UnsignedShortType, VSMShadowMap, Vector2$1 as Vector2, Vector3, Vector4, VectorKeyframeTrack, VideoGlitchMaterial, VideoTexture, VolumetricLightLensflareMaterial, VolumetricLightMaterial, WebAudio, WebAudio3D, WebAudioParam, WebGL1Renderer, WebGL3DRenderTarget, WebGLArrayRenderTarget, WebGLCubeRenderTarget, WebGLMultipleRenderTargets, WebGLRenderTarget, WebGLRenderer, WebGLUtils, WireframeGeometry, Wobble, WrapAroundEnding, ZeroCurvatureEnding, ZeroFactor, ZeroSlopeEnding, ZeroStencilOp, _SRGBAFormat, absolute, basename, brightness, ceilPowerOfTwo$1 as ceilPowerOfTwo, clamp$1 as clamp, clearTween, damp$1 as damp, defer, degToRad$1 as degToRad, delayedCall, denormalize$1 as denormalize, euclideanModulo$1 as euclideanModulo, extension, floorPowerOfTwo$1 as floorPowerOfTwo, generateUUID$1 as generateUUID, getConstructor, getFrustum, getFrustumFromHeight, getFullscreenTriangle, getKeyByValue, getScreenSpaceBox, getSphericalCube, guid, headsTails, inverseLerp$1 as inverseLerp, isPowerOfTwo$1 as isPowerOfTwo, lerp$2 as lerp, lerpCameras, mapLinear$1 as mapLinear, normalize$1 as normalize, pingpong$1 as pingpong, radToDeg$1 as radToDeg, randFloat$1 as randFloat, randFloatSpread$1 as randFloatSpread, randInt$1 as randInt, sRGBEncoding, seededRandom$1 as seededRandom, setQuaternionFromProperEuler$1 as setQuaternionFromProperEuler, shuffle, smootherstep$2 as smootherstep, smoothstep$1 as smoothstep, ticker, tween, wait };

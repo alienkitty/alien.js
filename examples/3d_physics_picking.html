@@ -9,11 +9,9 @@
     <link rel="preconnect" href="https://fonts.gstatic.com">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto+Mono">
     <link rel="stylesheet" href="assets/css/style.css">
-</head>
-<body>
-    <div id="root"></div>
+
     <script type="module">
-        import { ACESFilmicToneMapping, AmbientLight, AssetLoader, Assets, BasicShadowMap, BloomCompositeMaterial, BoxGeometry, Color, Device, DirectionalLight, EnvironmentTextureLoader, Events, FXAAMaterial, GLSL3, Group, HemisphereLight, IcosahedronGeometry, ImageBitmapLoaderThread, LuminosityMaterial, Mesh, MeshBasicMaterial, MeshPhongMaterial, MeshStandardMaterial, NoBlending, OimoPhysics, OrthographicCamera, PanelItem, PerspectiveCamera, PlaneGeometry, PointLight, RawShaderMaterial, Raycaster, Reflector, RepeatWrapping, RigidBodyConfig, RigidBodyType, Scene, ShaderChunk, ShadowMaterial, Sound3D, SphereGeometry, SphericalJointConfig, Stage, TextureLoader, Thread, UI, Uniform, UnrealBloomBlurMaterial, Vector2, Vector3, WebAudio, WebGLRenderTarget, WebGLRenderer, clamp, delayedCall, floorPowerOfTwo, getFullscreenTriangle, getKeyByValue, lerp, mapLinear, ticker } from '../build/alien.js';
+        import { ACESFilmicToneMapping, AmbientLight, AssetLoader, Assets, BasicShadowMap, BloomCompositeMaterial, BoxGeometry, Color, Device, DirectionalLight, EnvironmentTextureLoader, Events, FXAAMaterial, GLSL3, Group, HemisphereLight, IcosahedronGeometry, ImageBitmapLoaderThread, LuminosityMaterial, Mesh, MeshBasicMaterial, MeshPhongMaterial, MeshStandardMaterial, NoBlending, OimoPhysics, OrthographicCamera, PanelItem, PerspectiveCamera, PlaneGeometry, PointLight, RawShaderMaterial, Raycaster, Reflector, RepeatWrapping, RigidBodyConfig, RigidBodyType, Scene, ShaderChunk, ShadowMaterial, Sound3D, SphereGeometry, SphericalJointConfig, Stage, TextureLoader, Thread, UI, UnrealBloomBlurMaterial, Vector2, Vector3, WebAudio, WebGLRenderTarget, WebGLRenderer, clamp, delayedCall, floorPowerOfTwo, getFullscreenTriangle, getKeyByValue, lerp, mapLinear, ticker } from '../build/alien.js';
 
         class Config {
             static LIGHT_COLOR = 0xf44336;
@@ -73,9 +71,9 @@
                 super({
                     glslVersion: GLSL3,
                     uniforms: {
-                        tScene: new Uniform(null),
-                        tBloom: new Uniform(null),
-                        uBloomDistortion: new Uniform(1.45)
+                        tScene: { value: null },
+                        tBloom: { value: null },
+                        uBloomDistortion: { value: 1.45 }
                     },
                     vertexShader: vertexCompositeShader,
                     fragmentShader: fragmentCompositeShader,
@@ -112,11 +110,11 @@
                 // Based on https://github.com/mrdoob/three.js/blob/dev/examples/jsm/shaders/SubsurfaceScatteringShader.js by daoshengmu
 
                 material.onBeforeCompile = shader => {
-                    shader.uniforms.thicknessDistortion = new Uniform(0.1);
-                    shader.uniforms.thicknessAmbient = new Uniform(0);
-                    shader.uniforms.thicknessAttenuation = new Uniform(0.8);
-                    shader.uniforms.thicknessPower = new Uniform(2);
-                    shader.uniforms.thicknessScale = new Uniform(16);
+                    shader.uniforms.thicknessDistortion = { value: 0.1 };
+                    shader.uniforms.thicknessAmbient = { value: 0 };
+                    shader.uniforms.thicknessAttenuation = { value: 0.8 };
+                    shader.uniforms.thicknessPower = { value: 2 };
+                    shader.uniforms.thicknessScale = { value: 16 };
 
                     shader.fragmentShader = shader.fragmentShader.replace(
                         'void main() {',
@@ -216,12 +214,12 @@
                 // Based on https://github.com/mrdoob/three.js/blob/dev/examples/jsm/shaders/SubsurfaceScatteringShader.js by daoshengmu
 
                 material.onBeforeCompile = shader => {
-                    shader.uniforms.thicknessMap = new Uniform(thicknessMap);
-                    shader.uniforms.thicknessDistortion = new Uniform(0);
-                    shader.uniforms.thicknessAmbient = new Uniform(0);
-                    shader.uniforms.thicknessAttenuation = new Uniform(1);
-                    shader.uniforms.thicknessPower = new Uniform(20);
-                    shader.uniforms.thicknessScale = new Uniform(16);
+                    shader.uniforms.thicknessMap = { value: thicknessMap };
+                    shader.uniforms.thicknessDistortion = { value: 0 };
+                    shader.uniforms.thicknessAmbient = { value: 0 };
+                    shader.uniforms.thicknessAttenuation = { value: 1 };
+                    shader.uniforms.thicknessPower = { value: 20 };
+                    shader.uniforms.thicknessScale = { value: 16 };
 
                     shader.fragmentShader = shader.fragmentShader.replace(
                         'void main() {',
@@ -344,10 +342,10 @@
                 material.onBeforeCompile = shader => {
                     map.updateMatrix();
 
-                    shader.uniforms.map = new Uniform(map);
-                    shader.uniforms.reflectMap = new Uniform(this.reflector.renderTarget.texture);
+                    shader.uniforms.map = { value: map };
+                    shader.uniforms.reflectMap = { value: this.reflector.renderTarget.texture };
                     shader.uniforms.reflectMapBlur = this.reflector.renderTargetUniform;
-                    shader.uniforms.uvTransform = new Uniform(map.matrix);
+                    shader.uniforms.uvTransform = { value: map.matrix };
                     shader.uniforms.textureMatrix = this.reflector.textureMatrixUniform;
 
                     shader.vertexShader = shader.vertexShader.replace(
@@ -1195,10 +1193,10 @@
                 this.screenTriangle = getFullscreenTriangle();
 
                 // Global uniforms
-                this.resolution = new Uniform(new Vector2());
-                this.aspect = new Uniform(1);
-                this.time = new Uniform(0);
-                this.frame = new Uniform(0);
+                this.resolution = { value: new Vector2() };
+                this.aspect = { value: 1 };
+                this.time = { value: 0 };
+                this.frame = { value: 0 };
 
                 // Global settings
                 this.anisotropy = this.renderer.capabilities.getMaxAnisotropy();
@@ -1374,5 +1372,8 @@
 
         App.init();
     </script>
+</head>
+<body>
+    <div id="root"></div>
 </body>
 </html>

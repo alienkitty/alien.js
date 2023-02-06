@@ -1,7 +1,6 @@
 import { Color, GLSL3, RawShaderMaterial } from 'three';
 
-import vertexShader from '../shaders/TextMaterial.vert.js';
-import fragmentShader from '../shaders/TextMaterial.frag.js';
+import { vertexShader, fragmentShader } from '../shaders/TextShader.js';
 
 export class TextMaterial extends RawShaderMaterial {
     constructor({

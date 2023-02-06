@@ -1,7 +1,6 @@
 import { GLSL3, NoBlending, RawShaderMaterial, Vector2 } from 'three';
 
-import vertexShader from '../shaders/TiltShiftPass.vert.js';
-import fragmentShader from '../shaders/TiltShiftPass.frag.js';
+import { vertexShader, fragmentShader } from '../shaders/TiltShiftShader.js';
 
 export class TiltShiftMaterial extends RawShaderMaterial {
     constructor(direction = new Vector2(0.5, 0.5)) {

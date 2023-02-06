@@ -1,7 +1,6 @@
 import { GLSL3, NoBlending, RawShaderMaterial } from 'three';
 
-import vertexShader from '../shaders/VideoGlitchPass.vert.js';
-import fragmentShader from '../shaders/VideoGlitchPass.frag.js';
+import { vertexShader, fragmentShader } from '../shaders/VideoGlitchShader.js';
 
 export class VideoGlitchMaterial extends RawShaderMaterial {
     constructor() {

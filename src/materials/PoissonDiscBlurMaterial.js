@@ -2,8 +2,7 @@ import { GLSL3, NearestFilter, NoBlending, RawShaderMaterial, RepeatWrapping, Ve
 
 import { TextureLoader } from '../loaders/world/TextureLoader.js';
 
-import vertexShader from '../shaders/PoissonDiscBlurPass.vert.js';
-import fragmentShader from '../shaders/PoissonDiscBlurPass.frag.js';
+import { vertexShader, fragmentShader } from '../shaders/PoissonDiscBlurShader.js';
 
 export class PoissonDiscBlurMaterial extends RawShaderMaterial {
     constructor({

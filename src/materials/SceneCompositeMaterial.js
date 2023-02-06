@@ -1,7 +1,6 @@
 import { GLSL3, NoBlending, RawShaderMaterial } from 'three';
 
-import vertexShader from '../shaders/SceneCompositePass.vert.js';
-import fragmentShader from '../shaders/SceneCompositePass.frag.js';
+import { vertexShader, fragmentShader } from '../shaders/SceneCompositeShader.js';
 
 export class SceneCompositeMaterial extends RawShaderMaterial {
     constructor() {

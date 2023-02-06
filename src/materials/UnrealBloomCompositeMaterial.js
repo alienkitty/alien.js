@@ -1,7 +1,6 @@
 import { GLSL3, NoBlending, RawShaderMaterial } from 'three';
 
-import vertexShader from '../shaders/UnrealBloomCompositePass.vert.js';
-import fragmentShader from '../shaders/UnrealBloomCompositePass.frag.js';
+import { vertexShader, fragmentShader } from '../shaders/UnrealBloomCompositeShader.js';
 
 export class UnrealBloomCompositeMaterial extends RawShaderMaterial {
     constructor(nMips) {

@@ -1,7 +1,6 @@
 import { GLSL3, NoBlending, RawShaderMaterial, Vector2 } from 'three';
 
-import vertexShader from '../shaders/BokehBlurPass2.vert.js';
-import fragmentShader from '../shaders/BokehBlurPass2.frag.js';
+import { vertexShader, fragmentShader } from '../shaders/BokehBlurShader2.js';
 
 export class BokehBlurMaterial2 extends RawShaderMaterial {
     constructor() {

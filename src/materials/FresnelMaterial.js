@@ -1,7 +1,6 @@
 import { Color, GLSL3, RawShaderMaterial } from 'three';
 
-import vertexShader from '../shaders/FresnelMaterial.vert.js';
-import fragmentShader from '../shaders/FresnelMaterial.frag.js';
+import { vertexShader, fragmentShader } from '../shaders/FresnelShader.js';
 
 export class FresnelMaterial extends RawShaderMaterial {
     constructor({

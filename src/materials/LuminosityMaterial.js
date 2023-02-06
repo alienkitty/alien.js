@@ -1,7 +1,6 @@
 import { GLSL3, NoBlending, RawShaderMaterial } from 'three';
 
-import vertexShader from '../shaders/LuminosityPass.vert.js';
-import fragmentShader from '../shaders/LuminosityPass.frag.js';
+import { vertexShader, fragmentShader } from '../shaders/LuminosityShader.js';
 
 export class LuminosityMaterial extends RawShaderMaterial {
     constructor() {

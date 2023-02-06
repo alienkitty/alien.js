@@ -1,7 +1,6 @@
 import { GLSL3, NoBlending, RawShaderMaterial } from 'three';
 
-import vertexShader from '../shaders/RGBPass.vert.js';
-import fragmentShader from '../shaders/RGBPass.frag.js';
+import { vertexShader, fragmentShader } from '../shaders/RGBShader.js';
 
 export class RGBMaterial extends RawShaderMaterial {
     constructor() {

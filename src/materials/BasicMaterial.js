@@ -1,7 +1,6 @@
 import { GLSL3, RawShaderMaterial } from 'three';
 
-import vertexShader from '../shaders/BasicMaterial.vert.js';
-import fragmentShader from '../shaders/BasicMaterial.frag.js';
+import { vertexShader, fragmentShader } from '../shaders/BasicShader.js';
 
 export class BasicMaterial extends RawShaderMaterial {
     constructor(map) {

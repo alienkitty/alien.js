@@ -2,8 +2,7 @@ import { GLSL3, NoBlending, RawShaderMaterial } from 'three';
 
 import { WorldController } from '../controllers/world/WorldController.js';
 
-import vertexShader from '../shaders/FluidView.vert.js';
-import fragmentShader from '../shaders/FluidView.frag.js';
+import { vertexShader, fragmentShader } from '../shaders/FluidViewShader.js';
 
 export class FluidViewMaterial extends RawShaderMaterial {
     constructor() {

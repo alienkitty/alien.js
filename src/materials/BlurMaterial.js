@@ -1,7 +1,6 @@
 import { GLSL3, NoBlending, RawShaderMaterial, Vector2 } from 'three';
 
-import vertexShader from '../shaders/BlurPass.vert.js';
-import fragmentShader from '../shaders/BlurPass.frag.js';
+import { vertexShader, fragmentShader } from '../shaders/BlurShader.js';
 
 export class BlurMaterial extends RawShaderMaterial {
     constructor(direction = new Vector2(0.5, 0.5)) {

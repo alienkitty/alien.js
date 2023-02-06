@@ -1,7 +1,6 @@
 import { GLSL3, NoBlending, RawShaderMaterial } from 'three';
 
-import vertexShader from '../shaders/DepthMaskPass.vert.js';
-import fragmentShader from '../shaders/DepthMaskPass.frag.js';
+import { vertexShader, fragmentShader } from '../shaders/DepthMaskShader.js';
 
 export class DepthMaskMaterial extends RawShaderMaterial {
     constructor() {

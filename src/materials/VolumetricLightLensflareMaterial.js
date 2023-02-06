@@ -1,7 +1,6 @@
 import { GLSL3, NoBlending, RawShaderMaterial, Vector2 } from 'three';
 
-import vertexShader from '../shaders/VolumetricLightLensflarePass.vert.js';
-import fragmentShader from '../shaders/VolumetricLightLensflarePass.frag.js';
+import { vertexShader, fragmentShader } from '../shaders/VolumetricLightLensflareShader.js';
 
 export class VolumetricLightLensflareMaterial extends RawShaderMaterial {
     constructor() {

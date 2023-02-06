@@ -1,7 +1,6 @@
 import { GLSL3, NoBlending, RawShaderMaterial } from 'three';
 
-import vertexShader from '../shaders/FlowPass.vert.js';
-import fragmentShader from '../shaders/FlowPass.frag.js';
+import { vertexShader, fragmentShader } from '../shaders/FlowShader.js';
 
 export class FlowMaterial extends RawShaderMaterial {
     constructor() {

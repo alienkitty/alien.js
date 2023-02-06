@@ -3,8 +3,7 @@ import { GLSL3, NoBlending, RawShaderMaterial } from 'three';
 import { Global } from '../config/Global.js';
 import { WorldController } from '../controllers/world/WorldController.js';
 
-import vertexShader from '../shaders/FluidPass.vert.js';
-import fragmentShader from '../shaders/FluidPass.frag.js';
+import { vertexShader, fragmentShader } from '../shaders/FluidPassShader.js';
 
 export class FluidPassMaterial extends RawShaderMaterial {
     constructor() {

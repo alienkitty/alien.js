@@ -1,7 +1,6 @@
 import { GLSL3, Matrix3, Matrix4, NoBlending, RawShaderMaterial } from 'three';
 
-import vertexShader from '../shaders/ReflectorDudvMaterial.vert.js';
-import fragmentShader from '../shaders/ReflectorDudvMaterial.frag.js';
+import { vertexShader, fragmentShader } from '../shaders/ReflectorDudvShader.js';
 
 export class ReflectorDudvMaterial extends RawShaderMaterial {
     constructor({

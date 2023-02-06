@@ -1,7 +1,6 @@
 import { Color, GLSL3, Matrix3, Matrix4, NoBlending, RawShaderMaterial, Vector2 } from 'three';
 
-import vertexShader from '../shaders/ReflectorMaterial.vert.js';
-import fragmentShader from '../shaders/ReflectorMaterial.frag.js';
+import { vertexShader, fragmentShader } from '../shaders/ReflectorShader.js';
 
 export class ReflectorMaterial extends RawShaderMaterial {
     constructor({

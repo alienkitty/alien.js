@@ -1,7 +1,6 @@
 import { RawShaderMaterial } from 'three';
 
-import vertexShader from '../shaders/NormalMaterial.vert.js';
-import fragmentShader from '../shaders/NormalMaterial.frag.js';
+import { vertexShader, fragmentShader } from '../shaders/NormalShader.js';
 
 export class NormalMaterial extends RawShaderMaterial {
     constructor() {

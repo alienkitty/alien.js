@@ -1,7 +1,6 @@
 import { AdditiveBlending, GLSL3, RawShaderMaterial, Vector2 } from 'three';
 
-import vertexShader from '../shaders/LensflarePass.vert.js';
-import fragmentShader from '../shaders/LensflarePass.frag.js';
+import { vertexShader, fragmentShader } from '../shaders/LensflareShader.js';
 
 export class LensflareMaterial extends RawShaderMaterial {
     constructor() {

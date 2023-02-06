@@ -1,7 +1,6 @@
 import { GLSL3, NoBlending, RawShaderMaterial } from 'three';
 
-import vertexShader from '../shaders/AfterimagePass.vert.js';
-import fragmentShader from '../shaders/AfterimagePass.frag.js';
+import { vertexShader, fragmentShader } from '../shaders/AfterimageShader.js';
 
 export class AfterimageMaterial extends RawShaderMaterial {
     constructor() {

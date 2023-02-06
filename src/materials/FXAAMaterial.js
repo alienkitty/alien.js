@@ -1,7 +1,6 @@
 import { GLSL3, NoBlending, RawShaderMaterial, Vector2 } from 'three';
 
-import vertexShader from '../shaders/FXAAPass.vert.js';
-import fragmentShader from '../shaders/FXAAPass.frag.js';
+import { vertexShader, fragmentShader } from '../shaders/FXAAShader.js';
 
 export class FXAAMaterial extends RawShaderMaterial {
     constructor() {

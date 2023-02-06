@@ -1,7 +1,6 @@
 import { GLSL3, NoBlending, RawShaderMaterial } from 'three';
 
-import vertexShader from '../shaders/BadTVPass.vert.js';
-import fragmentShader from '../shaders/BadTVPass.frag.js';
+import { vertexShader, fragmentShader } from '../shaders/BadTVShader.js';
 
 export class BadTVMaterial extends RawShaderMaterial {
     constructor() {

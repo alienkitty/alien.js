@@ -1,7 +1,6 @@
 import { GLSL3, NoBlending, RawShaderMaterial } from 'three';
 
-import vertexShader from '../shaders/BloomCompositePass.vert.js';
-import fragmentShader from '../shaders/BloomCompositePass.frag.js';
+import { vertexShader, fragmentShader } from '../shaders/BloomCompositeShader.js';
 
 export class BloomCompositeMaterial extends RawShaderMaterial {
     constructor({

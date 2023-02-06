@@ -1,7 +1,6 @@
 import { GLSL3, NoBlending, RawShaderMaterial } from 'three';
 
-import vertexShader from '../shaders/ChromaticAberrationPass.vert.js';
-import fragmentShader from '../shaders/ChromaticAberrationPass.frag.js';
+import { vertexShader, fragmentShader } from '../shaders/ChromaticAberrationShader.js';
 
 export class ChromaticAberrationMaterial extends RawShaderMaterial {
     constructor() {

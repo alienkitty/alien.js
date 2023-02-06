@@ -17,8 +17,7 @@ import {
 
 import { getFullscreenTriangle } from './Utils3D.js';
 
-import vertexShader from '../../shaders/FlowmapPass.vert.js';
-import fragmentShader from '../../shaders/FlowmapPass.frag.js';
+import { vertexShader, fragmentShader } from '../../shaders/FlowmapShader.js';
 
 export class Flowmap {
     constructor(renderer, {

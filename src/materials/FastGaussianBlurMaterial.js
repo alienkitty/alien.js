@@ -1,7 +1,6 @@
 import { GLSL3, NoBlending, RawShaderMaterial, Vector2 } from 'three';
 
-import vertexShader from '../shaders/FastGaussianBlurPass.vert.js';
-import fragmentShader from '../shaders/FastGaussianBlurPass.frag.js';
+import { vertexShader, fragmentShader } from '../shaders/FastGaussianBlurShader.js';
 
 export class FastGaussianBlurMaterial extends RawShaderMaterial {
     constructor() {

@@ -11,7 +11,7 @@
     <link rel="stylesheet" href="assets/css/style.css">
 
     <script type="module">
-        import { Assets, Color, DirectionalLight, Events, Group, Interface, LinearFilter, Mesh, MeshStandardMaterial, PerspectiveCamera, PlaneGeometry, Scene, Stage, Texture, Vector2, WebGLRenderer, clearTween, delayedCall, getFrustum, ticker } from '../build/alien.js';
+        import { Assets, Color, DirectionalLight, Group, Interface, LinearFilter, Mesh, MeshStandardMaterial, PerspectiveCamera, PlaneGeometry, Scene, Stage, Texture, Vector2, WebGLRenderer, clearTween, delayedCall, getFrustum, ticker } from '../build/alien.js';
 
         class GridCanvas extends Interface {
             constructor() {
@@ -273,7 +273,7 @@
             }
 
             static addListeners() {
-                Stage.events.on(Events.VISIBILITY, this.onVisibility);
+                Stage.events.on('visibility', this.onVisibility);
                 window.addEventListener('pointerdown', this.onPointerDown);
                 window.addEventListener('pointermove', this.onPointerMove);
                 window.addEventListener('pointerup', this.onPointerUp);
@@ -480,7 +480,7 @@
             }
 
             static addListeners() {
-                Stage.events.on(Events.RESIZE, this.onResize);
+                Stage.events.on('resize', this.onResize);
                 ticker.add(this.onUpdate);
             }
 

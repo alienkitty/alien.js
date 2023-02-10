@@ -4,8 +4,6 @@
 
 import { Vector2 } from 'three/src/math/Vector2.js';
 
-import { Events } from '../../config/Events.js';
-import { Styles } from '../../config/Styles.js';
 import { Interface } from '../Interface.js';
 import { Stage } from '../Stage.js';
 import { PointText } from './PointText.js';
@@ -13,14 +11,11 @@ import { PointText } from './PointText.js';
 import { tween } from '../../tween/Tween.js';
 
 export class Point extends Interface {
-    constructor(panel, tracker, {
-        styles = Styles
-    } = {}) {
+    constructor(panel, tracker) {
         super('.point');
 
         this.panel = panel;
         this.tracker = tracker;
-        this.styles = styles;
 
         this.position = new Vector2();
         this.origin = new Vector2();
@@ -54,12 +49,12 @@ export class Point extends Interface {
     }
 
     initViews() {
-        this.text = new PointText({ styles: this.styles });
+        this.text = new PointText();
         this.add(this.text);
     }
 
     addListeners() {
-        Stage.events.on(Events.COLOR_PICKER, this.onColorPicker);
+        Stage.events.on('color_picker', this.onColorPicker);
         this.text.container.element.addEventListener('mouseenter', this.onHover);
         this.text.container.element.addEventListener('mouseleave', this.onHover);
         window.addEventListener('pointerdown', this.onPointerDown);
@@ -67,7 +62,7 @@ export class Point extends Interface {
     }
 
     removeListeners() {
-        Stage.events.off(Events.COLOR_PICKER, this.onColorPicker);
+        Stage.events.off('color_picker', this.onColorPicker);
         this.text.container.element.removeEventListener('mouseenter', this.onHover);
         this.text.container.element.removeEventListener('mouseleave', this.onHover);
         window.removeEventListener('pointerdown', this.onPointerDown);
@@ -153,7 +148,7 @@ export class Point extends Interface {
         }
 
         if (this.openColor && !this.openColor.element.contains(e.target)) {
-            Stage.events.emit(Events.COLOR_PICKER, { open: false, target: this });
+            Stage.events.emit('color_picker', { open: false, target: this });
         }
 
         if (this.tracker && this.tracker.isVisible && this.text.container.element.contains(e.target)) {

@@ -1,7 +1,9 @@
-import { ACESFilmicToneMapping, AmbientLight, Assets, BasicShadowMap, BloomCompositeMaterial, BoxGeometry, CameraMotionBlurMaterial, Color, DepthTexture, Device, DirectionalLight, EnvironmentTextureLoader, Events, FXAAMaterial, GLSL3, Global, Group, Header, HemisphereLight, IcosahedronGeometry, ImageBitmapLoaderThread, Interface, LuminosityMaterial, Matrix4, Mesh, MeshStandardMaterial, NearestFilter, NoBlending, OctahedronGeometry, OrthographicCamera, PanelItem, PerspectiveCamera, PlaneGeometry, Point3D, RawShaderMaterial, Reflector, RepeatWrapping, Scene, SceneCompositeMaterial, ShadowMaterial, Stage, TextureLoader, Thread, UnrealBloomBlurMaterial, Vector2, Vector3, WebGLRenderTarget, WebGLRenderer, clearTween, degToRad, delayedCall, floorPowerOfTwo, getFullscreenTriangle, getKeyByValue, lerp, lerpCameras, radToDeg, shuffle, ticker, tween } from '../../../build/alien.js';
+import { ACESFilmicToneMapping, AmbientLight, Assets, BasicShadowMap, BloomCompositeMaterial, BoxGeometry, CameraMotionBlurMaterial, Color, DepthTexture, DirectionalLight, EnvironmentTextureLoader, FXAAMaterial, GLSL3, Group, Header, HemisphereLight, IcosahedronGeometry, ImageBitmapLoaderThread, Interface, LuminosityMaterial, Matrix4, Mesh, MeshStandardMaterial, NearestFilter, NoBlending, OctahedronGeometry, OrthographicCamera, PanelItem, PerspectiveCamera, PlaneGeometry, Point3D, RawShaderMaterial, Reflector, RepeatWrapping, Scene, SceneCompositeMaterial, ShadowMaterial, Stage, TextureLoader, Thread, UnrealBloomBlurMaterial, Vector2, Vector3, WebGLRenderTarget, WebGLRenderer, clearTween, degToRad, delayedCall, floorPowerOfTwo, getFullscreenTriangle, getKeyByValue, lerp, lerpCameras, radToDeg, shuffle, ticker, tween } from '../../../build/alien.js';
 
-Global.PAGES = [];
-Global.PAGE_INDEX = 0;
+class Global {
+    static PAGES = [];
+    static PAGE_INDEX = 0;
+}
 
 class Config {
     static BREAKPOINT = 1000;
@@ -31,7 +33,7 @@ class Data {
     }
 
     static addListeners() {
-        Stage.events.on(Events.STATE_CHANGE, this.onStateChange);
+        Stage.events.on('state_change', this.onStateChange);
     }
 
     /**
@@ -310,7 +312,7 @@ class Details extends Interface {
     }
 
     addListeners() {
-        Stage.events.on(Events.RESIZE, this.onResize);
+        Stage.events.on('resize', this.onResize);
     }
 
     /**
@@ -1066,7 +1068,7 @@ class SceneController {
     }
 
     static addListeners() {
-        Stage.events.on(Events.STATE_CHANGE, this.onStateChange);
+        Stage.events.on('state_change', this.onStateChange);
     }
 
     /**
@@ -1151,7 +1153,7 @@ class ScenePanelController {
 
     static addListeners() {
         Point3D.add(...this.points);
-        Point3D.events.on(Events.CLICK, this.onClick);
+        Point3D.events.on('click', this.onClick);
     }
 
     /**
@@ -1353,8 +1355,8 @@ class RenderManager {
         this.scene = scene;
         this.camera = camera;
 
-        this.blurFocus = Device.mobile ? 0.5 : 0.25;
-        this.blurRotation = Device.mobile ? 0 : degToRad(75);
+        this.blurFocus = navigator.maxTouchPoints ? 0.5 : 0.25;
+        this.blurRotation = navigator.maxTouchPoints ? 0 : degToRad(75);
         this.blurFactor = 1;
         this.blurVelocityFactor = 0.1;
         this.luminosityThreshold = 0.1;
@@ -1718,7 +1720,7 @@ class CameraController {
      */
 
     static setView = view => {
-        if (!Device.mobile && (!view || view === this.next)) {
+        if (!navigator.maxTouchPoints && (!view || view === this.next)) {
             this.next = this;
             this.zoomedIn = false;
         } else {
@@ -1879,7 +1881,7 @@ class App {
     static async init() {
         Assets.path = '/examples/';
 
-        if (!Device.agent.includes('firefox')) {
+        if (!/firefox/i.test(navigator.userAgent)) {
             this.initThread();
         }
 
@@ -1957,7 +1959,7 @@ class App {
         });
 
         // Home page
-        if (!Device.mobile) {
+        if (!navigator.maxTouchPoints) {
             Global.PAGES.push(new Page({
                 path: '',
                 title: 'Camera Transition'
@@ -1977,7 +1979,7 @@ class App {
     }
 
     static addListeners() {
-        Stage.events.on(Events.RESIZE, this.onResize);
+        Stage.events.on('resize', this.onResize);
         ticker.add(this.onUpdate);
     }
 

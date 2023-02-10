@@ -1,4 +1,4 @@
-import { Events, Interface, Stage, clearTween, tween } from 'alien.js';
+import { Interface, Stage, clearTween, tween } from 'alien.js';
 
 import { Config } from '../../config/Config.js';
 import { Global } from '../../config/Global.js';
@@ -95,14 +95,14 @@ export class MuteButton extends Interface {
     }
 
     addListeners() {
-        Stage.events.on(Events.RESIZE, this.onResize);
+        Stage.events.on('resize', this.onResize);
         this.element.addEventListener('mouseenter', this.onHover);
         this.element.addEventListener('mouseleave', this.onHover);
         this.element.addEventListener('click', this.onClick);
     }
 
     removeListeners() {
-        Stage.events.off(Events.RESIZE, this.onResize);
+        Stage.events.off('resize', this.onResize);
         this.element.removeEventListener('mouseenter', this.onHover);
         this.element.removeEventListener('mouseleave', this.onHover);
         this.element.removeEventListener('click', this.onClick);

@@ -11,7 +11,7 @@
     <link rel="stylesheet" href="assets/css/style.css">
 
     <script type="module">
-        import { ACESFilmicToneMapping, AmbientLight, BloomCompositeMaterial, BufferGeometryLoader, BufferGeometryLoaderThread, Color, Device, EnvironmentTextureLoader, Events, FXAAMaterial, GLSL3, Group, HemisphereLight, ImageBitmapLoaderThread, LuminosityMaterial, Mesh, MeshBasicMaterial, MeshStandardMaterial, NoBlending, OrthographicCamera, PanelItem, PerspectiveCamera, PlaneGeometry, PointLight, RawShaderMaterial, Reflector, ReflectorDudvMaterial, RepeatWrapping, Scene, ShaderChunk, SphereGeometry, Stage, TextureLoader, Thread, UI, UnrealBloomBlurMaterial, Vector2, Vector3, WebGLRenderTarget, WebGLRenderer, floorPowerOfTwo, getFrustum, getFullscreenTriangle, lerp, ticker } from '../build/alien.js';
+        import { ACESFilmicToneMapping, AmbientLight, BloomCompositeMaterial, BufferGeometryLoader, BufferGeometryLoaderThread, Color, EnvironmentTextureLoader, FXAAMaterial, GLSL3, Group, HemisphereLight, ImageBitmapLoaderThread, LuminosityMaterial, Mesh, MeshBasicMaterial, MeshStandardMaterial, NoBlending, OrthographicCamera, PanelItem, PerspectiveCamera, PlaneGeometry, PointLight, RawShaderMaterial, Reflector, ReflectorDudvMaterial, RepeatWrapping, Scene, ShaderChunk, SphereGeometry, Stage, TextureLoader, Thread, UI, UnrealBloomBlurMaterial, Vector2, Vector3, WebGLRenderTarget, WebGLRenderer, floorPowerOfTwo, getFrustum, getFullscreenTriangle, lerp, ticker } from '../build/alien.js';
 
         class Config {
             static DEBUG = /[?&]debug/.test(location.search);
@@ -910,7 +910,7 @@
 
         class App {
             static async init() {
-                if (!Device.agent.includes('firefox')) {
+                if (!/firefox/i.test(navigator.userAgent)) {
                     this.initThread();
                 }
 
@@ -968,7 +968,7 @@
             }
 
             static addListeners() {
-                Stage.events.on(Events.RESIZE, this.onResize);
+                Stage.events.on('resize', this.onResize);
                 ticker.add(this.onUpdate);
             }
 

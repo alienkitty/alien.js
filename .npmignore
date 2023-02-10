@@ -1,7 +1,2 @@
-.DS_Store
-.eslintignore
-.eslintrc.json
 build
 examples
-public
-rollup.config.js

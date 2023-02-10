@@ -11,7 +11,7 @@
     <link rel="stylesheet" href="assets/css/style.css">
 
     <script type="module">
-        import { Events, Interface, Stage, clearTween, degToRad, ticker, tween } from '../build/alien.js';
+        import { Interface, Stage, clearTween, degToRad, ticker, tween } from '../build/alien.js';
 
         class ProgressCanvas extends Interface {
             constructor() {
@@ -73,7 +73,7 @@
             onComplete = () => {
                 this.removeListeners();
 
-                this.events.emit(Events.COMPLETE);
+                this.events.emit('complete');
             };
 
             /**

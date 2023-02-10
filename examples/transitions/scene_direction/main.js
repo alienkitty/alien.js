@@ -1,8 +1,10 @@
-import { ACESFilmicToneMapping, AmbientLight, Assets, BloomCompositeMaterial, BoxGeometry, Color, Component, Device, DirectionalLight, EnvironmentTextureLoader, Events, FXAAMaterial, GLSL3, Global, Group, Header, HemisphereLight, IcosahedronGeometry, ImageBitmapLoaderThread, Interface, LuminosityMaterial, Mesh, MeshStandardMaterial, NoBlending, OctahedronGeometry, OrthographicCamera, PanelItem, PerspectiveCamera, RawShaderMaterial, RepeatWrapping, Scene, SceneCompositeMaterial, Stage, TextureLoader, Thread, UnrealBloomBlurMaterial, Vector2, WebGLRenderTarget, WebGLRenderer, degToRad, floorPowerOfTwo, getFullscreenTriangle, lerp, shuffle, ticker, tween } from '../../../build/alien.js';
+import { ACESFilmicToneMapping, AmbientLight, Assets, BloomCompositeMaterial, BoxGeometry, Color, Component, DirectionalLight, EnvironmentTextureLoader, FXAAMaterial, GLSL3, Group, Header, HemisphereLight, IcosahedronGeometry, ImageBitmapLoaderThread, Interface, LuminosityMaterial, Mesh, MeshStandardMaterial, NoBlending, OctahedronGeometry, OrthographicCamera, PanelItem, PerspectiveCamera, RawShaderMaterial, RepeatWrapping, Scene, SceneCompositeMaterial, Stage, TextureLoader, Thread, UnrealBloomBlurMaterial, Vector2, WebGLRenderTarget, WebGLRenderer, degToRad, floorPowerOfTwo, getFullscreenTriangle, lerp, shuffle, ticker, tween } from '../../../build/alien.js';
 
-Global.PAGES = [];
-Global.PAGE_INDEX = 0;
-Global.PAGE_DIRECTION = 1;
+class Global {
+    static PAGES = [];
+    static PAGE_INDEX = 0;
+    static PAGE_DIRECTION = 1;
+}
 
 class Config {
     static BREAKPOINT = 1000;
@@ -31,7 +33,7 @@ class Data {
     }
 
     static addListeners() {
-        Stage.events.on(Events.STATE_CHANGE, this.onStateChange);
+        Stage.events.on('state_change', this.onStateChange);
     }
 
     /**
@@ -340,8 +342,8 @@ class UI extends Interface {
     }
 
     addListeners() {
-        Stage.events.on(Events.STATE_CHANGE, this.onStateChange);
-        Stage.events.on(Events.RESIZE, this.onResize);
+        Stage.events.on('state_change', this.onStateChange);
+        Stage.events.on('resize', this.onResize);
     }
 
     /**
@@ -923,7 +925,7 @@ class SceneController {
     }
 
     static addListeners() {
-        Stage.events.on(Events.STATE_CHANGE, this.onStateChange);
+        Stage.events.on('state_change', this.onStateChange);
     }
 
     /**
@@ -1381,7 +1383,7 @@ class App {
     static async init() {
         Assets.path = '/examples/';
 
-        if (!Device.agent.includes('firefox')) {
+        if (!/firefox/i.test(navigator.userAgent)) {
             this.initThread();
         }
 
@@ -1460,7 +1462,7 @@ class App {
     }
 
     static addListeners() {
-        Stage.events.on(Events.RESIZE, this.onResize);
+        Stage.events.on('resize', this.onResize);
         ticker.add(this.onUpdate);
     }
 

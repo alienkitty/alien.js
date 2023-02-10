@@ -19,7 +19,7 @@
     </style>
 
     <script type="module">
-        import { BasicMaterial, BufferGeometryLoader, BufferGeometryLoaderThread, Color, Device, DoubleSide, Events, FXAAMaterial, Group, ImageBitmapLoaderThread, Mesh, OrbitControls, OrthographicCamera, PerspectiveCamera, Scene, ShadowTextureMaterial, Stage, TextureLoader, Thread, Vector2, WebGLRenderTarget, WebGLRenderer, getFullscreenTriangle, ticker } from '../build/alien.js';
+        import { BasicMaterial, BufferGeometryLoader, BufferGeometryLoaderThread, Color, DoubleSide, FXAAMaterial, Group, ImageBitmapLoaderThread, Mesh, OrbitControls, OrthographicCamera, PerspectiveCamera, Scene, ShadowTextureMaterial, Stage, TextureLoader, Thread, Vector2, WebGLRenderTarget, WebGLRenderer, getFullscreenTriangle, ticker } from '../build/alien.js';
 
         class Cube extends Group {
             constructor() {
@@ -308,7 +308,7 @@
 
         class App {
             static async init() {
-                if (!Device.agent.includes('firefox')) {
+                if (!/firefox/i.test(navigator.userAgent)) {
                     this.initThread();
                 }
 
@@ -352,7 +352,7 @@
             }
 
             static addListeners() {
-                Stage.events.on(Events.RESIZE, this.onResize);
+                Stage.events.on('resize', this.onResize);
                 ticker.add(this.onUpdate);
             }
 

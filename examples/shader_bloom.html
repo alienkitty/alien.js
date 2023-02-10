@@ -11,7 +11,7 @@
     <link rel="stylesheet" href="assets/css/style.css">
 
     <script type="module">
-        import { BlurMaterial, Color, DirectionalLight, Events, FXAAMaterial, GLSL3, Group, HemisphereLight, Mesh, MeshStandardMaterial, NoBlending, OrthographicCamera, PanelItem, PerspectiveCamera, RawShaderMaterial, Scene, SphereGeometry, Stage, UI, Vector2, WebGLRenderTarget, WebGLRenderer, getFullscreenTriangle, ticker } from '../build/alien.js';
+        import { BlurMaterial, Color, DirectionalLight, FXAAMaterial, GLSL3, Group, HemisphereLight, Mesh, MeshStandardMaterial, NoBlending, OrthographicCamera, PanelItem, PerspectiveCamera, RawShaderMaterial, Scene, SphereGeometry, Stage, UI, Vector2, WebGLRenderTarget, WebGLRenderer, getFullscreenTriangle, ticker } from '../build/alien.js';
 
         const vertexCompositeShader = /* glsl */ `
             in vec3 position;
@@ -444,7 +444,7 @@
             }
 
             static addListeners() {
-                Stage.events.on(Events.RESIZE, this.onResize);
+                Stage.events.on('resize', this.onResize);
                 ticker.add(this.onUpdate);
             }
 

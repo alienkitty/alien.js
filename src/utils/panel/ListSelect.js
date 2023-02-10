@@ -2,20 +2,17 @@
  * @author pschroen / https://ufo.ai/
  */
 
-import { Events } from '../../config/Events.js';
 import { Interface } from '../Interface.js';
 
 export class ListSelect extends Interface {
     constructor({
         list,
-        index,
-        styles
+        index
     }) {
         super('.list-select');
 
         this.list = list;
         this.index = index;
-        this.styles = styles;
 
         this.clicked = false;
 
@@ -30,7 +27,6 @@ export class ListSelect extends Interface {
             width: '100%',
             height: 18,
             textTransform: 'uppercase',
-            ...this.styles.panel,
             whiteSpace: 'nowrap',
             overflow: 'hidden',
             cursor: 'pointer'
@@ -97,7 +93,7 @@ export class ListSelect extends Interface {
             this.clicked = false;
         });
 
-        this.events.emit(Events.CLICK, { target: this });
+        this.events.emit('click', { target: this });
     };
 
     /**

@@ -4,19 +4,13 @@
 
 import { Vector2 } from 'three/src/math/Vector2.js';
 
-import { Events } from '../../config/Events.js';
-import { Styles } from '../../config/Styles.js';
 import { Interface } from '../Interface.js';
 import { Stage } from '../Stage.js';
 import { Panel } from '../panel/Panel.js';
 
 export class HeaderInfo extends Interface {
-    constructor({
-        styles = Styles
-    } = {}) {
+    constructor() {
         super('.info');
-
-        this.styles = styles;
 
         this.count = 0;
         this.time = 0;
@@ -46,13 +40,12 @@ export class HeaderInfo extends Interface {
             userSelect: 'none'
         });
 
-        this.text = new Interface('.text');
-        this.text.css({
-            position: 'relative',
-            ...this.styles.number
+        this.number = new Interface('.number');
+        this.number.css({
+            position: 'relative'
         });
-        this.text.text(this.fps);
-        this.add(this.text);
+        this.number.text(this.fps);
+        this.add(this.number);
     }
 
     initViews() {
@@ -66,7 +59,7 @@ export class HeaderInfo extends Interface {
     }
 
     addListeners() {
-        Stage.events.on(Events.COLOR_PICKER, this.onColorPicker);
+        Stage.events.on('color_picker', this.onColorPicker);
         this.element.addEventListener('mouseenter', this.onHover);
         this.element.addEventListener('mouseleave', this.onHover);
         window.addEventListener('pointerdown', this.onPointerDown);
@@ -74,7 +67,7 @@ export class HeaderInfo extends Interface {
     }
 
     removeListeners() {
-        Stage.events.off(Events.COLOR_PICKER, this.onColorPicker);
+        Stage.events.off('color_picker', this.onColorPicker);
         this.element.removeEventListener('mouseenter', this.onHover);
         this.element.removeEventListener('mouseleave', this.onHover);
         window.removeEventListener('pointerdown', this.onPointerDown);
@@ -91,10 +84,10 @@ export class HeaderInfo extends Interface {
         }
 
         if (open) {
-            this.text.tween({ opacity: 0.35 }, 400, 'easeInOutSine');
+            this.number.tween({ opacity: 0.35 }, 400, 'easeInOutSine');
             this.openColor = target;
         } else {
-            this.text.tween({ opacity: 1 }, 400, 'easeInOutSine');
+            this.number.tween({ opacity: 1 }, 400, 'easeInOutSine');
             this.openColor = null;
         }
     };
@@ -150,7 +143,7 @@ export class HeaderInfo extends Interface {
         }
 
         if (this.openColor && !this.openColor.element.contains(e.target)) {
-            Stage.events.emit(Events.COLOR_PICKER, { open: false, target: this });
+            Stage.events.emit('color_picker', { open: false, target: this });
         } else if (!this.element.contains(e.target)) {
             this.panel.animateOut(() => {
                 this.isOpen = false;
@@ -176,7 +169,7 @@ export class HeaderInfo extends Interface {
 
         this.count++;
 
-        this.text.text(this.fps);
+        this.number.text(this.fps);
     };
 
     destroy = () => {

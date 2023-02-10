@@ -1,4 +1,4 @@
-import { Assets, Events, Stage, WebAudio, ticker, wait } from 'alien.js';
+import { Assets, Stage, WebAudio, ticker, wait } from 'alien.js';
 
 import { Global } from '../config/Global.js';
 import { AudioController } from './audio/AudioController.js';
@@ -51,7 +51,7 @@ export class App {
     }
 
     static addListeners() {
-        Stage.events.on(Events.RESIZE, this.onResize);
+        Stage.events.on('resize', this.onResize);
         ticker.add(this.onUpdate);
     }
 

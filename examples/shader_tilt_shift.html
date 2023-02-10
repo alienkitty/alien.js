@@ -11,7 +11,7 @@
     <link rel="stylesheet" href="assets/css/style.css">
 
     <script type="module">
-        import { ACESFilmicToneMapping, AdditiveBlending, AmbientLight, BloomCompositeMaterial, BufferGeometry, Color, CopyMaterial, DepthTexture, Device, DirectionalLight, EnvironmentTextureLoader, Events, FXAAMaterial, Float32BufferAttribute, GLSL3, Group, HemisphereLight, ImageBitmapLoaderThread, LuminosityMaterial, Mesh, MeshStandardMaterial, OrbitControls, OrthographicCamera, PanelItem, PerspectiveCamera, Points, RawShaderMaterial, RepeatWrapping, Scene, SceneCompositeMaterial, SphereGeometry, Stage, TextureLoader, Thread, TiltShiftMaterial, UI, UnrealBloomBlurMaterial, Vector2, WebGLRenderTarget, WebGLRenderer, floorPowerOfTwo, getFullscreenTriangle, lerp, randFloatSpread, ticker } from '../build/alien.js';
+        import { ACESFilmicToneMapping, AdditiveBlending, AmbientLight, BloomCompositeMaterial, BufferGeometry, Color, CopyMaterial, DepthTexture, DirectionalLight, EnvironmentTextureLoader, FXAAMaterial, Float32BufferAttribute, GLSL3, Group, HemisphereLight, ImageBitmapLoaderThread, LuminosityMaterial, Mesh, MeshStandardMaterial, OrbitControls, OrthographicCamera, PanelItem, PerspectiveCamera, Points, RawShaderMaterial, RepeatWrapping, Scene, SceneCompositeMaterial, SphereGeometry, Stage, TextureLoader, Thread, TiltShiftMaterial, UI, UnrealBloomBlurMaterial, Vector2, WebGLRenderTarget, WebGLRenderer, floorPowerOfTwo, getFullscreenTriangle, lerp, randFloatSpread, ticker } from '../build/alien.js';
 
         import simplex3d from '../src/shaders/modules/noise/simplex3d.glsl.js';
         import depth from '../src/shaders/modules/depth/depth.glsl.js';
@@ -683,7 +683,7 @@
 
         class App {
             static async init() {
-                if (!Device.agent.includes('firefox')) {
+                if (!/firefox/i.test(navigator.userAgent)) {
                     this.initThread();
                 }
 
@@ -731,7 +731,7 @@
             }
 
             static addListeners() {
-                Stage.events.on(Events.RESIZE, this.onResize);
+                Stage.events.on('resize', this.onResize);
                 ticker.add(this.onUpdate);
             }
 

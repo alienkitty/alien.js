@@ -11,7 +11,7 @@
     <link rel="stylesheet" href="assets/css/style.css">
 
     <script type="module">
-        import { Events, Stage, Thread, ticker } from '../build/alien.js';
+        import { Stage, Thread, ticker } from '../build/alien.js';
 
         // Based on https://codepen.io/zepha/pen/VpXvBJ
 
@@ -216,7 +216,7 @@
             }
 
             static addListeners() {
-                Stage.events.on(Events.RESIZE, this.onResize);
+                Stage.events.on('resize', this.onResize);
                 window.addEventListener('load', this.onLoad);
             }
 

@@ -2,7 +2,6 @@
  * @author pschroen / https://ufo.ai/
  */
 
-import { Events } from '../config/Events.js';
 import { EventEmitter } from '../utils/EventEmitter.js';
 
 export class Loader {
@@ -27,7 +26,7 @@ export class Loader {
     increment() {
         this.progress = ++this.loaded / this.total;
 
-        this.events.emit(Events.PROGRESS, { progress: this.progress });
+        this.events.emit('progress', { progress: this.progress });
 
         if (this.loaded === this.total) {
             this.complete();
@@ -37,7 +36,7 @@ export class Loader {
     complete() {
         this.resolve();
 
-        this.events.emit(Events.COMPLETE);
+        this.events.emit('complete');
 
         if (this.callback) {
             this.callback();

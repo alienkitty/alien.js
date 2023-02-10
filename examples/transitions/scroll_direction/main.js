@@ -1,7 +1,9 @@
-import { ACESFilmicToneMapping, AmbientLight, Assets, BloomCompositeMaterial, BoxGeometry, Color, Component, Device, DirectionalLight, EnvironmentTextureLoader, Events, FXAAMaterial, GLSL3, Global, Group, Header, HemisphereLight, IcosahedronGeometry, ImageBitmapLoaderThread, Interface, LuminosityMaterial, Mesh, MeshStandardMaterial, NoBlending, OctahedronGeometry, OrthographicCamera, PanelItem, PerspectiveCamera, RawShaderMaterial, RepeatWrapping, Scene, SceneCompositeMaterial, SmoothViews, Stage, TextureLoader, Thread, UnrealBloomBlurMaterial, Vector2, WebGLRenderTarget, WebGLRenderer, defer, degToRad, floorPowerOfTwo, getFullscreenTriangle, lerp, shuffle, ticker } from '../../../build/alien.js';
+import { ACESFilmicToneMapping, AmbientLight, Assets, BloomCompositeMaterial, BoxGeometry, Color, Component, DirectionalLight, EnvironmentTextureLoader, FXAAMaterial, GLSL3, Group, Header, HemisphereLight, IcosahedronGeometry, ImageBitmapLoaderThread, Interface, LuminosityMaterial, Mesh, MeshStandardMaterial, NoBlending, OctahedronGeometry, OrthographicCamera, PanelItem, PerspectiveCamera, RawShaderMaterial, RepeatWrapping, Scene, SceneCompositeMaterial, SmoothViews, Stage, TextureLoader, Thread, UnrealBloomBlurMaterial, Vector2, WebGLRenderTarget, WebGLRenderer, defer, degToRad, floorPowerOfTwo, getFullscreenTriangle, lerp, shuffle, ticker } from '../../../build/alien.js';
 
-Global.SECTIONS = [];
-Global.SECTION_INDEX = 0;
+class Global {
+    static SECTIONS = [];
+    static SECTION_INDEX = 0;
+}
 
 class Config {
     static BREAKPOINT = 1000;
@@ -251,8 +253,8 @@ class UI extends Interface {
     }
 
     addListeners() {
-        Stage.events.on(Events.VIEW_CHANGE, this.onViewChange);
-        Stage.events.on(Events.RESIZE, this.onResize);
+        Stage.events.on('view_change', this.onViewChange);
+        Stage.events.on('resize', this.onResize);
     }
 
     /**
@@ -367,7 +369,7 @@ class Section extends Interface {
 
     onIntersect = ([entry]) => {
         if (entry.isIntersecting) {
-            Stage.events.emit(Events.VIEW_CHANGE, { index: this.index });
+            Stage.events.emit('view_change', { index: this.index });
         }
     };
 }
@@ -1351,7 +1353,7 @@ class App {
     static async init() {
         Assets.path = '/examples/';
 
-        if (!Device.agent.includes('firefox')) {
+        if (!/firefox/i.test(navigator.userAgent)) {
             this.initThread();
         }
 
@@ -1425,7 +1427,7 @@ class App {
     }
 
     static addListeners() {
-        Stage.events.on(Events.RESIZE, this.onResize);
+        Stage.events.on('resize', this.onResize);
         ticker.add(this.onUpdate);
     }
 

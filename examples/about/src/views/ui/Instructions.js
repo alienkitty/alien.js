@@ -1,4 +1,4 @@
-import { Device, Interface } from 'alien.js';
+import { Interface } from 'alien.js';
 
 export class Instructions extends Interface {
     constructor() {
@@ -35,7 +35,7 @@ export class Instructions extends Interface {
             textTransform: 'uppercase',
             opacity: 0.7
         });
-        this.text.text(`${Device.mobile ? 'Tap' : 'Click'} for sound`);
+        this.text.text(`${navigator.maxTouchPoints ? 'Tap' : 'Click'} for sound`);
         this.container.add(this.text);
     }
 

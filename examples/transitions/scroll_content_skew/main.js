@@ -1,7 +1,9 @@
-import { ACESFilmicToneMapping, AmbientLight, Assets, BloomCompositeMaterial, BlurMaterial, BoxGeometry, Color, Device, DirectionalLight, EnvironmentTextureLoader, Events, FXAAMaterial, GLSL3, Global, Group, HemisphereLight, IcosahedronGeometry, ImageBitmapLoaderThread, Interface, LuminosityMaterial, Mesh, MeshStandardMaterial, NoBlending, OctahedronGeometry, OrthographicCamera, PanelItem, PerspectiveCamera, RawShaderMaterial, RepeatWrapping, Scene, SceneCompositeMaterial, SmoothSkew, Stage, TextureLoader, Thread, UI, UnrealBloomBlurMaterial, Vector2, WebGLRenderTarget, WebGLRenderer, clamp, clearTween, defer, degToRad, floorPowerOfTwo, getFullscreenTriangle, inverseLerp, lerp, shuffle, ticker, tween } from '../../../build/alien.js';
+import { ACESFilmicToneMapping, AmbientLight, Assets, BloomCompositeMaterial, BlurMaterial, BoxGeometry, Color, DirectionalLight, EnvironmentTextureLoader, FXAAMaterial, GLSL3, Group, HemisphereLight, IcosahedronGeometry, ImageBitmapLoaderThread, Interface, LuminosityMaterial, Mesh, MeshStandardMaterial, NoBlending, OctahedronGeometry, OrthographicCamera, PanelItem, PerspectiveCamera, RawShaderMaterial, RepeatWrapping, Scene, SceneCompositeMaterial, SmoothSkew, Stage, TextureLoader, Thread, UI, UnrealBloomBlurMaterial, Vector2, WebGLRenderTarget, WebGLRenderer, clamp, clearTween, defer, degToRad, floorPowerOfTwo, getFullscreenTriangle, inverseLerp, lerp, shuffle, ticker, tween } from '../../../build/alien.js';
 
-Global.SECTIONS = [];
-Global.SECTION_INDEX = 0;
+class Global {
+    static SECTIONS = [];
+    static SECTION_INDEX = 0;
+}
 
 class Config {
     static BREAKPOINT = 1000;
@@ -204,7 +206,7 @@ class Details extends Interface {
     }
 
     addListeners() {
-        Stage.events.on(Events.RESIZE, this.onResize);
+        Stage.events.on('resize', this.onResize);
     }
 
     /**
@@ -306,7 +308,7 @@ class Section extends Interface {
 
     onIntersect = ([entry]) => {
         if (entry.isIntersecting) {
-            Stage.events.emit(Events.VIEW_CHANGE, { index: this.index });
+            Stage.events.emit('view_change', { index: this.index });
 
             if (!this.animatedIn) {
                 this.animatedIn = true;
@@ -645,7 +647,7 @@ class SceneController {
     }
 
     static addListeners() {
-        Stage.events.on(Events.VIEW_CHANGE, this.onViewChange);
+        Stage.events.on('view_change', this.onViewChange);
     }
 
     /**
@@ -1234,7 +1236,7 @@ class App {
     static async init() {
         Assets.path = '/examples/';
 
-        if (!Device.agent.includes('firefox')) {
+        if (!/firefox/i.test(navigator.userAgent)) {
             this.initThread();
         }
 
@@ -1306,7 +1308,7 @@ class App {
     }
 
     static addListeners() {
-        Stage.events.on(Events.RESIZE, this.onResize);
+        Stage.events.on('resize', this.onResize);
         ticker.add(this.onUpdate);
     }
 

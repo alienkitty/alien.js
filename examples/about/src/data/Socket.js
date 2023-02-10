@@ -1,4 +1,4 @@
-import { EventEmitter, Events, Stage } from 'alien.js';
+import { EventEmitter, Stage } from 'alien.js';
 
 import { Global } from '../config/Global.js';
 
@@ -98,7 +98,7 @@ export class Socket extends EventEmitter {
     onUsers = e => {
         Global.USERS = e;
 
-        Stage.events.emit(Events.UPDATE, e);
+        Stage.events.emit('update', e);
     };
 
     onHeartbeat = e => {

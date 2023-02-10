@@ -11,7 +11,7 @@
     <link rel="stylesheet" href="assets/css/style.css">
 
     <script type="module">
-        import { ACESFilmicToneMapping, AmbientLight, BloomCompositeMaterial, Color, Device, DirectionalLight, DoubleSide, EnvironmentTextureLoader, Events, FXAAMaterial, GLSL3, Group, HemisphereLight, ImageBitmapLoaderThread, LuminosityMaterial, Mesh, MeshPhysicalMaterial, NoBlending, OrbitControls, OrthographicCamera, PanelItem, PerspectiveCamera, PlaneGeometry, PolyhedronGeometry, RawShaderMaterial, Reflector, ReflectorDudvMaterial, RepeatWrapping, Scene, Stage, TetrahedronGeometry, TextureLoader, Thread, UI, UnrealBloomBlurMaterial, Vector2, Vector3, WebGLRenderTarget, WebGLRenderer, degToRad, floorPowerOfTwo, getFullscreenTriangle, getKeyByValue, lerp, ticker } from '../build/alien.js';
+        import { ACESFilmicToneMapping, AmbientLight, BloomCompositeMaterial, Color, DirectionalLight, DoubleSide, EnvironmentTextureLoader, FXAAMaterial, GLSL3, Group, HemisphereLight, ImageBitmapLoaderThread, LuminosityMaterial, Mesh, MeshPhysicalMaterial, NoBlending, OrbitControls, OrthographicCamera, PanelItem, PerspectiveCamera, PlaneGeometry, PolyhedronGeometry, RawShaderMaterial, Reflector, ReflectorDudvMaterial, RepeatWrapping, Scene, Stage, TetrahedronGeometry, TextureLoader, Thread, UI, UnrealBloomBlurMaterial, Vector2, Vector3, WebGLRenderTarget, WebGLRenderer, degToRad, floorPowerOfTwo, getFullscreenTriangle, getKeyByValue, lerp, ticker } from '../build/alien.js';
 
         class Config {
             static CRYSTAL_COLOR = 0x9902ff;
@@ -1032,7 +1032,7 @@
 
         class App {
             static async init() {
-                if (!Device.agent.includes('firefox')) {
+                if (!/firefox/i.test(navigator.userAgent)) {
                     this.initThread();
                 }
 
@@ -1089,7 +1089,7 @@
             }
 
             static addListeners() {
-                Stage.events.on(Events.RESIZE, this.onResize);
+                Stage.events.on('resize', this.onResize);
                 ticker.add(this.onUpdate);
             }
 

@@ -2,7 +2,6 @@
  * @author pschroen / https://ufo.ai/
  */
 
-import { Events } from '../config/Events.js';
 import { Interface } from './Interface.js';
 
 import { ticker } from '../tween/Ticker.js';
@@ -30,19 +29,19 @@ if (typeof window !== 'undefined') {
     function onPopState(e) {
         Stage.path = location.pathname;
 
-        Stage.events.emit(Events.STATE_CHANGE, e);
+        Stage.events.emit('state_change', e);
     }
 
     function onKeyDown(e) {
-        Stage.events.emit(Events.KEY_DOWN, e);
+        Stage.events.emit('key_down', e);
     }
 
     function onKeyUp(e) {
-        Stage.events.emit(Events.KEY_UP, e);
+        Stage.events.emit('key_up', e);
     }
 
     function onKeyPress(e) {
-        Stage.events.emit(Events.KEY_PRESS, e);
+        Stage.events.emit('key_press', e);
     }
 
     function onResize(e) {
@@ -50,11 +49,11 @@ if (typeof window !== 'undefined') {
         Stage.height = document.documentElement.clientHeight;
         Stage.dpr = window.devicePixelRatio;
 
-        Stage.events.emit(Events.RESIZE, e);
+        Stage.events.emit('resize', e);
     }
 
     function onVisibility(e) {
-        Stage.events.emit(Events.VISIBILITY, e);
+        Stage.events.emit('visibility', e);
     }
 
     /**

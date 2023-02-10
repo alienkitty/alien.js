@@ -2,16 +2,11 @@
  * @author pschroen / https://ufo.ai/
  */
 
-import { Styles } from '../../config/Styles.js';
 import { Interface } from '../Interface.js';
 
 export class TargetNumber extends Interface {
-    constructor({
-        styles = Styles
-    } = {}) {
+    constructor() {
         super('.number');
-
-        this.styles = styles;
 
         const size = window.devicePixelRatio > 1 ? 17 : 18;
 
@@ -31,15 +26,14 @@ export class TargetNumber extends Interface {
             border: `${window.devicePixelRatio > 1 ? 1.5 : 1}px solid var(--ui-color)`
         });
 
-        this.text = new Interface('.text');
-        this.text.css({
+        this.number = new Interface('.number');
+        this.number.css({
             position: 'absolute',
             left: window.devicePixelRatio > 1 ? 4 : 5,
-            ...this.styles.number,
             lineHeight: this.height - (window.devicePixelRatio > 1 ? 3 : 2),
             textAlign: 'center'
         });
-        this.add(this.text);
+        this.add(this.number);
     }
 
     /**
@@ -52,7 +46,7 @@ export class TargetNumber extends Interface {
         }
 
         if (data.targetNumber) {
-            this.text.text(data.targetNumber);
+            this.number.text(data.targetNumber);
         }
     };
 

@@ -11,7 +11,7 @@
     <link rel="stylesheet" href="assets/css/style.css">
 
     <script type="module">
-        import { Color, DirectionalLight, Events, FXAAMaterial, Group, HemisphereLight, LinearMipmapLinearFilter, Mesh, MeshStandardMaterial, OrthographicCamera, PanelItem, PerspectiveCamera, PoissonDiscBlurMaterial, Scene, SphereGeometry, Stage, UI, Vector2, WebGLRenderTarget, WebGLRenderer, floorPowerOfTwo, getFullscreenTriangle, ticker } from '../build/alien.js';
+        import { Color, DirectionalLight, FXAAMaterial, Group, HemisphereLight, LinearMipmapLinearFilter, Mesh, MeshStandardMaterial, OrthographicCamera, PanelItem, PerspectiveCamera, PoissonDiscBlurMaterial, Scene, SphereGeometry, Stage, UI, Vector2, WebGLRenderTarget, WebGLRenderer, floorPowerOfTwo, getFullscreenTriangle, ticker } from '../build/alien.js';
 
         import periodic3d from '../src/shaders/modules/noise/periodic3d.glsl.js';
 
@@ -322,7 +322,7 @@
             }
 
             static addListeners() {
-                Stage.events.on(Events.RESIZE, this.onResize);
+                Stage.events.on('resize', this.onResize);
                 ticker.add(this.onUpdate);
             }
 

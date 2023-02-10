@@ -1,4 +1,4 @@
-import { Events, Interface, Stage } from 'alien.js';
+import { Interface, Stage } from 'alien.js';
 
 import { Global } from '../config/Global.js';
 import { AudioController } from '../controllers/audio/AudioController.js';
@@ -52,10 +52,10 @@ export class UI extends Interface {
     }
 
     addListeners() {
-        Stage.events.on(Events.UPDATE, this.onUsers);
-        Stage.events.on(Events.KEY_UP, this.onKeyUp);
-        this.details.events.on(Events.CLICK, this.onDetails);
-        this.detailsButton.events.on(Events.CLICK, this.onDetails);
+        Stage.events.on('update', this.onUsers);
+        Stage.events.on('key_up', this.onKeyUp);
+        this.details.events.on('click', this.onDetails);
+        this.detailsButton.events.on('click', this.onDetails);
     }
 
     /**
@@ -63,7 +63,7 @@ export class UI extends Interface {
      */
 
     onUsers = () => {
-        this.detailsButton.setIndex();
+        this.detailsButton.setNumber();
     };
 
     onKeyUp = e => {

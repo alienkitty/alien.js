@@ -2,7 +2,6 @@
  * @author pschroen / https://ufo.ai/
  */
 
-import { Events } from '../../config/Events.js';
 import { Interface } from '../Interface.js';
 import { Stage } from '../Stage.js';
 
@@ -29,11 +28,11 @@ export class Panel extends Interface {
     }
 
     addListeners() {
-        Stage.events.on(Events.COLOR_PICKER, this.onColorPicker);
+        Stage.events.on('color_picker', this.onColorPicker);
     }
 
     removeListeners() {
-        Stage.events.off(Events.COLOR_PICKER, this.onColorPicker);
+        Stage.events.off('color_picker', this.onColorPicker);
     }
 
     /**

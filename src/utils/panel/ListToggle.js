@@ -2,20 +2,17 @@
  * @author pschroen / https://ufo.ai/
  */
 
-import { Events } from '../../config/Events.js';
 import { Interface } from '../Interface.js';
 
 export class ListToggle extends Interface {
     constructor({
         label,
-        index,
-        styles
+        index
     }) {
         super('.list-toggle');
 
         this.label = label;
         this.index = index;
-        this.styles = styles;
 
         this.clicked = false;
 
@@ -31,7 +28,6 @@ export class ListToggle extends Interface {
             width: 54,
             height: 18,
             textTransform: 'uppercase',
-            ...this.styles.panel,
             whiteSpace: 'nowrap',
             overflow: 'hidden',
             cursor: 'pointer'
@@ -92,7 +88,7 @@ export class ListToggle extends Interface {
     };
 
     onClick = () => {
-        this.events.emit(Events.CLICK, { target: this });
+        this.events.emit('click', { target: this });
     };
 
     /**

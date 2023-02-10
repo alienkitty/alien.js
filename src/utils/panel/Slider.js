@@ -6,7 +6,6 @@
 
 import { Vector2 } from 'three/src/math/Vector2.js';
 
-import { Events } from '../../config/Events.js';
 import { Interface } from '../Interface.js';
 
 import { clamp } from '../Utils.js';
@@ -18,8 +17,7 @@ export class Slider extends Interface {
         max = 1,
         step = 0.01,
         value = 0,
-        callback,
-        styles
+        callback
     }) {
         super('.slider');
 
@@ -30,7 +28,6 @@ export class Slider extends Interface {
         this.precision = this.getPrecision(this.step);
         this.value = typeof value === 'string' ? parseFloat(value) : value;
         this.callback = callback;
-        this.styles = styles;
 
         this.range = this.max - this.min;
         this.value = this.getValue(this.value);
@@ -63,7 +60,6 @@ export class Slider extends Interface {
             cssFloat: 'left',
             marginRight: 10,
             textTransform: 'uppercase',
-            ...this.styles.panel,
             lineHeight: 20,
             whiteSpace: 'nowrap'
         });
@@ -74,7 +70,6 @@ export class Slider extends Interface {
         this.number.css({
             position: 'relative',
             cssFloat: 'right',
-            ...this.styles.number,
             lineHeight: 20,
             letterSpacing: 0.5,
             whiteSpace: 'nowrap'
@@ -182,7 +177,7 @@ export class Slider extends Interface {
         if (this.value !== this.lastValue) {
             this.lastValue = this.value;
 
-            this.events.emit(Events.UPDATE, this.value);
+            this.events.emit('update', this.value);
 
             if (this.callback) {
                 this.callback(this.value);

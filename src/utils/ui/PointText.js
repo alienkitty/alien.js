@@ -2,18 +2,13 @@
  * @author pschroen / https://ufo.ai/
  */
 
-import { Styles } from '../../config/Styles.js';
 import { Interface } from '../Interface.js';
 import { TargetNumber } from './TargetNumber.js';
 import { Panel } from '../panel/Panel.js';
 
 export class PointText extends Interface {
-    constructor({
-        styles = Styles
-    } = {}) {
+    constructor() {
         super('.text');
-
-        this.styles = styles;
 
         this.locked = false;
 
@@ -39,7 +34,6 @@ export class PointText extends Interface {
         this.name = new Interface('.name');
         this.name.css({
             position: 'relative',
-            ...this.styles.label,
             lineHeight: 18,
             whiteSpace: 'nowrap'
         });
@@ -48,14 +42,13 @@ export class PointText extends Interface {
         this.type = new Interface('.type');
         this.type.css({
             position: 'relative',
-            ...this.styles.small,
             opacity: 0.7
         });
         this.container.add(this.type);
     }
 
     initViews() {
-        this.number = new TargetNumber({ styles: this.styles });
+        this.number = new TargetNumber();
         this.number.css({
             left: -(this.number.width + 10),
             top: '50%',

@@ -4,9 +4,6 @@
 
 import { Group, Mesh, MeshBasicMaterial, Raycaster, SphereGeometry, Vector2 } from 'three';
 
-import { Device } from '../../config/Device.js';
-import { Events } from '../../config/Events.js';
-import { Styles } from '../../config/Styles.js';
 import { Interface } from '../Interface.js';
 import { Line } from './Line.js';
 import { Reticle } from './Reticle.js';
@@ -20,7 +17,6 @@ export class Point3D extends Group {
     static init(scene, camera, {
         root = document.body,
         container = document.body,
-        styles = Styles,
         debug = false
     } = {}) {
         this.scene = scene;
@@ -28,7 +24,6 @@ export class Point3D extends Group {
         this.root = root instanceof Interface ? root : new Interface(root);
         this.container = container instanceof Interface ? container : new Interface(container);
         this.events = this.root.events;
-        this.styles = styles;
         this.debug = debug;
 
         this.objects = [];
@@ -64,7 +59,7 @@ export class Point3D extends Group {
     }
 
     static addListeners() {
-        this.events.on(Events.INVERT, this.onInvert);
+        this.events.on('invert', this.onInvert);
         window.addEventListener('resize', this.onResize);
         window.addEventListener('pointerdown', this.onPointerDown);
         window.addEventListener('pointermove', this.onPointerMove);
@@ -72,7 +67,7 @@ export class Point3D extends Group {
     }
 
     static removeListeners() {
-        this.events.off(Events.INVERT, this.onInvert);
+        this.events.off('invert', this.onInvert);
         window.removeEventListener('resize', this.onResize);
         window.removeEventListener('pointerdown', this.onPointerDown);
         window.removeEventListener('pointermove', this.onPointerMove);
@@ -191,7 +186,7 @@ export class Point3D extends Group {
 
         this.points.forEach(point => point.update());
 
-        if (!Device.mobile && time - this.lastRaycast > this.raycastInterval) {
+        if (!navigator.maxTouchPoints && time - this.lastRaycast > this.raycastInterval) {
             this.onPointerMove();
             this.lastRaycast = time;
         }
@@ -303,20 +298,20 @@ export class Point3D extends Group {
     }
 
     initViews() {
-        const { context, styles } = Point3D;
+        const { context } = Point3D;
 
         this.line = new Line(context);
         Point3D.container.add(this.line);
 
-        this.reticle = new Reticle({ styles });
+        this.reticle = new Reticle();
         Point3D.container.add(this.reticle);
 
         if (!this.noTracker) {
-            this.tracker = new Tracker({ styles });
+            this.tracker = new Tracker();
             Point3D.container.add(this.tracker);
         }
 
-        this.point = new Point(this, this.tracker, { styles });
+        this.point = new Point(this, this.tracker);
         this.point.setData({
             name: this.name,
             type: this.type
@@ -354,7 +349,7 @@ export class Point3D extends Group {
             });
         }
 
-        Point3D.events.emit(Events.HOVER, { type, target: this });
+        Point3D.events.emit('hover', { type, target: this });
     };
 
     onClick = () => {
@@ -369,9 +364,9 @@ export class Point3D extends Group {
                 this.toggle(false);
             }
 
-            Point3D.events.emit(Events.CLICK, { selected: Point3D.getSelected(), target: this });
+            Point3D.events.emit('click', { selected: Point3D.getSelected(), target: this });
         } else {
-            Point3D.events.emit(Events.CLICK, { target: this });
+            Point3D.events.emit('click', { target: this });
         }
     };
 

@@ -11,7 +11,7 @@
     <link rel="stylesheet" href="assets/css/style.css">
 
     <script type="module">
-        import { Events, GLSL3, Mesh, NoBlending, OrthographicCamera, PanelItem, RawShaderMaterial, Scene, Stage, UI, Vector2, WebGLRenderer, getFullscreenTriangle, ticker } from '../build/alien.js';
+        import { GLSL3, Mesh, NoBlending, OrthographicCamera, PanelItem, RawShaderMaterial, Scene, Stage, UI, Vector2, WebGLRenderer, getFullscreenTriangle, ticker } from '../build/alien.js';
 
         import simplex2d from '../src/shaders/modules/noise/simplex2d.glsl.js';
 
@@ -281,7 +281,7 @@
             }
 
             static addListeners() {
-                Stage.events.on(Events.RESIZE, this.onResize);
+                Stage.events.on('resize', this.onResize);
                 ticker.add(this.onUpdate);
             }
 

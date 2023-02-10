@@ -1,4 +1,4 @@
-import { AssetLoader, Assets, Device, Events, FontLoader, MultiLoader, Stage } from 'alien.js';
+import { AssetLoader, Assets, FontLoader, MultiLoader, Stage } from 'alien.js';
 
 import { Config } from '../config/Config.js';
 import { Data } from '../data/Data.js';
@@ -6,10 +6,6 @@ import { PreloaderView } from '../views/PreloaderView.js';
 
 export class Preloader {
     static init() {
-        if (!Device.webgl) {
-            return location.href = 'fallback.html';
-        }
-
         Assets.cache = true;
 
         Data.init();
@@ -52,13 +48,13 @@ export class Preloader {
     }
 
     static addListeners() {
-        this.loader.events.on(Events.PROGRESS, this.view.onProgress);
-        this.view.events.on(Events.COMPLETE, this.onComplete);
+        this.loader.events.on('progress', this.view.onProgress);
+        this.view.events.on('complete', this.onComplete);
     }
 
     static removeListeners() {
-        this.loader.events.off(Events.PROGRESS, this.view.onProgress);
-        this.view.events.off(Events.COMPLETE, this.onComplete);
+        this.loader.events.off('progress', this.view.onProgress);
+        this.view.events.off('complete', this.onComplete);
     }
 
     /**

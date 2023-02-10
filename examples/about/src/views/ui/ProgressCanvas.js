@@ -1,4 +1,4 @@
-import { Events, Interface, Stage, clearTween, degToRad, ticker, tween } from 'alien.js';
+import { Interface, Stage, clearTween, degToRad, ticker, tween } from 'alien.js';
 
 export class ProgressCanvas extends Interface {
     constructor() {
@@ -57,7 +57,7 @@ export class ProgressCanvas extends Interface {
     onComplete = () => {
         this.removeListeners();
 
-        this.events.emit(Events.COMPLETE);
+        this.events.emit('complete');
     };
 
     /**

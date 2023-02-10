@@ -11,7 +11,7 @@
     <link rel="stylesheet" href="assets/css/style.css">
 
     <script type="module">
-        import { ACESFilmicToneMapping, AmbientLight, BloomCompositeMaterial, Color, DirectionalLight, EnvironmentTextureLoader, Events, FXAAMaterial, FrontSide, GLSL3, GLTFLoader, Group, Header, HemisphereLight, Interface, LuminosityMaterial, Mesh, MeshBasicMaterial, NoBlending, OrbitControls, OrthographicCamera, PanelItem, PerspectiveCamera, PointLight, RawShaderMaterial, Scene, SphereGeometry, Stage, UnrealBloomBlurMaterial, Vector2, Vector3, WebGLRenderTarget, WebGLRenderer, degToRad, floorPowerOfTwo, getFrustum, getFullscreenTriangle, getKeyByValue, lerp, ticker, tween } from '../build/alien.js';
+        import { ACESFilmicToneMapping, AmbientLight, BloomCompositeMaterial, Color, DirectionalLight, EnvironmentTextureLoader, FXAAMaterial, FrontSide, GLSL3, GLTFLoader, Group, Header, HemisphereLight, Interface, LuminosityMaterial, Mesh, MeshBasicMaterial, NoBlending, OrbitControls, OrthographicCamera, PanelItem, PerspectiveCamera, PointLight, RawShaderMaterial, Scene, SphereGeometry, Stage, UnrealBloomBlurMaterial, Vector2, Vector3, WebGLRenderTarget, WebGLRenderer, degToRad, floorPowerOfTwo, getFrustum, getFullscreenTriangle, getKeyByValue, lerp, ticker, tween } from '../build/alien.js';
 
         class Config {
             static DEBUG = /[?&]debug/.test(location.search);
@@ -897,7 +897,7 @@
             }
 
             static addListeners() {
-                Stage.events.on(Events.RESIZE, this.onResize);
+                Stage.events.on('resize', this.onResize);
                 ticker.add(this.onUpdate);
                 window.addEventListener('load', this.onLoad);
             }

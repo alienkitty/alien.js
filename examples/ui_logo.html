@@ -11,7 +11,7 @@
     <link rel="stylesheet" href="assets/css/style.css">
 
     <script type="module">
-        import { Events, Interface, Stage } from '../build/alien.js';
+        import { Interface, Stage } from '../build/alien.js';
 
         class Logo extends Interface {
             constructor() {
@@ -43,14 +43,14 @@
             }
 
             addListeners() {
-                Stage.events.on(Events.RESIZE, this.onResize);
+                Stage.events.on('resize', this.onResize);
                 this.element.addEventListener('mouseenter', this.onHover);
                 this.element.addEventListener('mouseleave', this.onHover);
                 this.element.addEventListener('click', this.onClick);
             }
 
             removeListeners() {
-                Stage.events.off(Events.RESIZE, this.onResize);
+                Stage.events.off('resize', this.onResize);
                 this.element.removeEventListener('mouseenter', this.onHover);
                 this.element.removeEventListener('mouseleave', this.onHover);
                 this.element.removeEventListener('click', this.onClick);

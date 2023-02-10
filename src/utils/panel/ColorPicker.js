@@ -10,7 +10,6 @@
 import { Color } from 'three/src/math/Color.js';
 import { Vector2 } from 'three/src/math/Vector2.js';
 
-import { Events } from '../../config/Events.js';
 import { Interface } from '../Interface.js';
 import { Stage } from '../Stage.js';
 
@@ -26,15 +25,13 @@ export class ColorPicker extends Interface {
     constructor({
         value,
         noText,
-        callback,
-        styles
+        callback
     }) {
         super('.color-picker');
 
         this.value = new Color(value);
         this.noText = noText;
         this.callback = callback;
-        this.styles = styles;
 
         this.width = 108;
         this.height = 19;
@@ -79,7 +76,6 @@ export class ColorPicker extends Interface {
             position: 'relative',
             width: '100%',
             height: this.height,
-            ...this.styles.panel,
             lineHeight: this.height,
             whiteSpace: 'nowrap',
             cursor: 'pointer'
@@ -299,7 +295,7 @@ export class ColorPicker extends Interface {
     }
 
     addListeners() {
-        Stage.events.on(Events.COLOR_PICKER, this.onColorPicker);
+        Stage.events.on('color_picker', this.onColorPicker);
         this.container.element.addEventListener('click', this.onClick);
         this.element.addEventListener('pointerdown', this.onPointerDown);
         window.addEventListener('pointermove', this.onPointerMove);
@@ -307,7 +303,7 @@ export class ColorPicker extends Interface {
     }
 
     removeListeners() {
-        Stage.events.off(Events.COLOR_PICKER, this.onColorPicker);
+        Stage.events.off('color_picker', this.onColorPicker);
         this.container.element.removeEventListener('click', this.onClick);
         this.element.removeEventListener('pointerdown', this.onPointerDown);
         window.removeEventListener('pointermove', this.onPointerMove);
@@ -326,15 +322,15 @@ export class ColorPicker extends Interface {
 
     onClick = () => {
         if (!this.isOpen) {
-            Stage.events.emit(Events.COLOR_PICKER, { open: false, target: this });
+            Stage.events.emit('color_picker', { open: false, target: this });
 
             this.open();
 
-            Stage.events.emit(Events.COLOR_PICKER, { open: true, target: this });
+            Stage.events.emit('color_picker', { open: true, target: this });
         } else {
             this.close();
 
-            Stage.events.emit(Events.COLOR_PICKER, { open: false, target: this });
+            Stage.events.emit('color_picker', { open: false, target: this });
         }
     };
 
@@ -512,7 +508,7 @@ export class ColorPicker extends Interface {
             this.lastValue = value;
 
             if (this.isDown) {
-                this.events.emit(Events.UPDATE, this.value);
+                this.events.emit('update', this.value);
 
                 if (this.callback) {
                     this.callback(this.value);

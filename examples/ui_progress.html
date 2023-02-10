@@ -11,7 +11,7 @@
     <link rel="stylesheet" href="assets/css/style.css">
 
     <script type="module">
-        import { Events, Interface, Stage, clearTween, ticker, tween } from '../build/alien.js';
+        import { Interface, Stage, clearTween, ticker, tween } from '../build/alien.js';
 
         class Progress extends Interface {
             constructor() {
@@ -89,7 +89,7 @@
             onComplete = () => {
                 this.removeListeners();
 
-                this.events.emit(Events.COMPLETE);
+                this.events.emit('complete');
             };
 
             /**

@@ -2,7 +2,6 @@
  * @author pschroen / https://ufo.ai/
  */
 
-import { Styles } from '../../config/Styles.js';
 import { Interface } from '../Interface.js';
 import { Link } from './Link.js';
 import { List } from './List.js';
@@ -10,13 +9,10 @@ import { Slider } from './Slider.js';
 import { ColorPicker } from './ColorPicker.js';
 
 export class PanelItem extends Interface {
-    static styles = Styles;
-
     constructor(data) {
         super('.panel-item');
 
         this.data = data;
-        this.data.styles = this.data.styles || PanelItem.styles;
 
         this.width = 128;
 
@@ -39,7 +35,6 @@ export class PanelItem extends Interface {
             this.text.css({
                 position: 'relative',
                 textTransform: 'uppercase',
-                ...this.data.styles.panel,
                 whiteSpace: 'nowrap'
             });
             this.text.text(this.data.label);
@@ -90,9 +85,8 @@ export class PanelItem extends Interface {
             const list = Object.keys(this.data.list);
             const index = list.indexOf(this.data.value);
             const callback = this.data.callback;
-            const styles = this.data.styles;
 
-            this.list = new List({ list, index, callback, styles });
+            this.list = new List({ list, index, callback });
             this.add(this.list);
         } else if (this.data.type === 'slider') {
             this.css({

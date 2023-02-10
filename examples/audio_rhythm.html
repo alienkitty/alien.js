@@ -22,7 +22,7 @@
     </style>
 
     <script type="module">
-        import { AssetLoader, Assets, Device, Events, Interface, Panel, PanelItem, Stage, WebAudio, headsTails } from '../build/alien.js';
+        import { AssetLoader, Assets, Interface, Panel, PanelItem, Stage, WebAudio, headsTails } from '../build/alien.js';
 
         class Config {
             static ASSETS = [
@@ -74,7 +74,7 @@
                     textTransform: 'uppercase',
                     opacity: 0.7
                 });
-                this.text.text(`${Device.mobile ? 'Tap' : 'Click'} for sound`);
+                this.text.text(`${navigator.maxTouchPoints ? 'Tap' : 'Click'} for sound`);
                 this.container.add(this.text);
             }
 
@@ -160,7 +160,7 @@
             }
 
             static addListeners() {
-                Stage.events.on(Events.VISIBILITY, this.onVisibility);
+                Stage.events.on('visibility', this.onVisibility);
                 window.addEventListener('pointerdown', this.onPointerDown);
 
                 this.instructions.toggle(true);

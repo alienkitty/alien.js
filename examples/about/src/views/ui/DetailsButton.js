@@ -1,4 +1,4 @@
-import { Events, Interface, Stage, clearTween, tween } from 'alien.js';
+import { Interface, Stage, clearTween, tween } from 'alien.js';
 
 import { Config } from '../../config/Config.js';
 import { Global } from '../../config/Global.js';
@@ -25,7 +25,7 @@ export class DetailsButton extends Interface {
         this.needsUpdate = false;
 
         this.initHTML();
-        this.initIndex();
+        this.initNumber();
         this.initCanvas();
         this.initCircle();
 
@@ -48,15 +48,15 @@ export class DetailsButton extends Interface {
         });
     }
 
-    initIndex() {
-        this.index = new Interface('.index');
-        this.index.css({
+    initNumber() {
+        this.number = new Interface('.number');
+        this.number.css({
             left: 34,
             top: 12,
             ...Styles.number
         });
-        this.index.text(Global.USERS.length);
-        this.add(this.index);
+        this.number.text(Global.USERS.length);
+        this.add(this.number);
     }
 
     initCanvas() {
@@ -96,14 +96,14 @@ export class DetailsButton extends Interface {
     }
 
     addListeners() {
-        Stage.events.on(Events.RESIZE, this.onResize);
+        Stage.events.on('resize', this.onResize);
         this.element.addEventListener('mouseenter', this.onHover);
         this.element.addEventListener('mouseleave', this.onHover);
         this.element.addEventListener('click', this.onClick);
     }
 
     removeListeners() {
-        Stage.events.off(Events.RESIZE, this.onResize);
+        Stage.events.off('resize', this.onResize);
         this.element.removeEventListener('mouseenter', this.onHover);
         this.element.removeEventListener('mouseleave', this.onHover);
         this.element.removeEventListener('click', this.onClick);
@@ -178,21 +178,21 @@ export class DetailsButton extends Interface {
     };
 
     onClick = () => {
-        this.events.emit(Events.CLICK);
+        this.events.emit('click');
     };
 
     /**
      * Public methods
      */
 
-    setIndex = () => {
-        if (String(Global.USERS.length) === this.index.text()) {
+    setNumber = () => {
+        if (String(Global.USERS.length) === this.number.text()) {
             return;
         }
 
-        this.index.tween({ y: -10, opacity: 0 }, 300, 'easeInSine', () => {
-            this.index.text(Global.USERS.length);
-            this.index.css({ y: 10 }).tween({ y: 0, opacity: 1 }, 1000, 'easeOutCubic');
+        this.number.tween({ y: -10, opacity: 0 }, 300, 'easeInSine', () => {
+            this.number.text(Global.USERS.length);
+            this.number.css({ y: 10 }).tween({ y: 0, opacity: 1 }, 1000, 'easeOutCubic');
         });
     };
 

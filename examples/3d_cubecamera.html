@@ -11,7 +11,7 @@
     <link rel="stylesheet" href="assets/css/style.css">
 
     <script type="module">
-        import { ACESFilmicToneMapping, AdditiveBlending, BackSide, BlurMaterial, Color, CubeCamera, Device, Events, FXAAMaterial, GLSL3, Group, IcosahedronGeometry, ImageBitmapLoaderThread, LinearMipmapLinearFilter, Mesh, MeshBasicMaterial, MultiplyOperation, NoBlending, OrthographicCamera, PanelItem, PerspectiveCamera, RawShaderMaterial, Scene, SphereGeometry, Sprite, SpriteMaterial, Stage, TextureLoader, Thread, UI, Vector2, Vector3, WebGLCubeRenderTarget, WebGLRenderTarget, WebGLRenderer, Wobble, degToRad, getFullscreenTriangle, getKeyByValue, randFloat, ticker, tween } from '../build/alien.js';
+        import { ACESFilmicToneMapping, AdditiveBlending, BackSide, BlurMaterial, Color, CubeCamera, FXAAMaterial, GLSL3, Group, IcosahedronGeometry, ImageBitmapLoaderThread, LinearMipmapLinearFilter, Mesh, MeshBasicMaterial, MultiplyOperation, NoBlending, OrthographicCamera, PanelItem, PerspectiveCamera, RawShaderMaterial, Scene, SphereGeometry, Sprite, SpriteMaterial, Stage, TextureLoader, Thread, UI, Vector2, Vector3, WebGLCubeRenderTarget, WebGLRenderTarget, WebGLRenderer, Wobble, degToRad, getFullscreenTriangle, getKeyByValue, randFloat, ticker, tween } from '../build/alien.js';
 
         class Config {
             static BG_COLOR = 0x030627;
@@ -809,7 +809,7 @@
 
         class App {
             static async init() {
-                if (!Device.agent.includes('firefox')) {
+                if (!/firefox/i.test(navigator.userAgent)) {
                     this.initThread();
                 }
 
@@ -862,7 +862,7 @@
             }
 
             static addListeners() {
-                Stage.events.on(Events.RESIZE, this.onResize);
+                Stage.events.on('resize', this.onResize);
                 ticker.add(this.onUpdate);
             }
 

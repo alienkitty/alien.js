@@ -11,7 +11,7 @@
     <link rel="stylesheet" href="assets/css/style.css">
 
     <script type="module">
-        import { Color, Events, FXAAMaterial, GLSL3, Group, Mesh, OrbitControls, OrthographicCamera, PerspectiveCamera, RawShaderMaterial, Scene, SphereGeometry, Stage, Vector2, WebGLRenderTarget, WebGLRenderer, getFullscreenTriangle, ticker } from '../build/alien.js';
+        import { Color, FXAAMaterial, GLSL3, Group, Mesh, OrbitControls, OrthographicCamera, PerspectiveCamera, RawShaderMaterial, Scene, SphereGeometry, Stage, Vector2, WebGLRenderTarget, WebGLRenderer, getFullscreenTriangle, ticker } from '../build/alien.js';
 
         import periodic3d from '../src/shaders/modules/noise/periodic3d.glsl.js';
         import dither from '../src/shaders/modules/dither/dither.glsl.js';
@@ -257,7 +257,7 @@
             }
 
             static addListeners() {
-                Stage.events.on(Events.RESIZE, this.onResize);
+                Stage.events.on('resize', this.onResize);
                 ticker.add(this.onUpdate);
             }
 

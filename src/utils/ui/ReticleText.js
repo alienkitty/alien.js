@@ -2,16 +2,11 @@
  * @author pschroen / https://ufo.ai/
  */
 
-import { Styles } from '../../config/Styles.js';
 import { Interface } from '../Interface.js';
 
 export class ReticleText extends Interface {
-    constructor({
-        styles = Styles
-    } = {}) {
+    constructor() {
         super('.text');
-
-        this.styles = styles;
 
         this.initHTML();
     }
@@ -26,7 +21,6 @@ export class ReticleText extends Interface {
         this.primary = new Interface('.primary');
         this.primary.css({
             position: 'relative',
-            ...this.styles.number,
             lineHeight: 18,
             whiteSpace: 'nowrap'
         });
@@ -35,7 +29,6 @@ export class ReticleText extends Interface {
         this.secondary = new Interface('.secondary');
         this.secondary.css({
             position: 'relative',
-            ...this.styles.small,
             opacity: 0.7
         });
         this.add(this.secondary);

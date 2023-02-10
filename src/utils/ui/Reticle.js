@@ -4,19 +4,16 @@
 
 import { Vector2 } from 'three/src/math/Vector2.js';
 
-import { Styles } from '../../config/Styles.js';
 import { Interface } from '../Interface.js';
 import { ReticleText } from './ReticleText.js';
 
 export class Reticle extends Interface {
     constructor({
-        noText = true,
-        styles = Styles
+        noText = true
     } = {}) {
         super('.reticle');
 
         this.noText = noText;
-        this.styles = styles;
 
         this.position = new Vector2();
         this.target = new Vector2();
@@ -59,7 +56,7 @@ export class Reticle extends Interface {
 
     initViews() {
         if (!this.noText) {
-            this.text = new ReticleText({ styles: this.styles });
+            this.text = new ReticleText();
             this.add(this.text);
         }
     }

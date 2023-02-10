@@ -2,7 +2,6 @@
  * @author pschroen / https://ufo.ai/
  */
 
-import { Events } from '../../config/Events.js';
 import { Interface } from '../Interface.js';
 import { ListToggle } from './ListToggle.js';
 import { ListSelect } from './ListSelect.js';
@@ -11,15 +10,13 @@ export class List extends Interface {
     constructor({
         list,
         index,
-        callback,
-        styles
+        callback
     }) {
         super('.list');
 
         this.list = list;
         this.index = index;
         this.callback = callback;
-        this.styles = styles;
 
         this.items = [];
 
@@ -37,14 +34,14 @@ export class List extends Interface {
 
     initViews() {
         if (this.list.length > 2) {
-            const item = new ListSelect({ list: this.list, index: this.index, styles: this.styles });
-            item.events.on(Events.CLICK, this.onClick);
+            const item = new ListSelect({ list: this.list, index: this.index });
+            item.events.on('click', this.onClick);
             this.add(item);
             this.items.push(item);
         } else {
             this.list.forEach((label, i) => {
-                const item = new ListToggle({ label, index: i, styles: this.styles });
-                item.events.on(Events.CLICK, this.onClick);
+                const item = new ListToggle({ label, index: i });
+                item.events.on('click', this.onClick);
 
                 if (this.index === i) {
                     item.onHover({ type: 'mouseenter' });
@@ -64,7 +61,7 @@ export class List extends Interface {
     onClick = ({ target }) => {
         const value = this.list[target.index];
 
-        this.events.emit(Events.UPDATE, value);
+        this.events.emit('update', value);
 
         if (this.callback) {
             this.callback(value);

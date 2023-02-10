@@ -11,7 +11,7 @@
     <link rel="stylesheet" href="assets/css/style.css">
 
     <script type="module">
-        import { Events, Interface, Stage, shuffle } from '../build/alien.js';
+        import { Interface, Stage, shuffle } from '../build/alien.js';
 
         class Config {
             static BREAKPOINT = 1000;
@@ -222,7 +222,7 @@
             }
 
             addListeners() {
-                Stage.events.on(Events.RESIZE, this.onResize);
+                Stage.events.on('resize', this.onResize);
             }
 
             /**

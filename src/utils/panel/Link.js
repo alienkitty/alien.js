@@ -4,20 +4,17 @@
  * Based on https://github.com/lo-th/uil
  */
 
-import { Events } from '../../config/Events.js';
 import { Interface } from '../Interface.js';
 
 export class Link extends Interface {
     constructor({
         value = '',
-        callback,
-        styles
+        callback
     }) {
         super('.link');
 
         this.value = value;
         this.callback = callback;
-        this.styles = styles;
 
         this.initHTML();
 
@@ -30,7 +27,6 @@ export class Link extends Interface {
             width: 'fit-content',
             height: 20,
             textTransform: 'uppercase',
-            ...this.styles.panel,
             whiteSpace: 'nowrap',
             cursor: 'pointer'
         });
@@ -78,7 +74,7 @@ export class Link extends Interface {
     onClick = () => {
         const value = this.value;
 
-        this.events.emit(Events.UPDATE, value);
+        this.events.emit('update', value);
 
         if (this.callback) {
             this.callback(value);

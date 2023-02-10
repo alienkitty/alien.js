@@ -4,7 +4,6 @@
 
 import { LinearFilter, Texture } from 'three';
 
-import { Device } from '../../config/Device.js';
 import { Thread } from '../../utils/Thread.js';
 import { ImageBitmapLoaderThread } from '../ImageBitmapLoaderThread.js';
 import { Assets } from '../Assets.js';
@@ -44,7 +43,7 @@ export class TextureLoader extends Loader {
 
             if (cached) {
                 promise = Promise.resolve(cached);
-            } else if (typeof createImageBitmap !== 'undefined' && !Device.agent.includes('firefox')) {
+            } else if (typeof createImageBitmap !== 'undefined' && !/firefox/i.test(navigator.userAgent)) {
                 const params = {
                     imageOrientation: this.options.imageOrientation,
                     premultiplyAlpha: this.options.premultiplyAlpha

@@ -2,7 +2,6 @@
  * @author pschroen / https://ufo.ai/
  */
 
-import { Events } from '../config/Events.js';
 import { Loader } from './Loader.js';
 
 export class MultiLoader extends Loader {
@@ -14,8 +13,8 @@ export class MultiLoader extends Loader {
     }
 
     load(loader, weight = 1) {
-        loader.events.on(Events.PROGRESS, this.onProgress);
-        loader.events.on(Events.COMPLETE, this.onComplete);
+        loader.events.on('progress', this.onProgress);
+        loader.events.on('complete', this.onComplete);
 
         this.loaders.push(loader);
         this.weights.push(weight);
@@ -37,7 +36,7 @@ export class MultiLoader extends Loader {
         const progress = loaded / this.total;
 
         if (progress < 1) {
-            this.events.emit(Events.PROGRESS, { progress });
+            this.events.emit('progress', { progress });
         }
     };
 

@@ -11,7 +11,7 @@
     <link rel="stylesheet" href="assets/css/style.css">
 
     <script type="module">
-        import { ACESFilmicToneMapping, AmbientLight, AssetLoader, Assets, BasicShadowMap, BloomCompositeMaterial, BoxGeometry, Color, Device, DirectionalLight, EnvironmentTextureLoader, Events, FXAAMaterial, GLSL3, Group, HemisphereLight, IcosahedronGeometry, ImageBitmapLoaderThread, LuminosityMaterial, Mesh, MeshBasicMaterial, MeshPhongMaterial, MeshStandardMaterial, NoBlending, OimoPhysics, OrthographicCamera, PanelItem, PerspectiveCamera, PlaneGeometry, PointLight, RawShaderMaterial, Raycaster, Reflector, RepeatWrapping, RigidBodyConfig, RigidBodyType, Scene, ShaderChunk, ShadowMaterial, Sound3D, SphereGeometry, SphericalJointConfig, Stage, TextureLoader, Thread, UI, UnrealBloomBlurMaterial, Vector2, Vector3, WebAudio, WebGLRenderTarget, WebGLRenderer, clamp, delayedCall, floorPowerOfTwo, getFullscreenTriangle, getKeyByValue, lerp, mapLinear, ticker } from '../build/alien.js';
+        import { ACESFilmicToneMapping, AmbientLight, AssetLoader, Assets, BasicShadowMap, BloomCompositeMaterial, BoxGeometry, Color, DirectionalLight, EnvironmentTextureLoader, FXAAMaterial, GLSL3, Group, HemisphereLight, IcosahedronGeometry, ImageBitmapLoaderThread, LuminosityMaterial, Mesh, MeshBasicMaterial, MeshPhongMaterial, MeshStandardMaterial, NoBlending, OimoPhysics, OrthographicCamera, PanelItem, PerspectiveCamera, PlaneGeometry, PointLight, RawShaderMaterial, Raycaster, Reflector, RepeatWrapping, RigidBodyConfig, RigidBodyType, Scene, ShaderChunk, ShadowMaterial, Sound3D, SphereGeometry, SphericalJointConfig, Stage, TextureLoader, Thread, UI, UnrealBloomBlurMaterial, Vector2, Vector3, WebAudio, WebGLRenderTarget, WebGLRenderer, clamp, delayedCall, floorPowerOfTwo, getFullscreenTriangle, getKeyByValue, lerp, mapLinear, ticker } from '../build/alien.js';
 
         class Config {
             static LIGHT_COLOR = 0xf44336;
@@ -524,7 +524,7 @@
             }
 
             static addListeners() {
-                Stage.events.on(Events.VISIBILITY, this.onVisibility);
+                Stage.events.on('visibility', this.onVisibility);
                 window.addEventListener('pointerdown', this.onPointerDown);
             }
 
@@ -1270,7 +1270,7 @@
             static async init() {
                 Assets.cache = true;
 
-                if (!Device.agent.includes('firefox')) {
+                if (!/firefox/i.test(navigator.userAgent)) {
                     this.initThread();
                 }
 
@@ -1344,7 +1344,7 @@
             }
 
             static addListeners() {
-                Stage.events.on(Events.RESIZE, this.onResize);
+                Stage.events.on('resize', this.onResize);
                 ticker.add(this.onUpdate);
             }
 

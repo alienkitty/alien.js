@@ -11,7 +11,7 @@
     <link rel="stylesheet" href="assets/css/style.css">
 
     <script type="module">
-        import { ACESFilmicToneMapping, AmbientLight, Assets, BloomCompositeMaterial, Color, Device, DirectionalLight, EnvironmentTextureLoader, Events, FXAAMaterial, Group, HemisphereLight, ImageBitmapLoaderThread, LuminosityMaterial, Mesh, MeshPhysicalMaterial, MeshStandardMaterial, OrbitControls, OrthographicCamera, PanelItem, PerspectiveCamera, RepeatWrapping, Scene, SceneCompositeMaterial, ShaderChunk, SphereGeometry, Stage, TextureLoader, Thread, UI, UnrealBloomBlurMaterial, Vector2, WebGLRenderTarget, WebGLRenderer, floorPowerOfTwo, getFullscreenTriangle, lerp, ticker } from '../build/alien.js';
+        import { ACESFilmicToneMapping, AmbientLight, Assets, BloomCompositeMaterial, Color, DirectionalLight, EnvironmentTextureLoader, FXAAMaterial, Group, HemisphereLight, ImageBitmapLoaderThread, LuminosityMaterial, Mesh, MeshPhysicalMaterial, MeshStandardMaterial, OrbitControls, OrthographicCamera, PanelItem, PerspectiveCamera, RepeatWrapping, Scene, SceneCompositeMaterial, ShaderChunk, SphereGeometry, Stage, TextureLoader, Thread, UI, UnrealBloomBlurMaterial, Vector2, WebGLRenderTarget, WebGLRenderer, floorPowerOfTwo, getFullscreenTriangle, lerp, ticker } from '../build/alien.js';
 
         class Config {
             static ICE_COLOR = 0x547691;
@@ -733,7 +733,7 @@
             static async init() {
                 Assets.cache = true;
 
-                if (!Device.agent.includes('firefox')) {
+                if (!/firefox/i.test(navigator.userAgent)) {
                     this.initThread();
                 }
 
@@ -788,7 +788,7 @@
             }
 
             static addListeners() {
-                Stage.events.on(Events.RESIZE, this.onResize);
+                Stage.events.on('resize', this.onResize);
                 ticker.add(this.onUpdate);
             }
 

@@ -11,7 +11,7 @@
     <link rel="stylesheet" href="assets/css/style.css">
 
     <script type="module">
-        import { ACESFilmicToneMapping, AfterimageMaterial, BloomCompositeMaterial, BufferAttribute, BufferGeometry, Color, DirectionalLight, Events, FXAAMaterial, Fog, Group, HemisphereLight, LinearFilter, LuminosityMaterial, Mesh, OrthographicCamera, PanelItem, PerspectiveCamera, PlaneGeometry, Reflector, ReflectorMaterial, RepeatWrapping, Scene, SceneCompositeMaterial, Stage, TextGeometry, TextGeometryLoader, TextMaterial, TextureLoader, UI, UnrealBloomBlurMaterial, Vector2, Vector3, WebGLRenderTarget, WebGLRenderer, floorPowerOfTwo, getFullscreenTriangle, getKeyByValue, lerp, ticker } from '../build/alien.js';
+        import { ACESFilmicToneMapping, AfterimageMaterial, BloomCompositeMaterial, BufferAttribute, BufferGeometry, Color, DirectionalLight, FXAAMaterial, Fog, Group, HemisphereLight, LinearFilter, LuminosityMaterial, Mesh, OrthographicCamera, PanelItem, PerspectiveCamera, PlaneGeometry, Reflector, ReflectorMaterial, RepeatWrapping, Scene, SceneCompositeMaterial, Stage, TextGeometry, TextGeometryLoader, TextMaterial, TextureLoader, UI, UnrealBloomBlurMaterial, Vector2, Vector3, WebGLRenderTarget, WebGLRenderer, floorPowerOfTwo, getFullscreenTriangle, getKeyByValue, lerp, ticker } from '../build/alien.js';
 
         class Text extends Group {
             constructor() {
@@ -746,7 +746,7 @@
             }
 
             static addListeners() {
-                Stage.events.on(Events.RESIZE, this.onResize);
+                Stage.events.on('resize', this.onResize);
                 ticker.add(this.onUpdate);
             }
 

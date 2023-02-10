@@ -11,7 +11,7 @@
     <link rel="stylesheet" href="assets/css/style.css">
 
     <script type="module">
-        import { ACESFilmicToneMapping, AmbientLight, BasicShadowMap, BloomCompositeMaterial, BoxGeometry, Color, Device, DirectionalLight, DynamicDrawUsage, EnvironmentTextureLoader, EventEmitter, Events, FXAAMaterial, GLSL3, Group, HemisphereLight, IcosahedronGeometry, ImageBitmapLoaderThread, InstancedMesh, LuminosityMaterial, Matrix4, Mesh, MeshBasicMaterial, MeshStandardMaterial, NoBlending, OimoPhysicsBuffer, OimoPhysicsController, OrthographicCamera, PanelItem, PerspectiveCamera, PlaneGeometry, PointLight, RawShaderMaterial, Reflector, RepeatWrapping, Scene, ShaderChunk, ShadowMaterial, SphereGeometry, Stage, TextureLoader, Thread, UI, UnrealBloomBlurMaterial, Vector2, Vector3, WebGLRenderTarget, WebGLRenderer, floorPowerOfTwo, getFrustum, getFullscreenTriangle, getKeyByValue, lerp, ticker } from '../build/alien.js';
+        import { ACESFilmicToneMapping, AmbientLight, BasicShadowMap, BloomCompositeMaterial, BoxGeometry, Color, DirectionalLight, DynamicDrawUsage, EnvironmentTextureLoader, EventEmitter, FXAAMaterial, GLSL3, Group, HemisphereLight, IcosahedronGeometry, ImageBitmapLoaderThread, InstancedMesh, LuminosityMaterial, Matrix4, Mesh, MeshBasicMaterial, MeshStandardMaterial, NoBlending, OimoPhysicsBuffer, OimoPhysicsController, OrthographicCamera, PanelItem, PerspectiveCamera, PlaneGeometry, PointLight, RawShaderMaterial, Reflector, RepeatWrapping, Scene, ShaderChunk, ShadowMaterial, SphereGeometry, Stage, TextureLoader, Thread, UI, UnrealBloomBlurMaterial, Vector2, Vector3, WebGLRenderTarget, WebGLRenderer, floorPowerOfTwo, getFrustum, getFullscreenTriangle, getKeyByValue, lerp, ticker } from '../build/alien.js';
 
         class Config {
             static LIGHT_COLOR = 0xf44336;
@@ -202,7 +202,7 @@
             }
 
             initEngine() {
-                if (!Device.agent.includes('firefox')) {
+                if (!/firefox/i.test(navigator.userAgent)) {
                     this.thread = new Thread({
                         imports: [
                             ['../build/alien.js', 'EventEmitter', 'OimoPhysicsBuffer', 'Vector3', 'delayedCall', 'ticker']
@@ -1243,7 +1243,7 @@
 
         class App {
             static async init() {
-                if (!Device.agent.includes('firefox')) {
+                if (!/firefox/i.test(navigator.userAgent)) {
                     this.initThread();
                 }
 
@@ -1301,7 +1301,7 @@
             }
 
             static addListeners() {
-                Stage.events.on(Events.RESIZE, this.onResize);
+                Stage.events.on('resize', this.onResize);
                 ticker.add(this.onUpdate);
             }
 

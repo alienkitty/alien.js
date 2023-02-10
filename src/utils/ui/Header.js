@@ -2,17 +2,12 @@
  * @author pschroen / https://ufo.ai/
  */
 
-import { Styles } from '../../config/Styles.js';
 import { Interface } from '../Interface.js';
 import { HeaderInfo } from './HeaderInfo.js';
 
 export class Header extends Interface {
-    constructor({
-        styles = Styles
-    } = {}) {
+    constructor() {
         super('.header');
-
-        this.styles = styles;
 
         this.initHTML();
         this.initViews();
@@ -28,7 +23,7 @@ export class Header extends Interface {
     }
 
     initViews() {
-        this.info = new HeaderInfo({ styles: this.styles });
+        this.info = new HeaderInfo();
         this.info.css({
             x: -10,
             opacity: 0

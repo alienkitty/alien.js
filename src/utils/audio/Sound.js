@@ -2,7 +2,6 @@
  * @author pschroen / https://ufo.ai/
  */
 
-import { Device } from '../../config/Device.js';
 import { WebAudioParam } from './WebAudioParam.js';
 
 export class Sound {
@@ -29,7 +28,7 @@ export class Sound {
 
         this.input = this.stereo || this.output;
 
-        if (!Device.mobile || this.context.state === 'running') {
+        if (!navigator.maxTouchPoints || this.context.state === 'running') {
             this.load();
         }
     }

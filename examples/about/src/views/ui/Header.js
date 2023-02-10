@@ -1,4 +1,4 @@
-import { Events, Interface, Stage } from 'alien.js';
+import { Interface, Stage } from 'alien.js';
 
 import { Config } from '../../config/Config.js';
 import { NavLink } from './NavLink.js';
@@ -41,11 +41,11 @@ export class Header extends Interface {
     }
 
     addListeners() {
-        Stage.events.on(Events.RESIZE, this.onResize);
+        Stage.events.on('resize', this.onResize);
     }
 
     removeListeners() {
-        Stage.events.off(Events.RESIZE, this.onResize);
+        Stage.events.off('resize', this.onResize);
     }
 
     /**

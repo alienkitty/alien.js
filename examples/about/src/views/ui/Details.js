@@ -1,4 +1,4 @@
-import { Events, Interface, Stage, basename } from 'alien.js';
+import { Interface, Stage, basename } from 'alien.js';
 
 import { Config } from '../../config/Config.js';
 import { Styles } from '../../config/Styles.js';
@@ -101,12 +101,12 @@ export class Details extends Interface {
     }
 
     addListeners() {
-        Stage.events.on(Events.RESIZE, this.onResize);
+        Stage.events.on('resize', this.onResize);
         this.bg.element.addEventListener('click', this.onClick);
     }
 
     removeListeners() {
-        Stage.events.off(Events.RESIZE, this.onResize);
+        Stage.events.off('resize', this.onResize);
         this.bg.element.removeEventListener('click', this.onClick);
     }
 
@@ -133,7 +133,7 @@ export class Details extends Interface {
     };
 
     onClick = () => {
-        this.events.emit(Events.CLICK);
+        this.events.emit('click');
     };
 
     /**

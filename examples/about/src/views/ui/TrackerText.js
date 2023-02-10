@@ -15,14 +15,14 @@ export class TrackerText extends Interface {
             top: -3
         });
 
-        this.text = new Interface('.text');
-        this.text.css({
+        this.name = new Interface('.name');
+        this.name.css({
             position: 'relative',
             ...Styles.number,
             lineHeight: 18,
             whiteSpace: 'nowrap'
         });
-        this.add(this.text);
+        this.add(this.name);
 
         this.latency = new Interface('.latency');
         this.latency.css({
@@ -43,8 +43,8 @@ export class TrackerText extends Interface {
         }
 
         if (data.remoteAddress) {
-            // this.text.text(data.nickname || data.remoteAddress);
-            this.text.text(data.nickname || data.id);
+            // this.name.text(data.nickname || data.remoteAddress);
+            this.name.text(data.nickname || data.id);
         }
 
         if (data.latency) {

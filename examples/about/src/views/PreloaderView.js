@@ -1,4 +1,4 @@
-import { Events, Interface } from 'alien.js';
+import { Interface } from 'alien.js';
 
 import { ProgressCanvas } from './ui/ProgressCanvas.js';
 
@@ -36,11 +36,11 @@ export class PreloaderView extends Interface {
     }
 
     addListeners() {
-        this.view.events.on(Events.COMPLETE, this.onComplete);
+        this.view.events.on('complete', this.onComplete);
     }
 
     removeListeners() {
-        this.view.events.off(Events.COMPLETE, this.onComplete);
+        this.view.events.off('complete', this.onComplete);
     }
 
     /**
@@ -52,7 +52,7 @@ export class PreloaderView extends Interface {
     };
 
     onComplete = () => {
-        this.events.emit(Events.COMPLETE);
+        this.events.emit('complete');
     };
 
     /**

@@ -2,8 +2,6 @@
  * @author pschroen / https://ufo.ai/
  */
 
-import { Events } from '../../config/Events.js';
-import { Styles } from '../../config/Styles.js';
 import { Interface } from '../Interface.js';
 import { Stage } from '../Stage.js';
 import { Header } from './Header.js';
@@ -12,13 +10,11 @@ import { ticker } from '../../tween/Ticker.js';
 
 export class UI extends Interface {
     constructor({
-        fps = false,
-        styles = Styles
+        fps = false
     } = {}) {
         super('.ui');
 
         this.fps = fps;
-        this.styles = styles;
 
         if (!Stage.root) {
             Stage.root = document.querySelector(':root');
@@ -54,17 +50,17 @@ export class UI extends Interface {
 
     initViews() {
         if (this.fps) {
-            this.header = new Header({ styles: this.styles });
+            this.header = new Header();
             this.add(this.header);
         }
     }
 
     addListeners() {
-        Stage.events.on(Events.INVERT, this.onInvert);
+        Stage.events.on('invert', this.onInvert);
     }
 
     removeListeners() {
-        Stage.events.off(Events.INVERT, this.onInvert);
+        Stage.events.off('invert', this.onInvert);
     }
 
     /**

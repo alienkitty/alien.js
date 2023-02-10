@@ -21,19 +21,15 @@ Alien.js is a [MVC](https://en.wikipedia.org/wiki/Model%E2%80%93view%E2%80%93con
 
 The post-processing workflow takes a more linear approach, so instead of abstracting with an effect composer, you work directly with the render targets, making it easier to build custom effects.
 
-The idea is to build a self-contained framework with minimal dependencies, only [rollup.js](https://rollupjs.org/) is used for bundling, and can also be used as a [library](index.js).
+*Note this design pattern intentionally does not use underscores or private fields, in favour of cleaner code.*
+
+### Install
+
+The examples and library require the peer dependencies [three](https://github.com/mrdoob/three.js) and [oimophysics](https://github.com/saharan/OimoPhysics).
 
 ```sh
-npm i alien.js
+npm i three saharan/OimoPhysics#v1.2.3 alien.js
 ```
-
-```js
-import { Events, Interface, Stage } from 'alien.js';
-```
-
-In its design, everything is an ES module, all user interfaces and components follow the same class structure, making it easy to copy-paste from examples and between projects.
-
-*Note this design pattern intentionally does not use underscores or private fields, in favour of cleaner code.*
 
 ### Examples
 
@@ -175,206 +171,13 @@ In its design, everything is an ES module, all user interfaces and components fo
 [scroll](https://alien.js.org/examples/transitions/scroll_content_views/) (smooth scroll with scroll direction and camera parallax, [debug](https://alien.js.org/examples/transitions/scroll_content_views/?debug))  
 [camera](https://alien.js.org/examples/transitions/camera/) (with motion blur and tilt shift effect, [debug](https://alien.js.org/examples/transitions/camera/?debug))  
 
-### Class structure
-
-```js
-import { Events } from '../config/Events.js';
-import { Interface } from '../utils/Interface.js';
-import { Stage } from '../utils/Stage.js';
-
-class Logo extends Interface {
-    constructor() {
-        super('.logo');
-
-        this.initHTML();
-
-        this.addListeners();
-        this.onResize();
-    }
-
-    initHTML() {
-        this.css({
-            left: 50,
-            top: 50,
-            width: 64,
-            height: 64,
-            cursor: 'pointer',
-            opacity: 0
-        });
-
-        this.image = new Interface(null, 'img');
-        this.image.attr({ src: 'assets/images/alienkitty.svg' });
-        this.image.css({
-            position: 'relative',
-            width: '100%'
-        });
-        this.add(this.image);
-    }
-
-    addListeners() {
-        Stage.events.on(Events.RESIZE, this.onResize);
-        this.element.addEventListener('mouseenter', this.onHover);
-        this.element.addEventListener('mouseleave', this.onHover);
-        this.element.addEventListener('click', this.onClick);
-    }
-
-    removeListeners() {
-        Stage.events.off(Events.RESIZE, this.onResize);
-        this.element.removeEventListener('mouseenter', this.onHover);
-        this.element.removeEventListener('mouseleave', this.onHover);
-        this.element.removeEventListener('click', this.onClick);
-    }
-
-    /**
-     * Event handlers
-     */
-
-    onResize = () => {
-        const { width, height } = Stage;
-
-        if (width < height) {
-            this.css({
-                left: 30,
-                top: 30,
-                width: 40,
-                height: 40
-            });
-        } else {
-            this.css({
-                left: 50,
-                top: 50,
-                width: 64,
-                height: 64
-            });
-        }
-    };
-
-    onHover = ({ type }) => {
-        this.clearTween();
-
-        if (type === 'mouseenter') {
-            this.tween({ opacity: 0.6 }, 300, 'easeOutCubic');
-        } else {
-            this.tween({ opacity: 1 }, 300, 'easeOutCubic');
-        }
-    };
-
-    onClick = () => {
-        // open('https://alien.js.org/');
-        Stage.setPath('/');
-    };
-
-    /**
-     * Public methods
-     */
-
-    animateIn = () => {
-        this.tween({ opacity: 1 }, 600, 'easeInOutSine');
-    };
-
-    destroy = () => {
-        this.removeListeners();
-
-        return super.destroy();
-    };
-}
-```
-
-### Class hierarchy
-
-```mermaid
-classDiagram
-class Preloader {
-  init()
-  onComplete()
-}
-class App {
-  init()
-  onResize()
-  onUpdate(time, delta, frame)
-}
-class WorldController {
-  renderer
-  scene
-  camera
-  resolution
-  aspect
-  time
-  frame
-  init()
-  resize(width, height, dpr)
-  update(time, delta, frame)
-}
-class CameraController {
-  init(camera)
-  resize(width, height)
-  update()
-}
-class SceneController {
-  init(view)
-  resize()
-  update()
-}
-class InputManager {
-  init(camera)
-  update(time)
-  add(...objects)
-  remove(...objects)
-}
-class RenderManager {
-  init(renderer, scene, camera)
-  resize(width, height, dpr)
-  update()
-}
-class AudioController {
-  init()
-  trigger(event, ...params)
-}
-Preloader --> App
-App --> WorldController
-App --> CameraController
-App --> SceneController
-App --> InputManager
-App --> RenderManager
-SceneController --> SceneView
-App --> SceneView
-SceneView --> "many" View : Contains
-Group <|-- SceneView
-Group <|-- View
-```
-
 ### Getting started
 
-Clone this repository template and install its dependencies:
+Clone this repository and install its dependencies:
 
 ```sh
 git clone https://github.com/pschroen/alien.js
 cd alien.js
-npm i
-
-# or
-
-npx degit pschroen/alien.js my-app
-cd my-app
-npm i
-```
-
-```sh
-# Serve at localhost:8080
-npm run dev
-
-# Build for production
-npm run build
-```
-
-[localhost:8080/](http://localhost:8080/) (without ui)  
-[localhost:8080/?ui](http://localhost:8080/?ui) (with ui)  
-[localhost:8080/?ui&orbit](http://localhost:8080/?ui&orbit) (with ui and orbit controls)  
-[localhost:8080/?orbit](http://localhost:8080/?orbit) (just orbit controls)
-
-### With examples
-
-```sh
 npm i
 cd examples
 npm i
@@ -382,7 +185,7 @@ npm run build
 npm start
 ```
 
-### With ESLint
+### ESLint
 
 ```sh
 npm i -D eslint eslint-plugin-html

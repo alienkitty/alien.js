@@ -1,6 +1,6 @@
 import { HalfFloatType, Vector2, WebGLRenderTarget } from 'three';
 
-import { Events, Stage } from 'alien.js';
+import { Stage } from 'alien.js';
 
 import { Global } from '../../config/Global.js';
 import { Data } from '../../data/Data.js';
@@ -58,7 +58,7 @@ export class FluidController {
     }
 
     static addListeners() {
-        Stage.events.on(Events.UPDATE, this.onUsers);
+        Stage.events.on('update', this.onUsers);
         window.addEventListener('pointerdown', this.onPointerDown);
         window.addEventListener('pointermove', this.onPointerMove);
         window.addEventListener('pointerup', this.onPointerUp);

@@ -63,3 +63,19 @@ body {
     background-color: var(--ui-color);
     color: var(--bg-color);
 }
+
+.ui {
+    font-family: 'Roboto Mono', monospace;
+    font-size: 11px;
+    line-height: 15px;
+    letter-spacing: 0.03em;
+}
+
+.ui .number, .ui .primary {
+    letter-spacing: 1px;
+}
+
+.ui .type, .ui .secondary {
+    font-size: 10px;
+    letter-spacing: 0.5px;
+}

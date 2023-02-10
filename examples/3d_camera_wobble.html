@@ -11,7 +11,7 @@
     <link rel="stylesheet" href="assets/css/style.css">
 
     <script type="module">
-        import { ACESFilmicToneMapping, BloomCompositeMaterial, Color, DirectionalLight, Events, FXAAMaterial, Fog, GLSL3, Group, HemisphereLight, LuminosityMaterial, Mesh, MeshBasicMaterial, NoBlending, OrthographicCamera, PanelItem, PerspectiveCamera, PlaneGeometry, RawShaderMaterial, Reflector, ReflectorMaterial, RepeatWrapping, SVGLoader, Scene, Stage, TextureLoader, UI, UnrealBloomBlurMaterial, Vector2, Vector3, WebGLRenderTarget, WebGLRenderer, Wobble, degToRad, floorPowerOfTwo, getFullscreenTriangle, lerp, mapLinear, ticker } from '../build/alien.js';
+        import { ACESFilmicToneMapping, BloomCompositeMaterial, Color, DirectionalLight, FXAAMaterial, Fog, GLSL3, Group, HemisphereLight, LuminosityMaterial, Mesh, MeshBasicMaterial, NoBlending, OrthographicCamera, PanelItem, PerspectiveCamera, PlaneGeometry, RawShaderMaterial, Reflector, ReflectorMaterial, RepeatWrapping, SVGLoader, Scene, Stage, TextureLoader, UI, UnrealBloomBlurMaterial, Vector2, Vector3, WebGLRenderTarget, WebGLRenderer, Wobble, degToRad, floorPowerOfTwo, getFullscreenTriangle, lerp, mapLinear, ticker } from '../build/alien.js';
 
         import rgbshift from '../src/shaders/modules/rgbshift/rgbshift.glsl.js';
 
@@ -778,7 +778,7 @@
             }
 
             static addListeners() {
-                Stage.events.on(Events.RESIZE, this.onResize);
+                Stage.events.on('resize', this.onResize);
                 ticker.add(this.onUpdate);
             }
 

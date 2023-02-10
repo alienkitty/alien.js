@@ -4,8 +4,6 @@
  * Based on https://gist.github.com/jesperlandberg/dd2cb6c6d7c928601b7f0229db818171
  */
 
-import { Device } from '../../config/Device.js';
-import { Events } from '../../config/Events.js';
 import { Component } from '../Component.js';
 import { Stage } from '../Stage.js';
 
@@ -38,7 +36,7 @@ export class Smooth extends Component {
     }
 
     initHTML() {
-        if (!Device.mobile) {
+        if (!navigator.maxTouchPoints) {
             this.root.css({
                 position: 'fixed',
                 left: 0,
@@ -53,12 +51,12 @@ export class Smooth extends Component {
     }
 
     addListeners() {
-        Stage.events.on(Events.RESIZE, this.onResize);
+        Stage.events.on('resize', this.onResize);
         ticker.add(this.onUpdate);
     }
 
     removeListeners() {
-        Stage.events.off(Events.RESIZE, this.onResize);
+        Stage.events.off('resize', this.onResize);
         ticker.remove(this.onUpdate);
     }
 
@@ -78,7 +76,7 @@ export class Smooth extends Component {
     };
 
     onUpdate = () => {
-        if (!Device.mobile) {
+        if (!navigator.maxTouchPoints) {
             this.position = lerp(this.position, document.scrollingElement.scrollTop, this.lerpSpeed);
         } else {
             this.position = document.scrollingElement.scrollTop;
@@ -92,7 +90,7 @@ export class Smooth extends Component {
             return;
         }
 
-        if (!Device.mobile) {
+        if (!navigator.maxTouchPoints) {
             this.container.css({ y: -Math.round(this.position) });
         }
 

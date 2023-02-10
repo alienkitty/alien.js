@@ -1,4 +1,4 @@
-import { Events, Stage, WebAudio, clamp, tween } from 'alien.js';
+import { Stage, WebAudio, clamp, tween } from 'alien.js';
 
 import { Config } from '../../config/Config.js';
 import { Global } from '../../config/Global.js';
@@ -21,7 +21,7 @@ export class AudioController {
     }
 
     static addListeners() {
-        Stage.events.on(Events.VISIBILITY, this.onVisibility);
+        Stage.events.on('visibility', this.onVisibility);
         window.addEventListener('pointerdown', this.onPointerDown);
 
         if (this.enabled || !Global.SOUND) {

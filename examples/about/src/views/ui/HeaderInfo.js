@@ -23,13 +23,13 @@ export class HeaderInfo extends Interface {
             userSelect: 'none'
         });
 
-        this.text = new Interface('.text');
-        this.text.css({
+        this.number = new Interface('.number');
+        this.number.css({
             position: 'relative',
             ...Styles.number
         });
-        this.text.text(this.fps);
-        this.add(this.text);
+        this.number.text(this.fps);
+        this.add(this.number);
     }
 
     /**
@@ -47,6 +47,6 @@ export class HeaderInfo extends Interface {
 
         this.count++;
 
-        this.text.text(this.fps);
+        this.number.text(this.fps);
     };
 }

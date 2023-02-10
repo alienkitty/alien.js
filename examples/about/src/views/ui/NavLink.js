@@ -1,4 +1,4 @@
-import { Events, Interface } from 'alien.js';
+import { Interface } from 'alien.js';
 
 export class NavLink extends Interface {
     constructor(title, link) {
@@ -74,7 +74,7 @@ export class NavLink extends Interface {
     };
 
     onClick = () => {
-        this.events.emit(Events.CLICK);
+        this.events.emit('click');
     };
 
     /**

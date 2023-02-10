@@ -4,17 +4,12 @@
 
 import { Vector2 } from 'three/src/math/Vector2.js';
 
-import { Styles } from '../../config/Styles.js';
 import { Interface } from '../Interface.js';
 import { TargetNumber } from './TargetNumber.js';
 
 export class Tracker extends Interface {
-    constructor({
-        styles = Styles
-    } = {}) {
+    constructor() {
         super('.tracker');
-
-        this.styles = styles;
 
         this.position = new Vector2();
         this.target = new Vector2();
@@ -94,7 +89,7 @@ export class Tracker extends Interface {
     }
 
     initViews() {
-        this.number = new TargetNumber({ styles: this.styles });
+        this.number = new TargetNumber();
         this.number.css({
             left: -(this.number.width + 15),
             top: '50%',

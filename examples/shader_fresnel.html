@@ -19,7 +19,7 @@
     </style>
 
     <script type="module">
-        import { Color, Events, FXAAMaterial, GLSL3, Group, Mesh, OrbitControls, OrthographicCamera, PanelItem, PerspectiveCamera, RawShaderMaterial, Scene, SphereGeometry, Stage, UI, Vector2, WebGLRenderTarget, WebGLRenderer, brightness, getFullscreenTriangle, ticker } from '../build/alien.js';
+        import { Color, FXAAMaterial, GLSL3, Group, Mesh, OrbitControls, OrthographicCamera, PanelItem, PerspectiveCamera, RawShaderMaterial, Scene, SphereGeometry, Stage, UI, Vector2, WebGLRenderTarget, WebGLRenderer, brightness, getFullscreenTriangle, ticker } from '../build/alien.js';
 
         import periodic3d from '../src/shaders/modules/noise/periodic3d.glsl.js';
 
@@ -202,7 +202,7 @@
                 if (invert !== this.lastInvert) {
                     this.lastInvert = invert;
 
-                    Stage.events.emit(Events.INVERT, { invert });
+                    Stage.events.emit('invert', { invert });
                 }
             };
 
@@ -401,7 +401,7 @@
             }
 
             static addListeners() {
-                Stage.events.on(Events.RESIZE, this.onResize);
+                Stage.events.on('resize', this.onResize);
                 ticker.add(this.onUpdate);
             }
 

@@ -19,7 +19,7 @@
     </style>
 
     <script type="module">
-        import { BasicMaterial, BufferGeometryLoader, BufferGeometryLoaderThread, Color, FXAAMaterial, Group, ImageBitmapLoaderThread, Mesh, OrbitControls, OrthographicCamera, PerspectiveCamera, PlaneGeometry, Reflector, ReflectorDudvMaterial, RepeatWrapping, Scene, Stage, TextureLoader, Thread, Vector2, WebGLRenderTarget, WebGLRenderer, getFullscreenTriangle, ticker } from '../build/alien.js';
+        import { BasicMaterial, BufferGeometryLoader, BufferGeometryLoaderThread, Color, FXAAMaterial, Group, ImageBitmapLoaderThread, Mesh, OrbitControls, OrthographicCamera, PerspectiveCamera, PlaneGeometry, Reflector, ReflectorDudvMaterial, RepeatWrapping, Scene, TextureLoader, Thread, Vector2, WebGLRenderTarget, WebGLRenderer, getFullscreenTriangle, ticker } from '../build/alien.js';
 
         class Sphere extends Group {
             constructor() {
@@ -347,7 +347,6 @@
                     this.initThread();
                 }
 
-                this.initStage();
                 this.initWorld();
                 this.initViews();
                 this.initControllers();
@@ -366,13 +365,9 @@
                 Thread.shared();
             }
 
-            static initStage() {
-                Stage.init(document.querySelector('#root'));
-            }
-
             static initWorld() {
                 WorldController.init();
-                Stage.add(WorldController.element);
+                document.body.appendChild(WorldController.element);
             }
 
             static initViews() {
@@ -388,8 +383,9 @@
             }
 
             static addListeners() {
-                Stage.events.on('resize', this.onResize);
+                window.addEventListener('resize', this.onResize);
                 ticker.add(this.onUpdate);
+                ticker.start();
             }
 
             /**
@@ -397,7 +393,9 @@
              */
 
             static onResize = () => {
-                const { width, height, dpr } = Stage;
+                const width = document.documentElement.clientWidth;
+                const height = document.documentElement.clientHeight;
+                const dpr = window.devicePixelRatio;
 
                 WorldController.resize(width, height, dpr);
                 SceneController.resize(width, height);
@@ -415,6 +413,5 @@
     </script>
 </head>
 <body>
-    <div id="root"></div>
 </body>
 </html>

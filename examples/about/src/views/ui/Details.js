@@ -1,4 +1,4 @@
-import { Interface, Stage, basename } from 'alien.js';
+import { Interface, basename } from 'alien.js';
 
 import { Config } from '../../config/Config.js';
 import { Styles } from '../../config/Styles.js';
@@ -13,7 +13,6 @@ export class Details extends Interface {
 
         this.initHTML();
         this.initViews();
-        this.setStackOrder();
 
         this.addListeners();
         this.onResize();
@@ -22,6 +21,7 @@ export class Details extends Interface {
     initHTML() {
         this.invisible();
         this.css({
+            position: 'absolute',
             left: 0,
             top: 0,
             width: '100%',
@@ -34,6 +34,7 @@ export class Details extends Interface {
 
         this.bg = new Interface('.bg');
         this.bg.css({
+            position: 'absolute',
             width: '100%',
             height: '100%',
             backgroundColor: '#000',
@@ -44,24 +45,20 @@ export class Details extends Interface {
 
         this.container = new Interface('.container');
         this.container.css({
-            position: 'relative',
             width: 400,
-            margin: '10% 10% 13%'
+            margin: '10% 10% 13%',
+            zIndex: 1
         });
         this.add(this.container);
     }
 
     initViews() {
         this.title = new DetailsTitle(basename('Multiuser Fluid').replace(/[\s.]+/g, '_'));
-        this.title.css({
-            width: 'fit-content'
-        });
         this.container.add(this.title);
         this.texts.push(this.title);
 
         this.text = new Interface('.text', 'p');
         this.text.css({
-            width: 'fit-content',
             ...Styles.content
         });
         this.text.html('A fluid shader tribute to Mr.doob’s Multiuser Sketchpad from 2010. Multiuser Fluid is an experiment to combine UI and data visualization elements in a multiuser environment.');
@@ -94,19 +91,13 @@ export class Details extends Interface {
         });
     }
 
-    setStackOrder() {
-        this.texts.forEach(text => {
-            text.css({ zIndex: 4 });
-        });
-    }
-
     addListeners() {
-        Stage.events.on('resize', this.onResize);
+        window.addEventListener('resize', this.onResize);
         this.bg.element.addEventListener('click', this.onClick);
     }
 
     removeListeners() {
-        Stage.events.off('resize', this.onResize);
+        window.removeEventListener('resize', this.onResize);
         this.bg.element.removeEventListener('click', this.onClick);
     }
 
@@ -115,7 +106,7 @@ export class Details extends Interface {
      */
 
     onResize = () => {
-        if (Stage.width < Config.BREAKPOINT) {
+        if (document.documentElement.clientWidth < Config.BREAKPOINT) {
             this.css({ display: '' });
 
             this.container.css({

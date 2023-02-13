@@ -33,6 +33,11 @@ export class Reticle extends Interface {
             height: 12,
             marginLeft: -12 / 2,
             marginTop: -12 / 2,
+            fontFamily: 'var(--ui-font-family)',
+            fontWeight: 'var(--ui-font-weight)',
+            fontSize: 'var(--ui-font-size)',
+            lineHeight: 'var(--ui-line-height)',
+            letterSpacing: 'var(--ui-letter-spacing)',
             pointerEvents: 'none',
             webkitUserSelect: 'none',
             userSelect: 'none'

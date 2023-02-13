@@ -35,7 +35,6 @@ class DetailsLink extends Interface {
 
         this.text = new Interface('.text');
         this.text.css({
-            position: 'relative',
             display: 'inline-block'
         });
         this.text.text(this.title);
@@ -43,7 +42,6 @@ class DetailsLink extends Interface {
 
         this.line = new Interface('.line');
         this.line.css({
-            position: 'relative',
             display: 'inline-block',
             fontWeight: '700',
             verticalAlign: 'middle'
@@ -79,9 +77,8 @@ class DetailsTitle extends Interface {
 
     initHTML() {
         this.css({
-            position: 'relative',
-            left: -1,
-            margin: '0 0 6px',
+            width: 'fit-content',
+            margin: '0 0 6px -1px',
             fontFamily: 'Roboto, sans-serif',
             fontWeight: '300',
             fontSize: 23,
@@ -100,6 +97,7 @@ class DetailsTitle extends Interface {
             }
 
             const letter = new Interface(null, 'span');
+            letter.css({ display: 'inline-block' });
             letter.html(str);
             this.add(letter);
 
@@ -145,6 +143,7 @@ class Details extends Interface {
     initHTML() {
         this.invisible();
         this.css({
+            position: 'absolute',
             left: 0,
             top: 0,
             width: '100%',
@@ -157,7 +156,6 @@ class Details extends Interface {
 
         this.container = new Interface('.container');
         this.container.css({
-            position: 'relative',
             width: 400,
             margin: '10% 10% 13%'
         });
@@ -175,7 +173,6 @@ class Details extends Interface {
         this.text = new Interface('.text', 'p');
         this.text.css({
             width: 'fit-content',
-            position: 'relative',
             margin: '6px 0',
             fontFamily: 'Gothic A1, sans-serif',
             fontWeight: '400',
@@ -206,7 +203,7 @@ class Details extends Interface {
     }
 
     addListeners() {
-        Stage.events.on('resize', this.onResize);
+        window.addEventListener('resize', this.onResize);
     }
 
     /**
@@ -214,7 +211,7 @@ class Details extends Interface {
      */
 
     onResize = () => {
-        if (Stage.width < Config.BREAKPOINT) {
+        if (document.documentElement.clientWidth < Config.BREAKPOINT) {
             this.css({ display: '' });
 
             this.container.css({
@@ -1308,7 +1305,7 @@ class App {
     }
 
     static addListeners() {
-        Stage.events.on('resize', this.onResize);
+        window.addEventListener('resize', this.onResize);
         ticker.add(this.onUpdate);
     }
 
@@ -1317,7 +1314,9 @@ class App {
      */
 
     static onResize = () => {
-        const { width, height, dpr } = Stage;
+        const width = document.documentElement.clientWidth;
+        const height = document.documentElement.clientHeight;
+        const dpr = window.devicePixelRatio;
 
         WorldController.resize(width, height, dpr);
         SceneController.resize(width, height, dpr);

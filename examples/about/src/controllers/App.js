@@ -51,7 +51,7 @@ export class App {
     }
 
     static addListeners() {
-        Stage.events.on('resize', this.onResize);
+        window.addEventListener('resize', this.onResize);
         ticker.add(this.onUpdate);
     }
 
@@ -60,7 +60,8 @@ export class App {
      */
 
     static onResize = () => {
-        const { width, height } = Stage;
+        const width = document.documentElement.clientWidth;
+        const height = document.documentElement.clientHeight;
         const dpr = 1;
 
         WorldController.resize(width, height, dpr);

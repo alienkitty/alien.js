@@ -11,7 +11,7 @@
     <link rel="stylesheet" href="assets/css/style.css">
 
     <script type="module">
-        import { ACESFilmicToneMapping, AmbientLight, AssetLoader, Assets, BasicShadowMap, BloomCompositeMaterial, BoxGeometry, Color, DirectionalLight, EnvironmentTextureLoader, FXAAMaterial, GLSL3, Group, HemisphereLight, IcosahedronGeometry, ImageBitmapLoaderThread, LuminosityMaterial, Mesh, MeshBasicMaterial, MeshPhongMaterial, MeshStandardMaterial, NoBlending, OimoPhysics, OrthographicCamera, PanelItem, PerspectiveCamera, PlaneGeometry, PointLight, RawShaderMaterial, Raycaster, Reflector, RepeatWrapping, RigidBodyConfig, RigidBodyType, Scene, ShaderChunk, ShadowMaterial, Sound3D, SphereGeometry, SphericalJointConfig, Stage, TextureLoader, Thread, UI, UnrealBloomBlurMaterial, Vector2, Vector3, WebAudio, WebGLRenderTarget, WebGLRenderer, clamp, delayedCall, floorPowerOfTwo, getFullscreenTriangle, getKeyByValue, lerp, mapLinear, ticker } from '../build/alien.js';
+        import { ACESFilmicToneMapping, AmbientLight, AssetLoader, Assets, BasicShadowMap, BloomCompositeMaterial, BoxGeometry, Color, DirectionalLight, EnvironmentTextureLoader, FXAAMaterial, GLSL3, Group, HemisphereLight, IcosahedronGeometry, ImageBitmapLoaderThread, LuminosityMaterial, Mesh, MeshBasicMaterial, MeshPhongMaterial, MeshStandardMaterial, NoBlending, OimoPhysics, OrthographicCamera, PanelItem, PerspectiveCamera, PlaneGeometry, PointLight, RawShaderMaterial, Raycaster, Reflector, RepeatWrapping, RigidBodyConfig, RigidBodyType, Scene, ShaderChunk, ShadowMaterial, Sound3D, SphereGeometry, SphericalJointConfig, TextureLoader, Thread, UI, UnrealBloomBlurMaterial, Vector2, Vector3, WebAudio, WebGLRenderTarget, WebGLRenderer, clamp, delayedCall, floorPowerOfTwo, getFullscreenTriangle, getKeyByValue, lerp, mapLinear, ticker } from '../build/alien.js';
 
         class Config {
             static LIGHT_COLOR = 0xf44336;
@@ -524,7 +524,7 @@
             }
 
             static addListeners() {
-                Stage.events.on('visibility', this.onVisibility);
+                document.addEventListener('visibilitychange', this.onVisibility);
                 window.addEventListener('pointerdown', this.onPointerDown);
             }
 
@@ -605,7 +605,7 @@
             static initViews() {
                 this.ui = new UI({ fps: true });
                 this.ui.animateIn();
-                Stage.add(this.ui);
+                document.body.appendChild(this.ui.element);
             }
 
             static initPanel() {
@@ -986,8 +986,8 @@
                     return;
                 }
 
-                this.mouse.x = (clientX / Stage.width) * 2 - 1;
-                this.mouse.y = 1 - (clientY / Stage.height) * 2;
+                this.mouse.x = (clientX / document.documentElement.clientWidth) * 2 - 1;
+                this.mouse.y = 1 - (clientY / document.documentElement.clientHeight) * 2;
 
                 if (this.selected) {
                     this.raycaster.setFromCamera(this.mouse, this.camera);
@@ -1041,16 +1041,16 @@
 
                         CameraController.enabled = false;
 
-                        Stage.css({ cursor: 'move' });
+                        document.body.style.cursor = 'move';
                     } else if (this.hover !== object) {
                         this.hover = object;
-                        Stage.css({ cursor: 'pointer' });
+                        document.body.style.cursor = 'pointer';
                     } else {
-                        Stage.css({ cursor: 'pointer' });
+                        document.body.style.cursor = 'pointer';
                     }
                 } else if (this.hover) {
                     this.hover = null;
-                    Stage.css({ cursor: '' });
+                    document.body.style.cursor = '';
                 }
             };
 
@@ -1112,8 +1112,8 @@
                     return;
                 }
 
-                this.mouse.x = (clientX / Stage.width) * 2 - 1;
-                this.mouse.y = 1 - (clientY / Stage.height) * 2;
+                this.mouse.x = (clientX / document.documentElement.clientWidth) * 2 - 1;
+                this.mouse.y = 1 - (clientY / document.documentElement.clientHeight) * 2;
             };
 
             static onPointerUp = e => {
@@ -1274,7 +1274,6 @@
                     this.initThread();
                 }
 
-                this.initStage();
                 this.initWorld();
                 this.initViews();
                 this.initControllers();
@@ -1303,13 +1302,9 @@
                 Thread.shared();
             }
 
-            static initStage() {
-                Stage.init(document.querySelector('#root'));
-            }
-
             static initWorld() {
                 WorldController.init();
-                Stage.add(WorldController.element);
+                document.body.appendChild(WorldController.element);
             }
 
             static initViews() {
@@ -1344,8 +1339,9 @@
             }
 
             static addListeners() {
-                Stage.events.on('resize', this.onResize);
+                window.addEventListener('resize', this.onResize);
                 ticker.add(this.onUpdate);
+                ticker.start();
             }
 
             /**
@@ -1353,7 +1349,9 @@
              */
 
             static onResize = () => {
-                const { width, height, dpr } = Stage;
+                const width = document.documentElement.clientWidth;
+                const height = document.documentElement.clientHeight;
+                const dpr = window.devicePixelRatio;
 
                 WorldController.resize(width, height, dpr);
                 CameraController.resize(width, height);
@@ -1374,6 +1372,5 @@
     </script>
 </head>
 <body>
-    <div id="root"></div>
 </body>
 </html>

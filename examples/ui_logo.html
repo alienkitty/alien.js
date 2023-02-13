@@ -11,7 +11,7 @@
     <link rel="stylesheet" href="assets/css/style.css">
 
     <script type="module">
-        import { Interface, Stage } from '../build/alien.js';
+        import { Interface, ticker } from '../build/alien.js';
 
         class Logo extends Interface {
             constructor() {
@@ -25,6 +25,7 @@
 
             initHTML() {
                 this.css({
+                    position: 'absolute',
                     left: 50,
                     top: 50,
                     width: 64,
@@ -36,21 +37,21 @@
                 this.image = new Interface(null, 'img');
                 this.image.attr({ src: 'assets/images/alienkitty.svg' });
                 this.image.css({
-                    position: 'relative',
-                    width: '100%'
+                    width: '100%',
+                    height: 'auto'
                 });
                 this.add(this.image);
             }
 
             addListeners() {
-                Stage.events.on('resize', this.onResize);
+                window.addEventListener('resize', this.onResize);
                 this.element.addEventListener('mouseenter', this.onHover);
                 this.element.addEventListener('mouseleave', this.onHover);
                 this.element.addEventListener('click', this.onClick);
             }
 
             removeListeners() {
-                Stage.events.off('resize', this.onResize);
+                window.removeEventListener('resize', this.onResize);
                 this.element.removeEventListener('mouseenter', this.onHover);
                 this.element.removeEventListener('mouseleave', this.onHover);
                 this.element.removeEventListener('click', this.onClick);
@@ -61,7 +62,8 @@
              */
 
             onResize = () => {
-                const { width, height } = Stage;
+                const width = document.documentElement.clientWidth;
+                const height = document.documentElement.clientHeight;
 
                 if (width < height) {
                     this.css({
@@ -91,8 +93,7 @@
             };
 
             onClick = () => {
-                // open('https://alien.js.org/');
-                Stage.setPath('/');
+                open('https://alien.js.org/');
             };
 
             /**
@@ -112,23 +113,19 @@
 
         class App {
             static async init() {
-                this.initStage();
                 this.initViews();
 
                 this.addListeners();
             }
 
-            static initStage() {
-                Stage.init(document.querySelector('#root'));
-            }
-
             static initViews() {
                 this.logo = new Logo();
-                Stage.add(this.logo);
+                document.body.appendChild(this.logo.element);
             }
 
             static addListeners() {
                 window.addEventListener('load', this.onLoad);
+                ticker.start();
             }
 
             /**
@@ -144,6 +141,5 @@
     </script>
 </head>
 <body>
-    <div id="root"></div>
 </body>
 </html>

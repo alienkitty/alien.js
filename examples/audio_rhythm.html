@@ -11,18 +11,18 @@
     <link rel="stylesheet" href="assets/css/style.css">
 
     <style>
-        html, body, #root {
-            position: unset;
-            overflow-y: scroll;
+        *, :after, :before {
+            touch-action: unset;
         }
 
-        #root, #root * {
-            touch-action: unset;
+        body {
+            position: unset;
+            overscroll-behavior: none;
         }
     </style>
 
     <script type="module">
-        import { AssetLoader, Assets, Interface, Panel, PanelItem, Stage, WebAudio, headsTails } from '../build/alien.js';
+        import { AssetLoader, Assets, Interface, Panel, PanelItem, WebAudio, headsTails, ticker } from '../build/alien.js';
 
         class Config {
             static ASSETS = [
@@ -48,6 +48,7 @@
             initHTML() {
                 this.invisible();
                 this.css({
+                    position: 'absolute',
                     left: '50%',
                     bottom: 55,
                     width: 300,
@@ -57,6 +58,7 @@
 
                 this.container = new Interface('.container');
                 this.container.css({
+                    position: 'absolute',
                     bottom: 0,
                     width: '100%'
                 });
@@ -64,7 +66,6 @@
 
                 this.text = new Interface('.text');
                 this.text.css({
-                    position: 'relative',
                     fontFamily: 'Gothic A1, sans-serif',
                     fontWeight: '700',
                     fontSize: 10,
@@ -105,7 +106,6 @@
 
             initHTML() {
                 this.css({
-                    position: 'relative',
                     minHeight: '100%',
                     display: 'flex',
                     justifyContent: 'center',
@@ -160,7 +160,7 @@
             }
 
             static addListeners() {
-                Stage.events.on('visibility', this.onVisibility);
+                document.addEventListener('visibilitychange', this.onVisibility);
                 window.addEventListener('pointerdown', this.onPointerDown);
 
                 this.instructions.toggle(true);
@@ -248,7 +248,6 @@
                 const { ambient, bells, accent1, accent2, kick, snare, hihat } = AudioController;
 
                 const track1 = new Panel();
-                track1.css({ position: 'relative' });
                 track1.animateIn();
                 this.ui.add(track1);
 
@@ -297,7 +296,6 @@
                 });
 
                 const track2 = new Panel();
-                track2.css({ position: 'relative' });
                 track2.animateIn();
                 this.ui.add(track2);
 
@@ -346,7 +344,6 @@
                 });
 
                 const track3 = new Panel();
-                track3.css({ position: 'relative' });
                 track3.animateIn();
                 this.ui.add(track3);
 
@@ -395,7 +392,6 @@
                 });
 
                 const track4 = new Panel();
-                track4.css({ position: 'relative' });
                 track4.animateIn();
                 this.ui.add(track4);
 
@@ -444,7 +440,6 @@
                 });
 
                 const track5 = new Panel();
-                track5.css({ position: 'relative' });
                 track5.animateIn();
                 this.ui.add(track5);
 
@@ -493,7 +488,6 @@
                 });
 
                 const track6 = new Panel();
-                track6.css({ position: 'relative' });
                 track6.animateIn();
                 this.ui.add(track6);
 
@@ -542,7 +536,6 @@
                 });
 
                 const track7 = new Panel();
-                track7.css({ position: 'relative' });
                 track7.animateIn();
                 this.ui.add(track7);
 
@@ -596,7 +589,6 @@
             static async init() {
                 Assets.cache = true;
 
-                this.initStage();
                 this.initViews();
                 this.initLoader();
 
@@ -604,15 +596,13 @@
 
                 this.initAudio();
                 this.initPanel();
-            }
 
-            static initStage() {
-                Stage.init(document.querySelector('#root'));
+                this.addListeners();
             }
 
             static initViews() {
                 this.ui = new UI();
-                Stage.add(this.ui);
+                document.body.appendChild(this.ui.element);
             }
 
             static initLoader() {
@@ -627,12 +617,15 @@
             static initPanel() {
                 PanelController.init(this.ui);
             }
+
+            static addListeners() {
+                ticker.start();
+            }
         }
 
         App.init();
     </script>
 </head>
 <body>
-    <div id="root"></div>
 </body>
 </html>

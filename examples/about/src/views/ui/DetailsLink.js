@@ -20,7 +20,6 @@ export class DetailsLink extends Interface {
 
         this.text = new Interface('.text');
         this.text.css({
-            position: 'relative',
             display: 'inline-block'
         });
         this.text.text(this.title);
@@ -28,7 +27,6 @@ export class DetailsLink extends Interface {
 
         this.line = new Interface('.line');
         this.line.css({
-            position: 'relative',
             display: 'inline-block',
             fontWeight: '700'
         });

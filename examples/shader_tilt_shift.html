@@ -11,7 +11,7 @@
     <link rel="stylesheet" href="assets/css/style.css">
 
     <script type="module">
-        import { ACESFilmicToneMapping, AdditiveBlending, AmbientLight, BloomCompositeMaterial, BufferGeometry, Color, CopyMaterial, DepthTexture, DirectionalLight, EnvironmentTextureLoader, FXAAMaterial, Float32BufferAttribute, GLSL3, Group, HemisphereLight, ImageBitmapLoaderThread, LuminosityMaterial, Mesh, MeshStandardMaterial, OrbitControls, OrthographicCamera, PanelItem, PerspectiveCamera, Points, RawShaderMaterial, RepeatWrapping, Scene, SceneCompositeMaterial, SphereGeometry, Stage, TextureLoader, Thread, TiltShiftMaterial, UI, UnrealBloomBlurMaterial, Vector2, WebGLRenderTarget, WebGLRenderer, floorPowerOfTwo, getFullscreenTriangle, lerp, randFloatSpread, ticker } from '../build/alien.js';
+        import { ACESFilmicToneMapping, AdditiveBlending, AmbientLight, BloomCompositeMaterial, BufferGeometry, Color, CopyMaterial, DepthTexture, DirectionalLight, EnvironmentTextureLoader, FXAAMaterial, Float32BufferAttribute, GLSL3, Group, HemisphereLight, ImageBitmapLoaderThread, LuminosityMaterial, Mesh, MeshStandardMaterial, OrbitControls, OrthographicCamera, PanelItem, PerspectiveCamera, Points, RawShaderMaterial, RepeatWrapping, Scene, SceneCompositeMaterial, SphereGeometry, TextureLoader, Thread, TiltShiftMaterial, UI, UnrealBloomBlurMaterial, Vector2, WebGLRenderTarget, WebGLRenderer, floorPowerOfTwo, getFullscreenTriangle, lerp, randFloatSpread, ticker } from '../build/alien.js';
 
         import simplex3d from '../src/shaders/modules/noise/simplex3d.glsl.js';
         import depth from '../src/shaders/modules/depth/depth.glsl.js';
@@ -130,7 +130,7 @@
                     uniforms: {
                         tMap: { value: getTexture('assets/textures/particle.png') },
                         tDepth: { value: null },
-                        uScale: { value: Stage.dpr / 2 },
+                        uScale: { value: window.devicePixelRatio / 2 },
                         uAlpha: { value: 1 },
                         uCameraNear: { value: camera.near },
                         uCameraFar: { value: camera.far },
@@ -220,7 +220,7 @@
             static initViews() {
                 this.ui = new UI({ fps: true });
                 this.ui.animateIn();
-                Stage.add(this.ui);
+                document.body.appendChild(this.ui.element);
             }
 
             static initPanel() {
@@ -687,7 +687,6 @@
                     this.initThread();
                 }
 
-                this.initStage();
                 this.initWorld();
                 this.initViews();
                 this.initControllers();
@@ -704,13 +703,9 @@
                 Thread.shared();
             }
 
-            static initStage() {
-                Stage.init(document.querySelector('#root'));
-            }
-
             static initWorld() {
                 WorldController.init();
-                Stage.add(WorldController.element);
+                document.body.appendChild(WorldController.element);
             }
 
             static initViews() {
@@ -731,8 +726,9 @@
             }
 
             static addListeners() {
-                Stage.events.on('resize', this.onResize);
+                window.addEventListener('resize', this.onResize);
                 ticker.add(this.onUpdate);
+                ticker.start();
             }
 
             /**
@@ -740,7 +736,9 @@
              */
 
             static onResize = () => {
-                const { width, height, dpr } = Stage;
+                const width = document.documentElement.clientWidth;
+                const height = document.documentElement.clientHeight;
+                const dpr = window.devicePixelRatio;
 
                 WorldController.resize(width, height, dpr);
                 RenderManager.resize(width, height, dpr);
@@ -757,6 +755,5 @@
     </script>
 </head>
 <body>
-    <div id="root"></div>
 </body>
 </html>

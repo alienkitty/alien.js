@@ -131,6 +131,7 @@ class UILink extends Interface {
 
         this.line = new Interface('.line');
         this.line.css({
+            position: 'absolute',
             left: 10,
             right: 10,
             bottom: 10,
@@ -208,7 +209,6 @@ class UITitle extends Interface {
     initHTML() {
         this.invisible();
         this.css({
-            position: 'relative',
             margin: 0,
             fontFamily: 'Roboto, sans-serif',
             fontWeight: '300',
@@ -230,6 +230,7 @@ class UITitle extends Interface {
             }
 
             const letter = new Interface(null, 'span');
+            letter.css({ display: 'inline-block' });
             letter.html(str);
             this.add(letter);
 
@@ -320,9 +321,11 @@ class UI extends Interface {
 
         this.container = new Interface('.container');
         this.container.css({
-            position: 'relative',
-            margin: '23px 0 0',
-            textAlign: 'center'
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            height: '100%',
+            padding: '24px 0'
         });
         this.add(this.container);
     }
@@ -338,12 +341,13 @@ class UI extends Interface {
         const link = Data.getPath(item.path);
 
         this.link = new UILink('Next', link);
+        this.link.css({ marginTop: 'auto' });
         this.container.add(this.link);
     }
 
     addListeners() {
         Stage.events.on('state_change', this.onStateChange);
-        Stage.events.on('resize', this.onResize);
+        window.addEventListener('resize', this.onResize);
     }
 
     /**
@@ -371,21 +375,13 @@ class UI extends Interface {
     };
 
     onResize = () => {
-        if (Stage.width < Config.BREAKPOINT) {
+        if (document.documentElement.clientWidth < Config.BREAKPOINT) {
             this.container.css({
-                margin: '24px 0 0'
-            });
-
-            this.link.css({
-                marginTop: Stage.height - 24 * 2 - 70
+                padding: '24px 0'
             });
         } else {
             this.container.css({
-                margin: '55px 0 0'
-            });
-
-            this.link.css({
-                marginTop: Stage.height - 55 * 2 - 70
+                padding: '55px 0'
             });
         }
     };
@@ -1416,7 +1412,7 @@ class App {
     }
 
     static initStage() {
-        Stage.init(document.querySelector('#root'));
+        Stage.init();
         Stage.css({ opacity: 0 });
     }
 
@@ -1462,7 +1458,7 @@ class App {
     }
 
     static addListeners() {
-        Stage.events.on('resize', this.onResize);
+        window.addEventListener('resize', this.onResize);
         ticker.add(this.onUpdate);
     }
 
@@ -1471,7 +1467,9 @@ class App {
      */
 
     static onResize = () => {
-        const { width, height, dpr } = Stage;
+        const width = document.documentElement.clientWidth;
+        const height = document.documentElement.clientHeight;
+        const dpr = window.devicePixelRatio;
 
         WorldController.resize(width, height, dpr);
         SceneController.resize(width, height, dpr);

@@ -11,7 +11,7 @@
     <link rel="stylesheet" href="assets/css/style.css">
 
     <script type="module">
-        import { ACESFilmicToneMapping, AdditiveBlending, BackSide, BlurMaterial, Color, CubeCamera, FXAAMaterial, GLSL3, Group, IcosahedronGeometry, ImageBitmapLoaderThread, LinearMipmapLinearFilter, Mesh, MeshBasicMaterial, MultiplyOperation, NoBlending, OrthographicCamera, PanelItem, PerspectiveCamera, RawShaderMaterial, Scene, SphereGeometry, Sprite, SpriteMaterial, Stage, TextureLoader, Thread, UI, Vector2, Vector3, WebGLCubeRenderTarget, WebGLRenderTarget, WebGLRenderer, Wobble, degToRad, getFullscreenTriangle, getKeyByValue, randFloat, ticker, tween } from '../build/alien.js';
+        import { ACESFilmicToneMapping, AdditiveBlending, BackSide, BlurMaterial, Color, CubeCamera, FXAAMaterial, GLSL3, Group, IcosahedronGeometry, ImageBitmapLoaderThread, LinearMipmapLinearFilter, Mesh, MeshBasicMaterial, MultiplyOperation, NoBlending, OrthographicCamera, PanelItem, PerspectiveCamera, RawShaderMaterial, Scene, SphereGeometry, Sprite, SpriteMaterial, TextureLoader, Thread, UI, Vector2, Vector3, WebGLCubeRenderTarget, WebGLRenderTarget, WebGLRenderer, Wobble, degToRad, getFullscreenTriangle, getKeyByValue, randFloat, ticker, tween } from '../build/alien.js';
 
         class Config {
             static BG_COLOR = new Color(0x030627);
@@ -408,7 +408,7 @@
             static initViews() {
                 this.ui = new UI({ fps: true });
                 this.ui.animateIn();
-                Stage.add(this.ui);
+                document.body.appendChild(this.ui.element);
             }
 
             static initPanel() {
@@ -870,7 +870,6 @@
                     this.initThread();
                 }
 
-                this.initStage();
                 this.initWorld();
                 this.initViews();
                 this.initControllers();
@@ -892,13 +891,9 @@
                 Thread.shared();
             }
 
-            static initStage() {
-                Stage.init(document.querySelector('#root'));
-            }
-
             static initWorld() {
                 WorldController.init();
-                Stage.add(WorldController.element);
+                document.body.appendChild(WorldController.element);
             }
 
             static initViews() {
@@ -919,8 +914,9 @@
             }
 
             static addListeners() {
-                Stage.events.on('resize', this.onResize);
+                window.addEventListener('resize', this.onResize);
                 ticker.add(this.onUpdate);
+                ticker.start();
             }
 
             /**
@@ -928,7 +924,9 @@
              */
 
             static onResize = () => {
-                const { width, height, dpr } = Stage;
+                const width = document.documentElement.clientWidth;
+                const height = document.documentElement.clientHeight;
+                const dpr = window.devicePixelRatio;
 
                 WorldController.resize(width, height, dpr);
                 CameraController.resize(width, height);
@@ -949,6 +947,5 @@
     </script>
 </head>
 <body>
-    <div id="root"></div>
 </body>
 </html>

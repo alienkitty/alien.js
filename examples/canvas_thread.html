@@ -11,7 +11,7 @@
     <link rel="stylesheet" href="assets/css/style.css">
 
     <script type="module">
-        import { Stage, Thread, ticker } from '../build/alien.js';
+        import { Thread, ticker } from '../build/alien.js';
 
         // Based on https://codepen.io/zepha/pen/VpXvBJ
 
@@ -194,7 +194,6 @@
 
         class App {
             static async init() {
-                this.initStage();
                 this.initCanvas();
                 this.initControllers();
 
@@ -202,13 +201,9 @@
                 this.onResize();
             }
 
-            static initStage() {
-                Stage.init(document.querySelector('#root'));
-            }
-
             static initCanvas() {
                 this.canvas = document.createElement('canvas');
-                Stage.add(this.canvas);
+                document.body.appendChild(this.canvas);
             }
 
             static initControllers() {
@@ -216,7 +211,7 @@
             }
 
             static addListeners() {
-                Stage.events.on('resize', this.onResize);
+                window.addEventListener('resize', this.onResize);
                 window.addEventListener('load', this.onLoad);
             }
 
@@ -225,7 +220,9 @@
              */
 
             static onResize = () => {
-                const { width, height, dpr } = Stage;
+                const width = document.documentElement.clientWidth;
+                const height = document.documentElement.clientHeight;
+                const dpr = window.devicePixelRatio;
 
                 this.canvas.style.width = width + 'px';
                 this.canvas.style.height = height + 'px';
@@ -242,6 +239,5 @@
     </script>
 </head>
 <body>
-    <div id="root"></div>
 </body>
 </html>

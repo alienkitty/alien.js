@@ -16,6 +16,7 @@ export class Tracker extends Interface {
     initHTML() {
         this.invisible();
         this.css({
+            position: 'absolute',
             left: '50%',
             top: '50%',
             width: 12,
@@ -26,6 +27,7 @@ export class Tracker extends Interface {
 
         this.reticle = new Interface('.reticle');
         this.reticle.css({
+            position: 'absolute',
             left: '50%',
             top: '50%',
             width: 12,

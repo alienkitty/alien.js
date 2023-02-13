@@ -1,8 +1,7 @@
 export class Styles {
     static h1 = {
-        position: 'relative',
-        left: -1,
-        margin: '0 0 6px',
+        width: 'fit-content',
+        margin: '0 0 6px -1px',
         fontFamily: 'D-DIN, sans-serif',
         fontWeight: '400',
         fontSize: 24,
@@ -11,25 +10,31 @@ export class Styles {
     };
 
     static content = {
-        position: 'relative',
-        margin: '6px 0'
+        width: 'fit-content',
+        margin: '6px 0',
+        fontFamily: 'Gothic A1, sans-serif',
+        fontWeight: '500',
+        fontSize: 13,
+        lineHeight: '1.5',
+        letterSpacing: 'normal'
     };
 
     static label = {
         fontFamily: 'Roboto Mono, monospace',
+        fontWeight: '500',
         fontSize: 11,
         lineHeight: 15,
         letterSpacing: '0.03em'
     };
 
-    static small = {
-        ...this.label,
-        fontSize: 10,
-        letterSpacing: 0.5
-    };
-
     static number = {
         ...this.label,
         letterSpacing: 1
+    };
+
+    static secondary = {
+        ...this.label,
+        fontSize: 10,
+        letterSpacing: 0.5
     };
 }

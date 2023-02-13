@@ -11,13 +11,13 @@ export class TrackerText extends Interface {
 
     initHTML() {
         this.css({
+            position: 'absolute',
             left: 20,
             top: -3
         });
 
         this.name = new Interface('.name');
         this.name.css({
-            position: 'relative',
             ...Styles.number,
             lineHeight: 18,
             whiteSpace: 'nowrap'
@@ -26,8 +26,7 @@ export class TrackerText extends Interface {
 
         this.latency = new Interface('.latency');
         this.latency.css({
-            position: 'relative',
-            ...Styles.small,
+            ...Styles.secondary,
             opacity: 0.7
         });
         this.add(this.latency);

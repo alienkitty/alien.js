@@ -28,6 +28,7 @@ export class DetailsTitle extends Interface {
             }
 
             const letter = new Interface(null, 'span');
+            letter.css({ display: 'inline-block' });
             letter.html(str);
             this.add(letter);
 

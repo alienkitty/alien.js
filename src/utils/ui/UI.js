@@ -32,8 +32,6 @@ export class UI extends Interface {
 
         this.initHTML();
         this.initViews();
-
-        this.addListeners();
     }
 
     initHTML() {
@@ -55,22 +53,6 @@ export class UI extends Interface {
         }
     }
 
-    addListeners() {
-        Stage.events.on('invert', this.onInvert);
-    }
-
-    removeListeners() {
-        Stage.events.off('invert', this.onInvert);
-    }
-
-    /**
-     * Event handlers
-     */
-
-    onInvert = ({ invert }) => {
-        this.invert(invert);
-    };
-
     /**
      * Public methods
      */
@@ -84,6 +66,8 @@ export class UI extends Interface {
     invert = isInverted => {
         Stage.root.style.setProperty('--ui-color', isInverted ? this.invertColors.light : this.invertColors.dark);
         Stage.root.style.setProperty('--ui-color-triplet', isInverted ? this.invertColors.lightTriplet : this.invertColors.darkTriplet);
+
+        Stage.events.emit('invert', { invert: isInverted });
     };
 
     update = () => {
@@ -106,11 +90,5 @@ export class UI extends Interface {
         if (this.header) {
             this.header.animateOut();
         }
-    };
-
-    destroy = () => {
-        this.removeListeners();
-
-        return super.destroy();
     };
 }

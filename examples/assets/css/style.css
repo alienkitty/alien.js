@@ -1,5 +1,13 @@
 :root {
     --bg-color: #0e0e0e;
+    --ui-font-family: 'Roboto Mono', monospace;
+    --ui-font-weight: 400;
+    --ui-font-size: 11px;
+    --ui-line-height: 15px;
+    --ui-letter-spacing: 0.03em;
+    --ui-number-letter-spacing: 0.5px;
+    --ui-secondary-font-size: 10px;
+    --ui-secondary-letter-spacing: 0.5px;
     --ui-color: rgba(255, 255, 255, 0.94);
     --ui-color-triplet: 255, 255, 255;
     --ui-invert-light-color: #000;
@@ -8,53 +16,47 @@
     --ui-invert-dark-color-triplet: 255, 255, 255;
 }
 
-html, body, #root {
-    width: 100%;
-    height: 100%;
-    overflow: hidden;
-}
-
-body {
-    position: fixed;
-    margin: 0;
-    font-family: 'Roboto Mono', monospace;
-    font-weight: 400;
-    font-size: 11px;
-    line-height: 1.7;
-    letter-spacing: 0.03em;
-    background-color: var(--bg-color);
-    color: var(--ui-color);
-}
-
-#root, #root * {
-    position: absolute;
-    outline: none;
-    border: none;
+*, :after, :before {
     box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    border: 0;
     touch-action: none;
     -webkit-touch-callout: none;
     -webkit-user-drag: none;
-    -webkit-tap-highlight-color: transparent;
     -webkit-text-size-adjust: none;
     text-size-adjust: none;
 }
 
-#root br, #root span, #root a {
-    position: relative;
-    display: inline-block;
+*:focus {
+    outline: 0;
+    box-shadow: none;
 }
 
-#root a, #root button, #root input, #root select {
-    pointer-events: auto;
+html, body {
+    width: 100%;
+    height: 100%;
 }
 
-#root a {
+body {
+    position: fixed;
+    font-family: var(--ui-font-family);
+    font-weight: var(--ui-font-weight);
+    font-size: var(--ui-font-size);
+    line-height: var(--ui-line-height);
+    letter-spacing: var(--ui-letter-spacing);
+    background-color: var(--bg-color);
+    color: var(--ui-color);
+    -webkit-tap-highlight-color: transparent;
+}
+
+a {
     color: var(--ui-color);
     text-decoration: none;
     text-underline-offset: 3px;
 }
 
-#root a:hover, #root a:focus {
+a:hover, a:focus {
     color: var(--ui-color);
     text-decoration: underline;
 }
@@ -62,20 +64,4 @@ body {
 ::selection {
     background-color: var(--ui-color);
     color: var(--bg-color);
-}
-
-.ui {
-    font-family: 'Roboto Mono', monospace;
-    font-size: 11px;
-    line-height: 15px;
-    letter-spacing: 0.03em;
-}
-
-.ui .number, .ui .primary {
-    letter-spacing: 1px;
-}
-
-.ui .type, .ui .secondary {
-    font-size: 10px;
-    letter-spacing: 0.5px;
 }

@@ -5,7 +5,6 @@
 import { Vector2 } from 'three/src/math/Vector2.js';
 
 import { Component } from '../Component.js';
-import { Stage } from '../Stage.js';
 
 import { clearTween, tween } from '../../tween/Tween.js';
 
@@ -41,7 +40,7 @@ export class Line extends Component {
     resize = () => {
         // Context properties need to be reassigned after resize
         this.context.lineWidth = 1.5;
-        this.context.strokeStyle = Stage.rootStyle.getPropertyValue('--ui-color').trim();
+        this.context.strokeStyle = getComputedStyle(document.querySelector(':root')).getPropertyValue('--ui-color').trim();
 
         this.update();
     };

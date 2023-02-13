@@ -26,7 +26,6 @@ export class List extends Interface {
 
     initHTML() {
         this.css({
-            position: 'relative',
             width: '100%',
             height: 18
         });

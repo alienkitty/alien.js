@@ -3,7 +3,6 @@
  */
 
 import { Component } from '../Component.js';
-import { Stage } from '../Stage.js';
 
 import { ticker } from '../../tween/Ticker.js';
 import { defer } from '../../tween/Tween.js';
@@ -56,12 +55,12 @@ export class SmoothViews extends Component {
     }
 
     addListeners() {
-        Stage.events.on('resize', this.onResize);
+        window.addEventListener('resize', this.onResize);
         ticker.add(this.onUpdate);
     }
 
     removeListeners() {
-        Stage.events.off('resize', this.onResize);
+        window.removeEventListener('resize', this.onResize);
         ticker.remove(this.onUpdate);
     }
 
@@ -128,7 +127,7 @@ export class SmoothViews extends Component {
         const current = this.position + this.views[this.index2].height - this.views[this.index2].top;
         this.progress = clamp(current / this.views[this.index2].height, 0, 1);
 
-        this.total = clamp(this.position / (this.height - Stage.height), 0, 1);
+        this.total = clamp(this.position / (this.height - document.documentElement.clientHeight), 0, 1);
     };
 
     /**

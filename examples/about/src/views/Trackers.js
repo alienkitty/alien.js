@@ -9,6 +9,7 @@ export class Trackers extends Interface {
 
     initHTML() {
         this.css({
+            position: 'absolute',
             left: 0,
             top: 0,
             width: '100%',

@@ -11,7 +11,7 @@
     <link rel="stylesheet" href="assets/css/style.css">
 
     <script type="module">
-        import { Color, DirectionalLight, FXAAMaterial, Group, HemisphereLight, LuminosityMaterial, Mesh, MeshStandardMaterial, OrthographicCamera, PanelItem, PerspectiveCamera, Scene, SceneCompositeMaterial, SphereGeometry, Stage, UI, UnrealBloomBlurMaterial, UnrealBloomCompositeMaterial, Vector2, Vector3, WebGLRenderTarget, WebGLRenderer, floorPowerOfTwo, getFullscreenTriangle, ticker } from '../build/alien.js';
+        import { Color, DirectionalLight, FXAAMaterial, Group, HemisphereLight, LuminosityMaterial, Mesh, MeshStandardMaterial, OrthographicCamera, PanelItem, PerspectiveCamera, Scene, SceneCompositeMaterial, SphereGeometry, UI, UnrealBloomBlurMaterial, UnrealBloomCompositeMaterial, Vector2, Vector3, WebGLRenderTarget, WebGLRenderer, floorPowerOfTwo, getFullscreenTriangle, ticker } from '../build/alien.js';
 
         import periodic3d from '../src/shaders/modules/noise/periodic3d.glsl.js';
 
@@ -68,7 +68,7 @@
             static initViews() {
                 this.ui = new UI({ fps: true });
                 this.ui.animateIn();
-                Stage.add(this.ui);
+                document.body.appendChild(this.ui.element);
             }
 
             static initPanel() {
@@ -415,7 +415,6 @@
 
         class App {
             static async init() {
-                this.initStage();
                 this.initWorld();
                 this.initViews();
                 this.initControllers();
@@ -426,13 +425,9 @@
                 this.initPanel();
             }
 
-            static initStage() {
-                Stage.init(document.querySelector('#root'));
-            }
-
             static initWorld() {
                 WorldController.init();
-                Stage.add(WorldController.element);
+                document.body.appendChild(WorldController.element);
             }
 
             static initViews() {
@@ -451,8 +446,9 @@
             }
 
             static addListeners() {
-                Stage.events.on('resize', this.onResize);
+                window.addEventListener('resize', this.onResize);
                 ticker.add(this.onUpdate);
+                ticker.start();
             }
 
             /**
@@ -460,7 +456,9 @@
              */
 
             static onResize = () => {
-                const { width, height, dpr } = Stage;
+                const width = document.documentElement.clientWidth;
+                const height = document.documentElement.clientHeight;
+                const dpr = window.devicePixelRatio;
 
                 WorldController.resize(width, height, dpr);
                 RenderManager.resize(width, height, dpr);
@@ -477,6 +475,5 @@
     </script>
 </head>
 <body>
-    <div id="root"></div>
 </body>
 </html>

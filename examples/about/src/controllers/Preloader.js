@@ -19,10 +19,7 @@ export class Preloader {
     }
 
     static initStage() {
-        Stage.init(document.querySelector('#root'));
-
-        Stage.root = document.querySelector(':root');
-        Stage.rootStyle = getComputedStyle(Stage.root);
+        Stage.init();
     }
 
     static initView() {

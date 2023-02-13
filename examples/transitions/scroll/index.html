@@ -11,17 +11,16 @@
     <link rel="stylesheet" href="/examples/assets/css/style.css">
 
     <style>
-        html, body, #root {
-            position: unset;
-            overflow-y: scroll;
-            overscroll-behavior: none;
-        }
-
-        #root, #root * {
+        *, :after, :before {
             touch-action: unset;
         }
 
-        #root canvas {
+        body {
+            position: unset;
+            overscroll-behavior: none;
+        }
+
+        canvas {
             position: fixed;
             left: 0;
             top: 0;

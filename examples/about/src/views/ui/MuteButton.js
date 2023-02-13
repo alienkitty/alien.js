@@ -25,6 +25,7 @@ export class MuteButton extends Interface {
 
     initHTML() {
         this.css({
+            position: 'absolute',
             right: 22,
             bottom: 20,
             width: this.width + 20,
@@ -41,6 +42,7 @@ export class MuteButton extends Interface {
     initCanvas() {
         this.canvas = new Interface(null, 'canvas');
         this.canvas.css({
+            position: 'absolute',
             left: '50%',
             top: '50%',
             marginLeft: -this.width / 2,
@@ -95,14 +97,14 @@ export class MuteButton extends Interface {
     }
 
     addListeners() {
-        Stage.events.on('resize', this.onResize);
+        window.addEventListener('resize', this.onResize);
         this.element.addEventListener('mouseenter', this.onHover);
         this.element.addEventListener('mouseleave', this.onHover);
         this.element.addEventListener('click', this.onClick);
     }
 
     removeListeners() {
-        Stage.events.off('resize', this.onResize);
+        window.removeEventListener('resize', this.onResize);
         this.element.removeEventListener('mouseenter', this.onHover);
         this.element.removeEventListener('mouseleave', this.onHover);
         this.element.removeEventListener('click', this.onClick);
@@ -113,7 +115,7 @@ export class MuteButton extends Interface {
      */
 
     onResize = () => {
-        if (Stage.width < Config.BREAKPOINT) {
+        if (document.documentElement.clientWidth < Config.BREAKPOINT) {
             this.css({
                 right: 12,
                 bottom: 10

@@ -56,7 +56,6 @@ export class Slider extends Interface {
 
         this.text = new Interface('.text');
         this.text.css({
-            position: 'relative',
             cssFloat: 'left',
             marginRight: 10,
             textTransform: 'uppercase',
@@ -68,17 +67,16 @@ export class Slider extends Interface {
 
         this.number = new Interface('.number');
         this.number.css({
-            position: 'relative',
             cssFloat: 'right',
+            fontVariantNumeric: 'tabular-nums',
             lineHeight: 20,
-            letterSpacing: 0.5,
+            letterSpacing: 'var(--ui-number-letter-spacing)',
             whiteSpace: 'nowrap'
         });
         this.add(this.number);
 
         this.line = new Interface('.line');
         this.line.css({
-            position: 'relative',
             clear: 'both',
             width: '100%',
             height: 1,

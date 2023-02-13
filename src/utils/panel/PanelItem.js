@@ -24,7 +24,6 @@ export class PanelItem extends Interface {
 
         if (!this.data.type) {
             this.css({
-                position: 'relative',
                 boxSizing: 'border-box',
                 width,
                 padding: '10px 10px 0',
@@ -33,7 +32,6 @@ export class PanelItem extends Interface {
 
             this.text = new Interface('.text');
             this.text.css({
-                position: 'relative',
                 textTransform: 'uppercase',
                 whiteSpace: 'nowrap'
             });
@@ -41,14 +39,12 @@ export class PanelItem extends Interface {
             this.add(this.text);
         } else if (this.data.type === 'spacer') {
             this.css({
-                position: 'relative',
                 boxSizing: 'border-box',
                 width,
                 height: 7
             });
         } else if (this.data.type === 'divider') {
             this.css({
-                position: 'relative',
                 boxSizing: 'border-box',
                 width,
                 padding: '0 10px',
@@ -57,7 +53,6 @@ export class PanelItem extends Interface {
 
             this.line = new Interface('.line');
             this.line.css({
-                position: 'relative',
                 width: '100%',
                 height: 1,
                 backgroundColor: 'rgba(var(--ui-color-triplet), 0.25)',
@@ -66,7 +61,6 @@ export class PanelItem extends Interface {
             this.add(this.line);
         } else if (this.data.type === 'link') {
             this.css({
-                position: 'relative',
                 boxSizing: 'border-box',
                 width,
                 padding: '2px 10px 0'
@@ -76,7 +70,6 @@ export class PanelItem extends Interface {
             this.add(this.link);
         } else if (this.data.type === 'list') {
             this.css({
-                position: 'relative',
                 boxSizing: 'border-box',
                 width,
                 padding: '2px 10px 0'
@@ -90,7 +83,6 @@ export class PanelItem extends Interface {
             this.add(this.list);
         } else if (this.data.type === 'slider') {
             this.css({
-                position: 'relative',
                 boxSizing: 'border-box',
                 width,
                 padding: '0 10px'
@@ -100,7 +92,6 @@ export class PanelItem extends Interface {
             this.add(this.slider);
         } else if (this.data.type === 'color') {
             this.css({
-                position: 'relative',
                 boxSizing: 'border-box',
                 width,
                 height: 19,

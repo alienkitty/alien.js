@@ -16,7 +16,6 @@ export class HeaderInfo extends Interface {
 
     initHTML() {
         this.css({
-            position: 'relative',
             cssFloat: 'right',
             padding: 10,
             webkitUserSelect: 'none',
@@ -25,7 +24,6 @@ export class HeaderInfo extends Interface {
 
         this.number = new Interface('.number');
         this.number.css({
-            position: 'relative',
             ...Styles.number
         });
         this.number.text(this.fps);

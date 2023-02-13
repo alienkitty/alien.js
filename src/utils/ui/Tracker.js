@@ -25,6 +25,11 @@ export class Tracker extends Interface {
     initHTML() {
         this.css({
             position: 'absolute',
+            fontFamily: 'var(--ui-font-family)',
+            fontWeight: 'var(--ui-font-weight)',
+            fontSize: 'var(--ui-font-size)',
+            lineHeight: 'var(--ui-line-height)',
+            letterSpacing: 'var(--ui-letter-spacing)',
             pointerEvents: 'none',
             webkitUserSelect: 'none',
             userSelect: 'none'

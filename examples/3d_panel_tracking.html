@@ -11,7 +11,7 @@
     <link rel="stylesheet" href="assets/css/style.css">
 
     <script type="module">
-        import { ACESFilmicToneMapping, AmbientLight, BasicShadowMap, BloomCompositeMaterial, BoxGeometry, Color, DirectionalLight, EnvironmentTextureLoader, FXAAMaterial, GLSL3, Group, HemisphereLight, IcosahedronGeometry, ImageBitmapLoaderThread, LuminosityMaterial, MaterialPanelController, Mesh, MeshStandardMaterial, NoBlending, OctahedronGeometry, OrthographicCamera, PanelItem, PerspectiveCamera, PlaneGeometry, Point3D, RawShaderMaterial, Reflector, RepeatWrapping, Scene, ShadowMaterial, Stage, TextureLoader, Thread, UI, UnrealBloomBlurMaterial, Vector2, Vector3, WebGLRenderTarget, WebGLRenderer, degToRad, floorPowerOfTwo, getFullscreenTriangle, lerp, ticker } from '../build/alien.js';
+        import { ACESFilmicToneMapping, AmbientLight, BasicShadowMap, BloomCompositeMaterial, BoxGeometry, Color, DirectionalLight, EnvironmentTextureLoader, FXAAMaterial, GLSL3, Group, HemisphereLight, IcosahedronGeometry, ImageBitmapLoaderThread, LuminosityMaterial, MaterialPanelController, Mesh, MeshStandardMaterial, NoBlending, OctahedronGeometry, OrthographicCamera, PanelItem, PerspectiveCamera, PlaneGeometry, Point3D, RawShaderMaterial, Reflector, RepeatWrapping, Scene, ShadowMaterial, TextureLoader, Thread, UI, UnrealBloomBlurMaterial, Vector2, Vector3, WebGLRenderTarget, WebGLRenderer, degToRad, floorPowerOfTwo, getFullscreenTriangle, lerp, ticker } from '../build/alien.js';
 
         class Config {
             static DEBUG = /[?&]debug/.test(location.search);
@@ -563,12 +563,11 @@
             static initViews() {
                 this.ui = new UI({ fps: true });
                 this.ui.animateIn();
-                Stage.add(this.ui);
+                document.body.appendChild(this.ui.element);
             }
 
             static initControllers() {
                 Point3D.init(this.scene, this.camera, {
-                    root: Stage,
                     container: this.ui,
                     debug: Config.DEBUG
                 });
@@ -886,8 +885,8 @@
                     return;
                 }
 
-                this.mouse.x = (clientX / Stage.width) * 2 - 1;
-                this.mouse.y = 1 - (clientY / Stage.height) * 2;
+                this.mouse.x = (clientX / document.documentElement.clientWidth) * 2 - 1;
+                this.mouse.y = 1 - (clientY / document.documentElement.clientHeight) * 2;
             };
 
             static onPointerUp = e => {
@@ -1032,7 +1031,6 @@
                     this.initThread();
                 }
 
-                this.initStage();
                 this.initWorld();
                 this.initViews();
                 this.initControllers();
@@ -1058,13 +1056,9 @@
                 Thread.shared();
             }
 
-            static initStage() {
-                Stage.init(document.querySelector('#root'));
-            }
-
             static initWorld() {
                 WorldController.init();
-                Stage.add(WorldController.element);
+                document.body.appendChild(WorldController.element);
             }
 
             static initViews() {
@@ -1087,8 +1081,9 @@
             }
 
             static addListeners() {
-                Stage.events.on('resize', this.onResize);
+                window.addEventListener('resize', this.onResize);
                 ticker.add(this.onUpdate);
+                ticker.start();
             }
 
             /**
@@ -1096,7 +1091,9 @@
              */
 
             static onResize = () => {
-                const { width, height, dpr } = Stage;
+                const width = document.documentElement.clientWidth;
+                const height = document.documentElement.clientHeight;
+                const dpr = window.devicePixelRatio;
 
                 WorldController.resize(width, height, dpr);
                 CameraController.resize(width, height);
@@ -1117,6 +1114,5 @@
     </script>
 </head>
 <body>
-    <div id="root"></div>
 </body>
 </html>

@@ -11,7 +11,7 @@
     <link rel="stylesheet" href="assets/css/style.css">
 
     <script type="module">
-        import { Color, FXAAMaterial, GLSL3, Group, Mesh, OrbitControls, OrthographicCamera, PerspectiveCamera, RawShaderMaterial, Scene, SphereGeometry, Stage, Vector2, WebGLRenderTarget, WebGLRenderer, getFullscreenTriangle, ticker } from '../build/alien.js';
+        import { Color, FXAAMaterial, GLSL3, Group, Mesh, OrbitControls, OrthographicCamera, PerspectiveCamera, RawShaderMaterial, Scene, SphereGeometry, Vector2, WebGLRenderTarget, WebGLRenderer, getFullscreenTriangle, ticker } from '../build/alien.js';
 
         import periodic3d from '../src/shaders/modules/noise/periodic3d.glsl.js';
         import dither from '../src/shaders/modules/dither/dither.glsl.js';
@@ -227,7 +227,6 @@
 
         class App {
             static async init() {
-                this.initStage();
                 this.initWorld();
                 this.initViews();
                 this.initControllers();
@@ -236,13 +235,9 @@
                 this.onResize();
             }
 
-            static initStage() {
-                Stage.init(document.querySelector('#root'));
-            }
-
             static initWorld() {
                 WorldController.init();
-                Stage.add(WorldController.element);
+                document.body.appendChild(WorldController.element);
             }
 
             static initViews() {
@@ -257,8 +252,9 @@
             }
 
             static addListeners() {
-                Stage.events.on('resize', this.onResize);
+                window.addEventListener('resize', this.onResize);
                 ticker.add(this.onUpdate);
+                ticker.start();
             }
 
             /**
@@ -266,7 +262,9 @@
              */
 
             static onResize = () => {
-                const { width, height, dpr } = Stage;
+                const width = document.documentElement.clientWidth;
+                const height = document.documentElement.clientHeight;
+                const dpr = window.devicePixelRatio;
 
                 WorldController.resize(width, height, dpr);
                 RenderManager.resize(width, height, dpr);
@@ -282,6 +280,5 @@
     </script>
 </head>
 <body>
-    <div id="root"></div>
 </body>
 </html>

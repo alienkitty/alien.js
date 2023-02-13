@@ -20,15 +20,17 @@ export class ReticleText extends Interface {
 
         this.primary = new Interface('.primary');
         this.primary.css({
-            position: 'relative',
+            fontVariantNumeric: 'tabular-nums',
             lineHeight: 18,
+            letterSpacing: 'var(--ui-number-letter-spacing)',
             whiteSpace: 'nowrap'
         });
         this.add(this.primary);
 
         this.secondary = new Interface('.secondary');
         this.secondary.css({
-            position: 'relative',
+            fontSize: 'var(--ui-secondary-font-size)',
+            letterSpacing: 'var(--ui-secondary-letter-spacing)',
             opacity: 0.7
         });
         this.add(this.secondary);

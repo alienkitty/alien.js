@@ -53,7 +53,7 @@ export class UI extends Interface {
 
     addListeners() {
         Stage.events.on('update', this.onUsers);
-        Stage.events.on('key_up', this.onKeyUp);
+        window.addEventListener('keyup', this.onKeyUp);
         this.details.events.on('click', this.onDetails);
         this.detailsButton.events.on('click', this.onDetails);
     }

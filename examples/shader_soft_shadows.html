@@ -19,7 +19,7 @@
     </style>
 
     <script type="module">
-        import { AmbientLight, BasicShadowMap, BufferGeometryLoader, BufferGeometryLoaderThread, Color, DirectionalLight, FXAAMaterial, Group, HemisphereLight, ImageBitmapLoaderThread, Mesh, MeshPhongMaterial, NoBlending, OrbitControls, OrthographicCamera, PanelItem, PerspectiveCamera, PlaneGeometry, Reflector, RepeatWrapping, Scene, ShadowMaterial, SoftShadows, SphereGeometry, Stage, TextureLoader, Thread, UI, Vector2, WebGLRenderTarget, WebGLRenderer, getFullscreenTriangle, ticker } from '../build/alien.js';
+        import { AmbientLight, BasicShadowMap, BufferGeometryLoader, BufferGeometryLoaderThread, Color, DirectionalLight, FXAAMaterial, Group, HemisphereLight, ImageBitmapLoaderThread, Mesh, MeshPhongMaterial, NoBlending, OrbitControls, OrthographicCamera, PanelItem, PerspectiveCamera, PlaneGeometry, Reflector, RepeatWrapping, Scene, ShadowMaterial, SoftShadows, SphereGeometry, TextureLoader, Thread, UI, Vector2, WebGLRenderTarget, WebGLRenderer, getFullscreenTriangle, ticker } from '../build/alien.js';
 
         // Based on https://threejs.org/examples/#webgl_shadowmap_pcss by spidersharma03
 
@@ -261,7 +261,7 @@
             static initViews() {
                 this.ui = new UI({ fps: true });
                 this.ui.animateIn();
-                Stage.add(this.ui);
+                document.body.appendChild(this.ui.element);
             }
 
             static initPanel() {
@@ -506,7 +506,6 @@
                     this.initThread();
                 }
 
-                this.initStage();
                 this.initWorld();
                 this.initViews();
                 this.initControllers();
@@ -527,13 +526,9 @@
                 Thread.shared();
             }
 
-            static initStage() {
-                Stage.init(document.querySelector('#root'));
-            }
-
             static initWorld() {
                 WorldController.init();
-                Stage.add(WorldController.element);
+                document.body.appendChild(WorldController.element);
             }
 
             static initViews() {
@@ -555,8 +550,9 @@
             }
 
             static addListeners() {
-                Stage.events.on('resize', this.onResize);
+                window.addEventListener('resize', this.onResize);
                 ticker.add(this.onUpdate);
+                ticker.start();
             }
 
             /**
@@ -564,7 +560,9 @@
              */
 
             static onResize = () => {
-                const { width, height, dpr } = Stage;
+                const width = document.documentElement.clientWidth;
+                const height = document.documentElement.clientHeight;
+                const dpr = window.devicePixelRatio;
 
                 WorldController.resize(width, height, dpr);
                 SceneController.resize(width, height);
@@ -583,6 +581,5 @@
     </script>
 </head>
 <body>
-    <div id="root"></div>
 </body>
 </html>

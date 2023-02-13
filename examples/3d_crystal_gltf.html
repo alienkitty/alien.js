@@ -11,7 +11,7 @@
     <link rel="stylesheet" href="assets/css/style.css">
 
     <script type="module">
-        import { ACESFilmicToneMapping, AmbientLight, BloomCompositeMaterial, Color, DirectionalLight, EnvironmentTextureLoader, FXAAMaterial, FrontSide, GLSL3, GLTFLoader, Group, Header, HemisphereLight, Interface, LuminosityMaterial, Mesh, MeshBasicMaterial, NoBlending, OrbitControls, OrthographicCamera, PanelItem, PerspectiveCamera, PointLight, RawShaderMaterial, Scene, SphereGeometry, Stage, UnrealBloomBlurMaterial, Vector2, Vector3, WebGLRenderTarget, WebGLRenderer, degToRad, floorPowerOfTwo, getFrustum, getFullscreenTriangle, getKeyByValue, lerp, ticker, tween } from '../build/alien.js';
+        import { ACESFilmicToneMapping, AmbientLight, BloomCompositeMaterial, Color, DirectionalLight, EnvironmentTextureLoader, FXAAMaterial, FrontSide, GLSL3, GLTFLoader, Group, Header, HemisphereLight, Interface, LuminosityMaterial, Mesh, MeshBasicMaterial, NoBlending, OrbitControls, OrthographicCamera, PanelItem, PerspectiveCamera, PointLight, RawShaderMaterial, Scene, SphereGeometry, UnrealBloomBlurMaterial, Vector2, Vector3, WebGLRenderTarget, WebGLRenderer, degToRad, floorPowerOfTwo, getFrustum, getFullscreenTriangle, getKeyByValue, lerp, ticker, tween } from '../build/alien.js';
 
         class Config {
             static DEBUG = /[?&]debug/.test(location.search);
@@ -28,6 +28,7 @@
             initHTML() {
                 this.invisible();
                 this.css({
+                    position: 'absolute',
                     left: '50%',
                     top: 55,
                     width: 300,
@@ -37,6 +38,7 @@
 
                 this.container = new Interface('.container');
                 this.container.css({
+                    position: 'absolute',
                     top: 0,
                     width: '100%'
                 });
@@ -44,7 +46,6 @@
 
                 this.text = new Interface('.text');
                 this.text.css({
-                    position: 'relative',
                     fontFamily: 'Gothic A1, sans-serif',
                     fontWeight: '700',
                     fontSize: 10,
@@ -283,8 +284,8 @@
                     return;
                 }
 
-                this.target.x = (clientX / Stage.width) * 2 - 1;
-                this.target.y = 1 - (clientY / Stage.height) * 2;
+                this.target.x = (clientX / document.documentElement.clientWidth) * 2 - 1;
+                this.target.y = 1 - (clientY / document.documentElement.clientHeight) * 2;
             };
 
             static onPointerUp = e => {
@@ -848,7 +849,6 @@
 
         class App {
             static async init() {
-                this.initStage();
                 this.initWorld();
                 this.initViews();
                 this.initControllers();
@@ -867,13 +867,9 @@
                 SceneController.animateIn();
             }
 
-            static initStage() {
-                Stage.init(document.querySelector('#root'));
-            }
-
             static initWorld() {
                 WorldController.init();
-                Stage.add(WorldController.element);
+                document.body.appendChild(WorldController.element);
             }
 
             static initViews() {
@@ -881,7 +877,7 @@
                 WorldController.scene.add(this.view);
 
                 this.ui = new UI();
-                Stage.add(this.ui);
+                document.body.appendChild(this.ui.element);
             }
 
             static initControllers() {
@@ -897,9 +893,10 @@
             }
 
             static addListeners() {
-                Stage.events.on('resize', this.onResize);
-                ticker.add(this.onUpdate);
+                window.addEventListener('resize', this.onResize);
                 window.addEventListener('load', this.onLoad);
+                ticker.add(this.onUpdate);
+                ticker.start();
             }
 
             /**
@@ -907,7 +904,9 @@
              */
 
             static onResize = () => {
-                const { width, height, dpr } = Stage;
+                const width = document.documentElement.clientWidth;
+                const height = document.documentElement.clientHeight;
+                const dpr = window.devicePixelRatio;
 
                 WorldController.resize(width, height, dpr);
                 CameraController.resize(width, height);
@@ -932,6 +931,5 @@
     </script>
 </head>
 <body>
-    <div id="root"></div>
 </body>
 </html>

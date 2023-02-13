@@ -11,7 +11,7 @@
     <link rel="stylesheet" href="assets/css/style.css">
 
     <script type="module">
-        import { Interface, Magnetic, Stage, clearTween, ticker, tween } from '../build/alien.js';
+        import { Interface, Magnetic, clearTween, ticker, tween } from '../build/alien.js';
 
         class Progress extends Interface {
             constructor() {
@@ -115,26 +115,22 @@
 
         class App {
             static init() {
-                this.initStage();
                 this.initView();
 
                 this.addListeners();
             }
 
-            static initStage() {
-                Stage.init(document.querySelector('#root'));
-            }
-
             static initView() {
                 this.view = new Progress();
                 this.view.css({
+                    position: 'absolute',
                     left: '50%',
                     top: '50%',
                     marginLeft: -this.view.width / 2,
                     marginTop: -this.view.height / 2,
                     cursor: 'pointer'
                 });
-                Stage.add(this.view);
+                document.body.appendChild(this.view.element);
 
                 this.magnet = new Magnetic(this.view);
                 this.view.add(this.magnet);
@@ -144,6 +140,7 @@
 
             static addListeners() {
                 this.view.element.addEventListener('click', this.onClick);
+                ticker.start();
             }
 
             /**
@@ -165,6 +162,5 @@
     </script>
 </head>
 <body>
-    <div id="root"></div>
 </body>
 </html>

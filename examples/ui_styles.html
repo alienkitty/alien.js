@@ -11,7 +11,7 @@
     <link rel="stylesheet" href="assets/css/style.css">
 
     <script type="module">
-        import { Interface, Stage, shuffle } from '../build/alien.js';
+        import { Interface, shuffle, ticker } from '../build/alien.js';
 
         class Config {
             static BREAKPOINT = 1000;
@@ -27,9 +27,8 @@
             };
 
             static h1 = {
-                position: 'relative',
-                left: -1,
-                margin: '0 0 6px',
+                width: 'fit-content',
+                margin: '0 0 6px -1px',
                 fontFamily: 'Roboto, sans-serif',
                 fontWeight: '300',
                 fontSize: 23,
@@ -39,7 +38,7 @@
             };
 
             static content = {
-                position: 'relative',
+                width: 'fit-content',
                 margin: '6px 0',
                 ...this.body
             };
@@ -66,7 +65,6 @@
 
                 this.text = new Interface('.text');
                 this.text.css({
-                    position: 'relative',
                     display: 'inline-block'
                 });
                 this.text.text(this.title);
@@ -74,7 +72,6 @@
 
                 this.line = new Interface('.line');
                 this.line.css({
-                    position: 'relative',
                     display: 'inline-block',
                     fontWeight: '700',
                     verticalAlign: 'middle'
@@ -123,6 +120,7 @@
                     }
 
                     const letter = new Interface(null, 'span');
+                    letter.css({ display: 'inline-block' });
                     letter.html(str);
                     this.add(letter);
 
@@ -167,6 +165,7 @@
             initHTML() {
                 this.invisible();
                 this.css({
+                    position: 'absolute',
                     left: 0,
                     top: 0,
                     width: '100%',
@@ -179,7 +178,6 @@
 
                 this.container = new Interface('.container');
                 this.container.css({
-                    position: 'relative',
                     width: 400,
                     margin: '10% 10% 13%'
                 });
@@ -222,7 +220,7 @@
             }
 
             addListeners() {
-                Stage.events.on('resize', this.onResize);
+                window.addEventListener('resize', this.onResize);
             }
 
             /**
@@ -230,7 +228,7 @@
              */
 
             onResize = () => {
-                if (Stage.width < Config.BREAKPOINT) {
+                if (document.documentElement.clientWidth < Config.BREAKPOINT) {
                     this.css({ display: '' });
 
                     this.container.css({
@@ -315,23 +313,19 @@
 
         class App {
             static async init() {
-                this.initStage();
                 this.initViews();
 
                 this.addListeners();
             }
 
-            static initStage() {
-                Stage.init(document.querySelector('#root'));
-            }
-
             static initViews() {
                 this.ui = new UI();
-                Stage.add(this.ui);
+                document.body.appendChild(this.ui.element);
             }
 
             static addListeners() {
                 window.addEventListener('load', this.onLoad);
+                ticker.start();
             }
 
             /**
@@ -347,6 +341,5 @@
     </script>
 </head>
 <body>
-    <div id="root"></div>
 </body>
 </html>

@@ -1,4 +1,4 @@
-import { Stage, WebAudio, clamp, tween } from 'alien.js';
+import { WebAudio, clamp, tween } from 'alien.js';
 
 import { Config } from '../../config/Config.js';
 import { Global } from '../../config/Global.js';
@@ -21,7 +21,7 @@ export class AudioController {
     }
 
     static addListeners() {
-        Stage.events.on('visibility', this.onVisibility);
+        document.addEventListener('visibilitychange', this.onVisibility);
         window.addEventListener('pointerdown', this.onPointerDown);
 
         if (this.enabled || !Global.SOUND) {
@@ -88,7 +88,7 @@ export class AudioController {
      */
 
     static resize = () => {
-        if (Stage.width < Config.BREAKPOINT) {
+        if (document.documentElement.clientWidth < Config.BREAKPOINT) {
             this.easing = 0.8;
         } else {
             this.easing = 0.97;
@@ -100,8 +100,8 @@ export class AudioController {
             return;
         }
 
-        const normalX = x / Stage.width;
-        const normalY = y / Stage.height;
+        const normalX = x / document.documentElement.clientWidth;
+        const normalY = y / document.documentElement.clientHeight;
 
         if (!this.water[id]) {
             this.water[id] = {};

@@ -14,6 +14,7 @@ export class PreloaderView extends Interface {
 
     initHTML() {
         this.css({
+            position: 'absolute',
             left: 0,
             top: 0,
             width: '100%',
@@ -27,6 +28,7 @@ export class PreloaderView extends Interface {
     initView() {
         this.view = new ProgressCanvas();
         this.view.css({
+            position: 'absolute',
             left: '50%',
             top: '50%',
             marginLeft: -this.view.width / 2,

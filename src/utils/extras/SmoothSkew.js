@@ -5,7 +5,6 @@
  */
 
 import { Component } from '../Component.js';
-import { Stage } from '../Stage.js';
 
 import { ticker } from '../../tween/Ticker.js';
 import { defer } from '../../tween/Tween.js';
@@ -53,12 +52,12 @@ export class SmoothSkew extends Component {
     }
 
     addListeners() {
-        Stage.events.on('resize', this.onResize);
+        window.addEventListener('resize', this.onResize);
         ticker.add(this.onUpdate);
     }
 
     removeListeners() {
-        Stage.events.off('resize', this.onResize);
+        window.removeEventListener('resize', this.onResize);
         ticker.remove(this.onUpdate);
     }
 
@@ -95,11 +94,11 @@ export class SmoothSkew extends Component {
         if (!navigator.maxTouchPoints) {
             this.container.css({
                 y: -Math.round(this.position),
-                skewY: (this.delta / Stage.width) * 10 * this.skew
+                skewY: (this.delta / document.documentElement.clientWidth) * 10 * this.skew
             });
         }
 
-        this.progress = clamp(this.position / (this.height - Stage.height), 0, 1);
+        this.progress = clamp(this.position / (this.height - document.documentElement.clientHeight), 0, 1);
     };
 
     /**

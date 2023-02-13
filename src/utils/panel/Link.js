@@ -34,6 +34,7 @@ export class Link extends Interface {
 
         this.line = new Interface('.line');
         this.line.css({
+            position: 'absolute',
             left: 0,
             right: 0,
             bottom: 1,

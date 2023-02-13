@@ -10,6 +10,7 @@ export class Instructions extends Interface {
     initHTML() {
         this.invisible();
         this.css({
+            position: 'absolute',
             left: '50%',
             bottom: 55,
             width: 300,
@@ -19,6 +20,7 @@ export class Instructions extends Interface {
 
         this.container = new Interface('.container');
         this.container.css({
+            position: 'absolute',
             bottom: 0,
             width: '100%'
         });
@@ -26,7 +28,6 @@ export class Instructions extends Interface {
 
         this.text = new Interface('.text');
         this.text.css({
-            position: 'relative',
             fontWeight: '700',
             fontSize: 10,
             lineHeight: 20,

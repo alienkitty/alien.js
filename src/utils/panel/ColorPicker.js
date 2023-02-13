@@ -73,7 +73,6 @@ export class ColorPicker extends Interface {
 
         this.container = new Interface('.container');
         this.container.css({
-            position: 'relative',
             width: '100%',
             height: this.height,
             lineHeight: this.height,
@@ -84,7 +83,6 @@ export class ColorPicker extends Interface {
 
         this.swatch = new Interface('.swatch');
         this.swatch.css({
-            position: 'relative',
             cssFloat: 'left',
             boxSizing: 'border-box',
             width: this.height,
@@ -98,7 +96,6 @@ export class ColorPicker extends Interface {
         if (!this.noText) {
             this.text = new Interface('.text');
             this.text.css({
-                position: 'relative',
                 cssFloat: 'right'
             });
             this.container.add(this.text);
@@ -485,7 +482,7 @@ export class ColorPicker extends Interface {
         return this;
     };
 
-    cursor = (cursor = 'auto') => {
+    cursor = (cursor = '') => {
         if (cursor !== this.lastCursor) {
             this.lastCursor = cursor;
 

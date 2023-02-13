@@ -13,11 +13,6 @@ if (typeof window !== 'undefined') {
 
     function addListeners() {
         window.addEventListener('popstate', onPopState);
-        window.addEventListener('keydown', onKeyDown);
-        window.addEventListener('keyup', onKeyUp);
-        window.addEventListener('keypress', onKeyPress);
-        window.addEventListener('resize', onResize);
-        document.addEventListener('visibilitychange', onVisibility);
 
         ticker.start();
     }
@@ -32,40 +27,18 @@ if (typeof window !== 'undefined') {
         Stage.events.emit('state_change', e);
     }
 
-    function onKeyDown(e) {
-        Stage.events.emit('key_down', e);
-    }
-
-    function onKeyUp(e) {
-        Stage.events.emit('key_up', e);
-    }
-
-    function onKeyPress(e) {
-        Stage.events.emit('key_press', e);
-    }
-
-    function onResize(e) {
-        Stage.width = document.documentElement.clientWidth;
-        Stage.height = document.documentElement.clientHeight;
-        Stage.dpr = window.devicePixelRatio;
-
-        Stage.events.emit('resize', e);
-    }
-
-    function onVisibility(e) {
-        Stage.events.emit('visibility', e);
-    }
-
     /**
      * Public methods
      */
 
-    Stage.init = element => {
+    Stage.init = (element = document.body) => {
         Stage.element = element;
+
+        Stage.root = document.querySelector(':root');
+        Stage.rootStyle = getComputedStyle(Stage.root);
 
         addListeners();
         onPopState();
-        onResize();
     };
 
     Stage.setPath = path => {

@@ -35,6 +35,7 @@ export class DetailsButton extends Interface {
 
     initHTML() {
         this.css({
+            position: 'absolute',
             left: 19,
             bottom: 18,
             width: this.width + 40,
@@ -51,6 +52,7 @@ export class DetailsButton extends Interface {
     initNumber() {
         this.number = new Interface('.number');
         this.number.css({
+            position: 'absolute',
             left: 34,
             top: 12,
             ...Styles.number
@@ -62,6 +64,7 @@ export class DetailsButton extends Interface {
     initCanvas() {
         this.canvas = new Interface(null, 'canvas');
         this.canvas.css({
+            position: 'absolute',
             left: 10,
             top: 10
         });
@@ -96,14 +99,14 @@ export class DetailsButton extends Interface {
     }
 
     addListeners() {
-        Stage.events.on('resize', this.onResize);
+        window.addEventListener('resize', this.onResize);
         this.element.addEventListener('mouseenter', this.onHover);
         this.element.addEventListener('mouseleave', this.onHover);
         this.element.addEventListener('click', this.onClick);
     }
 
     removeListeners() {
-        Stage.events.off('resize', this.onResize);
+        window.removeEventListener('resize', this.onResize);
         this.element.removeEventListener('mouseenter', this.onHover);
         this.element.removeEventListener('mouseleave', this.onHover);
         this.element.removeEventListener('click', this.onClick);
@@ -114,7 +117,7 @@ export class DetailsButton extends Interface {
      */
 
     onResize = () => {
-        if (Stage.width < Config.BREAKPOINT) {
+        if (document.documentElement.clientWidth < Config.BREAKPOINT) {
             this.css({
                 left: 9,
                 bottom: 8

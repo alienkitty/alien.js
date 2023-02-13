@@ -33,7 +33,6 @@ export class PointText extends Interface {
 
         this.name = new Interface('.name');
         this.name.css({
-            position: 'relative',
             lineHeight: 18,
             whiteSpace: 'nowrap'
         });
@@ -41,7 +40,8 @@ export class PointText extends Interface {
 
         this.type = new Interface('.type');
         this.type.css({
-            position: 'relative',
+            fontSize: 'var(--ui-secondary-font-size)',
+            letterSpacing: 'var(--ui-secondary-letter-spacing)',
             opacity: 0.7
         });
         this.container.add(this.type);
@@ -50,6 +50,7 @@ export class PointText extends Interface {
     initViews() {
         this.number = new TargetNumber();
         this.number.css({
+            position: 'absolute',
             left: -(this.number.width + 10),
             top: '50%',
             marginTop: -Math.round(this.number.height / 2)

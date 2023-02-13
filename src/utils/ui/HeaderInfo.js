@@ -32,9 +32,13 @@ export class HeaderInfo extends Interface {
 
     initHTML() {
         this.css({
-            position: 'relative',
             cssFloat: 'right',
             padding: 10,
+            fontFamily: 'var(--ui-font-family)',
+            fontWeight: 'var(--ui-font-weight)',
+            fontSize: 'var(--ui-font-size)',
+            lineHeight: 'var(--ui-line-height)',
+            letterSpacing: 'var(--ui-letter-spacing)',
             pointerEvents: 'auto',
             webkitUserSelect: 'none',
             userSelect: 'none'
@@ -42,7 +46,8 @@ export class HeaderInfo extends Interface {
 
         this.number = new Interface('.number');
         this.number.css({
-            position: 'relative'
+            fontVariantNumeric: 'tabular-nums',
+            letterSpacing: 'var(--ui-number-letter-spacing)'
         });
         this.number.text(this.fps);
         this.add(this.number);

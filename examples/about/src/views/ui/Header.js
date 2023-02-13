@@ -1,4 +1,4 @@
-import { Interface, Stage } from 'alien.js';
+import { Interface } from 'alien.js';
 
 import { Config } from '../../config/Config.js';
 import { NavLink } from './NavLink.js';
@@ -17,6 +17,7 @@ export class Header extends Interface {
 
     initHTML() {
         this.css({
+            position: 'absolute',
             left: 20,
             top: 20,
             right: 20,
@@ -41,11 +42,11 @@ export class Header extends Interface {
     }
 
     addListeners() {
-        Stage.events.on('resize', this.onResize);
+        window.addEventListener('resize', this.onResize);
     }
 
     removeListeners() {
-        Stage.events.off('resize', this.onResize);
+        window.removeEventListener('resize', this.onResize);
     }
 
     /**
@@ -53,7 +54,7 @@ export class Header extends Interface {
      */
 
     onResize = () => {
-        if (Stage.width < Config.BREAKPOINT) {
+        if (document.documentElement.clientWidth < Config.BREAKPOINT) {
             this.css({
                 left: 10,
                 top: 10,

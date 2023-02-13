@@ -11,7 +11,7 @@
     <link rel="stylesheet" href="assets/css/style.css">
 
     <script type="module">
-        import { Assets, Color, DirectionalLight, Group, Interface, LinearFilter, Mesh, MeshStandardMaterial, PerspectiveCamera, PlaneGeometry, Scene, Stage, Texture, Vector2, WebGLRenderer, clearTween, delayedCall, getFrustum, ticker } from '../build/alien.js';
+        import { Assets, Color, DirectionalLight, Group, Interface, LinearFilter, Mesh, MeshStandardMaterial, PerspectiveCamera, PlaneGeometry, Scene, Texture, Vector2, WebGLRenderer, clearTween, delayedCall, getFrustum, ticker } from '../build/alien.js';
 
         class GridCanvas extends Interface {
             constructor() {
@@ -198,7 +198,9 @@
              */
 
             resize = () => {
-                const { width, height, dpr } = Stage;
+                const width = document.documentElement.clientWidth;
+                const height = document.documentElement.clientHeight;
+                const dpr = window.devicePixelRatio;
 
                 this.grid.resize(width, height, dpr);
                 this.resizeCanvas('displace', width, height, dpr);
@@ -263,7 +265,7 @@
                 this.mouse = new Vector2();
                 this.last = new Vector2();
                 this.delta = new Vector2();
-                this.mouse.set(Stage.width / 2, Stage.height / 2);
+                this.mouse.set(document.documentElement.clientWidth / 2, document.documentElement.clientHeight / 2);
                 this.last.copy(this.mouse);
 
                 this.timeout = false;
@@ -273,7 +275,7 @@
             }
 
             static addListeners() {
-                Stage.events.on('visibility', this.onVisibility);
+                document.addEventListener('visibilitychange', this.onVisibility);
                 window.addEventListener('pointerdown', this.onPointerDown);
                 window.addEventListener('pointermove', this.onPointerMove);
                 window.addEventListener('pointerup', this.onPointerUp);
@@ -446,7 +448,6 @@
 
         class App {
             static async init() {
-                this.initStage();
                 this.initWorld();
                 this.initViews();
                 this.initControllers();
@@ -458,13 +459,9 @@
                 SceneController.animateIn();
             }
 
-            static initStage() {
-                Stage.init(document.querySelector('#root'));
-            }
-
             static initWorld() {
                 WorldController.init();
-                Stage.add(WorldController.element);
+                document.body.appendChild(WorldController.element);
             }
 
             static initViews() {
@@ -480,8 +477,9 @@
             }
 
             static addListeners() {
-                Stage.events.on('resize', this.onResize);
+                window.addEventListener('resize', this.onResize);
                 ticker.add(this.onUpdate);
+                ticker.start();
             }
 
             /**
@@ -489,7 +487,9 @@
              */
 
             static onResize = () => {
-                const { width, height, dpr } = Stage;
+                const width = document.documentElement.clientWidth;
+                const height = document.documentElement.clientHeight;
+                const dpr = window.devicePixelRatio;
 
                 WorldController.resize(width, height, dpr);
                 SceneController.resize();
@@ -507,6 +507,5 @@
     </script>
 </head>
 <body>
-    <div id="root"></div>
 </body>
 </html>

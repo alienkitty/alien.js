@@ -21,9 +21,5 @@
   },
   "homepage": "https://alien.js.org",
   "author": "pschroen",
-  "license": "MIT",
-  "peerDependencies": {
-    "oimophysics": "saharan/OimoPhysics#v1.2.3",
-    "three": "latest"
-  }
+  "license": "MIT"
 }

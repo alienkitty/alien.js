@@ -25,7 +25,27 @@ The post-processing workflow takes a more linear approach, so instead of abstrac
 
 ### Install
 
-The examples and library require the peer dependencies [three](https://github.com/mrdoob/three.js) and [oimophysics](https://github.com/saharan/OimoPhysics).
+The library is divided into four separate entry points depending on your use case.
+
+The main entry point without any dependencies is for the UI and Panel components, Tween and Web Audio engine.
+
+```sh
+npm i alien.js
+```
+
+The `alien.js/three` and `alien.js/materials` entry points for [three](https://github.com/mrdoob/three.js).
+
+```sh
+npm i three alien.js
+```
+
+And the `alien.js/oimophysics` entry point for [oimophysics](https://github.com/saharan/OimoPhysics).
+
+```sh
+npm i saharan/OimoPhysics#v1.2.3 alien.js
+```
+
+The examples require both the dependencies [three](https://github.com/mrdoob/three.js) and [oimophysics](https://github.com/saharan/OimoPhysics).
 
 ```sh
 npm i three saharan/OimoPhysics#v1.2.3 alien.js
@@ -178,7 +198,7 @@ Clone this repository and install its dependencies:
 ```sh
 git clone https://github.com/pschroen/alien.js
 cd alien.js
-npm i
+npm i three saharan/OimoPhysics#v1.2.3
 cd examples
 npm i
 npm run build

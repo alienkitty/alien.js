@@ -2,8 +2,15 @@
   "name": "alien.js",
   "version": "0.20.0",
   "description": "Future web pattern",
-  "exports": "./src/index.js",
   "type": "module",
+  "exports": {
+    ".": "./src/index.js",
+    "./all": "./src/all.js",
+    "./three": "./src/three.js",
+    "./oimophysics": "./src/oimophysics.js",
+    "./materials": "./src/materials.js",
+    "./src/*": "./src/*"
+  },
   "sideEffects": false,
   "repository": {
     "type": "git",

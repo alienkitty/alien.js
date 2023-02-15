@@ -1,45 +1,74 @@
 /**
  * @author pschroen / https://ufo.ai/
+ *
+ * Based on https://github.com/mrdoob/three.js/blob/dev/src/math/MathUtils.js
  */
 
-export function degrees(radians) {
-    return radians * 180 / Math.PI;
+export const DEG2RAD = Math.PI / 180;
+export const RAD2DEG = 180 / Math.PI;
+
+export function degToRad(degrees) {
+    return degrees * DEG2RAD;
 }
 
-export function radians(degrees) {
-    return degrees * Math.PI / 180;
+export function radToDeg(radians) {
+    return radians * RAD2DEG;
+}
+
+export function isPowerOfTwo(value) {
+    return (value & (value - 1)) === 0 && value !== 0;
+}
+
+export function ceilPowerOfTwo(value) {
+    return Math.pow(2, Math.ceil(Math.log(value) / Math.LN2));
+}
+
+export function floorPowerOfTwo(value) {
+    return Math.pow(2, Math.floor(Math.log(value) / Math.LN2));
 }
 
 export function clamp(value, min, max) {
     return Math.max(min, Math.min(max, value));
 }
 
-export function range(value, oldMin, oldMax, newMin, newMax, isClamp) {
-    const newValue = ((value - oldMin) * (newMax - newMin)) / (oldMax - oldMin) + newMin;
-
-    if (isClamp) {
-        return clamp(newValue, Math.min(newMin, newMax), Math.max(newMin, newMax));
-    }
-
-    return newValue;
+export function euclideanModulo(n, m) {
+    return ((n % m) + m) % m;
 }
 
-export function mix(a, b, alpha) {
-    return a * (1 - alpha) + b * alpha;
+export function mapLinear(x, a1, a2, b1, b2) {
+    return b1 + (x - a1) * (b2 - b1) / (a2 - a1);
+}
+
+export function inverseLerp(x, y, value) {
+    if (x !== y) {
+        return (value - x) / (y - x);
+    } else {
+        return 0;
+    }
+}
+
+export function lerp(x, y, t) {
+    return (1 - t) * x + t * y;
 }
 
 export function step(edge, value) {
     return value < edge ? 0 : 1;
 }
 
-export function smoothstep(min, max, value) {
-    const x = clamp((value - min) / (max - min), 0, 1);
+export function smoothstep(x, min, max) {
+    if (x <= min) return 0;
+    if (x >= max) return 1;
+
+    x = (x - min) / (max - min);
 
     return x * x * (3 - 2 * x);
 }
 
-export function smootherstep(min, max, value) {
-    const x = clamp((value - min) / (max - min), 0, 1);
+export function smootherstep(x, min, max) {
+    if (x <= min) return 0;
+    if (x >= max) return 1;
+
+    x = (x - min) / (max - min);
 
     return x * x * x * (x * (x * 6 - 15) + 10);
 }
@@ -58,34 +87,32 @@ export function fract(value) {
     return value - Math.floor(value);
 }
 
-export function lerp(value, target, alpha) {
-    return value + (target - value) * alpha;
-}
-
-export function mod(value, n) {
-    return (value % n + n) % n;
-}
-
 export function shuffle(array) {
     return array.sort(() => Math.random() - 0.5);
 }
 
-export function random(min, max, precision = 0) {
-    const multiplier = Math.pow(10, precision);
+export function randInt(low, high) {
+    return low + Math.floor(Math.random() * (high - low + 1));
+}
 
-    return Math.round((Math.random() * (max - min) + min) * multiplier) / multiplier;
+export function randFloat(low, high) {
+    return low + Math.random() * (high - low);
+}
+
+export function randFloatSpread(range) {
+    return range * (0.5 - Math.random());
 }
 
 export function headsTails(heads, tails) {
     if (typeof heads === 'undefined') {
-        return random(0, 1);
+        return randInt(0, 1);
     }
 
-    return random(0, 1) ? tails : heads;
+    return randInt(0, 1) ? tails : heads;
 }
 
 export function guid() {
-    return (Date.now() + random(0, 99999)).toString();
+    return (Date.now() + randInt(0, 99999)).toString();
 }
 
 export function brightness(color) {

@@ -1,5 +1,7 @@
 /**
  * @author pschroen / https://ufo.ai/
+ *
+ * Based on https://github.com/mrdoob/three.js/blob/dev/src/loaders/Loader.js
  */
 
 import { EventEmitter } from '../utils/EventEmitter.js';

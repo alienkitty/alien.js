@@ -54,6 +54,8 @@ export { PointText } from './utils/ui/PointText.js';
 export { TargetNumber } from './utils/ui/TargetNumber.js';
 
 // Extras
+export { Vector2 } from './utils/extras/Vector2.js';
+export { Color } from './utils/extras/Color.js';
 export { Smooth } from './utils/extras/Smooth.js';
 export { SmoothSkew } from './utils/extras/SmoothSkew.js';
 export { SmoothViews } from './utils/extras/SmoothViews.js';

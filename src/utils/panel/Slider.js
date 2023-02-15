@@ -4,7 +4,7 @@
  * Based on https://github.com/lo-th/uil
  */
 
-import { Vector2 } from 'three/src/math/Vector2.js';
+import { Vector2 } from '../extras/Vector2.js';
 
 import { Interface } from '../Interface.js';
 

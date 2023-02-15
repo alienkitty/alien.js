@@ -76,6 +76,8 @@ export { OimoPhysicsBuffer } from './utils/physics/OimoPhysicsBuffer.js';
 export { OimoPhysicsController } from './utils/physics/OimoPhysicsController.js';
 
 // Extras
+// export { Vector2 } from './utils/extras/Vector2.js';
+// export { Color } from './utils/extras/Color.js';
 export { Smooth } from './utils/extras/Smooth.js';
 export { SmoothSkew } from './utils/extras/SmoothSkew.js';
 export { SmoothViews } from './utils/extras/SmoothViews.js';

@@ -2,7 +2,7 @@
  * @author pschroen / https://ufo.ai/
  */
 
-import { Vector2 } from 'three/src/math/Vector2.js';
+import { Vector2 } from '../extras/Vector2.js';
 
 import { Component } from '../Component.js';
 

@@ -901,11 +901,9 @@ class RenderManager {
         // Gaussian blur materials
         this.hBlurMaterial = new BlurMaterial(BlurDirectionX);
         this.hBlurMaterial.uniforms.uBluriness.value = this.blurFactor;
-        this.hBlurMaterial.uniforms.uResolution = resolution;
 
         this.vBlurMaterial = new BlurMaterial(BlurDirectionY);
         this.vBlurMaterial.uniforms.uBluriness.value = this.blurFactor;
-        this.vBlurMaterial.uniforms.uResolution = resolution;
 
         // FXAA material
         this.fxaaMaterial = new FXAAMaterial();
@@ -1000,6 +998,9 @@ class RenderManager {
 
         this.renderTargetA.setSize(width, height);
         this.renderTargetB.setSize(width, height);
+
+        this.hBlurMaterial.uniforms.uResolution.value.set(width, height);
+        this.vBlurMaterial.uniforms.uResolution.value.set(width, height);
 
         width = floorPowerOfTwo(width) / 2;
         height = floorPowerOfTwo(height) / 2;

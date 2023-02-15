@@ -697,7 +697,7 @@
                 this.glitchDistortion2 = 0.04;
                 this.glitchSpeed = 0.01;
                 this.blurResolutionScale = 0.25;
-                this.blurFactor = 6;
+                this.blurFactor = 1.5;
                 this.luminosityThreshold = 0.1;
                 this.luminositySmoothing = 1;
                 this.bloomStrength = 0.3;
@@ -760,11 +760,9 @@
                 // Gaussian blur materials
                 this.hBlurMaterial = new BlurMaterial(BlurDirectionX);
                 this.hBlurMaterial.uniforms.uBluriness.value = this.blurFactor;
-                this.hBlurMaterial.uniforms.uResolution = resolution;
 
                 this.vBlurMaterial = new BlurMaterial(BlurDirectionY);
                 this.vBlurMaterial.uniforms.uBluriness.value = this.blurFactor;
-                this.vBlurMaterial.uniforms.uResolution = resolution;
 
                 // FXAA material
                 this.fxaaMaterial = new FXAAMaterial();
@@ -837,6 +835,9 @@
 
                 this.renderTargetBlurA.setSize(blurWidth, blurHeight);
                 this.renderTargetBlurB.setSize(blurWidth, blurHeight);
+
+                this.hBlurMaterial.uniforms.uResolution.value.set(blurWidth, blurHeight);
+                this.vBlurMaterial.uniforms.uResolution.value.set(blurWidth, blurHeight);
 
                 width = floorPowerOfTwo(width) / 2;
                 height = floorPowerOfTwo(height) / 2;

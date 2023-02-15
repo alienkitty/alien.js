@@ -1410,14 +1410,12 @@ class RenderManager {
         this.hBlurMaterial.uniforms.uFocus.value = this.blurFocus;
         this.hBlurMaterial.uniforms.uRotation.value = this.blurRotation;
         this.hBlurMaterial.uniforms.uBluriness.value = this.blurFactor;
-        this.hBlurMaterial.uniforms.uResolution = resolution;
         this.hBlurMaterial.uniforms.uTime = time;
 
         this.vBlurMaterial = new BlurMaterial(BlurDirectionY);
         this.vBlurMaterial.uniforms.uFocus.value = this.blurFocus;
         this.vBlurMaterial.uniforms.uRotation.value = this.blurRotation;
         this.vBlurMaterial.uniforms.uBluriness.value = this.blurFactor;
-        this.vBlurMaterial.uniforms.uResolution = resolution;
         this.vBlurMaterial.uniforms.uTime = time;
 
         // FXAA material
@@ -1481,6 +1479,9 @@ class RenderManager {
         this.renderTargetA.setSize(width, height);
         this.renderTargetB.setSize(width, height);
         this.renderTargetC.setSize(width, height);
+
+        this.hBlurMaterial.uniforms.uResolution.value.set(width, height);
+        this.vBlurMaterial.uniforms.uResolution.value.set(width, height);
 
         width = floorPowerOfTwo(width) / 2;
         height = floorPowerOfTwo(height) / 2;

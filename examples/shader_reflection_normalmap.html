@@ -132,6 +132,7 @@
                 const normalMap = await loadTexture('assets/textures/pbr/polished_concrete_normal.jpg');
                 normalMap.wrapS = RepeatWrapping;
                 normalMap.wrapT = RepeatWrapping;
+                normalMap.repeat.set(8, 8);
 
                 const material = new MeshStandardMaterial({
                     color: new Color(0x111111),

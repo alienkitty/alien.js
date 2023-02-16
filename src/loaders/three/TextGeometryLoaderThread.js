@@ -3,7 +3,7 @@
  */
 
 import { Thread } from '../../utils/Thread.js';
-import { TextGeometry } from '../../utils/world/TextGeometry.js';
+import { TextGeometry } from '../../utils/three/TextGeometry.js';
 
 import { absolute } from '../../utils/Utils.js';
 

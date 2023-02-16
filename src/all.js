@@ -6,12 +6,12 @@ export { FontLoader } from './loaders/FontLoader.js';
 export { MultiLoader } from './loaders/MultiLoader.js';
 export { ImageBitmapLoader } from './loaders/ImageBitmapLoader.js';
 export { ImageBitmapLoaderThread } from './loaders/ImageBitmapLoaderThread.js';
-export { TextureLoader } from './loaders/world/TextureLoader.js';
-export { EnvironmentTextureLoader } from './loaders/world/EnvironmentTextureLoader.js';
-export { BufferGeometryLoader } from './loaders/world/BufferGeometryLoader.js';
-export { BufferGeometryLoaderThread } from './loaders/world/BufferGeometryLoaderThread.js';
-export { TextGeometryLoader } from './loaders/world/TextGeometryLoader.js';
-export { TextGeometryLoaderThread } from './loaders/world/TextGeometryLoaderThread.js';
+export { TextureLoader } from './loaders/three/TextureLoader.js';
+export { EnvironmentTextureLoader } from './loaders/three/EnvironmentTextureLoader.js';
+export { BufferGeometryLoader } from './loaders/three/BufferGeometryLoader.js';
+export { BufferGeometryLoaderThread } from './loaders/three/BufferGeometryLoaderThread.js';
+export { TextGeometryLoader } from './loaders/three/TextGeometryLoader.js';
+export { TextGeometryLoaderThread } from './loaders/three/TextGeometryLoaderThread.js';
 export { BufferLoader } from './loaders/audio/BufferLoader.js';
 
 // Tween
@@ -60,12 +60,12 @@ export { PointText } from './utils/ui/PointText.js';
 export { TargetNumber } from './utils/ui/TargetNumber.js';
 
 // 3D
-export * from './utils/world/Utils3D.js';
-export { Wobble } from './utils/world/Wobble.js';
-export { Flowmap } from './utils/world/Flowmap.js';
-export { Reflector } from './utils/world/Reflector.js';
-export { SoftShadows } from './utils/world/SoftShadows.js';
-export { TextGeometry } from './utils/world/TextGeometry.js';
+export * from './utils/three/Utils3D.js';
+export { Wobble } from './utils/three/Wobble.js';
+export { Flowmap } from './utils/three/Flowmap.js';
+export { Reflector } from './utils/three/Reflector.js';
+export { SoftShadows } from './utils/three/SoftShadows.js';
+export { TextGeometry } from './utils/three/TextGeometry.js';
 export { WebAudio3D } from './utils/audio/WebAudio3D.js';
 export { Sound3D } from './utils/audio/Sound3D.js';
 export { Point3D } from './utils/ui/Point3D.js';

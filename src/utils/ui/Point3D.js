@@ -11,7 +11,7 @@ import { Tracker } from './Tracker.js';
 import { Point } from './Point.js';
 
 import { clearTween, delayedCall } from '../../tween/Tween.js';
-import { getScreenSpaceBox } from '../world/Utils3D.js';
+import { getScreenSpaceBox } from '../three/Utils3D.js';
 
 export class Point3D extends Group {
     static init(scene, camera, {

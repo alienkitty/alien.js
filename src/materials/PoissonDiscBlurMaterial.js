@@ -1,6 +1,6 @@
 import { GLSL3, NearestFilter, NoBlending, RawShaderMaterial, RepeatWrapping, Vector2 } from 'three';
 
-import { TextureLoader } from '../loaders/world/TextureLoader.js';
+import { TextureLoader } from '../loaders/three/TextureLoader.js';
 
 import { vertexShader, fragmentShader } from '../shaders/PoissonDiscBlurShader.js';
 

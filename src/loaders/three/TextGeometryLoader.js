@@ -5,7 +5,7 @@
 import { BufferAttribute, BufferGeometry } from 'three';
 
 import { Thread } from '../../utils/Thread.js';
-import { TextGeometry } from '../../utils/world/TextGeometry.js';
+import { TextGeometry } from '../../utils/three/TextGeometry.js';
 import { TextGeometryLoaderThread } from './TextGeometryLoaderThread.js';
 import { Assets } from '../Assets.js';
 import { Loader } from '../Loader.js';

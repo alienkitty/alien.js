@@ -1,21 +1,7 @@
-<p align="center">
-    <img src="https://github.com/pschroen/alien.js/raw/master/examples/assets/images/alienkitty.png" alt="Alien.js" width="510">
-</p>
+# Alien.js
 
-<h1 align="center">Alien.js</h1>
-
-<p align="center">
-    <a href="https://www.npmjs.com/package/alien.js">
-        <img src="https://img.shields.io/npm/v/alien.js" alt="NPM Package">
-    </a>
-    <a href="https://deepscan.io/dashboard#view=project&tid=20020&pid=23464&bid=712438">
-        <img src="https://deepscan.io/api/teams/20020/projects/23464/branches/712438/badge/grade.svg" alt="DeepScan grade">
-    </a>
-</p>
-
-<p align="center"><b>Future web pattern</b></p>
-
-<br>
+[![NPM Package][npm]][npm-url]
+[![DeepScan][deepscan]][deepscan-url]
 
 Alien.js is a [MVC](https://en.wikipedia.org/wiki/Model%E2%80%93view%E2%80%93controller) design pattern for building [single-page applications](https://en.wikipedia.org/wiki/Single-page_application) with ES modules and [three.js](https://threejs.org/), intended for developers who are interested in creating their own shaders.
 
@@ -23,7 +9,11 @@ The post-processing workflow takes a more linear approach, so instead of abstrac
 
 *Note this design pattern intentionally does not use underscores or private fields, in favour of cleaner code.*
 
-### Install
+<p>
+    <img src="https://github.com/pschroen/alien.js/raw/master/alien.js.png" alt="Alien.js">
+</p>
+
+### Usage
 
 The library is divided into two entry points depending on your use case.
 
@@ -217,3 +207,9 @@ npx eslint examples/ui/*.html
 * [Three.js](https://github.com/mrdoob/three.js)
 * [Post Processing](https://github.com/pmndrs/postprocessing)
 * [OGL](https://github.com/oframe/ogl)
+
+
+[npm]: https://img.shields.io/npm/v/alien.js
+[npm-url]: https://www.npmjs.com/package/alien.js
+[deepscan]: https://deepscan.io/api/teams/20020/projects/23464/branches/712438/badge/grade.svg
+[deepscan-url]: https://deepscan.io/dashboard#view=project&tid=20020&pid=23464&bid=712438

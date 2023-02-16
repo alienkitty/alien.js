@@ -1,4 +1,4 @@
-import { ACESFilmicToneMapping, AmbientLight, Assets, BasicShadowMap, BloomCompositeMaterial, BoxGeometry, CameraMotionBlurMaterial, Color, DepthTexture, DirectionalLight, EnvironmentTextureLoader, FXAAMaterial, GLSL3, Group, Header, HemisphereLight, IcosahedronGeometry, ImageBitmapLoaderThread, Interface, LuminosityMaterial, Matrix4, Mesh, MeshStandardMaterial, NearestFilter, NoBlending, OctahedronGeometry, OrthographicCamera, PanelItem, PerspectiveCamera, PlaneGeometry, Point3D, RawShaderMaterial, Reflector, RepeatWrapping, Scene, SceneCompositeMaterial, ShadowMaterial, Stage, TextureLoader, Thread, UnrealBloomBlurMaterial, Vector2, Vector3, WebGLRenderTarget, WebGLRenderer, clearTween, degToRad, delayedCall, floorPowerOfTwo, getFullscreenTriangle, getKeyByValue, lerp, lerpCameras, radToDeg, shuffle, ticker, tween } from '../../../../build/alien.three.js';
+import { ACESFilmicToneMapping, AmbientLight, AssetLoader, BasicShadowMap, BloomCompositeMaterial, BoxGeometry, CameraMotionBlurMaterial, Color, DepthTexture, DirectionalLight, EnvironmentTextureLoader, FXAAMaterial, GLSL3, Group, Header, HemisphereLight, IcosahedronGeometry, ImageBitmapLoaderThread, Interface, LuminosityMaterial, Matrix4, Mesh, MeshStandardMaterial, NearestFilter, NoBlending, OctahedronGeometry, OrthographicCamera, PanelItem, PerspectiveCamera, PlaneGeometry, Point3D, RawShaderMaterial, Reflector, RepeatWrapping, Scene, SceneCompositeMaterial, ShadowMaterial, Stage, TextureLoader, Thread, UnrealBloomBlurMaterial, Vector2, Vector3, WebGLRenderTarget, WebGLRenderer, clearTween, degToRad, delayedCall, floorPowerOfTwo, getFullscreenTriangle, getKeyByValue, lerp, lerpCameras, radToDeg, shuffle, ticker, tween } from '../../../../build/alien.three.js';
 
 class Global {
     static PAGES = [];
@@ -6,6 +6,7 @@ class Global {
 }
 
 class Config {
+    static PATH = '/examples/three/';
     static BREAKPOINT = 1000;
 
     static DEBUG = /[?&]debug/.test(location.search);
@@ -20,7 +21,7 @@ class Page {
 }
 
 class Data {
-    static path = '/examples/three/transitions/camera/';
+    static path = `${Config.PATH}transitions/camera/`;
 
     static init() {
         this.setIndexes();
@@ -1832,7 +1833,10 @@ class WorldController {
 
     static initLoaders() {
         this.textureLoader = new TextureLoader();
+        this.textureLoader.setPath(Config.PATH);
+
         this.environmentLoader = new EnvironmentTextureLoader(this.renderer);
+        this.environmentLoader.setPath(Config.PATH);
     }
 
     static async initEnvironment() {
@@ -1877,12 +1881,11 @@ class WorldController {
 
 class App {
     static async init() {
-        Assets.path = '/examples/three/';
-
         if (!/firefox/i.test(navigator.userAgent)) {
             this.initThread();
         }
 
+        this.initLoader();
         this.initStage();
         this.initWorld();
 
@@ -1912,6 +1915,11 @@ class App {
         ImageBitmapLoaderThread.init();
 
         Thread.shared();
+    }
+
+    static initLoader() {
+        this.assetLoader = new AssetLoader();
+        this.assetLoader.setPath(Config.PATH);
     }
 
     static initStage() {
@@ -1947,7 +1955,7 @@ class App {
     }
 
     static async loadData() {
-        const data = await Assets.loadData('transitions/data.json');
+        const data = await this.assetLoader.loadData('transitions/data.json');
 
         data.pages.forEach(item => {
             Global.PAGES.push(new Page(item));

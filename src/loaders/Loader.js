@@ -1,6 +1,7 @@
 /**
  * @author pschroen / https://ufo.ai/
  *
+ * Based on https://github.com/mrdoob/three.js/blob/dev/src/loaders/Cache.js
  * Based on https://github.com/mrdoob/three.js/blob/dev/src/loaders/Loader.js
  */
 
@@ -14,6 +15,11 @@ export class Loader {
         this.total = 0;
         this.loaded = 0;
         this.progress = 0;
+        this.path = '';
+        this.crossOrigin;
+        this.fetchOptions;
+        this.cache = false;
+        this.files = {};
         this.promise = new Promise(resolve => this.resolve = resolve);
 
         assets.forEach(path => this.load(path));
@@ -57,6 +63,28 @@ export class Loader {
 
     ready() {
         return this.total ? this.promise : Promise.resolve();
+    }
+
+    getPath(path) {
+        return this.path + path;
+    }
+
+    setPath(path) {
+        this.path = path;
+
+        return this;
+    }
+
+    setCrossOrigin(crossOrigin) {
+        this.crossOrigin = crossOrigin;
+
+        return this;
+    }
+
+    setFetchOptions(fetchOptions) {
+        this.fetchOptions = fetchOptions;
+
+        return this;
     }
 
     destroy() {

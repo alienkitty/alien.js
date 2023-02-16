@@ -1,13 +1,10 @@
-import { AssetLoader, Assets, FontLoader, MultiLoader, Stage } from 'alien.js/three';
+import { BufferLoader, MultiLoader, Stage } from 'alien.js/three';
 
-import { Config } from '../config/Config.js';
 import { Data } from '../data/Data.js';
 import { PreloaderView } from '../views/PreloaderView.js';
 
 export class Preloader {
     static init() {
-        Assets.cache = true;
-
         Data.init();
         Data.Socket.init();
 
@@ -30,9 +27,14 @@ export class Preloader {
     static async initLoader() {
         this.view.animateIn();
 
+        const bufferLoader = new BufferLoader([
+            'assets/sounds/bass_drum.mp3',
+            'assets/sounds/deep_spacy_loop.mp3',
+            'assets/sounds/water_loop.mp3'
+        ]);
+
         this.loader = new MultiLoader();
-        this.loader.load(new FontLoader());
-        this.loader.load(new AssetLoader(Config.ASSETS));
+        this.loader.load(bufferLoader);
         this.loader.add(2);
 
         const { App } = await import('./App.js');
@@ -40,7 +42,7 @@ export class Preloader {
 
         this.app = App;
 
-        await this.app.init(this.loader.loaders[1]);
+        await this.app.init(bufferLoader);
         this.loader.trigger(1);
     }
 

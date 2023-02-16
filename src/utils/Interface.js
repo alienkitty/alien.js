@@ -2,7 +2,6 @@
  * @author pschroen / https://ufo.ai/
  */
 
-import { Assets } from '../loaders/Assets.js';
 import { EventEmitter } from './EventEmitter.js';
 
 import { clearTween, delayedCall, tween } from '../tween/Tween.js';
@@ -380,17 +379,6 @@ export class Interface {
         return this.css({ visibility: '' });
     }
 
-    bg(path, backgroundSize = 'contain', backgroundPosition = 'center', backgroundRepeat = 'no-repeat') {
-        const style = {
-            backgroundImage: `url(${Assets.getPath(path)})`,
-            backgroundSize,
-            backgroundPosition,
-            backgroundRepeat
-        };
-
-        return this.css(style);
-    }
-
     line(progress = this.progress || 0) {
         const start = this.start || 0;
         const offset = this.offset || 0;
@@ -405,16 +393,6 @@ export class Interface {
         };
 
         return this.css(style);
-    }
-
-    load(path) {
-        const promise = fetch(Assets.getPath(path), Assets.options).then(response => {
-            return response.text();
-        }).then(str => {
-            this.html(str);
-        });
-
-        return promise;
     }
 
     destroy() {
@@ -436,8 +414,6 @@ export class Interface {
                 this.children[i].destroy();
             }
         }
-
-        this.element.object = null;
 
         for (const prop in this) {
             this[prop] = null;

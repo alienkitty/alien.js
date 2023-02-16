@@ -1,4 +1,4 @@
-import { Assets, Stage, WebAudio, ticker, wait } from 'alien.js/three';
+import { Stage, WebAudio, ticker, wait } from 'alien.js/three';
 
 import { Global } from '../config/Global.js';
 import { AudioController } from './audio/AudioController.js';
@@ -8,8 +8,8 @@ import { Trackers } from '../views/Trackers.js';
 import { UI } from '../views/UI.js';
 
 export class App {
-    static async init(loader) {
-        this.loader = loader;
+    static async init(bufferLoader) {
+        this.bufferLoader = bufferLoader;
 
         const sound = localStorage.getItem('sound');
         Global.SOUND = sound ? JSON.parse(sound) : true;
@@ -21,7 +21,10 @@ export class App {
         this.addListeners();
         this.onResize();
 
-        await this.loader.ready();
+        await Promise.all([
+            document.fonts.ready,
+            this.bufferLoader.ready()
+        ]);
 
         this.initAudio();
     }
@@ -46,7 +49,7 @@ export class App {
     }
 
     static initAudio() {
-        WebAudio.init(Assets.filter(path => /sounds/.test(path)), { sampleRate: 48000 });
+        WebAudio.init(this.bufferLoader.files, { sampleRate: 48000 });
         AudioController.init(this.ui.instructions);
     }
 

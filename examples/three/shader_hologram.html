@@ -11,7 +11,7 @@
     <link rel="stylesheet" href="assets/css/style.css">
 
     <script type="module">
-        import { ACESFilmicToneMapping, AmbientLight, Assets, BloomCompositeMaterial, BlurMaterial, ChromaticAberrationMaterial, Color, DirectionalLight, EdgesGeometry, EnvironmentTextureLoader, FXAAMaterial, GLSL3, Group, HemisphereLight, ImageBitmapLoaderThread, LineBasicMaterial, LineSegments, LuminosityMaterial, Mesh, MeshBasicMaterial, MeshPhysicalMaterial, MeshStandardMaterial, NoBlending, OrbitControls, OrthographicCamera, PanelItem, PerspectiveCamera, RawShaderMaterial, RepeatWrapping, Scene, SceneCompositeMaterial, SphereGeometry, TextureLoader, Thread, UI, UnrealBloomBlurMaterial, Vector2, VideoGlitchMaterial, WebGLRenderTarget, WebGLRenderer, floorPowerOfTwo, getFullscreenTriangle, lerp, ticker } from '../../build/alien.three.js';
+        import { ACESFilmicToneMapping, AmbientLight, BloomCompositeMaterial, BlurMaterial, ChromaticAberrationMaterial, Color, DirectionalLight, EdgesGeometry, EnvironmentTextureLoader, FXAAMaterial, GLSL3, Group, HemisphereLight, ImageBitmapLoaderThread, LineBasicMaterial, LineSegments, LuminosityMaterial, Mesh, MeshBasicMaterial, MeshPhysicalMaterial, MeshStandardMaterial, NoBlending, OrbitControls, OrthographicCamera, PanelItem, PerspectiveCamera, RawShaderMaterial, RepeatWrapping, Scene, SceneCompositeMaterial, SphereGeometry, TextureLoader, Thread, UI, UnrealBloomBlurMaterial, Vector2, VideoGlitchMaterial, WebGLRenderTarget, WebGLRenderer, floorPowerOfTwo, getFullscreenTriangle, lerp, ticker } from '../../build/alien.three.js';
 
         class Config {
             static ICE_COLOR = 0x547691;
@@ -1076,7 +1076,10 @@
 
             static initLoaders() {
                 this.textureLoader = new TextureLoader();
+                this.textureLoader.cache = true;
+
                 this.environmentLoader = new EnvironmentTextureLoader(this.renderer);
+                this.environmentLoader.cache = true;
             }
 
             static async initEnvironment() {
@@ -1138,8 +1141,6 @@
 
         class App {
             static async init() {
-                Assets.cache = true;
-
                 if (!/firefox/i.test(navigator.userAgent)) {
                     this.initThread();
                 }

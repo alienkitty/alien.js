@@ -11,7 +11,7 @@
     <link rel="stylesheet" href="assets/css/style.css">
 
     <script type="module">
-        import { ACESFilmicToneMapping, AmbientLight, Assets, BloomCompositeMaterial, Color, DirectionalLight, EnvironmentTextureLoader, FXAAMaterial, Group, HemisphereLight, ImageBitmapLoaderThread, LuminosityMaterial, Mesh, MeshPhysicalMaterial, MeshStandardMaterial, OrbitControls, OrthographicCamera, PanelItem, PerspectiveCamera, RepeatWrapping, Scene, SceneCompositeMaterial, ShaderChunk, SphereGeometry, TextureLoader, Thread, UI, UnrealBloomBlurMaterial, Vector2, WebGLRenderTarget, WebGLRenderer, floorPowerOfTwo, getFullscreenTriangle, lerp, ticker } from '../../build/alien.three.js';
+        import { ACESFilmicToneMapping, AmbientLight, BloomCompositeMaterial, Color, DirectionalLight, EnvironmentTextureLoader, FXAAMaterial, Group, HemisphereLight, ImageBitmapLoaderThread, LuminosityMaterial, Mesh, MeshPhysicalMaterial, MeshStandardMaterial, OrbitControls, OrthographicCamera, PanelItem, PerspectiveCamera, RepeatWrapping, Scene, SceneCompositeMaterial, ShaderChunk, SphereGeometry, TextureLoader, Thread, UI, UnrealBloomBlurMaterial, Vector2, WebGLRenderTarget, WebGLRenderer, floorPowerOfTwo, getFullscreenTriangle, lerp, ticker } from '../../build/alien.three.js';
 
         class Config {
             static ICE_COLOR = 0x547691;
@@ -669,7 +669,10 @@
 
             static initLoaders() {
                 this.textureLoader = new TextureLoader();
+                this.textureLoader.cache = true;
+
                 this.environmentLoader = new EnvironmentTextureLoader(this.renderer);
+                this.environmentLoader.cache = true;
             }
 
             static async initEnvironment() {
@@ -731,8 +734,6 @@
 
         class App {
             static async init() {
-                Assets.cache = true;
-
                 if (!/firefox/i.test(navigator.userAgent)) {
                     this.initThread();
                 }

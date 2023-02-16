@@ -4,7 +4,6 @@
 
 import { Thread } from '../utils/Thread.js';
 import { ImageBitmapLoaderThread } from './ImageBitmapLoaderThread.js';
-import { Assets } from './Assets.js';
 import { Loader } from './Loader.js';
 
 export class ImageBitmapLoader extends Loader {
@@ -19,16 +18,16 @@ export class ImageBitmapLoader extends Loader {
     }
 
     load(path, callback) {
-        const cached = Assets.get(path);
+        const cached = this.files[path];
 
         let promise;
 
         if (cached) {
             promise = Promise.resolve(cached);
         } else if (Thread.threads) {
-            promise = ImageBitmapLoaderThread.load(Assets.getPath(path), Assets.options, this.options);
+            promise = ImageBitmapLoaderThread.load(this.getPath(path), this.fetchOptions, this.options);
         } else {
-            promise = fetch(Assets.getPath(path), Assets.options).then(response => {
+            promise = fetch(this.getPath(path), this.fetchOptions).then(response => {
                 return response.blob();
             }).then(blob => {
                 return createImageBitmap(blob, this.options);
@@ -40,7 +39,9 @@ export class ImageBitmapLoader extends Loader {
                 throw new Error(bitmap.error);
             }
 
-            Assets.add(path, bitmap);
+            if (this.cache) {
+                this.files[path] = bitmap;
+            }
 
             this.increment();
 

@@ -6,7 +6,6 @@ import { LinearFilter, Texture } from 'three';
 
 import { Thread } from '../../utils/Thread.js';
 import { ImageBitmapLoaderThread } from '../ImageBitmapLoaderThread.js';
-import { Assets } from '../Assets.js';
 import { Loader } from '../Loader.js';
 
 import { isPowerOfTwo } from '../../utils/Utils.js';
@@ -25,7 +24,7 @@ export class TextureLoader extends Loader {
     }
 
     load(path, callback) {
-        const cached = Assets.get(path);
+        const cached = this.files[path];
 
         let texture;
         let promise;
@@ -43,23 +42,21 @@ export class TextureLoader extends Loader {
 
             if (cached) {
                 promise = Promise.resolve(cached);
-            } else if (typeof createImageBitmap !== 'undefined' && !/firefox/i.test(navigator.userAgent)) {
+            } else {
                 const params = {
                     imageOrientation: this.options.imageOrientation,
                     premultiplyAlpha: this.options.premultiplyAlpha
                 };
 
                 if (Thread.threads) {
-                    promise = ImageBitmapLoaderThread.load(Assets.getPath(path), Assets.options, params);
+                    promise = ImageBitmapLoaderThread.load(this.getPath(path), this.fetchOptions, params);
                 } else {
-                    promise = fetch(Assets.getPath(path), Assets.options).then(response => {
+                    promise = fetch(this.getPath(path), this.fetchOptions).then(response => {
                         return response.blob();
                     }).then(blob => {
                         return createImageBitmap(blob, params);
                     });
                 }
-            } else {
-                promise = Assets.loadImage(path);
             }
 
             promise.then(image => {
@@ -97,7 +94,9 @@ export class TextureLoader extends Loader {
                 }
             });
 
-            Assets.add(path, texture);
+            if (this.cache) {
+                this.files[path] = texture;
+            }
         }
 
         this.total++;

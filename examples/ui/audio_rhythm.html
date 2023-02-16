@@ -22,21 +22,7 @@
     </style>
 
     <script type="module">
-        import { AssetLoader, Assets, Interface, Panel, PanelItem, WebAudio, headsTails, ticker } from '../../src/index.js';
-
-        class Config {
-            static ASSETS = [
-                'assets/sounds/metal_monk_loop.mp3',
-                'assets/sounds/ethereal_bells.mp3',
-                'assets/sounds/accent_transition_1.mp3',
-                'assets/sounds/accent_transition_2.mp3',
-                'assets/sounds/hover.mp3',
-                'assets/sounds/click.mp3',
-                'assets/sounds/kick.mp3',
-                'assets/sounds/snare.mp3',
-                'assets/sounds/hihat.mp3'
-            ];
-        }
+        import { BufferLoader, Interface, Panel, PanelItem, WebAudio, headsTails, ticker } from '../../src/index.js';
 
         class Instructions extends Interface {
             constructor() {
@@ -181,7 +167,7 @@
             static onPointerDown = () => {
                 // this.instructions.toggle(false);
 
-                // Based on https://www.html5rocks.com/en/tutorials/webaudio/intro/
+                // Based on https://www.html5rocks.com/en/tutorials/webaudio/intro/ by smus
 
                 const bells = this.bells;
                 const accent1 = this.accent1;
@@ -587,12 +573,10 @@
 
         class App {
             static async init() {
-                Assets.cache = true;
-
-                this.initViews();
                 this.initLoader();
+                this.initViews();
 
-                await this.loader.ready();
+                await this.bufferLoader.ready();
 
                 this.initAudio();
                 this.initPanel();
@@ -600,17 +584,27 @@
                 this.addListeners();
             }
 
+            static initLoader() {
+                this.bufferLoader = new BufferLoader([
+                    'assets/sounds/metal_monk_loop.mp3',
+                    'assets/sounds/ethereal_bells.mp3',
+                    'assets/sounds/accent_transition_1.mp3',
+                    'assets/sounds/accent_transition_2.mp3',
+                    'assets/sounds/hover.mp3',
+                    'assets/sounds/click.mp3',
+                    'assets/sounds/kick.mp3',
+                    'assets/sounds/snare.mp3',
+                    'assets/sounds/hihat.mp3'
+                ]);
+            }
+
             static initViews() {
                 this.ui = new UI();
                 document.body.appendChild(this.ui.element);
             }
 
-            static initLoader() {
-                this.loader = new AssetLoader(Config.ASSETS);
-            }
-
             static initAudio() {
-                WebAudio.init(Assets.filter(path => /sounds/.test(path)), { sampleRate: 48000 });
+                WebAudio.init(this.bufferLoader.files, { sampleRate: 48000 });
                 AudioController.init(this.ui.instructions);
             }
 

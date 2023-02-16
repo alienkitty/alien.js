@@ -2,7 +2,6 @@
  * @author pschroen / https://ufo.ai/
  */
 
-import { Assets } from '../../loaders/Assets.js';
 import { WebAudioParam } from './WebAudioParam.js';
 import { Sound } from './Sound.js';
 
@@ -10,6 +9,9 @@ import { tween } from '../../tween/Tween.js';
 import { basename } from '../Utils.js';
 
 export class WebAudio {
+    static path = '';
+    static crossOrigin;
+
     static init(assets = {}, options) {
         this.context = new AudioContext(options);
         this.sounds = {};
@@ -44,10 +46,10 @@ export class WebAudio {
             sound = new Sound(parent, id, null, bypass);
 
             const audio = new Audio();
-            audio.crossOrigin = Assets.crossOrigin;
+            audio.crossOrigin = this.crossOrigin;
             audio.autoplay = false;
             audio.loop = sound.loop;
-            audio.src = Assets.getPath(buffer);
+            audio.src = this.getPath(buffer);
 
             sound.source = this.context.createMediaElementSource(audio);
             sound.source.connect(sound.input);
@@ -192,6 +194,22 @@ export class WebAudio {
 
     static resume() {
         this.context.resume();
+    }
+
+    static getPath(path) {
+        return this.path + path;
+    }
+
+    static setPath(path) {
+        this.path = path;
+
+        return this;
+    }
+
+    static setCrossOrigin(crossOrigin) {
+        this.crossOrigin = crossOrigin;
+
+        return this;
     }
 
     static destroy() {

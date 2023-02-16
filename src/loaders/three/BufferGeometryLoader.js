@@ -6,7 +6,6 @@ import { BufferAttribute, BufferGeometry } from 'three';
 
 import { Thread } from '../../utils/Thread.js';
 import { BufferGeometryLoaderThread } from './BufferGeometryLoaderThread.js';
-import { Assets } from '../Assets.js';
 import { Loader } from '../Loader.js';
 
 export class BufferGeometryLoader extends Loader {
@@ -14,9 +13,9 @@ export class BufferGeometryLoader extends Loader {
         let promise;
 
         if (Thread.threads) {
-            promise = BufferGeometryLoaderThread.load(path, Assets.options);
+            promise = BufferGeometryLoaderThread.load(this.getPath(path), this.fetchOptions);
         } else {
-            promise = fetch(path, Assets.options).then(response => {
+            promise = fetch(this.getPath(path), this.fetchOptions).then(response => {
                 return response.json();
             }).then(({ data }) => {
                 const buffers = {};

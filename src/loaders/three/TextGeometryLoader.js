@@ -7,7 +7,6 @@ import { BufferAttribute, BufferGeometry } from 'three';
 import { Thread } from '../../utils/Thread.js';
 import { TextGeometry } from '../../utils/three/TextGeometry.js';
 import { TextGeometryLoaderThread } from './TextGeometryLoaderThread.js';
-import { Assets } from '../Assets.js';
 import { Loader } from '../Loader.js';
 
 export class TextGeometryLoader extends Loader {
@@ -24,9 +23,9 @@ export class TextGeometryLoader extends Loader {
         let promise;
 
         if (Thread.threads) {
-            promise = TextGeometryLoaderThread.load(path, Assets.options, this.options);
+            promise = TextGeometryLoaderThread.load(this.getPath(path), this.fetchOptions, this.options);
         } else {
-            promise = fetch(path, Assets.options).then(response => {
+            promise = fetch(this.getPath(path), this.fetchOptions).then(response => {
                 return response.json();
             }).then(font => {
                 this.options.font = font;

@@ -1,5 +1,7 @@
 /**
  * @author pschroen / https://ufo.ai/
+ *
+ * Based on https://developer.mozilla.org/en-US/docs/Web/API/EventTarget#simple_implementation_of_eventtarget
  */
 
 export class EventEmitter {

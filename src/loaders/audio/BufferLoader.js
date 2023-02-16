@@ -2,33 +2,32 @@
  * @author pschroen / https://ufo.ai/
  */
 
-import { Assets } from '../Assets.js';
 import { Loader } from '../Loader.js';
 
 export class BufferLoader extends Loader {
-    constructor(context, assets, callback) {
+    constructor(assets, callback) {
         super(assets, callback);
 
-        this.context = context;
+        this.cache = true;
     }
 
     load(path, callback) {
-        const cached = Assets.get(path);
+        const cached = this.files[path];
 
         let promise;
 
         if (cached) {
             promise = Promise.resolve(cached);
         } else {
-            promise = fetch(Assets.getPath(path), Assets.options).then(response => {
+            promise = fetch(this.getPath(path), this.fetchOptions).then(response => {
                 return response.arrayBuffer();
-            }).then(buffer => {
-                return this.context.decodeAudioData(buffer);
             });
         }
 
         promise.then(buffer => {
-            Assets.add(path, buffer);
+            if (this.cache) {
+                this.files[path] = buffer;
+            }
 
             this.increment();
 

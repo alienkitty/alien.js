@@ -11,7 +11,7 @@
     <link rel="stylesheet" href="assets/css/style.css">
 
     <script type="module">
-        import { Assets, Color, DirectionalLight, Group, Interface, LinearFilter, Mesh, MeshStandardMaterial, PerspectiveCamera, PlaneGeometry, Scene, Texture, Vector2, WebGLRenderer, clearTween, delayedCall, getFrustum, ticker } from '../../build/alien.three.js';
+        import { AssetLoader, Color, DirectionalLight, Group, Interface, LinearFilter, Mesh, MeshStandardMaterial, PerspectiveCamera, PlaneGeometry, Scene, Texture, Vector2, WebGLRenderer, clearTween, delayedCall, getFrustum, ticker } from '../../build/alien.three.js';
 
         class GridCanvas extends Interface {
             constructor() {
@@ -135,7 +135,7 @@
             }
 
             async loadImage(name, path) {
-                const image = await Assets.loadImage(path);
+                const image = await WorldController.loadImage(path);
 
                 this.image[name] = image;
 
@@ -378,6 +378,7 @@
             static init() {
                 this.initWorld();
                 this.initLights();
+                this.initLoaders();
 
                 this.addListeners();
             }
@@ -411,6 +412,10 @@
                 this.scene.add(light);
             }
 
+            static initLoaders() {
+                this.assetLoader = new AssetLoader();
+            }
+
             static addListeners() {
                 this.renderer.domElement.addEventListener('touchstart', this.onTouchStart);
             }
@@ -442,6 +447,8 @@
                 this.time.value = time;
                 this.frame.value = frame;
             };
+
+            static loadImage = path => this.assetLoader.loadImage(path);
 
             static getFrustum = offsetZ => getFrustum(this.camera, offsetZ);
         }

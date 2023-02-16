@@ -39,6 +39,22 @@ export class EnvironmentTextureLoader extends Loader {
         this.total++;
     }
 
+    getPath(path) {
+        return this.textureLoader.getPath(path);
+    }
+
+    setPath(path) {
+        return this.textureLoader.setPath(path);
+    }
+
+    setCrossOrigin(crossOrigin) {
+        return this.textureLoader.setCrossOrigin(crossOrigin);
+    }
+
+    setFetchOptions(fetchOptions) {
+        return this.textureLoader.setFetchOptions(fetchOptions);
+    }
+
     destroy() {
         this.pmremGenerator.dispose();
         this.textureLoader.destroy();

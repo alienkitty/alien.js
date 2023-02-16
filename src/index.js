@@ -1,8 +1,6 @@
 // Loaders
-export { Assets } from './loaders/Assets.js';
 export { Loader } from './loaders/Loader.js';
 export { AssetLoader } from './loaders/AssetLoader.js';
-export { FontLoader } from './loaders/FontLoader.js';
 export { MultiLoader } from './loaders/MultiLoader.js';
 export { ImageBitmapLoader } from './loaders/ImageBitmapLoader.js';
 export { ImageBitmapLoaderThread } from './loaders/ImageBitmapLoaderThread.js';

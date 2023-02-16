@@ -11,16 +11,12 @@
     <link rel="stylesheet" href="assets/css/style.css">
 
     <script type="module">
-        import { ACESFilmicToneMapping, AmbientLight, AssetLoader, Assets, BasicShadowMap, BloomCompositeMaterial, BoxGeometry, Color, DirectionalLight, EnvironmentTextureLoader, EventEmitter, FXAAMaterial, GLSL3, Group, HemisphereLight, IcosahedronGeometry, ImageBitmapLoaderThread, LuminosityMaterial, Mesh, MeshBasicMaterial, MeshPhongMaterial, MeshStandardMaterial, NoBlending, OimoPhysicsBuffer, OimoPhysicsController, OrthographicCamera, PanelItem, PerspectiveCamera, PlaneGeometry, PointLight, RawShaderMaterial, Raycaster, Reflector, RepeatWrapping, Scene, ShaderChunk, ShadowMaterial, Sound3D, SphereGeometry, TextureLoader, Thread, UI, UnrealBloomBlurMaterial, Vector2, Vector3, WebAudio, WebGLRenderTarget, WebGLRenderer, clamp, delayedCall, floorPowerOfTwo, getFullscreenTriangle, getKeyByValue, lerp, mapLinear, ticker } from '../../build/alien.three.js';
+        import { ACESFilmicToneMapping, AmbientLight, BasicShadowMap, BloomCompositeMaterial, BoxGeometry, BufferLoader, Color, DirectionalLight, EnvironmentTextureLoader, EventEmitter, FXAAMaterial, GLSL3, Group, HemisphereLight, IcosahedronGeometry, ImageBitmapLoaderThread, LuminosityMaterial, Mesh, MeshBasicMaterial, MeshPhongMaterial, MeshStandardMaterial, NoBlending, OimoPhysicsBuffer, OimoPhysicsController, OrthographicCamera, PanelItem, PerspectiveCamera, PlaneGeometry, PointLight, RawShaderMaterial, Raycaster, Reflector, RepeatWrapping, Scene, ShaderChunk, ShadowMaterial, Sound3D, SphereGeometry, TextureLoader, Thread, UI, UnrealBloomBlurMaterial, Vector2, Vector3, WebAudio, WebGLRenderTarget, WebGLRenderer, clamp, delayedCall, floorPowerOfTwo, getFullscreenTriangle, getKeyByValue, lerp, mapLinear, ticker } from '../../build/alien.three.js';
 
         class Config {
             static LIGHT_COLOR = 0xf44336;
 
             static DEBUG = /[?&]debug/.test(location.search);
-
-            static ASSETS = [
-                'assets/sounds/gong.mp3'
-            ];
         }
 
         class Layer {
@@ -1552,16 +1548,14 @@
 
         class App {
             static async init() {
-                Assets.cache = true;
-
                 if (!/firefox/i.test(navigator.userAgent)) {
                     this.initThread();
                 }
 
+                this.initLoader();
                 this.initWorld();
                 this.initViews();
                 this.initControllers();
-                this.initLoader();
 
                 this.addListeners();
                 this.onResize();
@@ -1570,7 +1564,7 @@
                     SceneController.ready(),
                     WorldController.textureLoader.ready(),
                     WorldController.environmentLoader.ready(),
-                    this.loader.ready()
+                    this.bufferLoader.ready()
                 ]);
 
                 this.initAudio();
@@ -1585,6 +1579,10 @@
 
                 Thread.count--; // Make room for the physics thread
                 Thread.shared();
+            }
+
+            static initLoader() {
+                this.bufferLoader = new BufferLoader(['assets/sounds/gong.mp3']);
             }
 
             static initWorld() {
@@ -1606,14 +1604,10 @@
                 RenderManager.init(renderer, scene, camera);
             }
 
-            static initLoader() {
-                this.loader = new AssetLoader(Config.ASSETS);
-            }
-
             static initAudio() {
                 const { scene, camera } = WorldController;
 
-                WebAudio.init(Assets.filter(path => /sounds/.test(path)), { sampleRate: 48000 });
+                WebAudio.init(this.bufferLoader.files, { sampleRate: 48000 });
                 AudioController.init(scene, camera, this.view);
             }
 

@@ -47,7 +47,6 @@ import { OimoPhysics } from 'alien.js/three/oimophysics';
 [progress indeterminate](https://alien.js.org/examples/ui/progress_indeterminate.html) (svg)  
 [close](https://alien.js.org/examples/ui/close.html) (svg)  
 [magnetic](https://alien.js.org/examples/ui/magnetic.html) (component, svg)  
-[tilt](https://alien.js.org/examples/ui/tilt.html)  
 [styles](https://alien.js.org/examples/ui/styles.html)  
 [fps](https://alien.js.org/examples/ui/fps.html)  
 [fps panel](https://alien.js.org/examples/ui/fps_panel.html)  

@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+    <title>Poisson Disc Blur Post-processing — Alien.js</title>
+
+    <link rel="preconnect" href="https://fonts.gstatic.com">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto+Mono">
+    <link rel="stylesheet" href="assets/css/style.css">
+
+    <script type="module">
+        import { Color, DirectionalLight, FXAAMaterial, Group, HemisphereLight, LinearMipmapLinearFilter, Mesh, MeshStandardMaterial, OrthographicCamera, PanelItem, PerspectiveCamera, PoissonDiscBlurMaterial, Scene, SphereGeometry, UI, Vector2, WebGLRenderTarget, WebGLRenderer, floorPowerOfTwo, getFullscreenTriangle, ticker } from '../../build/alien.three.js';
+
+        import periodic3d from '../../src/shaders/modules/noise/periodic3d.glsl.js';
+
+        class SceneView extends Group {
+            constructor() {
+                super();
+
+                this.initMesh();
+            }
+
+            initMesh() {
+                const { time } = WorldController;
+
+                const geometry = new SphereGeometry(1, 80, 80);
+
+                const material = new MeshStandardMaterial({ roughness: 0 });
+
+                // Based on https://github.com/spite/perlin-experiments
+
+                material.onBeforeCompile = shader => {
+                    shader.uniforms.time = time;
+
+                    shader.vertexShader = shader.vertexShader.replace(
+                        'void main() {',
+                        /* glsl */ `
+                        uniform float time;
+
+                        ${periodic3d}
+
+                        void main() {
+                        `
+                    );
+
+                    shader.vertexShader = shader.vertexShader.replace(
+                        '#include <begin_vertex>',
+                        /* glsl */ `
+                        float f = 0.05 * pnoise(vec3(2.0 * normal + time), vec3(10.0));
+                        vec3 transformed = position + f * normal;
+                        `
+                    );
+                };
+
+                const mesh = new Mesh(geometry, material);
+                this.add(mesh);
+            }
+        }
+
+        class PanelController {
+            static init() {
+                this.initViews();
+                this.initPanel();
+            }
+
+            static initViews() {
+                this.ui = new UI({ fps: true });
+                this.ui.animateIn();
+                document.body.appendChild(this.ui.element);
+            }
+
+            static initPanel() {
+                const { blurMaterial } = RenderManager;
+
+                const items = [
+                    {
+                        label: 'FPS'
+                    },
+                    {
+                        type: 'divider'
+                    },
+                    {
+                        type: 'slider',
+                        label: 'Radius',
+                        min: 0,
+                        max: 50,
+                        step: 0.1,
+                        value: blurMaterial.uniforms.uRadius.value,
+                        callback: value => {
+                            blurMaterial.uniforms.uRadius.value = value;
+                        }
+                    }
+                ];
+
+                items.forEach(data => {
+                    this.ui.addPanel(new PanelItem(data));
+                });
+            }
+
+            /**
+             * Public methods
+             */
+
+            static update = () => {
+                if (!this.ui) {
+                    return;
+                }
+
+                this.ui.update();
+            };
+        }
+
+        class RenderManager {
+            static init(renderer, scene, camera) {
+                this.renderer = renderer;
+                this.scene = scene;
+                this.camera = camera;
+
+                this.enabled = true;
+
+                this.initRenderer();
+            }
+
+            static initRenderer() {
+                const { screenTriangle, resolution, time } = WorldController;
+
+                // Fullscreen triangle
+                this.screenCamera = new OrthographicCamera(-1, 1, 1, -1, 0, 1);
+                this.screen = new Mesh(screenTriangle);
+                this.screen.frustumCulled = false;
+
+                // Render targets
+                this.renderTargetA = new WebGLRenderTarget(1, 1, {
+                    depthBuffer: false
+                });
+
+                this.renderTargetB = this.renderTargetA.clone();
+                this.renderTargetB.texture.minFilter = LinearMipmapLinearFilter;
+                this.renderTargetB.texture.generateMipmaps = true;
+
+                this.renderTargetA.depthBuffer = true;
+
+                // FXAA material
+                this.fxaaMaterial = new FXAAMaterial();
+                this.fxaaMaterial.uniforms.uResolution = resolution;
+
+                // Poisson-disc blur material
+                this.blurMaterial = new PoissonDiscBlurMaterial();
+                this.blurMaterial.uniforms.uResolution = resolution;
+                this.blurMaterial.uniforms.uTime = time;
+            }
+
+            /**
+             * Public methods
+             */
+
+            static resize = (width, height, dpr) => {
+                this.renderer.setPixelRatio(dpr);
+                this.renderer.setSize(width, height);
+
+                width = Math.round(width * dpr);
+                height = Math.round(height * dpr);
+
+                this.renderTargetA.setSize(width, height);
+
+                width = floorPowerOfTwo(width) / 2;
+                height = floorPowerOfTwo(height) / 2;
+
+                this.renderTargetB.setSize(width, height);
+            };
+
+            static update = () => {
+                const renderer = this.renderer;
+                const scene = this.scene;
+                const camera = this.camera;
+
+                if (!this.enabled) {
+                    renderer.setRenderTarget(null);
+                    renderer.render(scene, camera);
+                    return;
+                }
+
+                const renderTargetA = this.renderTargetA;
+                const renderTargetB = this.renderTargetB;
+
+                // Scene pass
+                renderer.setRenderTarget(renderTargetA);
+                renderer.render(scene, camera);
+
+                // FXAA pass
+                this.fxaaMaterial.uniforms.tMap.value = renderTargetA.texture;
+                this.screen.material = this.fxaaMaterial;
+                renderer.setRenderTarget(renderTargetB);
+                renderer.render(this.screen, this.screenCamera);
+
+                // Poisson-disc blur pass (render to screen)
+                this.blurMaterial.uniforms.tMap.value = renderTargetB.texture;
+                this.screen.material = this.blurMaterial;
+                renderer.setRenderTarget(null);
+                renderer.render(this.screen, this.screenCamera);
+            };
+        }
+
+        class WorldController {
+            static init() {
+                this.initWorld();
+                this.initLights();
+
+                this.addListeners();
+            }
+
+            static initWorld() {
+                this.renderer = new WebGLRenderer({
+                    powerPreference: 'high-performance',
+                    stencil: false
+                });
+                this.element = this.renderer.domElement;
+
+                // 3D scene
+                this.scene = new Scene();
+                this.scene.background = new Color(0x0e0e0e);
+                this.camera = new PerspectiveCamera(30);
+                this.camera.near = 0.5;
+                this.camera.far = 40;
+                this.camera.position.z = 8;
+                this.camera.lookAt(this.scene.position);
+
+                // Global geometries
+                this.screenTriangle = getFullscreenTriangle();
+
+                // Global uniforms
+                this.resolution = { value: new Vector2() };
+                this.aspect = { value: 1 };
+                this.time = { value: 0 };
+                this.frame = { value: 0 };
+            }
+
+            static initLights() {
+                this.scene.add(new HemisphereLight(0x606060, 0x404040));
+
+                const light = new DirectionalLight(0xffffff, 0.6);
+                light.position.set(1, 1, 1);
+                this.scene.add(light);
+            }
+
+            static addListeners() {
+                this.renderer.domElement.addEventListener('touchstart', this.onTouchStart);
+            }
+
+            /**
+             * Event handlers
+             */
+
+            static onTouchStart = e => {
+                e.preventDefault();
+            };
+
+            /**
+             * Public methods
+             */
+
+            static resize = (width, height, dpr) => {
+                this.camera.aspect = width / height;
+                this.camera.updateProjectionMatrix();
+
+                if (width < height) {
+                    this.camera.position.z = 10;
+                } else {
+                    this.camera.position.z = 8;
+                }
+
+                width = Math.round(width * dpr);
+                height = Math.round(height * dpr);
+
+                this.resolution.value.set(width, height);
+                this.aspect.value = width / height;
+            };
+
+            static update = (time, delta, frame) => {
+                this.time.value = time;
+                this.frame.value = frame;
+            };
+        }
+
+        class App {
+            static async init() {
+                this.initWorld();
+                this.initViews();
+                this.initControllers();
+
+                this.addListeners();
+                this.onResize();
+
+                this.initPanel();
+            }
+
+            static initWorld() {
+                WorldController.init();
+                document.body.appendChild(WorldController.element);
+            }
+
+            static initViews() {
+                this.view = new SceneView();
+                WorldController.scene.add(this.view);
+            }
+
+            static initControllers() {
+                const { renderer, scene, camera } = WorldController;
+
+                RenderManager.init(renderer, scene, camera);
+            }
+
+            static initPanel() {
+                PanelController.init();
+            }
+
+            static addListeners() {
+                window.addEventListener('resize', this.onResize);
+                ticker.add(this.onUpdate);
+                ticker.start();
+            }
+
+            /**
+             * Event handlers
+             */
+
+            static onResize = () => {
+                const width = document.documentElement.clientWidth;
+                const height = document.documentElement.clientHeight;
+                const dpr = window.devicePixelRatio;
+
+                WorldController.resize(width, height, dpr);
+                RenderManager.resize(width, height, dpr);
+            };
+
+            static onUpdate = (time, delta, frame) => {
+                WorldController.update(time, delta, frame);
+                RenderManager.update(time, delta, frame);
+                PanelController.update();
+            };
+        }
+
+        App.init();
+    </script>
+</head>
+<body>
+</body>
+</html>

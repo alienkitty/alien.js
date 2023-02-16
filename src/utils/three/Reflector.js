@@ -16,7 +16,7 @@ import {
     WebGLRenderTarget
 } from 'three';
 
-import { ReflectorBlurMaterial } from '../../materials/ReflectorBlurMaterial.js';
+import { ReflectorBlurMaterial } from '../../materials/three/ReflectorBlurMaterial.js';
 
 import { getFullscreenTriangle } from './Utils3D.js';
 

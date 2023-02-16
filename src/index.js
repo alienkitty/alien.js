@@ -39,7 +39,6 @@ export { ListToggle } from './utils/panel/ListToggle.js';
 export { ListSelect } from './utils/panel/ListSelect.js';
 export { Slider } from './utils/panel/Slider.js';
 export { ColorPicker } from './utils/panel/ColorPicker.js';
-export { MaterialPanelController } from './utils/panel/MaterialPanelController.js';
 
 // UI
 export { UI } from './utils/ui/UI.js';

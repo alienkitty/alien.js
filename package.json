@@ -5,10 +5,8 @@
   "type": "module",
   "exports": {
     ".": "./src/index.js",
-    "./all": "./src/all.js",
     "./three": "./src/three.js",
-    "./oimophysics": "./src/oimophysics.js",
-    "./materials": "./src/materials.js",
+    "./three/oimophysics": "./src/three.oimophysics.js",
     "./src/*": "./src/*"
   },
   "sideEffects": false,

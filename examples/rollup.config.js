@@ -1,9 +1,9 @@
 import resolve from '@rollup/plugin-node-resolve';
 
 export default {
-  input: '../src/all.js',
+  input: '../src/three.js',
   output: {
-    file: '../build/alien.js',
+    file: '../build/alien.three.js',
     format: 'es'
   },
   plugins: [

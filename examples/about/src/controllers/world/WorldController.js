@@ -1,6 +1,6 @@
 import { Mesh, OrthographicCamera, Scene, Vector2, WebGLRenderer } from 'three';
 
-import { getFullscreenTriangle } from 'alien.js';
+import { getFullscreenTriangle } from 'alien.js/three';
 
 export class WorldController {
     static init() {

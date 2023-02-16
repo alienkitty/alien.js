@@ -1,4 +1,4 @@
-import { Assets, Stage, WebAudio, ticker, wait } from 'alien.js';
+import { Assets, Stage, WebAudio, ticker, wait } from 'alien.js/three';
 
 import { Global } from '../config/Global.js';
 import { AudioController } from './audio/AudioController.js';

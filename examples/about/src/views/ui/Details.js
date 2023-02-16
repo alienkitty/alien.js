@@ -1,4 +1,4 @@
-import { Interface, basename } from 'alien.js';
+import { Interface, basename } from 'alien.js/three';
 
 import { Config } from '../../config/Config.js';
 import { Styles } from '../../config/Styles.js';

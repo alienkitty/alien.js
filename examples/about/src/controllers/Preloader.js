@@ -1,4 +1,4 @@
-import { AssetLoader, Assets, FontLoader, MultiLoader, Stage } from 'alien.js';
+import { AssetLoader, Assets, FontLoader, MultiLoader, Stage } from 'alien.js/three';
 
 import { Config } from '../config/Config.js';
 import { Data } from '../data/Data.js';

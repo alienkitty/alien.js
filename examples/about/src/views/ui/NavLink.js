@@ -1,4 +1,4 @@
-import { Interface } from 'alien.js';
+import { Interface } from 'alien.js/three';
 
 export class NavLink extends Interface {
     constructor(title, link) {

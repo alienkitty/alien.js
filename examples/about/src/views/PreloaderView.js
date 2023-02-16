@@ -1,4 +1,4 @@
-import { Interface } from 'alien.js';
+import { Interface } from 'alien.js/three';
 
 import { ProgressCanvas } from './ui/ProgressCanvas.js';
 

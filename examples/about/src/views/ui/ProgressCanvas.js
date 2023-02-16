@@ -1,4 +1,4 @@
-import { Interface, Stage, clearTween, degToRad, ticker, tween } from 'alien.js';
+import { Interface, Stage, clearTween, degToRad, ticker, tween } from 'alien.js/three';
 
 export class ProgressCanvas extends Interface {
     constructor() {

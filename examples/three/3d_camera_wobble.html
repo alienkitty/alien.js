@@ -11,7 +11,7 @@
     <link rel="stylesheet" href="assets/css/style.css">
 
     <script type="module">
-        import { ACESFilmicToneMapping, BloomCompositeMaterial, Color, DirectionalLight, FXAAMaterial, Fog, GLSL3, Group, HemisphereLight, LuminosityMaterial, Mesh, MeshBasicMaterial, MeshStandardMaterial, NoBlending, OrthographicCamera, PanelItem, PerspectiveCamera, PlaneGeometry, RawShaderMaterial, Reflector, RepeatWrapping, SVGLoader, Scene, TextureLoader, UI, UnrealBloomBlurMaterial, Vector2, Vector3, WebGLRenderTarget, WebGLRenderer, Wobble, degToRad, floorPowerOfTwo, getFullscreenTriangle, lerp, mapLinear, ticker } from '../../build/alien.three.js';
+        import { ACESFilmicToneMapping, BloomCompositeMaterial, Color, DirectionalLight, FXAAMaterial, Fog, GLSL3, Group, HemisphereLight, LuminosityMaterial, MathUtils, Mesh, MeshBasicMaterial, MeshStandardMaterial, NoBlending, OrthographicCamera, PanelItem, PerspectiveCamera, PlaneGeometry, RawShaderMaterial, Reflector, RepeatWrapping, SVGLoader, Scene, TextureLoader, UI, UnrealBloomBlurMaterial, Vector2, Vector3, WebGLRenderTarget, WebGLRenderer, Wobble, getFullscreenTriangle, ticker } from '../../build/alien.three.js';
 
         import rgbshift from '../../src/shaders/modules/rgbshift/rgbshift.glsl.js';
 
@@ -248,7 +248,7 @@
              */
 
             resize = (width, height) => {
-                width = floorPowerOfTwo(width) / 2;
+                width = MathUtils.floorPowerOfTwo(width) / 2;
                 height = 1024;
 
                 this.reflector.setSize(width, height);
@@ -492,7 +492,7 @@
 
                 for (let i = 0, l = this.nMips; i < l; i++) {
                     const factor = bloomFactors[i];
-                    bloomFactors[i] = this.bloomStrength * lerp(factor, 1.2 - factor, this.bloomRadius);
+                    bloomFactors[i] = this.bloomStrength * MathUtils.lerp(factor, 1.2 - factor, this.bloomRadius);
                 }
 
                 return bloomFactors;
@@ -512,8 +512,8 @@
                 this.renderTargetA.setSize(width, height);
                 this.renderTargetB.setSize(width, height);
 
-                width = floorPowerOfTwo(width) / 2;
-                height = floorPowerOfTwo(height) / 2;
+                width = MathUtils.floorPowerOfTwo(width) / 2;
+                height = MathUtils.floorPowerOfTwo(height) / 2;
 
                 this.renderTargetBright.setSize(width, height);
 
@@ -626,7 +626,7 @@
                 this.origin.copy(this.group.position);
 
                 this.rotation = 0;
-                this.rotateAngle = degToRad(10);
+                this.rotateAngle = MathUtils.degToRad(10);
                 this.lerpSpeed = 0.02;
                 this.lerpSpeed2 = 0.07;
                 this.enabled = false;
@@ -690,8 +690,8 @@
                 this.delta.subVectors(this.mouse, this.last);
                 this.last.copy(this.mouse);
 
-                const directionX = mapLinear(this.mouse.x, 0, document.documentElement.clientWidth, -1, 1);
-                const directionY = mapLinear(this.mouse.y, 0, document.documentElement.clientHeight, 1, -1);
+                const directionX = MathUtils.mapLinear(this.mouse.x, 0, document.documentElement.clientWidth, -1, 1);
+                const directionY = MathUtils.mapLinear(this.mouse.y, 0, document.documentElement.clientHeight, 1, -1);
 
                 this.target.x = this.origin.x + this.targetXY.x * directionX;
                 this.target.y = this.origin.y + this.targetXY.y * directionY;
@@ -700,7 +700,7 @@
                 this.group.position.lerp(this.target, this.lerpSpeed);
                 this.group.lookAt(this.lookAt);
 
-                const rotateStrength = mapLinear(Math.abs(this.delta.x) / document.documentElement.clientWidth, 0, 0.02, 0, 1);
+                const rotateStrength = MathUtils.mapLinear(Math.abs(this.delta.x) / document.documentElement.clientWidth, 0, 0.02, 0, 1);
                 this.rotation += (this.rotateAngle * rotateStrength * Math.sign(this.delta.x) - this.rotation) * this.lerpSpeed;
                 this.rotateGroup.rotation.z += (this.rotation - this.rotateGroup.rotation.z) * this.lerpSpeed2;
 

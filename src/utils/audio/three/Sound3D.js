@@ -2,12 +2,10 @@
  * @author pschroen / https://ufo.ai/
  */
 
-import { Group, Quaternion, Vector3 } from 'three';
+import { Group, MathUtils, Quaternion, Vector3 } from 'three';
 
 import { WebAudio } from '../WebAudio.js';
 import { WebAudioParam } from '../WebAudioParam.js';
-
-import { clamp, guid, mapLinear } from '../../Utils.js';
 
 export class Sound3D extends Group {
     constructor(camera, id, buffer) {
@@ -67,7 +65,7 @@ export class Sound3D extends Group {
         if (buffer) {
             this.sound = WebAudio.add(this, id, buffer, true);
         } else {
-            this.sound = WebAudio.clone(this, id, guid(), true);
+            this.sound = WebAudio.clone(this, id, MathUtils.generateUUID(), true);
         }
     }
 
@@ -82,11 +80,11 @@ export class Sound3D extends Group {
             this.cameraWorldPosition.setFromMatrixPosition(this.camera.matrixWorld);
             this.worldPosition.setFromMatrixPosition(this.matrixWorld);
 
-            this.gain.value = clamp(mapLinear(this.cameraWorldPosition.distanceTo(this.worldPosition) + this.audioDistance, this.audioNearDistance, this.audioFarDistance, 1, 0), 0, 1);
+            this.gain.value = MathUtils.clamp(MathUtils.mapLinear(this.cameraWorldPosition.distanceTo(this.worldPosition) + this.audioDistance, this.audioNearDistance, this.audioFarDistance, 1, 0), 0, 1);
 
             this.screenSpacePosition.copy(this.worldPosition).project(this.camera);
 
-            this.stereoPan.value = clamp(this.screenSpacePosition.x, -1, 1);
+            this.stereoPan.value = MathUtils.clamp(this.screenSpacePosition.x, -1, 1);
         } else {
             this.matrixWorld.decompose(this.worldPosition, this.worldQuaternion, this.worldScale);
             this.worldOrientation.set(0, 0, 1).applyQuaternion(this.worldQuaternion);

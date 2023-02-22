@@ -1,4 +1,4 @@
-import { ACESFilmicToneMapping, AmbientLight, AssetLoader, BloomCompositeMaterial, BlurMaterial, BoxGeometry, Color, DirectionalLight, EnvironmentTextureLoader, FXAAMaterial, GLSL3, Group, Header, HemisphereLight, IcosahedronGeometry, ImageBitmapLoaderThread, Interface, LuminosityMaterial, Mesh, MeshStandardMaterial, NoBlending, OctahedronGeometry, OrthographicCamera, PanelItem, PerspectiveCamera, RawShaderMaterial, RepeatWrapping, Scene, SceneCompositeMaterial, Stage, TextureLoader, Thread, UnrealBloomBlurMaterial, Vector2, WebGLRenderTarget, WebGLRenderer, clamp, clearTween, degToRad, floorPowerOfTwo, getFullscreenTriangle, inverseLerp, lerp, shuffle, ticker, tween } from '../../../../build/alien.three.js';
+import { ACESFilmicToneMapping, AmbientLight, AssetLoader, BloomCompositeMaterial, BlurMaterial, BoxGeometry, Color, DirectionalLight, EnvironmentTextureLoader, FXAAMaterial, GLSL3, Group, Header, HemisphereLight, IcosahedronGeometry, ImageBitmapLoaderThread, Interface, LuminosityMaterial, MathUtils, Mesh, MeshStandardMaterial, NoBlending, OctahedronGeometry, OrthographicCamera, PanelItem, PerspectiveCamera, RawShaderMaterial, RepeatWrapping, Scene, SceneCompositeMaterial, Stage, TextureLoader, Thread, UnrealBloomBlurMaterial, Vector2, WebGLRenderTarget, WebGLRenderer, clearTween, getFullscreenTriangle, shuffle, ticker, tween } from '../../../../build/alien.three.js';
 
 class Global {
     static PAGES = [];
@@ -506,8 +506,8 @@ class AbstractCube extends Group {
         });
 
         const mesh = new Mesh(geometry, material);
-        mesh.rotation.x = degToRad(-45);
-        mesh.rotation.z = degToRad(-45);
+        mesh.rotation.x = MathUtils.degToRad(-45);
+        mesh.rotation.z = MathUtils.degToRad(-45);
         this.add(mesh);
 
         this.mesh = mesh;
@@ -597,7 +597,7 @@ class DarkPlanet extends Group {
         super();
 
         // 25 degree tilt like Mars
-        this.rotation.z = degToRad(25);
+        this.rotation.z = MathUtils.degToRad(25);
     }
 
     async initMesh() {
@@ -940,7 +940,7 @@ class RenderManager {
 
         for (let i = 0, l = this.nMips; i < l; i++) {
             const factor = bloomFactors[i];
-            bloomFactors[i] = this.bloomStrength * lerp(factor, 1.2 - factor, this.bloomRadius);
+            bloomFactors[i] = this.bloomStrength * MathUtils.lerp(factor, 1.2 - factor, this.bloomRadius);
         }
 
         return bloomFactors;
@@ -963,8 +963,8 @@ class RenderManager {
         this.hBlurMaterial.uniforms.uResolution.value.set(width, height);
         this.vBlurMaterial.uniforms.uResolution.value.set(width, height);
 
-        width = floorPowerOfTwo(width) / 2;
-        height = floorPowerOfTwo(height) / 2;
+        width = MathUtils.floorPowerOfTwo(width) / 2;
+        height = MathUtils.floorPowerOfTwo(height) / 2;
 
         this.renderTargetBright.setSize(width, height);
 
@@ -1044,7 +1044,7 @@ class RenderManager {
         renderer.render(this.screen, this.screenCamera);
 
         // Two pass Gaussian blur (horizontal and vertical)
-        const blurFactor = clamp(inverseLerp(0.5, 0, this.compositeMaterial.uniforms.uOpacity.value), 0, 1);
+        const blurFactor = MathUtils.clamp(MathUtils.inverseLerp(0.5, 0, this.compositeMaterial.uniforms.uOpacity.value), 0, 1);
 
         if (blurFactor > 0) {
             this.hBlurMaterial.uniforms.tMap.value = renderTargetA.texture;

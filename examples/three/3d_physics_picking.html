@@ -11,7 +11,7 @@
     <link rel="stylesheet" href="assets/css/style.css">
 
     <script type="module">
-        import { ACESFilmicToneMapping, AmbientLight, BasicShadowMap, BloomCompositeMaterial, BoxGeometry, BufferLoader, Color, DirectionalLight, EnvironmentTextureLoader, FXAAMaterial, GLSL3, Group, HemisphereLight, IcosahedronGeometry, ImageBitmapLoaderThread, LuminosityMaterial, Mesh, MeshBasicMaterial, MeshPhongMaterial, MeshStandardMaterial, NoBlending, OimoPhysics, OrthographicCamera, PanelItem, PerspectiveCamera, PlaneGeometry, PointLight, RawShaderMaterial, Raycaster, Reflector, RepeatWrapping, RigidBodyConfig, RigidBodyType, Scene, ShaderChunk, ShadowMaterial, Sound3D, SphereGeometry, SphericalJointConfig, TextureLoader, Thread, UI, UnrealBloomBlurMaterial, Vector2, Vector3, WebAudio, WebGLRenderTarget, WebGLRenderer, clamp, delayedCall, floorPowerOfTwo, getFullscreenTriangle, getKeyByValue, lerp, mapLinear, ticker } from '../../build/alien.three.js';
+        import { ACESFilmicToneMapping, AmbientLight, BasicShadowMap, BloomCompositeMaterial, BoxGeometry, BufferLoader, Color, DirectionalLight, EnvironmentTextureLoader, FXAAMaterial, GLSL3, Group, HemisphereLight, IcosahedronGeometry, ImageBitmapLoaderThread, LuminosityMaterial, MathUtils, Mesh, MeshBasicMaterial, MeshPhongMaterial, MeshStandardMaterial, NoBlending, OimoPhysics, OrthographicCamera, PanelItem, PerspectiveCamera, PlaneGeometry, PointLight, RawShaderMaterial, Raycaster, Reflector, RepeatWrapping, RigidBodyConfig, RigidBodyType, Scene, ShaderChunk, ShadowMaterial, Sound3D, SphereGeometry, SphericalJointConfig, TextureLoader, Thread, UI, UnrealBloomBlurMaterial, Vector2, Vector3, WebAudio, WebGLRenderTarget, WebGLRenderer, delayedCall, getFullscreenTriangle, getKeyByValue, ticker } from '../../build/alien.three.js';
 
         class Config {
             static LIGHT_COLOR = 0xf44336;
@@ -569,9 +569,9 @@
                             this.scene.add(mesh);
                         }
 
-                        const strength = mapLinear(force, 0, 4, 0, 1);
-                        gong.sound.gain.set(clamp(strength * 0.5, 0, 1));
-                        gong.sound.playbackRate.set(clamp(0.8 + strength * 0.4, 0.8, 1.2));
+                        const strength = MathUtils.mapLinear(force, 0, 4, 0, 1);
+                        gong.sound.gain.set(MathUtils.clamp(strength * 0.5, 0, 1));
+                        gong.sound.playbackRate.set(MathUtils.clamp(0.8 + strength * 0.4, 0.8, 1.2));
                         gong.sound.play();
 
                         delayedCall(6000, () => {
@@ -814,7 +814,7 @@
 
                 for (let i = 0, l = this.nMips; i < l; i++) {
                     const factor = bloomFactors[i];
-                    bloomFactors[i] = this.bloomStrength * lerp(factor, 1.2 - factor, this.bloomRadius);
+                    bloomFactors[i] = this.bloomStrength * MathUtils.lerp(factor, 1.2 - factor, this.bloomRadius);
                 }
 
                 return bloomFactors;
@@ -834,8 +834,8 @@
                 this.renderTargetA.setSize(width, height);
                 this.renderTargetB.setSize(width, height);
 
-                width = floorPowerOfTwo(width) / 2;
-                height = floorPowerOfTwo(height) / 2;
+                width = MathUtils.floorPowerOfTwo(width) / 2;
+                height = MathUtils.floorPowerOfTwo(height) / 2;
 
                 this.renderTargetBright.setSize(width, height);
 

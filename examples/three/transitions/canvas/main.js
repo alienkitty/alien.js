@@ -1,4 +1,4 @@
-import { ACESFilmicToneMapping, AmbientLight, AssetLoader, BloomCompositeMaterial, BoxGeometry, Color, DirectionalLight, EnvironmentTextureLoader, FXAAMaterial, Group, Header, HemisphereLight, IcosahedronGeometry, ImageBitmapLoaderThread, Interface, LuminosityMaterial, Mesh, MeshStandardMaterial, OctahedronGeometry, OrthographicCamera, PanelItem, PerspectiveCamera, RepeatWrapping, Scene, SceneCompositeMaterial, Stage, TextureLoader, Thread, UnrealBloomBlurMaterial, Vector2, WebGLRenderTarget, WebGLRenderer, clearTween, degToRad, floorPowerOfTwo, getFullscreenTriangle, lerp, shuffle, ticker, tween } from '../../../../build/alien.three.js';
+import { ACESFilmicToneMapping, AmbientLight, AssetLoader, BloomCompositeMaterial, BoxGeometry, Color, DirectionalLight, EnvironmentTextureLoader, FXAAMaterial, Group, Header, HemisphereLight, IcosahedronGeometry, ImageBitmapLoaderThread, Interface, LuminosityMaterial, MathUtils, Mesh, MeshStandardMaterial, OctahedronGeometry, OrthographicCamera, PanelItem, PerspectiveCamera, RepeatWrapping, Scene, SceneCompositeMaterial, Stage, TextureLoader, Thread, UnrealBloomBlurMaterial, Vector2, WebGLRenderTarget, WebGLRenderer, clearTween, getFullscreenTriangle, shuffle, ticker, tween } from '../../../../build/alien.three.js';
 
 class Global {
     static PAGES = [];
@@ -603,8 +603,8 @@ class AbstractCube extends Group {
         });
 
         const mesh = new Mesh(geometry, material);
-        mesh.rotation.x = degToRad(-45);
-        mesh.rotation.z = degToRad(-45);
+        mesh.rotation.x = MathUtils.degToRad(-45);
+        mesh.rotation.z = MathUtils.degToRad(-45);
         this.add(mesh);
 
         this.mesh = mesh;
@@ -694,7 +694,7 @@ class DarkPlanet extends Group {
         super();
 
         // 25 degree tilt like Mars
-        this.rotation.z = degToRad(25);
+        this.rotation.z = MathUtils.degToRad(25);
     }
 
     async initMesh() {
@@ -1013,7 +1013,7 @@ class RenderManager {
 
         for (let i = 0, l = this.nMips; i < l; i++) {
             const factor = bloomFactors[i];
-            bloomFactors[i] = this.bloomStrength * lerp(factor, 1.2 - factor, this.bloomRadius);
+            bloomFactors[i] = this.bloomStrength * MathUtils.lerp(factor, 1.2 - factor, this.bloomRadius);
         }
 
         return bloomFactors;
@@ -1033,8 +1033,8 @@ class RenderManager {
         this.renderTargetA.setSize(width, height);
         this.renderTargetB.setSize(width, height);
 
-        width = floorPowerOfTwo(width) / 2;
-        height = floorPowerOfTwo(height) / 2;
+        width = MathUtils.floorPowerOfTwo(width) / 2;
+        height = MathUtils.floorPowerOfTwo(height) / 2;
 
         this.renderTargetBright.setSize(width, height);
 

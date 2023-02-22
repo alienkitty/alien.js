@@ -11,7 +11,7 @@
     <link rel="stylesheet" href="assets/css/style.css">
 
     <script type="module">
-        import { ACESFilmicToneMapping, AdditiveBlending, BackSide, BlurMaterial, Color, CubeCamera, FXAAMaterial, GLSL3, Group, IcosahedronGeometry, ImageBitmapLoaderThread, LinearMipmapLinearFilter, Mesh, MeshBasicMaterial, MultiplyOperation, NoBlending, OrthographicCamera, PanelItem, PerspectiveCamera, RawShaderMaterial, Scene, SphereGeometry, Sprite, SpriteMaterial, TextureLoader, Thread, UI, Vector2, Vector3, WebGLCubeRenderTarget, WebGLRenderTarget, WebGLRenderer, Wobble, degToRad, getFullscreenTriangle, getKeyByValue, randFloat, ticker, tween } from '../../build/alien.three.js';
+        import { ACESFilmicToneMapping, AdditiveBlending, BackSide, BlurMaterial, Color, CubeCamera, FXAAMaterial, GLSL3, Group, IcosahedronGeometry, ImageBitmapLoaderThread, LinearMipmapLinearFilter, MathUtils, Mesh, MeshBasicMaterial, MultiplyOperation, NoBlending, OrthographicCamera, PanelItem, PerspectiveCamera, RawShaderMaterial, Scene, SphereGeometry, Sprite, SpriteMaterial, TextureLoader, Thread, UI, Vector2, Vector3, WebGLCubeRenderTarget, WebGLRenderTarget, WebGLRenderer, Wobble, getFullscreenTriangle, getKeyByValue, ticker, tween } from '../../build/alien.three.js';
 
         class Config {
             static BG_COLOR = new Color(0x030627);
@@ -259,7 +259,7 @@
                 };
 
                 for (let i = 0; i < this.numParticles; i++) {
-                    const distance = randFloat(10, 40);
+                    const distance = MathUtils.randFloat(10, 40);
 
                     const sprite = new Sprite(material);
                     sprite.position.x = Math.random() * 2 - 1;
@@ -708,7 +708,7 @@
                 this.mouse.x = (clientX - this.halfWidth);
                 this.mouse.y = (clientY - this.halfHeight);
 
-                this.target.x = degToRad(-360) + (1 - this.mouse.x) * this.rotation * this.multiplier;
+                this.target.x = MathUtils.degToRad(-360) + (1 - this.mouse.x) * this.rotation * this.multiplier;
                 this.target.y = (1 - this.mouse.y) * this.rotation * this.multiplier;
             };
 
@@ -759,7 +759,7 @@
             static animateIn = () => {
                 this.enabled = true;
 
-                tween(this.target, { x: degToRad(-360) }, 4200, 'easeInOutQuart', () => {
+                tween(this.target, { x: MathUtils.degToRad(-360) }, 4200, 'easeInOutQuart', () => {
                     this.prevent = false;
                 });
             };

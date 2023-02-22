@@ -11,7 +11,7 @@
     <link rel="stylesheet" href="assets/css/style.css">
 
     <script type="module">
-        import { Color, DirectionalLight, FXAAMaterial, Group, HemisphereLight, LinearMipmapLinearFilter, Mesh, MeshStandardMaterial, OrthographicCamera, PanelItem, PerspectiveCamera, PoissonDiscBlurMaterial, Scene, SphereGeometry, UI, Vector2, WebGLRenderTarget, WebGLRenderer, floorPowerOfTwo, getFullscreenTriangle, ticker } from '../../build/alien.three.js';
+        import { Color, DirectionalLight, FXAAMaterial, Group, HemisphereLight, LinearMipmapLinearFilter, MathUtils, Mesh, MeshStandardMaterial, OrthographicCamera, PanelItem, PerspectiveCamera, PoissonDiscBlurMaterial, Scene, SphereGeometry, UI, Vector2, WebGLRenderTarget, WebGLRenderer, getFullscreenTriangle, ticker } from '../../build/alien.three.js';
 
         import periodic3d from '../../src/shaders/modules/noise/periodic3d.glsl.js';
 
@@ -165,8 +165,8 @@
 
                 this.renderTargetA.setSize(width, height);
 
-                width = floorPowerOfTwo(width) / 2;
-                height = floorPowerOfTwo(height) / 2;
+                width = MathUtils.floorPowerOfTwo(width) / 2;
+                height = MathUtils.floorPowerOfTwo(height) / 2;
 
                 this.renderTargetB.setSize(width, height);
             };

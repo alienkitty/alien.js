@@ -1,4 +1,4 @@
-import { ACESFilmicToneMapping, AmbientLight, AssetLoader, BasicShadowMap, BloomCompositeMaterial, BoxGeometry, CameraMotionBlurMaterial, Color, DepthTexture, DirectionalLight, EnvironmentTextureLoader, FXAAMaterial, GLSL3, Group, Header, HemisphereLight, IcosahedronGeometry, ImageBitmapLoaderThread, Interface, LuminosityMaterial, Matrix4, Mesh, MeshStandardMaterial, NearestFilter, NoBlending, OctahedronGeometry, OrthographicCamera, PanelItem, PerspectiveCamera, PlaneGeometry, Point3D, RawShaderMaterial, Reflector, RepeatWrapping, Scene, SceneCompositeMaterial, ShadowMaterial, Stage, TextureLoader, Thread, UnrealBloomBlurMaterial, Vector2, Vector3, WebGLRenderTarget, WebGLRenderer, clearTween, degToRad, delayedCall, floorPowerOfTwo, getFullscreenTriangle, getKeyByValue, lerp, lerpCameras, radToDeg, shuffle, ticker, tween } from '../../../../build/alien.three.js';
+import { ACESFilmicToneMapping, AmbientLight, AssetLoader, BasicShadowMap, BloomCompositeMaterial, BoxGeometry, CameraMotionBlurMaterial, Color, DepthTexture, DirectionalLight, EnvironmentTextureLoader, FXAAMaterial, GLSL3, Group, Header, HemisphereLight, IcosahedronGeometry, ImageBitmapLoaderThread, Interface, LuminosityMaterial, MathUtils, Matrix4, Mesh, MeshStandardMaterial, NearestFilter, NoBlending, OctahedronGeometry, OrthographicCamera, PanelItem, PerspectiveCamera, PlaneGeometry, Point3D, RawShaderMaterial, Reflector, RepeatWrapping, Scene, SceneCompositeMaterial, ShadowMaterial, Stage, TextureLoader, Thread, UnrealBloomBlurMaterial, Vector2, Vector3, WebGLRenderTarget, WebGLRenderer, clearTween, delayedCall, getFullscreenTriangle, getKeyByValue, lerpCameras, shuffle, ticker, tween } from '../../../../build/alien.three.js';
 
 class Global {
     static PAGES = [];
@@ -646,8 +646,8 @@ class AbstractCube extends Group {
         });
 
         const mesh = new Mesh(geometry, material);
-        mesh.rotation.x = degToRad(-45);
-        mesh.rotation.z = degToRad(-45);
+        mesh.rotation.x = MathUtils.degToRad(-45);
+        mesh.rotation.z = MathUtils.degToRad(-45);
         mesh.castShadow = true;
         mesh.receiveShadow = true;
         this.add(mesh);
@@ -789,7 +789,7 @@ class DarkPlanet extends Group {
         this.position.x = -2.5;
 
         // 25 degree tilt like Mars
-        this.rotation.z = degToRad(25);
+        this.rotation.z = MathUtils.degToRad(25);
 
         this.initCamera();
     }
@@ -1225,9 +1225,9 @@ class PanelController {
                 min: 0,
                 max: 360,
                 step: 0.3,
-                value: radToDeg(RenderManager.blurRotation),
+                value: MathUtils.radToDeg(RenderManager.blurRotation),
                 callback: value => {
-                    value = degToRad(value);
+                    value = MathUtils.degToRad(value);
                     hBlurMaterial.uniforms.uRotation.value = value;
                     vBlurMaterial.uniforms.uRotation.value = value;
                     compositeMaterial.uniforms.uRotation.value = value;
@@ -1354,7 +1354,7 @@ class RenderManager {
         this.camera = camera;
 
         this.blurFocus = navigator.maxTouchPoints ? 0.5 : 0.25;
-        this.blurRotation = navigator.maxTouchPoints ? 0 : degToRad(75);
+        this.blurRotation = navigator.maxTouchPoints ? 0 : MathUtils.degToRad(75);
         this.blurFactor = 1;
         this.blurVelocityFactor = 0.1;
         this.luminosityThreshold = 0.1;
@@ -1460,7 +1460,7 @@ class RenderManager {
 
         for (let i = 0, l = this.nMips; i < l; i++) {
             const factor = bloomFactors[i];
-            bloomFactors[i] = this.bloomStrength * lerp(factor, 1.2 - factor, this.bloomRadius);
+            bloomFactors[i] = this.bloomStrength * MathUtils.lerp(factor, 1.2 - factor, this.bloomRadius);
         }
 
         return bloomFactors;
@@ -1484,8 +1484,8 @@ class RenderManager {
         this.hBlurMaterial.uniforms.uResolution.value.set(width, height);
         this.vBlurMaterial.uniforms.uResolution.value.set(width, height);
 
-        width = floorPowerOfTwo(width) / 2;
-        height = floorPowerOfTwo(height) / 2;
+        width = MathUtils.floorPowerOfTwo(width) / 2;
+        height = MathUtils.floorPowerOfTwo(height) / 2;
 
         this.renderTargetBright.setSize(width, height);
 

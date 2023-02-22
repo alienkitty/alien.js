@@ -11,7 +11,7 @@
     <link rel="stylesheet" href="assets/css/style.css">
 
     <script type="module">
-        import { ACESFilmicToneMapping, AmbientLight, BloomCompositeMaterial, Color, DirectionalLight, EnvironmentTextureLoader, FXAAMaterial, FrontSide, GLSL3, GLTFLoader, Group, Header, HemisphereLight, Interface, LuminosityMaterial, Mesh, MeshBasicMaterial, NoBlending, OrbitControls, OrthographicCamera, PanelItem, PerspectiveCamera, PointLight, RawShaderMaterial, Scene, SphereGeometry, UnrealBloomBlurMaterial, Vector2, Vector3, WebGLRenderTarget, WebGLRenderer, degToRad, floorPowerOfTwo, getFrustum, getFullscreenTriangle, getKeyByValue, lerp, ticker, tween } from '../../build/alien.three.js';
+        import { ACESFilmicToneMapping, AmbientLight, BloomCompositeMaterial, Color, DirectionalLight, EnvironmentTextureLoader, FXAAMaterial, FrontSide, GLSL3, GLTFLoader, Group, Header, HemisphereLight, Interface, LuminosityMaterial, MathUtils, Mesh, MeshBasicMaterial, NoBlending, OrbitControls, OrthographicCamera, PanelItem, PerspectiveCamera, PointLight, RawShaderMaterial, Scene, SphereGeometry, UnrealBloomBlurMaterial, Vector2, Vector3, WebGLRenderTarget, WebGLRenderer, getFrustum, getFullscreenTriangle, getKeyByValue, ticker, tween } from '../../build/alien.three.js';
 
         class Config {
             static DEBUG = /[?&]debug/.test(location.search);
@@ -217,7 +217,7 @@
 
                 // Sketchfab model
                 const model = gltf.scene.children[0];
-                model.rotation.z = degToRad(200);
+                model.rotation.z = MathUtils.degToRad(200);
                 model.scale.multiplyScalar(0.01);
 
                 // Crystal mesh
@@ -518,7 +518,7 @@
 
                 for (let i = 0, l = this.nMips; i < l; i++) {
                     const factor = bloomFactors[i];
-                    bloomFactors[i] = this.bloomStrength * lerp(factor, 1.2 - factor, this.bloomRadius);
+                    bloomFactors[i] = this.bloomStrength * MathUtils.lerp(factor, 1.2 - factor, this.bloomRadius);
                 }
 
                 return bloomFactors;
@@ -538,8 +538,8 @@
                 this.renderTargetA.setSize(width, height);
                 this.renderTargetB.setSize(width, height);
 
-                width = floorPowerOfTwo(width) / 2;
-                height = floorPowerOfTwo(height) / 2;
+                width = MathUtils.floorPowerOfTwo(width) / 2;
+                height = MathUtils.floorPowerOfTwo(height) / 2;
 
                 this.renderTargetBright.setSize(width, height);
 
@@ -672,7 +672,7 @@
                 this.mouse.x = (clientX - this.halfWidth);
                 this.mouse.y = (clientY - this.halfHeight);
 
-                this.target.x = degToRad(-360) + (1 - this.mouse.x) * this.rotation * this.multiplier;
+                this.target.x = MathUtils.degToRad(-360) + (1 - this.mouse.x) * this.rotation * this.multiplier;
                 this.target.y = (1 - this.mouse.y) * this.rotation * this.multiplier;
             };
 
@@ -727,7 +727,7 @@
 
                 this.enabled = true;
 
-                tween(this.target, { x: degToRad(-360) }, 4200, 'easeInOutQuart', () => {
+                tween(this.target, { x: MathUtils.degToRad(-360) }, 4200, 'easeInOutQuart', () => {
                     this.prevent = false;
                 });
             };

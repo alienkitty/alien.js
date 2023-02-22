@@ -5,9 +5,7 @@
  * Based on https://github.com/lo-th/phy
  */
 
-import { Group, Matrix4 } from 'three';
-
-import { guid } from '../../Utils.js';
+import { Group, MathUtils, Matrix4 } from 'three';
 
 export class OimoPhysicsController {
     constructor(view) {
@@ -40,7 +38,7 @@ export class OimoPhysicsController {
         if (name !== undefined) {
             object.name = name;
         } else {
-            object.name = guid();
+            object.name = MathUtils.generateUUID();
         }
 
         if (position) {
@@ -192,7 +190,7 @@ export class OimoPhysicsController {
 
     handleInstancedMesh(object, geometry, props = {}) {
         const bodies = [];
-        const name = props.name || guid();
+        const name = props.name || MathUtils.generateUUID();
 
         for (let i = 0; i < object.count; i++) {
             const { position, quaternion, scale } = this.object;

@@ -3,11 +3,7 @@
 [![NPM Package][npm]][npm-url]
 [![DeepScan][deepscan]][deepscan-url]
 
-Alien.js is a [MVC](https://en.wikipedia.org/wiki/Model%E2%80%93view%E2%80%93controller) design pattern for building [single-page applications](https://en.wikipedia.org/wiki/Single-page_application) with ES modules and [three.js](https://threejs.org/), intended for developers who are interested in creating their own shaders.
-
-The post-processing workflow takes a more linear approach, so instead of abstracting with an effect composer, you work directly with the render targets, making it easier to build custom effects.
-
-*Note this design pattern intentionally does not use underscores or private fields, in favour of cleaner code.*
+This library is part of two sibling libraries, [Space.js](https://github.com/pschroen/space.js) for UI, Panel components, Tween, Web Audio, loaders, utilities, and [Alien.js](https://github.com/pschroen/alien.js) for 3D utilities, materials, shaders and physics.
 
 <p>
     <img src="https://github.com/pschroen/alien.js/raw/master/alien.js.png" alt="Alien.js">
@@ -15,9 +11,9 @@ The post-processing workflow takes a more linear approach, so instead of abstrac
 
 ### Usage
 
-The library is divided into two entry points depending on your use case.
+Alien.js is divided into two entry points depending on your use case.
 
-The `alien.js/three` entry point for [three](https://github.com/mrdoob/three.js) custom [utils](src/utils/three) and [materials](src/materials/three).
+The `alien.js/three` entry point for [three](https://github.com/mrdoob/three.js) custom [utilities](src/utils/three) and [materials](src/materials/three).
 
 ```sh
 npm i three alien.js
@@ -27,7 +23,7 @@ npm i three alien.js
 import { Wobble } from 'alien.js/three';
 ```
 
-And the `alien.js/three/oimophysics` entry point for [oimophysics](https://github.com/saharan/OimoPhysics) custom [utils](src/utils/three/physics).
+And the `alien.js/three/oimophysics` entry point for [oimophysics](https://github.com/saharan/OimoPhysics) custom [utilities](src/utils/three/physics).
 
 ```sh
 npm i three saharan/OimoPhysics#v1.2.3 alien.js
@@ -38,20 +34,6 @@ import { OimoPhysics } from 'alien.js/three/oimophysics';
 ```
 
 ### Examples
-
-#### ui
-
-[logo](https://alien.js.org/examples/ui/logo.html) (interface)  
-[progress](https://alien.js.org/examples/ui/progress_canvas.html) (canvas)  
-[progress](https://alien.js.org/examples/ui/progress.html) (svg)  
-[progress indeterminate](https://alien.js.org/examples/ui/progress_indeterminate.html) (svg)  
-[close](https://alien.js.org/examples/ui/close.html) (svg)  
-[magnetic](https://alien.js.org/examples/ui/magnetic.html) (component, svg)  
-[styles](https://alien.js.org/examples/ui/styles.html)  
-[fps](https://alien.js.org/examples/ui/fps.html)  
-[fps panel](https://alien.js.org/examples/ui/fps_panel.html)  
-[panel](https://alien.js.org/examples/ui/panel.html) (standalone)  
-[ufo](https://ufo.ai/) (2d scene, smooth scroll with skew effect)  
 
 #### transitions
 
@@ -151,11 +133,9 @@ import { OimoPhysics } from 'alien.js/three/oimophysics';
 #### audio
 
 [picking](https://alien.js.org/examples/three/3d_physics_picking.html) (with fast 3d audio, [debug](https://alien.js.org/examples/three/3d_physics_picking.html?debug))  
-[rhythm](https://alien.js.org/examples/ui/audio_rhythm.html)  
 
 #### thread
 
-[canvas](https://alien.js.org/examples/ui/thread_canvas.html) (noise)  
 [pbr](https://alien.js.org/examples/three/shader_pbr.html) (texture loader thread)  
 [cubemap uv](https://alien.js.org/examples/three/3d_cubemap_uv.html) (buffer geometry loader thread)  
 [instancing](https://alien.js.org/examples/three/3d_physics_instancing_thread.html) (physics thread)  
@@ -191,18 +171,17 @@ npx eslint src
 npx eslint examples/about/src
 npx eslint examples/three/*.html
 npx eslint examples/three/transitions
-npx eslint examples/ui/*.html
 ```
 
 ### Resources
 
 * [The Wiki](https://github.com/pschroen/alien.js/wiki)
-* [Example project structure](https://github.com/pschroen/alien.js/wiki/Project-structure)
 * [Tween](https://github.com/pschroen/alien.js/wiki/Tween)
 * [Changelog](https://github.com/pschroen/alien.js/releases)
 
 ### See also
 
+* [Space.js](https://github.com/pschroen/space.js)
 * [Three.js](https://github.com/mrdoob/three.js)
 * [Post Processing](https://github.com/pmndrs/postprocessing)
 * [OGL](https://github.com/oframe/ogl)

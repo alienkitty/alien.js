@@ -4,9 +4,9 @@
   "description": "Future web pattern",
   "type": "module",
   "exports": {
-    ".": "./src/index.js",
     "./three": "./src/three.js",
     "./three/oimophysics": "./src/three.oimophysics.js",
+    "./all/three": "./src/all.three.js",
     "./src/*": "./src/*"
   },
   "sideEffects": false,
@@ -19,5 +19,8 @@
   },
   "homepage": "https://alien.js.org",
   "author": "pschroen",
-  "license": "MIT"
+  "license": "MIT",
+  "dependencies": {
+    "space.js": "latest"
+  }
 }

@@ -18,7 +18,7 @@ import {
 
 import { ReflectorBlurMaterial } from '../../materials/three/ReflectorBlurMaterial.js';
 
-import { getFullscreenTriangle } from './Utils3D.js';
+import { getFullscreenTriangle } from 'space.js/three';
 
 export class Reflector extends Group {
     constructor({

@@ -11,7 +11,7 @@
     <link rel="stylesheet" href="assets/css/style.css">
 
     <script type="module">
-        import { ACESFilmicToneMapping, AfterimageMaterial, BloomCompositeMaterial, BufferAttribute, BufferGeometry, Color, DirectionalLight, FXAAMaterial, Fog, Group, HemisphereLight, LinearFilter, LuminosityMaterial, MathUtils, Mesh, MeshStandardMaterial, OrthographicCamera, PanelItem, PerspectiveCamera, PlaneGeometry, Reflector, RepeatWrapping, Scene, SceneCompositeMaterial, TextGeometry, TextGeometryLoader, TextMaterial, TextureLoader, UI, UnrealBloomBlurMaterial, Vector2, Vector3, WebGLRenderTarget, WebGLRenderer, getFullscreenTriangle, getKeyByValue, ticker } from '../../build/alien.three.js';
+        import { ACESFilmicToneMapping, AfterimageMaterial, BloomCompositeMaterial, BufferAttribute, BufferGeometry, Color, DirectionalLight, FXAAMaterial, Fog, Group, HemisphereLight, LinearFilter, LuminosityMaterial, MathUtils, Mesh, MeshStandardMaterial, OrthographicCamera, PanelItem, PerspectiveCamera, PlaneGeometry, Reflector, RepeatWrapping, Scene, SceneCompositeMaterial, TextGeometry, TextMaterial, TextureLoader, UI, UnrealBloomBlurMaterial, Vector2, Vector3, WebGLRenderTarget, WebGLRenderer, getFullscreenTriangle, getKeyByValue, ticker } from '../../build/alien.three.js';
 
         class Text extends Group {
             constructor() {
@@ -732,7 +732,6 @@
 
             static initLoaders() {
                 this.textureLoader = new TextureLoader();
-                this.textGeometryLoader = new TextGeometryLoader();
             }
 
             static addListeners() {
@@ -767,16 +766,6 @@
             static getTexture = (path, callback) => this.textureLoader.load(path, callback);
 
             static loadTexture = path => this.textureLoader.loadAsync(path);
-
-            static getTextGeometry = (path, options = {}, callback) => {
-                this.textGeometryLoader.setOptions(options);
-                return this.textGeometryLoader.load(path, callback);
-            };
-
-            static loadTextGeometry = (path, options = {}) => {
-                this.textGeometryLoader.setOptions(options);
-                return this.textGeometryLoader.loadAsync(path);
-            };
         }
 
         class App {

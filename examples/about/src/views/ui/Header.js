@@ -1,4 +1,4 @@
-import { Interface } from 'alien.js/three';
+import { Interface } from 'space.js/three';
 
 import { Config } from '../../config/Config.js';
 import { NavLink } from './NavLink.js';

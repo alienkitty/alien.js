@@ -1,6 +1,6 @@
 import { HalfFloatType, Vector2, WebGLRenderTarget } from 'three';
 
-import { Stage } from 'alien.js/three';
+import { Stage } from 'space.js/three';
 
 import { Global } from '../../config/Global.js';
 import { Data } from '../../data/Data.js';

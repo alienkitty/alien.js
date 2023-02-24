@@ -1,4 +1,4 @@
-import { EventEmitter, Stage } from 'alien.js/three';
+import { EventEmitter, Stage } from 'space.js/three';
 
 import { Global } from '../config/Global.js';
 

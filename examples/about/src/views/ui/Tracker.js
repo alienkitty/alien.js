@@ -1,4 +1,4 @@
-import { Interface } from 'alien.js/three';
+import { Interface } from 'space.js/three';
 
 import { AudioController } from '../../controllers/audio/AudioController.js';
 import { TrackerText } from './TrackerText.js';

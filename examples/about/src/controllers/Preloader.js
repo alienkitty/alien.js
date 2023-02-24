@@ -1,4 +1,4 @@
-import { BufferLoader, MultiLoader, Stage } from 'alien.js/three';
+import { BufferLoader, MultiLoader, Stage } from 'space.js/three';
 
 import { Data } from '../data/Data.js';
 import { PreloaderView } from '../views/PreloaderView.js';

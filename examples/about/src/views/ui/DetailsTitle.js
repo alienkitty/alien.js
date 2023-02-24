@@ -1,4 +1,4 @@
-import { Interface, shuffle } from 'alien.js/three';
+import { Interface, shuffle } from 'space.js/three';
 
 import { Styles } from '../../config/Styles.js';
 

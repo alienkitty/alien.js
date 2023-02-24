@@ -1,4 +1,4 @@
-import { Interface, Stage } from 'alien.js/three';
+import { Interface, Stage } from 'space.js/three';
 
 import { Global } from '../config/Global.js';
 import { AudioController } from '../controllers/audio/AudioController.js';

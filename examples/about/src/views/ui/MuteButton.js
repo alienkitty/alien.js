@@ -1,4 +1,4 @@
-import { Interface, Stage, clearTween, tween } from 'alien.js/three';
+import { Interface, Stage, clearTween, tween } from 'space.js/three';
 
 import { Config } from '../../config/Config.js';
 import { Global } from '../../config/Global.js';

@@ -1,5 +1,6 @@
 {
   "private": true,
+  "type": "module",
   "scripts": {
     "build": "rollup -c",
     "dev": "concurrently --names \"ROLLUP,HTTP\" -c \"bgBlue.bold,bgGreen.bold\" \"rollup -c -w -m inline\" \"servez public\"",
@@ -10,10 +11,10 @@
     "three": "latest"
   },
   "devDependencies": {
-    "@rollup/plugin-node-resolve": "^13.3.0",
-    "concurrently": "^7.2.2",
-    "rollup": "^2.75.7",
-    "rollup-plugin-bundleutils": "^1.2.5",
-    "servez": "^1.14.1"
+    "@rollup/plugin-node-resolve": "latest",
+    "concurrently": "latest",
+    "rollup": "latest",
+    "rollup-plugin-bundleutils": "latest",
+    "servez": "latest"
   }
 }

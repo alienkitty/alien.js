@@ -1,4 +1,4 @@
-import { Interface } from 'space.js/three';
+import { Interface } from '@alienkitty/space.js/three';
 
 export class Trackers extends Interface {
     constructor() {

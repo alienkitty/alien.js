@@ -1,4 +1,4 @@
-import { Interface, basename } from 'space.js/three';
+import { Interface, basename } from '@alienkitty/space.js/three';
 
 import { Config } from '../../config/Config.js';
 import { Styles } from '../../config/Styles.js';

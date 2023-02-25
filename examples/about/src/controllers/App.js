@@ -1,4 +1,4 @@
-import { Stage, WebAudio, ticker, wait } from 'space.js/three';
+import { Stage, WebAudio, ticker, wait } from '@alienkitty/space.js/three';
 
 import { Global } from '../config/Global.js';
 import { AudioController } from './audio/AudioController.js';

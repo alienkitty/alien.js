@@ -15,7 +15,7 @@ import {
     WebGLRenderTarget
 } from 'three';
 
-import { getFullscreenTriangle } from 'space.js/three';
+import { getFullscreenTriangle } from '@alienkitty/space.js/three';
 
 import { vertexShader, fragmentShader } from '../../shaders/FlowmapShader.js';
 

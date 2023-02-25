@@ -1,4 +1,4 @@
-import { WebAudio, clamp, tween } from 'space.js/three';
+import { WebAudio, clamp, tween } from '@alienkitty/space.js/three';
 
 import { Config } from '../../config/Config.js';
 import { Global } from '../../config/Global.js';

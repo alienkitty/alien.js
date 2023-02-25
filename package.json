@@ -1,5 +1,5 @@
 {
-  "name": "alien.js",
+  "name": "@alienkitty/alien.js",
   "version": "0.21.0",
   "description": "Future web pattern",
   "type": "module",
@@ -12,15 +12,15 @@
   "sideEffects": false,
   "repository": {
     "type": "git",
-    "url": "https://github.com/pschroen/alien.js"
+    "url": "https://github.com/alienkitty/alien.js"
   },
   "bugs": {
-    "url": "https://github.com/pschroen/alien.js/issues"
+    "url": "https://github.com/alienkitty/alien.js/issues"
   },
   "homepage": "https://alien.js.org",
   "author": "pschroen",
   "license": "MIT",
   "dependencies": {
-    "space.js": "latest"
+    "@alienkitty/space.js": "latest"
   }
 }

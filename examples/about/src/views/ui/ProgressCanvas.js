@@ -1,4 +1,4 @@
-import { Interface, Stage, clearTween, degToRad, ticker, tween } from 'space.js/three';
+import { Interface, Stage, clearTween, degToRad, ticker, tween } from '@alienkitty/space.js/three';
 
 export class ProgressCanvas extends Interface {
     constructor() {

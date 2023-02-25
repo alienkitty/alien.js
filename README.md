@@ -3,34 +3,34 @@
 [![NPM Package][npm]][npm-url]
 [![DeepScan][deepscan]][deepscan-url]
 
-This library is part of two sibling libraries, [Space.js](https://github.com/pschroen/space.js) for UI, Panel components, Tween, Web Audio, loaders, utilities, and [Alien.js](https://github.com/pschroen/alien.js) for 3D utilities, materials, shaders and physics.
+This library is part of two sibling libraries, [Space.js](https://github.com/alienkitty/space.js) for UI, Panel components, Tween, Web Audio, loaders, utilities, and [Alien.js](https://github.com/alienkitty/alien.js) for 3D utilities, materials, shaders and physics.
 
 <p>
-    <img src="https://github.com/pschroen/alien.js/raw/main/alien.js.png" alt="Alien.js">
+    <img src="https://github.com/alienkitty/alien.js/raw/main/alien.js.png" alt="Alien.js">
 </p>
 
 ### Usage
 
 Alien.js is divided into two entry points depending on your use case.
 
-The `alien.js/three` entry point for [three.js](https://github.com/mrdoob/three.js) custom [utilities](src/utils/three) and [materials](src/materials/three).
+The `@alienkitty/alien.js/three` entry point for [three.js](https://github.com/mrdoob/three.js) custom [utilities](src/utils/three) and [materials](src/materials/three).
 
 ```sh
-npm i three alien.js
+npm i three @alienkitty/alien.js
 ```
 
 ```js
-import { Wobble } from 'alien.js/three';
+import { Wobble } from '@alienkitty/alien.js/three';
 ```
 
-And the `alien.js/three/oimophysics` entry point for [OimoPhysics](https://github.com/saharan/OimoPhysics) custom [utilities](src/utils/three/physics).
+And the `@alienkitty/alien.js/three/oimophysics` entry point for [OimoPhysics](https://github.com/saharan/OimoPhysics) custom [utilities](src/utils/three/physics).
 
 ```sh
-npm i three saharan/OimoPhysics#v1.2.3 alien.js
+npm i three saharan/OimoPhysics#v1.2.3 @alienkitty/alien.js
 ```
 
 ```js
-import { OimoPhysics } from 'alien.js/three/oimophysics';
+import { OimoPhysics } from '@alienkitty/alien.js/three/oimophysics';
 ```
 
 ### Examples
@@ -154,7 +154,7 @@ import { OimoPhysics } from 'alien.js/three/oimophysics';
 Clone this repository and install its dependencies:
 
 ```sh
-git clone https://github.com/pschroen/alien.js
+git clone https://github.com/alienkitty/alien.js
 cd alien.js
 npm i three saharan/OimoPhysics#v1.2.3
 cd examples
@@ -175,19 +175,19 @@ npx eslint examples/three/transitions
 
 ### Resources
 
-* [The Wiki](https://github.com/pschroen/alien.js/wiki)
-* [Tween](https://github.com/pschroen/alien.js/wiki/Tween)
-* [Changelog](https://github.com/pschroen/alien.js/releases)
+* [The Wiki](https://github.com/alienkitty/alien.js/wiki)
+* [Tween](https://github.com/alienkitty/alien.js/wiki/Tween)
+* [Changelog](https://github.com/alienkitty/alien.js/releases)
 
 ### See also
 
-* [Space.js](https://github.com/pschroen/space.js)
+* [Space.js](https://github.com/alienkitty/space.js)
 * [Three.js](https://github.com/mrdoob/three.js)
 * [Post Processing](https://github.com/pmndrs/postprocessing)
 * [OGL](https://github.com/oframe/ogl)
 
 
-[npm]: https://img.shields.io/npm/v/alien.js
-[npm-url]: https://www.npmjs.com/package/alien.js
+[npm]: https://img.shields.io/npm/v/@alienkitty/alien.js
+[npm-url]: https://www.npmjs.com/package/@alienkitty/alien.js
 [deepscan]: https://deepscan.io/api/teams/20020/projects/23464/branches/733363/badge/grade.svg
 [deepscan-url]: https://deepscan.io/dashboard#view=project&tid=20020&pid=23464&bid=733363

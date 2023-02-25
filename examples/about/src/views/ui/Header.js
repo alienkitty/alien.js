@@ -1,4 +1,4 @@
-import { Interface } from 'space.js/three';
+import { Interface } from '@alienkitty/space.js/three';
 
 import { Config } from '../../config/Config.js';
 import { NavLink } from './NavLink.js';
@@ -26,7 +26,7 @@ export class Header extends Interface {
     }
 
     initViews() {
-        this.about = new NavLink('Alien.js', 'https://github.com/pschroen/alien.js');
+        this.about = new NavLink('Alien.js', 'https://github.com/alienkitty/alien.js');
         this.about.css({
             x: -10,
             opacity: 0

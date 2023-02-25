@@ -1,4 +1,4 @@
-import { Interface } from 'space.js/three';
+import { Interface } from '@alienkitty/space.js/three';
 
 export class DetailsLink extends Interface {
     constructor(title, link) {

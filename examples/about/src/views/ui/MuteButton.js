@@ -30,7 +30,6 @@ export class MuteButton extends Interface {
             bottom: 20,
             width: this.width + 20,
             height: this.height + 20,
-            zIndex: 3,
             cursor: 'pointer',
             pointerEvents: 'none',
             webkitUserSelect: 'none',

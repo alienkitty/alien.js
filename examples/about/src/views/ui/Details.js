@@ -38,16 +38,15 @@ export class Details extends Interface {
             width: '100%',
             height: '100%',
             backgroundColor: '#000',
-            zIndex: 1,
             opacity: 0
         });
         this.add(this.bg);
 
         this.container = new Interface('.container');
         this.container.css({
+            position: 'relative',
             width: 400,
-            margin: '10% 10% 13%',
-            zIndex: 1
+            margin: '10% 10% 13%'
         });
         this.add(this.container);
     }

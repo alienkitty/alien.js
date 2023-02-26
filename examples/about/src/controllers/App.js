@@ -4,8 +4,8 @@ import { Global } from '../config/Global.js';
 import { AudioController } from './audio/AudioController.js';
 import { WorldController } from './world/WorldController.js';
 import { FluidController } from './world/FluidController.js';
-import { Trackers } from '../views/Trackers.js';
 import { UI } from '../views/UI.js';
+import { Trackers } from '../views/Trackers.js';
 
 export class App {
     static async init(bufferLoader) {
@@ -35,11 +35,11 @@ export class App {
     }
 
     static initViews() {
-        this.trackers = new Trackers();
-        Stage.add(this.trackers);
-
         this.ui = new UI();
         Stage.add(this.ui);
+
+        this.trackers = new Trackers();
+        Stage.add(this.trackers);
     }
 
     static initControllers() {

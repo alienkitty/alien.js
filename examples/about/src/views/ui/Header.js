@@ -20,8 +20,7 @@ export class Header extends Interface {
             position: 'absolute',
             left: 20,
             top: 20,
-            right: 20,
-            zIndex: 3
+            right: 20
         });
     }
 

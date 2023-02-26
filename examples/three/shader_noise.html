@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+    <title>Noise Shader — Alien.js</title>
+
+    <link rel="preconnect" href="https://fonts.gstatic.com">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto+Mono">
+    <link rel="stylesheet" href="assets/css/style.css">
+
+    <script type="module">
+        import { GLSL3, Mesh, NoBlending, OrthographicCamera, PanelItem, RawShaderMaterial, Scene, UI, Vector2, WebGLRenderer, getFullscreenTriangle, ticker } from '../../build/alien.three.js';
+
+        import simplex2d from '../../src/shaders/modules/noise/simplex2d.glsl.js';
+
+        // Based on https://codepen.io/vaalentin/pen/MKMmXG
+
+        const vertexShader = /* glsl */ `
+            in vec3 position;
+            in vec2 uv;
+
+            out vec2 vUv;
+
+            void main() {
+                vUv = uv;
+
+                gl_Position = vec4(position, 1.0);
+            }
+        `;
+
+        const fragmentShader = /* glsl */ `
+            precision highp float;
+
+            uniform float uMultiplier;
+            uniform float uSpeed;
+            uniform float uTime;
+
+            in vec2 vUv;
+
+            out vec4 FragColor;
+
+            ${simplex2d}
+
+            float fbm(vec2 pos) {
+                float a = sin(uTime * uSpeed);
+                float b = cos(uTime * uSpeed);
+                mat2 m = mat2(-0.80, 0.36, -0.60, -0.48);
+
+                float total;
+
+                total = 0.5000 * snoise(pos) * a;
+                pos = m * pos * 2.02;
+
+                total += 0.2500 * snoise(pos) * b;
+                pos = m * pos * 2.03;
+
+                total += 0.1250 * snoise(pos) * a;
+                pos = m * pos * 2.01;
+
+                total += 0.0625 * snoise(pos) * b;
+
+                return total;
+            }
+
+            void main() {
+                vec2 pos = vUv.xy;
+
+                vec2 q = vec2(fbm(pos + vec2(0.0)), fbm(pos + vec2(0.0)));
+
+                float c = fbm(pos + sin(uTime * uSpeed) * uMultiplier * q);
+
+                FragColor = vec4(vec3(c), 1.0);
+            }
+        `;
+
+        class NoiseMaterial extends RawShaderMaterial {
+            constructor() {
+                super({
+                    glslVersion: GLSL3,
+                    uniforms: {
+                        uMultiplier: { value: 2 },
+                        uSpeed: { value: 0.5 },
+                        uTime: WorldController.time
+                    },
+                    vertexShader,
+                    fragmentShader,
+                    blending: NoBlending,
+                    depthWrite: false,
+                    depthTest: false
+                });
+            }
+        }
+
+        class PanelController {
+            static init() {
+                this.initViews();
+                this.initPanel();
+            }
+
+            static initViews() {
+                this.ui = new UI({ fps: true });
+                this.ui.animateIn();
+                document.body.appendChild(this.ui.element);
+            }
+
+            static initPanel() {
+                const { screen } = RenderManager;
+
+                const items = [
+                    {
+                        label: 'FPS'
+                    },
+                    {
+                        type: 'divider'
+                    },
+                    {
+                        type: 'slider',
+                        label: 'Mul',
+                        min: -5,
+                        max: 5,
+                        step: 0.05,
+                        value: screen.material.uniforms.uMultiplier.value,
+                        callback: value => {
+                            screen.material.uniforms.uMultiplier.value = value;
+                        }
+                    },
+                    {
+                        type: 'slider',
+                        label: 'Speed',
+                        min: 0,
+                        max: 1,
+                        step: 0.01,
+                        value: screen.material.uniforms.uSpeed.value,
+                        callback: value => {
+                            screen.material.uniforms.uSpeed.value = value;
+                        }
+                    }
+                ];
+
+                items.forEach(data => {
+                    this.ui.addPanel(new PanelItem(data));
+                });
+            }
+
+            /**
+             * Public methods
+             */
+
+            static update = () => {
+                if (!this.ui) {
+                    return;
+                }
+
+                this.ui.update();
+            };
+        }
+
+        class RenderManager {
+            static init(renderer, scene, camera, screen) {
+                this.renderer = renderer;
+                this.scene = scene;
+                this.camera = camera;
+                this.screen = screen;
+
+                this.initRenderer();
+            }
+
+            static initRenderer() {
+                this.screen.material = new NoiseMaterial();
+            }
+
+            /**
+             * Public methods
+             */
+
+            static resize = (width, height, dpr) => {
+                this.renderer.setPixelRatio(dpr);
+                this.renderer.setSize(width, height);
+            };
+
+            static update = () => {
+                this.renderer.render(this.scene, this.camera);
+            };
+        }
+
+        class WorldController {
+            static init() {
+                this.initWorld();
+
+                this.addListeners();
+            }
+
+            static initWorld() {
+                this.renderer = new WebGLRenderer({
+                    powerPreference: 'high-performance',
+                    stencil: false
+                });
+                this.element = this.renderer.domElement;
+
+                // 2D scene
+                this.scene = new Scene();
+                this.camera = new OrthographicCamera(-1, 1, 1, -1, 0, 1);
+                this.camera.lookAt(this.scene.position);
+
+                // Global geometries
+                this.screenTriangle = getFullscreenTriangle();
+
+                // Fullscreen triangle
+                this.screen = new Mesh(this.screenTriangle);
+                this.screen.frustumCulled = false;
+                this.scene.add(this.screen);
+
+                // Global uniforms
+                this.resolution = { value: new Vector2() };
+                this.aspect = { value: 1 };
+                this.time = { value: 0 };
+                this.frame = { value: 0 };
+            }
+
+            static addListeners() {
+                this.renderer.domElement.addEventListener('touchstart', this.onTouchStart);
+            }
+
+            /**
+             * Event handlers
+             */
+
+            static onTouchStart = e => {
+                e.preventDefault();
+            };
+
+            /**
+             * Public methods
+             */
+
+            static resize = (width, height, dpr) => {
+                width = Math.round(width * dpr);
+                height = Math.round(height * dpr);
+
+                this.resolution.value.set(width, height);
+                this.aspect.value = width / height;
+            };
+
+            static update = (time, delta, frame) => {
+                this.time.value = time;
+                this.frame.value = frame;
+            };
+        }
+
+        class App {
+            static async init() {
+                this.initWorld();
+                this.initControllers();
+
+                this.addListeners();
+                this.onResize();
+
+                this.initPanel();
+            }
+
+            static initWorld() {
+                WorldController.init();
+                document.body.appendChild(WorldController.element);
+            }
+
+            static initControllers() {
+                const { renderer, scene, camera, screen } = WorldController;
+
+                RenderManager.init(renderer, scene, camera, screen);
+            }
+
+            static initPanel() {
+                PanelController.init();
+            }
+
+            static addListeners() {
+                window.addEventListener('resize', this.onResize);
+                ticker.add(this.onUpdate);
+                ticker.start();
+            }
+
+            /**
+             * Event handlers
+             */
+
+            static onResize = () => {
+                const width = document.documentElement.clientWidth;
+                const height = document.documentElement.clientHeight;
+                const dpr = window.devicePixelRatio;
+
+                WorldController.resize(width, height, dpr);
+                RenderManager.resize(width, height, dpr);
+            };
+
+            static onUpdate = (time, delta, frame) => {
+                WorldController.update(time, delta, frame);
+                RenderManager.update(time, delta, frame);
+                PanelController.update();
+            };
+        }
+
+        App.init();
+    </script>
+</head>
+<body>
+</body>
+</html>

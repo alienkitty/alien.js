@@ -1,35 +1,19 @@
-@font-face {
-    font-family: 'D-DIN';
-    font-style: normal;
-    font-weight: 400;
-    src: url(../fonts/D-DIN.woff2) format('woff2');
-}
-
-@font-face {
-    font-family: 'Gothic A1';
-    font-style: normal;
-    font-weight: 500;
-    src: url(../fonts/GothicA1-Medium.woff2) format('woff2');
-}
-
-@font-face {
-    font-family: 'Gothic A1';
-    font-style: normal;
-    font-weight: 700;
-    src: url(../fonts/GothicA1-Bold.woff2) format('woff2');
-}
-
-@font-face {
-    font-family: 'Roboto Mono';
-    font-style: normal;
-    font-weight: 500;
-    src: url(../fonts/RobotoMono-Medium.woff2) format('woff2');
-}
-
 :root {
-    --bg-color: #000;
+    --bg-color: #0e0e0e;
+    --ui-font-family: 'Roboto Mono', monospace;
+    --ui-font-weight: 400;
+    --ui-font-size: 11px;
+    --ui-line-height: 15px;
+    --ui-letter-spacing: 0.03em;
+    --ui-number-letter-spacing: 0.5px;
+    --ui-secondary-font-size: 10px;
+    --ui-secondary-letter-spacing: 0.5px;
     --ui-color: rgba(255, 255, 255, 0.94);
     --ui-color-triplet: 255, 255, 255;
+    --ui-invert-light-color: #000;
+    --ui-invert-light-color-triplet: 0, 0, 0;
+    --ui-invert-dark-color: rgba(255, 255, 255, 0.94);
+    --ui-invert-dark-color-triplet: 255, 255, 255;
 }
 
 *, :after, :before {
@@ -56,14 +40,13 @@ html, body {
 
 body {
     position: fixed;
-    font-family: 'Gothic A1', sans-serif;
-    font-weight: 500;
-    font-size: 13px;
-    line-height: 1.5;
+    font-family: var(--ui-font-family);
+    font-weight: var(--ui-font-weight);
+    font-size: var(--ui-font-size);
+    line-height: var(--ui-line-height);
+    letter-spacing: var(--ui-letter-spacing);
     background-color: var(--bg-color);
     color: var(--ui-color);
-    -moz-osx-font-smoothing: grayscale;
-    -webkit-font-smoothing: antialiased;
     -webkit-tap-highlight-color: transparent;
 }
 

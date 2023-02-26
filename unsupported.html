@@ -15,50 +15,48 @@
             src: url(assets/fonts/RobotoMono-Medium.woff2) format('woff2');
         }
 
-        html, body, #root {
-            width: 100%;
-            height: 100%;
-            overflow: hidden;
-        }
-
-        body {
-            position: fixed;
-            margin: 0;
-            font-family: 'Roboto Mono', monospace;
-            font-weight: 500;
-            font-size: 11px;
-            line-height: 1.7;
-            letter-spacing: 0.03em;
-            background: #000;
-            color: rgba(255, 255, 255, 0.94);
-            -moz-osx-font-smoothing: grayscale;
-            -webkit-font-smoothing: antialiased;
-        }
-
-        #root, #root * {
-            position: absolute;
-            outline: none;
-            border: none;
+        *, :after, :before {
             box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            border: 0;
             touch-action: none;
             -webkit-touch-callout: none;
             -webkit-user-drag: none;
-            -webkit-tap-highlight-color: transparent;
             -webkit-text-size-adjust: none;
             text-size-adjust: none;
         }
 
-        #root br, #root span, #root a {
-            position: relative;
-            display: inline-block;
+        *:focus {
+            outline: 0;
+            box-shadow: none;
         }
 
-        #root a, #root a:hover, #root a:focus {
+        html, body {
+            width: 100%;
+            height: 100%;
+        }
+
+        body {
+            position: fixed;
+            font-family: 'Roboto Mono', monospace;
+            font-weight: 400;
+            font-size: 11px;
+            line-height: 1.7;
+            letter-spacing: 0.03em;
+            background-color: #000;
+            color: rgba(255, 255, 255, 0.94);
+            -moz-osx-font-smoothing: grayscale;
+            -webkit-font-smoothing: antialiased;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        a, a:hover, a:focus {
             color: rgba(255, 255, 255, 0.94);
         }
 
         ::selection {
-            background: rgba(255, 255, 255, 0.94);
+            background-color: rgba(255, 255, 255, 0.94);
             color: #000;
         }
     </style>
@@ -76,9 +74,7 @@
     </script>
 </head>
 <body>
-    <div id="root">
-        <div style="width: 90px; height: 86px; background-size: 90px 86px; left: 50%; top: 50%; margin-left: -45px; margin-top: -108px; background-image: url(assets/images/fallback.png);"></div>
-        <div style="width: 300px; left: 50%; top: 50%; margin-left: -150px; text-align: center; white-space: nowrap;"><span style="opacity: 0.75;">Sorry, your browser is out of date</span><br><a href="https://www.google.com/chrome/">Upgrade your browser</a></div>
-    </div>
+    <div style="position: absolute; width: 90px; height: 86px; background-size: 90px 86px; left: 50%; top: 50%; margin-left: -45px; margin-top: -108px; background-image: url(assets/images/fallback.png);"></div>
+    <div style="position: absolute; width: 300px; left: 50%; top: 50%; margin-left: -150px; text-align: center; white-space: nowrap;"><span style="opacity: 0.75;">Sorry, your browser is out of date</span><br><a href="https://www.google.com/chrome/">Upgrade your browser</a></div>
 </body>
 </html>

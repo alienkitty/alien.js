@@ -1,6 +1,6 @@
 {
   "name": "@alienkitty/alien.js",
-  "version": "0.21.0",
+  "version": "1.0.0",
   "description": "Future web pattern",
   "type": "module",
   "exports": {

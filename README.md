@@ -189,5 +189,5 @@ npx eslint examples/three/transitions
 
 [npm]: https://img.shields.io/npm/v/@alienkitty/alien.js
 [npm-url]: https://www.npmjs.com/package/@alienkitty/alien.js
-[deepscan]: https://deepscan.io/api/teams/20020/projects/23464/branches/733363/badge/grade.svg
-[deepscan-url]: https://deepscan.io/dashboard#view=project&tid=20020&pid=23464&bid=733363
+[deepscan]: https://deepscan.io/api/teams/20020/projects/23996/branches/734567/badge/grade.svg
+[deepscan-url]: https://deepscan.io/dashboard#view=project&tid=20020&pid=23996&bid=734567

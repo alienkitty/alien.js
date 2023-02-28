@@ -20,7 +20,21 @@ npm i three @alienkitty/alien.js
 ```
 
 ```js
+import { Vector3 } from 'three';
 import { Wobble } from '@alienkitty/alien.js/three';
+
+const position = new Vector3();
+const wobble = new Wobble(position);
+wobble.scale = 100;
+
+function animate(time) {
+    requestAnimationFrame(animate);
+
+    console.log(position);
+    wobble.update(time * 0.001 * 0.5); // seconds * 0.5
+}
+
+requestAnimationFrame(animate);
 ```
 
 And the `@alienkitty/alien.js/three/oimophysics` entry point for [OimoPhysics](https://github.com/saharan/OimoPhysics) custom [utilities](src/utils/three/physics).
@@ -31,6 +45,9 @@ npm i three saharan/OimoPhysics#v1.2.3 @alienkitty/alien.js
 
 ```js
 import { OimoPhysics } from '@alienkitty/alien.js/three/oimophysics';
+
+const physics = new OimoPhysics();
+console.log(physics.world.getGravity());
 ```
 
 ### Examples
@@ -148,6 +165,11 @@ import { OimoPhysics } from '@alienkitty/alien.js/three/oimophysics';
 [binary](https://hello-websockets-binary.glitch.me/) ([glitch](https://glitch.com/edit/#!/hello-websockets-binary))  
 [multiuser fluid](https://multiuser-fluid.glitch.me/) (binary, [glitch](https://glitch.com/edit/#!/multiuser-fluid))  
 [multiuser blocks](https://multiuser-blocks.glitch.me/) (binary, [glitch](https://glitch.com/edit/#!/multiuser-blocks))  
+
+#### test
+
+[wobble](https://alien.js.org/examples/three/test_wobble.html)  
+[oimophysics](https://alien.js.org/examples/three/test_oimophysics.html)  
 
 ### Getting started
 

@@ -12,8 +12,8 @@ export class Wobble {
         this.origin = new Vector3();
         this.target = new Vector3();
         this.perlin = new ImprovedNoise();
-        this.amplitude = new Vector3(1, 1, 1);
         this.frequency = new Vector3(1, 1, 1);
+        this.amplitude = new Vector3(1, 1, 1);
         this.scale = 1;
         this.lerpSpeed = 0.02;
 

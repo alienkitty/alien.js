@@ -130,14 +130,6 @@ console.log(physics.world.getGravity());
 [soft shadows](https://alien.js.org/examples/three/shader_soft_shadows.html)  
 [text](https://alien.js.org/examples/three/shader_text.html) (MSDF text)  
 [afterimage](https://alien.js.org/examples/three/shader_afterimage.html)  
-[transition](https://alien.js.org/examples/three/transitions/shader/) (mask)  
-[transition](https://alien.js.org/examples/three/transitions/shader_fade/) (fade with RGB shift)  
-[transition](https://alien.js.org/examples/three/transitions/scene/) (scene)  
-[transition](https://alien.js.org/examples/three/transitions/scene_direction/) (scene with page direction and camera parallax)  
-[transition](https://alien.js.org/examples/three/transitions/scroll/) (scroll, [debug](https://alien.js.org/examples/three/transitions/scroll/?debug))  
-[transition](https://alien.js.org/examples/three/transitions/scroll_direction/) (scroll direction and camera parallax, [debug](https://alien.js.org/examples/three/transitions/scroll_direction/?debug))  
-[transition](https://alien.js.org/examples/three/transitions/scroll_direction_zoom/) (scroll direction and camera zoom, [debug](https://alien.js.org/examples/three/transitions/scroll_direction_zoom/?debug))  
-[camera transition](https://alien.js.org/examples/three/transitions/camera/) (with motion blur and tilt shift effect, [debug](https://alien.js.org/examples/three/transitions/camera/?debug))  
 [alienkitty](https://alienkitty.com/) (2d scene, flowmap with RGB shift, MSDF text)  
 
 #### physics

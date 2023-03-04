@@ -4,7 +4,8 @@ import { vertexShader, fragmentShader } from '../../shaders/PoissonDiscBlurShade
 
 export class PoissonDiscBlurMaterial extends RawShaderMaterial {
     constructor({
-        blueNoisePath = 'assets/textures/blue_noise.png'
+        blueNoisePath = 'assets/textures/blue_noise.png',
+        blueNoiseResolution = new Vector2(256, 256)
     } = {}) {
         const texture = new TextureLoader().load(blueNoisePath);
         texture.wrapS = RepeatWrapping;
@@ -18,7 +19,7 @@ export class PoissonDiscBlurMaterial extends RawShaderMaterial {
             uniforms: {
                 tMap: { value: null },
                 tBlueNoise: { value: texture },
-                uBlueNoiseResolution: { value: new Vector2(256, 256) },
+                uBlueNoiseResolution: { value: blueNoiseResolution },
                 uRadius: { value: 42 },
                 uResolution: { value: new Vector2() },
                 uTime: { value: 0 }

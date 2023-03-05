@@ -1,4 +1,4 @@
-import { GLSL3, NoBlending, RawShaderMaterial, Uniform, Vector2 } from 'three';
+import { GLSL3, NoBlending, RawShaderMaterial, Vector2 } from 'three';
 
 import { vertexShader, fragmentShader } from '../../shaders/SMAAEdgesShader.js';
 
@@ -10,8 +10,8 @@ export class SMAAEdgesMaterial extends RawShaderMaterial {
                 SMAA_THRESHOLD: '0.1'
             },
             uniforms: {
-                tMap: new Uniform(null),
-                uTexelSize: new Uniform(new Vector2())
+                tMap: { value: null },
+                uTexelSize: { value: new Vector2() }
             },
             vertexShader,
             fragmentShader,

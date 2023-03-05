@@ -7,16 +7,18 @@ in vec2 uv;
 
 uniform vec2 uTexelSize;
 
-out vec2 vOffset0;
-out vec2 vOffset1;
-
 out vec2 vUv;
+out vec4 vOffset[2];
+
+void SMAANeighborhoodBlendingVS(vec2 texCoord) {
+    vOffset[0] = texCoord.xyxy + uTexelSize.xyxy * vec4(-1.0, 0.0, 0.0, 1.0);
+    vOffset[1] = texCoord.xyxy + uTexelSize.xyxy * vec4(1.0, 0.0, 0.0, -1.0);
+}
 
 void main() {
     vUv = uv;
 
-    vOffset0 = uv + uTexelSize * vec2(1.0, 0.0);
-    vOffset1 = uv + uTexelSize * vec2(0.0, 1.0);
+    SMAANeighborhoodBlendingVS(vUv);
 
     gl_Position = vec4(position, 1.0);
 }
@@ -29,52 +31,53 @@ uniform sampler2D tMap;
 uniform sampler2D tWeightMap;
 uniform vec2 uTexelSize;
 
-in vec2 vOffset0;
-in vec2 vOffset1;
-
 in vec2 vUv;
+in vec4 vOffset[2];
 
 out vec4 FragColor;
 
-void movec(bvec2 c, inout vec2 variable, vec2 value) {
-    if (c.x) { variable.x = value.x; }
-    if (c.y) { variable.y = value.y; }
-}
+vec4 SMAANeighborhoodBlendingPS(vec2 texCoord, vec4 offset[2], sampler2D colorTex, sampler2D blendTex) {
+    // Fetch the blending weights for the current pixel
+    vec4 a;
+    a.xz = texture(blendTex, texCoord).xz;
+    a.y = texture(blendTex, offset[1].zw).g;
+    a.w = texture(blendTex, offset[1].xy).a;
 
-void movec(bvec4 c, inout vec4 variable, vec4 value) {
-    movec(c.xy, variable.xy, value.xy);
-    movec(c.zw, variable.zw, value.zw);
+    // Ignore tiny blending weights
+    if (dot(a, vec4(1.0)) < 1e-5) {
+        return texture(colorTex, texCoord);
+    } else {
+        // Up to 4 lines can be crossing a pixel (one through each edge). We
+        // favor blending by choosing the line with the maximum weight for each
+        // direction.
+        vec2 offset;
+        offset.x = a.a > a.b ? a.a : -a.b; // left vs. right
+        offset.y = a.g > a.r ? -a.g : a.r; // top vs. bottom
+
+        // Then we go in the direction that has the maximum weight
+        if (abs(offset.x) > abs(offset.y)) { // horizontal vs. vertical
+            offset.y = 0.0;
+        } else {
+            offset.x = 0.0;
+        }
+
+        // Fetch the opposite color and lerp by hand
+        vec4 c = texture(colorTex, texCoord);
+        texCoord += sign(offset) * uTexelSize;
+        vec4 cOp = texture(colorTex, texCoord);
+        float s = abs(offset.x) > abs(offset.y) ? abs(offset.x) : abs(offset.y);
+
+        // Gamma correction
+        c.xyz = pow(c.xyz, vec3(2.2));
+        cOp.xyz = pow(cOp.xyz, vec3(2.2));
+        vec4 mixed = mix(c, cOp, s);
+        mixed.xyz = pow(mixed.xyz, vec3(1.0 / 2.2));
+
+        return mixed;
+    }
 }
 
 void main() {
-    // Fetch the blending weights for the current pixel
-    vec4 a;
-    a.x = texture(tWeightMap, vOffset0).a;
-    a.y = texture(tWeightMap, vOffset1).g;
-    a.wz = texture(tWeightMap, vUv).rb;
-
-    vec4 color = texture(tMap, vUv);
-
-    // Ignore tiny blending weights
-    if (dot(a, vec4(1.0)) >= 1e-5) {
-        // max(horizontal) > max(vertical)
-        bool h = max(a.x, a.z) > max(a.y, a.w);
-
-        // Calculate the blending offsets
-        vec4 blendingOffset = vec4(0.0, a.y, 0.0, a.w);
-        vec2 blendingWeight = a.yw;
-        movec(bvec4(h), blendingOffset, vec4(a.x, 0.0, a.z, 0.0));
-        movec(bvec2(h), blendingWeight, a.xz);
-        blendingWeight /= dot(blendingWeight, vec2(1.0));
-
-        // Calculate the texture coordinates
-        vec4 blendingCoord = blendingOffset * vec4(uTexelSize, -uTexelSize) + vUv.xyxy;
-
-        // Rely on bilinear filtering to mix the current pixel with the neighbor
-        color = blendingWeight.x * texture(tMap, blendingCoord.xy);
-        color += blendingWeight.y * texture(tMap, blendingCoord.zw);
-    }
-
-    FragColor = color;
+    FragColor = SMAANeighborhoodBlendingPS(vUv, vOffset, tMap, tWeightMap);
 }
 `;

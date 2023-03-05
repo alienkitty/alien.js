@@ -127,7 +127,7 @@
             }
 
             static initRenderer() {
-                const { screenTriangle, resolution, texelSize } = WorldController;
+                const { screenTriangle, texelSize } = WorldController;
 
                 // Fullscreen triangle
                 this.screenCamera = new OrthographicCamera(-1, 1, 1, -1, 0, 1);
@@ -150,7 +150,6 @@
 
                 // SMAA weights material
                 this.weightsMaterial = new SMAAWeightsMaterial();
-                this.weightsMaterial.uniforms.uResolution = resolution;
                 this.weightsMaterial.uniforms.uTexelSize = texelSize;
 
                 // SMAA material

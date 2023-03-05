@@ -89,6 +89,7 @@ console.log(physics.world.getGravity());
 
 [noise](https://alien.js.org/examples/three/shader_noise.html)  
 [fxaa](https://alien.js.org/examples/three/shader_fxaa.html)  
+[smaa](https://alien.js.org/examples/three/shader_smaa.html)  
 [blur](https://alien.js.org/examples/three/shader_blur.html) (Gaussian blur)  
 [blur](https://alien.js.org/examples/three/shader_poisson_disc_blur.html) (Poisson disc blur)  
 [blur](https://alien.js.org/examples/three/shader_bokeh_blur.html) (Bokeh blur)  

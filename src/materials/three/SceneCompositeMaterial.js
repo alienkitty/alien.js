@@ -13,8 +13,8 @@ export class SceneCompositeMaterial extends RawShaderMaterial {
             vertexShader,
             fragmentShader,
             blending: NoBlending,
-            depthWrite: false,
-            depthTest: false
+            depthTest: false,
+            depthWrite: false
         });
     }
 }

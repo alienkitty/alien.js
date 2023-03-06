@@ -14,8 +14,8 @@ export class DepthMaskMaterial extends RawShaderMaterial {
             vertexShader,
             fragmentShader,
             blending: NoBlending,
-            depthWrite: false,
-            depthTest: false
+            depthTest: false,
+            depthWrite: false
         });
     }
 }

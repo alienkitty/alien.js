@@ -14,8 +14,8 @@ export class RGBMaterial extends RawShaderMaterial {
             vertexShader,
             fragmentShader,
             blending: NoBlending,
-            depthWrite: false,
-            depthTest: false
+            depthTest: false,
+            depthWrite: false
         });
     }
 }

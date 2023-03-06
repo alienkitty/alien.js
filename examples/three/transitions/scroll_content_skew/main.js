@@ -1,4 +1,4 @@
-import { ACESFilmicToneMapping, AmbientLight, AssetLoader, BloomCompositeMaterial, BlurMaterial, BoxGeometry, Color, DirectionalLight, EnvironmentTextureLoader, FXAAMaterial, GLSL3, Group, HemisphereLight, IcosahedronGeometry, ImageBitmapLoaderThread, Interface, LuminosityMaterial, MathUtils, Mesh, MeshStandardMaterial, NoBlending, OctahedronGeometry, OrthographicCamera, PanelItem, PerspectiveCamera, RawShaderMaterial, RepeatWrapping, Scene, SceneCompositeMaterial, SmoothSkew, Stage, TextureLoader, Thread, UI, UnrealBloomBlurMaterial, Vector2, WebGLRenderTarget, WebGLRenderer, clearTween, defer, getFullscreenTriangle, shuffle, ticker, tween } from '../../../../build/alien.three.js';
+import { ACESFilmicToneMapping, AmbientLight, AssetLoader, BloomCompositeMaterial, BlurMaterial, BoxGeometry, Color, DirectionalLight, EnvironmentTextureLoader, GLSL3, Group, HemisphereLight, IcosahedronGeometry, ImageBitmapLoaderThread, Interface, LuminosityMaterial, MathUtils, Mesh, MeshStandardMaterial, NoBlending, OctahedronGeometry, OrthographicCamera, PanelItem, PerspectiveCamera, RawShaderMaterial, RepeatWrapping, SMAABlendMaterial, SMAAEdgesMaterial, SMAAWeightsMaterial, Scene, SceneCompositeMaterial, SmoothSkew, Stage, TextureLoader, Thread, UI, UnrealBloomBlurMaterial, Vector2, WebGLRenderTarget, WebGLRenderer, clearTween, defer, getFullscreenTriangle, shuffle, ticker, tween } from '../../../../build/alien.three.js';
 
 class Global {
     static SECTIONS = [];
@@ -394,8 +394,8 @@ class CompositeMaterial extends RawShaderMaterial {
             vertexShader: vertexCompositeShader,
             fragmentShader: fragmentCompositeShader,
             blending: NoBlending,
-            depthWrite: false,
-            depthTest: false
+            depthTest: false,
+            depthWrite: false
         });
     }
 }
@@ -872,7 +872,7 @@ class RenderManager {
     }
 
     static initRenderer() {
-        const { screenTriangle, resolution } = WorldController;
+        const { screenTriangle, texelSize, textureLoader } = WorldController;
 
         // Fullscreen triangle
         this.screenCamera = new OrthographicCamera(-1, 1, 1, -1, 0, 1);
@@ -885,6 +885,9 @@ class RenderManager {
         });
 
         this.renderTargetB = this.renderTargetA.clone();
+
+        this.renderTargetEdges = this.renderTargetA.clone();
+        this.renderTargetWeights = this.renderTargetA.clone();
 
         this.renderTargetsHorizontal = [];
         this.renderTargetsVertical = [];
@@ -906,9 +909,18 @@ class RenderManager {
         this.vBlurMaterial = new BlurMaterial(BlurDirectionY);
         this.vBlurMaterial.uniforms.uBluriness.value = this.blurFactor;
 
-        // FXAA material
-        this.fxaaMaterial = new FXAAMaterial();
-        this.fxaaMaterial.uniforms.uResolution = resolution;
+        // SMAA edge detection material
+        this.edgesMaterial = new SMAAEdgesMaterial();
+        this.edgesMaterial.uniforms.uTexelSize = texelSize;
+
+        // SMAA weights material
+        this.weightsMaterial = new SMAAWeightsMaterial(textureLoader);
+        this.weightsMaterial.uniforms.uTexelSize = texelSize;
+
+        // SMAA material
+        this.smaaMaterial = new SMAABlendMaterial();
+        this.smaaMaterial.uniforms.tWeightMap.value = this.renderTargetWeights.texture;
+        this.smaaMaterial.uniforms.uTexelSize = texelSize;
 
         // Luminosity high pass material
         this.luminosityMaterial = new LuminosityMaterial();
@@ -999,6 +1011,8 @@ class RenderManager {
 
         this.renderTargetA.setSize(width, height);
         this.renderTargetB.setSize(width, height);
+        this.renderTargetEdges.setSize(width, height);
+        this.renderTargetWeights.setSize(width, height);
 
         this.hBlurMaterial.uniforms.uResolution.value.set(width, height);
         this.vBlurMaterial.uniforms.uResolution.value.set(width, height);
@@ -1032,6 +1046,8 @@ class RenderManager {
 
         const renderTargetA = this.renderTargetA;
         const renderTargetB = this.renderTargetB;
+        const renderTargetEdges = this.renderTargetEdges;
+        const renderTargetWeights = this.renderTargetWeights;
         const renderTargetBright = this.renderTargetBright;
         const renderTargetsHorizontal = this.renderTargetsHorizontal;
         const renderTargetsVertical = this.renderTargetsVertical;
@@ -1040,9 +1056,21 @@ class RenderManager {
         renderer.setRenderTarget(renderTargetA);
         renderer.render(scene, camera);
 
-        // FXAA pass
-        this.fxaaMaterial.uniforms.tMap.value = renderTargetA.texture;
-        this.screen.material = this.fxaaMaterial;
+        // SMAA edge detection pass
+        this.edgesMaterial.uniforms.tMap.value = renderTargetA.texture;
+        this.screen.material = this.edgesMaterial;
+        renderer.setRenderTarget(renderTargetEdges);
+        renderer.render(this.screen, this.screenCamera);
+
+        // SMAA weights pass
+        this.weightsMaterial.uniforms.tMap.value = renderTargetEdges.texture;
+        this.screen.material = this.weightsMaterial;
+        renderer.setRenderTarget(renderTargetWeights);
+        renderer.render(this.screen, this.screenCamera);
+
+        // SMAA pass
+        this.smaaMaterial.uniforms.tMap.value = renderTargetA.texture;
+        this.screen.material = this.smaaMaterial;
         renderer.setRenderTarget(renderTargetB);
         renderer.render(this.screen, this.screenCamera);
 
@@ -1156,6 +1184,7 @@ class WorldController {
 
         // Global uniforms
         this.resolution = { value: new Vector2() };
+        this.texelSize = { value: new Vector2() };
         this.aspect = { value: 1 };
         this.time = { value: 0 };
         this.frame = { value: 0 };
@@ -1219,6 +1248,7 @@ class WorldController {
         height = Math.round(height * dpr);
 
         this.resolution.value.set(width, height);
+        this.texelSize.value.set(1 / width, 1 / height);
         this.aspect.value = width / height;
     };
 

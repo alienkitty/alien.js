@@ -32,6 +32,7 @@ export class WorldController {
 
         // Global uniforms
         this.resolution = { value: new Vector2() };
+        this.texelSize = { value: new Vector2() };
         this.aspect = { value: 1 };
         this.time = { value: 0 };
         this.frame = { value: 0 };
@@ -61,6 +62,7 @@ export class WorldController {
         height = Math.round(height * dpr);
 
         this.resolution.value.set(width, height);
+        this.texelSize.value.set(1 / width, 1 / height);
         this.aspect.value = width / height;
     };
 

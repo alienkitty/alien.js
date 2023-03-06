@@ -11,7 +11,7 @@
     <link rel="stylesheet" href="assets/css/style.css">
 
     <script type="module">
-        import { BasicMaterial, BufferGeometryLoader, BufferGeometryLoaderThread, Color, FXAAMaterial, Group, ImageBitmapLoaderThread, Mesh, OrbitControls, OrthographicCamera, PerspectiveCamera, Scene, TextureLoader, Thread, Vector2, WebGLRenderTarget, WebGLRenderer, getFullscreenTriangle, ticker } from '../../build/alien.three.js';
+        import { BasicMaterial, BufferGeometryLoader, BufferGeometryLoaderThread, Color, Group, ImageBitmapLoaderThread, Mesh, OrbitControls, OrthographicCamera, PerspectiveCamera, SMAABlendMaterial, SMAAEdgesMaterial, SMAAWeightsMaterial, Scene, TextureLoader, Thread, Vector2, WebGLRenderTarget, WebGLRenderer, getFullscreenTriangle, ticker } from '../../build/alien.three.js';
 
         class Cube extends Group {
             constructor() {
@@ -97,7 +97,7 @@
             }
 
             static initRenderer() {
-                const { screenTriangle, resolution } = WorldController;
+                const { screenTriangle, texelSize } = WorldController;
 
                 // Fullscreen triangle
                 this.screenCamera = new OrthographicCamera(-1, 1, 1, -1, 0, 1);
@@ -105,13 +105,27 @@
                 this.screen.frustumCulled = false;
 
                 // Render targets
-                this.renderTarget = new WebGLRenderTarget(1, 1);
+                this.renderTarget = new WebGLRenderTarget(1, 1, {
+                    depthBuffer: false
+                });
 
-                // FXAA material
-                this.fxaaMaterial = new FXAAMaterial();
-                this.fxaaMaterial.uniforms.tMap.value = this.renderTarget.texture;
-                this.fxaaMaterial.uniforms.uResolution = resolution;
-                this.screen.material = this.fxaaMaterial;
+                this.renderTargetEdges = this.renderTarget.clone();
+                this.renderTargetWeights = this.renderTarget.clone();
+
+                this.renderTarget.depthBuffer = true;
+
+                // SMAA edge detection material
+                this.edgesMaterial = new SMAAEdgesMaterial();
+                this.edgesMaterial.uniforms.uTexelSize = texelSize;
+
+                // SMAA weights material
+                this.weightsMaterial = new SMAAWeightsMaterial();
+                this.weightsMaterial.uniforms.uTexelSize = texelSize;
+
+                // SMAA material
+                this.smaaMaterial = new SMAABlendMaterial();
+                this.smaaMaterial.uniforms.tWeightMap.value = this.renderTargetWeights.texture;
+                this.smaaMaterial.uniforms.uTexelSize = texelSize;
             }
 
             /**
@@ -126,6 +140,8 @@
                 height = Math.round(height * dpr);
 
                 this.renderTarget.setSize(width, height);
+                this.renderTargetEdges.setSize(width, height);
+                this.renderTargetWeights.setSize(width, height);
             };
 
             static update = () => {
@@ -140,12 +156,28 @@
                 }
 
                 const renderTarget = this.renderTarget;
+                const renderTargetEdges = this.renderTargetEdges;
+                const renderTargetWeights = this.renderTargetWeights;
 
                 // Scene pass
                 renderer.setRenderTarget(renderTarget);
                 renderer.render(scene, camera);
 
-                // FXAA pass (render to screen)
+                // SMAA edge detection pass
+                this.edgesMaterial.uniforms.tMap.value = renderTarget.texture;
+                this.screen.material = this.edgesMaterial;
+                renderer.setRenderTarget(renderTargetEdges);
+                renderer.render(this.screen, this.screenCamera);
+
+                // SMAA weights pass
+                this.weightsMaterial.uniforms.tMap.value = renderTargetEdges.texture;
+                this.screen.material = this.weightsMaterial;
+                renderer.setRenderTarget(renderTargetWeights);
+                renderer.render(this.screen, this.screenCamera);
+
+                // SMAA pass (render to screen)
+                this.smaaMaterial.uniforms.tMap.value = renderTarget.texture;
+                this.screen.material = this.smaaMaterial;
                 renderer.setRenderTarget(null);
                 renderer.render(this.screen, this.screenCamera);
             };
@@ -181,6 +213,7 @@
 
                 // Global uniforms
                 this.resolution = { value: new Vector2() };
+                this.texelSize = { value: new Vector2() };
                 this.aspect = { value: 1 };
                 this.time = { value: 0 };
                 this.frame = { value: 0 };
@@ -230,6 +263,7 @@
                 height = Math.round(height * dpr);
 
                 this.resolution.value.set(width, height);
+                this.texelSize.value.set(1 / width, 1 / height);
                 this.aspect.value = width / height;
             };
 

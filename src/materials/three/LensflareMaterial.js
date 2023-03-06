@@ -17,8 +17,8 @@ export class LensflareMaterial extends RawShaderMaterial {
             vertexShader,
             fragmentShader,
             blending: AdditiveBlending,
-            depthWrite: false,
-            depthTest: false
+            depthTest: false,
+            depthWrite: false
         });
     }
 }

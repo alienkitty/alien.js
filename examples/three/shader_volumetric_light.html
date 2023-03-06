@@ -11,7 +11,7 @@
     <link rel="stylesheet" href="assets/css/style.css">
 
     <script type="module">
-        import { ACESFilmicToneMapping, AmbientLight, BloomCompositeMaterial, BlurMaterial, Color, EnvironmentTextureLoader, FXAAMaterial, GLSL3, Group, HemisphereLight, IcosahedronGeometry, ImageBitmapLoaderThread, LuminosityMaterial, MathUtils, Mesh, MeshBasicMaterial, MeshStandardMaterial, NoBlending, OrthographicCamera, PanelItem, PerspectiveCamera, PointLight, RawShaderMaterial, RepeatWrapping, Scene, ShaderChunk, TextureLoader, Thread, UI, UnrealBloomBlurMaterial, Vector2, Vector3, VolumetricLightMaterial, WebGLRenderTarget, WebGLRenderer, getFullscreenTriangle, ticker } from '../../build/alien.three.js';
+        import { ACESFilmicToneMapping, AmbientLight, BloomCompositeMaterial, BlurMaterial, Color, EnvironmentTextureLoader, GLSL3, Group, HemisphereLight, IcosahedronGeometry, ImageBitmapLoaderThread, LuminosityMaterial, MathUtils, Mesh, MeshBasicMaterial, MeshStandardMaterial, NoBlending, OrthographicCamera, PanelItem, PerspectiveCamera, PointLight, RawShaderMaterial, RepeatWrapping, SMAABlendMaterial, SMAAEdgesMaterial, SMAAWeightsMaterial, Scene, ShaderChunk, TextureLoader, Thread, UI, UnrealBloomBlurMaterial, Vector2, Vector3, VolumetricLightMaterial, WebGLRenderTarget, WebGLRenderer, getFullscreenTriangle, ticker } from '../../build/alien.three.js';
 
         class Config {
             static LIGHT_COLOR = 0xf44336;
@@ -76,8 +76,8 @@
                     vertexShader: vertexCompositeShader,
                     fragmentShader: fragmentCompositeShader,
                     blending: NoBlending,
-                    depthWrite: false,
-                    depthTest: false
+                    depthTest: false,
+                    depthWrite: false
                 });
             }
         }
@@ -636,7 +636,7 @@
             }
 
             static initRenderer() {
-                const { screenTriangle, resolution } = WorldController;
+                const { screenTriangle, texelSize } = WorldController;
 
                 this.renderer.autoClear = false;
 
@@ -651,6 +651,10 @@
                 });
 
                 this.renderTargetB = this.renderTargetA.clone();
+
+                this.renderTargetEdges = this.renderTargetA.clone();
+                this.renderTargetWeights = this.renderTargetA.clone();
+
                 this.renderTargetBlurA = this.renderTargetA.clone();
                 this.renderTargetBlurB = this.renderTargetA.clone();
 
@@ -686,9 +690,18 @@
                 this.vBlurMaterial = new BlurMaterial(BlurDirectionY);
                 this.vBlurMaterial.uniforms.uBluriness.value = this.blurFactor;
 
-                // FXAA material
-                this.fxaaMaterial = new FXAAMaterial();
-                this.fxaaMaterial.uniforms.uResolution = resolution;
+                // SMAA edge detection material
+                this.edgesMaterial = new SMAAEdgesMaterial();
+                this.edgesMaterial.uniforms.uTexelSize = texelSize;
+
+                // SMAA weights material
+                this.weightsMaterial = new SMAAWeightsMaterial();
+                this.weightsMaterial.uniforms.uTexelSize = texelSize;
+
+                // SMAA material
+                this.smaaMaterial = new SMAABlendMaterial();
+                this.smaaMaterial.uniforms.tWeightMap.value = this.renderTargetWeights.texture;
+                this.smaaMaterial.uniforms.uTexelSize = texelSize;
 
                 // Luminosity high pass material
                 this.luminosityMaterial = new LuminosityMaterial();
@@ -750,6 +763,8 @@
 
                 this.renderTargetA.setSize(width, height);
                 this.renderTargetB.setSize(width, height);
+                this.renderTargetEdges.setSize(width, height);
+                this.renderTargetWeights.setSize(width, height);
 
                 const blurWidth = Math.round(width * this.blurResolutionScale);
                 const blurHeight = Math.round(height * this.blurResolutionScale);
@@ -790,6 +805,8 @@
 
                 const renderTargetA = this.renderTargetA;
                 const renderTargetB = this.renderTargetB;
+                const renderTargetEdges = this.renderTargetEdges;
+                const renderTargetWeights = this.renderTargetWeights;
                 const renderTargetBlurA = this.renderTargetBlurA;
                 const renderTargetBlurB = this.renderTargetBlurB;
                 const renderTargetBright = this.renderTargetBright;
@@ -843,9 +860,23 @@
                 renderer.clear();
                 renderer.render(this.screen, this.screenCamera);
 
-                // FXAA pass
-                this.fxaaMaterial.uniforms.tMap.value = renderTargetA.texture;
-                this.screen.material = this.fxaaMaterial;
+                // SMAA edge detection pass
+                this.edgesMaterial.uniforms.tMap.value = renderTargetA.texture;
+                this.screen.material = this.edgesMaterial;
+                renderer.setRenderTarget(renderTargetEdges);
+                renderer.clear();
+                renderer.render(this.screen, this.screenCamera);
+
+                // SMAA weights pass
+                this.weightsMaterial.uniforms.tMap.value = renderTargetEdges.texture;
+                this.screen.material = this.weightsMaterial;
+                renderer.setRenderTarget(renderTargetWeights);
+                renderer.clear();
+                renderer.render(this.screen, this.screenCamera);
+
+                // SMAA pass
+                this.smaaMaterial.uniforms.tMap.value = renderTargetA.texture;
+                this.screen.material = this.smaaMaterial;
                 renderer.setRenderTarget(renderTargetB);
                 renderer.clear();
                 renderer.render(this.screen, this.screenCamera);
@@ -1001,6 +1032,7 @@
 
                 // Global uniforms
                 this.resolution = { value: new Vector2() };
+                this.texelSize = { value: new Vector2() };
                 this.aspect = { value: 1 };
                 this.time = { value: 0 };
                 this.frame = { value: 0 };
@@ -1045,6 +1077,7 @@
                 height = Math.round(height * dpr);
 
                 this.resolution.value.set(width, height);
+                this.texelSize.value.set(1 / width, 1 / height);
                 this.aspect.value = width / height;
             };
 

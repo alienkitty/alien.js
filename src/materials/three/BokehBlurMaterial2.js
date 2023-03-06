@@ -14,8 +14,8 @@ export class BokehBlurMaterial2 extends RawShaderMaterial {
             vertexShader,
             fragmentShader,
             blending: NoBlending,
-            depthWrite: false,
-            depthTest: false
+            depthTest: false,
+            depthWrite: false
         });
     }
 }

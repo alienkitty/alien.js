@@ -13801,7 +13801,7 @@ var color_pars_vertex = "#if defined( USE_COLOR_ALPHA )\n\tvarying vec4 vColor;\
 
 var color_vertex = "#if defined( USE_COLOR_ALPHA )\n\tvColor = vec4( 1.0 );\n#elif defined( USE_COLOR ) || defined( USE_INSTANCING_COLOR )\n\tvColor = vec3( 1.0 );\n#endif\n#ifdef USE_COLOR\n\tvColor *= color;\n#endif\n#ifdef USE_INSTANCING_COLOR\n\tvColor.xyz *= instanceColor.xyz;\n#endif";
 
-var common = "#define PI 3.141592653589793\n#define PI2 6.283185307179586\n#define PI_HALF 1.5707963267948966\n#define RECIPROCAL_PI 0.3183098861837907\n#define RECIPROCAL_PI2 0.15915494309189535\n#define EPSILON 1e-6\n#ifndef saturate\n#define saturate( a ) clamp( a, 0.0, 1.0 )\n#endif\n#define whiteComplement( a ) ( 1.0 - saturate( a ) )\nfloat pow2( const in float x ) { return x*x; }\nvec3 pow2( const in vec3 x ) { return x*x; }\nfloat pow3( const in float x ) { return x*x*x; }\nfloat pow4( const in float x ) { float x2 = x*x; return x2*x2; }\nfloat max3( const in vec3 v ) { return max( max( v.x, v.y ), v.z ); }\nfloat average( const in vec3 v ) { return dot( v, vec3( 0.3333333 ) ); }\nhighp float rand( const in vec2 uv ) {\n\tconst highp float a = 12.9898, b = 78.233, c = 43758.5453;\n\thighp float dt = dot( uv.xy, vec2( a,b ) ), sn = mod( dt, PI );\n\treturn fract( sin( sn ) * c );\n}\n#ifdef HIGH_PRECISION\n\tfloat precisionSafeLength( vec3 v ) { return length( v ); }\n#else\n\tfloat precisionSafeLength( vec3 v ) {\n\t\tfloat maxComponent = max3( abs( v ) );\n\t\treturn length( v / maxComponent ) * maxComponent;\n\t}\n#endif\nstruct IncidentLight {\n\tvec3 color;\n\tvec3 direction;\n\tbool visible;\n};\nstruct ReflectedLight {\n\tvec3 directDiffuse;\n\tvec3 directSpecular;\n\tvec3 indirectDiffuse;\n\tvec3 indirectSpecular;\n};\nstruct GeometricContext {\n\tvec3 position;\n\tvec3 normal;\n\tvec3 viewDir;\n#ifdef USE_CLEARCOAT\n\tvec3 clearcoatNormal;\n#endif\n};\nvec3 transformDirection( in vec3 dir, in mat4 matrix ) {\n\treturn normalize( ( matrix * vec4( dir, 0.0 ) ).xyz );\n}\nvec3 inverseTransformDirection( in vec3 dir, in mat4 matrix ) {\n\treturn normalize( ( vec4( dir, 0.0 ) * matrix ).xyz );\n}\nmat3 transposeMat3( const in mat3 m ) {\n\tmat3 tmp;\n\ttmp[ 0 ] = vec3( m[ 0 ].x, m[ 1 ].x, m[ 2 ].x );\n\ttmp[ 1 ] = vec3( m[ 0 ].y, m[ 1 ].y, m[ 2 ].y );\n\ttmp[ 2 ] = vec3( m[ 0 ].z, m[ 1 ].z, m[ 2 ].z );\n\treturn tmp;\n}\nfloat luminance( const in vec3 rgb ) {\n\tconst vec3 weights = vec3( 0.2126729, 0.7151522, 0.0721750 );\n\treturn dot( weights, rgb );\n}\nbool isPerspectiveMatrix( mat4 m ) {\n\treturn m[ 2 ][ 3 ] == - 1.0;\n}\nvec2 equirectUv( in vec3 dir ) {\n\tfloat u = atan( dir.z, dir.x ) * RECIPROCAL_PI2 + 0.5;\n\tfloat v = asin( clamp( dir.y, - 1.0, 1.0 ) ) * RECIPROCAL_PI + 0.5;\n\treturn vec2( u, v );\n}\nfloat w0( float a ) {\n\treturn ( 1.0 / 6.0 ) * ( a * ( a * ( - a + 3.0 ) - 3.0 ) + 1.0 );\n}\nfloat w1( float a ) {\n\treturn ( 1.0 / 6.0 ) * ( a *  a * ( 3.0 * a - 6.0 ) + 4.0 );\n}\nfloat w2( float a ){\n    return ( 1.0 / 6.0 ) * ( a * ( a * ( - 3.0 * a + 3.0 ) + 3.0 ) + 1.0 );\n}\nfloat w3( float a ) {\n\treturn ( 1.0 / 6.0 ) * ( a * a * a );\n}\nfloat g0( float a ) {\n\treturn w0( a ) + w1( a );\n}\nfloat g1( float a ) {\n\treturn w2( a ) + w3( a );\n}\nfloat h0( float a ) {\n\treturn - 1.0 + w1( a ) / ( w0( a ) + w1( a ) );\n}\nfloat h1( float a ) {\n    return 1.0 + w3( a ) / ( w2( a ) + w3( a ) );\n}\nvec4 bicubic( sampler2D tex, vec2 uv, vec4 texelSize, vec2 fullSize, float lod ) {\n\tuv = uv * texelSize.zw + 0.5;\n\tvec2 iuv = floor( uv );\n    vec2 fuv = fract( uv );\n    float g0x = g0( fuv.x );\n    float g1x = g1( fuv.x );\n    float h0x = h0( fuv.x );\n    float h1x = h1( fuv.x );\n    float h0y = h0( fuv.y );\n    float h1y = h1( fuv.y );\n    vec2 p0 = ( vec2( iuv.x + h0x, iuv.y + h0y ) - 0.5 ) * texelSize.xy;\n    vec2 p1 = ( vec2( iuv.x + h1x, iuv.y + h0y ) - 0.5 ) * texelSize.xy;\n    vec2 p2 = ( vec2( iuv.x + h0x, iuv.y + h1y ) - 0.5 ) * texelSize.xy;\n    vec2 p3 = ( vec2( iuv.x + h1x, iuv.y + h1y ) - 0.5 ) * texelSize.xy;\n    \n    vec2 lodFudge = pow( 1.95, lod ) / fullSize;\n\treturn g0( fuv.y ) * ( g0x * textureLod( tex, p0, lod ) + g1x * textureLod( tex, p1, lod ) ) +\n\t\t   g1( fuv.y ) * ( g0x * textureLod( tex, p2, lod ) + g1x * textureLod( tex, p3, lod ) );\n}\nvec4 textureBicubic( sampler2D sampler, vec2 uv, float lod ) {\n\tvec2 fLodSize = vec2( textureSize( sampler, int( lod ) ) );\n\tvec2 cLodSize = vec2( textureSize( sampler, int( lod + 1.0 ) ) );\n\tvec2 fLodSizeInv = 1.0 / fLodSize;\n\tvec2 cLodSizeInv = 1.0 / cLodSize;\n\tvec2 fullSize = vec2( textureSize( sampler, 0 ) );\n\tvec4 fSample = bicubic( sampler, uv, vec4( fLodSizeInv, fLodSize ), fullSize, floor( lod ) );\n\tvec4 cSample = bicubic( sampler, uv, vec4( cLodSizeInv, cLodSize ), fullSize, ceil( lod ) );\n\treturn mix( fSample, cSample, fract( lod ) );\n}";
+var common = "#define PI 3.141592653589793\n#define PI2 6.283185307179586\n#define PI_HALF 1.5707963267948966\n#define RECIPROCAL_PI 0.3183098861837907\n#define RECIPROCAL_PI2 0.15915494309189535\n#define EPSILON 1e-6\n#ifndef saturate\n#define saturate( a ) clamp( a, 0.0, 1.0 )\n#endif\n#define whiteComplement( a ) ( 1.0 - saturate( a ) )\nfloat pow2( const in float x ) { return x*x; }\nvec3 pow2( const in vec3 x ) { return x*x; }\nfloat pow3( const in float x ) { return x*x*x; }\nfloat pow4( const in float x ) { float x2 = x*x; return x2*x2; }\nfloat max3( const in vec3 v ) { return max( max( v.x, v.y ), v.z ); }\nfloat average( const in vec3 v ) { return dot( v, vec3( 0.3333333 ) ); }\nhighp float rand( const in vec2 uv ) {\n\tconst highp float a = 12.9898, b = 78.233, c = 43758.5453;\n\thighp float dt = dot( uv.xy, vec2( a,b ) ), sn = mod( dt, PI );\n\treturn fract( sin( sn ) * c );\n}\n#ifdef HIGH_PRECISION\n\tfloat precisionSafeLength( vec3 v ) { return length( v ); }\n#else\n\tfloat precisionSafeLength( vec3 v ) {\n\t\tfloat maxComponent = max3( abs( v ) );\n\t\treturn length( v / maxComponent ) * maxComponent;\n\t}\n#endif\nstruct IncidentLight {\n\tvec3 color;\n\tvec3 direction;\n\tbool visible;\n};\nstruct ReflectedLight {\n\tvec3 directDiffuse;\n\tvec3 directSpecular;\n\tvec3 indirectDiffuse;\n\tvec3 indirectSpecular;\n};\nstruct GeometricContext {\n\tvec3 position;\n\tvec3 normal;\n\tvec3 viewDir;\n#ifdef USE_CLEARCOAT\n\tvec3 clearcoatNormal;\n#endif\n};\nvec3 transformDirection( in vec3 dir, in mat4 matrix ) {\n\treturn normalize( ( matrix * vec4( dir, 0.0 ) ).xyz );\n}\nvec3 inverseTransformDirection( in vec3 dir, in mat4 matrix ) {\n\treturn normalize( ( vec4( dir, 0.0 ) * matrix ).xyz );\n}\nmat3 transposeMat3( const in mat3 m ) {\n\tmat3 tmp;\n\ttmp[ 0 ] = vec3( m[ 0 ].x, m[ 1 ].x, m[ 2 ].x );\n\ttmp[ 1 ] = vec3( m[ 0 ].y, m[ 1 ].y, m[ 2 ].y );\n\ttmp[ 2 ] = vec3( m[ 0 ].z, m[ 1 ].z, m[ 2 ].z );\n\treturn tmp;\n}\nfloat luminance( const in vec3 rgb ) {\n\tconst vec3 weights = vec3( 0.2126729, 0.7151522, 0.0721750 );\n\treturn dot( weights, rgb );\n}\nbool isPerspectiveMatrix( mat4 m ) {\n\treturn m[ 2 ][ 3 ] == - 1.0;\n}\nvec2 equirectUv( in vec3 dir ) {\n\tfloat u = atan( dir.z, dir.x ) * RECIPROCAL_PI2 + 0.5;\n\tfloat v = asin( clamp( dir.y, - 1.0, 1.0 ) ) * RECIPROCAL_PI + 0.5;\n\treturn vec2( u, v );\n}";
 
 var cube_uv_reflection_fragment = "#ifdef ENVMAP_TYPE_CUBE_UV\n\t#define cubeUV_minMipLevel 4.0\n\t#define cubeUV_minTileSize 16.0\n\tfloat getFace( vec3 direction ) {\n\t\tvec3 absDirection = abs( direction );\n\t\tfloat face = - 1.0;\n\t\tif ( absDirection.x > absDirection.z ) {\n\t\t\tif ( absDirection.x > absDirection.y )\n\t\t\t\tface = direction.x > 0.0 ? 0.0 : 3.0;\n\t\t\telse\n\t\t\t\tface = direction.y > 0.0 ? 1.0 : 4.0;\n\t\t} else {\n\t\t\tif ( absDirection.z > absDirection.y )\n\t\t\t\tface = direction.z > 0.0 ? 2.0 : 5.0;\n\t\t\telse\n\t\t\t\tface = direction.y > 0.0 ? 1.0 : 4.0;\n\t\t}\n\t\treturn face;\n\t}\n\tvec2 getUV( vec3 direction, float face ) {\n\t\tvec2 uv;\n\t\tif ( face == 0.0 ) {\n\t\t\tuv = vec2( direction.z, direction.y ) / abs( direction.x );\n\t\t} else if ( face == 1.0 ) {\n\t\t\tuv = vec2( - direction.x, - direction.z ) / abs( direction.y );\n\t\t} else if ( face == 2.0 ) {\n\t\t\tuv = vec2( - direction.x, direction.y ) / abs( direction.z );\n\t\t} else if ( face == 3.0 ) {\n\t\t\tuv = vec2( - direction.z, direction.y ) / abs( direction.x );\n\t\t} else if ( face == 4.0 ) {\n\t\t\tuv = vec2( - direction.x, direction.z ) / abs( direction.y );\n\t\t} else {\n\t\t\tuv = vec2( direction.x, direction.y ) / abs( direction.z );\n\t\t}\n\t\treturn 0.5 * ( uv + 1.0 );\n\t}\n\tvec3 bilinearCubeUV( sampler2D envMap, vec3 direction, float mipInt ) {\n\t\tfloat face = getFace( direction );\n\t\tfloat filterInt = max( cubeUV_minMipLevel - mipInt, 0.0 );\n\t\tmipInt = max( mipInt, cubeUV_minMipLevel );\n\t\tfloat faceSize = exp2( mipInt );\n\t\thighp vec2 uv = getUV( direction, face ) * ( faceSize - 2.0 ) + 1.0;\n\t\tif ( face > 2.0 ) {\n\t\t\tuv.y += faceSize;\n\t\t\tface -= 3.0;\n\t\t}\n\t\tuv.x += face * faceSize;\n\t\tuv.x += filterInt * 3.0 * cubeUV_minTileSize;\n\t\tuv.y += 4.0 * ( exp2( CUBEUV_MAX_MIP ) - faceSize );\n\t\tuv.x *= CUBEUV_TEXEL_WIDTH;\n\t\tuv.y *= CUBEUV_TEXEL_HEIGHT;\n\t\t#ifdef texture2DGradEXT\n\t\t\treturn texture2DGradEXT( envMap, uv, vec2( 0.0 ), vec2( 0.0 ) ).rgb;\n\t\t#else\n\t\t\treturn texture2D( envMap, uv ).rgb;\n\t\t#endif\n\t}\n\t#define cubeUV_r0 1.0\n\t#define cubeUV_v0 0.339\n\t#define cubeUV_m0 - 2.0\n\t#define cubeUV_r1 0.8\n\t#define cubeUV_v1 0.276\n\t#define cubeUV_m1 - 1.0\n\t#define cubeUV_r4 0.4\n\t#define cubeUV_v4 0.046\n\t#define cubeUV_m4 2.0\n\t#define cubeUV_r5 0.305\n\t#define cubeUV_v5 0.016\n\t#define cubeUV_m5 3.0\n\t#define cubeUV_r6 0.21\n\t#define cubeUV_v6 0.0038\n\t#define cubeUV_m6 4.0\n\tfloat roughnessToMip( float roughness ) {\n\t\tfloat mip = 0.0;\n\t\tif ( roughness >= cubeUV_r1 ) {\n\t\t\tmip = ( cubeUV_r0 - roughness ) * ( cubeUV_m1 - cubeUV_m0 ) / ( cubeUV_r0 - cubeUV_r1 ) + cubeUV_m0;\n\t\t} else if ( roughness >= cubeUV_r4 ) {\n\t\t\tmip = ( cubeUV_r1 - roughness ) * ( cubeUV_m4 - cubeUV_m1 ) / ( cubeUV_r1 - cubeUV_r4 ) + cubeUV_m1;\n\t\t} else if ( roughness >= cubeUV_r5 ) {\n\t\t\tmip = ( cubeUV_r4 - roughness ) * ( cubeUV_m5 - cubeUV_m4 ) / ( cubeUV_r4 - cubeUV_r5 ) + cubeUV_m4;\n\t\t} else if ( roughness >= cubeUV_r6 ) {\n\t\t\tmip = ( cubeUV_r5 - roughness ) * ( cubeUV_m6 - cubeUV_m5 ) / ( cubeUV_r5 - cubeUV_r6 ) + cubeUV_m5;\n\t\t} else {\n\t\t\tmip = - 2.0 * log2( 1.16 * roughness );\t\t}\n\t\treturn mip;\n\t}\n\tvec4 textureCubeUV( sampler2D envMap, vec3 sampleDir, float roughness ) {\n\t\tfloat mip = clamp( roughnessToMip( roughness ), cubeUV_m0, CUBEUV_MAX_MIP );\n\t\tfloat mipF = fract( mip );\n\t\tfloat mipInt = floor( mip );\n\t\tvec3 color0 = bilinearCubeUV( envMap, sampleDir, mipInt );\n\t\tif ( mipF == 0.0 ) {\n\t\t\treturn vec4( color0, 1.0 );\n\t\t} else {\n\t\t\tvec3 color1 = bilinearCubeUV( envMap, sampleDir, mipInt + 1.0 );\n\t\t\treturn vec4( mix( color0, color1, mipF ), 1.0 );\n\t\t}\n\t}\n#endif";
 
@@ -13959,7 +13959,7 @@ var tonemapping_pars_fragment = "#ifndef saturate\n#define saturate( a ) clamp( 
 
 var transmission_fragment = "#ifdef USE_TRANSMISSION\n\tmaterial.transmission = transmission;\n\tmaterial.transmissionAlpha = 1.0;\n\tmaterial.thickness = thickness;\n\tmaterial.attenuationDistance = attenuationDistance;\n\tmaterial.attenuationColor = attenuationColor;\n\t#ifdef USE_TRANSMISSIONMAP\n\t\tmaterial.transmission *= texture2D( transmissionMap, vUv ).r;\n\t#endif\n\t#ifdef USE_THICKNESSMAP\n\t\tmaterial.thickness *= texture2D( thicknessMap, vUv ).g;\n\t#endif\n\tvec3 pos = vWorldPosition;\n\tvec3 v = normalize( cameraPosition - pos );\n\tvec3 n = inverseTransformDirection( normal, viewMatrix );\n\tvec4 transmission = getIBLVolumeRefraction(\n\t\tn, v, material.roughness, material.diffuseColor, material.specularColor, material.specularF90,\n\t\tpos, modelMatrix, viewMatrix, projectionMatrix, material.ior, material.thickness,\n\t\tmaterial.attenuationColor, material.attenuationDistance );\n\tmaterial.transmissionAlpha = mix( material.transmissionAlpha, transmission.a, material.transmission );\n\ttotalDiffuse = mix( totalDiffuse, transmission.rgb, material.transmission );\n#endif";
 
-var transmission_pars_fragment = "#ifdef USE_TRANSMISSION\n\tuniform float transmission;\n\tuniform float thickness;\n\tuniform float attenuationDistance;\n\tuniform vec3 attenuationColor;\n\t#ifdef USE_TRANSMISSIONMAP\n\t\tuniform sampler2D transmissionMap;\n\t#endif\n\t#ifdef USE_THICKNESSMAP\n\t\tuniform sampler2D thicknessMap;\n\t#endif\n\tuniform vec2 transmissionSamplerSize;\n\tuniform sampler2D transmissionSamplerMap;\n\tuniform mat4 modelMatrix;\n\tuniform mat4 projectionMatrix;\n\tvarying vec3 vWorldPosition;\n\tvec3 getVolumeTransmissionRay( const in vec3 n, const in vec3 v, const in float thickness, const in float ior, const in mat4 modelMatrix ) {\n\t\tvec3 refractionVector = refract( - v, normalize( n ), 1.0 / ior );\n\t\tvec3 modelScale;\n\t\tmodelScale.x = length( vec3( modelMatrix[ 0 ].xyz ) );\n\t\tmodelScale.y = length( vec3( modelMatrix[ 1 ].xyz ) );\n\t\tmodelScale.z = length( vec3( modelMatrix[ 2 ].xyz ) );\n\t\treturn normalize( refractionVector ) * thickness * modelScale;\n\t}\n\tfloat applyIorToRoughness( const in float roughness, const in float ior ) {\n\t\treturn roughness * clamp( ior * 2.0 - 2.0, 0.0, 1.0 );\n\t}\n\tvec4 getTransmissionSample( const in vec2 fragCoord, const in float roughness, const in float ior ) {\n\t\tfloat lod = log2( transmissionSamplerSize.x ) * applyIorToRoughness( roughness, ior );\n\t\treturn textureBicubic( transmissionSamplerMap, fragCoord.xy, lod );\n\t}\n\tvec3 applyVolumeAttenuation( const in vec3 radiance, const in float transmissionDistance, const in vec3 attenuationColor, const in float attenuationDistance ) {\n\t\tif ( isinf( attenuationDistance ) ) {\n\t\t\treturn radiance;\n\t\t} else {\n\t\t\tvec3 attenuationCoefficient = -log( attenuationColor ) / attenuationDistance;\n\t\t\tvec3 transmittance = exp( - attenuationCoefficient * transmissionDistance );\t\t\treturn transmittance * radiance;\n\t\t}\n\t}\n\tvec4 getIBLVolumeRefraction( const in vec3 n, const in vec3 v, const in float roughness, const in vec3 diffuseColor,\n\t\tconst in vec3 specularColor, const in float specularF90, const in vec3 position, const in mat4 modelMatrix,\n\t\tconst in mat4 viewMatrix, const in mat4 projMatrix, const in float ior, const in float thickness,\n\t\tconst in vec3 attenuationColor, const in float attenuationDistance ) {\n\t\tvec3 transmissionRay = getVolumeTransmissionRay( n, v, thickness, ior, modelMatrix );\n\t\tvec3 refractedRayExit = position + transmissionRay;\n\t\tvec4 ndcPos = projMatrix * viewMatrix * vec4( refractedRayExit, 1.0 );\n\t\tvec2 refractionCoords = ndcPos.xy / ndcPos.w;\n\t\trefractionCoords += 1.0;\n\t\trefractionCoords /= 2.0;\n\t\tvec4 transmittedLight = getTransmissionSample( refractionCoords, roughness, ior );\n\t\tvec3 attenuatedColor = applyVolumeAttenuation( transmittedLight.rgb, length( transmissionRay ), attenuationColor, attenuationDistance );\n\t\tvec3 F = EnvironmentBRDF( n, v, specularColor, specularF90, roughness );\n\t\treturn vec4( ( 1.0 - F ) * attenuatedColor * diffuseColor, transmittedLight.a );\n\t}\n#endif";
+var transmission_pars_fragment = "#ifdef USE_TRANSMISSION\n\tuniform float transmission;\n\tuniform float thickness;\n\tuniform float attenuationDistance;\n\tuniform vec3 attenuationColor;\n\t#ifdef USE_TRANSMISSIONMAP\n\t\tuniform sampler2D transmissionMap;\n\t#endif\n\t#ifdef USE_THICKNESSMAP\n\t\tuniform sampler2D thicknessMap;\n\t#endif\n\tuniform vec2 transmissionSamplerSize;\n\tuniform sampler2D transmissionSamplerMap;\n\tuniform mat4 modelMatrix;\n\tuniform mat4 projectionMatrix;\n\tvarying vec3 vWorldPosition;\n\tfloat w0( float a ) {\n\t\treturn ( 1.0 / 6.0 ) * ( a * ( a * ( - a + 3.0 ) - 3.0 ) + 1.0 );\n\t}\n\tfloat w1( float a ) {\n\t\treturn ( 1.0 / 6.0 ) * ( a *  a * ( 3.0 * a - 6.0 ) + 4.0 );\n\t}\n\tfloat w2( float a ){\n\t\treturn ( 1.0 / 6.0 ) * ( a * ( a * ( - 3.0 * a + 3.0 ) + 3.0 ) + 1.0 );\n\t}\n\tfloat w3( float a ) {\n\t\treturn ( 1.0 / 6.0 ) * ( a * a * a );\n\t}\n\tfloat g0( float a ) {\n\t\treturn w0( a ) + w1( a );\n\t}\n\tfloat g1( float a ) {\n\t\treturn w2( a ) + w3( a );\n\t}\n\tfloat h0( float a ) {\n\t\treturn - 1.0 + w1( a ) / ( w0( a ) + w1( a ) );\n\t}\n\tfloat h1( float a ) {\n\t\treturn 1.0 + w3( a ) / ( w2( a ) + w3( a ) );\n\t}\n\tvec4 bicubic( sampler2D tex, vec2 uv, vec4 texelSize, vec2 fullSize, float lod ) {\n\t\tuv = uv * texelSize.zw + 0.5;\n\t\tvec2 iuv = floor( uv );\n\t\tvec2 fuv = fract( uv );\n\t\tfloat g0x = g0( fuv.x );\n\t\tfloat g1x = g1( fuv.x );\n\t\tfloat h0x = h0( fuv.x );\n\t\tfloat h1x = h1( fuv.x );\n\t\tfloat h0y = h0( fuv.y );\n\t\tfloat h1y = h1( fuv.y );\n\t\tvec2 p0 = ( vec2( iuv.x + h0x, iuv.y + h0y ) - 0.5 ) * texelSize.xy;\n\t\tvec2 p1 = ( vec2( iuv.x + h1x, iuv.y + h0y ) - 0.5 ) * texelSize.xy;\n\t\tvec2 p2 = ( vec2( iuv.x + h0x, iuv.y + h1y ) - 0.5 ) * texelSize.xy;\n\t\tvec2 p3 = ( vec2( iuv.x + h1x, iuv.y + h1y ) - 0.5 ) * texelSize.xy;\n\t\t\n\t\tvec2 lodFudge = pow( 1.95, lod ) / fullSize;\n\t\treturn g0( fuv.y ) * ( g0x * textureLod( tex, p0, lod ) + g1x * textureLod( tex, p1, lod ) ) +\n\t\t\tg1( fuv.y ) * ( g0x * textureLod( tex, p2, lod ) + g1x * textureLod( tex, p3, lod ) );\n\t}\n\tvec4 textureBicubic( sampler2D sampler, vec2 uv, float lod ) {\n\t\tvec2 fLodSize = vec2( textureSize( sampler, int( lod ) ) );\n\t\tvec2 cLodSize = vec2( textureSize( sampler, int( lod + 1.0 ) ) );\n\t\tvec2 fLodSizeInv = 1.0 / fLodSize;\n\t\tvec2 cLodSizeInv = 1.0 / cLodSize;\n\t\tvec2 fullSize = vec2( textureSize( sampler, 0 ) );\n\t\tvec4 fSample = bicubic( sampler, uv, vec4( fLodSizeInv, fLodSize ), fullSize, floor( lod ) );\n\t\tvec4 cSample = bicubic( sampler, uv, vec4( cLodSizeInv, cLodSize ), fullSize, ceil( lod ) );\n\t\treturn mix( fSample, cSample, fract( lod ) );\n\t}\n\tvec3 getVolumeTransmissionRay( const in vec3 n, const in vec3 v, const in float thickness, const in float ior, const in mat4 modelMatrix ) {\n\t\tvec3 refractionVector = refract( - v, normalize( n ), 1.0 / ior );\n\t\tvec3 modelScale;\n\t\tmodelScale.x = length( vec3( modelMatrix[ 0 ].xyz ) );\n\t\tmodelScale.y = length( vec3( modelMatrix[ 1 ].xyz ) );\n\t\tmodelScale.z = length( vec3( modelMatrix[ 2 ].xyz ) );\n\t\treturn normalize( refractionVector ) * thickness * modelScale;\n\t}\n\tfloat applyIorToRoughness( const in float roughness, const in float ior ) {\n\t\treturn roughness * clamp( ior * 2.0 - 2.0, 0.0, 1.0 );\n\t}\n\tvec4 getTransmissionSample( const in vec2 fragCoord, const in float roughness, const in float ior ) {\n\t\tfloat lod = log2( transmissionSamplerSize.x ) * applyIorToRoughness( roughness, ior );\n\t\treturn textureBicubic( transmissionSamplerMap, fragCoord.xy, lod );\n\t}\n\tvec3 applyVolumeAttenuation( const in vec3 radiance, const in float transmissionDistance, const in vec3 attenuationColor, const in float attenuationDistance ) {\n\t\tif ( isinf( attenuationDistance ) ) {\n\t\t\treturn radiance;\n\t\t} else {\n\t\t\tvec3 attenuationCoefficient = -log( attenuationColor ) / attenuationDistance;\n\t\t\tvec3 transmittance = exp( - attenuationCoefficient * transmissionDistance );\t\t\treturn transmittance * radiance;\n\t\t}\n\t}\n\tvec4 getIBLVolumeRefraction( const in vec3 n, const in vec3 v, const in float roughness, const in vec3 diffuseColor,\n\t\tconst in vec3 specularColor, const in float specularF90, const in vec3 position, const in mat4 modelMatrix,\n\t\tconst in mat4 viewMatrix, const in mat4 projMatrix, const in float ior, const in float thickness,\n\t\tconst in vec3 attenuationColor, const in float attenuationDistance ) {\n\t\tvec3 transmissionRay = getVolumeTransmissionRay( n, v, thickness, ior, modelMatrix );\n\t\tvec3 refractedRayExit = position + transmissionRay;\n\t\tvec4 ndcPos = projMatrix * viewMatrix * vec4( refractedRayExit, 1.0 );\n\t\tvec2 refractionCoords = ndcPos.xy / ndcPos.w;\n\t\trefractionCoords += 1.0;\n\t\trefractionCoords /= 2.0;\n\t\tvec4 transmittedLight = getTransmissionSample( refractionCoords, roughness, ior );\n\t\tvec3 attenuatedColor = applyVolumeAttenuation( transmittedLight.rgb, length( transmissionRay ), attenuationColor, attenuationDistance );\n\t\tvec3 F = EnvironmentBRDF( n, v, specularColor, specularF90, roughness );\n\t\treturn vec4( ( 1.0 - F ) * attenuatedColor * diffuseColor, transmittedLight.a );\n\t}\n#endif";
 
 var uv_pars_fragment = "#if ( defined( USE_UV ) && ! defined( UVS_VERTEX_ONLY ) )\n\tvarying vec2 vUv;\n#endif";
 
@@ -57654,7 +57654,7 @@ class Magnetic extends Component {
     };
 }
 
-const vertexShader$x = /* glsl */ `
+const vertexShader$A = /* glsl */ `
 in vec3 position;
 in vec3 normal;
 
@@ -57671,7 +57671,7 @@ void main() {
 }
 `;
 
-const fragmentShader$x = /* glsl */ `
+const fragmentShader$A = /* glsl */ `
 precision highp float;
 
 in vec3 vNormal;
@@ -57686,13 +57686,13 @@ void main() {
 class NormalMaterial extends RawShaderMaterial {
     constructor() {
         super({
-            vertexShader: vertexShader$x,
-            fragmentShader: fragmentShader$x
+            vertexShader: vertexShader$A,
+            fragmentShader: fragmentShader$A
         });
     }
 }
 
-const vertexShader$w = /* glsl */ `
+const vertexShader$z = /* glsl */ `
 in vec3 position;
 
 uniform mat4 modelViewMatrix;
@@ -57703,7 +57703,7 @@ void main() {
 }
 `;
 
-const fragmentShader$w = /* glsl */ `
+const fragmentShader$z = /* glsl */ `
 precision highp float;
 
 uniform vec3 uColor;
@@ -57722,13 +57722,13 @@ class ColorMaterial extends RawShaderMaterial {
             uniforms: {
                 uColor: { value: color instanceof Color$1 ? color : new Color$1(color) }
             },
-            vertexShader: vertexShader$w,
-            fragmentShader: fragmentShader$w
+            vertexShader: vertexShader$z,
+            fragmentShader: fragmentShader$z
         });
     }
 }
 
-const vertexShader$v = /* glsl */ `
+const vertexShader$y = /* glsl */ `
 in vec3 position;
 in vec2 uv;
 
@@ -57744,7 +57744,7 @@ void main() {
 }
 `;
 
-const fragmentShader$v = /* glsl */ `
+const fragmentShader$y = /* glsl */ `
 precision highp float;
 
 uniform sampler2D tMap;
@@ -57768,14 +57768,14 @@ class BasicMaterial extends RawShaderMaterial {
                 tMap: { value: map },
                 uAlpha: { value: 1 }
             },
-            vertexShader: vertexShader$v,
-            fragmentShader: fragmentShader$v,
+            vertexShader: vertexShader$y,
+            fragmentShader: fragmentShader$y,
             transparent: true
         });
     }
 }
 
-const vertexShader$u = /* glsl */ `
+const vertexShader$x = /* glsl */ `
 in vec3 position;
 in vec2 uv;
 
@@ -57791,7 +57791,7 @@ void main() {
 }
 `;
 
-const fragmentShader$u = /* glsl */ `
+const fragmentShader$x = /* glsl */ `
 precision highp float;
 
 uniform sampler2D tMap;
@@ -57817,14 +57817,14 @@ class ShadowTextureMaterial extends RawShaderMaterial {
                 tMap: { value: map },
                 uAlpha: { value: 1 }
             },
-            vertexShader: vertexShader$u,
-            fragmentShader: fragmentShader$u,
+            vertexShader: vertexShader$x,
+            fragmentShader: fragmentShader$x,
             transparent: true
         });
     }
 }
 
-const vertexShader$t = /* glsl */ `
+const vertexShader$w = /* glsl */ `
 in vec3 position;
 in vec3 normal;
 
@@ -57845,7 +57845,7 @@ void main() {
 }
 `;
 
-const fragmentShader$t = /* glsl */ `
+const fragmentShader$w = /* glsl */ `
 precision highp float;
 
 uniform vec3 uBaseColor;
@@ -57882,15 +57882,15 @@ class FresnelMaterial extends RawShaderMaterial {
                 uFresnelColor: { value: fresnelColor instanceof Color$1 ? fresnelColor : new Color$1(fresnelColor) },
                 uFresnelPower: { value: fresnelPower }
             },
-            vertexShader: vertexShader$t,
-            fragmentShader: fragmentShader$t
+            vertexShader: vertexShader$w,
+            fragmentShader: fragmentShader$w
         });
     }
 }
 
 // Based on https://oframe.github.io/ogl/examples/?src=mouse-flowmap.html by gordonnl
 
-const vertexShader$s = /* glsl */ `
+const vertexShader$v = /* glsl */ `
 in vec3 position;
 in vec2 uv;
 
@@ -57903,7 +57903,7 @@ void main() {
 }
 `;
 
-const fragmentShader$s = /* glsl */ `
+const fragmentShader$v = /* glsl */ `
 precision highp float;
 
 uniform sampler2D tMap;
@@ -57934,16 +57934,16 @@ class FlowMaterial extends RawShaderMaterial {
                 tMap: { value: null },
                 tFlow: { value: null }
             },
-            vertexShader: vertexShader$s,
-            fragmentShader: fragmentShader$s,
+            vertexShader: vertexShader$v,
+            fragmentShader: fragmentShader$v,
             blending: NoBlending,
-            depthWrite: false,
-            depthTest: false
+            depthTest: false,
+            depthWrite: false
         });
     }
 }
 
-const vertexShader$r = /* glsl */ `
+const vertexShader$u = /* glsl */ `
 in vec3 position;
 in vec2 uv;
 
@@ -57956,7 +57956,7 @@ void main() {
 }
 `;
 
-const fragmentShader$r = /* glsl */ `
+const fragmentShader$u = /* glsl */ `
 precision highp float;
 
 uniform sampler2D tMap;
@@ -57977,11 +57977,11 @@ class CopyMaterial extends RawShaderMaterial {
             uniforms: {
                 tMap: { value: map }
             },
-            vertexShader: vertexShader$r,
-            fragmentShader: fragmentShader$r,
+            vertexShader: vertexShader$u,
+            fragmentShader: fragmentShader$u,
             blending: NoBlending,
-            depthWrite: false,
-            depthTest: false
+            depthTest: false,
+            depthWrite: false
         });
     }
 }
@@ -58050,7 +58050,7 @@ vec4 fxaa(sampler2D tex, vec2 fragCoord, vec2 resolution,
 
 // Based on https://github.com/mattdesl/glsl-fxaa
 
-const vertexShader$q = /* glsl */ `
+const vertexShader$t = /* glsl */ `
 in vec3 position;
 in vec2 uv;
 
@@ -58079,7 +58079,7 @@ void main() {
 }
 `;
 
-const fragmentShader$q = /* glsl */ `
+const fragmentShader$t = /* glsl */ `
 precision highp float;
 
 uniform sampler2D tMap;
@@ -58110,11 +58110,475 @@ class FXAAMaterial extends RawShaderMaterial {
                 tMap: { value: null },
                 uResolution: { value: new Vector2$1() }
             },
+            vertexShader: vertexShader$t,
+            fragmentShader: fragmentShader$t,
+            blending: NoBlending,
+            depthTest: false,
+            depthWrite: false
+        });
+    }
+}
+
+// Based on https://github.com/pmndrs/postprocessing by vanruesc
+// Based on https://github.com/mrdoob/three.js/blob/dev/examples/jsm/postprocessing/SMAAPass.js by mpk
+
+const vertexShader$s = /* glsl */ `
+in vec3 position;
+in vec2 uv;
+
+uniform vec2 uTexelSize;
+
+out vec2 vUv;
+out vec4 vOffset[2];
+
+void SMAANeighborhoodBlendingVS(vec2 texCoord) {
+    vOffset[0] = texCoord.xyxy + uTexelSize.xyxy * vec4(-1.0, 0.0, 0.0, 1.0);
+    vOffset[1] = texCoord.xyxy + uTexelSize.xyxy * vec4(1.0, 0.0, 0.0, -1.0);
+}
+
+void main() {
+    vUv = uv;
+
+    SMAANeighborhoodBlendingVS(vUv);
+
+    gl_Position = vec4(position, 1.0);
+}
+`;
+
+const fragmentShader$s = /* glsl */ `
+precision highp float;
+
+uniform sampler2D tMap;
+uniform sampler2D tWeightMap;
+uniform vec2 uTexelSize;
+
+in vec2 vUv;
+in vec4 vOffset[2];
+
+out vec4 FragColor;
+
+vec4 SMAANeighborhoodBlendingPS(vec2 texCoord, vec4 offset[2], sampler2D colorTex, sampler2D blendTex) {
+    // Fetch the blending weights for the current pixel
+    vec4 a;
+    a.xz = texture(blendTex, texCoord).xz;
+    a.y = texture(blendTex, offset[1].zw).g;
+    a.w = texture(blendTex, offset[1].xy).a;
+
+    // Ignore tiny blending weights
+    if (dot(a, vec4(1.0)) < 1e-5) {
+        return texture(colorTex, texCoord);
+    } else {
+        // Up to 4 lines can be crossing a pixel (one through each edge). We
+        // favor blending by choosing the line with the maximum weight for each
+        // direction.
+        vec2 offset;
+        offset.x = a.a > a.b ? a.a : -a.b; // left vs. right
+        offset.y = a.g > a.r ? -a.g : a.r; // top vs. bottom
+
+        // Then we go in the direction that has the maximum weight
+        if (abs(offset.x) > abs(offset.y)) { // horizontal vs. vertical
+            offset.y = 0.0;
+        } else {
+            offset.x = 0.0;
+        }
+
+        // Fetch the opposite color and lerp by hand
+        vec4 c = texture(colorTex, texCoord);
+        texCoord += sign(offset) * uTexelSize;
+        vec4 cOp = texture(colorTex, texCoord);
+        float s = abs(offset.x) > abs(offset.y) ? abs(offset.x) : abs(offset.y);
+
+        // Gamma correction
+        c.xyz = pow(c.xyz, vec3(2.2));
+        cOp.xyz = pow(cOp.xyz, vec3(2.2));
+        vec4 mixed = mix(c, cOp, s);
+        mixed.xyz = pow(mixed.xyz, vec3(1.0 / 2.2));
+
+        return mixed;
+    }
+}
+
+void main() {
+    FragColor = SMAANeighborhoodBlendingPS(vUv, vOffset, tMap, tWeightMap);
+}
+`;
+
+class SMAABlendMaterial extends RawShaderMaterial {
+    constructor() {
+        super({
+            glslVersion: GLSL3,
+            uniforms: {
+                tMap: { value: null },
+                tWeightMap: { value: null },
+                uTexelSize: { value: new Vector2$1() }
+            },
+            vertexShader: vertexShader$s,
+            fragmentShader: fragmentShader$s,
+            blending: NoBlending,
+            depthTest: false,
+            depthWrite: false
+        });
+    }
+}
+
+// Based on https://github.com/pmndrs/postprocessing by vanruesc
+// Based on https://github.com/mrdoob/three.js/blob/dev/examples/jsm/postprocessing/SMAAPass.js by mpk
+
+const vertexShader$r = /* glsl */ `
+in vec3 position;
+in vec2 uv;
+
+uniform vec2 uTexelSize;
+
+out vec2 vUv;
+out vec4 vOffset[3];
+
+void SMAAEdgeDetectionVS(vec2 texCoord) {
+    vOffset[0] = texCoord.xyxy + uTexelSize.xyxy * vec4(-1.0, 0.0, 0.0, 1.0);
+    vOffset[1] = texCoord.xyxy + uTexelSize.xyxy * vec4(1.0, 0.0, 0.0, -1.0);
+    vOffset[2] = texCoord.xyxy + uTexelSize.xyxy * vec4(-2.0, 0.0, 0.0, 2.0);
+}
+
+void main() {
+    vUv = uv;
+
+    SMAAEdgeDetectionVS(vUv);
+
+    gl_Position = vec4(position, 1.0);
+}
+`;
+
+const fragmentShader$r = /* glsl */ `
+precision highp float;
+
+uniform sampler2D tMap;
+
+in vec2 vUv;
+in vec4 vOffset[3];
+
+out vec4 FragColor;
+
+vec4 SMAAColorEdgeDetectionPS(vec2 texCoord, vec4 offset[3], sampler2D colorTex) {
+    vec2 threshold = vec2(SMAA_THRESHOLD);
+
+    // Color-based edge detection
+    vec4 delta;
+    vec3 c = texture(colorTex, texCoord).rgb;
+
+    vec3 cLeft = texture(colorTex, offset[0].xy).rgb;
+    vec3 t = abs(c - cLeft);
+    delta.x = max(max(t.r, t.g), t.b);
+
+    vec3 cTop = texture(colorTex, offset[0].zw).rgb;
+    t = abs(c - cTop);
+    delta.y = max(max(t.r, t.g), t.b);
+
+    vec2 edges = step(threshold, delta.xy);
+
+    if (dot(edges, vec2(1.0)) == 0.0) {
+        discard;
+    }
+
+    // Calculate right and bottom deltas
+    vec3 cRight = texture(colorTex, offset[1].xy).rgb;
+    t = abs(c - cRight);
+    delta.z = max(max(t.r, t.g), t.b);
+
+    vec3 cBottom  = texture(colorTex, offset[1].zw).rgb;
+    t = abs(c - cBottom);
+    delta.w = max(max(t.r, t.g), t.b);
+
+    // Calculate the maximum delta in the direct neighborhood
+    float maxDelta = max(max(max(delta.x, delta.y), delta.z), delta.w);
+
+    // Calculate left-left and top-top deltas
+    vec3 cLeftLeft = texture(colorTex, offset[2].xy).rgb;
+    t = abs(c - cLeftLeft);
+    delta.z = max(max(t.r, t.g), t.b);
+
+    vec3 cTopTop = texture(colorTex, offset[2].zw).rgb;
+    t = abs(c - cTopTop);
+    delta.w = max(max(t.r, t.g), t.b);
+
+    // Calculate the final maximum delta
+    maxDelta = max(max(maxDelta, delta.z), delta.w);
+
+    // Local contrast adaptation
+    edges *= step(0.5 * maxDelta, delta.xy);
+
+    return vec4(edges, 0.0, 0.0);
+}
+
+void main() {
+    FragColor = SMAAColorEdgeDetectionPS(vUv, vOffset, tMap);
+}
+`;
+
+class SMAAEdgesMaterial extends RawShaderMaterial {
+    constructor() {
+        super({
+            glslVersion: GLSL3,
+            defines: {
+                SMAA_THRESHOLD: '0.1'
+            },
+            uniforms: {
+                tMap: { value: null },
+                uTexelSize: { value: new Vector2$1() }
+            },
+            vertexShader: vertexShader$r,
+            fragmentShader: fragmentShader$r,
+            blending: NoBlending,
+            depthTest: false,
+            depthWrite: false
+        });
+    }
+}
+
+// Based on https://github.com/pmndrs/postprocessing by vanruesc
+// Based on https://github.com/mrdoob/three.js/blob/dev/examples/jsm/postprocessing/SMAAPass.js by mpk
+
+const vertexShader$q = /* glsl */ `
+in vec3 position;
+in vec2 uv;
+
+uniform vec2 uTexelSize;
+
+out vec2 vUv;
+out vec4 vOffset[3];
+out vec2 vPixCoord;
+
+void SMAABlendingWeightCalculationVS(vec2 texCoord) {
+    vPixCoord = texCoord / uTexelSize;
+
+    // Offsets for the searches
+    vOffset[0] = texCoord.xyxy + uTexelSize.xyxy * vec4(-0.25, 0.125, 1.25, 0.125);
+    vOffset[1] = texCoord.xyxy + uTexelSize.xyxy * vec4(-0.125, 0.25, -0.125, -1.25);
+
+    // This indicates the ends of the loops
+    vOffset[2] = vec4(vOffset[0].xz, vOffset[1].yw) +
+        vec4(-2.0, 2.0, -2.0, 2.0) * uTexelSize.xxyy * float(SMAA_MAX_SEARCH_STEPS);
+}
+
+void main() {
+    vUv = uv;
+
+    SMAABlendingWeightCalculationVS(vUv);
+
+    gl_Position = vec4(position, 1.0);
+}
+`;
+
+const fragmentShader$q = /* glsl */ `
+precision highp float;
+
+#define SMAASampleLevelZeroOffset(tex, coord, offset) texture(tex, coord + offset * uTexelSize)
+
+uniform sampler2D tMap;
+uniform sampler2D tArea;
+uniform sampler2D tSearch;
+uniform vec2 uTexelSize;
+
+in vec2 vUv;
+in vec4 vOffset[3];
+in vec2 vPixCoord;
+
+out vec4 FragColor;
+
+float SMAASearchLength(sampler2D searchTex, vec2 e, float bias, float scale) {
+    e.r = bias + e.r * scale;
+    return 255.0 * texture(searchTex, e).r;
+}
+
+float SMAASearchXLeft(sampler2D edgesTex, sampler2D searchTex, vec2 texCoord, float end) {
+    vec2 e = vec2(0.0, 1.0);
+
+    for (int i = 0; i < SMAA_MAX_SEARCH_STEPS; i++) {
+        e = texture(edgesTex, texCoord).rg;
+        texCoord -= vec2(2.0, 0.0) * uTexelSize;
+        if (!(texCoord.x > end && e.g > 0.8281 && e.r == 0.0)) break;
+    }
+
+    texCoord.x += 0.25 * uTexelSize.x;
+    texCoord.x += uTexelSize.x;
+    texCoord.x += 2.0 * uTexelSize.x;
+    texCoord.x -= uTexelSize.x * SMAASearchLength(searchTex, e, 0.0, 0.5);
+
+    return texCoord.x;
+}
+
+float SMAASearchXRight(sampler2D edgesTex, sampler2D searchTex, vec2 texCoord, float end) {
+    vec2 e = vec2(0.0, 1.0);
+
+    for (int i = 0; i < SMAA_MAX_SEARCH_STEPS; i++) {
+        e = texture(edgesTex, texCoord).rg;
+        texCoord += vec2(2.0, 0.0) * uTexelSize;
+        if (!(texCoord.x < end && e.g > 0.8281 && e.r == 0.0)) break;
+    }
+
+    texCoord.x -= 0.25 * uTexelSize.x;
+    texCoord.x -= uTexelSize.x;
+    texCoord.x -= 2.0 * uTexelSize.x;
+    texCoord.x += uTexelSize.x * SMAASearchLength(searchTex, e, 0.5, 0.5);
+
+    return texCoord.x;
+}
+
+float SMAASearchYUp(sampler2D edgesTex, sampler2D searchTex, vec2 texCoord, float end) {
+    vec2 e = vec2(1.0, 0.0);
+
+    for (int i = 0; i < SMAA_MAX_SEARCH_STEPS; i++) {
+        e = texture(edgesTex, texCoord).rg;
+        texCoord += vec2(0.0, 2.0) * uTexelSize;
+        if (!(texCoord.y > end && e.r > 0.8281 && e.g == 0.0)) break;
+    }
+
+    texCoord.y -= 0.25 * uTexelSize.y;
+    texCoord.y -= uTexelSize.y;
+    texCoord.y -= 2.0 * uTexelSize.y;
+    texCoord.y += uTexelSize.y * SMAASearchLength(searchTex, e.gr, 0.0, 0.5);
+
+    return texCoord.y;
+}
+
+float SMAASearchYDown(sampler2D edgesTex, sampler2D searchTex, vec2 texCoord, float end) {
+    vec2 e = vec2(1.0, 0.0);
+
+    for (int i = 0; i < SMAA_MAX_SEARCH_STEPS; i++) {
+        e = texture(edgesTex, texCoord).rg;
+        texCoord -= vec2(0.0, 2.0) * uTexelSize;
+        if (!(texCoord.y < end && e.r > 0.8281 && e.g == 0.0)) break;
+    }
+
+    texCoord.y += 0.25 * uTexelSize.y;
+    texCoord.y += uTexelSize.y;
+    texCoord.y += 2.0 * uTexelSize.y;
+    texCoord.y -= uTexelSize.y * SMAASearchLength(searchTex, e.gr, 0.5, 0.5);
+
+    return texCoord.y;
+}
+
+vec2 SMAAArea(sampler2D areaTex, vec2 dist, float e1, float e2, float offset) {
+    // Rounding prevents precision errors of bilinear filtering
+    vec2 texCoord = vec2(SMAA_AREATEX_MAX_DISTANCE) * round(4.0 * vec2(e1, e2)) + dist;
+
+    // Apply a scale and bias for mapping to texel space
+    texCoord = SMAA_AREATEX_PIXEL_SIZE * texCoord + (0.5 * SMAA_AREATEX_PIXEL_SIZE);
+
+    // Move to the proper place, according to the subpixel offset
+    texCoord.y += SMAA_AREATEX_SUBTEX_SIZE * offset;
+
+    return texture(areaTex, texCoord).rg;
+}
+
+vec4 SMAABlendingWeightCalculationPS(vec2 texCoord, vec2 pixcoord, vec4 offset[3], sampler2D edgesTex, sampler2D areaTex, sampler2D searchTex) {
+    vec4 weights = vec4(0.0);
+    vec4 subsampleIndices = vec4(0.0);
+    vec2 e = texture(edgesTex, texCoord).rg;
+
+    if (e.g > 0.0) { // Edge at north
+        vec2 d;
+
+        // Find the distance to the left
+        vec2 coords;
+        coords.x = SMAASearchXLeft(edgesTex, searchTex, offset[0].xy, offset[2].x);
+        coords.y = offset[1].y;
+        d.x = coords.x;
+
+        // Now fetch the left crossing edges, two at a time using bilinear
+        // filtering. Sampling at -0.25 to discern what value each edge has.
+        float e1 = texture(edgesTex, coords).r;
+
+        // Find the distance to the right
+        coords.x = SMAASearchXRight(edgesTex, searchTex, offset[0].zw, offset[2].y);
+        d.y = coords.x;
+
+        // Translate distances into pixel units
+        d = d / uTexelSize.x - pixcoord.x;
+
+        // The area texture is compressed quadratically
+        vec2 sqrtD = sqrt(abs(d));
+
+        // Fetch the right crossing edges
+        coords.y -= 1.0 * uTexelSize.y;
+        float e2 = SMAASampleLevelZeroOffset(edgesTex, coords, vec2(1, 0)).r;
+
+        // Pattern recognized, now get the actual area
+        weights.rg = SMAAArea(areaTex, sqrtD, e1, e2, subsampleIndices.y);
+    }
+
+    if (e.r > 0.0) { // Edge at west
+        vec2 d;
+
+        // Find the distance to the top
+        vec2 coords;
+        coords.y = SMAASearchYUp(edgesTex, searchTex, offset[1].xy, offset[2].z);
+        coords.x = offset[0].x;
+        d.x = coords.y;
+
+        // Fetch the top crossing edges
+        float e1 = texture(edgesTex, coords).g;
+
+        // Find the distance to the bottom
+        coords.y = SMAASearchYDown(edgesTex, searchTex, offset[1].zw, offset[2].w);
+        d.y = coords.y;
+
+        // Translate distances into pixel units
+        d = d / uTexelSize.y - pixcoord.y;
+
+        // The area texture is compressed quadratically
+        vec2 sqrtD = sqrt(abs(d));
+
+        // Fetch the bottom crossing edges
+        coords.y -= 1.0 * uTexelSize.y;
+        float e2 = SMAASampleLevelZeroOffset(edgesTex, coords, vec2(0, 1)).g;
+
+        // Get the area for this direction
+        weights.ba = SMAAArea(areaTex, sqrtD, e1, e2, subsampleIndices.x);
+    }
+
+    return weights;
+}
+
+void main() {
+    FragColor = SMAABlendingWeightCalculationPS(vUv, vPixCoord, vOffset, tMap, tArea, tSearch);
+}
+`;
+
+class SMAAWeightsMaterial extends RawShaderMaterial {
+    constructor(loader = new TextureLoader$1(), {
+        areaTexturePath = 'assets/textures/smaa/area.png',
+        searchTexturePath = 'assets/textures/smaa/search.png'
+    } = {}) {
+        const areaTexture = loader.load(areaTexturePath);
+        areaTexture.minFilter = LinearFilter;
+        areaTexture.generateMipmaps = false;
+        areaTexture.flipY = false;
+
+        const searchTexture = loader.load(searchTexturePath);
+        searchTexture.magFilter = NearestFilter;
+        searchTexture.minFilter = NearestFilter;
+        searchTexture.generateMipmaps = false;
+        searchTexture.flipY = false;
+
+        super({
+            glslVersion: GLSL3,
+            defines: {
+                SMAA_MAX_SEARCH_STEPS: '8',
+                SMAA_AREATEX_MAX_DISTANCE: '16',
+                SMAA_AREATEX_PIXEL_SIZE: '(1.0 / vec2(160.0, 560.0))',
+                SMAA_AREATEX_SUBTEX_SIZE: '(1.0 / 7.0)'
+            },
+            uniforms: {
+                tMap: { value: null },
+                tArea: { value: areaTexture },
+                tSearch: { value: searchTexture },
+                uTexelSize: { value: new Vector2$1() }
+            },
             vertexShader: vertexShader$q,
             fragmentShader: fragmentShader$q,
             blending: NoBlending,
-            depthWrite: false,
-            depthTest: false
+            depthTest: false,
+            depthWrite: false
         });
     }
 }
@@ -58267,8 +58731,8 @@ class BadTVMaterial extends RawShaderMaterial {
             vertexShader: vertexShader$p,
             fragmentShader: fragmentShader$p,
             blending: NoBlending,
-            depthWrite: false,
-            depthTest: false
+            depthTest: false,
+            depthWrite: false
         });
     }
 }
@@ -58328,8 +58792,8 @@ class RGBMaterial extends RawShaderMaterial {
             vertexShader: vertexShader$o,
             fragmentShader: fragmentShader$o,
             blending: NoBlending,
-            depthWrite: false,
-            depthTest: false
+            depthTest: false,
+            depthWrite: false
         });
     }
 }
@@ -58340,17 +58804,17 @@ var blur$2 = /* glsl */ `
 vec4 blur(sampler2D image, vec2 uv, vec2 resolution, vec2 direction) {
     vec4 sum = vec4(0.0);
 
-    vec2 pixel = 1.0 / resolution;
+    vec2 texcoord = 1.0 / resolution;
 
-    sum += texture(image, uv - 4.0 * pixel * direction) * 0.051;
-    sum += texture(image, uv - 3.0 * pixel * direction) * 0.0918;
-    sum += texture(image, uv - 2.0 * pixel * direction) * 0.12245;
-    sum += texture(image, uv - 1.0 * pixel * direction) * 0.1531;
+    sum += texture(image, uv - 4.0 * texcoord * direction) * 0.051;
+    sum += texture(image, uv - 3.0 * texcoord * direction) * 0.0918;
+    sum += texture(image, uv - 2.0 * texcoord * direction) * 0.12245;
+    sum += texture(image, uv - 1.0 * texcoord * direction) * 0.1531;
     sum += texture(image, uv) * 0.1633;
-    sum += texture(image, uv + 1.0 * pixel * direction) * 0.1531;
-    sum += texture(image, uv + 2.0 * pixel * direction) * 0.12245;
-    sum += texture(image, uv + 3.0 * pixel * direction) * 0.0918;
-    sum += texture(image, uv + 4.0 * pixel * direction) * 0.051;
+    sum += texture(image, uv + 1.0 * texcoord * direction) * 0.1531;
+    sum += texture(image, uv + 2.0 * texcoord * direction) * 0.12245;
+    sum += texture(image, uv + 3.0 * texcoord * direction) * 0.0918;
+    sum += texture(image, uv + 4.0 * texcoord * direction) * 0.051;
 
     return sum;
 }
@@ -58401,8 +58865,8 @@ class BlurMaterial extends RawShaderMaterial {
             vertexShader: vertexShader$n,
             fragmentShader: fragmentShader$n,
             blending: NoBlending,
-            depthWrite: false,
-            depthTest: false
+            depthTest: false,
+            depthWrite: false
         });
     }
 }
@@ -58469,8 +58933,8 @@ class FastGaussianBlurMaterial extends RawShaderMaterial {
             vertexShader: vertexShader$m,
             fragmentShader: fragmentShader$m,
             blending: NoBlending,
-            depthWrite: false,
-            depthTest: false
+            depthTest: false,
+            depthWrite: false
         });
     }
 }
@@ -58523,8 +58987,8 @@ class LuminosityMaterial extends RawShaderMaterial {
             vertexShader: vertexShader$l,
             fragmentShader: fragmentShader$l,
             blending: NoBlending,
-            depthWrite: false,
-            depthTest: false
+            depthTest: false,
+            depthWrite: false
         });
     }
 }
@@ -58603,8 +59067,8 @@ class UnrealBloomBlurMaterial extends RawShaderMaterial {
             vertexShader: vertexShader$k,
             fragmentShader: fragmentShader$k,
             blending: NoBlending,
-            depthWrite: false,
-            depthTest: false
+            depthTest: false,
+            depthWrite: false
         });
     }
 }
@@ -58675,8 +59139,8 @@ class UnrealBloomCompositeMaterial extends RawShaderMaterial {
             vertexShader: vertexShader$j,
             fragmentShader: fragmentShader$j,
             blending: NoBlending,
-            depthWrite: false,
-            depthTest: false
+            depthTest: false,
+            depthWrite: false
         });
     }
 }
@@ -58777,8 +59241,8 @@ class BloomCompositeMaterial extends RawShaderMaterial {
             vertexShader: vertexShader$i,
             fragmentShader: fragmentShader$i,
             blending: NoBlending,
-            depthWrite: false,
-            depthTest: false
+            depthTest: false,
+            depthWrite: false
         });
     }
 }
@@ -58824,8 +59288,8 @@ class SceneCompositeMaterial extends RawShaderMaterial {
             vertexShader: vertexShader$h,
             fragmentShader: fragmentShader$h,
             blending: NoBlending,
-            depthWrite: false,
-            depthTest: false
+            depthTest: false,
+            depthWrite: false
         });
     }
 }
@@ -58925,10 +59389,11 @@ void main() {
 `;
 
 class PoissonDiscBlurMaterial extends RawShaderMaterial {
-    constructor({
-        blueNoisePath = 'assets/textures/blue_noise.png'
+    constructor(loader = new TextureLoader$1(), {
+        blueNoisePath = 'assets/textures/blue_noise.png',
+        blueNoiseResolution = new Vector2$1(256, 256)
     } = {}) {
-        const texture = new TextureLoader$1().load(blueNoisePath);
+        const texture = loader.load(blueNoisePath);
         texture.wrapS = RepeatWrapping;
         texture.wrapT = RepeatWrapping;
         texture.magFilter = NearestFilter;
@@ -58940,7 +59405,7 @@ class PoissonDiscBlurMaterial extends RawShaderMaterial {
             uniforms: {
                 tMap: { value: null },
                 tBlueNoise: { value: texture },
-                uBlueNoiseResolution: { value: new Vector2$1(256, 256) },
+                uBlueNoiseResolution: { value: blueNoiseResolution },
                 uRadius: { value: 42 },
                 uResolution: { value: new Vector2$1() },
                 uTime: { value: 0 }
@@ -58948,8 +59413,8 @@ class PoissonDiscBlurMaterial extends RawShaderMaterial {
             vertexShader: vertexShader$g,
             fragmentShader: fragmentShader$g,
             blending: NoBlending,
-            depthWrite: false,
-            depthTest: false
+            depthTest: false,
+            depthWrite: false
         });
     }
 }
@@ -59041,8 +59506,8 @@ class CameraMotionBlurMaterial extends RawShaderMaterial {
             vertexShader: vertexShader$f,
             fragmentShader: fragmentShader$f,
             blending: NoBlending,
-            depthWrite: false,
-            depthTest: false
+            depthTest: false,
+            depthWrite: false
         });
     }
 }
@@ -59124,8 +59589,8 @@ class BokehBlurMaterial1 extends RawShaderMaterial {
             vertexShader: vertexShader$e,
             fragmentShader: fragmentShader$e,
             blending: NoBlending,
-            depthWrite: false,
-            depthTest: false
+            depthTest: false,
+            depthWrite: false
         });
     }
 }
@@ -59207,8 +59672,8 @@ class BokehBlurMaterial2 extends RawShaderMaterial {
             vertexShader: vertexShader$d,
             fragmentShader: fragmentShader$d,
             blending: NoBlending,
-            depthWrite: false,
-            depthTest: false
+            depthTest: false,
+            depthWrite: false
         });
     }
 }
@@ -59274,8 +59739,8 @@ class TiltShiftMaterial extends RawShaderMaterial {
             vertexShader: vertexShader$c,
             fragmentShader: fragmentShader$c,
             blending: NoBlending,
-            depthWrite: false,
-            depthTest: false
+            depthTest: false,
+            depthWrite: false
         });
     }
 }
@@ -59326,8 +59791,8 @@ class ReflectorBlurMaterial extends RawShaderMaterial {
             vertexShader: vertexShader$b,
             fragmentShader: fragmentShader$b,
             blending: NoBlending,
-            depthWrite: false,
-            depthTest: false
+            depthTest: false,
+            depthWrite: false
         });
     }
 }
@@ -59700,8 +60165,8 @@ class ChromaticAberrationMaterial extends RawShaderMaterial {
             vertexShader: vertexShader$8,
             fragmentShader: fragmentShader$8,
             blending: NoBlending,
-            depthWrite: false,
-            depthTest: false
+            depthTest: false,
+            depthWrite: false
         });
     }
 }
@@ -59773,8 +60238,8 @@ class VideoGlitchMaterial extends RawShaderMaterial {
             vertexShader: vertexShader$7,
             fragmentShader: fragmentShader$7,
             blending: NoBlending,
-            depthWrite: false,
-            depthTest: false
+            depthTest: false,
+            depthWrite: false
         });
     }
 }
@@ -59849,8 +60314,8 @@ class AfterimageMaterial extends RawShaderMaterial {
             vertexShader: vertexShader$6,
             fragmentShader: fragmentShader$6,
             blending: NoBlending,
-            depthWrite: false,
-            depthTest: false
+            depthTest: false,
+            depthWrite: false
         });
     }
 }
@@ -59931,8 +60396,8 @@ class VolumetricLightMaterial extends RawShaderMaterial {
             vertexShader: vertexShader$5,
             fragmentShader: fragmentShader$5,
             blending: NoBlending,
-            depthWrite: false,
-            depthTest: false
+            depthTest: false,
+            depthWrite: false
         });
     }
 }
@@ -60065,8 +60530,8 @@ class VolumetricLightLensflareMaterial extends RawShaderMaterial {
             vertexShader: vertexShader$4,
             fragmentShader: fragmentShader$4,
             blending: NoBlending,
-            depthWrite: false,
-            depthTest: false
+            depthTest: false,
+            depthWrite: false
         });
     }
 }
@@ -60136,8 +60601,8 @@ class LensflareMaterial extends RawShaderMaterial {
             vertexShader: vertexShader$3,
             fragmentShader: fragmentShader$3,
             blending: AdditiveBlending,
-            depthWrite: false,
-            depthTest: false
+            depthTest: false,
+            depthWrite: false
         });
     }
 }
@@ -60190,8 +60655,8 @@ class DepthMaskMaterial extends RawShaderMaterial {
             vertexShader: vertexShader$2,
             fragmentShader: fragmentShader$2,
             blending: NoBlending,
-            depthWrite: false,
-            depthTest: false
+            depthTest: false,
+            depthWrite: false
         });
     }
 }
@@ -60341,8 +60806,8 @@ class Wobble {
         this.origin = new Vector3();
         this.target = new Vector3();
         this.perlin = new ImprovedNoise();
-        this.amplitude = new Vector3(1, 1, 1);
         this.frequency = new Vector3(1, 1, 1);
+        this.amplitude = new Vector3(1, 1, 1);
         this.scale = 1;
         this.lerpSpeed = 0.02;
 
@@ -60459,8 +60924,8 @@ class Flowmap {
             vertexShader,
             fragmentShader,
             blending: NoBlending,
-            depthWrite: false,
-            depthTest: false
+            depthTest: false,
+            depthWrite: false
         });
 
         // Fullscreen triangle
@@ -108104,4 +108569,4 @@ class OrbitControls extends EventDispatcher {
 
 }
 
-export { ACESFilmicToneMapping, AddEquation, AddOperation, AdditiveAnimationBlendMode, AdditiveBlending, AfterimageMaterial, AlphaFormat, AlwaysDepth, AlwaysStencilFunc, AmbientLight, AmbientLightProbe, AnimationClip, AnimationLoader, AnimationMixer, AnimationObjectGroup, AnimationUtils, ArcCurve, ArrayCamera, ArrowHelper, AssetLoader, Audio$1 as Audio, AudioAnalyser, AudioContext$1 as AudioContext, AudioListener, AudioLoader, AxesHelper, BackSide, BadTVMaterial, BasicDepthPacking, BasicMaterial, BasicShadowMap, BloomCompositeMaterial, BlurMaterial, BokehBlurMaterial1, BokehBlurMaterial2, Bone, BooleanKeyframeTrack, Box2, Box3, Box3Helper, BoxBufferGeometry, BoxGeometry$2 as BoxGeometry, BoxHelper, BufferAttribute, BufferGeometry, BufferGeometryLoader, BufferGeometryLoaderThread, BufferLoader, ByteType, Cache, Camera, CameraHelper, CameraMotionBlurMaterial, CanvasTexture, CapsuleBufferGeometry, CapsuleGeometry, CatmullRomCurve3, ChromaticAberrationMaterial, CineonToneMapping, CircleBufferGeometry, CircleGeometry, ClampToEdgeWrapping, Clock, Cluster, Color$1 as Color, ColorKeyframeTrack, ColorManagement, ColorMaterial, ColorPicker, Component, CompressedArrayTexture, CompressedTexture, CompressedTextureLoader, ConeBufferGeometry, ConeGeometry, CopyMaterial, CubeCamera, CubeReflectionMapping, CubeRefractionMapping, CubeTexture, CubeTextureLoader, CubeUVReflectionMapping, CubicBezierCurve, CubicBezierCurve3, CubicInterpolant, CullFaceBack, CullFaceFront, CullFaceFrontBack, CullFaceNone, Curve, CurvePath, CustomBlending, CustomToneMapping, CylinderBufferGeometry, CylinderGeometry, Cylindrical, DEG2RAD$1 as DEG2RAD, Data3DTexture, DataArrayTexture, DataTexture, DataTextureLoader, DataUtils, DecrementStencilOp, DecrementWrapStencilOp, DefaultLoadingManager, DepthFormat, DepthMaskMaterial, DepthStencilFormat, DepthTexture, DirectionalLight, DirectionalLightHelper, DiscreteInterpolant, DisplayP3ColorSpace, DodecahedronBufferGeometry, DodecahedronGeometry, DoubleSide, DstAlphaFactor, DstColorFactor, DynamicCopyUsage, DynamicDrawUsage, DynamicReadUsage, Easing, EdgesGeometry, EllipseCurve, EnvironmentTextureLoader, EqualDepth, EqualStencilFunc, EquirectangularReflectionMapping, EquirectangularRefractionMapping, Euler, EventDispatcher, EventEmitter, ExtrudeBufferGeometry, ExtrudeGeometry, FXAAMaterial, FastGaussianBlurMaterial, FileLoader, Float16BufferAttribute, Float32BufferAttribute, Float64BufferAttribute, FloatType, FlowMaterial, Flowmap, Fog, FogExp2, FramebufferTexture, FresnelMaterial, FrontSide, Frustum, GLBufferAttribute, GLSL1, GLSL3, GLTFLoader, GreaterDepth, GreaterEqualDepth, GreaterEqualStencilFunc, GreaterStencilFunc, GridHelper, Group, HalfFloatType, Header, HeaderInfo, HemisphereLight, HemisphereLightHelper, HemisphereLightProbe, IcosahedronBufferGeometry, IcosahedronGeometry, ImageBitmapLoader$1 as ImageBitmapLoader, ImageBitmapLoaderThread, ImageLoader, ImageUtils, IncrementStencilOp, IncrementWrapStencilOp, InstancedBufferAttribute, InstancedBufferGeometry, InstancedInterleavedBuffer, InstancedMesh, Int16BufferAttribute, Int32BufferAttribute, Int8BufferAttribute, IntType, Interface, InterleavedBuffer, InterleavedBufferAttribute, Interpolant, InterpolateDiscrete, InterpolateLinear, InterpolateSmooth, InvertStencilOp, KeepStencilOp, KeyframeTrack, LOD, LatheBufferGeometry, LatheGeometry, Layers, LensflareMaterial, LessDepth, LessEqualDepth, LessEqualStencilFunc, LessStencilFunc, Light, LightProbe, Line, Line3, LineBasicMaterial, LineCurve, LineCurve3, LineDashedMaterial, LineLoop, LineSegments, LinearEncoding, LinearFilter, LinearInterpolant, LinearMipMapLinearFilter, LinearMipMapNearestFilter, LinearMipmapLinearFilter, LinearMipmapNearestFilter, LinearSRGBColorSpace, LinearToneMapping, Link, LinkedList, List, ListSelect, ListToggle, Loader$1 as Loader, LoaderUtils, LoadingManager, LoopOnce, LoopPingPong, LoopRepeat, LuminanceAlphaFormat, LuminanceFormat, LuminosityMaterial, MOUSE, Magnetic, Material, MaterialLoader, MaterialPanelController, MathUtils, Matrix3, Matrix4, MaxEquation, Mesh, MeshBasicMaterial, MeshDepthMaterial, MeshDistanceMaterial, MeshLambertMaterial, MeshMatcapMaterial, MeshNormalMaterial, MeshPhongMaterial, MeshPhysicalMaterial, MeshStandardMaterial, MeshToonMaterial, MinEquation, MirroredRepeatWrapping, MixOperation, MultiLoader, MultiplyBlending, MultiplyOperation, NearestFilter, NearestMipMapLinearFilter, NearestMipMapNearestFilter, NearestMipmapLinearFilter, NearestMipmapNearestFilter, NeverDepth, NeverStencilFunc, NoBlending, NoColorSpace, NoToneMapping, NormalAnimationBlendMode, NormalBlending, NormalMaterial, NotEqualDepth, NotEqualStencilFunc, NumberKeyframeTrack, Object3D, ObjectLoader, ObjectPool, ObjectSpaceNormalMap, OctahedronBufferGeometry, OctahedronGeometry, OimoPhysics, OimoPhysicsBuffer, OimoPhysicsController, OneFactor, OneMinusDstAlphaFactor, OneMinusDstColorFactor, OneMinusSrcAlphaFactor, OneMinusSrcColorFactor, OrbitControls, OrthographicCamera, PCFShadowMap, PCFSoftShadowMap, PMREMGenerator, Panel, PanelItem, Path, PerspectiveCamera, Plane, PlaneBufferGeometry, PlaneGeometry, PlaneHelper, Point, Point3D, PointLight, PointLightHelper, PointText, Points, PointsMaterial, PoissonDiscBlurMaterial, PolarGridHelper, PolyhedronBufferGeometry, PolyhedronGeometry, PositionalAudio, PropertyBinding, PropertyMixer, QuadraticBezierCurve, QuadraticBezierCurve3, Quaternion, QuaternionKeyframeTrack, QuaternionLinearInterpolant, RAD2DEG$1 as RAD2DEG, RED_GREEN_RGTC2_Format, RED_RGTC1_Format, REVISION, RGBADepthPacking, RGBAFormat, RGBAIntegerFormat, RGBA_ASTC_10x10_Format, RGBA_ASTC_10x5_Format, RGBA_ASTC_10x6_Format, RGBA_ASTC_10x8_Format, RGBA_ASTC_12x10_Format, RGBA_ASTC_12x12_Format, RGBA_ASTC_4x4_Format, RGBA_ASTC_5x4_Format, RGBA_ASTC_5x5_Format, RGBA_ASTC_6x5_Format, RGBA_ASTC_6x6_Format, RGBA_ASTC_8x5_Format, RGBA_ASTC_8x6_Format, RGBA_ASTC_8x8_Format, RGBA_BPTC_Format, RGBA_ETC2_EAC_Format, RGBA_PVRTC_2BPPV1_Format, RGBA_PVRTC_4BPPV1_Format, RGBA_S3TC_DXT1_Format, RGBA_S3TC_DXT3_Format, RGBA_S3TC_DXT5_Format, RGBMaterial, RGB_ETC1_Format, RGB_ETC2_Format, RGB_PVRTC_2BPPV1_Format, RGB_PVRTC_4BPPV1_Format, RGB_S3TC_DXT1_Format, RGFormat, RGIntegerFormat, RawShaderMaterial, Ray, Raycaster, RectAreaLight, RedFormat, RedIntegerFormat, Reflector, ReflectorBlurMaterial, ReflectorDudvMaterial, ReflectorMaterial, ReinhardToneMapping, RepeatWrapping, ReplaceStencilOp, Reticle, ReticleText, ReverseSubtractEquation, RigidBodyConfig$1 as RigidBodyConfig, RigidBodyType$1 as RigidBodyType, RingBufferGeometry, RingGeometry, SIGNED_RED_GREEN_RGTC2_Format, SIGNED_RED_RGTC1_Format, SRGBColorSpace, SVGLoader, Scene, SceneCompositeMaterial, ShaderChunk, ShaderLib, ShaderMaterial, ShadowMaterial, ShadowTextureMaterial, Shape$2 as Shape, ShapeBufferGeometry, ShapeGeometry, ShapePath, ShapeUtils, ShortType, Skeleton, SkeletonHelper, SkinnedMesh, Slider, Smooth, SmoothSkew, SmoothViews, SoftShadows, Sound, Sound3D, Source, Sphere, SphereBufferGeometry, SphereGeometry$2 as SphereGeometry, Spherical, SphericalHarmonics3, SphericalJointConfig$1 as SphericalJointConfig, SplineCurve, SpotLight, SpotLightHelper, Sprite, SpriteMaterial, SrcAlphaFactor, SrcAlphaSaturateFactor, SrcColorFactor, Stage, StaticCopyUsage, StaticDrawUsage, StaticReadUsage, StereoCamera, StreamCopyUsage, StreamDrawUsage, StreamReadUsage, StringKeyframeTrack, SubtractEquation, SubtractiveBlending, TOUCH, TangentSpaceNormalMap, TargetNumber, TetrahedronBufferGeometry, TetrahedronGeometry, TextGeometry, TextMaterial, Texture, TextureLoader, Thread, Ticker, TiltShiftMaterial, TorusBufferGeometry, TorusGeometry, TorusKnotBufferGeometry, TorusKnotGeometry, Tracker, Triangle, TriangleFanDrawMode, TriangleStripDrawMode, TrianglesDrawMode, TubeBufferGeometry, TubeGeometry, Tween, TwoPassDoubleSide, UI, UVMapping, Uint16BufferAttribute, Uint32BufferAttribute, Uint8BufferAttribute, Uint8ClampedBufferAttribute, Uniform, UniformsGroup, UniformsLib, UniformsUtils, UnrealBloomBlurMaterial, UnrealBloomCompositeMaterial, UnsignedByteType, UnsignedInt248Type, UnsignedIntType, UnsignedShort4444Type, UnsignedShort5551Type, UnsignedShortType, VSMShadowMap, Vector2$1 as Vector2, Vector3, Vector4, VectorKeyframeTrack, VideoGlitchMaterial, VideoTexture, VolumetricLightLensflareMaterial, VolumetricLightMaterial, WebAudio, WebAudio3D, WebAudioParam, WebGL1Renderer, WebGL3DRenderTarget, WebGLArrayRenderTarget, WebGLCubeRenderTarget, WebGLMultipleRenderTargets, WebGLRenderTarget, WebGLRenderer, WebGLUtils, WireframeGeometry, Wobble, WrapAroundEnding, ZeroCurvatureEnding, ZeroFactor, ZeroSlopeEnding, ZeroStencilOp, _SRGBAFormat, absolute, basename, brightness, ceilPowerOfTwo$1 as ceilPowerOfTwo, clamp$1 as clamp, clearTween, defer, degToRad$1 as degToRad, delayedCall, euclideanModulo$1 as euclideanModulo, extension, floorPowerOfTwo$1 as floorPowerOfTwo, fract, getConstructor, getFrustum, getFrustumFromHeight, getFullscreenTriangle, getKeyByValue, getScreenSpaceBox, getSphericalCube, guid, headsTails, inverseLerp$1 as inverseLerp, isPowerOfTwo$1 as isPowerOfTwo, lerp$2 as lerp, lerpCameras, mapLinear$1 as mapLinear, parabola, pcurve, radToDeg$1 as radToDeg, randFloat$1 as randFloat, randFloatSpread$1 as randFloatSpread, randInt$1 as randInt, sRGBEncoding, shuffle, smootherstep$2 as smootherstep, smoothstep$1 as smoothstep, step, ticker, tween, wait };
+export { ACESFilmicToneMapping, AddEquation, AddOperation, AdditiveAnimationBlendMode, AdditiveBlending, AfterimageMaterial, AlphaFormat, AlwaysDepth, AlwaysStencilFunc, AmbientLight, AmbientLightProbe, AnimationClip, AnimationLoader, AnimationMixer, AnimationObjectGroup, AnimationUtils, ArcCurve, ArrayCamera, ArrowHelper, AssetLoader, Audio$1 as Audio, AudioAnalyser, AudioContext$1 as AudioContext, AudioListener, AudioLoader, AxesHelper, BackSide, BadTVMaterial, BasicDepthPacking, BasicMaterial, BasicShadowMap, BloomCompositeMaterial, BlurMaterial, BokehBlurMaterial1, BokehBlurMaterial2, Bone, BooleanKeyframeTrack, Box2, Box3, Box3Helper, BoxBufferGeometry, BoxGeometry$2 as BoxGeometry, BoxHelper, BufferAttribute, BufferGeometry, BufferGeometryLoader, BufferGeometryLoaderThread, BufferLoader, ByteType, Cache, Camera, CameraHelper, CameraMotionBlurMaterial, CanvasTexture, CapsuleBufferGeometry, CapsuleGeometry, CatmullRomCurve3, ChromaticAberrationMaterial, CineonToneMapping, CircleBufferGeometry, CircleGeometry, ClampToEdgeWrapping, Clock, Cluster, Color$1 as Color, ColorKeyframeTrack, ColorManagement, ColorMaterial, ColorPicker, Component, CompressedArrayTexture, CompressedTexture, CompressedTextureLoader, ConeBufferGeometry, ConeGeometry, CopyMaterial, CubeCamera, CubeReflectionMapping, CubeRefractionMapping, CubeTexture, CubeTextureLoader, CubeUVReflectionMapping, CubicBezierCurve, CubicBezierCurve3, CubicInterpolant, CullFaceBack, CullFaceFront, CullFaceFrontBack, CullFaceNone, Curve, CurvePath, CustomBlending, CustomToneMapping, CylinderBufferGeometry, CylinderGeometry, Cylindrical, DEG2RAD$1 as DEG2RAD, Data3DTexture, DataArrayTexture, DataTexture, DataTextureLoader, DataUtils, DecrementStencilOp, DecrementWrapStencilOp, DefaultLoadingManager, DepthFormat, DepthMaskMaterial, DepthStencilFormat, DepthTexture, DirectionalLight, DirectionalLightHelper, DiscreteInterpolant, DisplayP3ColorSpace, DodecahedronBufferGeometry, DodecahedronGeometry, DoubleSide, DstAlphaFactor, DstColorFactor, DynamicCopyUsage, DynamicDrawUsage, DynamicReadUsage, Easing, EdgesGeometry, EllipseCurve, EnvironmentTextureLoader, EqualDepth, EqualStencilFunc, EquirectangularReflectionMapping, EquirectangularRefractionMapping, Euler, EventDispatcher, EventEmitter, ExtrudeBufferGeometry, ExtrudeGeometry, FXAAMaterial, FastGaussianBlurMaterial, FileLoader, Float16BufferAttribute, Float32BufferAttribute, Float64BufferAttribute, FloatType, FlowMaterial, Flowmap, Fog, FogExp2, FramebufferTexture, FresnelMaterial, FrontSide, Frustum, GLBufferAttribute, GLSL1, GLSL3, GLTFLoader, GreaterDepth, GreaterEqualDepth, GreaterEqualStencilFunc, GreaterStencilFunc, GridHelper, Group, HalfFloatType, Header, HeaderInfo, HemisphereLight, HemisphereLightHelper, HemisphereLightProbe, IcosahedronBufferGeometry, IcosahedronGeometry, ImageBitmapLoader$1 as ImageBitmapLoader, ImageBitmapLoaderThread, ImageLoader, ImageUtils, IncrementStencilOp, IncrementWrapStencilOp, InstancedBufferAttribute, InstancedBufferGeometry, InstancedInterleavedBuffer, InstancedMesh, Int16BufferAttribute, Int32BufferAttribute, Int8BufferAttribute, IntType, Interface, InterleavedBuffer, InterleavedBufferAttribute, Interpolant, InterpolateDiscrete, InterpolateLinear, InterpolateSmooth, InvertStencilOp, KeepStencilOp, KeyframeTrack, LOD, LatheBufferGeometry, LatheGeometry, Layers, LensflareMaterial, LessDepth, LessEqualDepth, LessEqualStencilFunc, LessStencilFunc, Light, LightProbe, Line, Line3, LineBasicMaterial, LineCurve, LineCurve3, LineDashedMaterial, LineLoop, LineSegments, LinearEncoding, LinearFilter, LinearInterpolant, LinearMipMapLinearFilter, LinearMipMapNearestFilter, LinearMipmapLinearFilter, LinearMipmapNearestFilter, LinearSRGBColorSpace, LinearToneMapping, Link, LinkedList, List, ListSelect, ListToggle, Loader$1 as Loader, LoaderUtils, LoadingManager, LoopOnce, LoopPingPong, LoopRepeat, LuminanceAlphaFormat, LuminanceFormat, LuminosityMaterial, MOUSE, Magnetic, Material, MaterialLoader, MaterialPanelController, MathUtils, Matrix3, Matrix4, MaxEquation, Mesh, MeshBasicMaterial, MeshDepthMaterial, MeshDistanceMaterial, MeshLambertMaterial, MeshMatcapMaterial, MeshNormalMaterial, MeshPhongMaterial, MeshPhysicalMaterial, MeshStandardMaterial, MeshToonMaterial, MinEquation, MirroredRepeatWrapping, MixOperation, MultiLoader, MultiplyBlending, MultiplyOperation, NearestFilter, NearestMipMapLinearFilter, NearestMipMapNearestFilter, NearestMipmapLinearFilter, NearestMipmapNearestFilter, NeverDepth, NeverStencilFunc, NoBlending, NoColorSpace, NoToneMapping, NormalAnimationBlendMode, NormalBlending, NormalMaterial, NotEqualDepth, NotEqualStencilFunc, NumberKeyframeTrack, Object3D, ObjectLoader, ObjectPool, ObjectSpaceNormalMap, OctahedronBufferGeometry, OctahedronGeometry, OimoPhysics, OimoPhysicsBuffer, OimoPhysicsController, OneFactor, OneMinusDstAlphaFactor, OneMinusDstColorFactor, OneMinusSrcAlphaFactor, OneMinusSrcColorFactor, OrbitControls, OrthographicCamera, PCFShadowMap, PCFSoftShadowMap, PMREMGenerator, Panel, PanelItem, Path, PerspectiveCamera, Plane, PlaneBufferGeometry, PlaneGeometry, PlaneHelper, Point, Point3D, PointLight, PointLightHelper, PointText, Points, PointsMaterial, PoissonDiscBlurMaterial, PolarGridHelper, PolyhedronBufferGeometry, PolyhedronGeometry, PositionalAudio, PropertyBinding, PropertyMixer, QuadraticBezierCurve, QuadraticBezierCurve3, Quaternion, QuaternionKeyframeTrack, QuaternionLinearInterpolant, RAD2DEG$1 as RAD2DEG, RED_GREEN_RGTC2_Format, RED_RGTC1_Format, REVISION, RGBADepthPacking, RGBAFormat, RGBAIntegerFormat, RGBA_ASTC_10x10_Format, RGBA_ASTC_10x5_Format, RGBA_ASTC_10x6_Format, RGBA_ASTC_10x8_Format, RGBA_ASTC_12x10_Format, RGBA_ASTC_12x12_Format, RGBA_ASTC_4x4_Format, RGBA_ASTC_5x4_Format, RGBA_ASTC_5x5_Format, RGBA_ASTC_6x5_Format, RGBA_ASTC_6x6_Format, RGBA_ASTC_8x5_Format, RGBA_ASTC_8x6_Format, RGBA_ASTC_8x8_Format, RGBA_BPTC_Format, RGBA_ETC2_EAC_Format, RGBA_PVRTC_2BPPV1_Format, RGBA_PVRTC_4BPPV1_Format, RGBA_S3TC_DXT1_Format, RGBA_S3TC_DXT3_Format, RGBA_S3TC_DXT5_Format, RGBMaterial, RGB_ETC1_Format, RGB_ETC2_Format, RGB_PVRTC_2BPPV1_Format, RGB_PVRTC_4BPPV1_Format, RGB_S3TC_DXT1_Format, RGFormat, RGIntegerFormat, RawShaderMaterial, Ray, Raycaster, RectAreaLight, RedFormat, RedIntegerFormat, Reflector, ReflectorBlurMaterial, ReflectorDudvMaterial, ReflectorMaterial, ReinhardToneMapping, RepeatWrapping, ReplaceStencilOp, Reticle, ReticleText, ReverseSubtractEquation, RigidBodyConfig$1 as RigidBodyConfig, RigidBodyType$1 as RigidBodyType, RingBufferGeometry, RingGeometry, SIGNED_RED_GREEN_RGTC2_Format, SIGNED_RED_RGTC1_Format, SMAABlendMaterial, SMAAEdgesMaterial, SMAAWeightsMaterial, SRGBColorSpace, SVGLoader, Scene, SceneCompositeMaterial, ShaderChunk, ShaderLib, ShaderMaterial, ShadowMaterial, ShadowTextureMaterial, Shape$2 as Shape, ShapeBufferGeometry, ShapeGeometry, ShapePath, ShapeUtils, ShortType, Skeleton, SkeletonHelper, SkinnedMesh, Slider, Smooth, SmoothSkew, SmoothViews, SoftShadows, Sound, Sound3D, Source, Sphere, SphereBufferGeometry, SphereGeometry$2 as SphereGeometry, Spherical, SphericalHarmonics3, SphericalJointConfig$1 as SphericalJointConfig, SplineCurve, SpotLight, SpotLightHelper, Sprite, SpriteMaterial, SrcAlphaFactor, SrcAlphaSaturateFactor, SrcColorFactor, Stage, StaticCopyUsage, StaticDrawUsage, StaticReadUsage, StereoCamera, StreamCopyUsage, StreamDrawUsage, StreamReadUsage, StringKeyframeTrack, SubtractEquation, SubtractiveBlending, TOUCH, TangentSpaceNormalMap, TargetNumber, TetrahedronBufferGeometry, TetrahedronGeometry, TextGeometry, TextMaterial, Texture, TextureLoader, Thread, Ticker, TiltShiftMaterial, TorusBufferGeometry, TorusGeometry, TorusKnotBufferGeometry, TorusKnotGeometry, Tracker, Triangle, TriangleFanDrawMode, TriangleStripDrawMode, TrianglesDrawMode, TubeBufferGeometry, TubeGeometry, Tween, TwoPassDoubleSide, UI, UVMapping, Uint16BufferAttribute, Uint32BufferAttribute, Uint8BufferAttribute, Uint8ClampedBufferAttribute, Uniform, UniformsGroup, UniformsLib, UniformsUtils, UnrealBloomBlurMaterial, UnrealBloomCompositeMaterial, UnsignedByteType, UnsignedInt248Type, UnsignedIntType, UnsignedShort4444Type, UnsignedShort5551Type, UnsignedShortType, VSMShadowMap, Vector2$1 as Vector2, Vector3, Vector4, VectorKeyframeTrack, VideoGlitchMaterial, VideoTexture, VolumetricLightLensflareMaterial, VolumetricLightMaterial, WebAudio, WebAudio3D, WebAudioParam, WebGL1Renderer, WebGL3DRenderTarget, WebGLArrayRenderTarget, WebGLCubeRenderTarget, WebGLMultipleRenderTargets, WebGLRenderTarget, WebGLRenderer, WebGLUtils, WireframeGeometry, Wobble, WrapAroundEnding, ZeroCurvatureEnding, ZeroFactor, ZeroSlopeEnding, ZeroStencilOp, _SRGBAFormat, absolute, basename, brightness, ceilPowerOfTwo$1 as ceilPowerOfTwo, clamp$1 as clamp, clearTween, defer, degToRad$1 as degToRad, delayedCall, euclideanModulo$1 as euclideanModulo, extension, floorPowerOfTwo$1 as floorPowerOfTwo, fract, getConstructor, getFrustum, getFrustumFromHeight, getFullscreenTriangle, getKeyByValue, getScreenSpaceBox, getSphericalCube, guid, headsTails, inverseLerp$1 as inverseLerp, isPowerOfTwo$1 as isPowerOfTwo, lerp$2 as lerp, lerpCameras, mapLinear$1 as mapLinear, parabola, pcurve, radToDeg$1 as radToDeg, randFloat$1 as randFloat, randFloatSpread$1 as randFloatSpread, randInt$1 as randInt, sRGBEncoding, shuffle, smootherstep$2 as smootherstep, smoothstep$1 as smoothstep, step, ticker, tween, wait };

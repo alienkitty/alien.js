@@ -111,8 +111,8 @@
                     // map: this.texture.displace,
                     displacementMap: this.texture.displace,
                     displacementScale: 0.3,
-                    depthWrite: false,
                     depthTest: false,
+                    depthWrite: false,
                     // wireframe: true
                 });
 
@@ -401,6 +401,7 @@
 
                 // Global uniforms
                 this.resolution = { value: new Vector2() };
+                this.texelSize = { value: new Vector2() };
                 this.aspect = { value: 1 };
                 this.time = { value: 0 };
                 this.frame = { value: 0 };
@@ -440,6 +441,7 @@
                 height = Math.round(height * dpr);
 
                 this.resolution.value.set(width, height);
+                this.texelSize.value.set(1 / width, 1 / height);
                 this.aspect.value = width / height;
             };
 

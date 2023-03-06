@@ -11,7 +11,7 @@
     <link rel="stylesheet" href="assets/css/style.css">
 
     <script type="module">
-        import { BlurMaterial, Color, CopyMaterial, DirectionalLight, FXAAMaterial, Group, HemisphereLight, Mesh, MeshStandardMaterial, OrthographicCamera, PanelItem, PerspectiveCamera, Scene, SphereGeometry, UI, Vector2, WebGLRenderTarget, WebGLRenderer, getFullscreenTriangle, ticker } from '../../build/alien.three.js';
+        import { BlurMaterial, Color, CopyMaterial, DirectionalLight, Group, HemisphereLight, Mesh, MeshStandardMaterial, OrthographicCamera, PanelItem, PerspectiveCamera, SMAABlendMaterial, SMAAEdgesMaterial, SMAAWeightsMaterial, Scene, SphereGeometry, UI, Vector2, WebGLRenderTarget, WebGLRenderer, getFullscreenTriangle, ticker } from '../../build/alien.three.js';
 
         import periodic3d from '../../src/shaders/modules/noise/periodic3d.glsl.js';
 
@@ -130,7 +130,7 @@
             }
 
             static initRenderer() {
-                const { screenTriangle, resolution } = WorldController;
+                const { screenTriangle, texelSize } = WorldController;
 
                 // Fullscreen triangle
                 this.screenCamera = new OrthographicCamera(-1, 1, 1, -1, 0, 1);
@@ -143,10 +143,27 @@
                 });
 
                 this.renderTargetB = this.renderTargetA.clone();
+
+                this.renderTargetEdges = this.renderTargetA.clone();
+                this.renderTargetWeights = this.renderTargetA.clone();
+
                 this.renderTargetBlurA = this.renderTargetA.clone();
                 this.renderTargetBlurB = this.renderTargetA.clone();
 
                 this.renderTargetA.depthBuffer = true;
+
+                // SMAA edge detection material
+                this.edgesMaterial = new SMAAEdgesMaterial();
+                this.edgesMaterial.uniforms.uTexelSize = texelSize;
+
+                // SMAA weights material
+                this.weightsMaterial = new SMAAWeightsMaterial();
+                this.weightsMaterial.uniforms.uTexelSize = texelSize;
+
+                // SMAA material
+                this.smaaMaterial = new SMAABlendMaterial();
+                this.smaaMaterial.uniforms.tWeightMap.value = this.renderTargetWeights.texture;
+                this.smaaMaterial.uniforms.uTexelSize = texelSize;
 
                 // Gaussian blur materials
                 this.hBlurMaterial = new BlurMaterial(BlurDirectionX);
@@ -154,10 +171,6 @@
 
                 this.vBlurMaterial = new BlurMaterial(BlurDirectionY);
                 this.vBlurMaterial.uniforms.uBluriness.value = this.blurFactor;
-
-                // FXAA material
-                this.fxaaMaterial = new FXAAMaterial();
-                this.fxaaMaterial.uniforms.uResolution = resolution;
 
                 // Copy material
                 this.copyMaterial = new CopyMaterial();
@@ -176,6 +189,8 @@
 
                 this.renderTargetA.setSize(width, height);
                 this.renderTargetB.setSize(width, height);
+                this.renderTargetEdges.setSize(width, height);
+                this.renderTargetWeights.setSize(width, height);
 
                 width = Math.round(width * this.blurResolutionScale);
                 height = Math.round(height * this.blurResolutionScale);
@@ -200,6 +215,8 @@
 
                 const renderTargetA = this.renderTargetA;
                 const renderTargetB = this.renderTargetB;
+                const renderTargetEdges = this.renderTargetEdges;
+                const renderTargetWeights = this.renderTargetWeights;
                 const renderTargetBlurA = this.renderTargetBlurA;
                 const renderTargetBlurB = this.renderTargetBlurB;
 
@@ -207,9 +224,21 @@
                 renderer.setRenderTarget(renderTargetA);
                 renderer.render(scene, camera);
 
-                // FXAA pass
-                this.fxaaMaterial.uniforms.tMap.value = renderTargetA.texture;
-                this.screen.material = this.fxaaMaterial;
+                // SMAA edge detection pass
+                this.edgesMaterial.uniforms.tMap.value = renderTargetA.texture;
+                this.screen.material = this.edgesMaterial;
+                renderer.setRenderTarget(renderTargetEdges);
+                renderer.render(this.screen, this.screenCamera);
+
+                // SMAA weights pass
+                this.weightsMaterial.uniforms.tMap.value = renderTargetEdges.texture;
+                this.screen.material = this.weightsMaterial;
+                renderer.setRenderTarget(renderTargetWeights);
+                renderer.render(this.screen, this.screenCamera);
+
+                // SMAA pass
+                this.smaaMaterial.uniforms.tMap.value = renderTargetA.texture;
+                this.screen.material = this.smaaMaterial;
                 renderer.setRenderTarget(renderTargetB);
                 renderer.render(this.screen, this.screenCamera);
 
@@ -261,6 +290,7 @@
 
                 // Global uniforms
                 this.resolution = { value: new Vector2() };
+                this.texelSize = { value: new Vector2() };
                 this.aspect = { value: 1 };
                 this.time = { value: 0 };
                 this.frame = { value: 0 };
@@ -304,6 +334,7 @@
                 height = Math.round(height * dpr);
 
                 this.resolution.value.set(width, height);
+                this.texelSize.value.set(1 / width, 1 / height);
                 this.aspect.value = width / height;
             };
 

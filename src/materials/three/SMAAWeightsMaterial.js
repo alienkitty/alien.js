@@ -3,16 +3,16 @@ import { GLSL3, LinearFilter, NearestFilter, NoBlending, RawShaderMaterial, Text
 import { vertexShader, fragmentShader } from '../../shaders/SMAAWeightsShader.js';
 
 export class SMAAWeightsMaterial extends RawShaderMaterial {
-    constructor({
+    constructor(loader = new TextureLoader(), {
         areaTexturePath = 'assets/textures/smaa/area.png',
         searchTexturePath = 'assets/textures/smaa/search.png'
     } = {}) {
-        const areaTexture = new TextureLoader().load(areaTexturePath);
+        const areaTexture = loader.load(areaTexturePath);
         areaTexture.minFilter = LinearFilter;
         areaTexture.generateMipmaps = false;
         areaTexture.flipY = false;
 
-        const searchTexture = new TextureLoader().load(searchTexturePath);
+        const searchTexture = loader.load(searchTexturePath);
         searchTexture.magFilter = NearestFilter;
         searchTexture.minFilter = NearestFilter;
         searchTexture.generateMipmaps = false;

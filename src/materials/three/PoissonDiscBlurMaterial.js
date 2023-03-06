@@ -3,11 +3,11 @@ import { GLSL3, NearestFilter, NoBlending, RawShaderMaterial, RepeatWrapping, Te
 import { vertexShader, fragmentShader } from '../../shaders/PoissonDiscBlurShader.js';
 
 export class PoissonDiscBlurMaterial extends RawShaderMaterial {
-    constructor({
+    constructor(loader = new TextureLoader(), {
         blueNoisePath = 'assets/textures/blue_noise.png',
         blueNoiseResolution = new Vector2(256, 256)
     } = {}) {
-        const texture = new TextureLoader().load(blueNoisePath);
+        const texture = loader.load(blueNoisePath);
         texture.wrapS = RepeatWrapping;
         texture.wrapT = RepeatWrapping;
         texture.magFilter = NearestFilter;

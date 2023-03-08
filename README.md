@@ -96,6 +96,7 @@ console.log(physics.world.getGravity());
 [bloom](https://alien.js.org/examples/three/shader_bloom.html)  
 [bloom](https://alien.js.org/examples/three/shader_unreal_bloom.html) (Unreal bloom)  
 [bloom](https://alien.js.org/examples/three/shader_bloom_dither.html) (Unreal bloom with dither)  
+[bloom](https://alien.js.org/examples/three/shader_bloom_hdr.html) (Unreal bloom with HDR)  
 [matcap](https://alien.js.org/examples/three/shader_matcap.html)  
 [pbr](https://alien.js.org/examples/three/shader_pbr.html)  
 [soft particles](https://alien.js.org/examples/three/shader_soft_particles.html)  

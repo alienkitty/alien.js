@@ -66,16 +66,13 @@ export class Flowmap {
 
         // Fullscreen triangle
         this.screenCamera = new OrthographicCamera(-1, 1, 1, -1, 0, 1);
-
         this.screenTriangle = getFullscreenTriangle();
-
         this.screen = new Mesh(this.screenTriangle, this.material);
         this.screen.frustumCulled = false;
     }
 
     update() {
         const currentRenderTarget = this.renderer.getRenderTarget();
-
         const currentAutoClear = this.renderer.autoClear;
         this.renderer.autoClear = false;
 
@@ -91,7 +88,6 @@ export class Flowmap {
 
         // Restore renderer settings
         this.renderer.autoClear = currentAutoClear;
-
         this.renderer.setRenderTarget(currentRenderTarget);
     }
 

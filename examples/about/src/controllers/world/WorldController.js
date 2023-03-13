@@ -1,4 +1,4 @@
-import { Mesh, OrthographicCamera, Scene, Vector2, WebGLRenderer } from 'three';
+import { Mesh, OrthographicCamera, Vector2, WebGLRenderer } from 'three';
 
 import { getFullscreenTriangle } from '@alienkitty/space.js/three';
 
@@ -17,18 +17,11 @@ export class WorldController {
         });
         this.element = this.renderer.domElement;
 
-        // 2D scene
-        this.scene = new Scene();
-        this.camera = new OrthographicCamera(-1, 1, 1, -1, 0, 1);
-        this.camera.lookAt(this.scene.position);
-
-        // Global geometries
-        this.screenTriangle = getFullscreenTriangle();
-
         // Fullscreen triangle
-        this.screen = new Mesh(this.screenTriangle);
+        this.screenCamera = new OrthographicCamera(-1, 1, 1, -1, 0, 1);
+        this.screenTriangle = getFullscreenTriangle();
+        this.screen = new Mesh(this.screenTriangle, this.material);
         this.screen.frustumCulled = false;
-        this.scene.add(this.screen);
 
         // Global uniforms
         this.resolution = { value: new Vector2() };

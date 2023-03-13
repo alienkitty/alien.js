@@ -238,8 +238,8 @@
                 this.widthResolutionScale = this.width / frustum.width;
                 this.heightResolutionScale = this.height / frustum.height;
 
-                width = Math.round((width * dpr) * this.widthResolutionScale);
-                height = Math.round((height * dpr) * this.heightResolutionScale);
+                width = Math.round(width * dpr * this.widthResolutionScale);
+                height = Math.round(height * dpr * this.heightResolutionScale);
 
                 this.renderTarget.setSize(width, height);
 

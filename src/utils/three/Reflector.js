@@ -69,9 +69,7 @@ export class Reflector extends Group {
 
         // Fullscreen triangle
         this.screenCamera = new OrthographicCamera(-1, 1, 1, -1, 0, 1);
-
         this.screenTriangle = getFullscreenTriangle();
-
         this.screen = new Mesh(this.screenTriangle, this.blurMaterial);
         this.screen.frustumCulled = false;
     }
@@ -161,10 +159,8 @@ export class Reflector extends Group {
 
         // Render
         const currentRenderTarget = renderer.getRenderTarget();
-
         const currentXrEnabled = renderer.xr.enabled;
         const currentShadowAutoUpdate = renderer.shadowMap.autoUpdate;
-
         renderer.xr.enabled = false; // Avoid camera modification
         renderer.shadowMap.autoUpdate = false; // Avoid re-computing shadows
 
@@ -215,7 +211,6 @@ export class Reflector extends Group {
         // Restore renderer settings
         renderer.xr.enabled = currentXrEnabled;
         renderer.shadowMap.autoUpdate = currentShadowAutoUpdate;
-
         renderer.setRenderTarget(currentRenderTarget);
     }
 

@@ -10,11 +10,10 @@ import { FluidPassMaterial } from '../../materials/FluidPassMaterial.js';
 import { FluidViewMaterial } from '../../materials/FluidViewMaterial.js';
 
 export class FluidController {
-    static init(renderer, scene, camera, screen, trackers) {
+    static init(renderer, screen, screenCamera, trackers) {
         this.renderer = renderer;
-        this.scene = scene;
-        this.camera = camera;
         this.screen = screen;
+        this.screenCamera = screenCamera;
         this.trackers = trackers;
 
         this.pointer = {};
@@ -200,12 +199,12 @@ export class FluidController {
         this.passMaterial.uniforms.tMap.value = this.renderTargetRead.texture;
         this.screen.material = this.passMaterial;
         this.renderer.setRenderTarget(this.renderTargetWrite);
-        this.renderer.render(this.scene, this.camera);
+        this.renderer.render(this.screen, this.screenCamera);
 
         this.viewMaterial.uniforms.tMap.value = this.renderTargetWrite.texture;
         this.screen.material = this.viewMaterial;
         this.renderer.setRenderTarget(null);
-        this.renderer.render(this.scene, this.camera);
+        this.renderer.render(this.screen, this.screenCamera);
 
         // Swap render targets
         const temp = this.renderTargetRead;

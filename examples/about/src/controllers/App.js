@@ -43,9 +43,9 @@ export class App {
     }
 
     static initControllers() {
-        const { renderer, scene, camera, screen } = WorldController;
+        const { renderer, screen, screenCamera } = WorldController;
 
-        FluidController.init(renderer, scene, camera, screen, this.trackers);
+        FluidController.init(renderer, screen, screenCamera, this.trackers);
     }
 
     static initAudio() {

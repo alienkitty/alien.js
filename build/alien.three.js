@@ -57654,7 +57654,7 @@ class Magnetic extends Component {
     };
 }
 
-const vertexShader$A = /* glsl */ `
+const vertexShader$B = /* glsl */ `
 in vec3 position;
 in vec3 normal;
 
@@ -57671,7 +57671,7 @@ void main() {
 }
 `;
 
-const fragmentShader$A = /* glsl */ `
+const fragmentShader$B = /* glsl */ `
 precision highp float;
 
 in vec3 vNormal;
@@ -57686,13 +57686,14 @@ void main() {
 class NormalMaterial extends RawShaderMaterial {
     constructor() {
         super({
-            vertexShader: vertexShader$A,
-            fragmentShader: fragmentShader$A
+            glslVersion: GLSL3,
+            vertexShader: vertexShader$B,
+            fragmentShader: fragmentShader$B
         });
     }
 }
 
-const vertexShader$z = /* glsl */ `
+const vertexShader$A = /* glsl */ `
 in vec3 position;
 
 uniform mat4 modelViewMatrix;
@@ -57703,7 +57704,7 @@ void main() {
 }
 `;
 
-const fragmentShader$z = /* glsl */ `
+const fragmentShader$A = /* glsl */ `
 precision highp float;
 
 uniform vec3 uColor;
@@ -57722,8 +57723,55 @@ class ColorMaterial extends RawShaderMaterial {
             uniforms: {
                 uColor: { value: color instanceof Color$1 ? color : new Color$1(color) }
             },
+            vertexShader: vertexShader$A,
+            fragmentShader: fragmentShader$A
+        });
+    }
+}
+
+const vertexShader$z = /* glsl */ `
+in vec3 position;
+in vec2 uv;
+
+uniform mat4 modelViewMatrix;
+uniform mat4 projectionMatrix;
+
+out vec2 vUv;
+
+void main() {
+    vUv = uv;
+
+    gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+}
+`;
+
+const fragmentShader$z = /* glsl */ `
+precision highp float;
+
+uniform sampler2D tMap;
+uniform float uAlpha;
+
+in vec2 vUv;
+
+out vec4 FragColor;
+
+void main() {
+    FragColor = texture(tMap, vUv);
+    FragColor.a *= uAlpha;
+}
+`;
+
+class BasicMaterial extends RawShaderMaterial {
+    constructor(map) {
+        super({
+            glslVersion: GLSL3,
+            uniforms: {
+                tMap: { value: map },
+                uAlpha: { value: 1 }
+            },
             vertexShader: vertexShader$z,
-            fragmentShader: fragmentShader$z
+            fragmentShader: fragmentShader$z,
+            transparent: true
         });
     }
 }
@@ -57755,53 +57803,6 @@ in vec2 vUv;
 out vec4 FragColor;
 
 void main() {
-    FragColor = texture(tMap, vUv);
-    FragColor.a *= uAlpha;
-}
-`;
-
-class BasicMaterial extends RawShaderMaterial {
-    constructor(map) {
-        super({
-            glslVersion: GLSL3,
-            uniforms: {
-                tMap: { value: map },
-                uAlpha: { value: 1 }
-            },
-            vertexShader: vertexShader$y,
-            fragmentShader: fragmentShader$y,
-            transparent: true
-        });
-    }
-}
-
-const vertexShader$x = /* glsl */ `
-in vec3 position;
-in vec2 uv;
-
-uniform mat4 modelViewMatrix;
-uniform mat4 projectionMatrix;
-
-out vec2 vUv;
-
-void main() {
-    vUv = uv;
-
-    gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
-}
-`;
-
-const fragmentShader$x = /* glsl */ `
-precision highp float;
-
-uniform sampler2D tMap;
-uniform float uAlpha;
-
-in vec2 vUv;
-
-out vec4 FragColor;
-
-void main() {
     float shadow = texture(tMap, vUv).g;
 
     FragColor.rgb = vec3(0.0);
@@ -57817,14 +57818,14 @@ class ShadowTextureMaterial extends RawShaderMaterial {
                 tMap: { value: map },
                 uAlpha: { value: 1 }
             },
-            vertexShader: vertexShader$x,
-            fragmentShader: fragmentShader$x,
+            vertexShader: vertexShader$y,
+            fragmentShader: fragmentShader$y,
             transparent: true
         });
     }
 }
 
-const vertexShader$w = /* glsl */ `
+const vertexShader$x = /* glsl */ `
 in vec3 position;
 in vec3 normal;
 
@@ -57845,7 +57846,7 @@ void main() {
 }
 `;
 
-const fragmentShader$w = /* glsl */ `
+const fragmentShader$x = /* glsl */ `
 precision highp float;
 
 uniform vec3 uBaseColor;
@@ -57882,15 +57883,15 @@ class FresnelMaterial extends RawShaderMaterial {
                 uFresnelColor: { value: fresnelColor instanceof Color$1 ? fresnelColor : new Color$1(fresnelColor) },
                 uFresnelPower: { value: fresnelPower }
             },
-            vertexShader: vertexShader$w,
-            fragmentShader: fragmentShader$w
+            vertexShader: vertexShader$x,
+            fragmentShader: fragmentShader$x
         });
     }
 }
 
 // Based on https://oframe.github.io/ogl/examples/?src=mouse-flowmap.html by gordonnl
 
-const vertexShader$v = /* glsl */ `
+const vertexShader$w = /* glsl */ `
 in vec3 position;
 in vec2 uv;
 
@@ -57903,7 +57904,7 @@ void main() {
 }
 `;
 
-const fragmentShader$v = /* glsl */ `
+const fragmentShader$w = /* glsl */ `
 precision highp float;
 
 uniform sampler2D tMap;
@@ -57934,8 +57935,8 @@ class FlowMaterial extends RawShaderMaterial {
                 tMap: { value: null },
                 tFlow: { value: null }
             },
-            vertexShader: vertexShader$v,
-            fragmentShader: fragmentShader$v,
+            vertexShader: vertexShader$w,
+            fragmentShader: fragmentShader$w,
             blending: NoBlending,
             depthTest: false,
             depthWrite: false
@@ -57943,7 +57944,7 @@ class FlowMaterial extends RawShaderMaterial {
     }
 }
 
-const vertexShader$u = /* glsl */ `
+const vertexShader$v = /* glsl */ `
 in vec3 position;
 in vec2 uv;
 
@@ -57956,7 +57957,7 @@ void main() {
 }
 `;
 
-const fragmentShader$u = /* glsl */ `
+const fragmentShader$v = /* glsl */ `
 precision highp float;
 
 uniform sampler2D tMap;
@@ -57977,8 +57978,8 @@ class CopyMaterial extends RawShaderMaterial {
             uniforms: {
                 tMap: { value: map }
             },
-            vertexShader: vertexShader$u,
-            fragmentShader: fragmentShader$u,
+            vertexShader: vertexShader$v,
+            fragmentShader: fragmentShader$v,
             blending: NoBlending,
             depthTest: false,
             depthWrite: false
@@ -58050,7 +58051,7 @@ vec4 fxaa(sampler2D tex, vec2 fragCoord, vec2 resolution,
 
 // Based on https://github.com/mattdesl/glsl-fxaa
 
-const vertexShader$t = /* glsl */ `
+const vertexShader$u = /* glsl */ `
 in vec3 position;
 in vec2 uv;
 
@@ -58079,7 +58080,7 @@ void main() {
 }
 `;
 
-const fragmentShader$t = /* glsl */ `
+const fragmentShader$u = /* glsl */ `
 precision highp float;
 
 uniform sampler2D tMap;
@@ -58110,8 +58111,8 @@ class FXAAMaterial extends RawShaderMaterial {
                 tMap: { value: null },
                 uResolution: { value: new Vector2$1() }
             },
-            vertexShader: vertexShader$t,
-            fragmentShader: fragmentShader$t,
+            vertexShader: vertexShader$u,
+            fragmentShader: fragmentShader$u,
             blending: NoBlending,
             depthTest: false,
             depthWrite: false
@@ -58122,7 +58123,7 @@ class FXAAMaterial extends RawShaderMaterial {
 // Based on https://github.com/pmndrs/postprocessing by vanruesc
 // Based on https://github.com/mrdoob/three.js/blob/dev/examples/jsm/postprocessing/SMAAPass.js by mpk
 
-const vertexShader$s = /* glsl */ `
+const vertexShader$t = /* glsl */ `
 in vec3 position;
 in vec2 uv;
 
@@ -58145,7 +58146,7 @@ void main() {
 }
 `;
 
-const fragmentShader$s = /* glsl */ `
+const fragmentShader$t = /* glsl */ `
 precision highp float;
 
 uniform sampler2D tMap;
@@ -58212,8 +58213,8 @@ class SMAABlendMaterial extends RawShaderMaterial {
                 tWeightMap: { value: null },
                 uTexelSize: { value: new Vector2$1() }
             },
-            vertexShader: vertexShader$s,
-            fragmentShader: fragmentShader$s,
+            vertexShader: vertexShader$t,
+            fragmentShader: fragmentShader$t,
             blending: NoBlending,
             depthTest: false,
             depthWrite: false
@@ -58224,7 +58225,7 @@ class SMAABlendMaterial extends RawShaderMaterial {
 // Based on https://github.com/pmndrs/postprocessing by vanruesc
 // Based on https://github.com/mrdoob/three.js/blob/dev/examples/jsm/postprocessing/SMAAPass.js by mpk
 
-const vertexShader$r = /* glsl */ `
+const vertexShader$s = /* glsl */ `
 in vec3 position;
 in vec2 uv;
 
@@ -58248,7 +58249,7 @@ void main() {
 }
 `;
 
-const fragmentShader$r = /* glsl */ `
+const fragmentShader$s = /* glsl */ `
 precision highp float;
 
 uniform sampler2D tMap;
@@ -58325,8 +58326,8 @@ class SMAAEdgesMaterial extends RawShaderMaterial {
                 tMap: { value: null },
                 uTexelSize: { value: new Vector2$1() }
             },
-            vertexShader: vertexShader$r,
-            fragmentShader: fragmentShader$r,
+            vertexShader: vertexShader$s,
+            fragmentShader: fragmentShader$s,
             blending: NoBlending,
             depthTest: false,
             depthWrite: false
@@ -58337,7 +58338,7 @@ class SMAAEdgesMaterial extends RawShaderMaterial {
 // Based on https://github.com/pmndrs/postprocessing by vanruesc
 // Based on https://github.com/mrdoob/three.js/blob/dev/examples/jsm/postprocessing/SMAAPass.js by mpk
 
-const vertexShader$q = /* glsl */ `
+const vertexShader$r = /* glsl */ `
 in vec3 position;
 in vec2 uv;
 
@@ -58368,7 +58369,7 @@ void main() {
 }
 `;
 
-const fragmentShader$q = /* glsl */ `
+const fragmentShader$r = /* glsl */ `
 precision highp float;
 
 #define SMAASampleLevelZeroOffset(tex, coord, offset) texture(tex, coord + offset * uTexelSize)
@@ -58574,8 +58575,8 @@ class SMAAWeightsMaterial extends RawShaderMaterial {
                 tSearch: { value: searchTexture },
                 uTexelSize: { value: new Vector2$1() }
             },
-            vertexShader: vertexShader$q,
-            fragmentShader: fragmentShader$q,
+            vertexShader: vertexShader$r,
+            fragmentShader: fragmentShader$r,
             blending: NoBlending,
             depthTest: false,
             depthWrite: false
@@ -58682,7 +58683,7 @@ vec4 getBadTV(sampler2D image, vec2 uv, float time, float distortion, float dist
 }
 `;
 
-const vertexShader$p = /* glsl */ `
+const vertexShader$q = /* glsl */ `
 in vec3 position;
 in vec2 uv;
 
@@ -58695,7 +58696,7 @@ void main() {
 }
 `;
 
-const fragmentShader$p = /* glsl */ `
+const fragmentShader$q = /* glsl */ `
 precision highp float;
 
 uniform sampler2D tMap;
@@ -58728,8 +58729,8 @@ class BadTVMaterial extends RawShaderMaterial {
                 uRollSpeed: { value: 0.1 },
                 uTime: { value: 0 }
             },
-            vertexShader: vertexShader$p,
-            fragmentShader: fragmentShader$p,
+            vertexShader: vertexShader$q,
+            fragmentShader: fragmentShader$q,
             blending: NoBlending,
             depthTest: false,
             depthWrite: false
@@ -58749,7 +58750,7 @@ vec4 getRGB(sampler2D image, vec2 uv, float angle, float amount) {
 }
 `;
 
-const vertexShader$o = /* glsl */ `
+const vertexShader$p = /* glsl */ `
 in vec3 position;
 in vec2 uv;
 
@@ -58762,7 +58763,7 @@ void main() {
 }
 `;
 
-const fragmentShader$o = /* glsl */ `
+const fragmentShader$p = /* glsl */ `
 precision highp float;
 
 uniform sampler2D tMap;
@@ -58789,8 +58790,8 @@ class RGBMaterial extends RawShaderMaterial {
                 uAngle: { value: 0 },
                 uAmount: { value: 0.005 }
             },
-            vertexShader: vertexShader$o,
-            fragmentShader: fragmentShader$o,
+            vertexShader: vertexShader$p,
+            fragmentShader: fragmentShader$p,
             blending: NoBlending,
             depthTest: false,
             depthWrite: false
@@ -58820,7 +58821,7 @@ vec4 blur(sampler2D image, vec2 uv, vec2 resolution, vec2 direction) {
 }
 `;
 
-const vertexShader$n = /* glsl */ `
+const vertexShader$o = /* glsl */ `
 in vec3 position;
 in vec2 uv;
 
@@ -58833,7 +58834,7 @@ void main() {
 }
 `;
 
-const fragmentShader$n = /* glsl */ `
+const fragmentShader$o = /* glsl */ `
 precision highp float;
 
 uniform sampler2D tMap;
@@ -58862,8 +58863,8 @@ class BlurMaterial extends RawShaderMaterial {
                 uDirection: { value: direction },
                 uResolution: { value: new Vector2$1() }
             },
-            vertexShader: vertexShader$n,
-            fragmentShader: fragmentShader$n,
+            vertexShader: vertexShader$o,
+            fragmentShader: fragmentShader$o,
             blending: NoBlending,
             depthTest: false,
             depthWrite: false
@@ -58890,7 +58891,7 @@ vec4 blur13(sampler2D image, vec2 uv, vec2 resolution, vec2 direction) {
 }
 `;
 
-const vertexShader$m = /* glsl */ `
+const vertexShader$n = /* glsl */ `
 in vec3 position;
 in vec2 uv;
 
@@ -58903,7 +58904,7 @@ void main() {
 }
 `;
 
-const fragmentShader$m = /* glsl */ `
+const fragmentShader$n = /* glsl */ `
 precision highp float;
 
 uniform sampler2D tMap;
@@ -58930,8 +58931,8 @@ class FastGaussianBlurMaterial extends RawShaderMaterial {
                 uDirection: { value: new Vector2$1(1, 0) },
                 uResolution: { value: new Vector2$1() }
             },
-            vertexShader: vertexShader$m,
-            fragmentShader: fragmentShader$m,
+            vertexShader: vertexShader$n,
+            fragmentShader: fragmentShader$n,
             blending: NoBlending,
             depthTest: false,
             depthWrite: false
@@ -58941,7 +58942,7 @@ class FastGaussianBlurMaterial extends RawShaderMaterial {
 
 // Based on https://github.com/mrdoob/three.js/blob/dev/examples/jsm/shaders/LuminosityHighPassShader.js by bhouston
 
-const vertexShader$l = /* glsl */ `
+const vertexShader$m = /* glsl */ `
 in vec3 position;
 in vec2 uv;
 
@@ -58954,7 +58955,7 @@ void main() {
 }
 `;
 
-const fragmentShader$l = /* glsl */ `
+const fragmentShader$m = /* glsl */ `
 precision highp float;
 
 uniform sampler2D tMap;
@@ -58984,8 +58985,8 @@ class LuminosityMaterial extends RawShaderMaterial {
                 uThreshold: { value: 1 },
                 uSmoothing: { value: 1 }
             },
-            vertexShader: vertexShader$l,
-            fragmentShader: fragmentShader$l,
+            vertexShader: vertexShader$m,
+            fragmentShader: fragmentShader$m,
             blending: NoBlending,
             depthTest: false,
             depthWrite: false
@@ -59020,7 +59021,7 @@ vec4 blur(sampler2D image, vec2 uv, vec2 resolution, vec2 direction) {
 }
 `;
 
-const vertexShader$k = /* glsl */ `
+const vertexShader$l = /* glsl */ `
 in vec3 position;
 in vec2 uv;
 
@@ -59033,7 +59034,7 @@ void main() {
 }
 `;
 
-const fragmentShader$k = /* glsl */ `
+const fragmentShader$l = /* glsl */ `
 precision highp float;
 
 uniform sampler2D tMap;
@@ -59064,8 +59065,8 @@ class UnrealBloomBlurMaterial extends RawShaderMaterial {
                 uDirection: { value: new Vector2$1(0.5, 0.5) },
                 uResolution: { value: new Vector2$1() }
             },
-            vertexShader: vertexShader$k,
-            fragmentShader: fragmentShader$k,
+            vertexShader: vertexShader$l,
+            fragmentShader: fragmentShader$l,
             blending: NoBlending,
             depthTest: false,
             depthWrite: false
@@ -59075,7 +59076,7 @@ class UnrealBloomBlurMaterial extends RawShaderMaterial {
 
 // Based on https://github.com/mrdoob/three.js/blob/dev/examples/jsm/postprocessing/UnrealBloomPass.js by spidersharma03 and bhouston
 
-const vertexShader$j = /* glsl */ `
+const vertexShader$k = /* glsl */ `
 in vec3 position;
 in vec2 uv;
 
@@ -59088,7 +59089,7 @@ void main() {
 }
 `;
 
-const fragmentShader$j = /* glsl */ `
+const fragmentShader$k = /* glsl */ `
 precision highp float;
 
 uniform sampler2D tBlur1;
@@ -59136,8 +59137,8 @@ class UnrealBloomCompositeMaterial extends RawShaderMaterial {
                 uBloomFactors: { value: null },
                 uBloomTintColors: { value: null }
             },
-            vertexShader: vertexShader$j,
-            fragmentShader: fragmentShader$j,
+            vertexShader: vertexShader$k,
+            fragmentShader: fragmentShader$k,
             blending: NoBlending,
             depthTest: false,
             depthWrite: false
@@ -59178,7 +59179,7 @@ vec3 dither(vec3 color) {
 }
 `;
 
-const vertexShader$i = /* glsl */ `
+const vertexShader$j = /* glsl */ `
 in vec3 position;
 in vec2 uv;
 
@@ -59191,7 +59192,7 @@ void main() {
 }
 `;
 
-const fragmentShader$i = /* glsl */ `
+const fragmentShader$j = /* glsl */ `
 precision highp float;
 
 uniform sampler2D tBlur1;
@@ -59238,8 +59239,8 @@ class BloomCompositeMaterial extends RawShaderMaterial {
                 tBlur5: { value: null },
                 uBloomFactors: { value: null }
             },
-            vertexShader: vertexShader$i,
-            fragmentShader: fragmentShader$i,
+            vertexShader: vertexShader$j,
+            fragmentShader: fragmentShader$j,
             blending: NoBlending,
             depthTest: false,
             depthWrite: false
@@ -59247,7 +59248,7 @@ class BloomCompositeMaterial extends RawShaderMaterial {
     }
 }
 
-const vertexShader$h = /* glsl */ `
+const vertexShader$i = /* glsl */ `
 in vec3 position;
 in vec2 uv;
 
@@ -59260,7 +59261,7 @@ void main() {
 }
 `;
 
-const fragmentShader$h = /* glsl */ `
+const fragmentShader$i = /* glsl */ `
 precision highp float;
 
 uniform sampler2D tScene;
@@ -59285,8 +59286,8 @@ class SceneCompositeMaterial extends RawShaderMaterial {
                 tScene: { value: null },
                 tBloom: { value: null }
             },
-            vertexShader: vertexShader$h,
-            fragmentShader: fragmentShader$h,
+            vertexShader: vertexShader$i,
+            fragmentShader: fragmentShader$i,
             blending: NoBlending,
             depthTest: false,
             depthWrite: false
@@ -59345,7 +59346,7 @@ float getBlueNoise(sampler2D tex, float t, vec2 resolution) {
 }
 `;
 
-const vertexShader$g = /* glsl */ `
+const vertexShader$h = /* glsl */ `
 in vec3 position;
 in vec2 uv;
 
@@ -59358,7 +59359,7 @@ void main() {
 }
 `;
 
-const fragmentShader$g = /* glsl */ `
+const fragmentShader$h = /* glsl */ `
 precision highp float;
 
 uniform sampler2D tMap;
@@ -59410,8 +59411,8 @@ class PoissonDiscBlurMaterial extends RawShaderMaterial {
                 uResolution: { value: new Vector2$1() },
                 uTime: { value: 0 }
             },
-            vertexShader: vertexShader$g,
-            fragmentShader: fragmentShader$g,
+            vertexShader: vertexShader$h,
+            fragmentShader: fragmentShader$h,
             blending: NoBlending,
             depthTest: false,
             depthWrite: false
@@ -59421,7 +59422,7 @@ class PoissonDiscBlurMaterial extends RawShaderMaterial {
 
 // Based on https://github.com/blaze33/droneWorld
 
-const vertexShader$f = /* glsl */ `
+const vertexShader$g = /* glsl */ `
 in vec3 position;
 in vec2 uv;
 
@@ -59434,7 +59435,7 @@ void main() {
 }
 `;
 
-const fragmentShader$f = /* glsl */ `
+const fragmentShader$g = /* glsl */ `
 precision highp float;
 
 uniform vec3 cameraPosition;
@@ -59503,8 +59504,8 @@ class CameraMotionBlurMaterial extends RawShaderMaterial {
                 uPreviousWorldToClipMatrix: { value: new Matrix4() },
                 uCameraMove: { value: new Vector3() }
             },
-            vertexShader: vertexShader$f,
-            fragmentShader: fragmentShader$f,
+            vertexShader: vertexShader$g,
+            fragmentShader: fragmentShader$g,
             blending: NoBlending,
             depthTest: false,
             depthWrite: false
@@ -59514,7 +59515,7 @@ class CameraMotionBlurMaterial extends RawShaderMaterial {
 
 // Based on https://www.shadertoy.com/view/4lVfDt by battlebottle
 
-const vertexShader$e = /* glsl */ `
+const vertexShader$f = /* glsl */ `
 in vec3 position;
 in vec2 uv;
 
@@ -59527,7 +59528,7 @@ void main() {
 }
 `;
 
-const fragmentShader$e = /* glsl */ `
+const fragmentShader$f = /* glsl */ `
 precision highp float;
 
 #define PI          3.14
@@ -59586,8 +59587,8 @@ class BokehBlurMaterial1 extends RawShaderMaterial {
                 uScale: { value: 1 },
                 uResolution: { value: new Vector2$1() }
             },
-            vertexShader: vertexShader$e,
-            fragmentShader: fragmentShader$e,
+            vertexShader: vertexShader$f,
+            fragmentShader: fragmentShader$f,
             blending: NoBlending,
             depthTest: false,
             depthWrite: false
@@ -59597,7 +59598,7 @@ class BokehBlurMaterial1 extends RawShaderMaterial {
 
 // Based on https://www.shadertoy.com/view/4lVfDt by battlebottle
 
-const vertexShader$d = /* glsl */ `
+const vertexShader$e = /* glsl */ `
 in vec3 position;
 in vec2 uv;
 
@@ -59610,7 +59611,7 @@ void main() {
 }
 `;
 
-const fragmentShader$d = /* glsl */ `
+const fragmentShader$e = /* glsl */ `
 precision highp float;
 
 #define PI          3.14
@@ -59669,8 +59670,8 @@ class BokehBlurMaterial2 extends RawShaderMaterial {
                 uScale: { value: 1 },
                 uResolution: { value: new Vector2$1() }
             },
-            vertexShader: vertexShader$d,
-            fragmentShader: fragmentShader$d,
+            vertexShader: vertexShader$e,
+            fragmentShader: fragmentShader$e,
             blending: NoBlending,
             depthTest: false,
             depthWrite: false
@@ -59689,7 +59690,7 @@ float smootherstep(float edge0, float edge1, float x) {
 
 // Based on https://github.com/mrdoob/three.js/blob/dev/examples/jsm/shaders/HorizontalTiltShiftShader.js by alteredq
 
-const vertexShader$c = /* glsl */ `
+const vertexShader$d = /* glsl */ `
 in vec3 position;
 in vec2 uv;
 
@@ -59702,7 +59703,7 @@ void main() {
 }
 `;
 
-const fragmentShader$c = /* glsl */ `
+const fragmentShader$d = /* glsl */ `
 precision highp float;
 
 uniform sampler2D tMap;
@@ -59736,8 +59737,8 @@ class TiltShiftMaterial extends RawShaderMaterial {
                 uDirection: { value: direction },
                 uResolution: { value: new Vector2$1() }
             },
-            vertexShader: vertexShader$c,
-            fragmentShader: fragmentShader$c,
+            vertexShader: vertexShader$d,
+            fragmentShader: fragmentShader$d,
             blending: NoBlending,
             depthTest: false,
             depthWrite: false
@@ -59747,7 +59748,7 @@ class TiltShiftMaterial extends RawShaderMaterial {
 
 // Based on https://github.com/mrdoob/three.js/blob/dev/examples/jsm/shaders/HorizontalTiltShiftShader.js by alteredq
 
-const vertexShader$b = /* glsl */ `
+const vertexShader$c = /* glsl */ `
 in vec3 position;
 in vec2 uv;
 
@@ -59760,7 +59761,7 @@ void main() {
 }
 `;
 
-const fragmentShader$b = /* glsl */ `
+const fragmentShader$c = /* glsl */ `
 precision highp float;
 
 uniform sampler2D tMap;
@@ -59788,8 +59789,8 @@ class ReflectorBlurMaterial extends RawShaderMaterial {
                 uDirection: { value: new Vector2$1(1, 0) },
                 uResolution: { value: new Vector2$1() }
             },
-            vertexShader: vertexShader$b,
-            fragmentShader: fragmentShader$b,
+            vertexShader: vertexShader$c,
+            fragmentShader: fragmentShader$c,
             blending: NoBlending,
             depthTest: false,
             depthWrite: false
@@ -59799,7 +59800,7 @@ class ReflectorBlurMaterial extends RawShaderMaterial {
 
 // Based on https://github.com/mrdoob/three.js/blob/dev/examples/jsm/objects/Water2.js by Mugen87
 
-const vertexShader$a = /* glsl */ `
+const vertexShader$b = /* glsl */ `
 in vec3 position;
 in vec3 normal;
 in vec2 uv;
@@ -59831,7 +59832,7 @@ void main() {
 }
 `;
 
-const fragmentShader$a = /* glsl */ `
+const fragmentShader$b = /* glsl */ `
 precision highp float;
 
 uniform sampler2D tReflect;
@@ -59932,8 +59933,8 @@ class ReflectorMaterial extends RawShaderMaterial {
                 uMirror: { value: mirror },
                 uMixStrength: { value: mixStrength }
             },
-            vertexShader: vertexShader$a,
-            fragmentShader: fragmentShader$a,
+            vertexShader: vertexShader$b,
+            fragmentShader: fragmentShader$b,
             blending: NoBlending
         };
 
@@ -59993,7 +59994,7 @@ class ReflectorMaterial extends RawShaderMaterial {
 
 // Based on https://github.com/mrdoob/three.js/blob/dev/examples/jsm/objects/Water2.js by Mugen87
 
-const vertexShader$9 = /* glsl */ `
+const vertexShader$a = /* glsl */ `
 in vec3 position;
 in vec3 normal;
 in vec2 uv;
@@ -60025,7 +60026,7 @@ void main() {
 }
 `;
 
-const fragmentShader$9 = /* glsl */ `
+const fragmentShader$a = /* glsl */ `
 precision highp float;
 
 uniform sampler2D tMap;
@@ -60092,8 +60093,8 @@ class ReflectorDudvMaterial extends RawShaderMaterial {
                 uMatrix: { value: new Matrix4() },
                 uReflectivity: { value: reflectivity }
             },
-            vertexShader: vertexShader$9,
-            fragmentShader: fragmentShader$9,
+            vertexShader: vertexShader$a,
+            fragmentShader: fragmentShader$a,
             blending: NoBlending
         };
 
@@ -60110,9 +60111,227 @@ class ReflectorDudvMaterial extends RawShaderMaterial {
     }
 }
 
+// Based on https://github.com/pmndrs/drei/blob/master/src/core/MeshTransmissionMaterial.tsx by N8python
+
+class TransmissionMaterial extends MeshPhysicalMaterial {
+    constructor({
+        chromaticAberration = 0.05,
+        anisotropy = 0.1,
+        samples = 6,
+        buffer = null,
+        ...parameters
+    } = {}) {
+        super(parameters);
+
+        const uniforms = {
+            chromaticAberration: { value: chromaticAberration },
+            // Transmission must always be 0
+            transmission: { value: 0 },
+            // Instead a workaround is used, see below for reasons why
+            _transmission: { value: parameters.transmission },
+            transmissionMap: { value: null },
+            // Roughness is 1 in MeshPhysicalMaterial but it makes little sense in a transmission material
+            roughness: { value: 0 },
+            thickness: { value: parameters.thickness },
+            thicknessMap: { value: null },
+            attenuationDistance: { value: Infinity },
+            attenuationColor: { value: new Color$1() },
+            anisotropy: { value: anisotropy },
+            buffer: { value: buffer }
+        };
+
+        this.onBeforeCompile = shader => {
+            shader.uniforms = Object.assign(shader.uniforms, uniforms);
+
+            // We do use use .transmission and must therefore force USE_TRANSMISSION
+            // because threejs won't inject it for us
+            shader.defines.USE_TRANSMISSION = '';
+
+            // Head
+            shader.fragmentShader =
+                /* glsl */ `
+                uniform float chromaticAberration;
+                uniform float anisotropy;
+                uniform sampler2D buffer;
+
+                float seed = 0.0;
+                uint hash( uint x ) {
+                    x += ( x << 10u );
+                    x ^= ( x >>  6u );
+                    x += ( x <<  3u );
+                    x ^= ( x >> 11u );
+                    x += ( x << 15u );
+                    return x;
+                }
+
+                // Compound versions of the hashing algorithm I whipped together.
+                uint hash( uvec2 v ) { return hash( v.x ^ hash(v.y)                         ); }
+                uint hash( uvec3 v ) { return hash( v.x ^ hash(v.y) ^ hash(v.z)             ); }
+                uint hash( uvec4 v ) { return hash( v.x ^ hash(v.y) ^ hash(v.z) ^ hash(v.w) ); }
+
+                // Construct a float with half-open range [0:1] using low 23 bits.
+                // All zeroes yields 0.0, all ones yields the next smallest representable value below 1.0.
+                float floatConstruct( uint m ) {
+                    const uint ieeeMantissa = 0x007FFFFFu; // binary32 mantissa bitmask
+                    const uint ieeeOne      = 0x3F800000u; // 1.0 in IEEE binary32
+                    m &= ieeeMantissa;                     // Keep only mantissa bits (fractional part)
+                    m |= ieeeOne;                          // Add fractional part to 1.0
+                    float  f = uintBitsToFloat( m );       // Range [1:2]
+                    return f - 1.0;                        // Range [0:1]
+                }
+
+                // Pseudo-random value in half-open range [0:1].
+                float random( float x ) { return floatConstruct(hash(floatBitsToUint(x))); }
+                float random( vec2  v ) { return floatConstruct(hash(floatBitsToUint(v))); }
+                float random( vec3  v ) { return floatConstruct(hash(floatBitsToUint(v))); }
+                float random( vec4  v ) { return floatConstruct(hash(floatBitsToUint(v))); }
+
+                float rand() {
+                    float result = random(vec3(gl_FragCoord.xy, seed));
+                    seed += 1.0;
+                    return result;
+                }
+                ` + shader.fragmentShader;
+
+            // Remove transmission
+            shader.fragmentShader = shader.fragmentShader.replace(
+                '#include <transmission_pars_fragment>',
+                /* glsl */ `
+                #ifdef USE_TRANSMISSION
+                    // Transmission code is based on glTF-Sampler-Viewer
+                    // https://github.com/KhronosGroup/glTF-Sample-Viewer
+                    uniform float _transmission;
+                    uniform float thickness;
+                    uniform float attenuationDistance;
+                    uniform vec3 attenuationColor;
+                    #ifdef USE_TRANSMISSIONMAP
+                        uniform sampler2D transmissionMap;
+                    #endif
+                    #ifdef USE_THICKNESSMAP
+                        uniform sampler2D thicknessMap;
+                    #endif
+                    uniform mat4 modelMatrix;
+                    uniform mat4 projectionMatrix;
+                    varying vec3 vWorldPosition;
+                    vec3 getVolumeTransmissionRay( const in vec3 n, const in vec3 v, const in float thickness, const in float ior, const in mat4 modelMatrix ) {
+                        // Direction of refracted light.
+                        vec3 refractionVector = refract( - v, normalize( n ), 1.0 / ior );
+                        // Compute rotation-independant scaling of the model matrix.
+                        vec3 modelScale;
+                        modelScale.x = length( vec3( modelMatrix[ 0 ].xyz ) );
+                        modelScale.y = length( vec3( modelMatrix[ 1 ].xyz ) );
+                        modelScale.z = length( vec3( modelMatrix[ 2 ].xyz ) );
+                        // The thickness is specified in local space.
+                        return normalize( refractionVector ) * thickness * modelScale;
+                    }
+                    float applyIorToRoughness( const in float roughness, const in float ior ) {
+                        // Scale roughness with IOR so that an IOR of 1.0 results in no microfacet refraction and
+                        // an IOR of 1.5 results in the default amount of microfacet refraction.
+                        return roughness * clamp( ior * 2.0 - 2.0, 0.0, 1.0 );
+                    }
+                    vec4 getTransmissionSample( const in vec2 fragCoord, const in float roughness, const in float ior ) {
+                        return texture2D(buffer, fragCoord.xy);
+                    }
+                    vec3 applyVolumeAttenuation( const in vec3 radiance, const in float transmissionDistance, const in vec3 attenuationColor, const in float attenuationDistance ) {
+                        if ( isinf( attenuationDistance ) ) {
+                            // Attenuation distance is +∞, i.e. the transmitted color is not attenuated at all.
+                            return radiance;
+                        } else {
+                            // Compute light attenuation using Beer's law.
+                            vec3 attenuationCoefficient = -log( attenuationColor ) / attenuationDistance;
+                            vec3 transmittance = exp( - attenuationCoefficient * transmissionDistance ); // Beer's law
+                            return transmittance * radiance;
+                        }
+                    }
+                    vec4 getIBLVolumeRefraction( const in vec3 n, const in vec3 v, const in float roughness, const in vec3 diffuseColor,
+                        const in vec3 specularColor, const in float specularF90, const in vec3 position, const in mat4 modelMatrix,
+                        const in mat4 viewMatrix, const in mat4 projMatrix, const in float ior, const in float thickness,
+                        const in vec3 attenuationColor, const in float attenuationDistance ) {
+                        vec3 transmissionRay = getVolumeTransmissionRay( n, v, thickness, ior, modelMatrix );
+                        vec3 refractedRayExit = position + transmissionRay;
+                        // Project refracted vector on the framebuffer, while mapping to normalized device coordinates.
+                        vec4 ndcPos = projMatrix * viewMatrix * vec4( refractedRayExit, 1.0 );
+                        vec2 refractionCoords = ndcPos.xy / ndcPos.w;
+                        refractionCoords += 1.0;
+                        refractionCoords /= 2.0;
+                        // Sample framebuffer to get pixel the refracted ray hits.
+                        vec4 transmittedLight = getTransmissionSample( refractionCoords, roughness, ior );
+                        vec3 attenuatedColor = applyVolumeAttenuation( transmittedLight.rgb, length( transmissionRay ), attenuationColor, attenuationDistance );
+                        // Get the specular component.
+                        vec3 F = EnvironmentBRDF( n, v, specularColor, specularF90, roughness );
+                        return vec4( ( 1.0 - F ) * attenuatedColor * diffuseColor, transmittedLight.a );
+                    }
+                #endif
+                `
+            );
+
+            // Add refraction
+            shader.fragmentShader = shader.fragmentShader.replace(
+                '#include <transmission_fragment>',
+                /* glsl */ `
+                // Improve the refraction to use the world pos
+                material.transmission = _transmission;
+                material.transmissionAlpha = 1.0;
+                material.thickness = thickness;
+                material.attenuationDistance = attenuationDistance;
+                material.attenuationColor = attenuationColor;
+                #ifdef USE_TRANSMISSIONMAP
+                    material.transmission *= texture2D( transmissionMap, vUv ).r;
+                #endif
+                #ifdef USE_THICKNESSMAP
+                    material.thickness *= texture2D( thicknessMap, vUv ).g;
+                #endif
+
+                vec3 pos = vWorldPosition;
+                vec3 v = normalize( cameraPosition - pos );
+                vec3 n = inverseTransformDirection( normal, viewMatrix );
+                vec3 transmission = vec3(0.0);
+                float transmissionR, transmissionB, transmissionG;
+                float randomCoords = rand();
+                float thickness_smear = thickness * max(pow(roughnessFactor, 0.33), anisotropy);
+                for (float i = 0.0; i < ${samples}.0; i ++) {
+                    vec3 sampleNorm = normalize(n + roughnessFactor * roughnessFactor * 2.0 * normalize(vec3(rand() - 0.5, rand() - 0.5, rand() - 0.5)) * pow(rand(), 0.33));
+                    transmissionR = getIBLVolumeRefraction(
+                        sampleNorm, v, material.roughness, material.diffuseColor, material.specularColor, material.specularF90,
+                        pos, modelMatrix, viewMatrix, projectionMatrix, material.ior, material.thickness  + thickness_smear * (i + randomCoords) / float(${samples}),
+                        material.attenuationColor, material.attenuationDistance
+                    ).r;
+                    transmissionG = getIBLVolumeRefraction(
+                        sampleNorm, v, material.roughness, material.diffuseColor, material.specularColor, material.specularF90,
+                        pos, modelMatrix, viewMatrix, projectionMatrix, material.ior  * (1.0 + chromaticAberration * (i + randomCoords) / float(${samples})) , material.thickness + thickness_smear * (i + randomCoords) / float(${samples}),
+                        material.attenuationColor, material.attenuationDistance
+                    ).g;
+                    transmissionB = getIBLVolumeRefraction(
+                        sampleNorm, v, material.roughness, material.diffuseColor, material.specularColor, material.specularF90,
+                        pos, modelMatrix, viewMatrix, projectionMatrix, material.ior * (1.0 + 2.0 * chromaticAberration * (i + randomCoords) / float(${samples})), material.thickness + thickness_smear * (i + randomCoords) / float(${samples}),
+                        material.attenuationColor, material.attenuationDistance
+                    ).b;
+                    transmission.r += transmissionR;
+                    transmission.g += transmissionG;
+                    transmission.b += transmissionB;
+                }
+                transmission /= ${samples}.0;
+                totalDiffuse = mix( totalDiffuse, transmission.rgb, material.transmission );
+                `
+            );
+        };
+
+        Object.keys(uniforms).forEach(name =>
+            Object.defineProperty(this, name, {
+                get() {
+                    return uniforms[name].value;
+                },
+                set(value) {
+                    uniforms[name].value = value;
+                }
+            })
+        );
+    }
+}
+
 // Based on https://www.shadertoy.com/view/ltKBDd by battlebottle
 
-const vertexShader$8 = /* glsl */ `
+const vertexShader$9 = /* glsl */ `
 in vec3 position;
 in vec2 uv;
 
@@ -60125,7 +60344,7 @@ void main() {
 }
 `;
 
-const fragmentShader$8 = /* glsl */ `
+const fragmentShader$9 = /* glsl */ `
 precision highp float;
 
 uniform sampler2D tMap;
@@ -60162,8 +60381,8 @@ class ChromaticAberrationMaterial extends RawShaderMaterial {
                 uBlueOffset: { value: 0 },
                 uIntensity: { value: 1.5 }
             },
-            vertexShader: vertexShader$8,
-            fragmentShader: fragmentShader$8,
+            vertexShader: vertexShader$9,
+            fragmentShader: fragmentShader$9,
             blending: NoBlending,
             depthTest: false,
             depthWrite: false
@@ -60173,7 +60392,7 @@ class ChromaticAberrationMaterial extends RawShaderMaterial {
 
 // Based on https://www.shadertoy.com/view/XtK3W3 by dyvoid
 
-const vertexShader$7 = /* glsl */ `
+const vertexShader$8 = /* glsl */ `
 in vec3 position;
 in vec2 uv;
 
@@ -60186,7 +60405,7 @@ void main() {
 }
 `;
 
-const fragmentShader$7 = /* glsl */ `
+const fragmentShader$8 = /* glsl */ `
 precision highp float;
 
 uniform sampler2D tMap;
@@ -60235,8 +60454,8 @@ class VideoGlitchMaterial extends RawShaderMaterial {
                 uSpeed: { value: 1 },
                 uTime: { value: 0 }
             },
-            vertexShader: vertexShader$7,
-            fragmentShader: fragmentShader$7,
+            vertexShader: vertexShader$8,
+            fragmentShader: fragmentShader$8,
             blending: NoBlending,
             depthTest: false,
             depthWrite: false
@@ -60266,7 +60485,7 @@ vec4 when_gt(vec4 x, vec4 y) {
 
 // Based on https://github.com/mrdoob/three.js/blob/dev/examples/jsm/shaders/AfterimageShader.js by HypnosNova
 
-const vertexShader$6 = /* glsl */ `
+const vertexShader$7 = /* glsl */ `
 in vec3 position;
 in vec2 uv;
 
@@ -60279,7 +60498,7 @@ void main() {
 }
 `;
 
-const fragmentShader$6 = /* glsl */ `
+const fragmentShader$7 = /* glsl */ `
 precision highp float;
 
 uniform sampler2D tOld;
@@ -60311,8 +60530,8 @@ class AfterimageMaterial extends RawShaderMaterial {
                 tNew: { value: null },
                 uDamping: { value: 0.96 }
             },
-            vertexShader: vertexShader$6,
-            fragmentShader: fragmentShader$6,
+            vertexShader: vertexShader$7,
+            fragmentShader: fragmentShader$7,
             blending: NoBlending,
             depthTest: false,
             depthWrite: false
@@ -60324,7 +60543,7 @@ class AfterimageMaterial extends RawShaderMaterial {
 // Based on https://github.com/netpraxis/volumetric_light_example
 // Based on https://codepen.io/peterhry/pen/egzjGR
 
-const vertexShader$5 = /* glsl */ `
+const vertexShader$6 = /* glsl */ `
 in vec3 position;
 in vec2 uv;
 
@@ -60337,7 +60556,7 @@ void main() {
 }
 `;
 
-const fragmentShader$5 = /* glsl */ `
+const fragmentShader$6 = /* glsl */ `
 precision highp float;
 
 uniform sampler2D tMap;
@@ -60393,8 +60612,8 @@ class VolumetricLightMaterial extends RawShaderMaterial {
                 uWeight: { value: 0.4 },
                 uClamp: { value: 1 }
             },
-            vertexShader: vertexShader$5,
-            fragmentShader: fragmentShader$5,
+            vertexShader: vertexShader$6,
+            fragmentShader: fragmentShader$6,
             blending: NoBlending,
             depthTest: false,
             depthWrite: false
@@ -60433,7 +60652,7 @@ vec3 lensflare(vec2 uv, vec2 pos) {
 
 // Based on https://github.com/BKcore/Three.js-experiments-pool
 
-const vertexShader$4 = /* glsl */ `
+const vertexShader$5 = /* glsl */ `
 in vec3 position;
 in vec2 uv;
 
@@ -60446,7 +60665,7 @@ void main() {
 }
 `;
 
-const fragmentShader$4 = /* glsl */ `
+const fragmentShader$5 = /* glsl */ `
 precision highp float;
 
 uniform sampler2D tMap;
@@ -60527,8 +60746,8 @@ class VolumetricLightLensflareMaterial extends RawShaderMaterial {
                 uLensflareClamp: { value: 1 },
                 uResolution: { value: new Vector2$1() }
             },
-            vertexShader: vertexShader$4,
-            fragmentShader: fragmentShader$4,
+            vertexShader: vertexShader$5,
+            fragmentShader: fragmentShader$5,
             blending: NoBlending,
             depthTest: false,
             depthWrite: false
@@ -60538,7 +60757,7 @@ class VolumetricLightLensflareMaterial extends RawShaderMaterial {
 
 // Based on https://www.shadertoy.com/view/4sX3Rs by mu6k
 
-const vertexShader$3 = /* glsl */ `
+const vertexShader$4 = /* glsl */ `
 in vec3 position;
 in vec2 uv;
 
@@ -60551,7 +60770,7 @@ void main() {
 }
 `;
 
-const fragmentShader$3 = /* glsl */ `
+const fragmentShader$4 = /* glsl */ `
 precision highp float;
 
 uniform sampler2D tMap;
@@ -60598,8 +60817,8 @@ class LensflareMaterial extends RawShaderMaterial {
                 uClamp: { value: 1 },
                 uResolution: { value: new Vector2$1() }
             },
-            vertexShader: vertexShader$3,
-            fragmentShader: fragmentShader$3,
+            vertexShader: vertexShader$4,
+            fragmentShader: fragmentShader$4,
             blending: AdditiveBlending,
             depthTest: false,
             depthWrite: false
@@ -60607,7 +60826,7 @@ class LensflareMaterial extends RawShaderMaterial {
     }
 }
 
-const vertexShader$2 = /* glsl */ `
+const vertexShader$3 = /* glsl */ `
 in vec3 position;
 in vec2 uv;
 
@@ -60620,7 +60839,7 @@ void main() {
 }
 `;
 
-const fragmentShader$2 = /* glsl */ `
+const fragmentShader$3 = /* glsl */ `
 precision highp float;
 
 uniform sampler2D tMap;
@@ -60652,6 +60871,41 @@ class DepthMaskMaterial extends RawShaderMaterial {
                 tDepth1: { value: null },
                 tDepth2: { value: null }
             },
+            vertexShader: vertexShader$3,
+            fragmentShader: fragmentShader$3,
+            blending: NoBlending,
+            depthTest: false,
+            depthWrite: false
+        });
+    }
+}
+
+const vertexShader$2 = /* glsl */ `
+in vec3 position;
+
+uniform mat4 modelViewMatrix;
+uniform mat4 projectionMatrix;
+
+void main() {
+    gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+}
+`;
+
+const fragmentShader$2 = /* glsl */ `
+precision highp float;
+
+out vec4 FragColor;
+
+void main() {
+    FragColor = vec4(0);
+    discard;
+}
+`;
+
+class DiscardMaterial extends RawShaderMaterial {
+    constructor() {
+        super({
+            glslVersion: GLSL3,
             vertexShader: vertexShader$2,
             fragmentShader: fragmentShader$2,
             blending: NoBlending,
@@ -60930,16 +61184,13 @@ class Flowmap {
 
         // Fullscreen triangle
         this.screenCamera = new OrthographicCamera(-1, 1, 1, -1, 0, 1);
-
         this.screenTriangle = getFullscreenTriangle();
-
         this.screen = new Mesh(this.screenTriangle, this.material);
         this.screen.frustumCulled = false;
     }
 
     update() {
         const currentRenderTarget = this.renderer.getRenderTarget();
-
         const currentAutoClear = this.renderer.autoClear;
         this.renderer.autoClear = false;
 
@@ -60955,7 +61206,6 @@ class Flowmap {
 
         // Restore renderer settings
         this.renderer.autoClear = currentAutoClear;
-
         this.renderer.setRenderTarget(currentRenderTarget);
     }
 
@@ -61028,9 +61278,7 @@ class Reflector extends Group {
 
         // Fullscreen triangle
         this.screenCamera = new OrthographicCamera(-1, 1, 1, -1, 0, 1);
-
         this.screenTriangle = getFullscreenTriangle();
-
         this.screen = new Mesh(this.screenTriangle, this.blurMaterial);
         this.screen.frustumCulled = false;
     }
@@ -61120,10 +61368,8 @@ class Reflector extends Group {
 
         // Render
         const currentRenderTarget = renderer.getRenderTarget();
-
         const currentXrEnabled = renderer.xr.enabled;
         const currentShadowAutoUpdate = renderer.shadowMap.autoUpdate;
-
         renderer.xr.enabled = false; // Avoid camera modification
         renderer.shadowMap.autoUpdate = false; // Avoid re-computing shadows
 
@@ -61174,7 +61420,6 @@ class Reflector extends Group {
         // Restore renderer settings
         renderer.xr.enabled = currentXrEnabled;
         renderer.shadowMap.autoUpdate = currentShadowAutoUpdate;
-
         renderer.setRenderTarget(currentRenderTarget);
     }
 
@@ -108569,4 +108814,4 @@ class OrbitControls extends EventDispatcher {
 
 }
 
-export { ACESFilmicToneMapping, AddEquation, AddOperation, AdditiveAnimationBlendMode, AdditiveBlending, AfterimageMaterial, AlphaFormat, AlwaysDepth, AlwaysStencilFunc, AmbientLight, AmbientLightProbe, AnimationClip, AnimationLoader, AnimationMixer, AnimationObjectGroup, AnimationUtils, ArcCurve, ArrayCamera, ArrowHelper, AssetLoader, Audio$1 as Audio, AudioAnalyser, AudioContext$1 as AudioContext, AudioListener, AudioLoader, AxesHelper, BackSide, BadTVMaterial, BasicDepthPacking, BasicMaterial, BasicShadowMap, BloomCompositeMaterial, BlurMaterial, BokehBlurMaterial1, BokehBlurMaterial2, Bone, BooleanKeyframeTrack, Box2, Box3, Box3Helper, BoxBufferGeometry, BoxGeometry$2 as BoxGeometry, BoxHelper, BufferAttribute, BufferGeometry, BufferGeometryLoader, BufferGeometryLoaderThread, BufferLoader, ByteType, Cache, Camera, CameraHelper, CameraMotionBlurMaterial, CanvasTexture, CapsuleBufferGeometry, CapsuleGeometry, CatmullRomCurve3, ChromaticAberrationMaterial, CineonToneMapping, CircleBufferGeometry, CircleGeometry, ClampToEdgeWrapping, Clock, Cluster, Color$1 as Color, ColorKeyframeTrack, ColorManagement, ColorMaterial, ColorPicker, Component, CompressedArrayTexture, CompressedTexture, CompressedTextureLoader, ConeBufferGeometry, ConeGeometry, CopyMaterial, CubeCamera, CubeReflectionMapping, CubeRefractionMapping, CubeTexture, CubeTextureLoader, CubeUVReflectionMapping, CubicBezierCurve, CubicBezierCurve3, CubicInterpolant, CullFaceBack, CullFaceFront, CullFaceFrontBack, CullFaceNone, Curve, CurvePath, CustomBlending, CustomToneMapping, CylinderBufferGeometry, CylinderGeometry, Cylindrical, DEG2RAD$1 as DEG2RAD, Data3DTexture, DataArrayTexture, DataTexture, DataTextureLoader, DataUtils, DecrementStencilOp, DecrementWrapStencilOp, DefaultLoadingManager, DepthFormat, DepthMaskMaterial, DepthStencilFormat, DepthTexture, DirectionalLight, DirectionalLightHelper, DiscreteInterpolant, DisplayP3ColorSpace, DodecahedronBufferGeometry, DodecahedronGeometry, DoubleSide, DstAlphaFactor, DstColorFactor, DynamicCopyUsage, DynamicDrawUsage, DynamicReadUsage, Easing, EdgesGeometry, EllipseCurve, EnvironmentTextureLoader, EqualDepth, EqualStencilFunc, EquirectangularReflectionMapping, EquirectangularRefractionMapping, Euler, EventDispatcher, EventEmitter, ExtrudeBufferGeometry, ExtrudeGeometry, FXAAMaterial, FastGaussianBlurMaterial, FileLoader, Float16BufferAttribute, Float32BufferAttribute, Float64BufferAttribute, FloatType, FlowMaterial, Flowmap, Fog, FogExp2, FramebufferTexture, FresnelMaterial, FrontSide, Frustum, GLBufferAttribute, GLSL1, GLSL3, GLTFLoader, GreaterDepth, GreaterEqualDepth, GreaterEqualStencilFunc, GreaterStencilFunc, GridHelper, Group, HalfFloatType, Header, HeaderInfo, HemisphereLight, HemisphereLightHelper, HemisphereLightProbe, IcosahedronBufferGeometry, IcosahedronGeometry, ImageBitmapLoader$1 as ImageBitmapLoader, ImageBitmapLoaderThread, ImageLoader, ImageUtils, IncrementStencilOp, IncrementWrapStencilOp, InstancedBufferAttribute, InstancedBufferGeometry, InstancedInterleavedBuffer, InstancedMesh, Int16BufferAttribute, Int32BufferAttribute, Int8BufferAttribute, IntType, Interface, InterleavedBuffer, InterleavedBufferAttribute, Interpolant, InterpolateDiscrete, InterpolateLinear, InterpolateSmooth, InvertStencilOp, KeepStencilOp, KeyframeTrack, LOD, LatheBufferGeometry, LatheGeometry, Layers, LensflareMaterial, LessDepth, LessEqualDepth, LessEqualStencilFunc, LessStencilFunc, Light, LightProbe, Line, Line3, LineBasicMaterial, LineCurve, LineCurve3, LineDashedMaterial, LineLoop, LineSegments, LinearEncoding, LinearFilter, LinearInterpolant, LinearMipMapLinearFilter, LinearMipMapNearestFilter, LinearMipmapLinearFilter, LinearMipmapNearestFilter, LinearSRGBColorSpace, LinearToneMapping, Link, LinkedList, List, ListSelect, ListToggle, Loader$1 as Loader, LoaderUtils, LoadingManager, LoopOnce, LoopPingPong, LoopRepeat, LuminanceAlphaFormat, LuminanceFormat, LuminosityMaterial, MOUSE, Magnetic, Material, MaterialLoader, MaterialPanelController, MathUtils, Matrix3, Matrix4, MaxEquation, Mesh, MeshBasicMaterial, MeshDepthMaterial, MeshDistanceMaterial, MeshLambertMaterial, MeshMatcapMaterial, MeshNormalMaterial, MeshPhongMaterial, MeshPhysicalMaterial, MeshStandardMaterial, MeshToonMaterial, MinEquation, MirroredRepeatWrapping, MixOperation, MultiLoader, MultiplyBlending, MultiplyOperation, NearestFilter, NearestMipMapLinearFilter, NearestMipMapNearestFilter, NearestMipmapLinearFilter, NearestMipmapNearestFilter, NeverDepth, NeverStencilFunc, NoBlending, NoColorSpace, NoToneMapping, NormalAnimationBlendMode, NormalBlending, NormalMaterial, NotEqualDepth, NotEqualStencilFunc, NumberKeyframeTrack, Object3D, ObjectLoader, ObjectPool, ObjectSpaceNormalMap, OctahedronBufferGeometry, OctahedronGeometry, OimoPhysics, OimoPhysicsBuffer, OimoPhysicsController, OneFactor, OneMinusDstAlphaFactor, OneMinusDstColorFactor, OneMinusSrcAlphaFactor, OneMinusSrcColorFactor, OrbitControls, OrthographicCamera, PCFShadowMap, PCFSoftShadowMap, PMREMGenerator, Panel, PanelItem, Path, PerspectiveCamera, Plane, PlaneBufferGeometry, PlaneGeometry, PlaneHelper, Point, Point3D, PointLight, PointLightHelper, PointText, Points, PointsMaterial, PoissonDiscBlurMaterial, PolarGridHelper, PolyhedronBufferGeometry, PolyhedronGeometry, PositionalAudio, PropertyBinding, PropertyMixer, QuadraticBezierCurve, QuadraticBezierCurve3, Quaternion, QuaternionKeyframeTrack, QuaternionLinearInterpolant, RAD2DEG$1 as RAD2DEG, RED_GREEN_RGTC2_Format, RED_RGTC1_Format, REVISION, RGBADepthPacking, RGBAFormat, RGBAIntegerFormat, RGBA_ASTC_10x10_Format, RGBA_ASTC_10x5_Format, RGBA_ASTC_10x6_Format, RGBA_ASTC_10x8_Format, RGBA_ASTC_12x10_Format, RGBA_ASTC_12x12_Format, RGBA_ASTC_4x4_Format, RGBA_ASTC_5x4_Format, RGBA_ASTC_5x5_Format, RGBA_ASTC_6x5_Format, RGBA_ASTC_6x6_Format, RGBA_ASTC_8x5_Format, RGBA_ASTC_8x6_Format, RGBA_ASTC_8x8_Format, RGBA_BPTC_Format, RGBA_ETC2_EAC_Format, RGBA_PVRTC_2BPPV1_Format, RGBA_PVRTC_4BPPV1_Format, RGBA_S3TC_DXT1_Format, RGBA_S3TC_DXT3_Format, RGBA_S3TC_DXT5_Format, RGBMaterial, RGB_ETC1_Format, RGB_ETC2_Format, RGB_PVRTC_2BPPV1_Format, RGB_PVRTC_4BPPV1_Format, RGB_S3TC_DXT1_Format, RGFormat, RGIntegerFormat, RawShaderMaterial, Ray, Raycaster, RectAreaLight, RedFormat, RedIntegerFormat, Reflector, ReflectorBlurMaterial, ReflectorDudvMaterial, ReflectorMaterial, ReinhardToneMapping, RepeatWrapping, ReplaceStencilOp, Reticle, ReticleText, ReverseSubtractEquation, RigidBodyConfig$1 as RigidBodyConfig, RigidBodyType$1 as RigidBodyType, RingBufferGeometry, RingGeometry, SIGNED_RED_GREEN_RGTC2_Format, SIGNED_RED_RGTC1_Format, SMAABlendMaterial, SMAAEdgesMaterial, SMAAWeightsMaterial, SRGBColorSpace, SVGLoader, Scene, SceneCompositeMaterial, ShaderChunk, ShaderLib, ShaderMaterial, ShadowMaterial, ShadowTextureMaterial, Shape$2 as Shape, ShapeBufferGeometry, ShapeGeometry, ShapePath, ShapeUtils, ShortType, Skeleton, SkeletonHelper, SkinnedMesh, Slider, Smooth, SmoothSkew, SmoothViews, SoftShadows, Sound, Sound3D, Source, Sphere, SphereBufferGeometry, SphereGeometry$2 as SphereGeometry, Spherical, SphericalHarmonics3, SphericalJointConfig$1 as SphericalJointConfig, SplineCurve, SpotLight, SpotLightHelper, Sprite, SpriteMaterial, SrcAlphaFactor, SrcAlphaSaturateFactor, SrcColorFactor, Stage, StaticCopyUsage, StaticDrawUsage, StaticReadUsage, StereoCamera, StreamCopyUsage, StreamDrawUsage, StreamReadUsage, StringKeyframeTrack, SubtractEquation, SubtractiveBlending, TOUCH, TangentSpaceNormalMap, TargetNumber, TetrahedronBufferGeometry, TetrahedronGeometry, TextGeometry, TextMaterial, Texture, TextureLoader, Thread, Ticker, TiltShiftMaterial, TorusBufferGeometry, TorusGeometry, TorusKnotBufferGeometry, TorusKnotGeometry, Tracker, Triangle, TriangleFanDrawMode, TriangleStripDrawMode, TrianglesDrawMode, TubeBufferGeometry, TubeGeometry, Tween, TwoPassDoubleSide, UI, UVMapping, Uint16BufferAttribute, Uint32BufferAttribute, Uint8BufferAttribute, Uint8ClampedBufferAttribute, Uniform, UniformsGroup, UniformsLib, UniformsUtils, UnrealBloomBlurMaterial, UnrealBloomCompositeMaterial, UnsignedByteType, UnsignedInt248Type, UnsignedIntType, UnsignedShort4444Type, UnsignedShort5551Type, UnsignedShortType, VSMShadowMap, Vector2$1 as Vector2, Vector3, Vector4, VectorKeyframeTrack, VideoGlitchMaterial, VideoTexture, VolumetricLightLensflareMaterial, VolumetricLightMaterial, WebAudio, WebAudio3D, WebAudioParam, WebGL1Renderer, WebGL3DRenderTarget, WebGLArrayRenderTarget, WebGLCubeRenderTarget, WebGLMultipleRenderTargets, WebGLRenderTarget, WebGLRenderer, WebGLUtils, WireframeGeometry, Wobble, WrapAroundEnding, ZeroCurvatureEnding, ZeroFactor, ZeroSlopeEnding, ZeroStencilOp, _SRGBAFormat, absolute, basename, brightness, ceilPowerOfTwo$1 as ceilPowerOfTwo, clamp$1 as clamp, clearTween, defer, degToRad$1 as degToRad, delayedCall, euclideanModulo$1 as euclideanModulo, extension, floorPowerOfTwo$1 as floorPowerOfTwo, fract, getConstructor, getFrustum, getFrustumFromHeight, getFullscreenTriangle, getKeyByValue, getScreenSpaceBox, getSphericalCube, guid, headsTails, inverseLerp$1 as inverseLerp, isPowerOfTwo$1 as isPowerOfTwo, lerp$2 as lerp, lerpCameras, mapLinear$1 as mapLinear, parabola, pcurve, radToDeg$1 as radToDeg, randFloat$1 as randFloat, randFloatSpread$1 as randFloatSpread, randInt$1 as randInt, sRGBEncoding, shuffle, smootherstep$2 as smootherstep, smoothstep$1 as smoothstep, step, ticker, tween, wait };
+export { ACESFilmicToneMapping, AddEquation, AddOperation, AdditiveAnimationBlendMode, AdditiveBlending, AfterimageMaterial, AlphaFormat, AlwaysDepth, AlwaysStencilFunc, AmbientLight, AmbientLightProbe, AnimationClip, AnimationLoader, AnimationMixer, AnimationObjectGroup, AnimationUtils, ArcCurve, ArrayCamera, ArrowHelper, AssetLoader, Audio$1 as Audio, AudioAnalyser, AudioContext$1 as AudioContext, AudioListener, AudioLoader, AxesHelper, BackSide, BadTVMaterial, BasicDepthPacking, BasicMaterial, BasicShadowMap, BloomCompositeMaterial, BlurMaterial, BokehBlurMaterial1, BokehBlurMaterial2, Bone, BooleanKeyframeTrack, Box2, Box3, Box3Helper, BoxBufferGeometry, BoxGeometry$2 as BoxGeometry, BoxHelper, BufferAttribute, BufferGeometry, BufferGeometryLoader, BufferGeometryLoaderThread, BufferLoader, ByteType, Cache, Camera, CameraHelper, CameraMotionBlurMaterial, CanvasTexture, CapsuleBufferGeometry, CapsuleGeometry, CatmullRomCurve3, ChromaticAberrationMaterial, CineonToneMapping, CircleBufferGeometry, CircleGeometry, ClampToEdgeWrapping, Clock, Cluster, Color$1 as Color, ColorKeyframeTrack, ColorManagement, ColorMaterial, ColorPicker, Component, CompressedArrayTexture, CompressedTexture, CompressedTextureLoader, ConeBufferGeometry, ConeGeometry, CopyMaterial, CubeCamera, CubeReflectionMapping, CubeRefractionMapping, CubeTexture, CubeTextureLoader, CubeUVReflectionMapping, CubicBezierCurve, CubicBezierCurve3, CubicInterpolant, CullFaceBack, CullFaceFront, CullFaceFrontBack, CullFaceNone, Curve, CurvePath, CustomBlending, CustomToneMapping, CylinderBufferGeometry, CylinderGeometry, Cylindrical, DEG2RAD$1 as DEG2RAD, Data3DTexture, DataArrayTexture, DataTexture, DataTextureLoader, DataUtils, DecrementStencilOp, DecrementWrapStencilOp, DefaultLoadingManager, DepthFormat, DepthMaskMaterial, DepthStencilFormat, DepthTexture, DirectionalLight, DirectionalLightHelper, DiscardMaterial, DiscreteInterpolant, DisplayP3ColorSpace, DodecahedronBufferGeometry, DodecahedronGeometry, DoubleSide, DstAlphaFactor, DstColorFactor, DynamicCopyUsage, DynamicDrawUsage, DynamicReadUsage, Easing, EdgesGeometry, EllipseCurve, EnvironmentTextureLoader, EqualDepth, EqualStencilFunc, EquirectangularReflectionMapping, EquirectangularRefractionMapping, Euler, EventDispatcher, EventEmitter, ExtrudeBufferGeometry, ExtrudeGeometry, FXAAMaterial, FastGaussianBlurMaterial, FileLoader, Float16BufferAttribute, Float32BufferAttribute, Float64BufferAttribute, FloatType, FlowMaterial, Flowmap, Fog, FogExp2, FramebufferTexture, FresnelMaterial, FrontSide, Frustum, GLBufferAttribute, GLSL1, GLSL3, GLTFLoader, GreaterDepth, GreaterEqualDepth, GreaterEqualStencilFunc, GreaterStencilFunc, GridHelper, Group, HalfFloatType, Header, HeaderInfo, HemisphereLight, HemisphereLightHelper, HemisphereLightProbe, IcosahedronBufferGeometry, IcosahedronGeometry, ImageBitmapLoader$1 as ImageBitmapLoader, ImageBitmapLoaderThread, ImageLoader, ImageUtils, IncrementStencilOp, IncrementWrapStencilOp, InstancedBufferAttribute, InstancedBufferGeometry, InstancedInterleavedBuffer, InstancedMesh, Int16BufferAttribute, Int32BufferAttribute, Int8BufferAttribute, IntType, Interface, InterleavedBuffer, InterleavedBufferAttribute, Interpolant, InterpolateDiscrete, InterpolateLinear, InterpolateSmooth, InvertStencilOp, KeepStencilOp, KeyframeTrack, LOD, LatheBufferGeometry, LatheGeometry, Layers, LensflareMaterial, LessDepth, LessEqualDepth, LessEqualStencilFunc, LessStencilFunc, Light, LightProbe, Line, Line3, LineBasicMaterial, LineCurve, LineCurve3, LineDashedMaterial, LineLoop, LineSegments, LinearEncoding, LinearFilter, LinearInterpolant, LinearMipMapLinearFilter, LinearMipMapNearestFilter, LinearMipmapLinearFilter, LinearMipmapNearestFilter, LinearSRGBColorSpace, LinearToneMapping, Link, LinkedList, List, ListSelect, ListToggle, Loader$1 as Loader, LoaderUtils, LoadingManager, LoopOnce, LoopPingPong, LoopRepeat, LuminanceAlphaFormat, LuminanceFormat, LuminosityMaterial, MOUSE, Magnetic, Material, MaterialLoader, MaterialPanelController, MathUtils, Matrix3, Matrix4, MaxEquation, Mesh, MeshBasicMaterial, MeshDepthMaterial, MeshDistanceMaterial, MeshLambertMaterial, MeshMatcapMaterial, MeshNormalMaterial, MeshPhongMaterial, MeshPhysicalMaterial, MeshStandardMaterial, MeshToonMaterial, MinEquation, MirroredRepeatWrapping, MixOperation, MultiLoader, MultiplyBlending, MultiplyOperation, NearestFilter, NearestMipMapLinearFilter, NearestMipMapNearestFilter, NearestMipmapLinearFilter, NearestMipmapNearestFilter, NeverDepth, NeverStencilFunc, NoBlending, NoColorSpace, NoToneMapping, NormalAnimationBlendMode, NormalBlending, NormalMaterial, NotEqualDepth, NotEqualStencilFunc, NumberKeyframeTrack, Object3D, ObjectLoader, ObjectPool, ObjectSpaceNormalMap, OctahedronBufferGeometry, OctahedronGeometry, OimoPhysics, OimoPhysicsBuffer, OimoPhysicsController, OneFactor, OneMinusDstAlphaFactor, OneMinusDstColorFactor, OneMinusSrcAlphaFactor, OneMinusSrcColorFactor, OrbitControls, OrthographicCamera, PCFShadowMap, PCFSoftShadowMap, PMREMGenerator, Panel, PanelItem, Path, PerspectiveCamera, Plane, PlaneBufferGeometry, PlaneGeometry, PlaneHelper, Point, Point3D, PointLight, PointLightHelper, PointText, Points, PointsMaterial, PoissonDiscBlurMaterial, PolarGridHelper, PolyhedronBufferGeometry, PolyhedronGeometry, PositionalAudio, PropertyBinding, PropertyMixer, QuadraticBezierCurve, QuadraticBezierCurve3, Quaternion, QuaternionKeyframeTrack, QuaternionLinearInterpolant, RAD2DEG$1 as RAD2DEG, RED_GREEN_RGTC2_Format, RED_RGTC1_Format, REVISION, RGBADepthPacking, RGBAFormat, RGBAIntegerFormat, RGBA_ASTC_10x10_Format, RGBA_ASTC_10x5_Format, RGBA_ASTC_10x6_Format, RGBA_ASTC_10x8_Format, RGBA_ASTC_12x10_Format, RGBA_ASTC_12x12_Format, RGBA_ASTC_4x4_Format, RGBA_ASTC_5x4_Format, RGBA_ASTC_5x5_Format, RGBA_ASTC_6x5_Format, RGBA_ASTC_6x6_Format, RGBA_ASTC_8x5_Format, RGBA_ASTC_8x6_Format, RGBA_ASTC_8x8_Format, RGBA_BPTC_Format, RGBA_ETC2_EAC_Format, RGBA_PVRTC_2BPPV1_Format, RGBA_PVRTC_4BPPV1_Format, RGBA_S3TC_DXT1_Format, RGBA_S3TC_DXT3_Format, RGBA_S3TC_DXT5_Format, RGBMaterial, RGB_ETC1_Format, RGB_ETC2_Format, RGB_PVRTC_2BPPV1_Format, RGB_PVRTC_4BPPV1_Format, RGB_S3TC_DXT1_Format, RGFormat, RGIntegerFormat, RawShaderMaterial, Ray, Raycaster, RectAreaLight, RedFormat, RedIntegerFormat, Reflector, ReflectorBlurMaterial, ReflectorDudvMaterial, ReflectorMaterial, ReinhardToneMapping, RepeatWrapping, ReplaceStencilOp, Reticle, ReticleText, ReverseSubtractEquation, RigidBodyConfig$1 as RigidBodyConfig, RigidBodyType$1 as RigidBodyType, RingBufferGeometry, RingGeometry, SIGNED_RED_GREEN_RGTC2_Format, SIGNED_RED_RGTC1_Format, SMAABlendMaterial, SMAAEdgesMaterial, SMAAWeightsMaterial, SRGBColorSpace, SVGLoader, Scene, SceneCompositeMaterial, ShaderChunk, ShaderLib, ShaderMaterial, ShadowMaterial, ShadowTextureMaterial, Shape$2 as Shape, ShapeBufferGeometry, ShapeGeometry, ShapePath, ShapeUtils, ShortType, Skeleton, SkeletonHelper, SkinnedMesh, Slider, Smooth, SmoothSkew, SmoothViews, SoftShadows, Sound, Sound3D, Source, Sphere, SphereBufferGeometry, SphereGeometry$2 as SphereGeometry, Spherical, SphericalHarmonics3, SphericalJointConfig$1 as SphericalJointConfig, SplineCurve, SpotLight, SpotLightHelper, Sprite, SpriteMaterial, SrcAlphaFactor, SrcAlphaSaturateFactor, SrcColorFactor, Stage, StaticCopyUsage, StaticDrawUsage, StaticReadUsage, StereoCamera, StreamCopyUsage, StreamDrawUsage, StreamReadUsage, StringKeyframeTrack, SubtractEquation, SubtractiveBlending, TOUCH, TangentSpaceNormalMap, TargetNumber, TetrahedronBufferGeometry, TetrahedronGeometry, TextGeometry, TextMaterial, Texture, TextureLoader, Thread, Ticker, TiltShiftMaterial, TorusBufferGeometry, TorusGeometry, TorusKnotBufferGeometry, TorusKnotGeometry, Tracker, TransmissionMaterial, Triangle, TriangleFanDrawMode, TriangleStripDrawMode, TrianglesDrawMode, TubeBufferGeometry, TubeGeometry, Tween, TwoPassDoubleSide, UI, UVMapping, Uint16BufferAttribute, Uint32BufferAttribute, Uint8BufferAttribute, Uint8ClampedBufferAttribute, Uniform, UniformsGroup, UniformsLib, UniformsUtils, UnrealBloomBlurMaterial, UnrealBloomCompositeMaterial, UnsignedByteType, UnsignedInt248Type, UnsignedIntType, UnsignedShort4444Type, UnsignedShort5551Type, UnsignedShortType, VSMShadowMap, Vector2$1 as Vector2, Vector3, Vector4, VectorKeyframeTrack, VideoGlitchMaterial, VideoTexture, VolumetricLightLensflareMaterial, VolumetricLightMaterial, WebAudio, WebAudio3D, WebAudioParam, WebGL1Renderer, WebGL3DRenderTarget, WebGLArrayRenderTarget, WebGLCubeRenderTarget, WebGLMultipleRenderTargets, WebGLRenderTarget, WebGLRenderer, WebGLUtils, WireframeGeometry, Wobble, WrapAroundEnding, ZeroCurvatureEnding, ZeroFactor, ZeroSlopeEnding, ZeroStencilOp, _SRGBAFormat, absolute, basename, brightness, ceilPowerOfTwo$1 as ceilPowerOfTwo, clamp$1 as clamp, clearTween, defer, degToRad$1 as degToRad, delayedCall, euclideanModulo$1 as euclideanModulo, extension, floorPowerOfTwo$1 as floorPowerOfTwo, fract, getConstructor, getFrustum, getFrustumFromHeight, getFullscreenTriangle, getKeyByValue, getScreenSpaceBox, getSphericalCube, guid, headsTails, inverseLerp$1 as inverseLerp, isPowerOfTwo$1 as isPowerOfTwo, lerp$2 as lerp, lerpCameras, mapLinear$1 as mapLinear, parabola, pcurve, radToDeg$1 as radToDeg, randFloat$1 as randFloat, randFloatSpread$1 as randFloatSpread, randInt$1 as randInt, sRGBEncoding, shuffle, smootherstep$2 as smootherstep, smoothstep$1 as smoothstep, step, ticker, tween, wait };

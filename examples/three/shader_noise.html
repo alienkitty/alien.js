@@ -11,7 +11,7 @@
     <link rel="stylesheet" href="assets/css/style.css">
 
     <script type="module">
-        import { GLSL3, Mesh, NoBlending, OrthographicCamera, PanelItem, RawShaderMaterial, Scene, UI, Vector2, WebGLRenderer, getFullscreenTriangle, ticker } from '../../build/alien.three.js';
+        import { GLSL3, Mesh, NoBlending, OrthographicCamera, PanelItem, RawShaderMaterial, UI, Vector2, WebGLRenderer, getFullscreenTriangle, ticker } from '../../build/alien.three.js';
 
         import simplex2d from '../../src/shaders/modules/noise/simplex2d.glsl.js';
 
@@ -158,11 +158,10 @@
         }
 
         class RenderManager {
-            static init(renderer, scene, camera, screen) {
+            static init(renderer, screen, screenCamera) {
                 this.renderer = renderer;
-                this.scene = scene;
-                this.camera = camera;
                 this.screen = screen;
+                this.screenCamera = screenCamera;
 
                 this.initRenderer();
             }
@@ -181,7 +180,7 @@
             };
 
             static update = () => {
-                this.renderer.render(this.scene, this.camera);
+                this.renderer.render(this.screen, this.screenCamera);
             };
         }
 
@@ -199,18 +198,11 @@
                 });
                 this.element = this.renderer.domElement;
 
-                // 2D scene
-                this.scene = new Scene();
-                this.camera = new OrthographicCamera(-1, 1, 1, -1, 0, 1);
-                this.camera.lookAt(this.scene.position);
-
-                // Global geometries
-                this.screenTriangle = getFullscreenTriangle();
-
                 // Fullscreen triangle
-                this.screen = new Mesh(this.screenTriangle);
+                this.screenCamera = new OrthographicCamera(-1, 1, 1, -1, 0, 1);
+                this.screenTriangle = getFullscreenTriangle();
+                this.screen = new Mesh(this.screenTriangle, this.material);
                 this.screen.frustumCulled = false;
-                this.scene.add(this.screen);
 
                 // Global uniforms
                 this.resolution = { value: new Vector2() };
@@ -268,9 +260,9 @@
             }
 
             static initControllers() {
-                const { renderer, scene, camera, screen } = WorldController;
+                const { renderer, screen, screenCamera } = WorldController;
 
-                RenderManager.init(renderer, scene, camera, screen);
+                RenderManager.init(renderer, screen, screenCamera);
             }
 
             static initPanel() {

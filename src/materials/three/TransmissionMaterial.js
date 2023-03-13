@@ -6,7 +6,6 @@ export class TransmissionMaterial extends MeshPhysicalMaterial {
     constructor({
         chromaticAberration = 0.05,
         anisotropy = 0.1,
-        transmissionSampler = false,
         samples = 10,
         buffer = null,
         ...parameters
@@ -15,8 +14,8 @@ export class TransmissionMaterial extends MeshPhysicalMaterial {
 
         const uniforms = {
             chromaticAberration: { value: chromaticAberration },
-            // Transmission must always be 0, unless transmissionSampler is being used
-            transmission: { value: transmissionSampler ? parameters.transmission : 0 },
+            // Transmission must always be 0
+            transmission: { value: 0 },
             // Instead a workaround is used, see below for reasons why
             _transmission: { value: parameters.transmission },
             transmissionMap: { value: null },
@@ -33,11 +32,9 @@ export class TransmissionMaterial extends MeshPhysicalMaterial {
         this.onBeforeCompile = shader => {
             shader.uniforms = Object.assign(shader.uniforms, uniforms);
 
-            // If the transmission sampler is active inject a flag
-            if (transmissionSampler) shader.defines.USE_SAMPLER = '';
-            // Otherwise we do use use .transmission and must therefore force USE_TRANSMISSION
+            // We do use use .transmission and must therefore force USE_TRANSMISSION
             // because threejs won't inject it for us
-            else shader.defines.USE_TRANSMISSION = '';
+            shader.defines.USE_TRANSMISSION = '';
 
             // Head
             shader.fragmentShader =
@@ -102,8 +99,6 @@ export class TransmissionMaterial extends MeshPhysicalMaterial {
                     #ifdef USE_THICKNESSMAP
                         uniform sampler2D thicknessMap;
                     #endif
-                    uniform vec2 transmissionSamplerSize;
-                    uniform sampler2D transmissionSamplerMap;
                     uniform mat4 modelMatrix;
                     uniform mat4 projectionMatrix;
                     varying vec3 vWorldPosition;
@@ -124,16 +119,7 @@ export class TransmissionMaterial extends MeshPhysicalMaterial {
                         return roughness * clamp( ior * 2.0 - 2.0, 0.0, 1.0 );
                     }
                     vec4 getTransmissionSample( const in vec2 fragCoord, const in float roughness, const in float ior ) {
-                        float framebufferLod = log2( transmissionSamplerSize.x ) * applyIorToRoughness( roughness, ior );
-                        #ifdef USE_SAMPLER
-                            #ifdef texture2DLodEXT
-                                return texture2DLodEXT(transmissionSamplerMap, fragCoord.xy, framebufferLod);
-                            #else
-                                return texture2D(transmissionSamplerMap, fragCoord.xy, framebufferLod);
-                            #endif
-                        #else
-                            return texture2D(buffer, fragCoord.xy);
-                        #endif
+                        return texture2D(buffer, fragCoord.xy);
                     }
                     vec3 applyVolumeAttenuation( const in vec3 radiance, const in float transmissionDistance, const in vec3 attenuationColor, const in float attenuationDistance ) {
                         if ( isinf( attenuationDistance ) ) {

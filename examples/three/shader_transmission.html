@@ -4,27 +4,38 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
 
-    <title>Physically Based Rendering — Alien.js</title>
+    <title>Transmission — Alien.js</title>
 
     <link rel="preconnect" href="https://fonts.gstatic.com">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto+Mono">
     <link rel="stylesheet" href="assets/css/style.css">
 
     <script type="module">
-        import { ACESFilmicToneMapping, AmbientLight, BloomCompositeMaterial, Color, DirectionalLight, EnvironmentTextureLoader, Group, HemisphereLight, ImageBitmapLoaderThread, LuminosityMaterial, MathUtils, Mesh, MeshPhysicalMaterial, MeshStandardMaterial, OrbitControls, OrthographicCamera, PanelItem, PerspectiveCamera, RepeatWrapping, SMAABlendMaterial, SMAAEdgesMaterial, SMAAWeightsMaterial, Scene, SceneCompositeMaterial, ShaderChunk, SphereGeometry, TextureLoader, Thread, UI, UnrealBloomBlurMaterial, Vector2, WebGLRenderTarget, WebGLRenderer, getFullscreenTriangle, ticker } from '../../build/alien.three.js';
+        import { ACESFilmicToneMapping, AmbientLight, BackSide, BloomCompositeMaterial, Color, DirectionalLight, DiscardMaterial, EnvironmentTextureLoader, FrontSide, Group, HemisphereLight, ImageBitmapLoaderThread, LuminosityMaterial, MathUtils, Mesh, MeshStandardMaterial, NoToneMapping, OrbitControls, OrthographicCamera, PanelItem, PerspectiveCamera, RepeatWrapping, SMAABlendMaterial, SMAAEdgesMaterial, SMAAWeightsMaterial, Scene, SceneCompositeMaterial, SphereGeometry, TextureLoader, Thread, TransmissionMaterial, UI, UnrealBloomBlurMaterial, Vector2, WebGLRenderTarget, WebGLRenderer, getFullscreenTriangle, ticker } from '../../build/alien.three.js';
 
         class Config {
             static ICE_COLOR = 0x547691;
             static FRESNEL_COLOR = 0xd3e0e7;
         }
 
-        import fresnel from '../../src/shaders/modules/fresnel/fresnel.glsl.js';
-
         class IceSphere extends Group {
             constructor() {
                 super();
 
                 this.position.x = 2.5;
+
+                this.initRenderer();
+            }
+
+            initRenderer() {
+                const { renderer, scene, camera } = WorldController;
+
+                this.renderer = renderer;
+                this.scene = scene;
+                this.camera = camera;
+
+                // Render targets
+                this.renderTarget = new WebGLRenderTarget(1, 1);
             }
 
             async initMesh() {
@@ -32,150 +43,53 @@
 
                 const geometry = new SphereGeometry(1, 80, 80);
 
-                // Second set of UVs for aoMap and lightMap
-                // https://threejs.org/docs/#api/en/materials/MeshStandardMaterial.aoMap
-                geometry.attributes.uv2 = geometry.attributes.uv;
-
-                // Textures
-                const [map, normalMap, ormMap, thicknessMap] = await Promise.all([
-                    // loadTexture('assets/textures/uv.jpg'),
-                    loadTexture('assets/textures/pbr/polished_concrete_basecolor.jpg'),
-                    loadTexture('assets/textures/pbr/polished_concrete_normal.jpg'),
-                    // https://occlusion-roughness-metalness.glitch.me/
-                    loadTexture('assets/textures/pbr/polished_concrete_orm.jpg'),
-                    loadTexture('assets/textures/pbr/polished_concrete_height.jpg')
-                ]);
-
-                map.anisotropy = anisotropy;
-                map.wrapS = RepeatWrapping;
-                map.wrapT = RepeatWrapping;
-                map.repeat.set(2, 1);
+                const normalMap = await loadTexture('assets/textures/pbr/polished_concrete_normal.jpg');
 
                 normalMap.anisotropy = anisotropy;
                 normalMap.wrapS = RepeatWrapping;
                 normalMap.wrapT = RepeatWrapping;
                 normalMap.repeat.set(2, 1);
 
-                ormMap.anisotropy = anisotropy;
-                ormMap.wrapS = RepeatWrapping;
-                ormMap.wrapT = RepeatWrapping;
-                ormMap.repeat.set(2, 1);
-
-                thicknessMap.anisotropy = anisotropy;
-                thicknessMap.wrapS = RepeatWrapping;
-                thicknessMap.wrapT = RepeatWrapping;
-                thicknessMap.repeat.set(2, 1);
-
-                const material = new MeshPhysicalMaterial({
+                const material = new TransmissionMaterial({
                     color: new Color(Config.ICE_COLOR),
-                    metalness: 0.65,
-                    roughness: 0.1,
                     reflectivity: 0.5,
                     transmission: 0.3,
                     thickness: 1,
-                    // map,
-                    metalnessMap: ormMap,
-                    roughnessMap: ormMap,
-                    aoMap: ormMap,
-                    aoMapIntensity: 0.5,
                     normalMap,
                     normalScale: new Vector2(1, 1),
                     envMapIntensity: 0.1,
-                    clearcoat: 0.9,
-                    clearcoatRoughness: 1,
-                    clearcoatRoughnessMap: ormMap,
+                    clearcoat: 1,
                     clearcoatNormalMap: normalMap,
                     clearcoatNormalScale: new Vector2(2, -2),
                     specularColor: new Color(Config.FRESNEL_COLOR),
-                    specularIntensity: 1
+                    specularIntensity: 1,
+                    buffer: this.renderTarget.texture
                 });
-
-                material.onBeforeCompile = shader => {
-                    shader.uniforms.fresnelColor = { value: new Color(Config.FRESNEL_COLOR) };
-                    shader.uniforms.fresnelPower = { value: 1.5 };
-
-                    shader.uniforms.thicknessMap = { value: thicknessMap };
-                    shader.uniforms.thicknessDistortion = { value: 0.185 };
-                    shader.uniforms.thicknessAmbient = { value: 0 };
-                    shader.uniforms.thicknessAttenuation = { value: 1 };
-                    shader.uniforms.thicknessPower = { value: 20 };
-                    shader.uniforms.thicknessScale = { value: 4 };
-
-                    shader.vertexShader = shader.vertexShader.replace(
-                        'void main() {',
-                        /* glsl */ `
-                        out vec3 vWorldNormal;
-                        out vec3 vViewDirection;
-
-                        void main() {
-                        `
-                    );
-
-                    shader.vertexShader = shader.vertexShader.replace(
-                        '#include <project_vertex>',
-                        /* glsl */ `
-                        #include <project_vertex>
-
-                        vWorldNormal = normalize(modelMatrix * vec4(normal, 0.0)).xyz;
-                        vViewDirection = normalize(cameraPosition - (modelMatrix * vec4(transformed, 1.0)).xyz);
-                        `
-                    );
-
-                    shader.fragmentShader = shader.fragmentShader.replace(
-                        'void main() {',
-                        /* glsl */ `
-                        uniform vec3 fresnelColor;
-                        uniform float fresnelPower;
-
-                        in vec3 vWorldNormal;
-                        in vec3 vViewDirection;
-
-                        ${fresnel}
-
-                        uniform sampler2D thicknessMap;
-                        uniform float thicknessDistortion;
-                        uniform float thicknessAmbient;
-                        uniform float thicknessAttenuation;
-                        uniform float thicknessPower;
-                        uniform float thicknessScale;
-
-                        void RE_Direct_Scattering(IncidentLight directLight, vec2 uv, GeometricContext geometry, PhysicalMaterial material, inout ReflectedLight reflectedLight) {
-                            vec3 thickness = directLight.color * texture(thicknessMap, uv).r;
-                            vec3 scatteringHalf = normalize(directLight.direction + (geometry.normal * thicknessDistortion));
-                            float scatteringDot = pow(saturate(dot(geometry.viewDir, -scatteringHalf)), thicknessPower) * thicknessScale;
-                            vec3 scatteringIllu = (scatteringDot + thicknessAmbient) * thickness;
-                            reflectedLight.directDiffuse += material.diffuseColor * directLight.color * scatteringIllu * thicknessAttenuation;
-                        }
-
-                        void main() {
-                        `
-                    );
-
-                    shader.fragmentShader = shader.fragmentShader.replace(
-                        'vec3 totalEmissiveRadiance = emissive;',
-                        /* glsl */ `
-                        vec3 totalEmissiveRadiance = emissive;
-
-                        float fresnel = getFresnel(vViewDirection, vWorldNormal, fresnelPower);
-                        totalEmissiveRadiance += (fresnel * fresnelColor) * 0.2;
-                        `
-                    );
-
-                    shader.fragmentShader = shader.fragmentShader.replace(
-                        '#include <lights_fragment_begin>',
-                        ShaderChunk.lights_fragment_begin.replaceAll(
-                            'RE_Direct( directLight, geometry, material, reflectedLight );',
-                            /* glsl */ `
-                            RE_Direct( directLight, geometry, material, reflectedLight );
-                            RE_Direct_Scattering(directLight, vUv2, geometry, material, reflectedLight);
-                            `
-                        )
-                    );
-                };
 
                 const mesh = new Mesh(geometry, material);
                 this.add(mesh);
             }
+
+            /**
+             * Public methods
+             */
+
+            resize = (width, height) => {
+                this.renderTarget.setSize(width, height);
+            };
+
+            update = () => {
+                const currentRenderTarget = this.renderer.getRenderTarget();
+
+                // Occlusion pass
+                this.visible = false;
+                this.renderer.setRenderTarget(this.renderTarget);
+                this.renderer.render(this.scene, this.camera);
+                this.visible = true;
+
+                // Restore renderer settings
+                this.renderer.setRenderTarget(currentRenderTarget);
+            };
         }
 
         class DarkPlanet extends Group {
@@ -235,11 +149,36 @@
             }
         }
 
+        // Based on https://github.com/pmndrs/drei/blob/master/src/core/MeshTransmissionMaterial.tsx by N8python
+
         class PittedMetalSphere extends Group {
             constructor() {
                 super();
 
                 this.position.x = -2.5;
+
+                this.initRenderer();
+            }
+
+            initRenderer() {
+                const { renderer, scene, camera } = WorldController;
+
+                this.renderer = renderer;
+                this.scene = scene;
+                this.camera = camera;
+
+                this.backside = true;
+                this.thickness = 0.1;
+                this.backsideThickness = 3;
+                this.specularIntensity = 1;
+                this.backsideSpecularIntensity = 0.05;
+
+                // Render targets
+                this.renderTargetBack = new WebGLRenderTarget(1, 1);
+                this.renderTargetFront = this.renderTargetBack.clone();
+
+                // Occlusion material
+                this.discardMaterial = new DiscardMaterial();
             }
 
             async initMesh() {
@@ -247,51 +186,76 @@
 
                 const geometry = new SphereGeometry(1, 80, 80);
 
-                // Second set of UVs for aoMap and lightMap
-                // https://threejs.org/docs/#api/en/materials/MeshStandardMaterial.aoMap
-                geometry.attributes.uv2 = geometry.attributes.uv;
-
-                // Textures
-                const [map, normalMap, ormMap] = await Promise.all([
-                    // loadTexture('assets/textures/uv.jpg'),
-                    loadTexture('assets/textures/pbr/pitted_metal_basecolor.jpg'),
-                    loadTexture('assets/textures/pbr/pitted_metal_normal.jpg'),
-                    // https://occlusion-roughness-metalness.glitch.me/
-                    loadTexture('assets/textures/pbr/pitted_metal_orm.jpg')
-                ]);
-
-                map.anisotropy = anisotropy;
-                map.wrapS = RepeatWrapping;
-                map.wrapT = RepeatWrapping;
-                map.repeat.set(2, 1);
+                const normalMap = await loadTexture('assets/textures/pbr/pitted_metal_normal.jpg');
 
                 normalMap.anisotropy = anisotropy;
                 normalMap.wrapS = RepeatWrapping;
                 normalMap.wrapT = RepeatWrapping;
                 normalMap.repeat.set(2, 1);
 
-                ormMap.anisotropy = anisotropy;
-                ormMap.wrapS = RepeatWrapping;
-                ormMap.wrapT = RepeatWrapping;
-                ormMap.repeat.set(2, 1);
-
-                const material = new MeshStandardMaterial({
+                const material = new TransmissionMaterial({
                     color: new Color(),
-                    metalness: 1,
-                    roughness: 1,
-                    map,
-                    metalnessMap: ormMap,
-                    roughnessMap: ormMap,
-                    aoMap: ormMap,
-                    aoMapIntensity: 1,
                     normalMap,
                     normalScale: new Vector2(1, 1),
-                    envMapIntensity: 0.5
+                    envMapIntensity: 0.5,
+                    ior: 1.2,
+                    transmission: 1,
+                    thickness: this.thickness,
+                    specularColor: new Color().offsetHSL(0, 0, -0.65),
+                    specularIntensity: this.specularIntensity
                 });
 
                 const mesh = new Mesh(geometry, material);
                 this.add(mesh);
+
+                this.material = material;
+                this.mesh = mesh;
             }
+
+            /**
+             * Public methods
+             */
+
+            resize = (width, height) => {
+                this.renderTargetBack.setSize(width, height);
+                this.renderTargetFront.setSize(width, height);
+            };
+
+            update = () => {
+                this.material.time = WorldController.time.value;
+
+                const currentRenderTarget = this.renderer.getRenderTarget();
+
+                const currentToneMapping = this.renderer.toneMapping;
+                this.renderer.toneMapping = NoToneMapping;
+
+                // Occlusion pass
+                this.mesh.material = this.discardMaterial;
+
+                if (this.backside) {
+                    this.renderer.setRenderTarget(this.renderTargetBack);
+                    this.renderer.render(this.scene, this.camera);
+
+                    this.mesh.material = this.material;
+                    this.mesh.material.buffer = this.renderTargetBack.texture;
+                    this.mesh.material.thickness = this.backsideThickness;
+                    this.mesh.material.specularIntensity = this.backsideSpecularIntensity;
+                    this.mesh.material.side = BackSide;
+                }
+
+                this.renderer.setRenderTarget(this.renderTargetFront);
+                this.renderer.render(this.scene, this.camera);
+
+                this.mesh.material = this.material;
+                this.mesh.material.buffer = this.renderTargetFront.texture;
+                this.mesh.material.thickness = this.thickness;
+                this.mesh.material.specularIntensity = this.specularIntensity;
+                this.mesh.material.side = FrontSide;
+
+                // Restore renderer settings
+                this.renderer.toneMapping = currentToneMapping;
+                this.renderer.setRenderTarget(currentRenderTarget);
+            };
         }
 
         class SceneView extends Group {
@@ -318,6 +282,16 @@
              * Public methods
              */
 
+            resize = (width, height, dpr) => {
+                this.pittedMetalSphere.resize(width, height, dpr);
+                this.iceSphere.resize(width, height, dpr);
+            };
+
+            update = () => {
+                this.pittedMetalSphere.update();
+                this.iceSphere.update();
+            };
+
             ready = () => Promise.all([
                 this.pittedMetalSphere.initMesh(),
                 this.darkPlanet.initMesh(),
@@ -333,6 +307,18 @@
             /**
              * Public methods
              */
+
+            static resize = (width, height, dpr) => {
+                this.view.resize(width, height, dpr);
+            };
+
+            static update = () => {
+                if (!this.view.visible) {
+                    return;
+                }
+
+                this.view.update();
+            };
 
             static animateIn = () => {
                 this.view.visible = true;
@@ -829,11 +815,13 @@
                 const dpr = window.devicePixelRatio;
 
                 WorldController.resize(width, height, dpr);
+                SceneController.resize(width, height, dpr);
                 RenderManager.resize(width, height, dpr);
             };
 
             static onUpdate = (time, delta, frame) => {
                 WorldController.update(time, delta, frame);
+                SceneController.update();
                 RenderManager.update(time, delta, frame);
                 PanelController.update();
             };

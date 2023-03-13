@@ -6,7 +6,7 @@ export class TransmissionMaterial extends MeshPhysicalMaterial {
     constructor({
         chromaticAberration = 0.05,
         anisotropy = 0.1,
-        samples = 10,
+        samples = 6,
         buffer = null,
         ...parameters
     } = {}) {

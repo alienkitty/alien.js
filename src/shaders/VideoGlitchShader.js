@@ -1,5 +1,6 @@
 // Based on https://www.shadertoy.com/view/XtK3W3 by dyvoid
 
+import random from './modules/random/random.glsl.js';
 import simplex2d from './modules/noise/simplex2d.glsl.js';
 
 export const vertexShader = /* glsl */ `
@@ -28,6 +29,7 @@ in vec2 vUv;
 
 out vec4 FragColor;
 
+${random}
 ${simplex2d}
 
 void main() {
@@ -44,7 +46,7 @@ void main() {
     FragColor = texture(tMap, vec2(xpos, uv.y));
 
     // Mix in some random interference for lines
-    FragColor.rgb = mix(FragColor.rgb, vec3(0.0), noise * 0.3).rgb;
+    FragColor.rgb = mix(FragColor.rgb, vec3(random(vec2(uv.y * uTime))), noise * 0.3).rgb;
 
     // Apply a line pattern every 4 pixels
     if (floor(mod(gl_FragCoord.y * 0.25, 2.0)) == 0.0) {

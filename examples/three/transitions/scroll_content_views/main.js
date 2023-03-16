@@ -270,7 +270,7 @@ class Section extends Interface {
         this.css({
             position: 'relative',
             width: '100%',
-            height: '100vh'
+            height: '100svh'
         });
 
         if (Config.DEBUG) {

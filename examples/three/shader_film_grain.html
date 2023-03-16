@@ -39,9 +39,9 @@
             uniform sampler2D tScene;
             uniform sampler2D tBloom;
             uniform float uBloomDistortion;
+            uniform float uGrain;
             uniform float uBoost;
             uniform float uReduction;
-            uniform float uGrain;
             uniform float uTime;
 
             in vec2 vUv;
@@ -58,11 +58,11 @@
 
                 FragColor.rgb += getRGB(tBloom, vUv, center, 0.001 * uBloomDistortion).rgb;
 
-                // Vignetting
-                FragColor.rgb *= uBoost - center * uReduction;
-
                 // Film grain
                 FragColor.rgb += vec3(uGrain * random(vUv + vec2(uTime, 0.0) * 0.06));
+
+                // Vignetting
+                FragColor.rgb *= uBoost - center * uReduction;
             }
         `;
 
@@ -74,9 +74,9 @@
                         tScene: { value: null },
                         tBloom: { value: null },
                         uBloomDistortion: { value: 1.45 },
+                        uGrain: { value: 0.05 },
                         uBoost: { value: 1.1 },
                         uReduction: { value: 0.9 },
-                        uGrain: { value: 0.05 },
                         uTime: { value: 0 }
                     },
                     vertexShader: vertexCompositeShader,
@@ -172,6 +172,17 @@
                     },
                     {
                         type: 'slider',
+                        label: 'Grain',
+                        min: 0,
+                        max: 1,
+                        step: 0.01,
+                        value: compositeMaterial.uniforms.uGrain.value,
+                        callback: value => {
+                            compositeMaterial.uniforms.uGrain.value = value;
+                        }
+                    },
+                    {
+                        type: 'slider',
                         label: 'Boost',
                         min: 0,
                         max: 2,
@@ -190,17 +201,6 @@
                         value: compositeMaterial.uniforms.uReduction.value,
                         callback: value => {
                             compositeMaterial.uniforms.uReduction.value = value;
-                        }
-                    },
-                    {
-                        type: 'slider',
-                        label: 'Grain',
-                        min: 0,
-                        max: 1,
-                        step: 0.01,
-                        value: compositeMaterial.uniforms.uGrain.value,
-                        callback: value => {
-                            compositeMaterial.uniforms.uGrain.value = value;
                         }
                     },
                     {
@@ -292,9 +292,9 @@
                 this.scene = scene;
                 this.camera = camera;
 
+                this.grain = 0.05;
                 this.boost = 1.1;
                 this.reduction = 0.9;
-                this.grain = 0.03;
                 this.luminosityThreshold = 0.1;
                 this.luminositySmoothing = 1;
                 this.bloomStrength = 0.3;

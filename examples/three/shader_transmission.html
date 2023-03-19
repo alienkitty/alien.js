@@ -11,7 +11,7 @@
     <link rel="stylesheet" href="assets/css/style.css">
 
     <script type="module">
-        import { ACESFilmicToneMapping, AmbientLight, BackSide, BloomCompositeMaterial, Color, DirectionalLight, DiscardMaterial, EnvironmentTextureLoader, FrontSide, Group, HemisphereLight, ImageBitmapLoaderThread, LuminosityMaterial, MathUtils, Mesh, MeshStandardMaterial, NoToneMapping, OrbitControls, OrthographicCamera, PanelItem, PerspectiveCamera, RepeatWrapping, SMAABlendMaterial, SMAAEdgesMaterial, SMAAWeightsMaterial, Scene, SceneCompositeMaterial, SphereGeometry, TextureLoader, Thread, TransmissionMaterial, UI, UnrealBloomBlurMaterial, Vector2, WebGLRenderTarget, WebGLRenderer, getFullscreenTriangle, ticker } from '../../build/alien.three.js';
+        import { ACESFilmicToneMapping, AmbientLight, BackSide, BloomCompositeMaterial, Color, DirectionalLight, DiscardMaterial, EnvironmentTextureLoader, FrontSide, Group, HemisphereLight, ImageBitmapLoaderThread, LuminosityMaterial, MathUtils, Mesh, MeshStandardMaterial, MeshTransmissionMaterial, NoToneMapping, OrbitControls, OrthographicCamera, PanelItem, PerspectiveCamera, RepeatWrapping, SMAABlendMaterial, SMAAEdgesMaterial, SMAAWeightsMaterial, Scene, SceneCompositeMaterial, SphereGeometry, TextureLoader, Thread, UI, UnrealBloomBlurMaterial, Vector2, WebGLRenderTarget, WebGLRenderer, getFullscreenTriangle, ticker } from '../../build/alien.three.js';
 
         class Config {
             static ICE_COLOR = 0x547691;
@@ -50,7 +50,7 @@
                 normalMap.wrapT = RepeatWrapping;
                 normalMap.repeat.set(2, 1);
 
-                const material = new TransmissionMaterial({
+                const material = new MeshTransmissionMaterial({
                     color: new Color(Config.ICE_COLOR),
                     reflectivity: 0.5,
                     transmission: 0.3,
@@ -193,7 +193,7 @@
                 normalMap.wrapT = RepeatWrapping;
                 normalMap.repeat.set(2, 1);
 
-                const material = new TransmissionMaterial({
+                const material = new MeshTransmissionMaterial({
                     color: new Color(),
                     normalMap,
                     normalScale: new Vector2(1, 1),

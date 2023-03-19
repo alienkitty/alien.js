@@ -2,7 +2,7 @@
 
 import { Color, MeshPhysicalMaterial } from 'three';
 
-export class TransmissionMaterial extends MeshPhysicalMaterial {
+export class MeshTransmissionMaterial extends MeshPhysicalMaterial {
     constructor({
         chromaticAberration = 0.05,
         anisotropy = 0.1,

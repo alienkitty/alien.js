@@ -11,7 +11,7 @@
     <link rel="stylesheet" href="assets/css/style.css">
 
     <script type="module">
-        import { ACESFilmicToneMapping, AdditiveBlending, AmbientLight, BloomCompositeMaterial, BufferGeometry, ChromaticAberrationMaterial, Color, CopyMaterial, DepthTexture, DirectionalLight, EnvironmentTextureLoader, Float32BufferAttribute, GLSL3, Group, HemisphereLight, ImageBitmapLoaderThread, LuminosityMaterial, MathUtils, Mesh, MeshStandardMaterial, OrbitControls, OrthographicCamera, PanelItem, PerspectiveCamera, Points, RawShaderMaterial, RepeatWrapping, Scene, SceneCompositeMaterial, SphereGeometry, TextureLoader, Thread, UI, UnrealBloomBlurMaterial, Vector2, WebGLRenderTarget, WebGLRenderer, getFullscreenTriangle, ticker } from '../../build/alien.three.js';
+        import { ACESFilmicToneMapping, AdditiveBlending, AmbientLight, BloomCompositeMaterial, BufferGeometry, ChromaticAberrationMaterial, Color, CopyMaterial, DepthTexture, DirectionalLight, EnvironmentTextureLoader, Float32BufferAttribute, GLSL3, Group, HemisphereLight, ImageBitmapLoaderThread, LuminosityMaterial, MathUtils, Mesh, MeshStandardMaterial, OrbitControls, OrthographicCamera, PanelItem, PerspectiveCamera, Points, RawShaderMaterial, RepeatWrapping, Scene, SphereGeometry, TextureLoader, Thread, UI, UnrealBloomBlurMaterial, Vector2, WebGLRenderTarget, WebGLRenderer, getFullscreenTriangle, ticker } from '../../build/alien.three.js';
 
         import simplex3d from '../../src/shaders/modules/noise/simplex3d.glsl.js';
         import depth from '../../src/shaders/modules/depth/depth.glsl.js';
@@ -434,14 +434,14 @@
                 this.bloomCompositeMaterial.uniforms.tBlur5.value = this.renderTargetsVertical[4].texture;
                 this.bloomCompositeMaterial.uniforms.uBloomFactors.value = this.bloomFactors();
 
+                // Blend it additively
+                this.bloomCompositeMaterial.blending = AdditiveBlending;
+
                 // Dust scene
                 this.dustScene = new Scene();
                 this.dustScene.add(this.dust);
 
                 this.dust.material.uniforms.tDepth.value = this.renderTargetA.depthTexture;
-
-                // Composite material
-                this.compositeMaterial = new SceneCompositeMaterial();
 
                 // Copy material
                 this.copyMaterial = new CopyMaterial();
@@ -547,24 +547,15 @@
 
                 // Composite all the mips
                 this.screen.material = this.bloomCompositeMaterial;
-                renderer.setRenderTarget(renderTargetsHorizontal[0]);
-                renderer.clear();
+                renderer.setRenderTarget(renderTargetB);
                 renderer.render(this.screen, this.screenCamera);
 
                 // Dust scene
                 renderer.setRenderTarget(renderTargetB);
                 renderer.render(this.dustScene, camera);
 
-                // Composite pass
-                this.compositeMaterial.uniforms.tScene.value = renderTargetB.texture;
-                this.compositeMaterial.uniforms.tBloom.value = renderTargetsHorizontal[0].texture;
-                this.screen.material = this.compositeMaterial;
-                renderer.setRenderTarget(renderTargetA);
-                renderer.clear();
-                renderer.render(this.screen, this.screenCamera);
-
                 // Chromatic aberration pass (render to screen)
-                this.caMaterial.uniforms.tMap.value = renderTargetA.texture;
+                this.caMaterial.uniforms.tMap.value = renderTargetB.texture;
                 this.screen.material = this.caMaterial;
                 renderer.setRenderTarget(null);
                 renderer.clear();

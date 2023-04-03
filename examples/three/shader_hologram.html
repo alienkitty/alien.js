@@ -11,7 +11,7 @@
     <link rel="stylesheet" href="assets/css/style.css">
 
     <script type="module">
-        import { ACESFilmicToneMapping, AmbientLight, BloomCompositeMaterial, BlurMaterial, ChromaticAberrationMaterial, Color, DirectionalLight, EdgesGeometry, EnvironmentTextureLoader, GLSL3, Group, HemisphereLight, ImageBitmapLoaderThread, LineBasicMaterial, LineSegments, LuminosityMaterial, MathUtils, Mesh, MeshBasicMaterial, MeshStandardMaterial, NoBlending, OrbitControls, OrthographicCamera, PanelItem, PerspectiveCamera, RawShaderMaterial, RepeatWrapping, Scene, SceneCompositeMaterial, SphereGeometry, TextureLoader, Thread, UI, UnrealBloomBlurMaterial, Vector2, VideoGlitchMaterial, WebGLRenderTarget, WebGLRenderer, getFullscreenTriangle, ticker } from '../../build/alien.three.js';
+        import { ACESFilmicToneMapping, AdditiveBlending, AmbientLight, BloomCompositeMaterial, BlurMaterial, ChromaticAberrationMaterial, Color, DirectionalLight, EdgesGeometry, EnvironmentTextureLoader, GLSL3, Group, HemisphereLight, ImageBitmapLoaderThread, LineBasicMaterial, LineSegments, LuminosityMaterial, MathUtils, Mesh, MeshBasicMaterial, MeshStandardMaterial, NoBlending, OrbitControls, OrthographicCamera, PanelItem, PerspectiveCamera, RawShaderMaterial, RepeatWrapping, Scene, SphereGeometry, TextureLoader, Thread, UI, UnrealBloomBlurMaterial, Vector2, VideoGlitchMaterial, WebGLRenderTarget, WebGLRenderer, getFullscreenTriangle, ticker } from '../../build/alien.three.js';
 
         class Config {
             static ICE_COLOR = 0x547691;
@@ -800,9 +800,11 @@
                 this.bloomCompositeMaterial.uniforms.tBlur5.value = this.renderTargetsVertical[4].texture;
                 this.bloomCompositeMaterial.uniforms.uBloomFactors.value = this.bloomFactors();
 
-                // Composite materials
-                this.sceneCompositeMaterial = new CompositeMaterial();
-                this.compositeMaterial = new SceneCompositeMaterial();
+                // Blend it additively
+                this.bloomCompositeMaterial.blending = AdditiveBlending;
+
+                // Composite material
+                this.compositeMaterial = new CompositeMaterial();
 
                 // Chromatic aberration material
                 this.caMaterial = new ChromaticAberrationMaterial();
@@ -952,10 +954,10 @@
                 renderer.render(this.screen, this.screenCamera);
 
                 // Scene composite pass
-                this.sceneCompositeMaterial.uniforms.tScene.value = renderTargetA.texture;
-                this.sceneCompositeMaterial.uniforms.tHologram.value = renderTargetB.texture;
-                this.sceneCompositeMaterial.uniforms.tGlow.value = renderTargetBlurB.texture;
-                this.screen.material = this.sceneCompositeMaterial;
+                this.compositeMaterial.uniforms.tScene.value = renderTargetA.texture;
+                this.compositeMaterial.uniforms.tHologram.value = renderTargetB.texture;
+                this.compositeMaterial.uniforms.tGlow.value = renderTargetBlurB.texture;
+                this.screen.material = this.compositeMaterial;
                 renderer.setRenderTarget(renderTargetC);
                 renderer.clear();
                 renderer.render(this.screen, this.screenCamera);
@@ -990,20 +992,11 @@
 
                 // Composite all the mips
                 this.screen.material = this.bloomCompositeMaterial;
-                renderer.setRenderTarget(renderTargetsHorizontal[0]);
-                renderer.clear();
-                renderer.render(this.screen, this.screenCamera);
-
-                // Composite pass
-                this.compositeMaterial.uniforms.tScene.value = renderTargetC.texture;
-                this.compositeMaterial.uniforms.tBloom.value = renderTargetsHorizontal[0].texture;
-                this.screen.material = this.compositeMaterial;
-                renderer.setRenderTarget(renderTargetA);
-                renderer.clear();
+                renderer.setRenderTarget(renderTargetC);
                 renderer.render(this.screen, this.screenCamera);
 
                 // Chromatic aberration pass (render to screen)
-                this.caMaterial.uniforms.tMap.value = renderTargetA.texture;
+                this.caMaterial.uniforms.tMap.value = renderTargetC.texture;
                 this.screen.material = this.caMaterial;
                 renderer.setRenderTarget(null);
                 renderer.clear();

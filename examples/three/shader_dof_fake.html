@@ -11,7 +11,7 @@
     <link rel="stylesheet" href="assets/css/style.css">
 
     <script type="module">
-        import { ACESFilmicToneMapping, AdditiveBlending, AmbientLight, BloomCompositeMaterial, BufferGeometry, Color, CopyMaterial, DepthTexture, DirectionalLight, EnvironmentTextureLoader, Float32BufferAttribute, GLSL3, Group, HemisphereLight, ImageBitmapLoaderThread, LuminosityMaterial, MathUtils, Mesh, MeshStandardMaterial, NoBlending, OrbitControls, OrthographicCamera, PanelItem, PerspectiveCamera, Points, RawShaderMaterial, RepeatWrapping, Scene, SceneCompositeMaterial, SphereGeometry, TextureLoader, Thread, UI, UnrealBloomBlurMaterial, Vector2, WebGLRenderTarget, WebGLRenderer, getFullscreenTriangle, getKeyByValue, ticker } from '../../build/alien.three.js';
+        import { ACESFilmicToneMapping, AdditiveBlending, AmbientLight, BloomCompositeMaterial, BufferGeometry, Color, CopyMaterial, DepthTexture, DirectionalLight, EnvironmentTextureLoader, Float32BufferAttribute, GLSL3, Group, HemisphereLight, ImageBitmapLoaderThread, LuminosityMaterial, MathUtils, Mesh, MeshStandardMaterial, NoBlending, OrbitControls, OrthographicCamera, PanelItem, PerspectiveCamera, Points, RawShaderMaterial, RepeatWrapping, Scene, SphereGeometry, TextureLoader, Thread, UI, UnrealBloomBlurMaterial, Vector2, WebGLRenderTarget, WebGLRenderer, getFullscreenTriangle, getKeyByValue, ticker } from '../../build/alien.three.js';
 
         class Config {
             static DEBUG = /[?&]debug/.test(location.search);
@@ -610,14 +610,14 @@
                 this.bloomCompositeMaterial.uniforms.tBlur5.value = this.renderTargetsVertical[4].texture;
                 this.bloomCompositeMaterial.uniforms.uBloomFactors.value = this.bloomFactors();
 
+                // Blend it additively
+                this.bloomCompositeMaterial.blending = AdditiveBlending;
+
                 // Dust scene
                 this.dustScene = new Scene();
                 this.dustScene.add(this.dust);
 
                 this.dust.material.uniforms.tDepth.value = this.renderTargetA.depthTexture;
-
-                // Composite material
-                this.compositeMaterial = new SceneCompositeMaterial();
 
                 // Bokeh blur materials
                 this.bokehBlurMaterial1 = new BokehBlurMaterial1();
@@ -730,37 +730,28 @@
 
                 // Composite all the mips
                 this.screen.material = this.bloomCompositeMaterial;
-                renderer.setRenderTarget(renderTargetsHorizontal[0]);
-                renderer.clear();
+                renderer.setRenderTarget(renderTargetB);
                 renderer.render(this.screen, this.screenCamera);
 
                 // Dust scene
                 renderer.setRenderTarget(renderTargetB);
                 renderer.render(this.dustScene, camera);
 
-                // Composite pass
-                this.compositeMaterial.uniforms.tScene.value = renderTargetB.texture;
-                this.compositeMaterial.uniforms.tBloom.value = renderTargetsHorizontal[0].texture;
-                this.screen.material = this.compositeMaterial;
+                // Two pass Bokeh blur
+                this.bokehBlurMaterial1.uniforms.tMap.value = renderTargetB.texture;
+                this.screen.material = this.bokehBlurMaterial1;
                 renderer.setRenderTarget(renderTargetA);
                 renderer.clear();
                 renderer.render(this.screen, this.screenCamera);
 
-                // Two pass Bokeh blur
-                this.bokehBlurMaterial1.uniforms.tMap.value = renderTargetA.texture;
-                this.screen.material = this.bokehBlurMaterial1;
+                this.bokehBlurMaterial2.uniforms.tMap.value = renderTargetA.texture;
+                this.screen.material = this.bokehBlurMaterial2;
                 renderer.setRenderTarget(renderTargetB);
                 renderer.clear();
                 renderer.render(this.screen, this.screenCamera);
 
-                this.bokehBlurMaterial2.uniforms.tMap.value = renderTargetB.texture;
-                this.screen.material = this.bokehBlurMaterial2;
-                renderer.setRenderTarget(renderTargetA);
-                renderer.clear();
-                renderer.render(this.screen, this.screenCamera);
-
                 // Copy pass (render to screen)
-                this.copyMaterial.uniforms.tMap.value = renderTargetA.texture;
+                this.copyMaterial.uniforms.tMap.value = renderTargetB.texture;
                 this.screen.material = this.copyMaterial;
                 renderer.setRenderTarget(null);
                 renderer.clear();

@@ -353,11 +353,6 @@
                 this.renderer = renderer;
                 this.scene = scene;
                 this.camera = camera;
-
-                this.initRenderer();
-            }
-
-            static initRenderer() {
             }
 
             /**
@@ -386,7 +381,8 @@
             static initWorld() {
                 this.renderer = new WebGLRenderer({
                     powerPreference: 'high-performance',
-                    stencil: false
+                    stencil: false,
+                    antialias: true
                 });
                 this.element = this.renderer.domElement;
 

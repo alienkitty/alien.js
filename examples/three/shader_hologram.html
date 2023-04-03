@@ -11,7 +11,7 @@
     <link rel="stylesheet" href="assets/css/style.css">
 
     <script type="module">
-        import { ACESFilmicToneMapping, AmbientLight, BloomCompositeMaterial, BlurMaterial, ChromaticAberrationMaterial, Color, DirectionalLight, EdgesGeometry, EnvironmentTextureLoader, GLSL3, Group, HemisphereLight, ImageBitmapLoaderThread, LineBasicMaterial, LineSegments, LuminosityMaterial, MathUtils, Mesh, MeshBasicMaterial, MeshStandardMaterial, NoBlending, OrbitControls, OrthographicCamera, PanelItem, PerspectiveCamera, RawShaderMaterial, RepeatWrapping, SMAABlendMaterial, SMAAEdgesMaterial, SMAAWeightsMaterial, Scene, SceneCompositeMaterial, SphereGeometry, TextureLoader, Thread, UI, UnrealBloomBlurMaterial, Vector2, VideoGlitchMaterial, WebGLRenderTarget, WebGLRenderer, getFullscreenTriangle, ticker } from '../../build/alien.three.js';
+        import { ACESFilmicToneMapping, AdditiveBlending, AmbientLight, BloomCompositeMaterial, BlurMaterial, ChromaticAberrationMaterial, Color, DirectionalLight, EdgesGeometry, EnvironmentTextureLoader, GLSL3, Group, HemisphereLight, ImageBitmapLoaderThread, LineBasicMaterial, LineSegments, LuminosityMaterial, MathUtils, Mesh, MeshBasicMaterial, MeshStandardMaterial, NoBlending, OrbitControls, OrthographicCamera, PanelItem, PerspectiveCamera, RawShaderMaterial, RepeatWrapping, Scene, SphereGeometry, TextureLoader, Thread, UI, UnrealBloomBlurMaterial, Vector2, VideoGlitchMaterial, WebGLRenderTarget, WebGLRenderer, getFullscreenTriangle, ticker } from '../../build/alien.three.js';
 
         class Config {
             static ICE_COLOR = 0x547691;
@@ -151,6 +151,10 @@
                     polygonOffsetUnits: 1
                 });
 
+                // Second channel for aoMap and lightMap
+                // https://threejs.org/docs/#api/en/materials/MeshStandardMaterial.aoMap
+                material.aoMap.channel = 1;
+
                 const mesh = new Mesh(geometry, material);
 
                 // Hologram
@@ -288,6 +292,10 @@
                     envMapIntensity: 0.5
                 });
 
+                // Second channel for aoMap and lightMap
+                // https://threejs.org/docs/#api/en/materials/MeshStandardMaterial.aoMap
+                material.aoMap.channel = 1;
+
                 const mesh = new Mesh(geometry, material);
                 this.add(mesh);
             }
@@ -349,6 +357,10 @@
                     polygonOffsetFactor: 1,
                     polygonOffsetUnits: 1
                 });
+
+                // Second channel for aoMap and lightMap
+                // https://threejs.org/docs/#api/en/materials/MeshStandardMaterial.aoMap
+                material.aoMap.channel = 1;
 
                 const mesh = new Mesh(geometry, material);
 
@@ -712,7 +724,7 @@
             }
 
             static initRenderer() {
-                const { screenTriangle, texelSize, time } = WorldController;
+                const { screenTriangle, time } = WorldController;
 
                 this.renderer.autoClear = false;
 
@@ -729,9 +741,6 @@
                 this.renderTargetB = this.renderTargetA.clone();
                 this.renderTargetC = this.renderTargetA.clone();
                 this.renderTargetHologram = this.renderTargetA.clone();
-
-                this.renderTargetEdges = this.renderTargetA.clone();
-                this.renderTargetWeights = this.renderTargetA.clone();
 
                 this.renderTargetBlurA = this.renderTargetA.clone();
                 this.renderTargetBlurB = this.renderTargetA.clone();
@@ -768,19 +777,6 @@
                 this.vBlurMaterial = new BlurMaterial(BlurDirectionY);
                 this.vBlurMaterial.uniforms.uBluriness.value = this.blurFactor;
 
-                // SMAA edge detection material
-                this.edgesMaterial = new SMAAEdgesMaterial();
-                this.edgesMaterial.uniforms.uTexelSize = texelSize;
-
-                // SMAA weights material
-                this.weightsMaterial = new SMAAWeightsMaterial();
-                this.weightsMaterial.uniforms.uTexelSize = texelSize;
-
-                // SMAA material
-                this.smaaMaterial = new SMAABlendMaterial();
-                this.smaaMaterial.uniforms.tWeightMap.value = this.renderTargetWeights.texture;
-                this.smaaMaterial.uniforms.uTexelSize = texelSize;
-
                 // Luminosity high pass material
                 this.luminosityMaterial = new LuminosityMaterial();
                 this.luminosityMaterial.uniforms.uThreshold.value = this.luminosityThreshold;
@@ -804,9 +800,11 @@
                 this.bloomCompositeMaterial.uniforms.tBlur5.value = this.renderTargetsVertical[4].texture;
                 this.bloomCompositeMaterial.uniforms.uBloomFactors.value = this.bloomFactors();
 
-                // Composite materials
-                this.sceneCompositeMaterial = new CompositeMaterial();
-                this.compositeMaterial = new SceneCompositeMaterial();
+                // Blend it additively
+                this.bloomCompositeMaterial.blending = AdditiveBlending;
+
+                // Composite material
+                this.compositeMaterial = new CompositeMaterial();
 
                 // Chromatic aberration material
                 this.caMaterial = new ChromaticAberrationMaterial();
@@ -842,8 +840,6 @@
                 this.renderTargetB.setSize(width, height);
                 this.renderTargetC.setSize(width, height);
                 this.renderTargetHologram.setSize(width, height);
-                this.renderTargetEdges.setSize(width, height);
-                this.renderTargetWeights.setSize(width, height);
 
                 const blurWidth = Math.round(width * this.blurResolutionScale);
                 const blurHeight = Math.round(height * this.blurResolutionScale);
@@ -886,8 +882,6 @@
                 const renderTargetB = this.renderTargetB;
                 const renderTargetC = this.renderTargetC;
                 const renderTargetHologram = this.renderTargetHologram;
-                const renderTargetEdges = this.renderTargetEdges;
-                const renderTargetWeights = this.renderTargetWeights;
                 const renderTargetBlurA = this.renderTargetBlurA;
                 const renderTargetBlurB = this.renderTargetBlurB;
                 const renderTargetBright = this.renderTargetBright;
@@ -960,37 +954,16 @@
                 renderer.render(this.screen, this.screenCamera);
 
                 // Scene composite pass
-                this.sceneCompositeMaterial.uniforms.tScene.value = renderTargetA.texture;
-                this.sceneCompositeMaterial.uniforms.tHologram.value = renderTargetB.texture;
-                this.sceneCompositeMaterial.uniforms.tGlow.value = renderTargetBlurB.texture;
-                this.screen.material = this.sceneCompositeMaterial;
+                this.compositeMaterial.uniforms.tScene.value = renderTargetA.texture;
+                this.compositeMaterial.uniforms.tHologram.value = renderTargetB.texture;
+                this.compositeMaterial.uniforms.tGlow.value = renderTargetBlurB.texture;
+                this.screen.material = this.compositeMaterial;
                 renderer.setRenderTarget(renderTargetC);
                 renderer.clear();
                 renderer.render(this.screen, this.screenCamera);
 
-                // SMAA edge detection pass
-                this.edgesMaterial.uniforms.tMap.value = renderTargetC.texture;
-                this.screen.material = this.edgesMaterial;
-                renderer.setRenderTarget(renderTargetEdges);
-                renderer.clear();
-                renderer.render(this.screen, this.screenCamera);
-
-                // SMAA weights pass
-                this.weightsMaterial.uniforms.tMap.value = renderTargetEdges.texture;
-                this.screen.material = this.weightsMaterial;
-                renderer.setRenderTarget(renderTargetWeights);
-                renderer.clear();
-                renderer.render(this.screen, this.screenCamera);
-
-                // SMAA pass
-                this.smaaMaterial.uniforms.tMap.value = renderTargetC.texture;
-                this.screen.material = this.smaaMaterial;
-                renderer.setRenderTarget(renderTargetA);
-                renderer.clear();
-                renderer.render(this.screen, this.screenCamera);
-
                 // Extract bright areas
-                this.luminosityMaterial.uniforms.tMap.value = renderTargetA.texture;
+                this.luminosityMaterial.uniforms.tMap.value = renderTargetC.texture;
                 this.screen.material = this.luminosityMaterial;
                 renderer.setRenderTarget(renderTargetBright);
                 renderer.clear();
@@ -1019,20 +992,11 @@
 
                 // Composite all the mips
                 this.screen.material = this.bloomCompositeMaterial;
-                renderer.setRenderTarget(renderTargetsHorizontal[0]);
-                renderer.clear();
-                renderer.render(this.screen, this.screenCamera);
-
-                // Composite pass
-                this.compositeMaterial.uniforms.tScene.value = renderTargetA.texture;
-                this.compositeMaterial.uniforms.tBloom.value = renderTargetsHorizontal[0].texture;
-                this.screen.material = this.compositeMaterial;
-                renderer.setRenderTarget(renderTargetB);
-                renderer.clear();
+                renderer.setRenderTarget(renderTargetC);
                 renderer.render(this.screen, this.screenCamera);
 
                 // Chromatic aberration pass (render to screen)
-                this.caMaterial.uniforms.tMap.value = renderTargetB.texture;
+                this.caMaterial.uniforms.tMap.value = renderTargetC.texture;
                 this.screen.material = this.caMaterial;
                 renderer.setRenderTarget(null);
                 renderer.clear();
@@ -1054,7 +1018,8 @@
             static initWorld() {
                 this.renderer = new WebGLRenderer({
                     powerPreference: 'high-performance',
-                    stencil: false
+                    stencil: false,
+                    antialias: true
                 });
                 this.element = this.renderer.domElement;
 

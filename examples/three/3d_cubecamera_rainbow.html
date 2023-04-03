@@ -11,7 +11,7 @@
     <link rel="stylesheet" href="assets/css/style.css">
 
     <script type="module">
-        import { ACESFilmicToneMapping, AdditiveBlending, BackSide, BlurMaterial, Color, CubeCamera, GLSL3, Group, IcosahedronGeometry, ImageBitmapLoaderThread, LinearMipmapLinearFilter, MathUtils, Mesh, MeshBasicMaterial, MultiplyOperation, NoBlending, OrthographicCamera, PanelItem, PerspectiveCamera, RawShaderMaterial, SMAABlendMaterial, SMAAEdgesMaterial, SMAAWeightsMaterial, Scene, SphereGeometry, Sprite, SpriteMaterial, TextureLoader, Thread, UI, Vector2, Vector3, WebGLCubeRenderTarget, WebGLRenderTarget, WebGLRenderer, Wobble, getFullscreenTriangle, getKeyByValue, ticker, tween } from '../../build/alien.three.js';
+        import { ACESFilmicToneMapping, AdditiveBlending, BackSide, BlurMaterial, Color, CubeCamera, GLSL3, Group, IcosahedronGeometry, ImageBitmapLoaderThread, LinearMipmapLinearFilter, MathUtils, Mesh, MeshBasicMaterial, NoBlending, OrthographicCamera, PanelItem, PerspectiveCamera, RawShaderMaterial, SMAABlendMaterial, SMAAEdgesMaterial, SMAAWeightsMaterial, Scene, SphereGeometry, Sprite, SpriteMaterial, TextureLoader, Thread, UI, Vector2, Vector3, WebGLCubeRenderTarget, WebGLRenderTarget, WebGLRenderer, Wobble, getFullscreenTriangle, getKeyByValue, ticker, tween } from '../../build/alien.three.js';
 
         class Config {
             static BG_COLOR = new Color(0x030627);
@@ -193,9 +193,7 @@
 
                 // Chrome material
                 const material = new MeshBasicMaterial({
-                    envMap: cubeRenderTarget.texture,
-                    combine: MultiplyOperation,
-                    reflectivity: 1
+                    envMap: cubeRenderTarget.texture
                 });
 
                 const mesh = new Mesh(geometry, material);

@@ -125,10 +125,6 @@
 
                 const geometry = new PlaneGeometry(100, 100);
 
-                // Second set of UVs for aoMap and lightMap
-                // https://threejs.org/docs/#api/en/materials/MeshStandardMaterial.aoMap
-                geometry.attributes.uv2 = geometry.attributes.uv;
-
                 const normalMap = await loadTexture('assets/textures/pbr/polished_concrete_normal.jpg');
                 normalMap.wrapS = RepeatWrapping;
                 normalMap.wrapT = RepeatWrapping;
@@ -192,7 +188,7 @@
                         /* glsl */ `
                         #include <emissivemap_fragment>
 
-                        vec4 normalColor = texture2D(normalMap, vUv * normalScale);
+                        vec4 normalColor = texture2D(normalMap, vNormalMapUv * normalScale);
                         vec3 reflectNormal = normalize(vec3(normalColor.r * 2.0 - 1.0, normalColor.b, normalColor.g * 2.0 - 1.0));
                         vec3 reflectCoord = vCoord.xyz / vCoord.w;
                         vec2 reflectUv = reflectCoord.xy + reflectCoord.z * reflectNormal.xz * 0.05;

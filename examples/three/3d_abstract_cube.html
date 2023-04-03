@@ -111,6 +111,10 @@
                     flatShading: true
                 });
 
+                // Second channel for aoMap and lightMap
+                // https://threejs.org/docs/#api/en/materials/MeshStandardMaterial.aoMap
+                material.aoMap.channel = 1;
+
                 const mesh = new Mesh(geometry, material);
                 mesh.rotation.x = MathUtils.degToRad(-45);
                 mesh.rotation.z = MathUtils.degToRad(-45);

@@ -645,6 +645,10 @@ class AbstractCube extends Group {
             polygonOffsetUnits: 1
         });
 
+        // Second channel for aoMap and lightMap
+        // https://threejs.org/docs/#api/en/materials/MeshStandardMaterial.aoMap
+        material.aoMap.channel = 1;
+
         const mesh = new Mesh(geometry, material);
         mesh.rotation.x = MathUtils.degToRad(-45);
         mesh.rotation.z = MathUtils.degToRad(-45);
@@ -748,6 +752,10 @@ class FloatingCrystal extends Group {
             polygonOffsetFactor: 1,
             polygonOffsetUnits: 1
         });
+
+        // Second channel for aoMap and lightMap
+        // https://threejs.org/docs/#api/en/materials/MeshStandardMaterial.aoMap
+        material.aoMap.channel = 1;
 
         const mesh = new Mesh(geometry, material);
         mesh.scale.set(0.5, 1, 0.5);
@@ -854,6 +862,10 @@ class DarkPlanet extends Group {
             polygonOffsetFactor: 1,
             polygonOffsetUnits: 1
         });
+
+        // Second channel for aoMap and lightMap
+        // https://threejs.org/docs/#api/en/materials/MeshStandardMaterial.aoMap
+        material.aoMap.channel = 1;
 
         const mesh = new Mesh(geometry, material);
         mesh.castShadow = true;

@@ -164,6 +164,10 @@
                     flatShading: true
                 });
 
+                // Second channel for aoMap and lightMap
+                // https://threejs.org/docs/#api/en/materials/MeshStandardMaterial.aoMap
+                material.aoMap.channel = 1;
+
                 this.material = material;
             }
 

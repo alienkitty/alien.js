@@ -207,6 +207,10 @@
                     envMapIntensity: 1
                 });
 
+                // Second channel for aoMap and lightMap
+                // https://threejs.org/docs/#api/en/materials/MeshStandardMaterial.aoMap
+                material.aoMap.channel = 1;
+
                 // Based on https://github.com/mrdoob/three.js/blob/dev/examples/jsm/shaders/SubsurfaceScatteringShader.js by daoshengmu
 
                 material.onBeforeCompile = shader => {
@@ -245,7 +249,7 @@
                             'RE_Direct( directLight, geometry, material, reflectedLight );',
                             /* glsl */ `
                             RE_Direct( directLight, geometry, material, reflectedLight );
-                            RE_Direct_Scattering(directLight, vUv2, geometry, material, reflectedLight);
+                            RE_Direct_Scattering(directLight, vAoMapUv, geometry, material, reflectedLight);
                             `
                         )
                     );

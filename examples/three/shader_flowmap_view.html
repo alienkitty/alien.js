@@ -322,6 +322,10 @@
                     normalScale: new Vector2(3, 3)
                 });
 
+                // Second channel for aoMap and lightMap
+                // https://threejs.org/docs/#api/en/materials/MeshStandardMaterial.aoMap
+                material.aoMap.channel = 1;
+
                 const uniforms = {
                     mirror: { value: 0 },
                     mixStrength: { value: 10 }
@@ -372,7 +376,7 @@
                         /* glsl */ `
                         #include <emissivemap_fragment>
 
-                        vec4 normalColor = texture2D(normalMap, vUv * normalScale);
+                        vec4 normalColor = texture2D(normalMap, vNormalMapUv * normalScale);
                         vec3 reflectNormal = normalize(vec3(normalColor.r * 2.0 - 1.0, normalColor.b, normalColor.g * 2.0 - 1.0));
                         vec3 reflectCoord = vCoord.xyz / vCoord.w;
                         vec2 reflectUv = reflectCoord.xy + reflectCoord.z * reflectNormal.xz * 0.05;

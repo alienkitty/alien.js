@@ -143,6 +143,10 @@
                     envMapIntensity: 0.5
                 });
 
+                // Second channel for aoMap and lightMap
+                // https://threejs.org/docs/#api/en/materials/MeshStandardMaterial.aoMap
+                material.aoMap.channel = 1;
+
                 const mesh = new Mesh(geometry, material);
                 this.add(mesh);
             }

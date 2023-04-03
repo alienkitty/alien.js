@@ -1,4 +1,4 @@
-import { ACESFilmicToneMapping, AmbientLight, AssetLoader, BasicShadowMap, BloomCompositeMaterial, BoxGeometry, CameraMotionBlurMaterial, Color, DepthTexture, DirectionalLight, EnvironmentTextureLoader, GLSL3, Group, Header, HemisphereLight, IcosahedronGeometry, ImageBitmapLoaderThread, Interface, LuminosityMaterial, MathUtils, Matrix4, Mesh, MeshStandardMaterial, NearestFilter, NoBlending, OctahedronGeometry, OrthographicCamera, PanelItem, PerspectiveCamera, PlaneGeometry, Point3D, RawShaderMaterial, Reflector, RepeatWrapping, SMAABlendMaterial, SMAAEdgesMaterial, SMAAWeightsMaterial, Scene, SceneCompositeMaterial, ShadowMaterial, Stage, TextureLoader, Thread, UnrealBloomBlurMaterial, Vector2, Vector3, WebGLRenderTarget, WebGLRenderer, clearTween, delayedCall, getFullscreenTriangle, getKeyByValue, lerpCameras, shuffle, ticker, tween } from '../../../../build/alien.three.js';
+import { ACESFilmicToneMapping, AmbientLight, AssetLoader, BasicShadowMap, BloomCompositeMaterial, BoxGeometry, CameraMotionBlurMaterial, Color, DepthTexture, DirectionalLight, EnvironmentTextureLoader, GLSL3, Group, Header, HemisphereLight, IcosahedronGeometry, ImageBitmapLoaderThread, Interface, LuminosityMaterial, MathUtils, Matrix4, Mesh, MeshStandardMaterial, NearestFilter, NoBlending, OctahedronGeometry, OrthographicCamera, PanelItem, PerspectiveCamera, PlaneGeometry, Point3D, RawShaderMaterial, Reflector, RepeatWrapping, Scene, SceneCompositeMaterial, ShadowMaterial, Stage, TextureLoader, Thread, UnrealBloomBlurMaterial, Vector2, Vector3, WebGLRenderTarget, WebGLRenderer, clearTween, delayedCall, getFullscreenTriangle, getKeyByValue, lerpCameras, shuffle, ticker, tween } from '../../../../build/alien.three.js';
 
 class Global {
     static PAGES = [];
@@ -1379,7 +1379,7 @@ class RenderManager {
     }
 
     static initRenderer() {
-        const { screenTriangle, texelSize, time, textureLoader } = WorldController;
+        const { screenTriangle, time } = WorldController;
 
         // Fullscreen triangle
         this.screenCamera = new OrthographicCamera(-1, 1, 1, -1, 0, 1);
@@ -1393,9 +1393,6 @@ class RenderManager {
 
         this.renderTargetB = this.renderTargetA.clone();
         this.renderTargetC = this.renderTargetA.clone();
-
-        this.renderTargetEdges = this.renderTargetA.clone();
-        this.renderTargetWeights = this.renderTargetA.clone();
 
         this.renderTargetsHorizontal = [];
         this.renderTargetsVertical = [];
@@ -1433,19 +1430,6 @@ class RenderManager {
         this.vBlurMaterial.uniforms.uRotation.value = this.blurRotation;
         this.vBlurMaterial.uniforms.uBluriness.value = this.blurFactor;
         this.vBlurMaterial.uniforms.uTime = time;
-
-        // SMAA edge detection material
-        this.edgesMaterial = new SMAAEdgesMaterial();
-        this.edgesMaterial.uniforms.uTexelSize = texelSize;
-
-        // SMAA weights material
-        this.weightsMaterial = new SMAAWeightsMaterial(textureLoader);
-        this.weightsMaterial.uniforms.uTexelSize = texelSize;
-
-        // SMAA material
-        this.smaaMaterial = new SMAABlendMaterial();
-        this.smaaMaterial.uniforms.tWeightMap.value = this.renderTargetWeights.texture;
-        this.smaaMaterial.uniforms.uTexelSize = texelSize;
 
         // Luminosity high pass material
         this.luminosityMaterial = new LuminosityMaterial();
@@ -1504,8 +1488,6 @@ class RenderManager {
         this.renderTargetA.setSize(width, height);
         this.renderTargetB.setSize(width, height);
         this.renderTargetC.setSize(width, height);
-        this.renderTargetEdges.setSize(width, height);
-        this.renderTargetWeights.setSize(width, height);
 
         this.hBlurMaterial.uniforms.uResolution.value.set(width, height);
         this.vBlurMaterial.uniforms.uResolution.value.set(width, height);
@@ -1540,8 +1522,6 @@ class RenderManager {
         const renderTargetA = this.renderTargetA;
         const renderTargetB = this.renderTargetB;
         const renderTargetC = this.renderTargetC;
-        const renderTargetEdges = this.renderTargetEdges;
-        const renderTargetWeights = this.renderTargetWeights;
         const renderTargetBright = this.renderTargetBright;
         const renderTargetsHorizontal = this.renderTargetsHorizontal;
         const renderTargetsVertical = this.renderTargetsVertical;
@@ -1549,24 +1529,6 @@ class RenderManager {
         // Scene pass
         renderer.setRenderTarget(renderTargetA);
         renderer.render(scene, camera);
-
-        // SMAA edge detection pass
-        this.edgesMaterial.uniforms.tMap.value = renderTargetA.texture;
-        this.screen.material = this.edgesMaterial;
-        renderer.setRenderTarget(renderTargetEdges);
-        renderer.render(this.screen, this.screenCamera);
-
-        // SMAA weights pass
-        this.weightsMaterial.uniforms.tMap.value = renderTargetEdges.texture;
-        this.screen.material = this.weightsMaterial;
-        renderer.setRenderTarget(renderTargetWeights);
-        renderer.render(this.screen, this.screenCamera);
-
-        // SMAA pass
-        this.smaaMaterial.uniforms.tMap.value = renderTargetA.texture;
-        this.screen.material = this.smaaMaterial;
-        renderer.setRenderTarget(renderTargetB);
-        renderer.render(this.screen, this.screenCamera);
 
         // Camera motion blur pass
         if (!this.blurFactor) {
@@ -1580,9 +1542,9 @@ class RenderManager {
             this.cameraMotionBlurMaterial.uniforms.uCameraMove.value
                 .copy(this.camera.position).sub(this.previousCameraPosition);
 
-            this.cameraMotionBlurMaterial.uniforms.tMap.value = renderTargetB.texture;
+            this.cameraMotionBlurMaterial.uniforms.tMap.value = renderTargetA.texture;
             this.screen.material = this.cameraMotionBlurMaterial;
-            renderer.setRenderTarget(renderTargetC);
+            renderer.setRenderTarget(renderTargetB);
             renderer.render(this.screen, this.screenCamera);
         }
 
@@ -1591,7 +1553,7 @@ class RenderManager {
         this.previousCameraPosition.copy(this.camera.position);
 
         // Extract bright areas
-        this.luminosityMaterial.uniforms.tMap.value = !this.blurFactor ? renderTargetC.texture : renderTargetB.texture;
+        this.luminosityMaterial.uniforms.tMap.value = !this.blurFactor ? renderTargetB.texture : renderTargetA.texture;
         this.screen.material = this.luminosityMaterial;
         renderer.setRenderTarget(renderTargetBright);
         renderer.render(this.screen, this.screenCamera);
@@ -1621,29 +1583,29 @@ class RenderManager {
         renderer.render(this.screen, this.screenCamera);
 
         // Scene composite pass
-        this.sceneCompositeMaterial.uniforms.tScene.value = !this.blurFactor ? renderTargetC.texture : renderTargetB.texture;
+        this.sceneCompositeMaterial.uniforms.tScene.value = !this.blurFactor ? renderTargetB.texture : renderTargetA.texture;
         this.sceneCompositeMaterial.uniforms.tBloom.value = renderTargetsHorizontal[0].texture;
         this.screen.material = this.sceneCompositeMaterial;
-        renderer.setRenderTarget(renderTargetA);
+        renderer.setRenderTarget(renderTargetC);
         renderer.render(this.screen, this.screenCamera);
 
         // Two pass Gaussian blur (horizontal and vertical)
         if (this.blurFactor) {
-            this.hBlurMaterial.uniforms.tMap.value = renderTargetA.texture;
+            this.hBlurMaterial.uniforms.tMap.value = renderTargetC.texture;
             this.hBlurMaterial.uniforms.uBluriness.value = this.blurFactor;
             this.screen.material = this.hBlurMaterial;
-            renderer.setRenderTarget(renderTargetB);
+            renderer.setRenderTarget(renderTargetA);
             renderer.render(this.screen, this.screenCamera);
 
-            this.vBlurMaterial.uniforms.tMap.value = renderTargetB.texture;
+            this.vBlurMaterial.uniforms.tMap.value = renderTargetA.texture;
             this.vBlurMaterial.uniforms.uBluriness.value = this.blurFactor;
             this.screen.material = this.vBlurMaterial;
-            renderer.setRenderTarget(renderTargetA);
+            renderer.setRenderTarget(renderTargetC);
             renderer.render(this.screen, this.screenCamera);
         }
 
         // Composite pass (render to screen)
-        this.compositeMaterial.uniforms.tScene.value = renderTargetA.texture;
+        this.compositeMaterial.uniforms.tScene.value = renderTargetC.texture;
         this.compositeMaterial.uniforms.uBluriness.value = this.blurFactor;
         this.screen.material = this.compositeMaterial;
         renderer.setRenderTarget(null);
@@ -1824,7 +1786,8 @@ class WorldController {
     static initWorld() {
         this.renderer = new WebGLRenderer({
             powerPreference: 'high-performance',
-            stencil: false
+            stencil: false,
+            antialias: true
         });
         this.element = this.renderer.domElement;
 

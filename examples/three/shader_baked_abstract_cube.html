@@ -19,7 +19,7 @@
     </style>
 
     <script type="module">
-        import { BasicMaterial, BufferGeometryLoader, BufferGeometryLoaderThread, Color, DoubleSide, Group, ImageBitmapLoaderThread, Mesh, OrbitControls, OrthographicCamera, PerspectiveCamera, SMAABlendMaterial, SMAAEdgesMaterial, SMAAWeightsMaterial, Scene, ShadowTextureMaterial, TextureLoader, Thread, Vector2, WebGLRenderTarget, WebGLRenderer, getFullscreenTriangle, ticker } from '../../build/alien.three.js';
+        import { BasicMaterial, BufferGeometryLoader, BufferGeometryLoaderThread, Color, DoubleSide, Group, ImageBitmapLoaderThread, Mesh, OrbitControls, PerspectiveCamera, Scene, ShadowTextureMaterial, TextureLoader, Thread, Vector2, WebGLRenderer, getFullscreenTriangle, ticker } from '../../build/alien.three.js';
 
         class AbstractCube extends Group {
             constructor() {
@@ -147,42 +147,6 @@
                 this.renderer = renderer;
                 this.scene = scene;
                 this.camera = camera;
-
-                this.enabled = true;
-
-                this.initRenderer();
-            }
-
-            static initRenderer() {
-                const { screenTriangle, texelSize } = WorldController;
-
-                // Fullscreen triangle
-                this.screenCamera = new OrthographicCamera(-1, 1, 1, -1, 0, 1);
-                this.screen = new Mesh(screenTriangle);
-                this.screen.frustumCulled = false;
-
-                // Render targets
-                this.renderTarget = new WebGLRenderTarget(1, 1, {
-                    depthBuffer: false
-                });
-
-                this.renderTargetEdges = this.renderTarget.clone();
-                this.renderTargetWeights = this.renderTarget.clone();
-
-                this.renderTarget.depthBuffer = true;
-
-                // SMAA edge detection material
-                this.edgesMaterial = new SMAAEdgesMaterial();
-                this.edgesMaterial.uniforms.uTexelSize = texelSize;
-
-                // SMAA weights material
-                this.weightsMaterial = new SMAAWeightsMaterial();
-                this.weightsMaterial.uniforms.uTexelSize = texelSize;
-
-                // SMAA material
-                this.smaaMaterial = new SMAABlendMaterial();
-                this.smaaMaterial.uniforms.tWeightMap.value = this.renderTargetWeights.texture;
-                this.smaaMaterial.uniforms.uTexelSize = texelSize;
             }
 
             /**
@@ -192,51 +156,10 @@
             static resize = (width, height, dpr) => {
                 this.renderer.setPixelRatio(dpr);
                 this.renderer.setSize(width, height);
-
-                width = Math.round(width * dpr);
-                height = Math.round(height * dpr);
-
-                this.renderTarget.setSize(width, height);
-                this.renderTargetEdges.setSize(width, height);
-                this.renderTargetWeights.setSize(width, height);
             };
 
             static update = () => {
-                const renderer = this.renderer;
-                const scene = this.scene;
-                const camera = this.camera;
-
-                if (!this.enabled) {
-                    renderer.setRenderTarget(null);
-                    renderer.render(scene, camera);
-                    return;
-                }
-
-                const renderTarget = this.renderTarget;
-                const renderTargetEdges = this.renderTargetEdges;
-                const renderTargetWeights = this.renderTargetWeights;
-
-                // Scene pass
-                renderer.setRenderTarget(renderTarget);
-                renderer.render(scene, camera);
-
-                // SMAA edge detection pass
-                this.edgesMaterial.uniforms.tMap.value = renderTarget.texture;
-                this.screen.material = this.edgesMaterial;
-                renderer.setRenderTarget(renderTargetEdges);
-                renderer.render(this.screen, this.screenCamera);
-
-                // SMAA weights pass
-                this.weightsMaterial.uniforms.tMap.value = renderTargetEdges.texture;
-                this.screen.material = this.weightsMaterial;
-                renderer.setRenderTarget(renderTargetWeights);
-                renderer.render(this.screen, this.screenCamera);
-
-                // SMAA pass (render to screen)
-                this.smaaMaterial.uniforms.tMap.value = renderTarget.texture;
-                this.screen.material = this.smaaMaterial;
-                renderer.setRenderTarget(null);
-                renderer.render(this.screen, this.screenCamera);
+                this.renderer.render(this.scene, this.camera);
             };
         }
 
@@ -252,7 +175,8 @@
             static initWorld() {
                 this.renderer = new WebGLRenderer({
                     powerPreference: 'high-performance',
-                    stencil: false
+                    stencil: false,
+                    antialias: true
                 });
                 this.element = this.renderer.domElement;
 

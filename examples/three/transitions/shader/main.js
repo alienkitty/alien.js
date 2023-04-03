@@ -1,4 +1,4 @@
-import { ACESFilmicToneMapping, AmbientLight, AssetLoader, BloomCompositeMaterial, BoxGeometry, Color, DirectionalLight, EnvironmentTextureLoader, GLSL3, Group, Header, HemisphereLight, IcosahedronGeometry, ImageBitmapLoaderThread, Interface, LuminosityMaterial, MathUtils, Mesh, MeshStandardMaterial, OctahedronGeometry, OrthographicCamera, PanelItem, PerspectiveCamera, RawShaderMaterial, RepeatWrapping, SMAABlendMaterial, SMAAEdgesMaterial, SMAAWeightsMaterial, Scene, SceneCompositeMaterial, Stage, TextureLoader, Thread, UnrealBloomBlurMaterial, Vector2, WebGLRenderTarget, WebGLRenderer, clearTween, getFullscreenTriangle, shuffle, ticker, tween } from '../../../../build/alien.three.js';
+import { ACESFilmicToneMapping, AmbientLight, AssetLoader, BloomCompositeMaterial, BoxGeometry, Color, DirectionalLight, EnvironmentTextureLoader, GLSL3, Group, Header, HemisphereLight, IcosahedronGeometry, ImageBitmapLoaderThread, Interface, LuminosityMaterial, MathUtils, Mesh, MeshStandardMaterial, OctahedronGeometry, OrthographicCamera, PanelItem, PerspectiveCamera, RawShaderMaterial, RepeatWrapping, Scene, SceneCompositeMaterial, Stage, TextureLoader, Thread, UnrealBloomBlurMaterial, Vector2, WebGLRenderTarget, WebGLRenderer, clearTween, getFullscreenTriangle, shuffle, ticker, tween } from '../../../../build/alien.three.js';
 
 class Global {
     static PAGES = [];
@@ -871,7 +871,7 @@ class RenderManager {
     }
 
     static initRenderer() {
-        const { screenTriangle, texelSize, textureLoader } = WorldController;
+        const { screenTriangle } = WorldController;
 
         this.renderer.autoClear = false;
 
@@ -881,40 +881,22 @@ class RenderManager {
         this.screen.frustumCulled = false;
 
         // Render targets
-        this.renderTargetA = new WebGLRenderTarget(1, 1, {
+        this.renderTarget = new WebGLRenderTarget(1, 1, {
             depthBuffer: false
         });
-
-        this.renderTargetB = this.renderTargetA.clone();
-
-        this.renderTargetEdges = this.renderTargetA.clone();
-        this.renderTargetWeights = this.renderTargetA.clone();
 
         this.renderTargetsHorizontal = [];
         this.renderTargetsVertical = [];
         this.nMips = 5;
 
-        this.renderTargetBright = this.renderTargetA.clone();
+        this.renderTargetBright = this.renderTarget.clone();
 
         for (let i = 0, l = this.nMips; i < l; i++) {
-            this.renderTargetsHorizontal.push(this.renderTargetA.clone());
-            this.renderTargetsVertical.push(this.renderTargetA.clone());
+            this.renderTargetsHorizontal.push(this.renderTarget.clone());
+            this.renderTargetsVertical.push(this.renderTarget.clone());
         }
 
-        this.renderTargetA.depthBuffer = true;
-
-        // SMAA edge detection material
-        this.edgesMaterial = new SMAAEdgesMaterial();
-        this.edgesMaterial.uniforms.uTexelSize = texelSize;
-
-        // SMAA weights material
-        this.weightsMaterial = new SMAAWeightsMaterial(textureLoader);
-        this.weightsMaterial.uniforms.uTexelSize = texelSize;
-
-        // SMAA material
-        this.smaaMaterial = new SMAABlendMaterial();
-        this.smaaMaterial.uniforms.tWeightMap.value = this.renderTargetWeights.texture;
-        this.smaaMaterial.uniforms.uTexelSize = texelSize;
+        this.renderTarget.depthBuffer = true;
 
         // Luminosity high pass material
         this.luminosityMaterial = new LuminosityMaterial();
@@ -970,10 +952,7 @@ class RenderManager {
         width = Math.round(width * dpr);
         height = Math.round(height * dpr);
 
-        this.renderTargetA.setSize(width, height);
-        this.renderTargetB.setSize(width, height);
-        this.renderTargetEdges.setSize(width, height);
-        this.renderTargetWeights.setSize(width, height);
+        this.renderTarget.setSize(width, height);
 
         width = MathUtils.floorPowerOfTwo(width) / 2;
         height = MathUtils.floorPowerOfTwo(height) / 2;
@@ -1003,42 +982,18 @@ class RenderManager {
             return;
         }
 
-        const renderTargetA = this.renderTargetA;
-        const renderTargetB = this.renderTargetB;
-        const renderTargetEdges = this.renderTargetEdges;
-        const renderTargetWeights = this.renderTargetWeights;
+        const renderTarget = this.renderTarget;
         const renderTargetBright = this.renderTargetBright;
         const renderTargetsHorizontal = this.renderTargetsHorizontal;
         const renderTargetsVertical = this.renderTargetsVertical;
 
         // Scene pass
-        renderer.setRenderTarget(renderTargetA);
+        renderer.setRenderTarget(renderTarget);
         renderer.clear();
         renderer.render(scene, camera);
 
-        // SMAA edge detection pass
-        this.edgesMaterial.uniforms.tMap.value = renderTargetA.texture;
-        this.screen.material = this.edgesMaterial;
-        renderer.setRenderTarget(renderTargetEdges);
-        renderer.clear();
-        renderer.render(this.screen, this.screenCamera);
-
-        // SMAA weights pass
-        this.weightsMaterial.uniforms.tMap.value = renderTargetEdges.texture;
-        this.screen.material = this.weightsMaterial;
-        renderer.setRenderTarget(renderTargetWeights);
-        renderer.clear();
-        renderer.render(this.screen, this.screenCamera);
-
-        // SMAA pass
-        this.smaaMaterial.uniforms.tMap.value = renderTargetA.texture;
-        this.screen.material = this.smaaMaterial;
-        renderer.setRenderTarget(renderTargetB);
-        renderer.clear();
-        renderer.render(this.screen, this.screenCamera);
-
         // Extract bright areas
-        this.luminosityMaterial.uniforms.tMap.value = renderTargetB.texture;
+        this.luminosityMaterial.uniforms.tMap.value = renderTarget.texture;
         this.screen.material = this.luminosityMaterial;
         renderer.setRenderTarget(renderTargetBright);
         renderer.clear();
@@ -1072,7 +1027,7 @@ class RenderManager {
         renderer.render(this.screen, this.screenCamera);
 
         // Composite pass (render to screen)
-        this.compositeMaterial.uniforms.tScene.value = renderTargetB.texture;
+        this.compositeMaterial.uniforms.tScene.value = renderTarget.texture;
         this.compositeMaterial.uniforms.tBloom.value = renderTargetsHorizontal[0].texture;
         this.screen.material = this.compositeMaterial;
         renderer.setRenderTarget(null);
@@ -1140,7 +1095,8 @@ class WorldController {
     static initWorld() {
         this.renderer = new WebGLRenderer({
             powerPreference: 'high-performance',
-            stencil: false
+            stencil: false,
+            antialias: true
         });
         this.element = this.renderer.domElement;
 

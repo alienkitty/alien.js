@@ -368,6 +368,7 @@
                 for (let i = 0; i < boxes.count; i++) {
                     matrix.setPosition(Math.random() - 0.5, Math.random() * 2, Math.random() - 0.5);
                     boxes.setMatrixAt(i, matrix);
+                    boxes.computeBoundingSphere();
                 }
 
                 physics.add(boxes, { autoSleep: false });
@@ -388,6 +389,7 @@
                 for (let i = 0; i < spheres.count; i++) {
                     matrix.setPosition(Math.random() - 0.5, Math.random() * 2, Math.random() - 0.5);
                     spheres.setMatrixAt(i, matrix);
+                    spheres.computeBoundingSphere();
                 }
 
                 physics.add(spheres, { autoSleep: false });

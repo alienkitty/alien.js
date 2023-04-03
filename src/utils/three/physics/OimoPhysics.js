@@ -400,6 +400,7 @@ export class OimoPhysics {
                     this.object.updateMatrix();
 
                     object.setMatrixAt(j, this.object.matrix);
+                    object.computeBoundingSphere();
                 }
 
                 object.instanceMatrix.needsUpdate = true;

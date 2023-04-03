@@ -231,6 +231,7 @@ export class OimoPhysicsController {
                         this.object.updateMatrix();
 
                         object.setMatrixAt(j, this.object.matrix);
+                        object.computeBoundingSphere();
                     }
 
                     index += 8;

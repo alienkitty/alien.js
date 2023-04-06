@@ -302,11 +302,16 @@
 
                 this.position.z = 0;
 
+                this.initLight();
+
                 if (Config.DEBUG) {
                     this.initDebug();
                 }
+            }
 
-                this.initLight();
+            initLight() {
+                const light = new PointLight(Config.LIGHT_COLOR, 0.2);
+                this.add(light);
             }
 
             initDebug() {
@@ -319,11 +324,6 @@
 
                 const mesh = new Mesh(geometry, material);
                 this.add(mesh);
-            }
-
-            initLight() {
-                const light = new PointLight(Config.LIGHT_COLOR, 0.2);
-                this.add(light);
             }
         }
 

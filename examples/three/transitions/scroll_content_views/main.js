@@ -269,7 +269,6 @@ class Section extends Interface {
     initHTML() {
         this.css({
             position: 'relative',
-            width: '100%',
             height: '100svh'
         });
 
@@ -605,17 +604,17 @@ class FloatingCrystal extends Group {
         map.anisotropy = anisotropy;
         map.wrapS = RepeatWrapping;
         map.wrapT = RepeatWrapping;
-        map.repeat.set(2, 1);
+        map.repeat.set(2, 2);
 
         normalMap.anisotropy = anisotropy;
         normalMap.wrapS = RepeatWrapping;
         normalMap.wrapT = RepeatWrapping;
-        normalMap.repeat.set(2, 1);
+        normalMap.repeat.set(2, 2);
 
         ormMap.anisotropy = anisotropy;
         ormMap.wrapS = RepeatWrapping;
         ormMap.wrapT = RepeatWrapping;
-        ormMap.repeat.set(2, 1);
+        ormMap.repeat.set(2, 2);
 
         const material = new MeshStandardMaterial({
             color: new Color().offsetHSL(0, 0, -0.65),

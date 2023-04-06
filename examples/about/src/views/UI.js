@@ -67,8 +67,7 @@ export class UI extends Interface {
     };
 
     onKeyUp = e => {
-        if (e.keyCode === 27) {
-            // Esc
+        if (e.keyCode === 27) { // Esc
             this.onDetails();
         }
     };

@@ -11,7 +11,7 @@
     <link rel="stylesheet" href="assets/css/style.css">
 
     <script type="module">
-        import { ACESFilmicToneMapping, AmbientLight, BloomCompositeMaterial, BufferGeometryLoader, BufferGeometryLoaderThread, Color, DirectionalLight, EnvironmentTextureLoader, GLSL3, Group, HemisphereLight, ImageBitmapLoaderThread, LuminosityMaterial, MathUtils, Mesh, MeshBasicMaterial, MeshStandardMaterial, NoBlending, OrthographicCamera, PanelItem, PerspectiveCamera, PointLight, RawShaderMaterial, RepeatWrapping, Scene, SphereGeometry, TextureLoader, Thread, UI, UnrealBloomBlurMaterial, Vector2, Vector3, WebGLRenderTarget, WebGLRenderer, getFrustum, getFullscreenTriangle, ticker, tween } from '../../build/alien.three.js';
+        import { ACESFilmicToneMapping, AmbientLight, BloomCompositeMaterial, BufferGeometryLoader, BufferGeometryLoaderThread, Color, DirectionalLight, EnvironmentTextureLoader, GLSL3, Group, HemisphereLight, ImageBitmapLoaderThread, LuminosityMaterial, MathUtils, Mesh, MeshStandardMaterial, NoBlending, OrthographicCamera, PanelItem, PerspectiveCamera, PointLight, PointLightHelper, RawShaderMaterial, RepeatWrapping, Scene, TextureLoader, Thread, UI, UnrealBloomBlurMaterial, Vector2, Vector3, WebGLRenderTarget, WebGLRenderer, getFrustum, getFullscreenTriangle, ticker, tween } from '../../build/alien.three.js';
 
         class Config {
             static DEBUG = /[?&]debug/.test(location.search);
@@ -79,28 +79,16 @@
 
                 this.position.z = 2;
 
-                if (Config.DEBUG) {
-                    this.initDebug();
-                }
-
                 this.initLight();
-            }
-
-            initDebug() {
-                const geometry = new SphereGeometry(0.125, 1, 1);
-
-                const material = new MeshBasicMaterial({
-                    color: 0xff0000,
-                    wireframe: true
-                });
-
-                const mesh = new Mesh(geometry, material);
-                this.add(mesh);
             }
 
             initLight() {
                 const light = new PointLight(0xffffff, 0.2);
                 this.add(light);
+
+                if (Config.DEBUG) {
+                    WorldController.scene.add(new PointLightHelper(light, 0.125));
+                }
             }
         }
 

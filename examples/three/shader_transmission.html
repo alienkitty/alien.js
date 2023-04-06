@@ -11,7 +11,7 @@
     <link rel="stylesheet" href="assets/css/style.css">
 
     <script type="module">
-        import { ACESFilmicToneMapping, AmbientLight, BackSide, BloomCompositeMaterial, Color, DirectionalLight, DiscardMaterial, EnvironmentTextureLoader, FrontSide, Group, HemisphereLight, ImageBitmapLoaderThread, LuminosityMaterial, MathUtils, Mesh, MeshStandardMaterial, MeshTransmissionMaterial, NoToneMapping, OrbitControls, OrthographicCamera, PanelItem, PerspectiveCamera, RepeatWrapping, Scene, SceneCompositeMaterial, SphereGeometry, TextureLoader, Thread, UI, UnrealBloomBlurMaterial, Vector2, WebGLRenderTarget, WebGLRenderer, getFullscreenTriangle, ticker } from '../../build/alien.three.js';
+        import { ACESFilmicToneMapping, AmbientLight, BackSide, BloomCompositeMaterial, Color, DirectionalLight, DiscardMaterial, EnvironmentTextureLoader, Group, HemisphereLight, ImageBitmapLoaderThread, LuminosityMaterial, MathUtils, Mesh, MeshStandardMaterial, MeshTransmissionMaterial, NoToneMapping, OrbitControls, OrthographicCamera, PanelItem, PerspectiveCamera, RepeatWrapping, Scene, SceneCompositeMaterial, SphereGeometry, TextureLoader, Thread, UI, UnrealBloomBlurMaterial, Vector2, WebGLRenderTarget, WebGLRenderer, getFullscreenTriangle, ticker } from '../../build/alien.three.js';
 
         class Config {
             static ICE_COLOR = 0x547691;
@@ -230,6 +230,9 @@
                 const currentToneMapping = this.renderer.toneMapping;
                 this.renderer.toneMapping = NoToneMapping;
 
+                const currentMaterial = this.mesh.material;
+                const currentSide = this.mesh.material.side;
+
                 // Occlusion pass
                 this.mesh.material = this.discardMaterial;
 
@@ -237,7 +240,7 @@
                     this.renderer.setRenderTarget(this.renderTargetBack);
                     this.renderer.render(this.scene, this.camera);
 
-                    this.mesh.material = this.material;
+                    this.mesh.material = currentMaterial;
                     this.mesh.material.buffer = this.renderTargetBack.texture;
                     this.mesh.material.thickness = this.backsideThickness;
                     this.mesh.material.specularIntensity = this.backsideSpecularIntensity;
@@ -247,13 +250,13 @@
                 this.renderer.setRenderTarget(this.renderTargetFront);
                 this.renderer.render(this.scene, this.camera);
 
-                this.mesh.material = this.material;
+                // Restore settings
+                this.mesh.material = currentMaterial;
                 this.mesh.material.buffer = this.renderTargetFront.texture;
                 this.mesh.material.thickness = this.thickness;
                 this.mesh.material.specularIntensity = this.specularIntensity;
-                this.mesh.material.side = FrontSide;
+                this.mesh.material.side = currentSide;
 
-                // Restore renderer settings
                 this.renderer.toneMapping = currentToneMapping;
                 this.renderer.setRenderTarget(currentRenderTarget);
             };

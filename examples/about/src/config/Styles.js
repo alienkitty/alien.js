@@ -24,7 +24,7 @@ export class Styles {
         fontWeight: '500',
         fontSize: 11,
         lineHeight: 15,
-        letterSpacing: '0.03em'
+        letterSpacing: '0.02em'
     };
 
     static number = {

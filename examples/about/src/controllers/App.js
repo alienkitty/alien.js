@@ -49,7 +49,9 @@ export class App {
     }
 
     static initAudio() {
-        WebAudio.init(this.bufferLoader.files, { sampleRate: 48000 });
+        WebAudio.init({ sampleRate: 48000 });
+        WebAudio.load(this.bufferLoader.files);
+
         AudioController.init(this.ui.instructions);
     }
 

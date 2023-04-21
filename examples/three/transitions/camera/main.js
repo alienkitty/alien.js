@@ -1132,8 +1132,6 @@ class ScenePanelController {
     static init(view) {
         this.view = view;
 
-        this.points = [];
-
         this.initPanel();
 
         this.addListeners();
@@ -1145,15 +1143,11 @@ class ScenePanelController {
         const views = [darkPlanet, floatingCrystal, abstractCube];
 
         views.forEach(view => {
-            const { material } = view.mesh;
-
             view.point = new Point3D(view.mesh, {
-                name: material.name,
                 type: '',
                 noTracker: true
             });
             view.add(view.point);
-            this.points.push(view.point);
         });
 
         // Shrink tracker meshes a little bit
@@ -1162,7 +1156,6 @@ class ScenePanelController {
     }
 
     static addListeners() {
-        Point3D.add(...this.points);
         Point3D.events.on('click', this.onClick);
     }
 

@@ -39,16 +39,17 @@ export { Sound } from '@alienkitty/space.js/src/audio/Sound.js';
 export { WebAudio3D } from '@alienkitty/space.js/src/audio/three/WebAudio3D.js';
 export { Sound3D } from '@alienkitty/space.js/src/audio/three/Sound3D.js';
 
-// Panel
-export { Panel } from '@alienkitty/space.js/src/panel/Panel.js';
-export { PanelItem } from '@alienkitty/space.js/src/panel/PanelItem.js';
-export { Link } from '@alienkitty/space.js/src/panel/Link.js';
-export { List } from '@alienkitty/space.js/src/panel/List.js';
-export { ListToggle } from '@alienkitty/space.js/src/panel/ListToggle.js';
-export { ListSelect } from '@alienkitty/space.js/src/panel/ListSelect.js';
-export { Slider } from '@alienkitty/space.js/src/panel/Slider.js';
-export { ColorPicker } from '@alienkitty/space.js/src/panel/ColorPicker.js';
-export { MaterialPanelController } from '@alienkitty/space.js/src/panel/three/MaterialPanelController.js';
+// Panels
+export { Panel } from '@alienkitty/space.js/src/panels/Panel.js';
+export { PanelItem } from '@alienkitty/space.js/src/panels/PanelItem.js';
+export { Link } from '@alienkitty/space.js/src/panels/Link.js';
+export { List } from '@alienkitty/space.js/src/panels/List.js';
+export { ListToggle } from '@alienkitty/space.js/src/panels/ListToggle.js';
+export { ListSelect } from '@alienkitty/space.js/src/panels/ListSelect.js';
+export { Slider } from '@alienkitty/space.js/src/panels/Slider.js';
+export { ColorPicker } from '@alienkitty/space.js/src/panels/ColorPicker.js';
+export * from '@alienkitty/space.js/src/panels/three/Options.js';
+export * from '@alienkitty/space.js/src/panels/three/Panels.js';
 
 // UI
 export { UI } from '@alienkitty/space.js/src/ui/UI.js';

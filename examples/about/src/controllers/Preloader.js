@@ -27,7 +27,8 @@ export class Preloader {
     static async initLoader() {
         this.view.animateIn();
 
-        const bufferLoader = new BufferLoader([
+        const bufferLoader = new BufferLoader();
+        bufferLoader.loadAll([
             'assets/sounds/bass_drum.mp3',
             'assets/sounds/deep_spacy_loop.mp3',
             'assets/sounds/water_loop.mp3'

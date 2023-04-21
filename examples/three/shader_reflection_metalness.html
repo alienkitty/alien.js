@@ -11,7 +11,7 @@
     <link rel="stylesheet" href="assets/css/style.css">
 
     <script type="module">
-        import { ACESFilmicToneMapping, BloomCompositeMaterial, Color, DirectionalLight, EnvironmentTextureLoader, Fog, GLSL3, Group, HemisphereLight, LuminosityMaterial, MaterialPanelController, MathUtils, Mesh, MeshBasicMaterial, MeshStandardMaterial, NoBlending, OrthographicCamera, PanelItem, PerspectiveCamera, PlaneGeometry, RawShaderMaterial, Reflector, RepeatWrapping, SVGLoader, Scene, TextureLoader, UI, UnrealBloomBlurMaterial, Vector2, Vector3, WebGLRenderTarget, WebGLRenderer, getFullscreenTriangle, ticker } from '../../build/alien.three.js';
+        import { ACESFilmicToneMapping, BloomCompositeMaterial, Color, DirectionalLight, EnvironmentTextureLoader, Fog, GLSL3, Group, HemisphereLight, LuminosityMaterial, MathUtils, Mesh, MeshBasicMaterial, MeshStandardMaterial, NoBlending, OrthographicCamera, PanelItem, PerspectiveCamera, PlaneGeometry, RawShaderMaterial, Reflector, RepeatWrapping, SVGLoader, Scene, StandardMaterialPanel, TextureLoader, UI, UnrealBloomBlurMaterial, Vector2, Vector3, WebGLRenderTarget, WebGLRenderer, getFullscreenTriangle, ticker } from '../../build/alien.three.js';
 
         import rgbshift from '../../src/shaders/modules/rgbshift/rgbshift.glsl.js';
 
@@ -318,17 +318,19 @@
 
                 const { luminosityMaterial, bloomCompositeMaterial, compositeMaterial } = RenderManager;
 
-                [
+                const items = [
                     {
                         label: 'FPS'
-                    }
-                ].forEach(data => {
-                    this.ui.addPanel(new PanelItem(data));
-                });
+                    },
+                    {
+                        type: 'content',
+                        callback: (value, panel) => {
+                            const materialPanel = new StandardMaterialPanel(floor);
+                            materialPanel.animateIn(true);
 
-                MaterialPanelController.init(this.ui, floor.material);
-
-                [
+                            panel.setContent(materialPanel);
+                        }
+                    },
                     {
                         type: 'divider'
                     },
@@ -389,7 +391,9 @@
                             compositeMaterial.uniforms.uBloomDistortion.value = value;
                         }
                     }
-                ].forEach(data => {
+                ];
+
+                items.forEach(data => {
                     this.ui.addPanel(new PanelItem(data));
                 });
             }

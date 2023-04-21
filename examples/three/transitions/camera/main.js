@@ -254,7 +254,6 @@ class Details extends Interface {
     }
 
     initHTML() {
-        this.invisible();
         this.css({
             position: 'absolute',
             left: 0,
@@ -263,14 +262,16 @@ class Details extends Interface {
             height: '100%',
             display: 'flex',
             alignItems: 'center',
-            pointerEvents: 'none',
-            opacity: 0
+            pointerEvents: 'none'
         });
 
         this.container = new Interface('.container');
+        this.container.invisible();
         this.container.css({
             width: 400,
-            margin: '10% 10% 13%'
+            margin: '10% 10% 13%',
+            pointerEvents: 'none',
+            opacity: 0
         });
         this.add(this.container);
     }
@@ -340,9 +341,9 @@ class Details extends Interface {
      */
 
     animateIn = () => {
-        this.clearTween();
-        this.visible();
-        this.css({
+        this.container.clearTween();
+        this.container.visible();
+        this.container.css({
             pointerEvents: 'none',
             opacity: 1
         });
@@ -367,15 +368,15 @@ class Details extends Interface {
         this.clearTimeout(this.timeout);
 
         this.timeout = this.delayedCall(2000, () => {
-            this.css({ pointerEvents: 'auto' });
+            this.container.css({ pointerEvents: 'auto' });
         });
     };
 
     animateOut = callback => {
-        this.css({ pointerEvents: 'none' });
+        this.container.css({ pointerEvents: 'none' });
 
-        this.clearTween().tween({ opacity: 0 }, 300, 'easeInSine', () => {
-            this.invisible();
+        this.container.clearTween().tween({ opacity: 0 }, 300, 'easeInSine', () => {
+            this.container.invisible();
 
             if (callback) {
                 callback();

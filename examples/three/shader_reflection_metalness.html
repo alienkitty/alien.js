@@ -717,6 +717,10 @@
 
             static initLoaders() {
                 this.textureLoader = new TextureLoader();
+                this.textureLoader.setOptions({
+                    preserveData: true
+                });
+
                 this.environmentLoader = new EnvironmentTextureLoader(this.renderer);
                 this.svgLoader = new SVGLoader();
             }

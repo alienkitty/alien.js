@@ -25,7 +25,6 @@
         import encodings from '../../src/shaders/modules/encodings/encodings.glsl.js';
 
         // Based on https://github.com/mrdoob/three.js/blob/dev/examples/jsm/shaders/GammaCorrectionShader.js by WestLangley
-        // Based on https://github.com/mrdoob/three.js/blob/dev/examples/jsm/shaders/ACESFilmicToneMappingShader.js by WestLangley
 
         const vertexCompositeShader = /* glsl */ `
             in vec3 position;
@@ -46,8 +45,7 @@
             uniform sampler2D tScene;
             uniform sampler2D tBloom;
             uniform float uBloomDistortion;
-            uniform bool uSRGB;
-            uniform bool uACESFilmic;
+            uniform bool uGamma;
             uniform float uExposure;
 
             in vec2 vUv;
@@ -65,16 +63,10 @@
 
                 FragColor.rgb += getRGB(tBloom, vUv, angle, amount).rgb;
 
-                if (uSRGB) {
+                if (uGamma) {
                     FragColor.rgb *= uExposure;
 
-                    FragColor = LinearToSRGB(FragColor);
-                }
-
-                if (uACESFilmic) {
-                    FragColor.rgb *= uExposure / 0.6; // Pre-exposed, outside of the tone mapping function
-
-                    FragColor = vec4(ACESFilmicToneMapping(FragColor.rgb), FragColor.a);
+                    FragColor = linearToSRGB(FragColor);
                 }
             }
         `;
@@ -87,8 +79,7 @@
                         tScene: { value: null },
                         tBloom: { value: null },
                         uBloomDistortion: { value: 1.45 },
-                        uSRGB: { value: true },
-                        uACESFilmic: { value: false },
+                        uGamma: { value: true },
                         uExposure: { value: 1 }
                     },
                     vertexShader: vertexCompositeShader,
@@ -227,14 +218,9 @@
                     Post: true
                 };
 
-                const srgbOptions = {
+                const gammaOptions = {
                     Off: false,
-                    SRGB: true
-                };
-
-                const acesOptions = {
-                    Off: false,
-                    ACESFilm: true
+                    Gamma: true
                 };
 
                 const postItems = [
@@ -300,18 +286,10 @@
                     },
                     {
                         type: 'list',
-                        list: srgbOptions,
-                        value: getKeyByValue(srgbOptions, compositeMaterial.uniforms.uSRGB.value),
+                        list: gammaOptions,
+                        value: getKeyByValue(gammaOptions, compositeMaterial.uniforms.uGamma.value),
                         callback: value => {
-                            compositeMaterial.uniforms.uSRGB.value = srgbOptions[value];
-                        }
-                    },
-                    {
-                        type: 'list',
-                        list: acesOptions,
-                        value: getKeyByValue(acesOptions, compositeMaterial.uniforms.uACESFilmic.value),
-                        callback: value => {
-                            compositeMaterial.uniforms.uACESFilmic.value = acesOptions[value];
+                            compositeMaterial.uniforms.uGamma.value = gammaOptions[value];
                         }
                     },
                     {

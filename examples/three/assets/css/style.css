@@ -13,7 +13,7 @@
     --ui-color-line: rgba(255, 255, 255, 0.5);
     --ui-invert-light-color: #000;
     --ui-invert-light-color-triplet: 0, 0, 0;
-    --ui-invert-light-color-line: #000;
+    --ui-invert-light-color-line: rgba(0, 0, 0, 0.5);
     --ui-invert-dark-color: rgba(255, 255, 255, 0.94);
     --ui-invert-dark-color-triplet: 255, 255, 255;
     --ui-invert-dark-color-line: rgba(255, 255, 255, 0.5);

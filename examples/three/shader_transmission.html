@@ -11,7 +11,7 @@
     <link rel="stylesheet" href="assets/css/style.css">
 
     <script type="module">
-        import { ACESFilmicToneMapping, AmbientLight, BackSide, BloomCompositeMaterial, Color, DirectionalLight, DiscardMaterial, EnvironmentTextureLoader, Group, HemisphereLight, ImageBitmapLoaderThread, LuminosityMaterial, MathUtils, Mesh, MeshStandardMaterial, MeshTransmissionMaterial, NoToneMapping, OrbitControls, OrthographicCamera, PanelItem, PerspectiveCamera, RepeatWrapping, Scene, SceneCompositeMaterial, SphereGeometry, TextureLoader, Thread, UI, UnrealBloomBlurMaterial, Vector2, WebGLRenderTarget, WebGLRenderer, getFullscreenTriangle, ticker } from '../../build/alien.three.js';
+        import { ACESFilmicToneMapping, AmbientLight, BackSide, BloomCompositeMaterial, Color, DirectionalLight, DiscardMaterial, EnvironmentTextureLoader, Group, HemisphereLight, ImageBitmapLoaderThread, LuminosityMaterial, MathUtils, Mesh, MeshStandardMaterial, MeshTransmissionMaterial, NoToneMapping, OrbitControls, OrthographicCamera, Panel, PanelItem, PerspectiveCamera, PhysicalMaterialOptions, Point3D, RepeatWrapping, Scene, SceneCompositeMaterial, SphereGeometry, TextureLoader, Thread, UI, UnrealBloomBlurMaterial, Vector2, WebGLRenderTarget, WebGLRenderer, getFullscreenTriangle, getKeyByValue, ticker } from '../../build/alien.three.js';
 
         class Config {
             static ICE_COLOR = 0x547691;
@@ -73,7 +73,6 @@
 
                     this.mesh.material = currentMaterial;
                     this.mesh.material.buffer = this.renderTargetBack.texture;
-                    this.mesh.material.roughness = this.mesh.userData.backsideRoughness;
                     this.mesh.material.thickness = this.mesh.userData.backsideThickness;
                     this.mesh.material.side = BackSide;
                 }
@@ -84,7 +83,6 @@
                 // Restore settings
                 this.mesh.material = currentMaterial;
                 this.mesh.material.buffer = this.renderTargetFront.texture;
-                this.mesh.material.roughness = this.mesh.userData.roughness;
                 this.mesh.material.thickness = this.mesh.userData.thickness;
                 this.mesh.material.side = currentSide;
 
@@ -132,10 +130,8 @@
                 this.mesh = mesh;
 
                 // Transmission defaults
-                this.mesh.userData.roughness = 0;
                 this.mesh.userData.thickness = 1;
                 this.mesh.userData.backside = false;
-                this.mesh.userData.backsideRoughness = 0;
                 this.mesh.userData.backsideThickness = 3;
             }
         }
@@ -238,10 +234,8 @@
                 this.mesh = mesh;
 
                 // Transmission defaults
-                this.mesh.userData.roughness = 0;
                 this.mesh.userData.thickness = 0.1;
                 this.mesh.userData.backside = true;
-                this.mesh.userData.backsideRoughness = 0;
                 this.mesh.userData.backsideThickness = 3;
             }
         }
@@ -315,9 +309,278 @@
             static ready = () => this.view.ready();
         }
 
+        class TransmissionMaterialBackPanel extends Panel {
+            constructor(mesh) {
+                super();
+
+                this.mesh = mesh;
+
+                this.initPanel();
+            }
+
+            initPanel() {
+                const mesh = this.mesh;
+
+                const backsideOptions = {
+                    Off: false,
+                    On: true
+                };
+
+                const backsideItems = [
+                    {
+                        type: 'divider'
+                    },
+                    {
+                        type: 'slider',
+                        label: 'Thick',
+                        min: -10,
+                        max: 10,
+                        step: 0.1,
+                        value: mesh.userData.backsideThickness,
+                        callback: value => {
+                            mesh.userData.backsideThickness = value;
+                        }
+                    }
+                ];
+
+                const items = [
+                    {
+                        type: 'divider'
+                    },
+                    {
+                        type: 'list',
+                        list: backsideOptions,
+                        value: getKeyByValue(backsideOptions, mesh.userData.backside),
+                        callback: (value, panel) => {
+                            if (!panel.group) {
+                                const backsidePanel = new Panel();
+                                backsidePanel.animateIn(true);
+
+                                backsideItems.forEach(data => {
+                                    backsidePanel.add(new PanelItem(data));
+                                });
+
+                                panel.setContent(backsidePanel);
+                            }
+
+                            mesh.userData.backside = backsideOptions[value];
+
+                            if (mesh.userData.backside) {
+                                panel.group.show();
+                            } else {
+                                panel.group.hide();
+                            }
+                        }
+                    }
+                ];
+
+                items.forEach(data => {
+                    this.add(new PanelItem(data));
+                });
+            }
+        }
+
+        class TransmissionMaterialFrontPanel extends Panel {
+            constructor(mesh) {
+                super();
+
+                this.mesh = mesh;
+
+                this.initPanel();
+            }
+
+            initPanel() {
+                const mesh = this.mesh;
+
+                const items = [
+                    {
+                        type: 'divider'
+                    },
+                    {
+                        type: 'slider',
+                        label: 'Int',
+                        min: 0,
+                        max: 1,
+                        step: 0.01,
+                        value: mesh.material._transmission,
+                        callback: value => {
+                            mesh.material._transmission = value;
+                        }
+                    },
+                    {
+                        type: 'slider',
+                        label: 'Thick',
+                        min: -10,
+                        max: 10,
+                        step: 0.1,
+                        value: mesh.userData.thickness,
+                        callback: value => {
+                            mesh.userData.thickness = value;
+                        }
+                    },
+                    {
+                        type: 'color',
+                        value: mesh.material.attenuationColor,
+                        callback: value => {
+                            mesh.material.attenuationColor.copy(value);
+                        }
+                    },
+                    {
+                        type: 'slider',
+                        label: 'Distance',
+                        min: -10,
+                        max: 10,
+                        step: 0.1,
+                        value: mesh.material.attenuationDistance,
+                        callback: value => {
+                            mesh.material.attenuationDistance = value;
+                        }
+                    },
+                    {
+                        type: 'slider',
+                        label: 'IOR',
+                        min: 1,
+                        max: 2.333,
+                        step: 0.01,
+                        value: mesh.material.ior,
+                        callback: value => {
+                            mesh.material.ior = value;
+                        }
+                    },
+                    {
+                        type: 'slider',
+                        label: 'Reflect',
+                        min: 0,
+                        max: 1,
+                        step: 0.01,
+                        value: mesh.material.reflectivity,
+                        callback: value => {
+                            mesh.material.reflectivity = value;
+                        }
+                    },
+                    {
+                        type: 'slider',
+                        label: 'Chroma',
+                        min: 0,
+                        max: 1,
+                        step: 0.01,
+                        value: mesh.material.chromaticAberration,
+                        callback: value => {
+                            mesh.material.chromaticAberration = value;
+                        }
+                    },
+                    {
+                        type: 'slider',
+                        label: 'Anisotropy',
+                        min: 0,
+                        max: 1,
+                        step: 0.01,
+                        value: mesh.material.anisotropy,
+                        callback: value => {
+                            mesh.material.anisotropy = value;
+                        }
+                    }
+                    // TODO: Texture thumbnails
+                ];
+
+                items.forEach(data => {
+                    this.add(new PanelItem(data));
+                });
+            }
+        }
+
+        class TransmissionMaterialPanel extends Panel {
+            constructor(mesh) {
+                super();
+
+                this.mesh = mesh;
+
+                this.initPanel();
+            }
+
+            initPanel() {
+                const mesh = this.mesh;
+
+                const materialOptions = {
+                    Common: PhysicalMaterialOptions.Common,
+                    // TODO: Texture thumbnails
+                    // Map: PhysicalMaterialOptions.Map,
+                    Clearcoat: PhysicalMaterialOptions.Clearcoat,
+                    Sheen: PhysicalMaterialOptions.Sheen,
+                    Front: TransmissionMaterialFrontPanel,
+                    Back: TransmissionMaterialBackPanel,
+                    Env: PhysicalMaterialOptions.Env,
+                    Helper: PhysicalMaterialOptions.Helper
+                };
+
+                const items = [
+                    {
+                        type: 'divider'
+                    },
+                    {
+                        type: 'list',
+                        list: materialOptions,
+                        value: 'Common',
+                        callback: (value, panel) => {
+                            const MaterialPanel = materialOptions[value];
+
+                            const materialPanel = new MaterialPanel(mesh);
+                            materialPanel.animateIn(true);
+
+                            panel.setContent(materialPanel);
+                        }
+                    }
+                ];
+
+                items.forEach(data => {
+                    this.add(new PanelItem(data));
+                });
+            }
+        }
+
+        class ScenePanelController {
+            static init(view) {
+                this.view = view;
+
+                this.initPanel();
+            }
+
+            static initPanel() {
+                const { pittedMetalSphere, iceSphere } = this.view;
+
+                const objects = [pittedMetalSphere, iceSphere];
+
+                objects.forEach(object => {
+                    object.point = new Point3D(object.mesh);
+                    object.add(object.point);
+
+                    const items = [
+                        {
+                            type: 'content',
+                            callback: (value, panel) => {
+                                const materialPanel = new TransmissionMaterialPanel(object.mesh);
+                                materialPanel.animateIn(true);
+
+                                panel.setContent(materialPanel);
+                            }
+                        }
+                    ];
+
+                    items.forEach(data => {
+                        object.point.addPanel(new PanelItem(data));
+                    });
+                });
+            }
+        }
+
         class PanelController {
-            static init() {
+            static init(scene, camera, view) {
+                this.scene = scene;
+                this.camera = camera;
+                this.view = view;
+
                 this.initViews();
+                this.initControllers();
                 this.initPanel();
             }
 
@@ -325,6 +588,14 @@
                 this.ui = new UI({ fps: true });
                 this.ui.animateIn();
                 document.body.appendChild(this.ui.element);
+            }
+
+            static initControllers() {
+                Point3D.init(this.scene, this.camera, {
+                    container: this.ui
+                });
+
+                ScenePanelController.init(this.view);
             }
 
             static initPanel() {
@@ -394,11 +665,12 @@
              * Public methods
              */
 
-            static update = () => {
+            static update = time => {
                 if (!this.ui) {
                     return;
                 }
 
+                Point3D.update(time);
                 this.ui.update();
             };
         }
@@ -743,7 +1015,9 @@
             }
 
             static initPanel() {
-                PanelController.init();
+                const { scene, camera } = WorldController;
+
+                PanelController.init(scene, camera, this.view);
             }
 
             static addListeners() {

@@ -18,11 +18,11 @@
             static FRESNEL_COLOR = 0xd3e0e7;
         }
 
-        class IceSphere extends Group {
+        // Based on https://github.com/pmndrs/drei/blob/master/src/core/MeshTransmissionMaterial.tsx by N8python
+
+        class RenderGroup extends Group {
             constructor() {
                 super();
-
-                this.position.x = 2.5;
 
                 this.initRenderer();
             }
@@ -35,7 +35,69 @@
                 this.camera = camera;
 
                 // Render targets
-                this.renderTarget = new WebGLRenderTarget(1, 1);
+                this.renderTargetBack = new WebGLRenderTarget(1, 1);
+                this.renderTargetFront = this.renderTargetBack.clone();
+
+                // Occlusion material
+                this.discardMaterial = new DiscardMaterial();
+            }
+
+            /**
+             * Public methods
+             */
+
+            resize(width, height) {
+                this.renderTargetBack.setSize(width, height);
+                this.renderTargetFront.setSize(width, height);
+            }
+
+            update() {
+                if (typeof this.mesh.material.buffer === 'undefined') {
+                    return;
+                }
+
+                const currentRenderTarget = this.renderer.getRenderTarget();
+
+                const currentToneMapping = this.renderer.toneMapping;
+                this.renderer.toneMapping = NoToneMapping;
+
+                const currentMaterial = this.mesh.material;
+                const currentSide = this.mesh.material.side;
+
+                // Occlusion pass
+                this.mesh.material = this.discardMaterial;
+
+                if (this.mesh.userData.backside) {
+                    this.renderer.setRenderTarget(this.renderTargetBack);
+                    this.renderer.render(this.scene, this.camera);
+
+                    this.mesh.material = currentMaterial;
+                    this.mesh.material.buffer = this.renderTargetBack.texture;
+                    this.mesh.material.roughness = this.mesh.userData.backsideRoughness;
+                    this.mesh.material.thickness = this.mesh.userData.backsideThickness;
+                    this.mesh.material.side = BackSide;
+                }
+
+                this.renderer.setRenderTarget(this.renderTargetFront);
+                this.renderer.render(this.scene, this.camera);
+
+                // Restore settings
+                this.mesh.material = currentMaterial;
+                this.mesh.material.buffer = this.renderTargetFront.texture;
+                this.mesh.material.roughness = this.mesh.userData.roughness;
+                this.mesh.material.thickness = this.mesh.userData.thickness;
+                this.mesh.material.side = currentSide;
+
+                this.renderer.toneMapping = currentToneMapping;
+                this.renderer.setRenderTarget(currentRenderTarget);
+            }
+        }
+
+        class IceSphere extends RenderGroup {
+            constructor() {
+                super();
+
+                this.position.x = 2.5;
             }
 
             async initMesh() {
@@ -61,34 +123,21 @@
                     clearcoatNormalMap: normalMap,
                     clearcoatNormalScale: new Vector2(2, -2),
                     specularColor: new Color(Config.FRESNEL_COLOR),
-                    specularIntensity: 1,
-                    buffer: this.renderTarget.texture
+                    specularIntensity: 1
                 });
 
                 const mesh = new Mesh(geometry, material);
                 this.add(mesh);
+
+                this.mesh = mesh;
+
+                // Transmission defaults
+                this.mesh.userData.roughness = 0;
+                this.mesh.userData.thickness = 1;
+                this.mesh.userData.backside = false;
+                this.mesh.userData.backsideRoughness = 0;
+                this.mesh.userData.backsideThickness = 3;
             }
-
-            /**
-             * Public methods
-             */
-
-            resize = (width, height) => {
-                this.renderTarget.setSize(width, height);
-            };
-
-            update = () => {
-                const currentRenderTarget = this.renderer.getRenderTarget();
-
-                // Occlusion pass
-                this.visible = false;
-                this.renderer.setRenderTarget(this.renderTarget);
-                this.renderer.render(this.scene, this.camera);
-                this.visible = true;
-
-                // Restore renderer settings
-                this.renderer.setRenderTarget(currentRenderTarget);
-            };
         }
 
         class DarkPlanet extends Group {
@@ -152,36 +201,11 @@
             }
         }
 
-        // Based on https://github.com/pmndrs/drei/blob/master/src/core/MeshTransmissionMaterial.tsx by N8python
-
-        class PittedMetalSphere extends Group {
+        class PittedMetalSphere extends RenderGroup {
             constructor() {
                 super();
 
                 this.position.x = -2.5;
-
-                this.initRenderer();
-            }
-
-            initRenderer() {
-                const { renderer, scene, camera } = WorldController;
-
-                this.renderer = renderer;
-                this.scene = scene;
-                this.camera = camera;
-
-                this.backside = true;
-                this.thickness = 0.1;
-                this.backsideThickness = 3;
-                this.specularIntensity = 1;
-                this.backsideSpecularIntensity = 0.05;
-
-                // Render targets
-                this.renderTargetBack = new WebGLRenderTarget(1, 1);
-                this.renderTargetFront = this.renderTargetBack.clone();
-
-                // Occlusion material
-                this.discardMaterial = new DiscardMaterial();
             }
 
             async initMesh() {
@@ -203,63 +227,23 @@
                     envMapIntensity: 0.5,
                     ior: 1.2,
                     transmission: 1,
-                    thickness: this.thickness,
+                    thickness: 0.1,
                     specularColor: new Color().offsetHSL(0, 0, -0.65),
-                    specularIntensity: this.specularIntensity
+                    specularIntensity: 1
                 });
 
                 const mesh = new Mesh(geometry, material);
                 this.add(mesh);
 
-                this.material = material;
                 this.mesh = mesh;
+
+                // Transmission defaults
+                this.mesh.userData.roughness = 0;
+                this.mesh.userData.thickness = 0.1;
+                this.mesh.userData.backside = true;
+                this.mesh.userData.backsideRoughness = 0;
+                this.mesh.userData.backsideThickness = 3;
             }
-
-            /**
-             * Public methods
-             */
-
-            resize = (width, height) => {
-                this.renderTargetBack.setSize(width, height);
-                this.renderTargetFront.setSize(width, height);
-            };
-
-            update = () => {
-                const currentRenderTarget = this.renderer.getRenderTarget();
-
-                const currentToneMapping = this.renderer.toneMapping;
-                this.renderer.toneMapping = NoToneMapping;
-
-                const currentMaterial = this.mesh.material;
-                const currentSide = this.mesh.material.side;
-
-                // Occlusion pass
-                this.mesh.material = this.discardMaterial;
-
-                if (this.backside) {
-                    this.renderer.setRenderTarget(this.renderTargetBack);
-                    this.renderer.render(this.scene, this.camera);
-
-                    this.mesh.material = currentMaterial;
-                    this.mesh.material.buffer = this.renderTargetBack.texture;
-                    this.mesh.material.thickness = this.backsideThickness;
-                    this.mesh.material.specularIntensity = this.backsideSpecularIntensity;
-                    this.mesh.material.side = BackSide;
-                }
-
-                this.renderer.setRenderTarget(this.renderTargetFront);
-                this.renderer.render(this.scene, this.camera);
-
-                // Restore settings
-                this.mesh.material = currentMaterial;
-                this.mesh.material.buffer = this.renderTargetFront.texture;
-                this.mesh.material.thickness = this.thickness;
-                this.mesh.material.specularIntensity = this.specularIntensity;
-                this.mesh.material.side = currentSide;
-
-                this.renderer.toneMapping = currentToneMapping;
-                this.renderer.setRenderTarget(currentRenderTarget);
-            };
         }
 
         class SceneView extends Group {

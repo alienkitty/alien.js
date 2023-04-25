@@ -33,7 +33,7 @@ class EventEmitter {
         }
     }
 
-    emit(type, event = {}) {
+    emit(type, ...event) {
         if (!this.callbacks[type]) {
             return;
         }
@@ -41,7 +41,7 @@ class EventEmitter {
         const stack = this.callbacks[type].slice();
 
         for (let i = 0, l = stack.length; i < l; i++) {
-            stack[i].call(this, event);
+            stack[i].call(this, ...event);
         }
     }
 
@@ -62,27 +62,31 @@ class EventEmitter {
  */
 
 let Loader$1 = class Loader {
-    constructor(assets = [], callback) {
-        this.assets = assets;
-        this.callback = callback;
+    constructor() {
         this.events = new EventEmitter();
         this.total = 0;
         this.loaded = 0;
         this.progress = 0;
         this.path = '';
-        this.crossOrigin;
+        this.crossOrigin = 'anonymous';
         this.fetchOptions;
         this.cache = false;
         this.files = {};
         this.promise = new Promise(resolve => this.resolve = resolve);
-
-        assets.forEach(path => this.load(path));
     }
 
     load(/* path, callback */) {}
 
     loadAsync(path) {
         return new Promise(resolve => this.load(path, resolve));
+    }
+
+    loadAll(assets) {
+        return assets.map(path => this.load(path));
+    }
+
+    loadAllAsync(assets) {
+        return Promise.all(assets.map(path => this.loadAsync(path)));
     }
 
     increment() {
@@ -99,10 +103,6 @@ let Loader$1 = class Loader {
         this.resolve();
 
         this.events.emit('complete');
-
-        if (this.callback) {
-            this.callback();
-        }
     }
 
     add(num = 1) {
@@ -318,7 +318,7 @@ class AssetLoader extends Loader$1 {
 
         if (cached) {
             promise = Promise.resolve(cached);
-        } else if (/\.(jpe?g|png|gif|svg)/.test(path)) {
+        } else if (/\.(jpe?g|png|webp|gif|svg)/.test(path)) {
             promise = this.loadImage(path);
         } else if (/\.json/.test(path)) {
             promise = this.loadData(path);
@@ -398,8 +398,8 @@ class AssetLoader extends Loader$1 {
  */
 
 class BufferLoader extends Loader$1 {
-    constructor(assets, callback) {
-        super(assets, callback);
+    constructor() {
+        super();
 
         this.cache = true;
     }
@@ -714,8 +714,8 @@ class ImageBitmapLoaderThread {
  */
 
 let ImageBitmapLoader$1 = class ImageBitmapLoader extends Loader$1 {
-    constructor(assets, callback) {
-        super(assets, callback);
+    constructor() {
+        super();
 
         this.defaultOptions = {
             imageOrientation: 'none'
@@ -13458,7 +13458,7 @@ class WebGLCubeRenderTarget extends WebGLRenderTarget {
 
 const _vector1 = /*@__PURE__*/ new Vector3();
 const _vector2 = /*@__PURE__*/ new Vector3();
-const _normalMatrix = /*@__PURE__*/ new Matrix3();
+const _normalMatrix$1 = /*@__PURE__*/ new Matrix3();
 
 class Plane {
 
@@ -13623,7 +13623,7 @@ class Plane {
 
 	applyMatrix4( matrix, optionalNormalMatrix ) {
 
-		const normalMatrix = optionalNormalMatrix || _normalMatrix.getNormalMatrix( matrix );
+		const normalMatrix = optionalNormalMatrix || _normalMatrix$1.getNormalMatrix( matrix );
 
 		const referencePoint = this.coplanarPoint( _vector1 ).applyMatrix4( matrix );
 
@@ -31368,7 +31368,7 @@ function transformVertex( vertexPosition, mvPosition, center, scale, sin, cos ) 
 }
 
 const _v1$2 = /*@__PURE__*/ new Vector3();
-const _v2$1 = /*@__PURE__*/ new Vector3();
+const _v2$1$1 = /*@__PURE__*/ new Vector3();
 
 class LOD extends Object3D {
 
@@ -31505,9 +31505,9 @@ class LOD extends Object3D {
 		if ( levels.length > 1 ) {
 
 			_v1$2.setFromMatrixPosition( camera.matrixWorld );
-			_v2$1.setFromMatrixPosition( this.matrixWorld );
+			_v2$1$1.setFromMatrixPosition( this.matrixWorld );
 
-			const distance = _v1$2.distanceTo( _v2$1 ) / camera.zoom;
+			const distance = _v1$2.distanceTo( _v2$1$1 ) / camera.zoom;
 
 			levels[ 0 ].object.visible = true;
 
@@ -35861,7 +35861,7 @@ class DodecahedronGeometry extends PolyhedronGeometry {
 }
 
 const _v0 = /*@__PURE__*/ new Vector3();
-const _v1$1 = /*@__PURE__*/ new Vector3();
+const _v1$1$1 = /*@__PURE__*/ new Vector3();
 const _normal = /*@__PURE__*/ new Vector3();
 const _triangle = /*@__PURE__*/ new Triangle();
 
@@ -35978,10 +35978,10 @@ class EdgesGeometry extends BufferGeometry {
 
 					const { index0, index1 } = edgeData[ key ];
 					_v0.fromBufferAttribute( positionAttr, index0 );
-					_v1$1.fromBufferAttribute( positionAttr, index1 );
+					_v1$1$1.fromBufferAttribute( positionAttr, index1 );
 
 					vertices.push( _v0.x, _v0.y, _v0.z );
-					vertices.push( _v1$1.x, _v1$1.y, _v1$1.z );
+					vertices.push( _v1$1$1.x, _v1$1$1.y, _v1$1$1.z );
 
 				}
 
@@ -50374,8 +50374,8 @@ class PolarGridHelper extends LineSegments {
 
 }
 
-const _v1 = /*@__PURE__*/ new Vector3();
-const _v2 = /*@__PURE__*/ new Vector3();
+const _v1$8 = /*@__PURE__*/ new Vector3();
+const _v2$5 = /*@__PURE__*/ new Vector3();
 const _v3 = /*@__PURE__*/ new Vector3();
 
 class DirectionalLightHelper extends Object3D {
@@ -50433,11 +50433,11 @@ class DirectionalLightHelper extends Object3D {
 		this.light.updateWorldMatrix( true, false );
 		this.light.target.updateWorldMatrix( true, false );
 
-		_v1.setFromMatrixPosition( this.light.matrixWorld );
-		_v2.setFromMatrixPosition( this.light.target.matrixWorld );
-		_v3.subVectors( _v2, _v1 );
+		_v1$8.setFromMatrixPosition( this.light.matrixWorld );
+		_v2$5.setFromMatrixPosition( this.light.target.matrixWorld );
+		_v3.subVectors( _v2$5, _v1$8 );
 
-		this.lightPlane.lookAt( _v2 );
+		this.lightPlane.lookAt( _v2$5 );
 
 		if ( this.color !== undefined ) {
 
@@ -50451,7 +50451,7 @@ class DirectionalLightHelper extends Object3D {
 
 		}
 
-		this.targetLine.lookAt( _v2 );
+		this.targetLine.lookAt( _v2$5 );
 		this.targetLine.scale.z = _v3.length();
 
 	}
@@ -51610,8 +51610,8 @@ if ( typeof window !== 'undefined' ) {
  */
 
 class TextureLoader extends Loader$1 {
-    constructor(assets, callback) {
-        super(assets, callback);
+    constructor() {
+        super();
 
         this.defaultOptions = {
             imageOrientation: 'flipY',
@@ -51843,6 +51843,8 @@ class BufferGeometryLoader extends Loader$1 {
             if (buffers.uv2) {
                 geometry.setAttribute('uv2', new BufferAttribute(buffers.uv2, 2));
             }
+
+            geometry.computeBoundingSphere();
 
             this.increment();
 
@@ -52591,8 +52593,6 @@ class Interface {
         } else if (child.nodeName) {
             this.element.appendChild(child);
         }
-
-        return child;
     }
 
     remove(child) {
@@ -52600,9 +52600,9 @@ class Interface {
             return;
         }
 
-        if (child.element) {
+        if (child.element && child.element.parentNode) {
             child.element.parentNode.removeChild(child.element);
-        } else if (child.nodeName) {
+        } else if (child.nodeName && child.parentNode) {
             child.parentNode.removeChild(child);
         }
 
@@ -52613,12 +52613,40 @@ class Interface {
         }
     }
 
-    clone() {
+    replace(oldChild, newChild) {
+        if (!this.children) {
+            return;
+        }
+
+        const index = this.children.indexOf(oldChild);
+
+        if (~index) {
+            this.children[index] = newChild;
+
+            newChild.parent = this;
+        }
+
+        if (oldChild.element && oldChild.element.parentNode) {
+            if (newChild.element) {
+                oldChild.element.parentNode.replaceChild(newChild.element, oldChild.element);
+            } else if (newChild.nodeName) {
+                oldChild.element.parentNode.replaceChild(newChild, oldChild.element);
+            }
+        } else if (oldChild.nodeName && oldChild.parentNode) {
+            if (newChild.element) {
+                oldChild.parentNode.replaceChild(newChild.element, oldChild);
+            } else if (newChild.nodeName) {
+                oldChild.parentNode.replaceChild(newChild, oldChild);
+            }
+        }
+    }
+
+    clone(deep) {
         if (!this.element) {
             return;
         }
 
-        return new Interface(this.element.cloneNode(true));
+        return new Interface(this.element.cloneNode(deep));
     }
 
     empty() {
@@ -52778,6 +52806,66 @@ class Interface {
         return this;
     }
 
+    text(str) {
+        if (!this.element) {
+            return;
+        }
+
+        if (typeof str === 'undefined') {
+            return this.element.textContent;
+        } else {
+            this.element.textContent = str;
+        }
+
+        return this;
+    }
+
+    html(str) {
+        if (!this.element) {
+            return;
+        }
+
+        if (typeof str === 'undefined') {
+            return this.element.innerHTML;
+        } else {
+            this.element.innerHTML = str;
+        }
+
+        return this;
+    }
+
+    hide() {
+        return this.css({ display: 'none' });
+    }
+
+    show() {
+        return this.css({ display: '' });
+    }
+
+    invisible() {
+        return this.css({ visibility: 'hidden' });
+    }
+
+    visible() {
+        return this.css({ visibility: '' });
+    }
+
+    line(progress = this.progress || 0) {
+        const start = this.start || 0;
+        const offset = this.offset || 0;
+
+        const length = this.element.getTotalLength();
+        const dash = length * progress;
+        const gap = length - dash;
+
+        const style = {
+            strokeDasharray: `${dash},${gap}`,
+            strokeDashoffset: -length * (start + offset)
+        };
+
+        return this.css(style);
+    }
+
     tween(props, duration, ease, delay = 0, complete, update) {
         if (!this.element) {
             return;
@@ -52866,66 +52954,6 @@ class Interface {
         for (let i = this.timeouts.length - 1; i >= 0; i--) {
             this.clearTimeout(this.timeouts[i]);
         }
-    }
-
-    text(str) {
-        if (!this.element) {
-            return;
-        }
-
-        if (typeof str === 'undefined') {
-            return this.element.textContent;
-        } else {
-            this.element.textContent = str;
-        }
-
-        return this;
-    }
-
-    html(str) {
-        if (!this.element) {
-            return;
-        }
-
-        if (typeof str === 'undefined') {
-            return this.element.innerHTML;
-        } else {
-            this.element.innerHTML = str;
-        }
-
-        return this;
-    }
-
-    hide() {
-        return this.css({ display: 'none' });
-    }
-
-    show() {
-        return this.css({ display: '' });
-    }
-
-    invisible() {
-        return this.css({ visibility: 'hidden' });
-    }
-
-    visible() {
-        return this.css({ visibility: '' });
-    }
-
-    line(progress = this.progress || 0) {
-        const start = this.start || 0;
-        const offset = this.offset || 0;
-
-        const length = this.element.getTotalLength();
-        const dash = length * progress;
-        const gap = length - dash;
-
-        const style = {
-            strokeDasharray: `${dash},${gap}`,
-            strokeDashoffset: -length * (start + offset)
-        };
-
-        return this.css(style);
     }
 
     destroy() {
@@ -53037,8 +53065,6 @@ class Component {
                 this.group.add(child);
             }
         }
-
-        return child;
     }
 
     remove(child) {
@@ -53472,6 +53498,11 @@ class Sound {
     }
 
     play(startTime = this.context.currentTime + 0.01) {
+        if (this.element) {
+            this.element.loop = this.loop;
+            this.element.play();
+        }
+
         if (!this.ready) {
             this.load();
         }
@@ -53487,10 +53518,7 @@ class Sound {
                 this.stereo.pan.setValueAtTime(this.stereoPan.value, startTime);
             }
 
-            if (this.element) {
-                this.element.loop = this.loop;
-                this.element.play();
-            } else {
+            if (!this.element) {
                 if (this.isStopping && this.loop) {
                     this.isStopping = false;
                     return;
@@ -53543,9 +53571,9 @@ class Sound {
 
 class WebAudio {
     static path = '';
-    static crossOrigin;
+    static crossOrigin = 'anonymous';
 
-    static init(assets = {}, options) {
+    static init(options) {
         this.context = new AudioContext(options);
         this.sounds = {};
 
@@ -53555,14 +53583,16 @@ class WebAudio {
         this.gain = new WebAudioParam(this, 'output', 'gain', 1);
 
         this.input = this.output;
-
-        for (const path in assets) {
-            this.add(this, basename(path), assets[path]);
-        }
     }
 
     static get enabled() {
         return this.context.state === 'running';
+    }
+
+    static load(files = {}) {
+        for (const path in files) {
+            this.add(this, basename(path), files[path]);
+        }
     }
 
     static add(parent, id, buffer, bypass) {
@@ -53958,24 +53988,25 @@ class Panel extends Interface {
 
         if (open) {
             this.items.forEach(item => {
-                item.clearTween();
+                if (item.element.contains(target.element)) {
+                    if (item.view && item.view.group && item.view.container) {
+                        item.disable(item.view.container);
+                    }
 
-                if (item.color && item.color.isOpen) {
-                    item.color.fastClose = true;
                     return;
                 }
 
-                item.css({ pointerEvents: 'none' });
-                item.tween({ opacity: 0.35 }, 500, 'easeInOutSine');
+                item.disable();
             });
 
             this.openColor = target;
         } else {
             this.items.forEach(item => {
-                item.clearTween();
-                item.tween({ opacity: 1 }, 500, 'easeInOutSine', () => {
-                    item.css({ pointerEvents: 'auto' });
-                });
+                if (item.view && item.view.group && item.view.container) {
+                    item.enable(item.view.container);
+                }
+
+                item.enable();
             });
 
             this.openColor = null;
@@ -53990,6 +54021,23 @@ class Panel extends Interface {
         super.add(child);
 
         this.items.push(child);
+    };
+
+    setPanelValue = (label, value) => {
+        this.items.forEach(item => {
+            if (!item.view) {
+                return;
+            }
+
+            if (item.view.group && item.view.group.children[0] && item.view.group.children[0].setPanelValue) {
+                item.view.group.children[0].setPanelValue(label, value);
+                return;
+            }
+
+            if (item.data.label === label && item.view.setValue) {
+                item.view.setValue(value, true);
+            }
+        });
     };
 
     animateIn = fast => {
@@ -54042,6 +54090,7 @@ class Link extends Interface {
         this.callback = callback;
 
         this.initHTML();
+        this.setValue(this.value);
 
         this.addListeners();
     }
@@ -54098,13 +54147,7 @@ class Link extends Interface {
     };
 
     onClick = () => {
-        const value = this.value;
-
-        this.events.emit('update', value);
-
-        if (this.callback) {
-            this.callback(value);
-        }
+        this.update();
     };
 
     /**
@@ -54116,7 +54159,15 @@ class Link extends Interface {
 
         this.element.childNodes[0].nodeValue = this.value;
 
-        return this;
+        this.update();
+    };
+
+    update = () => {
+        this.events.emit('update', { value: this.value, target: this });
+
+        if (this.callback) {
+            this.callback(this.value, this);
+        }
     };
 
     destroy = () => {
@@ -54153,6 +54204,7 @@ class ListToggle extends Interface {
             cssFloat: 'left',
             width: 54,
             height: 18,
+            lineHeight: 16,
             textTransform: 'uppercase',
             whiteSpace: 'nowrap',
             overflow: 'hidden',
@@ -54223,6 +54275,8 @@ class ListToggle extends Interface {
 
     active = () => {
         this.clicked = true;
+        this.text.css({ y: -8, opacity: 0 });
+        this.over.css({ y: 0, opacity: 1 });
     };
 
     inactive = () => {
@@ -54261,8 +54315,8 @@ class ListSelect extends Interface {
     initHTML() {
         this.css({
             position: 'relative',
-            width: '100%',
             height: 18,
+            lineHeight: 16,
             textTransform: 'uppercase',
             whiteSpace: 'nowrap',
             overflow: 'hidden',
@@ -54351,48 +54405,53 @@ class ListSelect extends Interface {
 class List extends Interface {
     constructor({
         list,
-        index,
+        value,
         callback
     }) {
         super('.list');
 
         this.list = list;
-        this.index = index;
+        this.keys = Object.keys(this.list);
+        this.values = Object.values(this.list);
+        this.index = this.keys.indexOf(value);
         this.callback = callback;
 
         this.items = [];
 
         this.initHTML();
         this.initViews();
+
+        this.update();
     }
 
     initHTML() {
-        this.css({
-            width: '100%',
+        this.container = new Interface('.container');
+        this.container.css({
             height: 18
         });
+        this.add(this.container);
     }
 
     initViews() {
-        if (this.list.length > 2) {
-            const item = new ListSelect({ list: this.list, index: this.index });
+        if (this.keys.length > 2) {
+            const item = new ListSelect({ list: this.keys, index: this.index });
             item.events.on('click', this.onClick);
-            this.add(item);
+            this.container.add(item);
             this.items.push(item);
         } else {
-            this.list.forEach((label, i) => {
-                const item = new ListToggle({ label, index: i });
+            this.keys.forEach((label, index) => {
+                const item = new ListToggle({ label, index });
                 item.events.on('click', this.onClick);
-
-                if (this.index === i) {
-                    item.onHover({ type: 'mouseenter' });
-                    item.active();
-                }
-
-                this.add(item);
+                this.container.add(item);
                 this.items.push(item);
             });
         }
+    }
+
+    removeListeners() {
+        this.items.forEach(item => {
+            item.events.off('click', this.onClick);
+        });
     }
 
     /**
@@ -54400,19 +54459,58 @@ class List extends Interface {
      */
 
     onClick = ({ target }) => {
-        const value = this.list[target.index];
+        this.index = target.index;
 
-        this.events.emit('update', value);
+        this.update();
+    };
 
-        if (this.callback) {
-            this.callback(value);
+    /**
+     * Public methods
+     */
+
+    setContent = content => {
+        if (!this.group) {
+            this.group = new Interface('.group');
+            this.group.css({
+                position: 'relative',
+                left: -10
+            });
+            this.add(this.group);
         }
 
-        if (this.list.length > 2) {
+        const oldGroup = this.group;
+
+        const newGroup = this.group.clone();
+        newGroup.add(content);
+
+        this.replace(oldGroup, newGroup);
+        this.group = newGroup;
+
+        oldGroup.destroy();
+    };
+
+    setValue = value => {
+        this.index = this.values.indexOf(value);
+
+        this.update();
+    };
+
+    update = () => {
+        const value = this.keys[this.index];
+
+        this.events.emit('update', { value, target: this });
+
+        if (this.callback) {
+            this.callback(value, this);
+        }
+
+        if (this.keys.length > 2) {
             return;
         }
 
-        if (!target.clicked) {
+        const target = this.items[this.index];
+
+        if (target && !target.clicked) {
             target.active();
         }
 
@@ -54421,6 +54519,12 @@ class List extends Interface {
                 item.inactive();
             }
         });
+    };
+
+    destroy = () => {
+        this.removeListeners();
+
+        return super.destroy();
     };
 }
 
@@ -54665,18 +54769,18 @@ class Slider extends Interface {
         this.lastOrigin = new Vector2();
 
         this.initHTML();
+        this.setValue(this.value, true);
 
         this.addListeners();
-        this.update();
     }
 
     initHTML() {
-        this.css({
-            position: 'relative',
-            width: '100%',
+        this.container = new Interface('.container');
+        this.container.css({
             height: 28,
             cursor: 'w-resize'
         });
+        this.add(this.container);
 
         this.text = new Interface('.text');
         this.text.css({
@@ -54687,7 +54791,7 @@ class Slider extends Interface {
             whiteSpace: 'nowrap'
         });
         this.text.text(this.label);
-        this.add(this.text);
+        this.container.add(this.text);
 
         this.number = new Interface('.number');
         this.number.css({
@@ -54697,17 +54801,16 @@ class Slider extends Interface {
             letterSpacing: 'var(--ui-number-letter-spacing)',
             whiteSpace: 'nowrap'
         });
-        this.add(this.number);
+        this.container.add(this.number);
 
         this.line = new Interface('.line');
         this.line.css({
             clear: 'both',
-            width: '100%',
             height: 1,
             backgroundColor: 'var(--ui-color)',
             transformOrigin: 'left center'
         });
-        this.add(this.line);
+        this.container.add(this.line);
     }
 
     addListeners() {
@@ -54780,29 +54883,48 @@ class Slider extends Interface {
      * Public methods
      */
 
-    setValue = value => {
+    setContent = content => {
+        if (!this.group) {
+            this.group = new Interface('.group');
+            this.group.css({
+                position: 'relative',
+                left: -10
+            });
+            this.add(this.group);
+        }
+
+        const oldGroup = this.group;
+
+        const newGroup = this.group.clone();
+        newGroup.add(content);
+
+        this.replace(oldGroup, newGroup);
+        this.group = newGroup;
+
+        oldGroup.destroy();
+    };
+
+    setValue = (value, force) => {
         this.value = typeof value === 'string' ? parseFloat(value) : value;
         this.value = this.getValue(this.value);
         this.lastValue = this.value;
 
-        this.update();
-
-        return this;
+        this.update(force);
     };
 
-    update = () => {
+    update = force => {
         const scaleX = (this.value - this.min) / this.range;
 
         this.line.css({ scaleX });
         this.number.text(this.value);
 
-        if (this.value !== this.lastValue) {
+        if (this.value !== this.lastValue || force) {
             this.lastValue = this.value;
 
-            this.events.emit('update', this.value);
+            this.events.emit('update', { value: this.value, target: this });
 
             if (this.callback) {
-                this.callback(this.value);
+                this.callback(this.value, this);
             }
         }
     };
@@ -54811,6 +54933,51 @@ class Slider extends Interface {
         this.removeListeners();
 
         return super.destroy();
+    };
+}
+
+/**
+ * @author pschroen / https://ufo.ai/
+ */
+
+class Content extends Interface {
+    constructor({
+        callback
+    }) {
+        super('.content');
+
+        this.callback = callback;
+
+        this.update();
+    }
+
+    /**
+     * Public methods
+     */
+
+    setContent = content => {
+        if (!this.group) {
+            this.group = new Interface('.group');
+            this.add(this.group);
+        }
+
+        const oldGroup = this.group;
+
+        const newGroup = this.group.clone();
+        newGroup.add(content);
+
+        this.replace(oldGroup, newGroup);
+        this.group = newGroup;
+
+        oldGroup.destroy();
+    };
+
+    update = () => {
+        this.events.emit('update', { target: this });
+
+        if (this.callback) {
+            this.callback(undefined, this);
+        }
     };
 }
 
@@ -55131,9 +55298,9 @@ class ColorPicker extends Interface {
         this.isOpen = false;
         this.isDown = false;
         this.firstDown = false;
-        this.lastCursor = 'auto';
+        this.lastCursor = '';
         this.lastValue = this.value.getHex();
-        this.fastClose = false;
+        this.fastClose = true;
 
         this.h = 0;
         this.s = 0;
@@ -55143,7 +55310,7 @@ class ColorPicker extends Interface {
 
         this.initHTML();
         this.initColorRing();
-        this.setValue(this.value);
+        this.setValue(this.value, true);
 
         this.addListeners();
     }
@@ -55151,13 +55318,11 @@ class ColorPicker extends Interface {
     initHTML() {
         this.css({
             position: 'relative',
-            width: '100%',
             height: this.height
         });
 
         this.container = new Interface('.container');
         this.container.css({
-            width: '100%',
             height: this.height,
             lineHeight: this.height,
             whiteSpace: 'nowrap',
@@ -55540,7 +55705,7 @@ class ColorPicker extends Interface {
         this.parent.css({ height });
     };
 
-    setValue = value => {
+    setValue = (value, force) => {
         if (value && value.isColor) {
             this.value.copy(value);
         } else {
@@ -55549,9 +55714,7 @@ class ColorPicker extends Interface {
 
         this.value.getHSL(this);
 
-        this.update();
-
-        return this;
+        this.update(force);
     };
 
     setHSL = (h, s, l) => {
@@ -55562,8 +55725,6 @@ class ColorPicker extends Interface {
         this.l = l;
 
         this.update();
-
-        return this;
     };
 
     cursor = (cursor = '') => {
@@ -55574,7 +55735,7 @@ class ColorPicker extends Interface {
         }
     };
 
-    update = () => {
+    update = force => {
         this.moveMarkers();
 
         this.swatch.css({ backgroundColor: `#${this.value.getHexString()}` });
@@ -55585,14 +55746,14 @@ class ColorPicker extends Interface {
 
         const value = this.value.getHex();
 
-        if (value !== this.lastValue) {
+        if (value !== this.lastValue || force) {
             this.lastValue = value;
 
             if (this.isDown) {
-                this.events.emit('update', this.value);
+                this.events.emit('update', { value: this.value, target: this });
 
                 if (this.callback) {
-                    this.callback(this.value);
+                    this.callback(this.value, this);
                 }
             }
         }
@@ -55687,18 +55848,22 @@ class PanelItem extends Interface {
 
         this.data = data;
 
-        this.width = 128;
-
         this.initHTML();
     }
 
     initHTML() {
-        const width = this.width;
+        this.css({
+            width: 128
+        });
+
+        this.container = new Interface('.container');
+        this.container.css({
+            boxSizing: 'border-box'
+        });
+        this.add(this.container);
 
         if (!this.data.type) {
-            this.css({
-                boxSizing: 'border-box',
-                width,
+            this.container.css({
                 padding: '10px 10px 0',
                 marginBottom: 10
             });
@@ -55709,71 +55874,57 @@ class PanelItem extends Interface {
                 whiteSpace: 'nowrap'
             });
             this.text.text(this.data.label);
-            this.add(this.text);
+            this.container.add(this.text);
         } else if (this.data.type === 'spacer') {
-            this.css({
-                boxSizing: 'border-box',
-                width,
+            this.container.css({
                 height: 7
             });
         } else if (this.data.type === 'divider') {
-            this.css({
-                boxSizing: 'border-box',
-                width,
+            this.container.css({
                 padding: '0 10px',
                 margin: '7px 0'
             });
 
             this.line = new Interface('.line');
             this.line.css({
-                width: '100%',
                 height: 1,
                 backgroundColor: 'rgba(var(--ui-color-triplet), 0.25)',
                 transformOrigin: 'left center'
             });
-            this.add(this.line);
+            this.container.add(this.line);
         } else if (this.data.type === 'link') {
-            this.css({
-                boxSizing: 'border-box',
-                width,
+            this.container.css({
                 padding: '2px 10px 0'
             });
 
-            this.link = new Link(this.data);
-            this.add(this.link);
+            this.view = new Link(this.data);
+            this.container.add(this.view);
         } else if (this.data.type === 'list') {
-            this.css({
-                boxSizing: 'border-box',
-                width,
+            this.container.css({
                 padding: '2px 10px 0'
             });
 
-            const list = Object.keys(this.data.list);
-            const index = list.indexOf(this.data.value);
-            const callback = this.data.callback;
-
-            this.list = new List({ list, index, callback });
-            this.add(this.list);
+            this.view = new List(this.data);
+            this.container.add(this.view);
         } else if (this.data.type === 'slider') {
-            this.css({
-                boxSizing: 'border-box',
-                width,
+            this.container.css({
                 padding: '0 10px'
             });
 
-            this.slider = new Slider(this.data);
-            this.add(this.slider);
+            this.view = new Slider(this.data);
+            this.container.add(this.view);
+        } else if (this.data.type === 'content') {
+            this.view = new Content(this.data);
+            this.container.add(this.view);
         } else if (this.data.type === 'color') {
-            this.css({
-                boxSizing: 'border-box',
-                width,
+            this.container.css({
                 height: 19,
                 padding: '0 10px',
                 marginBottom: 7
             });
 
-            this.color = new ColorPicker(this.data);
-            this.add(this.color);
+            this.view = new ColorPicker(this.data);
+            this.container.add(this.view);
         }
     }
 
@@ -55782,22 +55933,1484 @@ class PanelItem extends Interface {
      */
 
     animateIn = (delay, fast) => {
-        if (this.data && this.data.type === 'group') {
-            this.line.clearTween().css({ scaleX: 0, opacity: 1 }).tween({ scaleX: 1 }, 400, 'easeInOutCubic', delay);
-        }
+        this.clearTween();
 
-        this.clearTween().css({ y: fast ? 0 : -10, opacity: 0 }).tween({ y: 0, opacity: 1 }, 400, 'easeOutCubic', delay);
+        if (fast) {
+            this.css({ y: 0, opacity: 1 });
+        } else {
+            this.css({ y: -10, opacity: 0 }).tween({ y: 0, opacity: 1 }, 400, 'easeOutCubic', delay);
+        }
     };
 
     animateOut = (index, total, delay, callback) => {
-        if (this.data && this.data.type === 'group') {
-            this.line.clearTween().tween({ scaleX: 0, opacity: 0 }, 500, 'easeInCubic', delay);
-        }
-
         this.clearTween().tween({ y: -10, opacity: 0 }, 500, 'easeInCubic', delay, () => {
             if (index === 0 && callback) {
                 callback();
             }
+        });
+    };
+
+    enable = (target = this.container) => {
+        target.clearTween();
+        target.tween({ opacity: 1 }, 500, 'easeInOutSine', () => {
+            target.css({ pointerEvents: 'auto' });
+        });
+    };
+
+    disable = (target = this.container) => {
+        target.clearTween();
+        target.css({ pointerEvents: 'none' });
+        target.tween({ opacity: 0.35 }, 500, 'easeInOutSine');
+    };
+}
+
+/**
+ * @author pschroen / https://ufo.ai/
+ */
+
+const VisibleOptions = {
+    Off: false,
+    Visible: true
+};
+
+const SideOptions = {
+    Front: FrontSide,
+    Back: BackSide,
+    Double: DoubleSide
+};
+
+const FlatShadingOptions = {
+    Off: false,
+    Flat: true
+};
+
+const WireframeOptions = {
+    Off: false,
+    Wire: true
+};
+
+const CombineOptions = {
+    Multiply: MultiplyOperation,
+    Mix: MixOperation,
+    Add: AddOperation
+};
+
+const WrapOptions = {
+    Repeat: RepeatWrapping,
+    Clamp: ClampToEdgeWrapping,
+    Mirror: MirroredRepeatWrapping
+};
+
+const HelperOptions = {
+    Off: false,
+    Helper: true
+};
+
+const NormalsHelperOptions = {
+    Off: false,
+    Normals: true
+};
+
+const TangentsHelperOptions = {
+    Off: false,
+    Tangents: true
+};
+
+const UVHelperOptions = {
+    Off: false,
+    UV: true
+};
+
+/**
+ *  This helper must be added as a child of the light
+ */
+
+class RectAreaLightHelper extends Line$1 {
+
+	constructor( light, color ) {
+
+		const positions = [ 1, 1, 0, - 1, 1, 0, - 1, - 1, 0, 1, - 1, 0, 1, 1, 0 ];
+
+		const geometry = new BufferGeometry();
+		geometry.setAttribute( 'position', new Float32BufferAttribute( positions, 3 ) );
+		geometry.computeBoundingSphere();
+
+		const material = new LineBasicMaterial( { fog: false } );
+
+		super( geometry, material );
+
+		this.light = light;
+		this.color = color; // optional hardwired color for the helper
+		this.type = 'RectAreaLightHelper';
+
+		//
+
+		const positions2 = [ 1, 1, 0, - 1, 1, 0, - 1, - 1, 0, 1, 1, 0, - 1, - 1, 0, 1, - 1, 0 ];
+
+		const geometry2 = new BufferGeometry();
+		geometry2.setAttribute( 'position', new Float32BufferAttribute( positions2, 3 ) );
+		geometry2.computeBoundingSphere();
+
+		this.add( new Mesh( geometry2, new MeshBasicMaterial( { side: BackSide, fog: false } ) ) );
+
+	}
+
+	updateMatrixWorld() {
+
+		this.scale.set( 0.5 * this.light.width, 0.5 * this.light.height, 1 );
+
+		if ( this.color !== undefined ) {
+
+			this.material.color.set( this.color );
+			this.children[ 0 ].material.color.set( this.color );
+
+		} else {
+
+			this.material.color.copy( this.light.color ).multiplyScalar( this.light.intensity );
+
+			// prevent hue shift
+			const c = this.material.color;
+			const max = Math.max( c.r, c.g, c.b );
+			if ( max > 1 ) c.multiplyScalar( 1 / max );
+
+			this.children[ 0 ].material.color.copy( this.material.color );
+
+		}
+
+		// ignore world scale on light
+		this.matrixWorld.extractRotation( this.light.matrixWorld ).scale( this.scale ).copyPosition( this.light.matrixWorld );
+
+		this.children[ 0 ].matrixWorld.copy( this.matrixWorld );
+
+	}
+
+	dispose() {
+
+		this.geometry.dispose();
+		this.material.dispose();
+		this.children[ 0 ].geometry.dispose();
+		this.children[ 0 ].material.dispose();
+
+	}
+
+}
+
+/**
+ * @author pschroen / https://ufo.ai/
+ */
+
+class AmbientLightPanel extends Panel {
+    constructor(panel, light) {
+        super();
+
+        this.panel = panel;
+        this.light = light;
+
+        this.initPanel();
+    }
+
+    initPanel() {
+        const light = this.light;
+
+        const lightItems = [
+            {
+                type: 'divider'
+            },
+            {
+                type: 'color',
+                value: light.color,
+                callback: value => {
+                    light.color.copy(value);
+                }
+            },
+            {
+                type: 'slider',
+                label: 'Int',
+                min: 0,
+                max: 1,
+                step: 0.01,
+                value: light.intensity,
+                callback: value => {
+                    light.intensity = value;
+                }
+            }
+        ];
+
+        const items = [
+            {
+                type: 'divider'
+            },
+            {
+                type: 'list',
+                list: VisibleOptions,
+                value: getKeyByValue(VisibleOptions, light.visible),
+                callback: (value, panel) => {
+                    if (!panel.group) {
+                        const lightPanel = new Panel();
+                        lightPanel.animateIn(true);
+
+                        lightItems.forEach(data => {
+                            lightPanel.add(new PanelItem(data));
+                        });
+
+                        panel.setContent(lightPanel);
+                    }
+
+                    light.visible = VisibleOptions[value];
+
+                    if (light.visible) {
+                        panel.group.show();
+                    } else {
+                        panel.group.hide();
+                    }
+                }
+            }
+        ];
+
+        items.forEach(data => {
+            this.add(new PanelItem(data));
+        });
+    }
+}
+
+/**
+ * @author pschroen / https://ufo.ai/
+ */
+
+class HemisphereLightPanel extends Panel {
+    constructor(panel, light) {
+        super();
+
+        this.panel = panel;
+        this.light = light;
+
+        this.initPanel();
+    }
+
+    initPanel() {
+        const light = this.light;
+
+        // Defaults
+        if (!light.userData.helper) {
+            light.userData.helper = false;
+        }
+
+        const lightItems = [
+            {
+                type: 'list',
+                list: HelperOptions,
+                value: getKeyByValue(HelperOptions, light.userData.helper),
+                callback: value => {
+                    light.userData.helper = HelperOptions[value];
+
+                    this.panel.toggleHemisphereLightHelper(light, light.userData.helper);
+                }
+            },
+            {
+                type: 'divider'
+            },
+            {
+                type: 'color',
+                value: light.color,
+                callback: value => {
+                    light.color.copy(value);
+
+                    if (light.helper) {
+                        light.helper.update();
+                    }
+                }
+            },
+            {
+                type: 'color',
+                value: light.groundColor,
+                callback: value => {
+                    light.groundColor.copy(value);
+
+                    if (light.helper) {
+                        light.helper.update();
+                    }
+                }
+            },
+            {
+                type: 'slider',
+                label: 'Int',
+                min: 0,
+                max: 1,
+                step: 0.01,
+                value: light.intensity,
+                callback: value => {
+                    light.intensity = value;
+                }
+            }
+        ];
+
+        const items = [
+            {
+                type: 'divider'
+            },
+            {
+                type: 'list',
+                list: VisibleOptions,
+                value: getKeyByValue(VisibleOptions, light.visible),
+                callback: (value, panel) => {
+                    if (!panel.group) {
+                        const lightPanel = new Panel();
+                        lightPanel.animateIn(true);
+
+                        lightItems.forEach(data => {
+                            lightPanel.add(new PanelItem(data));
+                        });
+
+                        panel.setContent(lightPanel);
+                    }
+
+                    light.visible = VisibleOptions[value];
+
+                    if (light.visible) {
+                        panel.group.show();
+                    } else {
+                        panel.group.hide();
+                    }
+
+                    if (light.helper) {
+                        light.helper.visible = light.visible;
+                    }
+                }
+            }
+        ];
+
+        items.forEach(data => {
+            this.add(new PanelItem(data));
+        });
+    }
+}
+
+/**
+ * @author pschroen / https://ufo.ai/
+ */
+
+class DirectionalLightPanel extends Panel {
+    constructor(panel, light) {
+        super();
+
+        this.panel = panel;
+        this.light = light;
+
+        this.initPanel();
+    }
+
+    initPanel() {
+        const light = this.light;
+
+        // Defaults
+        if (!light.userData.helper) {
+            light.userData.helper = false;
+        }
+
+        const lightItems = [
+            {
+                type: 'list',
+                list: HelperOptions,
+                value: getKeyByValue(HelperOptions, light.userData.helper),
+                callback: value => {
+                    light.userData.helper = HelperOptions[value];
+
+                    this.panel.toggleDirectionalLightHelper(light, light.userData.helper);
+                }
+            },
+            {
+                type: 'divider'
+            },
+            {
+                type: 'color',
+                value: light.color,
+                callback: value => {
+                    light.color.copy(value);
+
+                    if (light.helper) {
+                        light.helper.update();
+                    }
+                }
+            },
+            {
+                type: 'slider',
+                label: 'Int',
+                min: 0,
+                max: 1,
+                step: 0.01,
+                value: light.intensity,
+                callback: value => {
+                    light.intensity = value;
+                }
+            }
+        ];
+
+        const items = [
+            {
+                type: 'divider'
+            },
+            {
+                type: 'list',
+                list: VisibleOptions,
+                value: getKeyByValue(VisibleOptions, light.visible),
+                callback: (value, panel) => {
+                    if (!panel.group) {
+                        const lightPanel = new Panel();
+                        lightPanel.animateIn(true);
+
+                        lightItems.forEach(data => {
+                            lightPanel.add(new PanelItem(data));
+                        });
+
+                        panel.setContent(lightPanel);
+                    }
+
+                    light.visible = VisibleOptions[value];
+
+                    if (light.visible) {
+                        panel.group.show();
+                    } else {
+                        panel.group.hide();
+                    }
+
+                    if (light.helper) {
+                        light.helper.visible = light.visible;
+                    }
+                }
+            }
+        ];
+
+        items.forEach(data => {
+            this.add(new PanelItem(data));
+        });
+    }
+}
+
+/**
+ * @author pschroen / https://ufo.ai/
+ */
+
+class PointLightPanel extends Panel {
+    constructor(panel, light) {
+        super();
+
+        this.panel = panel;
+        this.light = light;
+
+        this.initPanel();
+    }
+
+    initPanel() {
+        const light = this.light;
+
+        // Defaults
+        if (!light.userData.helper) {
+            light.userData.helper = false;
+        }
+
+        const lightItems = [
+            {
+                type: 'list',
+                list: HelperOptions,
+                value: getKeyByValue(HelperOptions, light.userData.helper),
+                callback: value => {
+                    light.userData.helper = HelperOptions[value];
+
+                    this.panel.togglePointLightHelper(light, light.userData.helper);
+                }
+            },
+            {
+                type: 'divider'
+            },
+            {
+                type: 'color',
+                value: light.color,
+                callback: value => {
+                    light.color.copy(value);
+
+                    if (light.helper) {
+                        light.helper.update();
+                    }
+                }
+            },
+            {
+                type: 'slider',
+                label: 'Int',
+                min: 0,
+                max: 1,
+                step: 0.01,
+                value: light.intensity,
+                callback: value => {
+                    light.intensity = value;
+                }
+            }
+        ];
+
+        const items = [
+            {
+                type: 'divider'
+            },
+            {
+                type: 'list',
+                list: VisibleOptions,
+                value: getKeyByValue(VisibleOptions, light.visible),
+                callback: (value, panel) => {
+                    if (!panel.group) {
+                        const lightPanel = new Panel();
+                        lightPanel.animateIn(true);
+
+                        lightItems.forEach(data => {
+                            lightPanel.add(new PanelItem(data));
+                        });
+
+                        panel.setContent(lightPanel);
+                    }
+
+                    light.visible = VisibleOptions[value];
+
+                    if (light.visible) {
+                        panel.group.show();
+                    } else {
+                        panel.group.hide();
+                    }
+
+                    if (light.helper) {
+                        light.helper.visible = light.visible;
+                    }
+                }
+            }
+        ];
+
+        items.forEach(data => {
+            this.add(new PanelItem(data));
+        });
+    }
+}
+
+/**
+ * @author pschroen / https://ufo.ai/
+ */
+
+class SpotLightPanel extends Panel {
+    constructor(panel, light) {
+        super();
+
+        this.panel = panel;
+        this.light = light;
+
+        this.initPanel();
+    }
+
+    initPanel() {
+        const light = this.light;
+
+        // Defaults
+        if (!light.userData.helper) {
+            light.userData.helper = false;
+        }
+
+        const lightItems = [
+            {
+                type: 'list',
+                list: HelperOptions,
+                value: getKeyByValue(HelperOptions, light.userData.helper),
+                callback: value => {
+                    light.userData.helper = HelperOptions[value];
+
+                    this.panel.toggleSpotLightHelper(light, light.userData.helper);
+                }
+            },
+            {
+                type: 'divider'
+            },
+            {
+                type: 'color',
+                value: light.color,
+                callback: value => {
+                    light.color.copy(value);
+
+                    if (light.helper) {
+                        light.helper.update();
+                    }
+                }
+            },
+            {
+                type: 'slider',
+                label: 'Int',
+                min: 0,
+                max: 1,
+                step: 0.01,
+                value: light.intensity,
+                callback: value => {
+                    light.intensity = value;
+                }
+            }
+        ];
+
+        const items = [
+            {
+                type: 'divider'
+            },
+            {
+                type: 'list',
+                list: VisibleOptions,
+                value: getKeyByValue(VisibleOptions, light.visible),
+                callback: (value, panel) => {
+                    if (!panel.group) {
+                        const lightPanel = new Panel();
+                        lightPanel.animateIn(true);
+
+                        lightItems.forEach(data => {
+                            lightPanel.add(new PanelItem(data));
+                        });
+
+                        panel.setContent(lightPanel);
+                    }
+
+                    light.visible = VisibleOptions[value];
+
+                    if (light.visible) {
+                        panel.group.show();
+                    } else {
+                        panel.group.hide();
+                    }
+
+                    if (light.helper) {
+                        light.helper.visible = light.visible;
+                    }
+                }
+            }
+        ];
+
+        items.forEach(data => {
+            this.add(new PanelItem(data));
+        });
+    }
+}
+
+/**
+ * @author pschroen / https://ufo.ai/
+ */
+
+class RectAreaLightPanel extends Panel {
+    constructor(panel, light) {
+        super();
+
+        this.panel = panel;
+        this.light = light;
+
+        this.initPanel();
+    }
+
+    initPanel() {
+        const light = this.light;
+
+        // Defaults
+        if (!light.userData.helper) {
+            light.userData.helper = false;
+        }
+
+        const lightItems = [
+            {
+                type: 'list',
+                list: HelperOptions,
+                value: getKeyByValue(HelperOptions, light.userData.helper),
+                callback: value => {
+                    light.userData.helper = HelperOptions[value];
+
+                    this.panel.toggleRectAreaLightHelper(light, light.userData.helper);
+                }
+            },
+            {
+                type: 'divider'
+            },
+            {
+                type: 'color',
+                value: light.color,
+                callback: value => {
+                    light.color.copy(value);
+                }
+            },
+            {
+                type: 'slider',
+                label: 'Int',
+                min: 0,
+                max: 1,
+                step: 0.01,
+                value: light.intensity,
+                callback: value => {
+                    light.intensity = value;
+                }
+            }
+        ];
+
+        const items = [
+            {
+                type: 'divider'
+            },
+            {
+                type: 'list',
+                list: VisibleOptions,
+                value: getKeyByValue(VisibleOptions, light.visible),
+                callback: (value, panel) => {
+                    if (!panel.group) {
+                        const lightPanel = new Panel();
+                        lightPanel.animateIn(true);
+
+                        lightItems.forEach(data => {
+                            lightPanel.add(new PanelItem(data));
+                        });
+
+                        panel.setContent(lightPanel);
+                    }
+
+                    light.visible = VisibleOptions[value];
+
+                    if (light.visible) {
+                        panel.group.show();
+                    } else {
+                        panel.group.hide();
+                    }
+
+                    if (light.helper) {
+                        light.helper.visible = light.visible;
+                    }
+                }
+            }
+        ];
+
+        items.forEach(data => {
+            this.add(new PanelItem(data));
+        });
+    }
+}
+
+/**
+ * @author pschroen / https://ufo.ai/
+ */
+
+const LightOptions = {
+    Ambient: [AmbientLight, AmbientLightPanel],
+    Hemisphere: [HemisphereLight, HemisphereLightPanel],
+    Directional: [DirectionalLight, DirectionalLightPanel],
+    Point: [PointLight, PointLightPanel],
+    Spot: [SpotLight, SpotLightPanel],
+    RectArea: [RectAreaLight, RectAreaLightPanel]
+};
+
+function getKeyByLight(lightOptions, light) {
+    return Object.keys(lightOptions).reverse().find(key => light instanceof lightOptions[key][0]);
+}
+
+class LightPanelController {
+    static init(scene, ui) {
+        this.scene = scene;
+        this.ui = ui;
+
+        this.lights = [];
+
+        if (this.ui) {
+            this.initPanel();
+        }
+    }
+
+    static initPanel() {
+        const scene = this.scene;
+        const ui = this.ui;
+
+        const lightOptions = {};
+
+        scene.traverse(object => {
+            if (object.isLight) {
+                this.lights.push(object);
+            }
+        });
+
+        const keys = this.lights.map(light => getKeyByLight(LightOptions, light));
+        const counts = {};
+
+        keys.forEach(key => {
+            counts[key] = counts[key] ? counts[key] + 1 : 1;
+        });
+
+        this.lights.forEach(light => {
+            const key = getKeyByLight(LightOptions, light);
+
+            let count = 1;
+            let lightKey = `${key}${counts[key] > 1 ? count++ : ''}`;
+
+            while (Object.keys(lightOptions).includes(lightKey)) {
+                lightKey = `${key}${count++}`;
+            }
+
+            lightOptions[lightKey] = [light, LightOptions[key][1]];
+        });
+
+        const items = [
+            {
+                type: 'divider'
+            },
+            {
+                type: 'list',
+                list: lightOptions,
+                value: Object.keys(lightOptions)[0],
+                callback: (value, panel) => {
+                    const [light, LightPanel] = lightOptions[value];
+
+                    const lightPanel = new LightPanel(this, light);
+                    lightPanel.animateIn(true);
+
+                    panel.setContent(lightPanel);
+                }
+            }
+        ];
+
+        items.forEach(data => {
+            ui.addPanel(new PanelItem(data));
+        });
+    }
+
+    /**
+     * Public methods
+     */
+
+    static toggleHemisphereLightHelper = (light, show) => {
+        if (show) {
+            if (!light.helper) {
+                light.helper = new HemisphereLightHelper(light);
+                this.scene.add(light.helper);
+            }
+
+            light.helper.visible = true;
+        } else if (light.helper) {
+            light.helper.visible = false;
+        }
+    };
+
+    static toggleDirectionalLightHelper = (light, show) => {
+        if (show) {
+            if (!light.helper) {
+                light.helper = new DirectionalLightHelper(light, 0.125);
+                this.scene.add(light.helper);
+            }
+
+            light.helper.visible = true;
+        } else if (light.helper) {
+            light.helper.visible = false;
+        }
+    };
+
+    static togglePointLightHelper = (light, show) => {
+        if (show) {
+            if (!light.helper) {
+                light.helper = new PointLightHelper(light, 0.125);
+                this.scene.add(light.helper);
+            }
+
+            light.helper.visible = true;
+        } else if (light.helper) {
+            light.helper.visible = false;
+        }
+    };
+
+    static toggleSpotLightHelper = (light, show) => {
+        if (show) {
+            if (!light.helper) {
+                light.helper = new SpotLightHelper(light);
+                this.scene.add(light.helper);
+            }
+
+            light.helper.visible = true;
+        } else if (light.helper) {
+            light.helper.visible = false;
+        }
+    };
+
+    static toggleRectAreaLightHelper = (light, show) => {
+        if (show) {
+            if (!light.helper) {
+                light.helper = new RectAreaLightHelper(light);
+                this.scene.add(light.helper);
+            }
+
+            light.helper.visible = true;
+        } else if (light.helper) {
+            light.helper.visible = false;
+        }
+    };
+
+    static update = () => {
+        this.lights.forEach(light => {
+            if (light.helper && !light.isRectAreaLight) {
+                light.helper.update();
+            }
+        });
+    };
+
+    static destroy = () => {
+        this.lights.forEach(light => {
+            if (light.helper) {
+                if (light.isHemisphereLight) {
+                    this.toggleHemisphereLightHelper(light, false);
+                }
+
+                if (light.isDirectionalLight) {
+                    this.toggleDirectionalLightHelper(light, false);
+                }
+
+                if (light.isPointLight) {
+                    this.togglePointLightHelper(light, false);
+                }
+
+                if (light.isSpotLight) {
+                    this.toggleSpotLightHelper(light, false);
+                }
+
+                if (light.isRectAreaLight) {
+                    this.toggleRectAreaLightHelper(light, false);
+                }
+
+                this.scene.remove(light.helper);
+                light.helper.dispose();
+
+                delete light.helper;
+            }
+        });
+
+        for (const prop in this) {
+            this[prop] = null;
+        }
+
+        return null;
+    };
+}
+
+/**
+ * @author pschroen / https://ufo.ai/
+ */
+
+class BasicMaterialCommonPanel extends Panel {
+    constructor(mesh) {
+        super();
+
+        this.mesh = mesh;
+
+        this.initPanel();
+    }
+
+    initPanel() {
+        const mesh = this.mesh;
+
+        const items = [
+            {
+                type: 'divider'
+            },
+            {
+                type: 'color',
+                value: mesh.material.color,
+                callback: value => {
+                    mesh.material.color.copy(value);
+                }
+            },
+            {
+                type: 'list',
+                list: WireframeOptions,
+                value: getKeyByValue(WireframeOptions, mesh.material.wireframe),
+                callback: value => {
+                    mesh.material.wireframe = WireframeOptions[value];
+                }
+            }
+            // TODO: Texture thumbnails
+        ];
+
+        items.forEach(data => {
+            this.add(new PanelItem(data));
+        });
+    }
+}
+
+/**
+ * @author pschroen / https://ufo.ai/
+ */
+
+class BasicMaterialEnvPanel extends Panel {
+    constructor(mesh) {
+        super();
+
+        this.mesh = mesh;
+
+        this.initPanel();
+    }
+
+    initPanel() {
+        const mesh = this.mesh;
+
+        const items = [
+            {
+                type: 'divider'
+            },
+            {
+                type: 'list',
+                list: CombineOptions,
+                value: getKeyByValue(CombineOptions, mesh.material.combine),
+                callback: value => {
+                    mesh.material.combine = CombineOptions[value];
+                    mesh.material.needsUpdate = true;
+                }
+            },
+            {
+                type: 'slider',
+                label: 'Reflect',
+                min: 0,
+                max: 1,
+                step: 0.01,
+                value: mesh.material.reflectivity,
+                callback: value => {
+                    mesh.material.reflectivity = value;
+                }
+            },
+            {
+                type: 'slider',
+                label: 'Refract',
+                min: 0,
+                max: 1,
+                step: 0.01,
+                value: mesh.material.refractionRatio,
+                callback: value => {
+                    mesh.material.refractionRatio = value;
+                }
+            }
+            // TODO: Texture thumbnails
+        ];
+
+        items.forEach(data => {
+            this.add(new PanelItem(data));
+        });
+    }
+}
+
+const _v1$1 = new Vector3();
+const _v2$1 = new Vector3();
+const _normalMatrix = new Matrix3();
+
+class VertexNormalsHelper extends LineSegments {
+
+	constructor( object, size = 1, color = 0xff0000 ) {
+
+		const geometry = new BufferGeometry();
+
+		const nNormals = object.geometry.attributes.normal.count;
+		const positions = new Float32BufferAttribute( nNormals * 2 * 3, 3 );
+
+		geometry.setAttribute( 'position', positions );
+
+		super( geometry, new LineBasicMaterial( { color, toneMapped: false } ) );
+
+		this.object = object;
+		this.size = size;
+		this.type = 'VertexNormalsHelper';
+
+		//
+
+		this.matrixAutoUpdate = false;
+
+		this.update();
+
+	}
+
+	update() {
+
+		this.object.updateMatrixWorld( true );
+
+		_normalMatrix.getNormalMatrix( this.object.matrixWorld );
+
+		const matrixWorld = this.object.matrixWorld;
+
+		const position = this.geometry.attributes.position;
+
+		//
+
+		const objGeometry = this.object.geometry;
+
+		if ( objGeometry ) {
+
+			const objPos = objGeometry.attributes.position;
+
+			const objNorm = objGeometry.attributes.normal;
+
+			let idx = 0;
+
+			// for simplicity, ignore index and drawcalls, and render every normal
+
+			for ( let j = 0, jl = objPos.count; j < jl; j ++ ) {
+
+				_v1$1.fromBufferAttribute( objPos, j ).applyMatrix4( matrixWorld );
+
+				_v2$1.fromBufferAttribute( objNorm, j );
+
+				_v2$1.applyMatrix3( _normalMatrix ).normalize().multiplyScalar( this.size ).add( _v1$1 );
+
+				position.setXYZ( idx, _v1$1.x, _v1$1.y, _v1$1.z );
+
+				idx = idx + 1;
+
+				position.setXYZ( idx, _v2$1.x, _v2$1.y, _v2$1.z );
+
+				idx = idx + 1;
+
+			}
+
+		}
+
+		position.needsUpdate = true;
+
+	}
+
+	dispose() {
+
+		this.geometry.dispose();
+		this.material.dispose();
+
+	}
+
+}
+
+const _v1 = new Vector3();
+const _v2 = new Vector3();
+
+class VertexTangentsHelper extends LineSegments {
+
+	constructor( object, size = 1, color = 0x00ffff ) {
+
+		const geometry = new BufferGeometry();
+
+		const nTangents = object.geometry.attributes.tangent.count;
+		const positions = new Float32BufferAttribute( nTangents * 2 * 3, 3 );
+
+		geometry.setAttribute( 'position', positions );
+
+		super( geometry, new LineBasicMaterial( { color, toneMapped: false } ) );
+
+		this.object = object;
+		this.size = size;
+		this.type = 'VertexTangentsHelper';
+
+		//
+
+		this.matrixAutoUpdate = false;
+
+		this.update();
+
+	}
+
+	update() {
+
+		this.object.updateMatrixWorld( true );
+
+		const matrixWorld = this.object.matrixWorld;
+
+		const position = this.geometry.attributes.position;
+
+		//
+
+		const objGeometry = this.object.geometry;
+
+		const objPos = objGeometry.attributes.position;
+
+		const objTan = objGeometry.attributes.tangent;
+
+		let idx = 0;
+
+		// for simplicity, ignore index and drawcalls, and render every tangent
+
+		for ( let j = 0, jl = objPos.count; j < jl; j ++ ) {
+
+			_v1.fromBufferAttribute( objPos, j ).applyMatrix4( matrixWorld );
+
+			_v2.fromBufferAttribute( objTan, j );
+
+			_v2.transformDirection( matrixWorld ).multiplyScalar( this.size ).add( _v1 );
+
+			position.setXYZ( idx, _v1.x, _v1.y, _v1.z );
+
+			idx = idx + 1;
+
+			position.setXYZ( idx, _v2.x, _v2.y, _v2.z );
+
+			idx = idx + 1;
+
+		}
+
+		position.needsUpdate = true;
+
+	}
+
+	dispose() {
+
+		this.geometry.dispose();
+		this.material.dispose();
+
+	}
+
+}
+
+/**
+ * @author pschroen / https://ufo.ai/
+ */
+
+class Line extends Component {
+    constructor(context) {
+        super();
+
+        this.context = context;
+
+        this.start = new Vector2();
+        this.end = new Vector2();
+
+        this.props = {
+            alpha: 0,
+            start: 0,
+            offset: 0,
+            progress: 0
+        };
+    }
+
+    /**
+     * Public methods
+     */
+
+    startPoint = ({ x, y }) => {
+        this.start.set(x + 3, y - 3);
+    };
+
+    endPoint = position => {
+        this.end.copy(position);
+    };
+
+    resize = () => {
+        // Context properties need to be reassigned after resize
+        this.context.lineWidth = 1.5;
+        this.context.strokeStyle = getComputedStyle(document.querySelector(':root')).getPropertyValue('--ui-color-line').trim();
+
+        this.update();
+    };
+
+    update = () => {
+        if (this.props.alpha <= 0) {
+            return;
+        }
+
+        if (this.props.alpha < 0.001) {
+            this.props.alpha = 0;
+        }
+
+        this.context.globalAlpha = this.props.alpha;
+
+        const length = this.start.distanceTo(this.end);
+        const dash = length * this.props.progress;
+        const gap = length - dash;
+        const offset = -length * (this.props.start + this.props.offset);
+
+        this.context.setLineDash([dash, gap]);
+        this.context.lineDashOffset = offset;
+
+        this.context.beginPath();
+        this.context.moveTo(this.start.x, this.start.y);
+        this.context.lineTo(this.end.x, this.end.y);
+        this.context.stroke();
+    };
+
+    animateIn = (reverse = false) => {
+        clearTween(this.props);
+
+        tween(this.props, { alpha: 1 }, 500, 'easeOutSine');
+
+        if (reverse) {
+            this.props.start = 1;
+            this.props.progress = 0;
+
+            tween(this.props, { start: 0 }, 500, 'easeInCubic', null, () => {
+                this.props.progress = 1 - this.props.start;
+            });
+        } else {
+            this.props.start = 0;
+            this.props.progress = 0;
+
+            tween(this.props, { progress: 1 }, 400, 'easeOutCubic');
+        }
+    };
+
+    animateOut = (fast = false, callback) => {
+        let time;
+        let ease;
+
+        if (fast) {
+            time = 400;
+            ease = 'easeOutCubic';
+        } else {
+            time = 500;
+            ease = 'easeInCubic';
+        }
+
+        clearTween(this.props);
+
+        tween(this.props, { start: 1 }, time, ease, () => {
+            this.props.alpha = 0;
+            this.props.start = 0;
+
+            if (callback) {
+                callback();
+            }
+        }, () => {
+            this.props.progress = 1 - this.props.start;
+        });
+    };
+
+    inactive = () => {
+        tween(this.props, { alpha: 0 }, 300, 'easeOutSine');
+    };
+}
+
+/**
+ * @author pschroen / https://ufo.ai/
+ */
+
+class ReticleText extends Interface {
+    constructor() {
+        super('.text');
+
+        this.initHTML();
+    }
+
+    initHTML() {
+        this.css({
+            position: 'absolute',
+            left: 20,
+            top: -3
+        });
+
+        this.primary = new Interface('.primary');
+        this.primary.css({
+            fontVariantNumeric: 'tabular-nums',
+            lineHeight: 18,
+            letterSpacing: 'var(--ui-number-letter-spacing)',
+            whiteSpace: 'nowrap'
+        });
+        this.add(this.primary);
+
+        this.secondary = new Interface('.secondary');
+        this.secondary.css({
+            height: 18,
+            fontSize: 'var(--ui-secondary-font-size)',
+            letterSpacing: 'var(--ui-secondary-letter-spacing)',
+            opacity: 0.7
+        });
+        this.add(this.secondary);
+    }
+
+    /**
+     * Public methods
+     */
+
+    setData = data => {
+        if (!data) {
+            return;
+        }
+
+        if (data.primary) {
+            this.primary.text(data.primary);
+        }
+
+        if (data.secondary) {
+            this.secondary.text(data.secondary);
+        }
+    };
+}
+
+/**
+ * @author pschroen / https://ufo.ai/
+ */
+
+class Reticle extends Interface {
+    constructor({
+        noText = true
+    } = {}) {
+        super('.reticle');
+
+        this.noText = noText;
+
+        const size = 10;
+
+        this.width = size;
+        this.height = size;
+
+        this.position = new Vector2();
+        this.target = new Vector2();
+        this.lerpSpeed = 1;
+
+        this.initHTML();
+        this.initViews();
+    }
+
+    initHTML() {
+        this.invisible();
+        this.css({
+            position: 'absolute',
+            left: '50%',
+            top: '50%',
+            width: this.width,
+            height: this.height,
+            marginLeft: -this.width / 2,
+            marginTop: -this.height / 2,
+            pointerEvents: 'none',
+            webkitUserSelect: 'none',
+            userSelect: 'none'
+        });
+
+        this.center = new Interface('.center');
+        this.center.css({
+            position: 'absolute',
+            boxSizing: 'border-box',
+            left: '50%',
+            top: '50%',
+            width: this.width,
+            height: this.height,
+            marginLeft: -this.width / 2,
+            marginTop: -this.height / 2,
+            border: `${window.devicePixelRatio > 1 ? 1.5 : 1}px solid var(--ui-color)`,
+            borderRadius: '50%'
+        });
+        this.add(this.center);
+    }
+
+    initViews() {
+        if (!this.noText) {
+            this.text = new ReticleText();
+            this.add(this.text);
+        }
+    }
+
+    /**
+     * Public methods
+     */
+
+    setData = data => {
+        this.text.setData(data);
+    };
+
+    update = () => {
+        this.position.lerp(this.target, this.lerpSpeed);
+
+        this.css({ left: Math.round(this.position.x), top: Math.round(this.position.y) });
+    };
+
+    animateIn = () => {
+        this.clearTween().visible().css({ scale: 0.25, opacity: 0 }).tween({ scale: 1, opacity: 1 }, 400, 'easeOutCubic');
+    };
+
+    animateOut = () => {
+        this.clearTween().tween({ scale: 0, opacity: 0 }, 500, 'easeInCubic', () => {
+            this.invisible();
         });
     };
 }
@@ -55806,26 +57419,1490 @@ class PanelItem extends Interface {
  * @author pschroen / https://ufo.ai/
  */
 
-class MaterialPanelController {
-    static init(ui, material) {
-        this.ui = ui;
-        this.material = material;
+class TargetNumber extends Interface {
+    constructor() {
+        super('.target-number');
+
+        const size = window.devicePixelRatio > 1 ? 17 : 18;
+
+        this.width = size;
+        this.height = size;
+
+        this.initHTML();
+    }
+
+    initHTML() {
+        this.invisible();
+        this.css({
+            position: 'absolute',
+            boxSizing: 'border-box',
+            width: this.width,
+            height: this.height,
+            border: `${window.devicePixelRatio > 1 ? 1.5 : 1}px solid var(--ui-color)`
+        });
+
+        this.number = new Interface('.number');
+        this.number.css({
+            position: 'absolute',
+            left: window.devicePixelRatio > 1 ? 4 : 5,
+            fontVariantNumeric: 'tabular-nums',
+            lineHeight: this.height - (window.devicePixelRatio > 1 ? 3 : 2),
+            letterSpacing: 'var(--ui-number-letter-spacing)',
+            textAlign: 'center'
+        });
+        this.add(this.number);
+    }
+
+    /**
+     * Public methods
+     */
+
+    setData = data => {
+        if (!data) {
+            return;
+        }
+
+        if (data.targetNumber) {
+            this.number.text(data.targetNumber);
+        }
+    };
+
+    animateIn = () => {
+        this.clearTween().visible().css({ opacity: 0 }).tween({ opacity: 1 }, 400, 'easeOutCubic');
+    };
+
+    animateOut = () => {
+        this.clearTween().tween({ opacity: 0 }, 400, 'easeOutCubic', () => {
+            this.invisible();
+        });
+    };
+}
+
+/**
+ * @author pschroen / https://ufo.ai/
+ */
+
+class Tracker extends Interface {
+    constructor() {
+        super('.tracker');
+
+        this.position = new Vector2();
+        this.target = new Vector2();
+        this.lerpSpeed = 1;
+        this.locked = false;
+        this.animatedIn = false;
+        this.isVisible = false;
+
+        this.initHTML();
+        this.initViews();
+    }
+
+    initHTML() {
+        this.css({
+            position: 'absolute',
+            pointerEvents: 'none',
+            webkitUserSelect: 'none',
+            userSelect: 'none'
+        });
+
+        this.corners = new Interface('.corners');
+        this.corners.invisible();
+        this.corners.css({
+            position: 'absolute',
+            width: '100%',
+            height: '100%'
+        });
+        this.add(this.corners);
+
+        this.tl = new Interface('.tl');
+        this.tl.css({
+            position: 'absolute',
+            left: 0,
+            top: 0,
+            width: 6,
+            height: 6,
+            borderLeft: '1.5px solid var(--ui-color)',
+            borderTop: '1.5px solid var(--ui-color)'
+        });
+        this.corners.add(this.tl);
+
+        this.tr = new Interface('.tr');
+        this.tr.css({
+            position: 'absolute',
+            top: 0,
+            right: 0,
+            width: 6,
+            height: 6,
+            borderTop: '1.5px solid var(--ui-color)',
+            borderRight: '1.5px solid var(--ui-color)'
+        });
+        this.corners.add(this.tr);
+
+        this.br = new Interface('.br');
+        this.br.css({
+            position: 'absolute',
+            right: 0,
+            bottom: 0,
+            width: 6,
+            height: 6,
+            borderRight: '1.5px solid var(--ui-color)',
+            borderBottom: '1.5px solid var(--ui-color)'
+        });
+        this.corners.add(this.br);
+
+        this.bl = new Interface('.bl');
+        this.bl.css({
+            position: 'absolute',
+            left: 0,
+            bottom: 0,
+            width: 6,
+            height: 6,
+            borderLeft: '1.5px solid var(--ui-color)',
+            borderBottom: '1.5px solid var(--ui-color)'
+        });
+        this.corners.add(this.bl);
+    }
+
+    initViews() {
+        this.number = new TargetNumber();
+        this.number.css({
+            left: -(this.number.width + 15),
+            top: '50%',
+            marginTop: -Math.round(this.number.height / 2)
+        });
+        this.add(this.number);
+    }
+
+    /**
+     * Public methods
+     */
+
+    update = () => {
+        this.position.lerp(this.target, this.lerpSpeed);
+        this.css({ left: Math.round(this.position.x), top: Math.round(this.position.y) });
+    };
+
+    lock = () => {
+        this.number.animateIn();
+
+        this.locked = true;
+    };
+
+    unlock = () => {
+        this.number.animateOut();
+
+        this.locked = false;
+    };
+
+    show = () => {
+        this.clearTimeout(this.timeout);
+        this.corners.clearTween().tween({ opacity: 1 }, 400, 'easeOutCubic');
+
+        this.animatedIn = true;
+    };
+
+    hide = (fast = false) => {
+        if (this.locked) {
+            return;
+        }
+
+        this.clearTimeout(this.timeout);
+        this.timeout = this.delayedCall(fast ? 0 : 2000, () => {
+            this.corners.clearTween().tween({ opacity: 0 }, 400, 'easeOutCubic');
+        });
+
+        this.animatedIn = false;
+    };
+
+    animateIn = () => {
+        this.clearTimeout(this.timeout);
+        this.corners.clearTween().visible().css({ scale: 0.25, opacity: 0 }).tween({ scale: 1, opacity: 1 }, 400, 'easeOutCubic');
+
+        this.animatedIn = true;
+        this.isVisible = true;
+    };
+
+    animateOut = () => {
+        this.clearTimeout(this.timeout);
+        this.corners.clearTween().tween({ scale: 0, opacity: 0 }, 500, 'easeInCubic', () => {
+            this.corners.invisible();
+
+            this.animatedIn = false;
+            this.isVisible = false;
+        });
+    };
+}
+
+/**
+ * @author pschroen / https://ufo.ai/
+ */
+
+class PointText extends Interface {
+    constructor() {
+        super('.text');
+
+        this.locked = false;
+
+        this.initHTML();
+        this.initViews();
+    }
+
+    initHTML() {
+        this.css({
+            position: 'absolute',
+            left: 10,
+            top: -15
+        });
+
+        this.container = new Interface('.container');
+        this.container.css({
+            position: 'absolute',
+            cursor: 'move',
+            zIndex: 1
+        });
+        this.add(this.container);
+
+        this.name = new Interface('.name');
+        this.name.css({
+            lineHeight: 18,
+            whiteSpace: 'nowrap'
+        });
+        this.container.add(this.name);
+
+        this.type = new Interface('.type');
+        this.type.css({
+            height: 18,
+            fontSize: 'var(--ui-secondary-font-size)',
+            letterSpacing: 'var(--ui-secondary-letter-spacing)',
+            opacity: 0.7
+        });
+        this.container.add(this.type);
+    }
+
+    initViews() {
+        this.number = new TargetNumber();
+        this.number.css({
+            position: 'absolute',
+            left: -(this.number.width + 10),
+            top: '50%',
+            marginTop: -Math.round(this.number.height / 2)
+        });
+        this.container.add(this.number);
+
+        this.panel = new Panel();
+        this.panel.css({
+            position: 'absolute',
+            left: -10,
+            top: 36
+        });
+        this.add(this.panel);
+    }
+
+    /**
+     * Public methods
+     */
+
+    setData = data => {
+        if (!data) {
+            return;
+        }
+
+        let height = 0;
+
+        if (data.name) {
+            this.name.text(data.name);
+
+            height += 18;
+        }
+
+        if (data.type) {
+            this.type.text(data.type);
+
+            height += 15;
+        }
+
+        this.panel.css({ top: height + 3 });
+    };
+
+    lock = () => {
+        this.number.animateIn();
+
+        this.locked = true;
+    };
+
+    unlock = () => {
+        this.number.animateOut();
+
+        this.locked = false;
+    };
+
+    open = moved => {
+        if (moved) {
+            return;
+        }
+
+        this.clearTween().tween({ left: this.number.width + 30, opacity: 1 }, 400, 'easeOutCubic');
+
+        this.panel.animateIn();
+    };
+
+    close = () => {
+        this.clearTween().tween({ left: 10, opacity: 1 }, 400, 'easeInCubic', 200);
+
+        this.number.animateOut();
+        this.panel.animateOut();
+    };
+
+    animateIn = () => {
+        this.clearTween().css({ opacity: 0 }).tween({ opacity: 1 }, 400, 'easeOutCubic', 200);
+    };
+
+    animateOut = callback => {
+        this.clearTween().tween({ opacity: 0 }, 500, 'easeInCubic', 200, callback);
+    };
+}
+
+/**
+ * @author pschroen / https://ufo.ai/
+ */
+
+class Point extends Interface {
+    constructor(panel, tracker) {
+        super('.point');
+
+        this.panel = panel;
+        this.tracker = tracker;
+
+        this.position = new Vector2();
+        this.origin = new Vector2();
+        this.originPosition = new Vector2();
+        this.target = new Vector2();
+        this.mouse = new Vector2();
+        this.delta = new Vector2();
+        this.lastTime = null;
+        this.lastMouse = new Vector2();
+        this.lastOrigin = new Vector2();
+        this.lerpSpeed = 0.07;
+        this.openColor = null;
+        this.isOpen = false;
+        this.isDown = false;
+        this.isMove = false;
+
+        this.initHTML();
+        this.initViews();
+
+        this.addListeners();
+    }
+
+    initHTML() {
+        this.invisible();
+        this.css({
+            position: 'absolute',
+            pointerEvents: 'auto',
+            webkitUserSelect: 'none',
+            userSelect: 'none'
+        });
+    }
+
+    initViews() {
+        this.text = new PointText();
+        this.add(this.text);
+    }
+
+    addListeners() {
+        Stage.events.on('color_picker', this.onColorPicker);
+        this.text.container.element.addEventListener('mouseenter', this.onHover);
+        this.text.container.element.addEventListener('mouseleave', this.onHover);
+        window.addEventListener('pointerdown', this.onPointerDown);
+        window.addEventListener('pointerup', this.onPointerUp);
+    }
+
+    removeListeners() {
+        Stage.events.off('color_picker', this.onColorPicker);
+        this.text.container.element.removeEventListener('mouseenter', this.onHover);
+        this.text.container.element.removeEventListener('mouseleave', this.onHover);
+        window.removeEventListener('pointerdown', this.onPointerDown);
+        window.removeEventListener('pointerup', this.onPointerUp);
+    }
+
+    /**
+     * Event handlers
+     */
+
+    onColorPicker = ({ open, target }) => {
+        if (!this.element.contains(target.element)) {
+            return;
+        }
+
+        if (open) {
+            this.text.container.tween({ opacity: 0.35 }, 400, 'easeInOutSine');
+            this.openColor = target;
+        } else {
+            this.text.container.tween({ opacity: 1 }, 400, 'easeInOutSine');
+            this.openColor = null;
+        }
+    };
+
+    onHover = ({ type }) => {
+        if (type === 'mouseenter') {
+            this.panel.onHover({ type: 'over' });
+        } else {
+            this.panel.onHover({ type: 'out' });
+        }
+    };
+
+    onPointerDown = e => {
+        if (!this.isOpen) {
+            return;
+        }
+
+        if (this.text.container.element.contains(e.target)) {
+            this.isDown = true;
+        }
+
+        this.onPointerMove(e);
+
+        window.addEventListener('pointermove', this.onPointerMove);
+    };
+
+    onPointerMove = ({ clientX, clientY }) => {
+        const event = {
+            x: clientX,
+            y: clientY
+        };
+
+        this.mouse.copy(event);
+
+        if (!this.lastTime) {
+            this.lastTime = performance.now();
+            this.lastMouse.copy(event);
+            this.lastOrigin.copy(this.origin);
+        }
+
+        if (this.isDown) {
+            this.delta.subVectors(this.mouse, this.lastMouse);
+            this.origin.addVectors(this.lastOrigin, this.delta);
+
+            this.isMove = true;
+        }
+    };
+
+    onPointerUp = e => {
+        if (!this.isOpen || !this.lastTime) {
+            return;
+        }
+
+        window.removeEventListener('pointermove', this.onPointerMove);
+
+        this.isDown = false;
+
+        this.onPointerMove(e);
+
+        if (performance.now() - this.lastTime > 750 || this.delta.subVectors(this.mouse, this.lastMouse).length() > 50) {
+            this.lastTime = null;
+            return;
+        }
+
+        if (this.openColor && !this.openColor.element.contains(e.target)) {
+            Stage.events.emit('color_picker', { open: false, target: this });
+        }
+
+        if (this.tracker && this.tracker.isVisible && this.text.container.element.contains(e.target)) {
+            if (!this.tracker.animatedIn) {
+                this.tracker.show();
+            } else if (!this.tracker.locked) {
+                this.text.lock();
+                this.tracker.lock();
+            } else {
+                this.text.unlock();
+                this.tracker.unlock();
+                this.tracker.hide(true);
+            }
+        }
+
+        this.lastTime = null;
+    };
+
+    /**
+     * Public methods
+     */
+
+    setData = data => {
+        this.text.setData(data);
+    };
+
+    update = () => {
+        this.position.lerp(this.target, this.lerpSpeed);
+        this.originPosition.addVectors(this.origin, this.position);
+
+        this.css({ left: Math.round(this.originPosition.x), top: Math.round(this.originPosition.y) });
+    };
+
+    open = () => {
+        this.text.open(this.isMove);
+
+        this.isOpen = true;
+    };
+
+    close = () => {
+        tween(this.origin, { x: 0, y: 0 }, 400, 'easeOutCubic');
+
+        this.text.close();
+
+        this.isOpen = false;
+        this.isMove = false;
+    };
+
+    animateIn = () => {
+        this.visible();
+        this.clearTween().css({ opacity: 1 });
+        this.text.animateIn();
+    };
+
+    animateOut = () => {
+        this.text.animateOut(() => {
+            this.invisible();
+        });
+    };
+
+    inactive = () => {
+        this.clearTween().tween({ opacity: 0 }, 300, 'easeOutSine');
+        this.close();
+    };
+
+    destroy = () => {
+        this.removeListeners();
+
+        return super.destroy();
+    };
+}
+
+/**
+ * @author pschroen / https://ufo.ai/
+ */
+
+class Point3D extends Group {
+    static init(scene, camera, {
+        root = document.body,
+        container = document.body,
+        loader = new TextureLoader$1(),
+        uvTexturePath = 'assets/textures/uv.jpg',
+        uvHelper = false,
+        debug = false
+    } = {}) {
+        this.events = new EventEmitter();
+        this.scene = scene;
+        this.camera = camera;
+        this.root = root instanceof Interface ? root : new Interface(root);
+        this.container = container instanceof Interface ? container : new Interface(container);
+        this.loader = loader;
+        this.uvTexturePath = uvTexturePath;
+        this.uvHelper = uvHelper;
+        this.debug = debug;
+
+        this.objects = [];
+        this.points = [];
+        this.raycaster = new Raycaster();
+        this.raycaster.layers.enable(31); // Last layer
+        this.mouse = new Vector2$1(-1, -1);
+        this.delta = new Vector2$1();
+        this.coords = new Vector2$1();
+        this.hover = null;
+        this.click = null;
+        this.lastTime = null;
+        this.lastMouse = new Vector2$1();
+        this.raycastInterval = 1 / 10; // 10 frames per second
+        this.lastRaycast = 0;
+        this.halfScreen = new Vector2$1();
+        this.enabled = true;
+
+        this.initCanvas();
+        this.initLoaders();
+
+        this.addListeners();
+        this.onResize();
+    }
+
+    static initCanvas() {
+        this.canvas = new Interface(null, 'canvas');
+        this.canvas.css({
+            position: 'absolute',
+            left: 0,
+            top: 0,
+            pointerEvents: 'none'
+        });
+        this.context = this.canvas.element.getContext('2d');
+        this.container.add(this.canvas);
+    }
+
+    static initLoaders() {
+        if (this.uvHelper) {
+            this.uvTexture = this.loader.load(this.uvTexturePath);
+        }
+    }
+
+    static addListeners() {
+        Stage.events.on('invert', this.onInvert);
+        window.addEventListener('resize', this.onResize);
+        window.addEventListener('pointerdown', this.onPointerDown);
+        window.addEventListener('pointermove', this.onPointerMove);
+        window.addEventListener('pointerup', this.onPointerUp);
+        window.addEventListener('keyup', this.onKeyUp);
+    }
+
+    static removeListeners() {
+        Stage.events.off('invert', this.onInvert);
+        window.removeEventListener('resize', this.onResize);
+        window.removeEventListener('pointerdown', this.onPointerDown);
+        window.removeEventListener('pointermove', this.onPointerMove);
+        window.removeEventListener('pointerup', this.onPointerUp);
+        window.removeEventListener('keyup', this.onKeyUp);
+    }
+
+    /**
+     * Event handlers
+     */
+
+    static onInvert = () => {
+        this.invert();
+    };
+
+    static onResize = () => {
+        this.width = document.documentElement.clientWidth;
+        this.height = document.documentElement.clientHeight;
+        this.dpr = window.devicePixelRatio;
+
+        this.halfScreen.set(this.width / 2, this.height / 2);
+
+        this.canvas.element.width = Math.round(this.width * this.dpr);
+        this.canvas.element.height = Math.round(this.height * this.dpr);
+        this.canvas.element.style.width = this.width + 'px';
+        this.canvas.element.style.height = this.height + 'px';
+        this.context.scale(this.dpr, this.dpr);
+
+        this.points.forEach(point => point.resize());
+    };
+
+    static onPointerDown = e => {
+        if (!this.enabled) {
+            return;
+        }
+
+        this.onPointerMove(e);
+
+        this.lastTime = performance.now();
+        this.lastMouse.copy(this.mouse);
+
+        if (this.hover) {
+            this.click = this.hover;
+        }
+    };
+
+    static onPointerMove = e => {
+        if (!this.enabled) {
+            return;
+        }
+
+        if (e) {
+            this.mouse.x = e.clientX;
+            this.mouse.y = e.clientY;
+            this.coords.x = (this.mouse.x / this.width) * 2 - 1;
+            this.coords.y = 1 - (this.mouse.y / this.height) * 2;
+        }
+
+        if (document.elementFromPoint(this.mouse.x, this.mouse.y) instanceof HTMLCanvasElement) {
+            this.raycaster.setFromCamera(this.coords, this.camera);
+
+            const intersection = this.raycaster.intersectObjects(this.objects);
+
+            if (intersection.length) {
+                const point = this.points[this.objects.indexOf(intersection[0].object)];
+
+                if (!this.hover) {
+                    this.hover = point;
+                    this.hover.onHover({ type: 'over' });
+                    this.root.css({ cursor: 'pointer' });
+                } else if (this.hover !== point) {
+                    this.hover.onHover({ type: 'out' });
+                    this.hover = point;
+                    this.hover.onHover({ type: 'over' });
+                    this.root.css({ cursor: 'pointer' });
+                }
+            } else if (this.hover) {
+                this.hover.onHover({ type: 'out' });
+                this.hover = null;
+                this.root.css({ cursor: '' });
+            }
+        } else if (this.hover) {
+            this.hover.onHover({ type: 'out' });
+            this.hover = null;
+            this.root.css({ cursor: '' });
+        }
+    };
+
+    static onPointerUp = e => {
+        if (!this.enabled) {
+            return;
+        }
+
+        this.onPointerMove(e);
+
+        if (performance.now() - this.lastTime > 750 || this.delta.subVectors(this.mouse, this.lastMouse).length() > 50) {
+            this.click = null;
+            return;
+        }
+
+        if (this.click && this.click === this.hover) {
+            if (!e.altKey) {
+                this.points.forEach(point => {
+                    if (point !== this.click && point.animatedIn) {
+                        point.animateOut(true);
+                        point.inactive();
+                    }
+                });
+            }
+
+            this.click.onClick();
+        } else if (document.elementFromPoint(this.mouse.x, this.mouse.y) instanceof HTMLCanvasElement) {
+            this.animateOut();
+        }
+
+        this.click = null;
+    };
+
+    static onKeyUp = e => {
+        if (e.keyCode >= 48 && e.keyCode <= 57) { // 0-9
+            const select = this.points[e.keyCode - 49];
+
+            if (select) {
+                if (!e.altKey) {
+                    this.points.forEach(point => {
+                        if (point !== select && point.animatedIn) {
+                            point.animateOut(true);
+                            point.inactive();
+                        }
+                    });
+                }
+
+                select.onHover({ type: 'over' });
+                select.onClick();
+            } else {
+                this.animateOut();
+            }
+        }
+    };
+
+    /**
+     * Public methods
+     */
+
+    static getPoint = mesh => {
+        return this.points.find(point => point.object === mesh);
+    };
+
+    static getSelected = () => {
+        return this.points.filter(point => point.selected).map(point => point.object);
+    };
+
+    static setIndexes = () => {
+        this.points.forEach((point, i) => point.setIndex(i));
+    };
+
+    static invert = () => {
+        this.points.forEach(point => point.resize());
+    };
+
+    static update = time => {
+        this.context.clearRect(0, 0, this.canvas.element.width, this.canvas.element.height);
+
+        this.points.forEach(point => point.update());
+
+        if (!navigator.maxTouchPoints && time - this.lastRaycast > this.raycastInterval) {
+            this.onPointerMove();
+            this.lastRaycast = time;
+        }
+    };
+
+    static add = (...points) => {
+        points.forEach(point => {
+            this.objects.push(point.object);
+            this.points.push(point);
+        });
+
+        this.setIndexes();
+    };
+
+    static remove = (...points) => {
+        points.forEach(point => {
+            const index = this.points.indexOf(point);
+
+            if (~index) {
+                this.objects.splice(index, 1);
+                this.points.splice(index, 1);
+            }
+
+            if (point === this.hover) {
+                this.hover.onHover({ type: 'out' });
+                this.hover = null;
+                this.root.css({ cursor: '' });
+            }
+        });
+
+        this.setIndexes();
+    };
+
+    static animateOut = () => {
+        this.points.forEach(point => {
+            if (point.animatedIn) {
+                point.animateOut(true);
+                point.inactive();
+            }
+        });
+
+        if (this.hover) {
+            this.hover.onHover({ type: 'out' });
+            this.hover = null;
+            this.root.css({ cursor: '' });
+        }
+    };
+
+    static destroy = () => {
+        this.removeListeners();
+
+        if (this.uvTexture) {
+            this.uvTexture.dispose();
+        }
+
+        for (let i = this.points.length - 1; i >= 0; i--) {
+            if (this.points[i] && this.points[i].destroy) {
+                this.points[i].destroy();
+            }
+        }
+
+        for (const prop in this) {
+            this[prop] = null;
+        }
+
+        return null;
+    };
+
+    constructor(mesh, {
+        name = mesh.material.name || mesh.geometry.type,
+        type = mesh.material.type,
+        noTracker
+    } = {}) {
+        super();
+
+        this.object = mesh;
+        this.name = name;
+        this.type = type;
+        this.noTracker = noTracker;
+        this.isDefault = name === mesh.geometry.type && type === mesh.material.type;
+        this.camera = Point3D.camera;
+        this.halfScreen = Point3D.halfScreen;
+
+        this.center = new Vector2$1();
+        this.size = new Vector2$1();
+        this.selected = false;
+        this.animatedIn = false;
+
+        this.initMesh();
+        this.initHTML();
+        this.initViews();
+
+        Point3D.add(this);
+    }
+
+    initMesh() {
+        this.object.geometry.computeBoundingSphere();
+
+        const { center, radius } = this.object.geometry.boundingSphere;
+
+        this.geometry = new SphereGeometry$2(radius);
+
+        if (Point3D.debug) {
+            this.material = new MeshBasicMaterial({
+                color: 0xff0000,
+                wireframe: true
+            });
+        } else {
+            this.material = new MeshBasicMaterial({ visible: false });
+        }
+
+        this.mesh = new Mesh(this.geometry, this.material);
+        this.mesh.position.copy(this.object.position);
+        this.mesh.position.x = this.mesh.position.x + center.x;
+        this.mesh.position.y = this.mesh.position.y - center.y; // Y flipped
+        this.mesh.position.z = this.mesh.position.z + center.z;
+        this.mesh.scale.copy(this.object.scale);
+        this.mesh.layers.set(31); // Last layer
+        this.add(this.mesh);
+    }
+
+    initHTML() {
+        this.element = new Interface('.target');
+        this.element.css({
+            position: 'static',
+            fontFamily: 'var(--ui-font-family)',
+            fontWeight: 'var(--ui-font-weight)',
+            fontSize: 'var(--ui-font-size)',
+            lineHeight: 'var(--ui-line-height)',
+            letterSpacing: 'var(--ui-letter-spacing)'
+        });
+        Point3D.container.add(this.element);
+    }
+
+    initViews() {
+        const { context } = Point3D;
+
+        this.line = new Line(context);
+        this.element.add(this.line);
+
+        this.reticle = new Reticle();
+        this.element.add(this.reticle);
+
+        if (!this.noTracker) {
+            this.tracker = new Tracker();
+            this.element.add(this.tracker);
+        }
+
+        this.point = new Point(this, this.tracker);
+        this.point.setData({
+            name: this.name,
+            type: this.type
+        });
+        this.element.add(this.point);
+
+        this.panel = this.point.text.panel;
+    }
+
+    setInitialPosition() {
+        this.updateMatrixWorld();
+
+        this.reticle.position.copy(this.reticle.target);
+
+        if (this.tracker) {
+            this.tracker.position.copy(this.tracker.target);
+        }
+
+        this.point.position.copy(this.point.target);
+    }
+
+    /**
+     * Event handlers
+     */
+
+    onHover = ({ type }) => {
+        clearTween(this.timeout);
+
+        if (this.tracker && this.selected) {
+            if (type === 'over') {
+                this.tracker.show();
+            } else {
+                this.tracker.hide();
+            }
+
+            return;
+        }
+
+        if (type === 'over') {
+            if (!this.animatedIn) {
+                this.setInitialPosition();
+                this.resize();
+                this.animateIn();
+            }
+        } else {
+            this.timeout = delayedCall(2000, () => {
+                this.animateOut();
+            });
+        }
+
+        Point3D.events.emit('hover', { type, target: this });
+    };
+
+    onClick = () => {
+        clearTween(this.timeout);
+
+        if (this.tracker) {
+            this.selected = !this.selected;
+
+            if (this.selected) {
+                this.toggle(true);
+            } else {
+                this.toggle(false);
+            }
+
+            Point3D.events.emit('click', { selected: Point3D.getSelected(), target: this });
+        } else {
+            Point3D.events.emit('click', { target: this });
+        }
+    };
+
+    /**
+     * Public methods
+     */
+
+    setIndex = index => {
+        this.index = index;
+
+        if (this.tracker) {
+            const targetNumber = index + 1;
+
+            this.tracker.number.setData({ targetNumber });
+            this.point.text.number.setData({ targetNumber });
+        }
+    };
+
+    addPanel = item => {
+        this.panel.add(item);
+    };
+
+    toggleNormalsHelper = show => {
+        if (show) {
+            if (!this.normalsHelper) {
+                this.object.geometry.computeBoundingSphere();
+
+                const { radius } = this.object.geometry.boundingSphere;
+
+                this.normalsHelper = new VertexNormalsHelper(this.object, radius / 5);
+                Point3D.scene.add(this.normalsHelper);
+            }
+
+            this.normalsHelper.visible = true;
+        } else if (this.normalsHelper) {
+            this.normalsHelper.visible = false;
+        }
+    };
+
+    toggleTangentsHelper = show => {
+        if (show) {
+            if (!this.tangentsHelper) {
+                this.object.geometry.computeBoundingSphere();
+                this.object.geometry.computeTangents();
+
+                const { radius } = this.object.geometry.boundingSphere;
+
+                this.tangentsHelper = new VertexTangentsHelper(this.object, radius / 5);
+                Point3D.scene.add(this.tangentsHelper);
+            }
+
+            this.tangentsHelper.visible = true;
+        } else if (this.tangentsHelper) {
+            this.tangentsHelper.visible = false;
+        }
+    };
+
+    toggleUVHelper = show => {
+        const material = this.object.material;
+
+        if (show) {
+            if (Point3D.uvTexture && Point3D.uvTexture.image) {
+                if (!this.uvTexture) {
+                    this.uvTexture = Point3D.uvTexture.clone();
+                }
+
+                if (!this.currentMaterialMap && material.map !== this.uvTexture) {
+                    this.currentMaterialMap = material.map;
+
+                    material.map = this.uvTexture;
+                    material.needsUpdate = true;
+                }
+            }
+        } else {
+            material.map = this.currentMaterialMap;
+            material.needsUpdate = true;
+
+            if (this.uvTexture) {
+                this.uvTexture.dispose();
+            }
+
+            delete this.currentMaterialMap;
+            delete this.uvTexture;
+        }
+    };
+
+    resize = () => {
+        this.line.resize();
+    };
+
+    update = () => {
+        this.line.startPoint(this.reticle.position);
+        this.line.endPoint(this.point.originPosition);
+        this.line.update();
+        this.reticle.update();
+
+        if (this.tracker) {
+            this.tracker.update();
+        }
+
+        this.point.update();
+    };
+
+    updateMatrixWorld = force => {
+        super.updateMatrixWorld(force);
+
+        this.camera.updateMatrixWorld();
+
+        const box = getScreenSpaceBox(this.mesh, this.camera);
+        const center = box.getCenter(this.center).multiply(this.halfScreen);
+        const size = box.getSize(this.size).multiply(this.halfScreen);
+        const centerX = this.halfScreen.x + center.x;
+        const centerY = this.halfScreen.y - center.y;
+        const width = Math.round(size.x);
+        const height = Math.round(size.y);
+        const halfWidth = Math.round(width / 2);
+        const halfHeight = Math.round(height / 2);
+
+        this.reticle.target.set(centerX, centerY);
+
+        if (this.tracker) {
+            this.tracker.target.set(centerX, centerY);
+            this.tracker.css({
+                width,
+                height,
+                marginLeft: -halfWidth,
+                marginTop: -halfHeight
+            });
+        }
+
+        this.point.target.set(centerX + halfWidth, centerY - halfHeight);
+
+        if (this.normalsHelper) {
+            this.normalsHelper.update();
+        }
+
+        if (this.tangentsHelper) {
+            this.tangentsHelper.update();
+        }
+    };
+
+    animateIn = (reverse = false) => {
+        this.line.animateIn(reverse);
+        this.reticle.animateIn();
+        this.point.animateIn();
+
+        this.animatedIn = true;
+    };
+
+    animateOut = (fast = false, callback) => {
+        this.line.animateOut(fast, callback);
+        this.reticle.animateOut();
+
+        if (this.tracker) {
+            this.tracker.animateOut();
+        }
+
+        this.point.animateOut();
+
+        this.animatedIn = false;
+    };
+
+    toggle = show => {
+        if (show) {
+            this.line.animateOut(true);
+            this.reticle.animateOut();
+
+            if (this.tracker) {
+                this.tracker.animateIn();
+            }
+
+            this.point.open();
+        } else {
+            this.line.animateIn(true);
+            this.reticle.animateIn();
+
+            if (this.tracker) {
+                this.tracker.animateOut();
+            }
+
+            this.point.close();
+
+            Stage.events.emit('color_picker', { open: false, target: this.panel });
+        }
+    };
+
+    inactive = () => {
+        this.selected = false;
+        this.line.inactive();
+        this.point.inactive();
+
+        Stage.events.emit('color_picker', { open: false, target: this.panel });
+    };
+
+    destroy = () => {
+        if (this.normalsHelper) {
+            this.toggleNormalsHelper(false);
+            Point3D.scene.remove(this.normalsHelper);
+            this.normalsHelper.dispose();
+        }
+
+        if (this.tangentsHelper) {
+            this.toggleTangentsHelper(false);
+            Point3D.scene.remove(this.tangentsHelper);
+            this.tangentsHelper.dispose();
+        }
+
+        if (this.currentMaterialMap) {
+            this.toggleUVHelper(false);
+        }
+
+        this.material.dispose();
+        this.geometry.dispose();
+
+        this.animateOut(false, () => {
+            this.element = this.element.destroy();
+        });
+    };
+}
+
+/**
+ * @author pschroen / https://ufo.ai/
+ */
+
+class MeshHelperPanel extends Panel {
+    constructor(mesh) {
+        super();
+
+        this.mesh = mesh;
 
         this.initPanel();
     }
 
-    static initPanel() {
-        const material = this.material;
+    initPanel() {
+        const mesh = this.mesh;
+        const point = Point3D.getPoint(mesh);
 
-        const flatShadingOptions = {
-            Off: false,
-            Flat: true
-        };
+        // Defaults
+        if (!mesh.userData.normals) {
+            mesh.userData.normals = false;
+        }
 
-        const wireframeOptions = {
-            Off: false,
-            Wire: true
-        };
+        if (!mesh.userData.tangents) {
+            mesh.userData.tangents = false;
+        }
+
+        if (!mesh.userData.uv) {
+            mesh.userData.uv = false;
+        }
+
+        const items = [
+            {
+                type: 'divider'
+            },
+            {
+                type: 'list',
+                list: NormalsHelperOptions,
+                value: getKeyByValue(NormalsHelperOptions, mesh.userData.normals),
+                callback: value => {
+                    mesh.userData.normals = NormalsHelperOptions[value];
+                    point.toggleNormalsHelper(mesh.userData.normals);
+                }
+            }
+        ];
+
+        if (mesh.geometry.index) {
+            items.push(
+                {
+                    type: 'list',
+                    list: TangentsHelperOptions,
+                    value: getKeyByValue(TangentsHelperOptions, mesh.userData.tangents),
+                    callback: value => {
+                        mesh.userData.tangents = TangentsHelperOptions[value];
+                        point.toggleTangentsHelper(mesh.userData.tangents);
+                    }
+                }
+            );
+        }
+
+        if (Point3D.uvHelper) {
+            items.push(
+                {
+                    type: 'list',
+                    list: UVHelperOptions,
+                    value: getKeyByValue(UVHelperOptions, mesh.userData.uv),
+                    callback: value => {
+                        mesh.userData.uv = UVHelperOptions[value];
+                        point.toggleUVHelper(mesh.userData.uv);
+                    }
+                }
+                // TODO: Texture thumbnails
+            );
+        }
+
+        items.forEach(data => {
+            this.add(new PanelItem(data));
+        });
+    }
+}
+
+/**
+ * @author pschroen / https://ufo.ai/
+ */
+
+class MapPanel extends Panel {
+    constructor(mesh) {
+        super();
+
+        this.mesh = mesh;
+
+        this.initPanel();
+    }
+
+    initPanel() {
+        const mesh = this.mesh;
+
+        const items = [
+            {
+                type: 'divider'
+            }
+            // TODO: Texture thumbnails
+        ];
+
+        if (mesh.material.map) {
+            const repeatItems = [
+                {
+                    type: 'slider',
+                    label: 'X',
+                    min: 1,
+                    max: 16,
+                    step: 1,
+                    value: mesh.material.map.repeat.x,
+                    callback: value => {
+                        mesh.material.map.repeat.setX(value);
+                    }
+                },
+                {
+                    type: 'slider',
+                    label: 'Y',
+                    min: 1,
+                    max: 16,
+                    step: 1,
+                    value: mesh.material.map.repeat.y,
+                    callback: value => {
+                        mesh.material.map.repeat.setY(value);
+                    }
+                }
+            ];
+
+            items.push(
+                {
+                    type: 'list',
+                    list: WrapOptions,
+                    value: getKeyByValue(WrapOptions, mesh.material.map.wrapS),
+                    callback: (value, panel) => {
+                        if (!panel.group) {
+                            const repeatPanel = new Panel();
+                            repeatPanel.animateIn(true);
+
+                            repeatItems.forEach(data => {
+                                repeatPanel.add(new PanelItem(data));
+                            });
+
+                            panel.setContent(repeatPanel);
+                        }
+
+                        const wrapping = WrapOptions[value];
+
+                        mesh.material.map.wrapS = wrapping;
+                        mesh.material.map.wrapT = wrapping;
+
+                        if (mesh.material.map.image) {
+                            mesh.material.map.needsUpdate = true;
+                        }
+
+                        if (value === 'Repeat' || value === 'Mirror') {
+                            panel.group.show();
+                        } else {
+                            panel.group.hide();
+                        }
+                    }
+                }
+            );
+        }
+
+        items.forEach(data => {
+            this.add(new PanelItem(data));
+        });
+    }
+}
+
+/**
+ * @author pschroen / https://ufo.ai/
+ */
+
+const BasicMaterialOptions = {
+    Common: BasicMaterialCommonPanel,
+    Map: MapPanel,
+    Env: BasicMaterialEnvPanel,
+    Helper: MeshHelperPanel
+};
+
+class BasicMaterialPanel extends Panel {
+    static type = [
+        'common'
+    ];
+
+    static properties = {
+        common: [
+            'color',
+            'wireframe',
+            'combine',
+            'reflectivity',
+            'refractionRatio'
+        ]
+    };
+
+    constructor(mesh) {
+        super();
+
+        this.mesh = mesh;
+
+        this.initPanel();
+    }
+
+    initPanel() {
+        const mesh = this.mesh;
+
+        const items = [
+            {
+                type: 'divider'
+            },
+            {
+                type: 'list',
+                list: BasicMaterialOptions,
+                value: 'Common',
+                callback: (value, panel) => {
+                    const MaterialPanel = BasicMaterialOptions[value];
+
+                    const materialPanel = new MaterialPanel(mesh);
+                    materialPanel.animateIn(true);
+
+                    panel.setContent(materialPanel);
+                }
+            }
+        ];
+
+        items.forEach(data => {
+            this.add(new PanelItem(data));
+        });
+    }
+}
+
+/**
+ * @author pschroen / https://ufo.ai/
+ */
+
+class LambertMaterialCommonPanel extends Panel {
+    constructor(mesh) {
+        super();
+
+        this.mesh = mesh;
+
+        this.initPanel();
+    }
+
+    initPanel() {
+        const mesh = this.mesh;
 
         const items = [
             {
@@ -55833,27 +58910,603 @@ class MaterialPanelController {
             },
             {
                 type: 'color',
-                value: material.color,
+                value: mesh.material.color,
                 callback: value => {
-                    material.color.copy(value);
+                    mesh.material.color.copy(value);
                 }
             },
             {
                 type: 'color',
-                value: material.emissive,
+                value: mesh.material.emissive,
                 callback: value => {
-                    material.emissive.copy(value);
+                    mesh.material.emissive.copy(value);
+                }
+            },
+            {
+                type: 'list',
+                list: FlatShadingOptions,
+                value: getKeyByValue(FlatShadingOptions, mesh.material.flatShading),
+                callback: value => {
+                    mesh.material.flatShading = FlatShadingOptions[value];
+                    mesh.material.needsUpdate = true;
+                }
+            },
+            {
+                type: 'list',
+                list: WireframeOptions,
+                value: getKeyByValue(WireframeOptions, mesh.material.wireframe),
+                callback: value => {
+                    mesh.material.wireframe = WireframeOptions[value];
+                }
+            }
+            // TODO: Texture thumbnails
+        ];
+
+        items.forEach(data => {
+            this.add(new PanelItem(data));
+        });
+    }
+}
+
+/**
+ * @author pschroen / https://ufo.ai/
+ */
+
+class LambertMaterialEnvPanel extends Panel {
+    constructor(mesh) {
+        super();
+
+        this.mesh = mesh;
+
+        this.initPanel();
+    }
+
+    initPanel() {
+        const mesh = this.mesh;
+
+        const items = [
+            {
+                type: 'divider'
+            },
+            {
+                type: 'list',
+                list: CombineOptions,
+                value: getKeyByValue(CombineOptions, mesh.material.combine),
+                callback: value => {
+                    mesh.material.combine = CombineOptions[value];
+                    mesh.material.needsUpdate = true;
                 }
             },
             {
                 type: 'slider',
-                label: 'Metal',
+                label: 'Reflect',
                 min: 0,
-                max: 2,
+                max: 1,
                 step: 0.01,
-                value: material.metalness,
+                value: mesh.material.reflectivity,
                 callback: value => {
-                    material.metalness = value;
+                    mesh.material.reflectivity = value;
+                }
+            },
+            {
+                type: 'slider',
+                label: 'Refract',
+                min: 0,
+                max: 1,
+                step: 0.01,
+                value: mesh.material.refractionRatio,
+                callback: value => {
+                    mesh.material.refractionRatio = value;
+                }
+            }
+            // TODO: Texture thumbnails
+        ];
+
+        items.forEach(data => {
+            this.add(new PanelItem(data));
+        });
+    }
+}
+
+/**
+ * @author pschroen / https://ufo.ai/
+ */
+
+const LambertMaterialOptions = {
+    Common: LambertMaterialCommonPanel,
+    Map: MapPanel,
+    Env: LambertMaterialEnvPanel,
+    Helper: MeshHelperPanel
+};
+
+class LambertMaterialPanel extends Panel {
+    static type = [
+        'common'
+    ];
+
+    static properties = {
+        common: [
+            'color',
+            'emissive',
+            'flatShading',
+            'wireframe',
+            'combine',
+            'reflectivity',
+            'refractionRatio'
+        ]
+    };
+
+    constructor(mesh) {
+        super();
+
+        this.mesh = mesh;
+
+        this.initPanel();
+    }
+
+    initPanel() {
+        const mesh = this.mesh;
+
+        const items = [
+            {
+                type: 'divider'
+            },
+            {
+                type: 'list',
+                list: LambertMaterialOptions,
+                value: 'Common',
+                callback: (value, panel) => {
+                    const MaterialPanel = LambertMaterialOptions[value];
+
+                    const materialPanel = new MaterialPanel(mesh);
+                    materialPanel.animateIn(true);
+
+                    panel.setContent(materialPanel);
+                }
+            }
+        ];
+
+        items.forEach(data => {
+            this.add(new PanelItem(data));
+        });
+    }
+}
+
+/**
+ * @author pschroen / https://ufo.ai/
+ */
+
+class MatcapMaterialCommonPanel extends Panel {
+    constructor(mesh) {
+        super();
+
+        this.mesh = mesh;
+
+        this.initPanel();
+    }
+
+    initPanel() {
+        const mesh = this.mesh;
+
+        const items = [
+            {
+                type: 'divider'
+            },
+            {
+                type: 'color',
+                value: mesh.material.color,
+                callback: value => {
+                    mesh.material.color.copy(value);
+                }
+            },
+            {
+                type: 'list',
+                list: FlatShadingOptions,
+                value: getKeyByValue(FlatShadingOptions, mesh.material.flatShading),
+                callback: value => {
+                    mesh.material.flatShading = FlatShadingOptions[value];
+                    mesh.material.needsUpdate = true;
+                }
+            }
+            // TODO: Texture thumbnails
+        ];
+
+        items.forEach(data => {
+            this.add(new PanelItem(data));
+        });
+    }
+}
+
+/**
+ * @author pschroen / https://ufo.ai/
+ */
+
+const MatcapMaterialOptions = {
+    Common: MatcapMaterialCommonPanel,
+    Map: MapPanel,
+    Helper: MeshHelperPanel
+};
+
+class MatcapMaterialPanel extends Panel {
+    static type = [
+        'common'
+    ];
+
+    static properties = {
+        common: [
+            'color',
+            'flatShading'
+        ]
+    };
+
+    constructor(mesh) {
+        super();
+
+        this.mesh = mesh;
+
+        this.initPanel();
+    }
+
+    initPanel() {
+        const mesh = this.mesh;
+
+        const items = [
+            {
+                type: 'divider'
+            },
+            {
+                type: 'list',
+                list: MatcapMaterialOptions,
+                value: 'Common',
+                callback: (value, panel) => {
+                    const MaterialPanel = MatcapMaterialOptions[value];
+
+                    const materialPanel = new MaterialPanel(mesh);
+                    materialPanel.animateIn(true);
+
+                    panel.setContent(materialPanel);
+                }
+            }
+        ];
+
+        items.forEach(data => {
+            this.add(new PanelItem(data));
+        });
+    }
+}
+
+/**
+ * @author pschroen / https://ufo.ai/
+ */
+
+class PhongMaterialCommonPanel extends Panel {
+    constructor(mesh) {
+        super();
+
+        this.mesh = mesh;
+
+        this.initPanel();
+    }
+
+    initPanel() {
+        const mesh = this.mesh;
+
+        const items = [
+            {
+                type: 'divider'
+            },
+            {
+                type: 'color',
+                value: mesh.material.color,
+                callback: value => {
+                    mesh.material.color.copy(value);
+                }
+            },
+            {
+                type: 'color',
+                value: mesh.material.emissive,
+                callback: value => {
+                    mesh.material.emissive.copy(value);
+                }
+            },
+            {
+                type: 'color',
+                value: mesh.material.specular,
+                callback: value => {
+                    mesh.material.specular.copy(value);
+                }
+            },
+            {
+                type: 'slider',
+                label: 'Shiny',
+                min: 0,
+                max: 100,
+                step: 1,
+                value: mesh.material.shininess,
+                callback: value => {
+                    mesh.material.shininess = value;
+                }
+            },
+            {
+                type: 'list',
+                list: FlatShadingOptions,
+                value: getKeyByValue(FlatShadingOptions, mesh.material.flatShading),
+                callback: value => {
+                    mesh.material.flatShading = FlatShadingOptions[value];
+                    mesh.material.needsUpdate = true;
+                }
+            },
+            {
+                type: 'list',
+                list: WireframeOptions,
+                value: getKeyByValue(WireframeOptions, mesh.material.wireframe),
+                callback: value => {
+                    mesh.material.wireframe = WireframeOptions[value];
+                }
+            }
+            // TODO: Texture thumbnails
+        ];
+
+        items.forEach(data => {
+            this.add(new PanelItem(data));
+        });
+    }
+}
+
+/**
+ * @author pschroen / https://ufo.ai/
+ */
+
+class PhongMaterialEnvPanel extends Panel {
+    constructor(mesh) {
+        super();
+
+        this.mesh = mesh;
+
+        this.initPanel();
+    }
+
+    initPanel() {
+        const mesh = this.mesh;
+
+        const items = [
+            {
+                type: 'divider'
+            },
+            {
+                type: 'list',
+                list: CombineOptions,
+                value: getKeyByValue(CombineOptions, mesh.material.combine),
+                callback: value => {
+                    mesh.material.combine = CombineOptions[value];
+                    mesh.material.needsUpdate = true;
+                }
+            },
+            {
+                type: 'slider',
+                label: 'Reflect',
+                min: 0,
+                max: 1,
+                step: 0.01,
+                value: mesh.material.reflectivity,
+                callback: value => {
+                    mesh.material.reflectivity = value;
+                }
+            },
+            {
+                type: 'slider',
+                label: 'Refract',
+                min: 0,
+                max: 1,
+                step: 0.01,
+                value: mesh.material.refractionRatio,
+                callback: value => {
+                    mesh.material.refractionRatio = value;
+                }
+            }
+            // TODO: Texture thumbnails
+        ];
+
+        items.forEach(data => {
+            this.add(new PanelItem(data));
+        });
+    }
+}
+
+/**
+ * @author pschroen / https://ufo.ai/
+ */
+
+const PhongMaterialOptions = {
+    Common: PhongMaterialCommonPanel,
+    Map: MapPanel,
+    Env: PhongMaterialEnvPanel,
+    Helper: MeshHelperPanel
+};
+
+class PhongMaterialPanel extends Panel {
+    static type = [
+        'common',
+        'phong'
+    ];
+
+    static properties = {
+        common: [
+            'color',
+            'emissive',
+            'flatShading',
+            'wireframe',
+            'combine',
+            'reflectivity',
+            'refractionRatio'
+        ],
+        phong: [
+            'specular',
+            'shininess'
+        ]
+    };
+
+    constructor(mesh) {
+        super();
+
+        this.mesh = mesh;
+
+        this.initPanel();
+    }
+
+    initPanel() {
+        const mesh = this.mesh;
+
+        const items = [
+            {
+                type: 'divider'
+            },
+            {
+                type: 'list',
+                list: PhongMaterialOptions,
+                value: 'Common',
+                callback: (value, panel) => {
+                    const MaterialPanel = PhongMaterialOptions[value];
+
+                    const materialPanel = new MaterialPanel(mesh);
+                    materialPanel.animateIn(true);
+
+                    panel.setContent(materialPanel);
+                }
+            }
+        ];
+
+        items.forEach(data => {
+            this.add(new PanelItem(data));
+        });
+    }
+}
+
+/**
+ * @author pschroen / https://ufo.ai/
+ */
+
+class ToonMaterialCommonPanel extends Panel {
+    constructor(mesh) {
+        super();
+
+        this.mesh = mesh;
+
+        this.initPanel();
+    }
+
+    initPanel() {
+        const mesh = this.mesh;
+
+        const items = [
+            {
+                type: 'divider'
+            },
+            {
+                type: 'color',
+                value: mesh.material.color,
+                callback: value => {
+                    mesh.material.color.copy(value);
+                }
+            }
+            // TODO: Texture thumbnails
+        ];
+
+        items.forEach(data => {
+            this.add(new PanelItem(data));
+        });
+    }
+}
+
+/**
+ * @author pschroen / https://ufo.ai/
+ */
+
+const ToonMaterialOptions = {
+    Common: ToonMaterialCommonPanel,
+    Map: MapPanel,
+    Helper: MeshHelperPanel
+};
+
+class ToonMaterialPanel extends Panel {
+    static type = [
+        'common'
+    ];
+
+    static properties = {
+        common: [
+            'color'
+        ]
+    };
+
+    constructor(mesh) {
+        super();
+
+        this.mesh = mesh;
+
+        this.initPanel();
+    }
+
+    initPanel() {
+        const mesh = this.mesh;
+
+        const items = [
+            {
+                type: 'divider'
+            },
+            {
+                type: 'list',
+                list: ToonMaterialOptions,
+                value: 'Common',
+                callback: (value, panel) => {
+                    const MaterialPanel = ToonMaterialOptions[value];
+
+                    const materialPanel = new MaterialPanel(mesh);
+                    materialPanel.animateIn(true);
+
+                    panel.setContent(materialPanel);
+                }
+            }
+        ];
+
+        items.forEach(data => {
+            this.add(new PanelItem(data));
+        });
+    }
+}
+
+/**
+ * @author pschroen / https://ufo.ai/
+ */
+
+class StandardMaterialCommonPanel extends Panel {
+    constructor(mesh) {
+        super();
+
+        this.mesh = mesh;
+
+        this.initPanel();
+    }
+
+    initPanel() {
+        const mesh = this.mesh;
+
+        const items = [
+            {
+                type: 'divider'
+            },
+            {
+                type: 'color',
+                value: mesh.material.color,
+                callback: value => {
+                    mesh.material.color.copy(value);
+                }
+            },
+            {
+                type: 'color',
+                value: mesh.material.emissive,
+                callback: value => {
+                    mesh.material.emissive.copy(value);
                 }
             },
             {
@@ -55862,44 +59515,894 @@ class MaterialPanelController {
                 min: 0,
                 max: 2,
                 step: 0.01,
-                value: material.roughness,
+                value: mesh.material.roughness,
                 callback: value => {
-                    material.roughness = value;
+                    mesh.material.roughness = value;
+                }
+            },
+            {
+                type: 'slider',
+                label: 'Metal',
+                min: 0,
+                max: 2,
+                step: 0.01,
+                value: mesh.material.metalness,
+                callback: value => {
+                    mesh.material.metalness = value;
                 }
             },
             {
                 type: 'list',
-                list: flatShadingOptions,
-                value: getKeyByValue(flatShadingOptions, material.flatShading),
+                list: FlatShadingOptions,
+                value: getKeyByValue(FlatShadingOptions, mesh.material.flatShading),
                 callback: value => {
-                    material.flatShading = flatShadingOptions[value];
-                    material.needsUpdate = true;
+                    mesh.material.flatShading = FlatShadingOptions[value];
+                    mesh.material.needsUpdate = true;
                 }
             },
             {
                 type: 'list',
-                list: wireframeOptions,
-                value: getKeyByValue(wireframeOptions, material.wireframe),
+                list: WireframeOptions,
+                value: getKeyByValue(WireframeOptions, mesh.material.wireframe),
                 callback: value => {
-                    material.wireframe = wireframeOptions[value];
+                    mesh.material.wireframe = WireframeOptions[value];
                 }
+            }
+            // TODO: Texture thumbnails
+        ];
+
+        items.forEach(data => {
+            this.add(new PanelItem(data));
+        });
+    }
+}
+
+/**
+ * @author pschroen / https://ufo.ai/
+ */
+
+class StandardMaterialEnvPanel extends Panel {
+    constructor(mesh) {
+        super();
+
+        this.mesh = mesh;
+
+        this.initPanel();
+    }
+
+    initPanel() {
+        const mesh = this.mesh;
+
+        const items = [
+            {
+                type: 'divider'
             },
             // TODO: Texture thumbnails
             {
                 type: 'slider',
-                label: 'Env Int',
+                label: 'Int',
                 min: 0,
                 max: 10,
                 step: 0.1,
-                value: material.envMapIntensity,
+                value: mesh.material.envMapIntensity,
                 callback: value => {
-                    material.envMapIntensity = value;
+                    mesh.material.envMapIntensity = value;
                 }
             }
         ];
 
         items.forEach(data => {
-            this.ui.addPanel(new PanelItem(data));
+            this.add(new PanelItem(data));
+        });
+    }
+}
+
+/**
+ * @author pschroen / https://ufo.ai/
+ */
+
+const StandardMaterialOptions = {
+    Common: StandardMaterialCommonPanel,
+    Map: MapPanel,
+    Env: StandardMaterialEnvPanel,
+    Helper: MeshHelperPanel
+};
+
+class StandardMaterialPanel extends Panel {
+    static type = [
+        'common',
+        'standard'
+    ];
+
+    static properties = {
+        common: [
+            'color',
+            'emissive',
+            'flatShading',
+            'wireframe'
+        ],
+        standard: [
+            'roughness',
+            'metalness',
+            'envMapIntensity'
+        ]
+    };
+
+    constructor(mesh) {
+        super();
+
+        this.mesh = mesh;
+
+        this.initPanel();
+    }
+
+    initPanel() {
+        const mesh = this.mesh;
+
+        const items = [
+            {
+                type: 'divider'
+            },
+            {
+                type: 'list',
+                list: StandardMaterialOptions,
+                value: 'Common',
+                callback: (value, panel) => {
+                    const MaterialPanel = StandardMaterialOptions[value];
+
+                    const materialPanel = new MaterialPanel(mesh);
+                    materialPanel.animateIn(true);
+
+                    panel.setContent(materialPanel);
+                }
+            }
+        ];
+
+        items.forEach(data => {
+            this.add(new PanelItem(data));
+        });
+    }
+}
+
+/**
+ * @author pschroen / https://ufo.ai/
+ */
+
+class PhysicalMaterialCommonPanel extends Panel {
+    constructor(mesh) {
+        super();
+
+        this.mesh = mesh;
+
+        this.initPanel();
+    }
+
+    initPanel() {
+        const mesh = this.mesh;
+
+        const items = [
+            {
+                type: 'divider'
+            },
+            {
+                type: 'color',
+                value: mesh.material.color,
+                callback: value => {
+                    mesh.material.color.copy(value);
+                }
+            },
+            {
+                type: 'color',
+                value: mesh.material.emissive,
+                callback: value => {
+                    mesh.material.emissive.copy(value);
+                }
+            },
+            {
+                type: 'color',
+                value: mesh.material.specularColor,
+                callback: value => {
+                    mesh.material.specularColor.copy(value);
+                }
+            },
+            {
+                type: 'slider',
+                label: 'Specular',
+                min: 0,
+                max: 32,
+                step: 1,
+                value: mesh.material.specularIntensity,
+                callback: value => {
+                    mesh.material.specularIntensity = value;
+                }
+            },
+            {
+                type: 'slider',
+                label: 'Rough',
+                min: 0,
+                max: 2,
+                step: 0.01,
+                value: mesh.material.roughness,
+                callback: value => {
+                    mesh.material.roughness = value;
+                }
+            },
+            {
+                type: 'slider',
+                label: 'Metal',
+                min: 0,
+                max: 2,
+                step: 0.01,
+                value: mesh.material.metalness,
+                callback: value => {
+                    mesh.material.metalness = value;
+                }
+            },
+            {
+                type: 'list',
+                list: FlatShadingOptions,
+                value: getKeyByValue(FlatShadingOptions, mesh.material.flatShading),
+                callback: value => {
+                    mesh.material.flatShading = FlatShadingOptions[value];
+                    mesh.material.needsUpdate = true;
+                }
+            },
+            {
+                type: 'list',
+                list: WireframeOptions,
+                value: getKeyByValue(WireframeOptions, mesh.material.wireframe),
+                callback: value => {
+                    mesh.material.wireframe = WireframeOptions[value];
+                }
+            }
+            // TODO: Texture thumbnails
+        ];
+
+        items.forEach(data => {
+            this.add(new PanelItem(data));
+        });
+    }
+}
+
+/**
+ * @author pschroen / https://ufo.ai/
+ */
+
+class PhysicalMaterialClearcoatPanel extends Panel {
+    constructor(mesh) {
+        super();
+
+        this.mesh = mesh;
+
+        this.initPanel();
+    }
+
+    initPanel() {
+        const mesh = this.mesh;
+
+        const items = [
+            {
+                type: 'divider'
+            },
+            {
+                type: 'slider',
+                label: 'Int',
+                min: 0,
+                max: 1,
+                step: 0.01,
+                value: mesh.material.clearcoat,
+                callback: value => {
+                    mesh.material.clearcoat = value;
+                }
+            },
+            {
+                type: 'slider',
+                label: 'Rough',
+                min: 0,
+                max: 1,
+                step: 0.01,
+                value: mesh.material.clearcoatRoughness,
+                callback: value => {
+                    mesh.material.clearcoatRoughness = value;
+                }
+            }
+            // TODO: Texture thumbnails
+        ];
+
+        items.forEach(data => {
+            this.add(new PanelItem(data));
+        });
+    }
+}
+
+/**
+ * @author pschroen / https://ufo.ai/
+ */
+
+class PhysicalMaterialSheenPanel extends Panel {
+    constructor(mesh) {
+        super();
+
+        this.mesh = mesh;
+
+        this.initPanel();
+    }
+
+    initPanel() {
+        const mesh = this.mesh;
+
+        const items = [
+            {
+                type: 'divider'
+            },
+            {
+                type: 'slider',
+                label: 'Int',
+                min: 0,
+                max: 1,
+                step: 0.01,
+                value: mesh.material.sheen,
+                callback: value => {
+                    mesh.material.sheen = value;
+                }
+            },
+            {
+                type: 'slider',
+                label: 'Rough',
+                min: 0,
+                max: 1,
+                step: 0.01,
+                value: mesh.material.sheenRoughness,
+                callback: value => {
+                    mesh.material.sheenRoughness = value;
+                }
+            },
+            {
+                type: 'color',
+                value: mesh.material.sheenColor,
+                callback: value => {
+                    mesh.material.sheenColor.copy(value);
+                }
+            }
+            // TODO: Texture thumbnails
+        ];
+
+        items.forEach(data => {
+            this.add(new PanelItem(data));
+        });
+    }
+}
+
+/**
+ * @author pschroen / https://ufo.ai/
+ */
+
+class PhysicalMaterialTransmissionPanel extends Panel {
+    constructor(mesh) {
+        super();
+
+        this.mesh = mesh;
+
+        this.initPanel();
+    }
+
+    initPanel() {
+        const mesh = this.mesh;
+
+        const items = [
+            {
+                type: 'divider'
+            },
+            {
+                type: 'slider',
+                label: 'Int',
+                min: 0,
+                max: 1,
+                step: 0.01,
+                value: mesh.material.transmission,
+                callback: value => {
+                    mesh.material.transmission = value;
+                }
+            },
+            {
+                type: 'slider',
+                label: 'Thick',
+                min: -10,
+                max: 10,
+                step: 0.1,
+                value: mesh.material.thickness,
+                callback: value => {
+                    mesh.material.thickness = value;
+                }
+            },
+            {
+                type: 'color',
+                value: mesh.material.attenuationColor,
+                callback: value => {
+                    mesh.material.attenuationColor.copy(value);
+                }
+            },
+            {
+                type: 'slider',
+                label: 'Distance',
+                min: -10,
+                max: 10,
+                step: 0.1,
+                value: mesh.material.attenuationDistance,
+                callback: value => {
+                    mesh.material.attenuationDistance = value;
+                }
+            },
+            {
+                type: 'slider',
+                label: 'IOR',
+                min: 1,
+                max: 2.333,
+                step: 0.01,
+                value: mesh.material.ior,
+                callback: value => {
+                    mesh.material.ior = value;
+                }
+            },
+            {
+                type: 'slider',
+                label: 'Reflect',
+                min: 0,
+                max: 1,
+                step: 0.01,
+                value: mesh.material.reflectivity,
+                callback: value => {
+                    mesh.material.reflectivity = value;
+                }
+            }
+            // TODO: Texture thumbnails
+        ];
+
+        items.forEach(data => {
+            this.add(new PanelItem(data));
+        });
+    }
+}
+
+/**
+ * @author pschroen / https://ufo.ai/
+ */
+
+class PhysicalMaterialEnvPanel extends Panel {
+    constructor(mesh) {
+        super();
+
+        this.mesh = mesh;
+
+        this.initPanel();
+    }
+
+    initPanel() {
+        const mesh = this.mesh;
+
+        const items = [
+            {
+                type: 'divider'
+            },
+            {
+                type: 'slider',
+                label: 'IOR',
+                min: 1,
+                max: 2.333,
+                step: 0.01,
+                value: mesh.material.ior,
+                callback: value => {
+                    mesh.material.ior = value;
+                }
+            },
+            {
+                type: 'slider',
+                label: 'Reflect',
+                min: 0,
+                max: 1,
+                step: 0.01,
+                value: mesh.material.reflectivity,
+                callback: value => {
+                    mesh.material.reflectivity = value;
+                }
+            },
+            // TODO: Texture thumbnails
+            {
+                type: 'slider',
+                label: 'Int',
+                min: 0,
+                max: 10,
+                step: 0.1,
+                value: mesh.material.envMapIntensity,
+                callback: value => {
+                    mesh.material.envMapIntensity = value;
+                }
+            }
+        ];
+
+        items.forEach(data => {
+            this.add(new PanelItem(data));
+        });
+    }
+}
+
+/**
+ * @author pschroen / https://ufo.ai/
+ */
+
+const PhysicalMaterialOptions = {
+    Common: PhysicalMaterialCommonPanel,
+    Map: MapPanel,
+    Clearcoat: PhysicalMaterialClearcoatPanel,
+    Sheen: PhysicalMaterialSheenPanel,
+    Transmission: PhysicalMaterialTransmissionPanel,
+    Env: PhysicalMaterialEnvPanel,
+    Helper: MeshHelperPanel
+};
+
+class PhysicalMaterialPanel extends Panel {
+    static type = [
+        'common',
+        'standard',
+        'physical'
+    ];
+
+    static properties = {
+        common: [
+            'color',
+            'emissive',
+            'flatShading',
+            'wireframe'
+        ],
+        standard: [
+            'roughness',
+            'metalness',
+            'envMapIntensity'
+        ],
+        physical: [
+            'specularColor',
+            'specularIntensity',
+            'ior',
+            'reflectivity',
+            'transmission',
+            'thickness',
+            'attenuationColor',
+            'attenuationDistance',
+            'clearcoat',
+            'clearcoatRoughness',
+            'sheen',
+            'sheenRoughness',
+            'sheenColor'
+        ]
+    };
+
+    constructor(mesh) {
+        super();
+
+        this.mesh = mesh;
+
+        this.initPanel();
+    }
+
+    initPanel() {
+        const mesh = this.mesh;
+
+        const items = [
+            {
+                type: 'divider'
+            },
+            {
+                type: 'list',
+                list: PhysicalMaterialOptions,
+                value: 'Common',
+                callback: (value, panel) => {
+                    const MaterialPanel = PhysicalMaterialOptions[value];
+
+                    const materialPanel = new MaterialPanel(mesh);
+                    materialPanel.animateIn(true);
+
+                    panel.setContent(materialPanel);
+                }
+            }
+        ];
+
+        items.forEach(data => {
+            this.add(new PanelItem(data));
+        });
+    }
+}
+
+/**
+ * @author pschroen / https://ufo.ai/
+ */
+
+class NormalMaterialCommonPanel extends Panel {
+    constructor(mesh) {
+        super();
+
+        this.mesh = mesh;
+
+        this.initPanel();
+    }
+
+    initPanel() {
+        const mesh = this.mesh;
+
+        const items = [
+            {
+                type: 'divider'
+            },
+            {
+                type: 'list',
+                list: FlatShadingOptions,
+                value: getKeyByValue(FlatShadingOptions, mesh.material.flatShading),
+                callback: value => {
+                    mesh.material.flatShading = FlatShadingOptions[value];
+                    mesh.material.needsUpdate = true;
+                }
+            },
+            {
+                type: 'list',
+                list: WireframeOptions,
+                value: getKeyByValue(WireframeOptions, mesh.material.wireframe),
+                callback: value => {
+                    mesh.material.wireframe = WireframeOptions[value];
+                }
+            }
+        ];
+
+        items.forEach(data => {
+            this.add(new PanelItem(data));
+        });
+    }
+}
+
+/**
+ * @author pschroen / https://ufo.ai/
+ */
+
+const NormalMaterialOptions = {
+    Common: NormalMaterialCommonPanel,
+    Helper: MeshHelperPanel
+};
+
+class NormalMaterialPanel extends Panel {
+    static type = [
+        'common'
+    ];
+
+    static properties = {
+        common: [
+            'flatShading',
+            'wireframe'
+        ]
+    };
+
+    constructor(mesh) {
+        super();
+
+        this.mesh = mesh;
+
+        this.initPanel();
+    }
+
+    initPanel() {
+        const mesh = this.mesh;
+
+        const items = [
+            {
+                type: 'divider'
+            },
+            {
+                type: 'list',
+                list: NormalMaterialOptions,
+                value: 'Common',
+                callback: (value, panel) => {
+                    const MaterialPanel = NormalMaterialOptions[value];
+
+                    const materialPanel = new MaterialPanel(mesh);
+                    materialPanel.animateIn(true);
+
+                    panel.setContent(materialPanel);
+                }
+            }
+        ];
+
+        items.forEach(data => {
+            this.add(new PanelItem(data));
+        });
+    }
+}
+
+/**
+ * @author pschroen / https://ufo.ai/
+ */
+
+// https://threejs.org/docs/scenes/material-browser.html
+const MaterialOptions = {
+    Basic: [MeshBasicMaterial, BasicMaterialPanel],
+    Lambert: [MeshLambertMaterial, LambertMaterialPanel],
+    Matcap: [MeshMatcapMaterial, MatcapMaterialPanel],
+    Phong: [MeshPhongMaterial, PhongMaterialPanel],
+    Toon: [MeshToonMaterial, ToonMaterialPanel],
+    Standard: [MeshStandardMaterial, StandardMaterialPanel],
+    Physical: [MeshPhysicalMaterial, PhysicalMaterialPanel],
+    Normal: [MeshNormalMaterial, NormalMaterialPanel]
+};
+
+function getKeyByMaterial(materialOptions, material) {
+    return Object.keys(materialOptions).reverse().find(key => material instanceof materialOptions[key][0]);
+}
+
+class MaterialPanelController {
+    static init(mesh, ui, materialOptions = MaterialOptions) {
+        this.mesh = mesh;
+        this.ui = ui;
+        this.materialOptions = materialOptions;
+
+        this.lastMaterialPanel = null;
+
+        this.initPanel();
+    }
+
+    static initPanel() {
+        const mesh = this.mesh;
+        const ui = this.ui;
+        const materialOptions = this.materialOptions;
+
+        const materialProperties = {};
+
+        const materialItems = [
+            {
+                type: 'divider'
+            },
+            {
+                type: 'slider',
+                label: 'Opacity',
+                min: 0,
+                max: 1,
+                step: 0.01,
+                value: mesh.material.opacity,
+                callback: value => {
+                    if (value < 1) {
+                        mesh.material.transparent = true;
+                        mesh.material.needsUpdate = true;
+                    } else {
+                        mesh.material.transparent = false;
+                        mesh.material.needsUpdate = true;
+                    }
+
+                    mesh.material.opacity = value;
+                }
+            },
+            {
+                type: 'list',
+                list: SideOptions,
+                value: getKeyByValue(SideOptions, mesh.material.side),
+                callback: value => {
+                    mesh.material.side = SideOptions[value];
+                    mesh.material.needsUpdate = true;
+                }
+            },
+            {
+                type: 'list',
+                list: materialOptions,
+                value: getKeyByMaterial(materialOptions, mesh.material),
+                callback: (value, panel) => {
+                    const [Material, MaterialPanel] = materialOptions[value];
+
+                    const currentMaterialPanel = this.lastMaterialPanel || MaterialPanel;
+
+                    materialProperties.transparent = mesh.material.transparent;
+                    materialProperties.opacity = mesh.material.opacity;
+                    materialProperties.side = mesh.material.side;
+
+                    currentMaterialPanel.type.forEach(type => {
+                        if (!materialProperties[type]) {
+                            materialProperties[type] = {};
+                        }
+
+                        currentMaterialPanel.properties[type].forEach(key => {
+                            if (key in mesh.material) {
+                                const value = mesh.material[key];
+
+                                if (value && value.isColor) {
+                                    if (!materialProperties[type][key]) {
+                                        materialProperties[type][key] = value.clone();
+                                    } else {
+                                        materialProperties[type][key].copy(value);
+                                    }
+                                } else {
+                                    materialProperties[type][key] = value;
+                                }
+                            }
+                        });
+                    });
+
+                    materialProperties.map = mesh.material.map;
+
+                    mesh.material = new Material();
+
+                    mesh.material.transparent = materialProperties.transparent;
+                    mesh.material.opacity = materialProperties.opacity;
+                    mesh.material.side = materialProperties.side;
+
+                    MaterialPanel.type.forEach(type => {
+                        if (!materialProperties[type]) {
+                            materialProperties[type] = {};
+                        }
+
+                        MaterialPanel.properties[type].forEach(key => {
+                            if (key in mesh.material && key in materialProperties[type]) {
+                                const value = materialProperties[type][key];
+
+                                if (value && value.isColor) {
+                                    mesh.material[key].copy(value);
+                                } else {
+                                    mesh.material[key] = value;
+                                }
+                            }
+                        });
+                    });
+
+                    if (ui.uvTexture) {
+                        mesh.material.map = ui.uvTexture;
+                    } else {
+                        mesh.material.map = materialProperties.map;
+                    }
+
+                    mesh.material.needsUpdate = true;
+
+                    if (ui.point && ui.isDefault) {
+                        ui.point.setData({
+                            name: mesh.geometry.type,
+                            type: mesh.material.type
+                        });
+                    }
+
+                    const materialPanel = new MaterialPanel(mesh);
+                    materialPanel.animateIn(true);
+
+                    panel.setContent(materialPanel);
+
+                    this.lastMaterialPanel = MaterialPanel;
+                }
+            }
+        ];
+
+        const items = [
+            {
+                type: 'divider'
+            },
+            {
+                type: 'list',
+                list: VisibleOptions,
+                value: getKeyByValue(VisibleOptions, mesh.visible),
+                callback: (value, panel) => {
+                    if (!panel.group) {
+                        const materialPanel = new Panel();
+                        materialPanel.animateIn(true);
+
+                        materialItems.forEach(data => {
+                            materialPanel.add(new PanelItem(data));
+                        });
+
+                        panel.setContent(materialPanel);
+                    }
+
+                    mesh.visible = VisibleOptions[value];
+
+                    if (mesh.visible) {
+                        panel.group.show();
+                    } else {
+                        panel.group.hide();
+                    }
+                }
+            }
+        ];
+
+        items.forEach(data => {
+            ui.addPanel(new PanelItem(data));
         });
     }
 }
@@ -56146,8 +60649,10 @@ class UI extends Interface {
         this.invertColors = {
             light: Stage.rootStyle.getPropertyValue('--ui-invert-light-color').trim(),
             lightTriplet: Stage.rootStyle.getPropertyValue('--ui-invert-light-color-triplet').trim(),
+            lightLine: Stage.rootStyle.getPropertyValue('--ui-invert-light-color-line').trim(),
             dark: Stage.rootStyle.getPropertyValue('--ui-invert-dark-color').trim(),
-            darkTriplet: Stage.rootStyle.getPropertyValue('--ui-invert-dark-color-triplet').trim()
+            darkTriplet: Stage.rootStyle.getPropertyValue('--ui-invert-dark-color-triplet').trim(),
+            darkLine: Stage.rootStyle.getPropertyValue('--ui-invert-dark-color-line').trim()
         };
 
         this.startTime = performance.now();
@@ -56185,9 +60690,16 @@ class UI extends Interface {
         }
     };
 
+    setPanelValue = (label, value) => {
+        if (this.header) {
+            this.header.info.panel.setPanelValue(label, value);
+        }
+    };
+
     invert = isInverted => {
         Stage.root.style.setProperty('--ui-color', isInverted ? this.invertColors.light : this.invertColors.dark);
         Stage.root.style.setProperty('--ui-color-triplet', isInverted ? this.invertColors.lightTriplet : this.invertColors.darkTriplet);
+        Stage.root.style.setProperty('--ui-color-line', isInverted ? this.invertColors.lightLine : this.invertColors.darkLine);
 
         Stage.events.emit('invert', { invert: isInverted });
     };
@@ -56212,1330 +60724,6 @@ class UI extends Interface {
         if (this.header) {
             this.header.animateOut();
         }
-    };
-}
-
-/**
- * @author pschroen / https://ufo.ai/
- */
-
-class Line extends Component {
-    constructor(context) {
-        super();
-
-        this.context = context;
-
-        this.start = new Vector2();
-        this.end = new Vector2();
-
-        this.props = {
-            alpha: 0,
-            start: 0,
-            offset: 0,
-            progress: 0
-        };
-    }
-
-    /**
-     * Public methods
-     */
-
-    startPoint = ({ x, y }) => {
-        this.start.set(x + 3, y - 3);
-    };
-
-    endPoint = position => {
-        this.end.copy(position);
-    };
-
-    resize = () => {
-        // Context properties need to be reassigned after resize
-        this.context.lineWidth = 1.5;
-        this.context.strokeStyle = getComputedStyle(document.querySelector(':root')).getPropertyValue('--ui-color').trim();
-
-        this.update();
-    };
-
-    update = () => {
-        if (this.props.alpha <= 0) {
-            return;
-        }
-
-        if (this.props.alpha < 0.001) {
-            this.props.alpha = 0;
-        }
-
-        this.context.globalAlpha = 0.5 * this.props.alpha;
-
-        const length = this.start.distanceTo(this.end);
-        const dash = length * this.props.progress;
-        const gap = length - dash;
-        const offset = -length * (this.props.start + this.props.offset);
-
-        this.context.setLineDash([dash, gap]);
-        this.context.lineDashOffset = offset;
-
-        this.context.beginPath();
-        this.context.moveTo(this.start.x, this.start.y);
-        this.context.lineTo(this.end.x, this.end.y);
-        this.context.stroke();
-    };
-
-    animateIn = (reverse = false) => {
-        clearTween(this.props);
-
-        tween(this.props, { alpha: 1 }, 500, 'easeOutSine');
-
-        if (reverse) {
-            this.props.start = 1;
-            this.props.progress = 0;
-
-            tween(this.props, { start: 0 }, 500, 'easeInCubic', null, () => {
-                this.props.progress = 1 - this.props.start;
-            });
-        } else {
-            this.props.start = 0;
-            this.props.progress = 0;
-
-            tween(this.props, { progress: 1 }, 400, 'easeOutCubic');
-        }
-    };
-
-    animateOut = (fast = false, callback) => {
-        let time;
-        let ease;
-
-        if (fast) {
-            time = 400;
-            ease = 'easeOutCubic';
-        } else {
-            time = 500;
-            ease = 'easeInCubic';
-        }
-
-        clearTween(this.props);
-
-        tween(this.props, { start: 1 }, time, ease, () => {
-            this.props.alpha = 0;
-            this.props.start = 0;
-
-            if (callback) {
-                callback();
-            }
-        }, () => {
-            this.props.progress = 1 - this.props.start;
-        });
-    };
-
-    inactive = () => {
-        tween(this.props, { alpha: 0 }, 300, 'easeOutSine');
-    };
-}
-
-/**
- * @author pschroen / https://ufo.ai/
- */
-
-class ReticleText extends Interface {
-    constructor() {
-        super('.text');
-
-        this.initHTML();
-    }
-
-    initHTML() {
-        this.css({
-            position: 'absolute',
-            left: 20,
-            top: -3
-        });
-
-        this.primary = new Interface('.primary');
-        this.primary.css({
-            fontVariantNumeric: 'tabular-nums',
-            lineHeight: 18,
-            letterSpacing: 'var(--ui-number-letter-spacing)',
-            whiteSpace: 'nowrap'
-        });
-        this.add(this.primary);
-
-        this.secondary = new Interface('.secondary');
-        this.secondary.css({
-            fontSize: 'var(--ui-secondary-font-size)',
-            letterSpacing: 'var(--ui-secondary-letter-spacing)',
-            opacity: 0.7
-        });
-        this.add(this.secondary);
-    }
-
-    /**
-     * Public methods
-     */
-
-    setData = data => {
-        if (!data) {
-            return;
-        }
-
-        if (data.primary) {
-            this.primary.text(data.primary);
-        }
-
-        if (data.secondary) {
-            this.secondary.text(data.secondary);
-        }
-    };
-}
-
-/**
- * @author pschroen / https://ufo.ai/
- */
-
-class Reticle extends Interface {
-    constructor({
-        noText = true
-    } = {}) {
-        super('.reticle');
-
-        this.noText = noText;
-
-        this.position = new Vector2();
-        this.target = new Vector2();
-        this.lerpSpeed = 1;
-
-        this.initHTML();
-        this.initViews();
-    }
-
-    initHTML() {
-        this.invisible();
-        this.css({
-            position: 'absolute',
-            left: '50%',
-            top: '50%',
-            width: 12,
-            height: 12,
-            marginLeft: -12 / 2,
-            marginTop: -12 / 2,
-            fontFamily: 'var(--ui-font-family)',
-            fontWeight: 'var(--ui-font-weight)',
-            fontSize: 'var(--ui-font-size)',
-            lineHeight: 'var(--ui-line-height)',
-            letterSpacing: 'var(--ui-letter-spacing)',
-            pointerEvents: 'none',
-            webkitUserSelect: 'none',
-            userSelect: 'none'
-        });
-
-        this.center = new Interface('.center');
-        this.center.css({
-            position: 'absolute',
-            boxSizing: 'border-box',
-            left: '50%',
-            top: '50%',
-            width: 12,
-            height: 12,
-            marginLeft: -12 / 2,
-            marginTop: -12 / 2,
-            border: '2px solid var(--ui-color)',
-            borderRadius: '50%'
-        });
-        this.add(this.center);
-    }
-
-    initViews() {
-        if (!this.noText) {
-            this.text = new ReticleText();
-            this.add(this.text);
-        }
-    }
-
-    /**
-     * Public methods
-     */
-
-    setData = data => {
-        this.text.setData(data);
-    };
-
-    update = () => {
-        this.position.lerp(this.target, this.lerpSpeed);
-        this.css({ left: Math.round(this.position.x), top: Math.round(this.position.y) });
-    };
-
-    animateIn = () => {
-        this.clearTween().visible().css({ scale: 0.25, opacity: 0 }).tween({ scale: 1, opacity: 1 }, 400, 'easeOutCubic');
-    };
-
-    animateOut = () => {
-        this.clearTween().tween({ scale: 0, opacity: 0 }, 500, 'easeInCubic', () => {
-            this.invisible();
-        });
-    };
-}
-
-/**
- * @author pschroen / https://ufo.ai/
- */
-
-class TargetNumber extends Interface {
-    constructor() {
-        super('.target-number');
-
-        const size = window.devicePixelRatio > 1 ? 17 : 18;
-
-        this.width = size;
-        this.height = size;
-
-        this.initHTML();
-    }
-
-    initHTML() {
-        this.invisible();
-        this.css({
-            position: 'absolute',
-            boxSizing: 'border-box',
-            width: this.width,
-            height: this.height,
-            border: `${window.devicePixelRatio > 1 ? 1.5 : 1}px solid var(--ui-color)`
-        });
-
-        this.number = new Interface('.number');
-        this.number.css({
-            position: 'absolute',
-            left: window.devicePixelRatio > 1 ? 4 : 5,
-            fontVariantNumeric: 'tabular-nums',
-            lineHeight: this.height - (window.devicePixelRatio > 1 ? 3 : 2),
-            letterSpacing: 'var(--ui-number-letter-spacing)',
-            textAlign: 'center'
-        });
-        this.add(this.number);
-    }
-
-    /**
-     * Public methods
-     */
-
-    setData = data => {
-        if (!data) {
-            return;
-        }
-
-        if (data.targetNumber) {
-            this.number.text(data.targetNumber);
-        }
-    };
-
-    animateIn = () => {
-        this.clearTween().visible().css({ opacity: 0 }).tween({ opacity: 1 }, 400, 'easeOutCubic');
-    };
-
-    animateOut = () => {
-        this.clearTween().tween({ opacity: 0 }, 400, 'easeOutCubic', () => {
-            this.invisible();
-        });
-    };
-}
-
-/**
- * @author pschroen / https://ufo.ai/
- */
-
-class Tracker extends Interface {
-    constructor() {
-        super('.tracker');
-
-        this.position = new Vector2();
-        this.target = new Vector2();
-        this.lerpSpeed = 1;
-        this.locked = false;
-        this.animatedIn = false;
-        this.isVisible = false;
-
-        this.initHTML();
-        this.initViews();
-    }
-
-    initHTML() {
-        this.css({
-            position: 'absolute',
-            fontFamily: 'var(--ui-font-family)',
-            fontWeight: 'var(--ui-font-weight)',
-            fontSize: 'var(--ui-font-size)',
-            lineHeight: 'var(--ui-line-height)',
-            letterSpacing: 'var(--ui-letter-spacing)',
-            pointerEvents: 'none',
-            webkitUserSelect: 'none',
-            userSelect: 'none'
-        });
-
-        this.corners = new Interface('.corners');
-        this.corners.invisible();
-        this.corners.css({
-            position: 'absolute',
-            width: '100%',
-            height: '100%'
-        });
-        this.add(this.corners);
-
-        this.tl = new Interface('.tl');
-        this.tl.css({
-            position: 'absolute',
-            left: 0,
-            top: 0,
-            width: 6,
-            height: 6,
-            borderLeft: '1.5px solid var(--ui-color)',
-            borderTop: '1.5px solid var(--ui-color)'
-        });
-        this.corners.add(this.tl);
-
-        this.tr = new Interface('.tr');
-        this.tr.css({
-            position: 'absolute',
-            top: 0,
-            right: 0,
-            width: 6,
-            height: 6,
-            borderTop: '1.5px solid var(--ui-color)',
-            borderRight: '1.5px solid var(--ui-color)'
-        });
-        this.corners.add(this.tr);
-
-        this.br = new Interface('.br');
-        this.br.css({
-            position: 'absolute',
-            right: 0,
-            bottom: 0,
-            width: 6,
-            height: 6,
-            borderRight: '1.5px solid var(--ui-color)',
-            borderBottom: '1.5px solid var(--ui-color)'
-        });
-        this.corners.add(this.br);
-
-        this.bl = new Interface('.bl');
-        this.bl.css({
-            position: 'absolute',
-            left: 0,
-            bottom: 0,
-            width: 6,
-            height: 6,
-            borderLeft: '1.5px solid var(--ui-color)',
-            borderBottom: '1.5px solid var(--ui-color)'
-        });
-        this.corners.add(this.bl);
-    }
-
-    initViews() {
-        this.number = new TargetNumber();
-        this.number.css({
-            left: -(this.number.width + 15),
-            top: '50%',
-            marginTop: -Math.round(this.number.height / 2)
-        });
-        this.add(this.number);
-    }
-
-    /**
-     * Public methods
-     */
-
-    update = () => {
-        this.position.lerp(this.target, this.lerpSpeed);
-        this.css({ left: Math.round(this.position.x), top: Math.round(this.position.y) });
-    };
-
-    lock = () => {
-        this.number.animateIn();
-
-        this.locked = true;
-    };
-
-    unlock = () => {
-        this.number.animateOut();
-
-        this.locked = false;
-    };
-
-    show = () => {
-        this.clearTimeout(this.timeout);
-        this.corners.clearTween().tween({ opacity: 1 }, 400, 'easeOutCubic');
-
-        this.animatedIn = true;
-    };
-
-    hide = (fast = false) => {
-        if (this.locked) {
-            return;
-        }
-
-        this.clearTimeout(this.timeout);
-        this.timeout = this.delayedCall(fast ? 0 : 2000, () => {
-            this.corners.clearTween().tween({ opacity: 0 }, 400, 'easeOutCubic');
-        });
-
-        this.animatedIn = false;
-    };
-
-    animateIn = () => {
-        this.clearTimeout(this.timeout);
-        this.corners.clearTween().visible().css({ scale: 0.25, opacity: 0 }).tween({ scale: 1, opacity: 1 }, 400, 'easeOutCubic');
-
-        this.animatedIn = true;
-        this.isVisible = true;
-    };
-
-    animateOut = () => {
-        this.clearTimeout(this.timeout);
-        this.corners.clearTween().tween({ scale: 0, opacity: 0 }, 500, 'easeInCubic', () => {
-            this.corners.invisible();
-
-            this.animatedIn = false;
-            this.isVisible = false;
-        });
-    };
-}
-
-/**
- * @author pschroen / https://ufo.ai/
- */
-
-class PointText extends Interface {
-    constructor() {
-        super('.text');
-
-        this.locked = false;
-
-        this.initHTML();
-        this.initViews();
-    }
-
-    initHTML() {
-        this.css({
-            position: 'absolute',
-            left: 10,
-            top: -15,
-            pointerEvents: 'none'
-        });
-
-        this.container = new Interface('.container');
-        this.container.css({
-            position: 'absolute',
-            cursor: 'move'
-        });
-        this.add(this.container);
-
-        this.name = new Interface('.name');
-        this.name.css({
-            lineHeight: 18,
-            whiteSpace: 'nowrap'
-        });
-        this.container.add(this.name);
-
-        this.type = new Interface('.type');
-        this.type.css({
-            fontSize: 'var(--ui-secondary-font-size)',
-            letterSpacing: 'var(--ui-secondary-letter-spacing)',
-            opacity: 0.7
-        });
-        this.container.add(this.type);
-    }
-
-    initViews() {
-        this.number = new TargetNumber();
-        this.number.css({
-            position: 'absolute',
-            left: -(this.number.width + 10),
-            top: '50%',
-            marginTop: -Math.round(this.number.height / 2)
-        });
-        this.container.add(this.number);
-
-        this.panel = new Panel();
-        this.panel.css({
-            position: 'absolute',
-            left: -10,
-            top: 36
-        });
-        this.add(this.panel);
-    }
-
-    /**
-     * Public methods
-     */
-
-    setData = data => {
-        if (!data) {
-            return;
-        }
-
-        let height = 0;
-
-        if (data.name) {
-            this.name.text(data.name);
-
-            height += 18;
-        }
-
-        if (data.type) {
-            this.type.text(data.type);
-
-            height += 15;
-        }
-
-        this.panel.css({ top: height + 3 });
-    };
-
-    lock = () => {
-        this.number.animateIn();
-
-        this.locked = true;
-    };
-
-    unlock = () => {
-        this.number.animateOut();
-
-        this.locked = false;
-    };
-
-    open = moved => {
-        if (moved) {
-            return;
-        }
-
-        this.css({ pointerEvents: 'auto' });
-
-        this.clearTween().tween({ left: this.number.width + 30, opacity: 1 }, 400, 'easeOutCubic');
-
-        this.panel.animateIn();
-    };
-
-    close = () => {
-        this.css({ pointerEvents: 'none' });
-
-        this.clearTween().tween({ left: 10, opacity: 1 }, 400, 'easeInCubic', 200);
-
-        this.number.animateOut();
-        this.panel.animateOut();
-    };
-
-    animateIn = () => {
-        this.clearTween().css({ opacity: 0 }).tween({ opacity: 1 }, 400, 'easeOutCubic', 200);
-    };
-
-    animateOut = callback => {
-        this.clearTween().tween({ opacity: 0 }, 500, 'easeInCubic', 200, callback);
-    };
-}
-
-/**
- * @author pschroen / https://ufo.ai/
- */
-
-class Point extends Interface {
-    constructor(panel, tracker) {
-        super('.point');
-
-        this.panel = panel;
-        this.tracker = tracker;
-
-        this.position = new Vector2();
-        this.origin = new Vector2();
-        this.originPosition = new Vector2();
-        this.target = new Vector2();
-        this.mouse = new Vector2();
-        this.delta = new Vector2();
-        this.lastTime = null;
-        this.lastMouse = new Vector2();
-        this.lastOrigin = new Vector2();
-        this.lerpSpeed = 0.07;
-        this.openColor = null;
-        this.isOpen = false;
-        this.isDown = false;
-        this.isMove = false;
-
-        this.initHTML();
-        this.initViews();
-
-        this.addListeners();
-    }
-
-    initHTML() {
-        this.invisible();
-        this.css({
-            position: 'absolute',
-            fontFamily: 'var(--ui-font-family)',
-            fontWeight: 'var(--ui-font-weight)',
-            fontSize: 'var(--ui-font-size)',
-            lineHeight: 'var(--ui-line-height)',
-            letterSpacing: 'var(--ui-letter-spacing)',
-            pointerEvents: 'auto',
-            webkitUserSelect: 'none',
-            userSelect: 'none'
-        });
-    }
-
-    initViews() {
-        this.text = new PointText();
-        this.add(this.text);
-    }
-
-    addListeners() {
-        Stage.events.on('color_picker', this.onColorPicker);
-        this.text.container.element.addEventListener('mouseenter', this.onHover);
-        this.text.container.element.addEventListener('mouseleave', this.onHover);
-        window.addEventListener('pointerdown', this.onPointerDown);
-        window.addEventListener('pointerup', this.onPointerUp);
-    }
-
-    removeListeners() {
-        Stage.events.off('color_picker', this.onColorPicker);
-        this.text.container.element.removeEventListener('mouseenter', this.onHover);
-        this.text.container.element.removeEventListener('mouseleave', this.onHover);
-        window.removeEventListener('pointerdown', this.onPointerDown);
-        window.removeEventListener('pointerup', this.onPointerUp);
-    }
-
-    /**
-     * Event handlers
-     */
-
-    onColorPicker = ({ open, target }) => {
-        if (!this.element.contains(target.element)) {
-            return;
-        }
-
-        if (open) {
-            this.text.container.tween({ opacity: 0.35 }, 400, 'easeInOutSine');
-            this.openColor = target;
-        } else {
-            this.text.container.tween({ opacity: 1 }, 400, 'easeInOutSine');
-            this.openColor = null;
-        }
-    };
-
-    onHover = ({ type }) => {
-        if (type === 'mouseenter') {
-            this.panel.onHover({ type: 'over' });
-        } else {
-            this.panel.onHover({ type: 'out' });
-        }
-    };
-
-    onPointerDown = e => {
-        if (!this.isOpen) {
-            return;
-        }
-
-        if (this.text.container.element.contains(e.target)) {
-            this.isDown = true;
-        }
-
-        this.onPointerMove(e);
-
-        window.addEventListener('pointermove', this.onPointerMove);
-    };
-
-    onPointerMove = ({ clientX, clientY }) => {
-        const event = {
-            x: clientX,
-            y: clientY
-        };
-
-        this.mouse.copy(event);
-
-        if (!this.lastTime) {
-            this.lastTime = performance.now();
-            this.lastMouse.copy(event);
-            this.lastOrigin.copy(this.origin);
-        }
-
-        if (this.isDown) {
-            this.delta.subVectors(this.mouse, this.lastMouse);
-            this.origin.addVectors(this.lastOrigin, this.delta);
-
-            this.isMove = true;
-        }
-    };
-
-    onPointerUp = e => {
-        if (!this.isOpen || !this.lastTime) {
-            return;
-        }
-
-        window.removeEventListener('pointermove', this.onPointerMove);
-
-        this.isDown = false;
-
-        this.onPointerMove(e);
-
-        if (performance.now() - this.lastTime > 750 || this.delta.subVectors(this.mouse, this.lastMouse).length() > 50) {
-            this.lastTime = null;
-            return;
-        }
-
-        if (this.openColor && !this.openColor.element.contains(e.target)) {
-            Stage.events.emit('color_picker', { open: false, target: this });
-        }
-
-        if (this.tracker && this.tracker.isVisible && this.text.container.element.contains(e.target)) {
-            if (!this.tracker.animatedIn) {
-                this.tracker.show();
-            } else if (!this.tracker.locked) {
-                this.text.lock();
-                this.tracker.lock();
-            } else {
-                this.text.unlock();
-                this.tracker.unlock();
-                this.tracker.hide(true);
-            }
-        }
-
-        this.lastTime = null;
-    };
-
-    /**
-     * Public methods
-     */
-
-    setData = data => {
-        this.text.setData(data);
-    };
-
-    update = () => {
-        this.position.lerp(this.target, this.lerpSpeed);
-        this.originPosition.addVectors(this.origin, this.position);
-
-        this.css({ left: Math.round(this.originPosition.x), top: Math.round(this.originPosition.y) });
-    };
-
-    open = () => {
-        this.text.open(this.isMove);
-
-        this.isOpen = true;
-    };
-
-    close = () => {
-        tween(this.origin, { x: 0, y: 0 }, 400, 'easeOutCubic');
-
-        this.text.close();
-
-        this.isOpen = false;
-        this.isMove = false;
-    };
-
-    animateIn = () => {
-        this.visible();
-        this.css({ opacity: 1 });
-        this.text.animateIn();
-    };
-
-    animateOut = () => {
-        this.text.animateOut(() => {
-            this.invisible();
-        });
-    };
-
-    inactive = () => {
-        this.tween({ opacity: 0 }, 300, 'easeOutSine');
-        this.close();
-    };
-
-    destroy = () => {
-        this.removeListeners();
-
-        return super.destroy();
-    };
-}
-
-/**
- * @author pschroen / https://ufo.ai/
- */
-
-class Point3D extends Group {
-    static init(scene, camera, {
-        root = document.body,
-        container = document.body,
-        debug = false
-    } = {}) {
-        this.scene = scene;
-        this.camera = camera;
-        this.root = root instanceof Interface ? root : new Interface(root);
-        this.container = container instanceof Interface ? container : new Interface(container);
-        this.events = this.root.events;
-        this.debug = debug;
-
-        this.objects = [];
-        this.points = [];
-        this.raycaster = new Raycaster();
-        this.mouse = new Vector2$1(-1, -1);
-        this.delta = new Vector2$1();
-        this.hover = null;
-        this.click = null;
-        this.lastTime = null;
-        this.lastMouse = new Vector2$1();
-        this.raycastInterval = 1 / 10; // 10 frames per second
-        this.lastRaycast = 0;
-        this.halfScreen = new Vector2$1();
-        this.enabled = true;
-
-        this.initCanvas();
-
-        this.addListeners();
-        this.onResize();
-    }
-
-    static initCanvas() {
-        this.canvas = new Interface(null, 'canvas');
-        this.canvas.css({
-            position: 'absolute',
-            left: 0,
-            top: 0,
-            pointerEvents: 'none'
-        });
-        this.context = this.canvas.element.getContext('2d');
-        this.container.add(this.canvas);
-    }
-
-    static addListeners() {
-        this.events.on('invert', this.onInvert);
-        window.addEventListener('resize', this.onResize);
-        window.addEventListener('pointerdown', this.onPointerDown);
-        window.addEventListener('pointermove', this.onPointerMove);
-        window.addEventListener('pointerup', this.onPointerUp);
-    }
-
-    static removeListeners() {
-        this.events.off('invert', this.onInvert);
-        window.removeEventListener('resize', this.onResize);
-        window.removeEventListener('pointerdown', this.onPointerDown);
-        window.removeEventListener('pointermove', this.onPointerMove);
-        window.removeEventListener('pointerup', this.onPointerUp);
-    }
-
-    /**
-     * Event handlers
-     */
-
-    static onInvert = () => {
-        this.invert();
-    };
-
-    static onResize = () => {
-        this.width = document.documentElement.clientWidth;
-        this.height = document.documentElement.clientHeight;
-        this.dpr = window.devicePixelRatio;
-
-        this.halfScreen.set(this.width / 2, this.height / 2);
-
-        this.canvas.element.width = Math.round(this.width * this.dpr);
-        this.canvas.element.height = Math.round(this.height * this.dpr);
-        this.canvas.element.style.width = this.width + 'px';
-        this.canvas.element.style.height = this.height + 'px';
-        this.context.scale(this.dpr, this.dpr);
-
-        this.points.forEach(point => point.resize());
-    };
-
-    static onPointerDown = e => {
-        if (!this.enabled) {
-            return;
-        }
-
-        this.onPointerMove(e);
-
-        if (this.hover) {
-            this.click = this.hover;
-            this.lastTime = performance.now();
-            this.lastMouse.copy(this.mouse);
-        }
-    };
-
-    static onPointerMove = e => {
-        if (!this.enabled) {
-            return;
-        }
-
-        if (e) {
-            this.mouse.x = (e.clientX / this.width) * 2 - 1;
-            this.mouse.y = 1 - (e.clientY / this.height) * 2;
-        }
-
-        this.raycaster.setFromCamera(this.mouse, this.camera);
-
-        const intersection = this.raycaster.intersectObjects(this.objects);
-
-        if (intersection.length) {
-            const point = this.points[this.objects.indexOf(intersection[0].object)];
-
-            if (!this.hover) {
-                this.hover = point;
-                this.hover.onHover({ type: 'over' });
-                this.root.css({ cursor: 'pointer' });
-            } else if (this.hover !== point) {
-                this.hover.onHover({ type: 'out' });
-                this.hover = point;
-                this.hover.onHover({ type: 'over' });
-                this.root.css({ cursor: 'pointer' });
-            }
-        } else if (this.hover) {
-            this.hover.onHover({ type: 'out' });
-            this.hover = null;
-            this.root.css({ cursor: '' });
-        }
-    };
-
-    static onPointerUp = e => {
-        if (!this.enabled || !this.click) {
-            return;
-        }
-
-        this.onPointerMove(e);
-
-        if (performance.now() - this.lastTime > 750 || this.delta.subVectors(this.mouse, this.lastMouse).length() > 50) {
-            this.click = null;
-            return;
-        }
-
-        if (this.click === this.hover) {
-            this.click.onClick();
-        }
-
-        this.click = null;
-    };
-
-    /**
-     * Public methods
-     */
-
-    static getSelected = () => {
-        return this.points.filter(point => point.selected).map(point => point.object);
-    };
-
-    static setIndexes = () => {
-        this.points.forEach((point, i) => point.setIndex(i));
-    };
-
-    static invert = () => {
-        this.points.forEach(point => point.resize());
-    };
-
-    static update = time => {
-        this.context.clearRect(0, 0, this.canvas.element.width, this.canvas.element.height);
-
-        this.points.forEach(point => point.update());
-
-        if (!navigator.maxTouchPoints && time - this.lastRaycast > this.raycastInterval) {
-            this.onPointerMove();
-            this.lastRaycast = time;
-        }
-    };
-
-    static add = (...points) => {
-        points.forEach(point => {
-            this.objects.push(point.object);
-            this.points.push(point);
-        });
-
-        this.setIndexes();
-    };
-
-    static remove = (...points) => {
-        points.forEach(point => {
-            const index = this.points.indexOf(point);
-
-            if (~index) {
-                this.objects.splice(index, 1);
-                this.points.splice(index, 1);
-            }
-
-            if (point === this.hover) {
-                this.hover.onHover({ type: 'out' });
-                this.hover = null;
-                this.root.css({ cursor: '' });
-            }
-        });
-
-        this.setIndexes();
-    };
-
-    static animateOut = () => {
-        this.points.forEach(point => {
-            point.animateOut(true);
-            point.inactive();
-        });
-
-        if (this.hover) {
-            this.hover.onHover({ type: 'out' });
-            this.hover = null;
-            this.root.css({ cursor: '' });
-        }
-    };
-
-    static destroy = () => {
-        this.removeListeners();
-
-        for (let i = this.points.length - 1; i >= 0; i--) {
-            if (this.points[i] && this.points[i].destroy) {
-                this.points[i].destroy();
-            }
-        }
-
-        for (const prop in this) {
-            this[prop] = null;
-        }
-
-        return null;
-    };
-
-    constructor(object, {
-        name = object.geometry.type,
-        type = object.material.type,
-        noTracker
-    } = {}) {
-        super();
-
-        this.object = object;
-        this.name = name;
-        this.type = type;
-        this.noTracker = noTracker;
-        this.camera = Point3D.camera;
-        this.halfScreen = Point3D.halfScreen;
-
-        this.center = new Vector2$1();
-        this.size = new Vector2$1();
-        this.selected = false;
-        this.animatedIn = false;
-
-        this.initMesh();
-        this.initViews();
-    }
-
-    initMesh() {
-        this.object.geometry.computeBoundingSphere();
-        const { center, radius } = this.object.geometry.boundingSphere;
-        const geometry = new SphereGeometry$2(radius);
-
-        let material;
-
-        if (Point3D.debug) {
-            material = new MeshBasicMaterial({
-                color: 0xff0000,
-                wireframe: true
-            });
-        } else {
-            material = new MeshBasicMaterial({ visible: false });
-        }
-
-        this.mesh = new Mesh(geometry, material);
-        this.mesh.position.copy(this.object.position);
-        this.mesh.position.x = this.mesh.position.x + center.x;
-        this.mesh.position.y = this.mesh.position.y - center.y; // Y flipped
-        this.mesh.position.z = this.mesh.position.z + center.z;
-        this.mesh.scale.copy(this.object.scale);
-        this.add(this.mesh);
-    }
-
-    initViews() {
-        const { context } = Point3D;
-
-        this.line = new Line(context);
-        Point3D.container.add(this.line);
-
-        this.reticle = new Reticle();
-        Point3D.container.add(this.reticle);
-
-        if (!this.noTracker) {
-            this.tracker = new Tracker();
-            Point3D.container.add(this.tracker);
-        }
-
-        this.point = new Point(this, this.tracker);
-        this.point.setData({
-            name: this.name,
-            type: this.type
-        });
-        Point3D.container.add(this.point);
-
-        this.panel = this.point.text.panel;
-    }
-
-    /**
-     * Event handlers
-     */
-
-    onHover = ({ type }) => {
-        clearTween(this.timeout);
-
-        if (this.tracker && this.selected) {
-            if (type === 'over') {
-                this.tracker.show();
-            } else {
-                this.tracker.hide();
-            }
-
-            return;
-        }
-
-        if (type === 'over') {
-            if (!this.animatedIn) {
-                this.resize();
-                this.animateIn();
-            }
-        } else {
-            this.timeout = delayedCall(2000, () => {
-                this.animateOut();
-            });
-        }
-
-        Point3D.events.emit('hover', { type, target: this });
-    };
-
-    onClick = () => {
-        clearTween(this.timeout);
-
-        if (this.tracker) {
-            this.selected = !this.selected;
-
-            if (this.selected) {
-                this.toggle(true);
-            } else {
-                this.toggle(false);
-            }
-
-            Point3D.events.emit('click', { selected: Point3D.getSelected(), target: this });
-        } else {
-            Point3D.events.emit('click', { target: this });
-        }
-    };
-
-    /**
-     * Public methods
-     */
-
-    setIndex = index => {
-        this.index = index;
-
-        if (this.tracker) {
-            const targetNumber = index + 1;
-
-            this.tracker.number.setData({ targetNumber });
-            this.point.text.number.setData({ targetNumber });
-        }
-    };
-
-    addPanel = item => {
-        this.panel.add(item);
-    };
-
-    resize = () => {
-        this.line.resize();
-    };
-
-    update = () => {
-        this.line.startPoint(this.reticle.target);
-        this.line.endPoint(this.point.originPosition);
-        this.line.update();
-        this.reticle.update();
-
-        if (this.tracker) {
-            this.tracker.update();
-        }
-
-        this.point.update();
-    };
-
-    updateMatrixWorld = force => {
-        super.updateMatrixWorld(force);
-
-        this.camera.updateMatrixWorld();
-
-        const box = getScreenSpaceBox(this.mesh, this.camera);
-        const center = box.getCenter(this.center).multiply(this.halfScreen);
-        const size = box.getSize(this.size).multiply(this.halfScreen);
-        const centerX = this.halfScreen.x + center.x;
-        const centerY = this.halfScreen.y - center.y;
-        const width = Math.round(size.x);
-        const height = Math.round(size.y);
-        const halfWidth = Math.round(width / 2);
-        const halfHeight = Math.round(height / 2);
-
-        this.reticle.target.set(centerX, centerY);
-
-        if (this.tracker) {
-            this.tracker.target.set(centerX, centerY);
-            this.tracker.css({
-                width,
-                height,
-                marginLeft: -halfWidth,
-                marginTop: -halfHeight
-            });
-        }
-
-        this.point.target.set(centerX + halfWidth, centerY - halfHeight);
-    };
-
-    animateIn = (reverse = false) => {
-        this.line.animateIn(reverse);
-        this.reticle.animateIn();
-        this.point.animateIn();
-
-        this.animatedIn = true;
-    };
-
-    animateOut = (fast = false, callback) => {
-        this.line.animateOut(fast, callback);
-        this.reticle.animateOut();
-
-        if (this.tracker) {
-            this.tracker.animateOut();
-        }
-
-        this.point.animateOut();
-
-        this.animatedIn = false;
-    };
-
-    toggle = show => {
-        if (show) {
-            this.line.animateOut(true);
-            this.reticle.animateOut();
-
-            if (this.tracker) {
-                this.tracker.animateIn();
-            }
-
-            this.point.open();
-        } else {
-            this.line.animateIn(true);
-            this.reticle.animateIn();
-
-            if (this.tracker) {
-                this.tracker.animateOut();
-            }
-
-            this.point.close();
-        }
-    };
-
-    inactive = () => {
-        this.selected = false;
-        this.line.inactive();
-        this.point.inactive();
-    };
-
-    destroy = () => {
-        this.animateOut(false, () => {
-            this.point = this.point.destroy();
-
-            if (this.tracker) {
-                this.tracker = this.tracker.destroy();
-            }
-
-            this.reticle = this.reticle.destroy();
-            this.line = this.line.destroy();
-        });
     };
 }
 
@@ -109203,4 +112391,4 @@ class OrbitControls extends EventDispatcher {
 
 }
 
-export { ACESFilmicToneMapping, AddEquation, AddOperation, AdditiveAnimationBlendMode, AdditiveBlending, AfterimageMaterial, AlphaFormat, AlwaysDepth, AlwaysStencilFunc, AmbientLight, AmbientLightProbe, AnimationAction, AnimationClip, AnimationLoader, AnimationMixer, AnimationObjectGroup, AnimationUtils, ArcCurve, ArrayCamera, ArrowHelper, AssetLoader, Audio$1 as Audio, AudioAnalyser, AudioContext$1 as AudioContext, AudioListener, AudioLoader, AxesHelper, BackSide, BadTVMaterial, BasicDepthPacking, BasicMaterial, BasicShadowMap, BloomCompositeMaterial, BlurMaterial, BokehBlurMaterial1, BokehBlurMaterial2, Bone, BooleanKeyframeTrack, Box2, Box3, Box3Helper, BoxBufferGeometry, BoxGeometry$2 as BoxGeometry, BoxHelper, BufferAttribute, BufferGeometry, BufferGeometryLoader, BufferGeometryLoaderThread, BufferLoader, ByteType, Cache, Camera, CameraHelper, CameraMotionBlurMaterial, CanvasTexture, CapsuleBufferGeometry, CapsuleGeometry, CatmullRomCurve3, ChromaticAberrationMaterial, CineonToneMapping, CircleBufferGeometry, CircleGeometry, ClampToEdgeWrapping, Clock, Cluster, Color$1 as Color, ColorKeyframeTrack, ColorManagement, ColorMaterial, ColorPicker, Component, CompressedArrayTexture, CompressedTexture, CompressedTextureLoader, ConeBufferGeometry, ConeGeometry, CopyMaterial, CubeCamera, CubeReflectionMapping, CubeRefractionMapping, CubeTexture, CubeTextureLoader, CubeUVReflectionMapping, CubicBezierCurve, CubicBezierCurve3, CubicInterpolant, CullFaceBack, CullFaceFront, CullFaceFrontBack, CullFaceNone, Curve, CurvePath, CustomBlending, CustomToneMapping, CylinderBufferGeometry, CylinderGeometry, Cylindrical, DEG2RAD$1 as DEG2RAD, Data3DTexture, DataArrayTexture, DataTexture, DataTextureLoader, DataUtils, DecrementStencilOp, DecrementWrapStencilOp, DefaultLoadingManager, DepthFormat, DepthMaskMaterial, DepthStencilFormat, DepthTexture, DirectionalLight, DirectionalLightHelper, DiscardMaterial, DiscreteInterpolant, DisplayP3ColorSpace, DodecahedronBufferGeometry, DodecahedronGeometry, DoubleSide, DstAlphaFactor, DstColorFactor, DynamicCopyUsage, DynamicDrawUsage, DynamicReadUsage, Easing, EdgesGeometry, EllipseCurve, EnvironmentTextureLoader, EqualDepth, EqualStencilFunc, EquirectangularReflectionMapping, EquirectangularRefractionMapping, Euler, EventDispatcher, EventEmitter, ExtrudeBufferGeometry, ExtrudeGeometry, FXAAMaterial, FastGaussianBlurMaterial, FileLoader, Float16BufferAttribute, Float32BufferAttribute, Float64BufferAttribute, FloatType, FlowMaterial, Flowmap, Fog, FogExp2, FramebufferTexture, FresnelMaterial, FrontSide, Frustum, GLBufferAttribute, GLSL1, GLSL3, GLTFLoader, GreaterDepth, GreaterEqualDepth, GreaterEqualStencilFunc, GreaterStencilFunc, GridHelper, Group, HalfFloatType, Header, HeaderInfo, HemisphereLight, HemisphereLightHelper, HemisphereLightProbe, IcosahedronBufferGeometry, IcosahedronGeometry, ImageBitmapLoader$1 as ImageBitmapLoader, ImageBitmapLoaderThread, ImageLoader, ImageUtils, IncrementStencilOp, IncrementWrapStencilOp, InstancedBufferAttribute, InstancedBufferGeometry, InstancedInterleavedBuffer, InstancedMesh, Int16BufferAttribute, Int32BufferAttribute, Int8BufferAttribute, IntType, Interface, InterleavedBuffer, InterleavedBufferAttribute, Interpolant, InterpolateDiscrete, InterpolateLinear, InterpolateSmooth, InvertStencilOp, KeepStencilOp, KeyframeTrack, LOD, LatheBufferGeometry, LatheGeometry, Layers, LensflareMaterial, LessDepth, LessEqualDepth, LessEqualStencilFunc, LessStencilFunc, Light, LightProbe, Line, Line3, LineBasicMaterial, LineCurve, LineCurve3, LineDashedMaterial, LineLoop, LineSegments, LinearEncoding, LinearFilter, LinearInterpolant, LinearMipMapLinearFilter, LinearMipMapNearestFilter, LinearMipmapLinearFilter, LinearMipmapNearestFilter, LinearSRGBColorSpace, LinearToneMapping, Link, LinkedList, List, ListSelect, ListToggle, Loader$1 as Loader, LoaderUtils, LoadingManager, LoopOnce, LoopPingPong, LoopRepeat, LuminanceAlphaFormat, LuminanceFormat, LuminosityMaterial, MOUSE, Magnetic, Material, MaterialLoader, MaterialPanelController, MathUtils, Matrix3, Matrix4, MaxEquation, Mesh, MeshBasicMaterial, MeshDepthMaterial, MeshDistanceMaterial, MeshLambertMaterial, MeshMatcapMaterial, MeshNormalMaterial, MeshPhongMaterial, MeshPhysicalMaterial, MeshStandardMaterial, MeshToonMaterial, MeshTransmissionMaterial, MinEquation, MirroredRepeatWrapping, MixOperation, MultiLoader, MultiplyBlending, MultiplyOperation, NearestFilter, NearestMipMapLinearFilter, NearestMipMapNearestFilter, NearestMipmapLinearFilter, NearestMipmapNearestFilter, NeverDepth, NeverStencilFunc, NoBlending, NoColorSpace, NoToneMapping, NormalAnimationBlendMode, NormalBlending, NormalMaterial, NotEqualDepth, NotEqualStencilFunc, NumberKeyframeTrack, Object3D, ObjectLoader, ObjectPool, ObjectSpaceNormalMap, OctahedronBufferGeometry, OctahedronGeometry, OimoPhysics, OimoPhysicsBuffer, OimoPhysicsController, OneFactor, OneMinusDstAlphaFactor, OneMinusDstColorFactor, OneMinusSrcAlphaFactor, OneMinusSrcColorFactor, OrbitControls, OrthographicCamera, PCFShadowMap, PCFSoftShadowMap, PMREMGenerator, Panel, PanelItem, Path, PerspectiveCamera, Plane, PlaneBufferGeometry, PlaneGeometry, PlaneHelper, Point, Point3D, PointLight, PointLightHelper, PointText, Points, PointsMaterial, PoissonDiscBlurMaterial, PolarGridHelper, PolyhedronBufferGeometry, PolyhedronGeometry, PositionalAudio, PropertyBinding, PropertyMixer, QuadraticBezierCurve, QuadraticBezierCurve3, Quaternion, QuaternionKeyframeTrack, QuaternionLinearInterpolant, RAD2DEG$1 as RAD2DEG, RED_GREEN_RGTC2_Format, RED_RGTC1_Format, REVISION, RGBADepthPacking, RGBAFormat, RGBAIntegerFormat, RGBA_ASTC_10x10_Format, RGBA_ASTC_10x5_Format, RGBA_ASTC_10x6_Format, RGBA_ASTC_10x8_Format, RGBA_ASTC_12x10_Format, RGBA_ASTC_12x12_Format, RGBA_ASTC_4x4_Format, RGBA_ASTC_5x4_Format, RGBA_ASTC_5x5_Format, RGBA_ASTC_6x5_Format, RGBA_ASTC_6x6_Format, RGBA_ASTC_8x5_Format, RGBA_ASTC_8x6_Format, RGBA_ASTC_8x8_Format, RGBA_BPTC_Format, RGBA_ETC2_EAC_Format, RGBA_PVRTC_2BPPV1_Format, RGBA_PVRTC_4BPPV1_Format, RGBA_S3TC_DXT1_Format, RGBA_S3TC_DXT3_Format, RGBA_S3TC_DXT5_Format, RGBMaterial, RGB_ETC1_Format, RGB_ETC2_Format, RGB_PVRTC_2BPPV1_Format, RGB_PVRTC_4BPPV1_Format, RGB_S3TC_DXT1_Format, RGFormat, RGIntegerFormat, RawShaderMaterial, Ray, Raycaster, RectAreaLight, RedFormat, RedIntegerFormat, Reflector, ReflectorBlurMaterial, ReflectorDudvMaterial, ReflectorMaterial, ReinhardToneMapping, RepeatWrapping, ReplaceStencilOp, Reticle, ReticleText, ReverseSubtractEquation, RigidBodyConfig$1 as RigidBodyConfig, RigidBodyType$1 as RigidBodyType, RingBufferGeometry, RingGeometry, SIGNED_RED_GREEN_RGTC2_Format, SIGNED_RED_RGTC1_Format, SMAABlendMaterial, SMAAEdgesMaterial, SMAAWeightsMaterial, SRGBColorSpace, SVGLoader, Scene, SceneCompositeMaterial, ShaderChunk, ShaderLib, ShaderMaterial, ShadowMaterial, ShadowTextureMaterial, Shape$2 as Shape, ShapeBufferGeometry, ShapeGeometry, ShapePath, ShapeUtils, ShortType, Skeleton, SkeletonHelper, SkinnedMesh, Slider, Smooth, SmoothSkew, SmoothViews, SoftShadows, Sound, Sound3D, Source, Sphere, SphereBufferGeometry, SphereGeometry$2 as SphereGeometry, Spherical, SphericalHarmonics3, SphericalJointConfig$1 as SphericalJointConfig, SplineCurve, SpotLight, SpotLightHelper, Sprite, SpriteMaterial, SrcAlphaFactor, SrcAlphaSaturateFactor, SrcColorFactor, Stage, StaticCopyUsage, StaticDrawUsage, StaticReadUsage, StereoCamera, StreamCopyUsage, StreamDrawUsage, StreamReadUsage, StringKeyframeTrack, SubtractEquation, SubtractiveBlending, TOUCH, TangentSpaceNormalMap, TargetNumber, TetrahedronBufferGeometry, TetrahedronGeometry, TextGeometry, TextMaterial, Texture, TextureLoader, Thread, Ticker, TiltShiftMaterial, TorusBufferGeometry, TorusGeometry, TorusKnotBufferGeometry, TorusKnotGeometry, Tracker, Triangle, TriangleFanDrawMode, TriangleStripDrawMode, TrianglesDrawMode, TubeBufferGeometry, TubeGeometry, Tween, TwoPassDoubleSide, UI, UVMapping, Uint16BufferAttribute, Uint32BufferAttribute, Uint8BufferAttribute, Uint8ClampedBufferAttribute, Uniform, UniformsGroup, UniformsLib, UniformsUtils, UnrealBloomBlurMaterial, UnrealBloomCompositeMaterial, UnsignedByteType, UnsignedInt248Type, UnsignedIntType, UnsignedShort4444Type, UnsignedShort5551Type, UnsignedShortType, VSMShadowMap, Vector2$1 as Vector2, Vector3, Vector4, VectorKeyframeTrack, VideoGlitchMaterial, VideoTexture, VolumetricLightLensflareMaterial, VolumetricLightMaterial, WebAudio, WebAudio3D, WebAudioParam, WebGL1Renderer, WebGL3DRenderTarget, WebGLArrayRenderTarget, WebGLCubeRenderTarget, WebGLMultipleRenderTargets, WebGLRenderTarget, WebGLRenderer, WebGLUtils, WireframeGeometry, Wobble, WrapAroundEnding, ZeroCurvatureEnding, ZeroFactor, ZeroSlopeEnding, ZeroStencilOp, _SRGBAFormat, absolute, basename, brightness, ceilPowerOfTwo$1 as ceilPowerOfTwo, clamp$1 as clamp, clearTween, defer, degToRad$1 as degToRad, delayedCall, euclideanModulo$1 as euclideanModulo, extension, floorPowerOfTwo$1 as floorPowerOfTwo, fract, getConstructor, getFrustum, getFrustumFromHeight, getFullscreenTriangle, getKeyByValue, getScreenSpaceBox, getSphericalCube, guid, headsTails, inverseLerp$1 as inverseLerp, isPowerOfTwo$1 as isPowerOfTwo, lerp$2 as lerp, lerpCameras, mapLinear$1 as mapLinear, parabola, pcurve, radToDeg$1 as radToDeg, randFloat$1 as randFloat, randFloatSpread$1 as randFloatSpread, randInt$1 as randInt, sRGBEncoding, shuffle, smootherstep$2 as smootherstep, smoothstep$1 as smoothstep, step, ticker, tween, wait };
+export { ACESFilmicToneMapping, AddEquation, AddOperation, AdditiveAnimationBlendMode, AdditiveBlending, AfterimageMaterial, AlphaFormat, AlwaysDepth, AlwaysStencilFunc, AmbientLight, AmbientLightPanel, AmbientLightProbe, AnimationAction, AnimationClip, AnimationLoader, AnimationMixer, AnimationObjectGroup, AnimationUtils, ArcCurve, ArrayCamera, ArrowHelper, AssetLoader, Audio$1 as Audio, AudioAnalyser, AudioContext$1 as AudioContext, AudioListener, AudioLoader, AxesHelper, BackSide, BadTVMaterial, BasicDepthPacking, BasicMaterial, BasicMaterialCommonPanel, BasicMaterialEnvPanel, BasicMaterialOptions, BasicMaterialPanel, BasicShadowMap, BloomCompositeMaterial, BlurMaterial, BokehBlurMaterial1, BokehBlurMaterial2, Bone, BooleanKeyframeTrack, Box2, Box3, Box3Helper, BoxBufferGeometry, BoxGeometry$2 as BoxGeometry, BoxHelper, BufferAttribute, BufferGeometry, BufferGeometryLoader, BufferGeometryLoaderThread, BufferLoader, ByteType, Cache, Camera, CameraHelper, CameraMotionBlurMaterial, CanvasTexture, CapsuleBufferGeometry, CapsuleGeometry, CatmullRomCurve3, ChromaticAberrationMaterial, CineonToneMapping, CircleBufferGeometry, CircleGeometry, ClampToEdgeWrapping, Clock, Cluster, Color$1 as Color, ColorKeyframeTrack, ColorManagement, ColorMaterial, ColorPicker, CombineOptions, Component, CompressedArrayTexture, CompressedTexture, CompressedTextureLoader, ConeBufferGeometry, ConeGeometry, CopyMaterial, CubeCamera, CubeReflectionMapping, CubeRefractionMapping, CubeTexture, CubeTextureLoader, CubeUVReflectionMapping, CubicBezierCurve, CubicBezierCurve3, CubicInterpolant, CullFaceBack, CullFaceFront, CullFaceFrontBack, CullFaceNone, Curve, CurvePath, CustomBlending, CustomToneMapping, CylinderBufferGeometry, CylinderGeometry, Cylindrical, DEG2RAD$1 as DEG2RAD, Data3DTexture, DataArrayTexture, DataTexture, DataTextureLoader, DataUtils, DecrementStencilOp, DecrementWrapStencilOp, DefaultLoadingManager, DepthFormat, DepthMaskMaterial, DepthStencilFormat, DepthTexture, DirectionalLight, DirectionalLightHelper, DirectionalLightPanel, DiscardMaterial, DiscreteInterpolant, DisplayP3ColorSpace, DodecahedronBufferGeometry, DodecahedronGeometry, DoubleSide, DstAlphaFactor, DstColorFactor, DynamicCopyUsage, DynamicDrawUsage, DynamicReadUsage, Easing, EdgesGeometry, EllipseCurve, EnvironmentTextureLoader, EqualDepth, EqualStencilFunc, EquirectangularReflectionMapping, EquirectangularRefractionMapping, Euler, EventDispatcher, EventEmitter, ExtrudeBufferGeometry, ExtrudeGeometry, FXAAMaterial, FastGaussianBlurMaterial, FileLoader, FlatShadingOptions, Float16BufferAttribute, Float32BufferAttribute, Float64BufferAttribute, FloatType, FlowMaterial, Flowmap, Fog, FogExp2, FramebufferTexture, FresnelMaterial, FrontSide, Frustum, GLBufferAttribute, GLSL1, GLSL3, GLTFLoader, GreaterDepth, GreaterEqualDepth, GreaterEqualStencilFunc, GreaterStencilFunc, GridHelper, Group, HalfFloatType, Header, HeaderInfo, HelperOptions, HemisphereLight, HemisphereLightHelper, HemisphereLightPanel, HemisphereLightProbe, IcosahedronBufferGeometry, IcosahedronGeometry, ImageBitmapLoader$1 as ImageBitmapLoader, ImageBitmapLoaderThread, ImageLoader, ImageUtils, IncrementStencilOp, IncrementWrapStencilOp, InstancedBufferAttribute, InstancedBufferGeometry, InstancedInterleavedBuffer, InstancedMesh, Int16BufferAttribute, Int32BufferAttribute, Int8BufferAttribute, IntType, Interface, InterleavedBuffer, InterleavedBufferAttribute, Interpolant, InterpolateDiscrete, InterpolateLinear, InterpolateSmooth, InvertStencilOp, KeepStencilOp, KeyframeTrack, LOD, LambertMaterialCommonPanel, LambertMaterialEnvPanel, LambertMaterialOptions, LambertMaterialPanel, LatheBufferGeometry, LatheGeometry, Layers, LensflareMaterial, LessDepth, LessEqualDepth, LessEqualStencilFunc, LessStencilFunc, Light, LightOptions, LightPanelController, LightProbe, Line, Line3, LineBasicMaterial, LineCurve, LineCurve3, LineDashedMaterial, LineLoop, LineSegments, LinearEncoding, LinearFilter, LinearInterpolant, LinearMipMapLinearFilter, LinearMipMapNearestFilter, LinearMipmapLinearFilter, LinearMipmapNearestFilter, LinearSRGBColorSpace, LinearToneMapping, Link, LinkedList, List, ListSelect, ListToggle, Loader$1 as Loader, LoaderUtils, LoadingManager, LoopOnce, LoopPingPong, LoopRepeat, LuminanceAlphaFormat, LuminanceFormat, LuminosityMaterial, MOUSE, Magnetic, MapPanel, MatcapMaterialCommonPanel, MatcapMaterialOptions, MatcapMaterialPanel, Material, MaterialLoader, MaterialOptions, MaterialPanelController, MathUtils, Matrix3, Matrix4, MaxEquation, Mesh, MeshBasicMaterial, MeshDepthMaterial, MeshDistanceMaterial, MeshHelperPanel, MeshLambertMaterial, MeshMatcapMaterial, MeshNormalMaterial, MeshPhongMaterial, MeshPhysicalMaterial, MeshStandardMaterial, MeshToonMaterial, MeshTransmissionMaterial, MinEquation, MirroredRepeatWrapping, MixOperation, MultiLoader, MultiplyBlending, MultiplyOperation, NearestFilter, NearestMipMapLinearFilter, NearestMipMapNearestFilter, NearestMipmapLinearFilter, NearestMipmapNearestFilter, NeverDepth, NeverStencilFunc, NoBlending, NoColorSpace, NoToneMapping, NormalAnimationBlendMode, NormalBlending, NormalMaterial, NormalMaterialCommonPanel, NormalMaterialOptions, NormalMaterialPanel, NormalsHelperOptions, NotEqualDepth, NotEqualStencilFunc, NumberKeyframeTrack, Object3D, ObjectLoader, ObjectPool, ObjectSpaceNormalMap, OctahedronBufferGeometry, OctahedronGeometry, OimoPhysics, OimoPhysicsBuffer, OimoPhysicsController, OneFactor, OneMinusDstAlphaFactor, OneMinusDstColorFactor, OneMinusSrcAlphaFactor, OneMinusSrcColorFactor, OrbitControls, OrthographicCamera, PCFShadowMap, PCFSoftShadowMap, PMREMGenerator, Panel, PanelItem, Path, PerspectiveCamera, PhongMaterialCommonPanel, PhongMaterialEnvPanel, PhongMaterialOptions, PhongMaterialPanel, PhysicalMaterialClearcoatPanel, PhysicalMaterialCommonPanel, PhysicalMaterialEnvPanel, PhysicalMaterialOptions, PhysicalMaterialPanel, PhysicalMaterialSheenPanel, PhysicalMaterialTransmissionPanel, Plane, PlaneBufferGeometry, PlaneGeometry, PlaneHelper, Point, Point3D, PointLight, PointLightHelper, PointLightPanel, PointText, Points, PointsMaterial, PoissonDiscBlurMaterial, PolarGridHelper, PolyhedronBufferGeometry, PolyhedronGeometry, PositionalAudio, PropertyBinding, PropertyMixer, QuadraticBezierCurve, QuadraticBezierCurve3, Quaternion, QuaternionKeyframeTrack, QuaternionLinearInterpolant, RAD2DEG$1 as RAD2DEG, RED_GREEN_RGTC2_Format, RED_RGTC1_Format, REVISION, RGBADepthPacking, RGBAFormat, RGBAIntegerFormat, RGBA_ASTC_10x10_Format, RGBA_ASTC_10x5_Format, RGBA_ASTC_10x6_Format, RGBA_ASTC_10x8_Format, RGBA_ASTC_12x10_Format, RGBA_ASTC_12x12_Format, RGBA_ASTC_4x4_Format, RGBA_ASTC_5x4_Format, RGBA_ASTC_5x5_Format, RGBA_ASTC_6x5_Format, RGBA_ASTC_6x6_Format, RGBA_ASTC_8x5_Format, RGBA_ASTC_8x6_Format, RGBA_ASTC_8x8_Format, RGBA_BPTC_Format, RGBA_ETC2_EAC_Format, RGBA_PVRTC_2BPPV1_Format, RGBA_PVRTC_4BPPV1_Format, RGBA_S3TC_DXT1_Format, RGBA_S3TC_DXT3_Format, RGBA_S3TC_DXT5_Format, RGBMaterial, RGB_ETC1_Format, RGB_ETC2_Format, RGB_PVRTC_2BPPV1_Format, RGB_PVRTC_4BPPV1_Format, RGB_S3TC_DXT1_Format, RGFormat, RGIntegerFormat, RawShaderMaterial, Ray, Raycaster, RectAreaLight, RectAreaLightPanel, RedFormat, RedIntegerFormat, Reflector, ReflectorBlurMaterial, ReflectorDudvMaterial, ReflectorMaterial, ReinhardToneMapping, RepeatWrapping, ReplaceStencilOp, Reticle, ReticleText, ReverseSubtractEquation, RigidBodyConfig$1 as RigidBodyConfig, RigidBodyType$1 as RigidBodyType, RingBufferGeometry, RingGeometry, SIGNED_RED_GREEN_RGTC2_Format, SIGNED_RED_RGTC1_Format, SMAABlendMaterial, SMAAEdgesMaterial, SMAAWeightsMaterial, SRGBColorSpace, SVGLoader, Scene, SceneCompositeMaterial, ShaderChunk, ShaderLib, ShaderMaterial, ShadowMaterial, ShadowTextureMaterial, Shape$2 as Shape, ShapeBufferGeometry, ShapeGeometry, ShapePath, ShapeUtils, ShortType, SideOptions, Skeleton, SkeletonHelper, SkinnedMesh, Slider, Smooth, SmoothSkew, SmoothViews, SoftShadows, Sound, Sound3D, Source, Sphere, SphereBufferGeometry, SphereGeometry$2 as SphereGeometry, Spherical, SphericalHarmonics3, SphericalJointConfig$1 as SphericalJointConfig, SplineCurve, SpotLight, SpotLightHelper, SpotLightPanel, Sprite, SpriteMaterial, SrcAlphaFactor, SrcAlphaSaturateFactor, SrcColorFactor, Stage, StandardMaterialCommonPanel, StandardMaterialEnvPanel, StandardMaterialOptions, StandardMaterialPanel, StaticCopyUsage, StaticDrawUsage, StaticReadUsage, StereoCamera, StreamCopyUsage, StreamDrawUsage, StreamReadUsage, StringKeyframeTrack, SubtractEquation, SubtractiveBlending, TOUCH, TangentSpaceNormalMap, TangentsHelperOptions, TargetNumber, TetrahedronBufferGeometry, TetrahedronGeometry, TextGeometry, TextMaterial, Texture, TextureLoader, Thread, Ticker, TiltShiftMaterial, ToonMaterialCommonPanel, ToonMaterialOptions, ToonMaterialPanel, TorusBufferGeometry, TorusGeometry, TorusKnotBufferGeometry, TorusKnotGeometry, Tracker, Triangle, TriangleFanDrawMode, TriangleStripDrawMode, TrianglesDrawMode, TubeBufferGeometry, TubeGeometry, Tween, TwoPassDoubleSide, UI, UVHelperOptions, UVMapping, Uint16BufferAttribute, Uint32BufferAttribute, Uint8BufferAttribute, Uint8ClampedBufferAttribute, Uniform, UniformsGroup, UniformsLib, UniformsUtils, UnrealBloomBlurMaterial, UnrealBloomCompositeMaterial, UnsignedByteType, UnsignedInt248Type, UnsignedIntType, UnsignedShort4444Type, UnsignedShort5551Type, UnsignedShortType, VSMShadowMap, Vector2$1 as Vector2, Vector3, Vector4, VectorKeyframeTrack, VideoGlitchMaterial, VideoTexture, VisibleOptions, VolumetricLightLensflareMaterial, VolumetricLightMaterial, WebAudio, WebAudio3D, WebAudioParam, WebGL1Renderer, WebGL3DRenderTarget, WebGLArrayRenderTarget, WebGLCubeRenderTarget, WebGLMultipleRenderTargets, WebGLRenderTarget, WebGLRenderer, WebGLUtils, WireframeGeometry, WireframeOptions, Wobble, WrapAroundEnding, WrapOptions, ZeroCurvatureEnding, ZeroFactor, ZeroSlopeEnding, ZeroStencilOp, _SRGBAFormat, absolute, basename, brightness, ceilPowerOfTwo$1 as ceilPowerOfTwo, clamp$1 as clamp, clearTween, defer, degToRad$1 as degToRad, delayedCall, euclideanModulo$1 as euclideanModulo, extension, floorPowerOfTwo$1 as floorPowerOfTwo, fract, getConstructor, getFrustum, getFrustumFromHeight, getFullscreenTriangle, getKeyByLight, getKeyByMaterial, getKeyByValue, getScreenSpaceBox, getSphericalCube, guid, headsTails, inverseLerp$1 as inverseLerp, isPowerOfTwo$1 as isPowerOfTwo, lerp$2 as lerp, lerpCameras, mapLinear$1 as mapLinear, parabola, pcurve, radToDeg$1 as radToDeg, randFloat$1 as randFloat, randFloatSpread$1 as randFloatSpread, randInt$1 as randInt, sRGBEncoding, shuffle, smootherstep$2 as smootherstep, smoothstep$1 as smoothstep, step, ticker, tween, wait };

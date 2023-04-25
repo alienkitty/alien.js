@@ -1575,7 +1575,8 @@
             }
 
             static initLoader() {
-                this.bufferLoader = new BufferLoader(['assets/sounds/gong.mp3']);
+                this.bufferLoader = new BufferLoader();
+                this.bufferLoader.loadAll(['assets/sounds/gong.mp3']);
             }
 
             static initWorld() {
@@ -1600,7 +1601,9 @@
             static initAudio() {
                 const { scene, camera } = WorldController;
 
-                WebAudio.init(this.bufferLoader.files, { sampleRate: 48000 });
+                WebAudio.init({ sampleRate: 48000 });
+                WebAudio.load(this.bufferLoader.files);
+
                 AudioController.init(scene, camera, this.view);
             }
 

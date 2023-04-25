@@ -4,20 +4,27 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
 
-    <title>Baked Subsurface Scattering Shader — Alien.js</title>
+    <title>3D Backdrop — Alien.js</title>
 
     <link rel="preconnect" href="https://fonts.gstatic.com">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto+Mono">
     <link rel="stylesheet" href="assets/css/style.css">
 
-    <script type="module">
-        import { ACESFilmicToneMapping, AmbientLight, BloomCompositeMaterial, BufferGeometryLoader, BufferGeometryLoaderThread, Color, EnvironmentTextureLoader, GLSL3, Group, HemisphereLight, ImageBitmapLoaderThread, LuminosityMaterial, MathUtils, Mesh, MeshStandardMaterial, NoBlending, OrthographicCamera, PanelItem, PerspectiveCamera, PlaneGeometry, PointLight, PointLightHelper, RawShaderMaterial, Reflector, ReflectorDudvMaterial, RepeatWrapping, Scene, ShaderChunk, TextureLoader, Thread, UI, UnrealBloomBlurMaterial, Vector2, Vector3, WebGLRenderTarget, WebGLRenderer, getFrustum, getFullscreenTriangle, ticker } from '../../build/alien.three.js';
-
-        class Config {
-            static DEBUG = /[?&]debug/.test(location.search);
+    <style>
+        :root {
+            --bg-color: #efefef;
+            --ui-color: #000;
+            --ui-color-triplet: 0, 0, 0;
         }
+    </style>
+
+    <script type="module">
+        import { ACESFilmicToneMapping, AmbientLight, BasicShadowMap, BloomCompositeMaterial, CineonToneMapping, Color, DirectionalLight, Easing, EnvironmentTextureLoader, GLSL3, Group, HemisphereLight, IcosahedronGeometry, LightPanelController, LinearToneMapping, LuminosityMaterial, MathUtils, Mesh, MeshStandardMaterial, NoBlending, NoToneMapping, OrbitControls, OrthographicCamera, Panel, PanelItem, PerspectiveCamera, PlaneGeometry, RawShaderMaterial, ReinhardToneMapping, Scene, SoftShadows, TextureLoader, UI, UnrealBloomBlurMaterial, Vector2, WebGLRenderTarget, WebGLRenderer, getFullscreenTriangle, getKeyByValue, ticker } from '../../build/alien.three.js';
 
         import rgbshift from '../../src/shaders/modules/rgbshift/rgbshift.glsl.js';
+        import encodings from '../../src/shaders/modules/encodings/encodings.glsl.js';
+
+        // Based on https://github.com/mrdoob/three.js/blob/dev/examples/jsm/shaders/GammaCorrectionShader.js by WestLangley
 
         const vertexCompositeShader = /* glsl */ `
             in vec3 position;
@@ -38,12 +45,15 @@
             uniform sampler2D tScene;
             uniform sampler2D tBloom;
             uniform float uBloomDistortion;
+            uniform bool uGamma;
+            uniform float uExposure;
 
             in vec2 vUv;
 
             out vec4 FragColor;
 
             ${rgbshift}
+            ${encodings}
 
             void main() {
                 FragColor = texture(tScene, vUv);
@@ -52,6 +62,12 @@
                 float amount = 0.001 * uBloomDistortion;
 
                 FragColor.rgb += getRGB(tBloom, vUv, angle, amount).rgb;
+
+                if (uGamma) {
+                    FragColor.rgb *= uExposure;
+
+                    FragColor = linearToSRGB(FragColor);
+                }
             }
         `;
 
@@ -62,7 +78,9 @@
                     uniforms: {
                         tScene: { value: null },
                         tBloom: { value: null },
-                        uBloomDistortion: { value: 1.45 }
+                        uBloomDistortion: { value: 1.45 },
+                        uGamma: { value: true },
+                        uExposure: { value: 1 }
                     },
                     vertexShader: vertexCompositeShader,
                     fragmentShader: fragmentCompositeShader,
@@ -73,306 +91,105 @@
             }
         }
 
-        class MouseLight extends Group {
+        class Sphere extends Group {
             constructor() {
                 super();
 
-                this.position.z = 0;
-
-                this.initLight();
-            }
-
-            initLight() {
-                const light = new PointLight(0xf44336, 0.2);
-                this.add(light);
-
-                if (Config.DEBUG) {
-                    WorldController.scene.add(new PointLightHelper(light, 0.125));
-                }
-            }
-        }
-
-        class Cube extends Group {
-            constructor() {
-                super();
-            }
-
-            async initGeometry() {
-                const { loadBufferGeometry } = WorldController;
-
-                this.geometry = await loadBufferGeometry('assets/geometry/cube.json');
-            }
-
-            async initMaterial() {
-                const { anisotropy, loadTexture } = WorldController;
-
-                // Textures
-                const [map, normalMap, ormMap, thicknessMap] = await Promise.all([
-                    // loadTexture('assets/textures/uv.jpg'),
-                    loadTexture('assets/textures/pbr/pitted_metal_basecolor.jpg'),
-                    loadTexture('assets/textures/pbr/pitted_metal_normal.jpg'),
-                    // https://occlusion-roughness-metalness.glitch.me/
-                    loadTexture('assets/textures/pbr/pitted_metal_orm.jpg'),
-                    loadTexture('assets/textures/cube/cube_thickness.jpg')
-                ]);
-
-                map.anisotropy = anisotropy;
-                normalMap.anisotropy = anisotropy;
-                ormMap.anisotropy = anisotropy;
-                thicknessMap.anisotropy = anisotropy;
-
-                const material = new MeshStandardMaterial({
-                    color: new Color().offsetHSL(0, 0, -0.65),
-                    metalness: 0.6,
-                    roughness: 2,
-                    map,
-                    metalnessMap: ormMap,
-                    roughnessMap: ormMap,
-                    aoMap: ormMap,
-                    aoMapIntensity: 1,
-                    normalMap,
-                    normalScale: new Vector2(3, 3),
-                    envMapIntensity: 1,
-                    flatShading: true
-                });
-
-                // Second channel for aoMap and lightMap
-                // https://threejs.org/docs/#api/en/materials/MeshStandardMaterial.aoMap
-                material.aoMap.channel = 1;
-
-                // Based on https://github.com/mrdoob/three.js/blob/dev/examples/jsm/shaders/SubsurfaceScatteringShader.js by daoshengmu
-
-                const uniforms = {
-                    thicknessMap: { value: thicknessMap },
-                    thicknessDistortion: { value: 0.1 },
-                    thicknessAmbient: { value: 0 },
-                    thicknessAttenuation: { value: 0.8 },
-                    thicknessPower: { value: 2 },
-                    thicknessScale: { value: 16 }
-                };
-
-                material.onBeforeCompile = shader => {
-                    shader.uniforms = Object.assign(shader.uniforms, uniforms);
-
-                    shader.fragmentShader = shader.fragmentShader.replace(
-                        'void main() {',
-                        /* glsl */ `
-                        uniform sampler2D thicknessMap;
-                        uniform float thicknessDistortion;
-                        uniform float thicknessAmbient;
-                        uniform float thicknessAttenuation;
-                        uniform float thicknessPower;
-                        uniform float thicknessScale;
-
-                        void RE_Direct_Scattering(IncidentLight directLight, vec2 uv, GeometricContext geometry, inout ReflectedLight reflectedLight) {
-                            vec3 thickness = directLight.color * texture(thicknessMap, uv).g;
-                            vec3 scatteringHalf = normalize(directLight.direction + (geometry.normal * thicknessDistortion));
-                            float scatteringDot = pow(saturate(dot(geometry.viewDir, -scatteringHalf)), thicknessPower) * thicknessScale;
-                            vec3 scatteringIllu = (scatteringDot + thicknessAmbient) * thickness;
-                            reflectedLight.directDiffuse += scatteringIllu * thicknessAttenuation * directLight.color;
-                        }
-
-                        void main() {
-                        `
-                    );
-
-                    shader.fragmentShader = shader.fragmentShader.replace(
-                        '#include <lights_fragment_begin>',
-                        ShaderChunk.lights_fragment_begin.replaceAll(
-                            'RE_Direct( directLight, geometry, material, reflectedLight );',
-                            /* glsl */ `
-                            RE_Direct( directLight, geometry, material, reflectedLight );
-                            RE_Direct_Scattering(directLight, vAoMapUv, geometry, reflectedLight);
-                            `
-                        )
-                    );
-                };
-
-                this.material = material;
-                this.uniforms = uniforms;
+                this.initMesh();
             }
 
             initMesh() {
-                this.mesh = new Mesh(this.geometry, this.material);
-                this.add(this.mesh);
-            }
+                const geometry = new IcosahedronGeometry(0.6, 12);
 
-            /**
-             * Public methods
-             */
-
-            ready = async () => {
-                await Promise.all([
-                    this.initGeometry(),
-                    this.initMaterial()
-                ]);
-
-                this.initMesh();
-            };
-        }
-
-        class Floor extends Group {
-            constructor() {
-                super();
-
-                this.initReflector();
-            }
-
-            initReflector() {
-                this.reflector = new Reflector({ blurIterations: 6 });
-            }
-
-            async initMesh() {
-                const { loadTexture } = WorldController;
-
-                const geometry = new PlaneGeometry(100, 100);
-
-                const map = await loadTexture('assets/textures/waterdudv.jpg');
-                map.wrapS = RepeatWrapping;
-                map.wrapT = RepeatWrapping;
-                map.repeat.set(6, 6);
-
-                const material = new ReflectorDudvMaterial({
-                    map,
-                    reflectivity: 0.8
+                const material = new MeshStandardMaterial({
+                    color: 0xefefef,
+                    metalness: 0.6,
+                    roughness: 0.6,
+                    dithering: true
                 });
-                material.uniforms.tReflect = { value: this.reflector.renderTarget.texture };
-                material.uniforms.tReflectBlur = this.reflector.renderTargetUniform;
-                material.uniforms.uMatrix = this.reflector.textureMatrixUniform;
 
                 const mesh = new Mesh(geometry, material);
-                mesh.position.y = -0.54;
-                mesh.rotation.x = -Math.PI / 2;
-                mesh.add(this.reflector);
-
-                mesh.onBeforeRender = (renderer, scene, camera) => {
-                    this.visible = false;
-                    this.reflector.update(renderer, scene, camera);
-                    this.visible = true;
-                };
-
+                mesh.castShadow = true;
+                mesh.receiveShadow = true;
                 this.add(mesh);
             }
+        }
 
-            /**
-             * Public methods
-             */
+        // Based on https://github.com/pmndrs/drei/blob/master/src/core/Backdrop.tsx
 
-            resize = (width, height) => {
-                height = 1024;
+        class Backdrop extends Group {
+            constructor({
+                floor = 1,
+                segments = 20,
+                receiveShadow = true
+            } = {}) {
+                super();
 
-                this.reflector.setSize(width, height);
-            };
+                this.floor = floor;
+                this.segments = segments;
+                this.receiveShadow = receiveShadow;
 
-            ready = () => this.initMesh();
+                this.offset = this.segments / this.segments / 2;
+
+                this.initMesh();
+            }
+
+            initMesh() {
+                const geometry = new PlaneGeometry(1, 1, this.segments, this.segments);
+                const position = geometry.attributes.position;
+
+                let i = 0;
+
+                for (let x = 0; x < this.segments + 1; x++) {
+                    for (let y = 0; y < this.segments + 1; y++) {
+                        position.setXYZ(
+                            i++,
+                            x / this.segments - this.offset + (x === 0 ? -this.floor : 0),
+                            y / this.segments - this.offset,
+                            Easing.easeInExpo(x / this.segments)
+                        );
+                    }
+                }
+
+                position.needsUpdate = true;
+                geometry.computeVertexNormals();
+
+                const material = new MeshStandardMaterial({
+                    color: 0xefefef,
+                    metalness: 0.6,
+                    roughness: 0.6,
+                    dithering: true
+                });
+
+                const mesh = new Mesh(geometry, material);
+                mesh.position.set(0, -0.86, -2);
+                mesh.rotation.set(-Math.PI / 2, 0, Math.PI / 2);
+                mesh.scale.set(5, 15, 5);
+                mesh.receiveShadow = this.receiveShadow;
+                this.add(mesh);
+            }
         }
 
         class SceneView extends Group {
             constructor() {
                 super();
 
-                this.visible = false;
-
                 this.initViews();
             }
 
             initViews() {
-                this.floor = new Floor();
-                this.add(this.floor);
+                this.backdrop = new Backdrop();
+                this.add(this.backdrop);
 
-                this.cube = new Cube();
-                this.add(this.cube);
-
-                this.light = new MouseLight();
-                this.add(this.light);
+                this.sphere = new Sphere();
+                this.add(this.sphere);
             }
-
-            /**
-             * Public methods
-             */
-
-            ready = () => Promise.all([
-                this.floor.ready(),
-                this.cube.ready()
-            ]);
-        }
-
-        class SceneController {
-            static init(view) {
-                this.view = view;
-
-                this.mouse = new Vector2();
-                this.target = new Vector2();
-                this.lightPosition = new Vector3();
-                this.lerpSpeed = 0.25;
-
-                this.addListeners();
-            }
-
-            static addListeners() {
-                window.addEventListener('pointerdown', this.onPointerDown);
-                window.addEventListener('pointermove', this.onPointerMove);
-                window.addEventListener('pointerup', this.onPointerUp);
-            }
-
-            /**
-             * Event handlers
-             */
-
-            static onPointerDown = e => {
-                this.onPointerMove(e);
-            };
-
-            static onPointerMove = ({ clientX, clientY }) => {
-                if (!this.view.visible) {
-                    return;
-                }
-
-                this.target.x = (clientX / document.documentElement.clientWidth) * 2 - 1;
-                this.target.y = 1 - (clientY / document.documentElement.clientHeight) * 2;
-            };
-
-            static onPointerUp = e => {
-                this.onPointerMove(e);
-            };
-
-            /**
-             * Public methods
-             */
-
-            static resize = (width, height) => {
-                this.view.floor.resize(width, height);
-
-                const frustum = WorldController.getFrustum(this.view.light.position.z);
-
-                this.halfWidth = frustum.width / 2;
-                this.halfHeight = frustum.height / 2;
-            };
-
-            static update = () => {
-                if (!this.view.visible) {
-                    return;
-                }
-
-                this.mouse.lerp(this.target, this.lerpSpeed);
-
-                this.lightPosition.x = this.mouse.x * this.halfWidth;
-                this.lightPosition.y = this.mouse.y * this.halfHeight;
-                this.lightPosition.z = this.view.light.position.z;
-
-                this.view.light.position.copy(this.lightPosition);
-            };
-
-            static animateIn = () => {
-                this.view.visible = true;
-            };
-
-            static ready = () => this.view.ready();
         }
 
         class PanelController {
-            static init(view) {
-                this.view = view;
+            static init(renderer, scene) {
+                this.renderer = renderer;
+                this.scene = scene;
 
                 this.initViews();
                 this.initPanel();
@@ -385,72 +202,28 @@
             }
 
             static initPanel() {
-                const { cube } = this.view;
+                // https://threejs.org/examples/#webgl_tonemapping
+                const toneMappingOptions = {
+                    None: NoToneMapping,
+                    Linear: LinearToneMapping,
+                    Reinhard: ReinhardToneMapping,
+                    Cineon: CineonToneMapping,
+                    ACESFilmic: ACESFilmicToneMapping
+                };
 
                 const { luminosityMaterial, bloomCompositeMaterial, compositeMaterial } = RenderManager;
 
-                const items = [
-                    {
-                        label: 'FPS'
-                    },
-                    {
-                        type: 'divider'
-                    },
-                    {
-                        type: 'slider',
-                        label: 'Distort',
-                        min: 0,
-                        max: 1,
-                        step: 0.01,
-                        value: cube.uniforms.thicknessDistortion.value,
-                        callback: value => {
-                            cube.uniforms.thicknessDistortion.value = value;
-                        }
-                    },
-                    {
-                        type: 'slider',
-                        label: 'Ambient',
-                        min: 0,
-                        max: 5,
-                        step: 0.05,
-                        value: cube.uniforms.thicknessAmbient.value,
-                        callback: value => {
-                            cube.uniforms.thicknessAmbient.value = value;
-                        }
-                    },
-                    {
-                        type: 'slider',
-                        label: 'Atten',
-                        min: 0,
-                        max: 5,
-                        step: 0.05,
-                        value: cube.uniforms.thicknessAttenuation.value,
-                        callback: value => {
-                            cube.uniforms.thicknessAttenuation.value = value;
-                        }
-                    },
-                    {
-                        type: 'slider',
-                        label: 'Power',
-                        min: 0,
-                        max: 32,
-                        step: 0.1,
-                        value: cube.uniforms.thicknessPower.value,
-                        callback: value => {
-                            cube.uniforms.thicknessPower.value = value;
-                        }
-                    },
-                    {
-                        type: 'slider',
-                        label: 'Scale',
-                        min: 0,
-                        max: 64,
-                        step: 0.1,
-                        value: cube.uniforms.thicknessScale.value,
-                        callback: value => {
-                            cube.uniforms.thicknessScale.value = value;
-                        }
-                    },
+                const postOptions = {
+                    Off: false,
+                    Post: true
+                };
+
+                const gammaOptions = {
+                    Off: false,
+                    Gamma: true
+                };
+
+                const postItems = [
                     {
                         type: 'divider'
                     },
@@ -510,6 +283,94 @@
                         callback: value => {
                             compositeMaterial.uniforms.uBloomDistortion.value = value;
                         }
+                    },
+                    {
+                        type: 'list',
+                        list: gammaOptions,
+                        value: getKeyByValue(gammaOptions, compositeMaterial.uniforms.uGamma.value),
+                        callback: value => {
+                            compositeMaterial.uniforms.uGamma.value = gammaOptions[value];
+                        }
+                    },
+                    {
+                        type: 'slider',
+                        label: 'Exp',
+                        min: 0,
+                        max: 2,
+                        step: 0.01,
+                        value: compositeMaterial.uniforms.uExposure.value,
+                        callback: value => {
+                            compositeMaterial.uniforms.uExposure.value = value;
+                        }
+                    }
+                ];
+
+                [
+                    {
+                        label: 'FPS'
+                    }
+                ].forEach(data => {
+                    this.ui.addPanel(new PanelItem(data));
+                });
+
+                LightPanelController.init(this.scene, this.ui);
+
+                const items = [
+                    {
+                        type: 'divider'
+                    },
+                    {
+                        type: 'list',
+                        list: toneMappingOptions,
+                        value: getKeyByValue(toneMappingOptions, this.renderer.toneMapping),
+                        callback: value => {
+                            this.renderer.toneMapping = toneMappingOptions[value];
+
+                            this.scene.traverse(object => {
+                                if (object.isMesh) {
+                                    object.material.needsUpdate = true;
+                                }
+                            });
+                        }
+                    },
+                    {
+                        type: 'slider',
+                        label: 'Exp',
+                        min: 0,
+                        max: 2,
+                        step: 0.01,
+                        value: this.renderer.toneMappingExposure,
+                        callback: value => {
+                            this.renderer.toneMappingExposure = value;
+                        }
+                    },
+                    {
+                        type: 'divider'
+                    },
+                    {
+                        type: 'list',
+                        list: postOptions,
+                        value: getKeyByValue(postOptions, RenderManager.enabled),
+                        callback: (value, panel) => {
+                            if (!panel.group) {
+                                const postPanel = new Panel();
+                                postPanel.animateIn(true);
+
+                                postItems.forEach(data => {
+                                    postPanel.add(new PanelItem(data));
+                                });
+
+                                panel.setContent(postPanel);
+                            }
+
+                            RenderManager.enabled = postOptions[value];
+
+                            if (RenderManager.enabled) {
+                                panel.group.show();
+                            } else {
+                                panel.group.hide();
+                            }
+                        }
                     }
                 ];
 
@@ -527,6 +388,7 @@
                     return;
                 }
 
+                LightPanelController.update();
                 this.ui.update();
             };
         }
@@ -540,7 +402,7 @@
                 this.scene = scene;
                 this.camera = camera;
 
-                this.luminosityThreshold = 0.1;
+                this.luminosityThreshold = 0.75;
                 this.luminositySmoothing = 1;
                 this.bloomStrength = 0.3;
                 this.bloomRadius = 0.2;
@@ -703,83 +565,14 @@
             };
         }
 
-        class CameraController {
-            static init(camera) {
-                this.camera = camera;
-
-                this.mouse = new Vector2();
-                this.lookAt = new Vector3(0, 0, -2);
-                this.origin = new Vector3();
-                this.target = new Vector3();
-                this.targetXY = new Vector2(5, 0.4);
-                this.origin.copy(this.camera.position);
-
-                this.lerpSpeed = 0.02;
-                this.enabled = false;
-
-                this.addListeners();
-            }
-
-            static addListeners() {
-                window.addEventListener('pointerdown', this.onPointerDown);
-                window.addEventListener('pointermove', this.onPointerMove);
-                window.addEventListener('pointerup', this.onPointerUp);
-            }
-
-            /**
-             * Event handlers
-             */
-
-            static onPointerDown = e => {
-                this.onPointerMove(e);
-            };
-
-            static onPointerMove = ({ clientX, clientY }) => {
-                if (!this.enabled) {
-                    return;
-                }
-
-                this.mouse.x = (clientX / document.documentElement.clientWidth) * 2 - 1;
-                this.mouse.y = 1 - (clientY / document.documentElement.clientHeight) * 2;
-            };
-
-            static onPointerUp = e => {
-                this.onPointerMove(e);
-            };
-
-            /**
-             * Public methods
-             */
-
-            static resize = (width, height) => {
-                this.camera.aspect = width / height;
-                this.camera.updateProjectionMatrix();
-            };
-
-            static update = () => {
-                if (!this.enabled) {
-                    return;
-                }
-
-                this.target.x = this.origin.x + this.targetXY.x * this.mouse.x;
-                this.target.y = this.origin.y + this.targetXY.y * this.mouse.y;
-                this.target.z = this.origin.z;
-
-                this.camera.position.lerp(this.target, this.lerpSpeed);
-                this.camera.lookAt(this.lookAt);
-            };
-
-            static animateIn = () => {
-                this.enabled = true;
-            };
-        }
-
         class WorldController {
             static init() {
                 this.initWorld();
+                this.initShadows();
                 this.initLights();
                 this.initLoaders();
                 this.initEnvironment();
+                this.initControls();
 
                 this.addListeners();
             }
@@ -795,14 +588,15 @@
                 // Tone mapping
                 this.renderer.toneMapping = ACESFilmicToneMapping;
                 this.renderer.toneMappingExposure = 1;
+                // this.renderer.outputEncoding = sRGBEncoding;
 
                 // 3D scene
                 this.scene = new Scene();
-                this.scene.background = new Color(0x0e0e0e);
-                this.camera = new PerspectiveCamera(30);
-                this.camera.near = 0.5;
-                this.camera.far = 40;
-                this.camera.position.z = 8;
+                this.scene.background = new Color(0xefefef);
+                this.camera = new PerspectiveCamera(35);
+                this.camera.near = 1;
+                this.camera.far = 2000;
+                this.camera.position.set(0, 0.5, 6);
                 this.camera.lookAt(this.scene.position);
 
                 // Global geometries
@@ -819,20 +613,55 @@
                 this.anisotropy = this.renderer.capabilities.getMaxAnisotropy();
             }
 
+            static initShadows() {
+                this.renderer.shadowMap.enabled = true;
+                this.renderer.shadowMap.type = BasicShadowMap;
+
+                SoftShadows.init({
+                    size: 0.004,
+                    frustum: 3.75,
+                    near: 9.5,
+                    samples: 6,
+                    rings: 4
+                });
+            }
+
             static initLights() {
                 this.scene.add(new AmbientLight(0xffffff, 0.2));
 
                 this.scene.add(new HemisphereLight(0x606060, 0x404040));
+
+                const directionalLight1 = new DirectionalLight(0xffffff, 0.8);
+                directionalLight1.position.set(5, 5, 5);
+                directionalLight1.castShadow = true;
+                directionalLight1.shadow.mapSize.width = 1024;
+                directionalLight1.shadow.mapSize.height = 1024;
+                directionalLight1.shadow.camera.near = 0.1;
+                directionalLight1.shadow.camera.far = 50;
+                this.scene.add(directionalLight1);
+
+                const directionalLight2 = new DirectionalLight();
+                directionalLight2.position.set(-3, 4, 1);
+                directionalLight2.castShadow = true;
+                directionalLight2.shadow.mapSize.width = 1024;
+                directionalLight2.shadow.mapSize.height = 1024;
+                directionalLight2.shadow.camera.near = 0.1;
+                directionalLight2.shadow.camera.far = 50;
+                this.scene.add(directionalLight2);
             }
 
             static initLoaders() {
                 this.textureLoader = new TextureLoader();
                 this.environmentLoader = new EnvironmentTextureLoader(this.renderer);
-                this.bufferGeometryLoader = new BufferGeometryLoader();
             }
 
             static async initEnvironment() {
                 this.scene.environment = await this.loadEnvironmentTexture('assets/textures/env/jewelry_black_contrast.jpg');
+            }
+
+            static initControls() {
+                this.controls = new OrbitControls(this.camera, this.renderer.domElement);
+                this.controls.enableDamping = true;
             }
 
             static addListeners() {
@@ -852,6 +681,9 @@
              */
 
             static resize = (width, height, dpr) => {
+                this.camera.aspect = width / height;
+                this.camera.updateProjectionMatrix();
+
                 width = Math.round(width * dpr);
                 height = Math.round(height * dpr);
 
@@ -863,6 +695,8 @@
             static update = (time, delta, frame) => {
                 this.time.value = time;
                 this.frame.value = frame;
+
+                this.controls.update();
             };
 
             static getTexture = (path, callback) => this.textureLoader.load(path, callback);
@@ -870,20 +704,10 @@
             static loadTexture = path => this.textureLoader.loadAsync(path);
 
             static loadEnvironmentTexture = path => this.environmentLoader.loadAsync(path);
-
-            static getBufferGeometry = (path, callback) => this.bufferGeometryLoader.load(path, callback);
-
-            static loadBufferGeometry = path => this.bufferGeometryLoader.loadAsync(path);
-
-            static getFrustum = offsetZ => getFrustum(this.camera, offsetZ);
         }
 
         class App {
             static async init() {
-                if (!/firefox/i.test(navigator.userAgent)) {
-                    this.initThread();
-                }
-
                 this.initWorld();
                 this.initViews();
                 this.initControllers();
@@ -892,22 +716,11 @@
                 this.onResize();
 
                 await Promise.all([
-                    SceneController.ready(),
                     WorldController.textureLoader.ready(),
                     WorldController.environmentLoader.ready()
                 ]);
 
                 this.initPanel();
-
-                CameraController.animateIn();
-                SceneController.animateIn();
-            }
-
-            static initThread() {
-                ImageBitmapLoaderThread.init();
-                BufferGeometryLoaderThread.init();
-
-                Thread.shared();
             }
 
             static initWorld() {
@@ -923,13 +736,13 @@
             static initControllers() {
                 const { renderer, scene, camera } = WorldController;
 
-                CameraController.init(camera);
-                SceneController.init(this.view);
                 RenderManager.init(renderer, scene, camera);
             }
 
             static initPanel() {
-                PanelController.init(this.view);
+                const { renderer, scene } = WorldController;
+
+                PanelController.init(renderer, scene);
             }
 
             static addListeners() {
@@ -948,15 +761,11 @@
                 const dpr = window.devicePixelRatio;
 
                 WorldController.resize(width, height, dpr);
-                CameraController.resize(width, height);
-                SceneController.resize(width, height);
                 RenderManager.resize(width, height, dpr);
             };
 
             static onUpdate = (time, delta, frame) => {
                 WorldController.update(time, delta, frame);
-                CameraController.update();
-                SceneController.update();
                 RenderManager.update(time, delta, frame);
                 PanelController.update();
             };

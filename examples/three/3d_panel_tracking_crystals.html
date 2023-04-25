@@ -11,7 +11,7 @@
     <link rel="stylesheet" href="assets/css/style.css">
 
     <script type="module">
-        import { ACESFilmicToneMapping, AmbientLight, BasicShadowMap, BloomCompositeMaterial, BoxGeometry, Color, DirectionalLight, DoubleSide, EnvironmentTextureLoader, GLSL3, Group, HemisphereLight, IcosahedronGeometry, ImageBitmapLoaderThread, LuminosityMaterial, MaterialPanelController, MathUtils, Mesh, MeshPhysicalMaterial, NoBlending, OctahedronGeometry, OrthographicCamera, PanelItem, PerspectiveCamera, PlaneGeometry, Point3D, RawShaderMaterial, Reflector, RepeatWrapping, Scene, ShadowMaterial, TextureLoader, Thread, UI, UnrealBloomBlurMaterial, Vector2, Vector3, WebGLRenderTarget, WebGLRenderer, getFullscreenTriangle, getKeyByValue, ticker } from '../../build/alien.three.js';
+        import { ACESFilmicToneMapping, AmbientLight, BasicShadowMap, BloomCompositeMaterial, BoxGeometry, Color, DirectionalLight, DoubleSide, EnvironmentTextureLoader, GLSL3, Group, HemisphereLight, IcosahedronGeometry, ImageBitmapLoaderThread, LuminosityMaterial, MathUtils, Mesh, MeshPhysicalMaterial, NoBlending, OctahedronGeometry, OrthographicCamera, PanelItem, PerspectiveCamera, PhysicalMaterialPanel, PlaneGeometry, Point3D, RawShaderMaterial, Reflector, RepeatWrapping, Scene, ShadowMaterial, TextureLoader, Thread, UI, UnrealBloomBlurMaterial, Vector2, Vector3, WebGLRenderTarget, WebGLRenderer, getFullscreenTriangle, getKeyByValue, ticker } from '../../build/alien.three.js';
 
         class Config {
             static CRYSTAL_COLOR = 0x9902ff;
@@ -128,6 +128,7 @@
                     sheenColor: new Color(Config.CRYSTAL_COLOR),
                     sheenRoughness: 1,
                     side: DoubleSide,
+                    forceSinglePass: true,
                     transparent: true,
                     opacity: 0.8,
                     flatShading: true,
@@ -187,17 +188,17 @@
                 map.anisotropy = anisotropy;
                 map.wrapS = RepeatWrapping;
                 map.wrapT = RepeatWrapping;
-                map.repeat.set(2, 1);
+                map.repeat.set(2, 2);
 
                 normalMap.anisotropy = anisotropy;
                 normalMap.wrapS = RepeatWrapping;
                 normalMap.wrapT = RepeatWrapping;
-                normalMap.repeat.set(2, 1);
+                normalMap.repeat.set(2, 2);
 
                 ormMap.anisotropy = anisotropy;
                 ormMap.wrapS = RepeatWrapping;
                 ormMap.wrapT = RepeatWrapping;
-                ormMap.repeat.set(2, 1);
+                ormMap.repeat.set(2, 2);
 
                 const material = new MeshPhysicalMaterial({
                     name: 'Floating Crystal',
@@ -222,6 +223,7 @@
                     sheenColor: new Color(Config.CRYSTAL_COLOR),
                     sheenRoughness: 1,
                     side: DoubleSide,
+                    forceSinglePass: true,
                     transparent: true,
                     opacity: 0.8,
                     flatShading: true,
@@ -319,6 +321,7 @@
                     sheenColor: new Color(Config.CRYSTAL_COLOR),
                     sheenRoughness: 1,
                     side: DoubleSide,
+                    forceSinglePass: true,
                     transparent: true,
                     opacity: 0.8,
                     polygonOffset: true,
@@ -552,8 +555,6 @@
             static init(view) {
                 this.view = view;
 
-                this.points = [];
-
                 this.initPanel();
 
                 this.addListeners();
@@ -562,19 +563,27 @@
             static initPanel() {
                 const { darkPlanet, floatingCrystal, abstractCube } = this.view;
 
-                const views = [darkPlanet, floatingCrystal, abstractCube];
+                const objects = [darkPlanet, floatingCrystal, abstractCube];
 
-                views.forEach(view => {
-                    const { material } = view.mesh;
+                objects.forEach(object => {
+                    object.point = new Point3D(object.mesh);
+                    object.add(object.point);
 
-                    view.point = new Point3D(view.mesh, {
-                        name: material.name,
-                        type: material.type
+                    const items = [
+                        {
+                            type: 'content',
+                            callback: (value, panel) => {
+                                const materialPanel = new PhysicalMaterialPanel(object.mesh);
+                                materialPanel.animateIn(true);
+
+                                panel.setContent(materialPanel);
+                            }
+                        }
+                    ];
+
+                    items.forEach(data => {
+                        object.point.addPanel(new PanelItem(data));
                     });
-                    view.add(view.point);
-                    this.points.push(view.point);
-
-                    MaterialPanelController.init(view.point, material);
                 });
 
                 // Shrink tracker meshes a little bit
@@ -583,7 +592,6 @@
             }
 
             static addListeners() {
-                Point3D.add(...this.points);
                 Point3D.events.on('click', this.onClick);
             }
 
@@ -1037,6 +1045,10 @@
 
             static initLoaders() {
                 this.textureLoader = new TextureLoader();
+                this.textureLoader.setOptions({
+                    preserveData: true
+                });
+
                 this.environmentLoader = new EnvironmentTextureLoader(this.renderer);
             }
 

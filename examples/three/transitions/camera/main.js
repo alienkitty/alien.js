@@ -254,7 +254,6 @@ class Details extends Interface {
     }
 
     initHTML() {
-        this.invisible();
         this.css({
             position: 'absolute',
             left: 0,
@@ -263,14 +262,16 @@ class Details extends Interface {
             height: '100%',
             display: 'flex',
             alignItems: 'center',
-            pointerEvents: 'none',
-            opacity: 0
+            pointerEvents: 'none'
         });
 
         this.container = new Interface('.container');
+        this.container.invisible();
         this.container.css({
             width: 400,
-            margin: '10% 10% 13%'
+            margin: '10% 10% 13%',
+            pointerEvents: 'none',
+            opacity: 0
         });
         this.add(this.container);
     }
@@ -340,9 +341,9 @@ class Details extends Interface {
      */
 
     animateIn = () => {
-        this.clearTween();
-        this.visible();
-        this.css({
+        this.container.clearTween();
+        this.container.visible();
+        this.container.css({
             pointerEvents: 'none',
             opacity: 1
         });
@@ -367,15 +368,15 @@ class Details extends Interface {
         this.clearTimeout(this.timeout);
 
         this.timeout = this.delayedCall(2000, () => {
-            this.css({ pointerEvents: 'auto' });
+            this.container.css({ pointerEvents: 'auto' });
         });
     };
 
     animateOut = callback => {
-        this.css({ pointerEvents: 'none' });
+        this.container.css({ pointerEvents: 'none' });
 
-        this.clearTween().tween({ opacity: 0 }, 300, 'easeInSine', () => {
-            this.invisible();
+        this.container.clearTween().tween({ opacity: 0 }, 300, 'easeInSine', () => {
+            this.container.invisible();
 
             if (callback) {
                 callback();
@@ -722,17 +723,17 @@ class FloatingCrystal extends Group {
         map.anisotropy = anisotropy;
         map.wrapS = RepeatWrapping;
         map.wrapT = RepeatWrapping;
-        map.repeat.set(2, 1);
+        map.repeat.set(2, 2);
 
         normalMap.anisotropy = anisotropy;
         normalMap.wrapS = RepeatWrapping;
         normalMap.wrapT = RepeatWrapping;
-        normalMap.repeat.set(2, 1);
+        normalMap.repeat.set(2, 2);
 
         ormMap.anisotropy = anisotropy;
         ormMap.wrapS = RepeatWrapping;
         ormMap.wrapT = RepeatWrapping;
-        ormMap.repeat.set(2, 1);
+        ormMap.repeat.set(2, 2);
 
         const material = new MeshStandardMaterial({
             name: 'Floating Crystal',
@@ -1132,8 +1133,6 @@ class ScenePanelController {
     static init(view) {
         this.view = view;
 
-        this.points = [];
-
         this.initPanel();
 
         this.addListeners();
@@ -1145,15 +1144,11 @@ class ScenePanelController {
         const views = [darkPlanet, floatingCrystal, abstractCube];
 
         views.forEach(view => {
-            const { material } = view.mesh;
-
             view.point = new Point3D(view.mesh, {
-                name: material.name,
                 type: '',
                 noTracker: true
             });
             view.add(view.point);
-            this.points.push(view.point);
         });
 
         // Shrink tracker meshes a little bit
@@ -1162,7 +1157,6 @@ class ScenePanelController {
     }
 
     static addListeners() {
-        Point3D.add(...this.points);
         Point3D.events.on('click', this.onClick);
     }
 

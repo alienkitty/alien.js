@@ -11,7 +11,9 @@
     <link rel="stylesheet" href="assets/css/style.css">
 
     <script type="module">
-        import { BasicMaterial, BufferGeometryLoader, BufferGeometryLoaderThread, Color, Group, ImageBitmapLoaderThread, Mesh, OrbitControls, PerspectiveCamera, Scene, TextureLoader, Thread, Vector2, WebGLRenderer, getFullscreenTriangle, ticker } from '../../build/alien.three.js';
+        import { BasicMaterial, BufferGeometryLoader, BufferGeometryLoaderThread, Color, ColorManagement, Group, ImageBitmapLoaderThread, LinearSRGBColorSpace, Mesh, OrbitControls, PerspectiveCamera, Scene, TextureLoader, Thread, Vector2, WebGLRenderer, getFullscreenTriangle, ticker } from '../../build/alien.three.js';
+
+        ColorManagement.enabled = false; // Disable color management
 
         /*
 
@@ -53,8 +55,8 @@
         12) Outputs a .json with the required position, normal and uv attributes.
 
         Note you can only export one UV at a time.
-        If you want to use uv2 you'll need to re-export with the other UV in slot 1.
-        And then manually copy-paste the uv attribute into the .json as the uv2 attribute.
+        If you want to use uv1 you'll need to re-export with the other UV in slot 1.
+        And then manually copy-paste the uv attribute into the .json as the uv1 attribute.
 
         13) Repeat for each of your objects.
 
@@ -72,7 +74,7 @@
 
                 // Use second set of UVs for cubemap row layout
                 // https://docs.unrealengine.com/4.27/en-US/RenderingAndGraphics/Textures/Cubemaps/CreatingCubemaps/
-                geometry.attributes.uv = geometry.attributes.uv2;
+                geometry.attributes.uv = geometry.attributes.uv1;
 
                 this.geometry = geometry;
             }
@@ -169,6 +171,9 @@
                     antialias: true
                 });
                 this.element = this.renderer.domElement;
+
+                // Output color space encoding
+                this.renderer.outputColorSpace = LinearSRGBColorSpace;
 
                 // 3D scene
                 this.scene = new Scene();

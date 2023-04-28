@@ -11,7 +11,9 @@
     <link rel="stylesheet" href="assets/css/style.css">
 
     <script type="module">
-        import { ACESFilmicToneMapping, BloomCompositeMaterial, Color, DirectionalLight, Fog, GLSL3, Group, HemisphereLight, LuminosityMaterial, MathUtils, Mesh, MeshBasicMaterial, MeshStandardMaterial, NoBlending, OrthographicCamera, PanelItem, PerspectiveCamera, PlaneGeometry, RawShaderMaterial, Reflector, RepeatWrapping, SVGLoader, Scene, TextureLoader, UI, UnrealBloomBlurMaterial, Vector2, Vector3, WebGLRenderTarget, WebGLRenderer, Wobble, getFullscreenTriangle, ticker } from '../../build/alien.three.js';
+        import { ACESFilmicToneMapping, BloomCompositeMaterial, Color, ColorManagement, DirectionalLight, Fog, GLSL3, Group, HemisphereLight, LinearSRGBColorSpace, LuminosityMaterial, MathUtils, Mesh, MeshBasicMaterial, MeshStandardMaterial, NoBlending, OrthographicCamera, PanelItem, PerspectiveCamera, PlaneGeometry, RawShaderMaterial, Reflector, RepeatWrapping, SVGLoader, Scene, TextureLoader, UI, UnrealBloomBlurMaterial, Vector2, Vector3, WebGLRenderTarget, WebGLRenderer, Wobble, getFullscreenTriangle, ticker } from '../../build/alien.three.js';
+
+        ColorManagement.enabled = false; // Disable color management
 
         import rgbshift from '../../src/shaders/modules/rgbshift/rgbshift.glsl.js';
 
@@ -125,7 +127,7 @@
 
                 // Second set of UVs for aoMap and lightMap
                 // https://threejs.org/docs/#api/en/materials/MeshStandardMaterial.aoMap
-                geometry.attributes.uv2 = geometry.attributes.uv;
+                geometry.attributes.uv1 = geometry.attributes.uv;
 
                 // Textures
                 const [map, normalMap, ormMap] = await Promise.all([
@@ -729,9 +731,10 @@
                 });
                 this.element = this.renderer.domElement;
 
-                // Tone mapping
+                // Tone mapping and output color space encoding
                 this.renderer.toneMapping = ACESFilmicToneMapping;
                 this.renderer.toneMappingExposure = 1;
+                this.renderer.outputColorSpace = LinearSRGBColorSpace;
 
                 // 3D scene
                 this.scene = new Scene();

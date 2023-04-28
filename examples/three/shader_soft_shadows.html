@@ -19,7 +19,9 @@
     </style>
 
     <script type="module">
-        import { AmbientLight, BasicShadowMap, BufferGeometryLoader, BufferGeometryLoaderThread, Color, DirectionalLight, Group, HemisphereLight, ImageBitmapLoaderThread, Mesh, MeshPhongMaterial, NoBlending, OrbitControls, PanelItem, PerspectiveCamera, PlaneGeometry, Reflector, RepeatWrapping, Scene, ShadowMaterial, SoftShadows, SphereGeometry, TextureLoader, Thread, UI, Vector2, WebGLRenderer, getFullscreenTriangle, ticker } from '../../build/alien.three.js';
+        import { AmbientLight, BasicShadowMap, BufferGeometryLoader, BufferGeometryLoaderThread, Color, ColorManagement, DirectionalLight, Group, HemisphereLight, ImageBitmapLoaderThread, LinearSRGBColorSpace, Mesh, MeshPhongMaterial, NoBlending, OrbitControls, PanelItem, PerspectiveCamera, PlaneGeometry, Reflector, RepeatWrapping, Scene, ShadowMaterial, SoftShadows, SphereGeometry, TextureLoader, Thread, UI, Vector2, WebGLRenderer, getFullscreenTriangle, ticker } from '../../build/alien.three.js';
+
+        ColorManagement.enabled = false; // Disable color management
 
         // Based on https://threejs.org/examples/#webgl_shadowmap_pcss by spidersharma03
 
@@ -343,6 +345,9 @@
                     antialias: true
                 });
                 this.element = this.renderer.domElement;
+
+                // Output color space encoding
+                this.renderer.outputColorSpace = LinearSRGBColorSpace;
 
                 // 3D scene
                 this.scene = new Scene();

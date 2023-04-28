@@ -11,7 +11,9 @@
     <link rel="stylesheet" href="assets/css/style.css">
 
     <script type="module">
-        import { ACESFilmicToneMapping, AmbientLight, BloomCompositeMaterial, BoxGeometry, BufferGeometry, Color, DirectionalLight, Float32BufferAttribute, GLSL3, Group, HemisphereLight, LuminosityMaterial, MathUtils, Mesh, MeshStandardMaterial, NoBlending, OrthographicCamera, PanelItem, PlaneGeometry, RawShaderMaterial, Scene, UI, UnrealBloomBlurMaterial, Vector2, WebGLRenderTarget, WebGLRenderer, getFullscreenTriangle, getKeyByValue, ticker } from '../../build/alien.three.js';
+        import { ACESFilmicToneMapping, AmbientLight, BloomCompositeMaterial, BoxGeometry, BufferGeometry, Color, ColorManagement, DirectionalLight, Float32BufferAttribute, GLSL3, Group, HemisphereLight, LinearSRGBColorSpace, LuminosityMaterial, MathUtils, Mesh, MeshStandardMaterial, NoBlending, OrthographicCamera, PanelItem, PlaneGeometry, RawShaderMaterial, Scene, UI, UnrealBloomBlurMaterial, Vector2, WebGLRenderTarget, WebGLRenderer, getFullscreenTriangle, getKeyByValue, ticker } from '../../build/alien.three.js';
+
+        ColorManagement.enabled = false; // Disable color management
 
         class Config {
             static BREAKPOINT = 1000;
@@ -481,9 +483,10 @@
                 });
                 this.element = this.renderer.domElement;
 
-                // Tone mapping
+                // Tone mapping and output color space encoding
                 this.renderer.toneMapping = ACESFilmicToneMapping;
                 this.renderer.toneMappingExposure = 1;
+                this.renderer.outputColorSpace = LinearSRGBColorSpace;
 
                 // Isometric scene
                 this.scene = new Scene();

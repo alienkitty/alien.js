@@ -19,7 +19,9 @@
     </style>
 
     <script type="module">
-        import { Color, GLSL3, Group, Mesh, OrbitControls, PanelItem, PerspectiveCamera, RawShaderMaterial, Scene, SphereGeometry, UI, Vector2, WebGLRenderer, brightness, getFullscreenTriangle, ticker } from '../../build/alien.three.js';
+        import { Color, ColorManagement, GLSL3, Group, LinearSRGBColorSpace, Mesh, OrbitControls, PanelItem, PerspectiveCamera, RawShaderMaterial, Scene, SphereGeometry, UI, Vector2, WebGLRenderer, brightness, getFullscreenTriangle, ticker } from '../../build/alien.three.js';
+
+        ColorManagement.enabled = false; // Disable color management
 
         import periodic3d from '../../src/shaders/modules/noise/periodic3d.glsl.js';
 
@@ -251,6 +253,9 @@
                     antialias: true
                 });
                 this.element = this.renderer.domElement;
+
+                // Output color space encoding
+                this.renderer.outputColorSpace = LinearSRGBColorSpace;
 
                 // 3D scene
                 this.scene = new Scene();

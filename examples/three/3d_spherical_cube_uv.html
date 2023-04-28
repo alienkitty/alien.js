@@ -11,7 +11,9 @@
     <link rel="stylesheet" href="assets/css/style.css">
 
     <script type="module">
-        import { BasicMaterial, BufferGeometryLoader, BufferGeometryLoaderThread, Color, Group, ImageBitmapLoaderThread, Mesh, OrbitControls, PerspectiveCamera, Scene, TextureLoader, Thread, Vector2, WebGLRenderer, getFullscreenTriangle, ticker } from '../../build/alien.three.js';
+        import { BasicMaterial, BufferGeometryLoader, BufferGeometryLoaderThread, Color, ColorManagement, Group, ImageBitmapLoaderThread, LinearSRGBColorSpace, Mesh, OrbitControls, PerspectiveCamera, Scene, TextureLoader, Thread, Vector2, WebGLRenderer, getFullscreenTriangle, ticker } from '../../build/alien.three.js';
+
+        ColorManagement.enabled = false; // Disable color management
 
         class Cube extends Group {
             constructor() {
@@ -25,7 +27,7 @@
 
                 // Use second set of UVs for cubemap row layout
                 // https://docs.unrealengine.com/4.27/en-US/RenderingAndGraphics/Textures/Cubemaps/CreatingCubemaps/
-                geometry.attributes.uv = geometry.attributes.uv2;
+                geometry.attributes.uv = geometry.attributes.uv1;
 
                 this.geometry = geometry;
             }
@@ -122,6 +124,9 @@
                     antialias: true
                 });
                 this.element = this.renderer.domElement;
+
+                // Output color space encoding
+                this.renderer.outputColorSpace = LinearSRGBColorSpace;
 
                 // 3D scene
                 this.scene = new Scene();

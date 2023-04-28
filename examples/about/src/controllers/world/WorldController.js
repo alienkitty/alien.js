@@ -1,4 +1,6 @@
-import { Mesh, OrthographicCamera, Vector2, WebGLRenderer } from 'three';
+import { ColorManagement, Mesh, OrthographicCamera, Vector2, WebGLRenderer } from 'three';
+
+ColorManagement.enabled = false; // Disable color management
 
 import { getFullscreenTriangle } from '@alienkitty/space.js/three';
 

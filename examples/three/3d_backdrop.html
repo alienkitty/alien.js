@@ -19,7 +19,9 @@
     </style>
 
     <script type="module">
-        import { ACESFilmicToneMapping, AmbientLight, BasicShadowMap, BloomCompositeMaterial, CineonToneMapping, Color, DirectionalLight, Easing, EnvironmentTextureLoader, GLSL3, Group, HemisphereLight, IcosahedronGeometry, LightPanelController, LinearToneMapping, LuminosityMaterial, MathUtils, Mesh, MeshStandardMaterial, NoBlending, NoToneMapping, OrbitControls, OrthographicCamera, Panel, PanelItem, PerspectiveCamera, PlaneGeometry, RawShaderMaterial, ReinhardToneMapping, Scene, SoftShadows, TextureLoader, UI, UnrealBloomBlurMaterial, Vector2, WebGLRenderTarget, WebGLRenderer, getFullscreenTriangle, getKeyByValue, ticker } from '../../build/alien.three.js';
+        import { ACESFilmicToneMapping, AmbientLight, BasicShadowMap, BloomCompositeMaterial, CineonToneMapping, Color, ColorManagement, DirectionalLight, Easing, EnvironmentTextureLoader, GLSL3, Group, HemisphereLight, IcosahedronGeometry, LightPanelController, LinearSRGBColorSpace, LinearToneMapping, LuminosityMaterial, MathUtils, Mesh, MeshStandardMaterial, NoBlending, NoToneMapping, OrbitControls, OrthographicCamera, Panel, PanelItem, PerspectiveCamera, PlaneGeometry, RawShaderMaterial, ReinhardToneMapping, Scene, SoftShadows, TextureLoader, UI, UnrealBloomBlurMaterial, Vector2, WebGLRenderTarget, WebGLRenderer, getFullscreenTriangle, getKeyByValue, ticker } from '../../build/alien.three.js';
+
+        ColorManagement.enabled = false; // Disable color management
 
         import rgbshift from '../../src/shaders/modules/rgbshift/rgbshift.glsl.js';
         import encodings from '../../src/shaders/modules/encodings/encodings.glsl.js';
@@ -585,10 +587,10 @@
                 });
                 this.element = this.renderer.domElement;
 
-                // Tone mapping
+                // Tone mapping and output color space encoding
                 this.renderer.toneMapping = ACESFilmicToneMapping;
                 this.renderer.toneMappingExposure = 1;
-                // this.renderer.outputEncoding = sRGBEncoding;
+                this.renderer.outputColorSpace = LinearSRGBColorSpace;
 
                 // 3D scene
                 this.scene = new Scene();

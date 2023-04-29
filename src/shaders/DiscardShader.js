@@ -1,3 +1,5 @@
+// Based on https://github.com/pmndrs/drei/blob/master/src/materials/DiscardMaterial.tsx
+
 export const vertexShader = /* glsl */ `
 in vec3 position;
 

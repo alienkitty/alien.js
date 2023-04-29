@@ -361,10 +361,10 @@ class UIBackground extends Interface {
         this.end = 0;
         this.direction = this.end - this.start < 0 ? -1 : 1;
 
-        this.element.width = Math.round(width * dpr);
-        this.element.height = Math.round(height * dpr);
-        this.element.style.width = width + 'px';
-        this.element.style.height = height + 'px';
+        this.element.width = Math.round(this.width * dpr);
+        this.element.height = Math.round(this.height * dpr);
+        this.element.style.width = this.width + 'px';
+        this.element.style.height = this.height + 'px';
         this.context.scale(dpr, dpr);
 
         const increment = width / (this.points.length - 1);

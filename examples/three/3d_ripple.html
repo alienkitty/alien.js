@@ -62,8 +62,8 @@
                 this.width = width;
                 this.height = height;
 
-                this.element.width = Math.round(width * dpr);
-                this.element.height = Math.round(height * dpr);
+                this.element.width = Math.round(this.width * dpr);
+                this.element.height = Math.round(this.height * dpr);
                 this.context.scale(dpr, dpr);
 
                 this.update();
@@ -101,17 +101,7 @@
             }
 
             initMesh() {
-                this.texture.grid = new Texture(this.grid.element);
-                this.texture.grid.minFilter = LinearFilter;
-                this.texture.grid.generateMipmaps = false;
-                this.texture.displace = new Texture(this.canvas.displace);
-                this.texture.displace.minFilter = LinearFilter;
-                this.texture.displace.generateMipmaps = false;
-
                 this.material = new MeshStandardMaterial({
-                    map: this.texture.grid,
-                    // map: this.texture.displace,
-                    displacementMap: this.texture.displace,
                     displacementScale: 0.3,
                     depthTest: false,
                     depthWrite: false,
@@ -204,11 +194,30 @@
                 const height = document.documentElement.clientHeight;
                 const dpr = window.devicePixelRatio;
 
+                if (this.texture.grid) {
+                    this.texture.grid.dispose();
+                }
+
+                if (this.texture.displace) {
+                    this.texture.displace.dispose();
+                }
+
                 this.grid.resize(width, height, dpr);
                 this.resizeCanvas('displace', width, height, dpr);
                 this.resizeCanvas('ripple', 256, 256, dpr);
 
+                this.texture.grid = new Texture(this.grid.element);
+                this.texture.grid.minFilter = LinearFilter;
+                this.texture.grid.generateMipmaps = false;
                 this.texture.grid.needsUpdate = true;
+                this.texture.displace = new Texture(this.canvas.displace);
+                this.texture.displace.minFilter = LinearFilter;
+                this.texture.displace.generateMipmaps = false;
+                this.texture.displace.needsUpdate = true;
+
+                this.material.map = this.texture.grid;
+                // this.material.map = this.texture.displace;
+                this.material.displacementMap = this.texture.displace;
 
                 if (this.isLoaded) {
                     // Draws from a canvas are faster

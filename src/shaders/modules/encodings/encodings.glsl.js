@@ -1,4 +1,4 @@
-// Based on https://github.com/mrdoob/three.js/blob/dev/examples/jsm/shaders/GammaCorrectionShader.js by WestLangley
+// From https://github.com/mrdoob/three.js/blob/dev/src/renderers/shaders/ShaderChunk/encodings_pars_fragment.glsl.js
 
 export default /* glsl */ `
 vec4 linearToSRGB(vec4 value) {

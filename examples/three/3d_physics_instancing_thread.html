@@ -11,7 +11,9 @@
     <link rel="stylesheet" href="assets/css/style.css">
 
     <script type="module">
-        import { ACESFilmicToneMapping, AmbientLight, BasicShadowMap, BloomCompositeMaterial, BoxGeometry, Color, DirectionalLight, DynamicDrawUsage, EnvironmentTextureLoader, EventEmitter, GLSL3, Group, HemisphereLight, IcosahedronGeometry, ImageBitmapLoaderThread, InstancedMesh, LuminosityMaterial, MathUtils, Matrix4, Mesh, MeshBasicMaterial, MeshStandardMaterial, NoBlending, OimoPhysicsBuffer, OimoPhysicsController, OrthographicCamera, PanelItem, PerspectiveCamera, PlaneGeometry, PointLight, RawShaderMaterial, Reflector, RepeatWrapping, Scene, ShaderChunk, ShadowMaterial, SphereGeometry, TextureLoader, Thread, UI, UnrealBloomBlurMaterial, Vector2, Vector3, WebGLRenderTarget, WebGLRenderer, getFrustum, getFullscreenTriangle, getKeyByValue, ticker } from '../../build/alien.three.js';
+        import { ACESFilmicToneMapping, AmbientLight, BasicShadowMap, BloomCompositeMaterial, BoxGeometry, Color, ColorManagement, DirectionalLight, DynamicDrawUsage, EnvironmentTextureLoader, EventEmitter, GLSL3, Group, HemisphereLight, IcosahedronGeometry, ImageBitmapLoaderThread, InstancedMesh, LinearSRGBColorSpace, LuminosityMaterial, MathUtils, Matrix4, Mesh, MeshBasicMaterial, MeshStandardMaterial, NoBlending, OimoPhysicsBuffer, OimoPhysicsController, OrthographicCamera, PanelItem, PerspectiveCamera, PlaneGeometry, PointLight, RawShaderMaterial, Reflector, RepeatWrapping, Scene, ShaderChunk, ShadowMaterial, SphereGeometry, TextureLoader, Thread, UI, UnrealBloomBlurMaterial, Vector2, Vector3, WebGLRenderTarget, WebGLRenderer, getFrustum, getFullscreenTriangle, getKeyByValue, ticker } from '../../build/alien.three.js';
+
+        ColorManagement.enabled = false; // Disable color management
 
         class Config {
             static LIGHT_COLOR = 0xf44336;
@@ -582,7 +584,7 @@
 
                 // Second set of UVs for aoMap and lightMap
                 // https://threejs.org/docs/#api/en/materials/MeshStandardMaterial.aoMap
-                geometryBox.attributes.uv2 = geometryBox.attributes.uv;
+                geometryBox.attributes.uv1 = geometryBox.attributes.uv;
 
                 const boxes = new InstancedMesh(geometryBox, material, 100);
                 boxes.instanceMatrix.setUsage(DynamicDrawUsage); // Will be updated every frame
@@ -603,7 +605,7 @@
 
                 // Second set of UVs for aoMap and lightMap
                 // https://threejs.org/docs/#api/en/materials/MeshStandardMaterial.aoMap
-                geometrySphere.attributes.uv2 = geometrySphere.attributes.uv;
+                geometrySphere.attributes.uv1 = geometrySphere.attributes.uv;
 
                 const spheres = new InstancedMesh(geometrySphere, material, 100);
                 spheres.instanceMatrix.setUsage(DynamicDrawUsage); // Will be updated every frame
@@ -1142,9 +1144,10 @@
                 this.renderer.shadowMap.enabled = true;
                 this.renderer.shadowMap.type = BasicShadowMap;
 
-                // Tone mapping
+                // Tone mapping and output color space encoding
                 this.renderer.toneMapping = ACESFilmicToneMapping;
                 this.renderer.toneMappingExposure = 1;
+                this.renderer.outputColorSpace = LinearSRGBColorSpace;
 
                 // 3D scene
                 this.scene = new Scene();

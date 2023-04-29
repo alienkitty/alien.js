@@ -1,4 +1,6 @@
-import { ACESFilmicToneMapping, AmbientLight, AssetLoader, BloomCompositeMaterial, BoxGeometry, Color, DirectionalLight, EnvironmentTextureLoader, Group, Header, HemisphereLight, IcosahedronGeometry, ImageBitmapLoaderThread, Interface, LuminosityMaterial, MathUtils, Mesh, MeshStandardMaterial, OctahedronGeometry, OrthographicCamera, PanelItem, PerspectiveCamera, RepeatWrapping, Scene, SceneCompositeMaterial, Stage, TextureLoader, Thread, UnrealBloomBlurMaterial, Vector2, WebGLRenderTarget, WebGLRenderer, clearTween, getFullscreenTriangle, shuffle, ticker, tween } from '../../../../build/alien.three.js';
+import { ACESFilmicToneMapping, AmbientLight, AssetLoader, BloomCompositeMaterial, BoxGeometry, Color, ColorManagement, DirectionalLight, EnvironmentTextureLoader, Group, Header, HemisphereLight, IcosahedronGeometry, ImageBitmapLoaderThread, Interface, LinearSRGBColorSpace, LuminosityMaterial, MathUtils, Mesh, MeshStandardMaterial, OctahedronGeometry, OrthographicCamera, PanelItem, PerspectiveCamera, RepeatWrapping, Scene, SceneCompositeMaterial, Stage, TextureLoader, Thread, UnrealBloomBlurMaterial, Vector2, WebGLRenderTarget, WebGLRenderer, clearTween, getFullscreenTriangle, shuffle, ticker, tween } from '../../../../build/alien.three.js';
+
+ColorManagement.enabled = false; // Disable color management
 
 class Global {
     static PAGES = [];
@@ -359,10 +361,10 @@ class UIBackground extends Interface {
         this.end = 0;
         this.direction = this.end - this.start < 0 ? -1 : 1;
 
-        this.element.width = Math.round(width * dpr);
-        this.element.height = Math.round(height * dpr);
-        this.element.style.width = width + 'px';
-        this.element.style.height = height + 'px';
+        this.element.width = Math.round(this.width * dpr);
+        this.element.height = Math.round(this.height * dpr);
+        this.element.style.width = this.width + 'px';
+        this.element.style.height = this.height + 'px';
         this.context.scale(dpr, dpr);
 
         const increment = width / (this.points.length - 1);
@@ -572,7 +574,7 @@ class AbstractCube extends Group {
 
         // Second set of UVs for aoMap and lightMap
         // https://threejs.org/docs/#api/en/materials/MeshStandardMaterial.aoMap
-        geometry.attributes.uv2 = geometry.attributes.uv;
+        geometry.attributes.uv1 = geometry.attributes.uv;
 
         // Textures
         const [map, normalMap, ormMap] = await Promise.all([
@@ -635,7 +637,7 @@ class FloatingCrystal extends Group {
 
         // Second set of UVs for aoMap and lightMap
         // https://threejs.org/docs/#api/en/materials/MeshStandardMaterial.aoMap
-        geometry.attributes.uv2 = geometry.attributes.uv;
+        geometry.attributes.uv1 = geometry.attributes.uv;
 
         // Textures
         const [map, normalMap, ormMap] = await Promise.all([
@@ -712,7 +714,7 @@ class DarkPlanet extends Group {
 
         // Second set of UVs for aoMap and lightMap
         // https://threejs.org/docs/#api/en/materials/MeshStandardMaterial.aoMap
-        geometry.attributes.uv2 = geometry.attributes.uv;
+        geometry.attributes.uv1 = geometry.attributes.uv;
 
         // Textures
         const [map, normalMap, ormMap] = await Promise.all([
@@ -1131,9 +1133,10 @@ class WorldController {
         });
         this.element = this.renderer.domElement;
 
-        // Tone mapping
+        // Tone mapping and output color space encoding
         this.renderer.toneMapping = ACESFilmicToneMapping;
         this.renderer.toneMappingExposure = 1;
+        this.renderer.outputColorSpace = LinearSRGBColorSpace;
 
         // 3D scene
         this.scene = new Scene();

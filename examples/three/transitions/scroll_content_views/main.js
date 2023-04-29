@@ -1,4 +1,6 @@
-import { ACESFilmicToneMapping, AmbientLight, AssetLoader, BloomCompositeMaterial, BoxGeometry, Color, Component, DirectionalLight, EnvironmentTextureLoader, GLSL3, Group, HemisphereLight, IcosahedronGeometry, ImageBitmapLoaderThread, Interface, LuminosityMaterial, MathUtils, Mesh, MeshStandardMaterial, NoBlending, OctahedronGeometry, OrthographicCamera, PanelItem, PerspectiveCamera, RawShaderMaterial, RepeatWrapping, Scene, SceneCompositeMaterial, SmoothViews, Stage, TextureLoader, Thread, UI, UnrealBloomBlurMaterial, Vector2, WebGLRenderTarget, WebGLRenderer, defer, getFullscreenTriangle, shuffle, ticker } from '../../../../build/alien.three.js';
+import { ACESFilmicToneMapping, AmbientLight, AssetLoader, BloomCompositeMaterial, BoxGeometry, Color, ColorManagement, Component, DirectionalLight, EnvironmentTextureLoader, GLSL3, Group, HemisphereLight, IcosahedronGeometry, ImageBitmapLoaderThread, Interface, LinearSRGBColorSpace, LuminosityMaterial, MathUtils, Mesh, MeshStandardMaterial, NoBlending, OctahedronGeometry, OrthographicCamera, PanelItem, PerspectiveCamera, RawShaderMaterial, RepeatWrapping, Scene, SceneCompositeMaterial, SmoothViews, Stage, TextureLoader, Thread, UI, UnrealBloomBlurMaterial, Vector2, WebGLRenderTarget, WebGLRenderer, defer, getFullscreenTriangle, shuffle, ticker } from '../../../../build/alien.three.js';
+
+ColorManagement.enabled = false; // Disable color management
 
 class Global {
     static SECTIONS = [];
@@ -488,7 +490,7 @@ class AbstractCube extends Group {
 
         // Second set of UVs for aoMap and lightMap
         // https://threejs.org/docs/#api/en/materials/MeshStandardMaterial.aoMap
-        geometry.attributes.uv2 = geometry.attributes.uv;
+        geometry.attributes.uv1 = geometry.attributes.uv;
 
         // Textures
         const [map, normalMap, ormMap] = await Promise.all([
@@ -590,7 +592,7 @@ class FloatingCrystal extends Group {
 
         // Second set of UVs for aoMap and lightMap
         // https://threejs.org/docs/#api/en/materials/MeshStandardMaterial.aoMap
-        geometry.attributes.uv2 = geometry.attributes.uv;
+        geometry.attributes.uv1 = geometry.attributes.uv;
 
         // Textures
         const [map, normalMap, ormMap] = await Promise.all([
@@ -706,7 +708,7 @@ class DarkPlanet extends Group {
 
         // Second set of UVs for aoMap and lightMap
         // https://threejs.org/docs/#api/en/materials/MeshStandardMaterial.aoMap
-        geometry.attributes.uv2 = geometry.attributes.uv;
+        geometry.attributes.uv1 = geometry.attributes.uv;
 
         // Textures
         const [map, normalMap, ormMap] = await Promise.all([
@@ -1237,9 +1239,10 @@ class WorldController {
         });
         this.element = this.renderer.domElement;
 
-        // Tone mapping
+        // Tone mapping and output color space encoding
         this.renderer.toneMapping = ACESFilmicToneMapping;
         this.renderer.toneMappingExposure = 1;
+        this.renderer.outputColorSpace = LinearSRGBColorSpace;
 
         // Global 3D camera
         this.camera = new PerspectiveCamera(30);

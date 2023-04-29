@@ -11,7 +11,9 @@
     <link rel="stylesheet" href="assets/css/style.css">
 
     <script type="module">
-        import { BloomCompositeMaterial, Color, DirectionalLight, Group, HalfFloatType, HemisphereLight, LuminosityMaterial, MathUtils, Mesh, MeshBasicMaterial, OrthographicCamera, PanelItem, PerspectiveCamera, Scene, SceneCompositeMaterial, SphereGeometry, UI, UnrealBloomBlurMaterial, Vector2, WebGLRenderTarget, WebGLRenderer, getFullscreenTriangle, ticker } from '../../build/alien.three.js';
+        import { BloomCompositeMaterial, Color, ColorManagement, DirectionalLight, Group, HalfFloatType, HemisphereLight, LinearSRGBColorSpace, LuminosityMaterial, MathUtils, Mesh, MeshBasicMaterial, OrthographicCamera, PanelItem, PerspectiveCamera, Scene, SceneCompositeMaterial, SphereGeometry, UI, UnrealBloomBlurMaterial, Vector2, WebGLRenderTarget, WebGLRenderer, getFullscreenTriangle, ticker } from '../../build/alien.three.js';
+
+        ColorManagement.enabled = false; // Disable color management
 
         class Config {
             static LIGHT_COLOR = 0xff8dfc;
@@ -322,6 +324,9 @@
                     antialias: true
                 });
                 this.element = this.renderer.domElement;
+
+                // Output color space encoding
+                this.renderer.outputColorSpace = LinearSRGBColorSpace;
 
                 // 3D scene
                 this.scene = new Scene();

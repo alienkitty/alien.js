@@ -620,11 +620,11 @@
                 this.renderer.shadowMap.type = BasicShadowMap;
 
                 SoftShadows.init({
-                    size: 0.004,
+                    size: 0.003,
                     frustum: 3.75,
                     near: 9.5,
-                    samples: 6,
-                    rings: 4
+                    samples: 3,
+                    rings: 2
                 });
             }
 
@@ -639,7 +639,7 @@
                 directionalLight1.shadow.mapSize.width = 1024;
                 directionalLight1.shadow.mapSize.height = 1024;
                 directionalLight1.shadow.camera.near = 0.1;
-                directionalLight1.shadow.camera.far = 50;
+                directionalLight1.shadow.camera.far = 20;
                 this.scene.add(directionalLight1);
 
                 const directionalLight2 = new DirectionalLight();
@@ -648,7 +648,7 @@
                 directionalLight2.shadow.mapSize.width = 1024;
                 directionalLight2.shadow.mapSize.height = 1024;
                 directionalLight2.shadow.camera.near = 0.1;
-                directionalLight2.shadow.camera.far = 50;
+                directionalLight2.shadow.camera.far = 20;
                 this.scene.add(directionalLight2);
             }
 

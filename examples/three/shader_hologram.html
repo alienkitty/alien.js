@@ -1036,7 +1036,7 @@
                 this.camera = new PerspectiveCamera(30);
                 this.camera.near = 0.5;
                 this.camera.far = 40;
-                this.camera.position.z = 8;
+                this.camera.position.z = 12;
                 this.camera.lookAt(this.scene.position);
 
                 // Global geometries
@@ -1050,7 +1050,7 @@
                 this.frame = { value: 0 };
 
                 // Global settings
-                this.anisotropy = this.renderer.capabilities.getMaxAnisotropy();
+                // this.anisotropy = this.renderer.capabilities.getMaxAnisotropy();
             }
 
             static initLights() {
@@ -1089,7 +1089,7 @@
             static initControls() {
                 this.controls = new OrbitControls(this.camera, this.renderer.domElement);
                 this.controls.enableDamping = true;
-                this.controls.enableZoom = false;
+                // this.controls.enableZoom = false;
             }
 
             static addListeners() {
@@ -1113,9 +1113,9 @@
                 this.camera.updateProjectionMatrix();
 
                 if (width < height) {
-                    this.camera.position.z = 10;
+                    this.camera.position.z = 14;
                 } else {
-                    this.camera.position.z = 8;
+                    this.camera.position.z = 12;
                 }
 
                 width = Math.round(width * dpr);

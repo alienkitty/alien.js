@@ -37,3 +37,4 @@ export { DepthMaskMaterial } from './DepthMaskMaterial.js';
 export { DiscardMaterial } from './DiscardMaterial.js';
 export { TextMaterial } from './TextMaterial.js';
 export { MeshTransmissionMaterial } from './MeshTransmissionMaterial.js';
+export { MeshTransmissionDistortionMaterial } from './MeshTransmissionDistortionMaterial.js';

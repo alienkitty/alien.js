@@ -118,6 +118,7 @@ console.log(physics.world.getGravity());
 [fresnel](https://alien.js.org/examples/three/shader_fresnel.html) (with looping noise)  
 [hologram](https://alien.js.org/examples/three/shader_hologram.html)  
 [transmission](https://alien.js.org/examples/three/shader_transmission.html) (modified physically based material)  
+[distortion](https://alien.js.org/examples/three/shader_transmission_distortion.html) (transmission with distortion)  
 [subsurface scattering](https://alien.js.org/examples/three/shader_subsurface_scattering.html) (SSS)  
 [volumetric light](https://alien.js.org/examples/three/shader_volumetric_light.html) (god rays)  
 [anamorphic light](https://alien.js.org/examples/three/shader_anamorphic_light.html) (fast anamorphic lens flares)  

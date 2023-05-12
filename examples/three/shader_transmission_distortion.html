@@ -4,110 +4,163 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
 
-    <title>Subsurface Scattering Shader — Alien.js</title>
+    <title>Transmission Distortion — Alien.js</title>
 
     <link rel="preconnect" href="https://fonts.gstatic.com">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto+Mono">
     <link rel="stylesheet" href="assets/css/style.css">
 
     <script type="module">
-        import { ACESFilmicToneMapping, AmbientLight, BloomCompositeMaterial, Color, ColorManagement, EnvironmentTextureLoader, GLSL3, Group, HemisphereLight, IcosahedronGeometry, ImageBitmapLoaderThread, LinearSRGBColorSpace, LuminosityMaterial, MathUtils, Mesh, MeshStandardMaterial, NoBlending, OrthographicCamera, PanelItem, PerspectiveCamera, PlaneGeometry, PointLight, RawShaderMaterial, Reflector, ReflectorDudvMaterial, RepeatWrapping, Scene, ShaderChunk, TextureLoader, Thread, UI, UnrealBloomBlurMaterial, Vector2, Vector3, WebGLRenderTarget, WebGLRenderer, getFullscreenTriangle, ticker } from '../../build/alien.three.js';
+        import { ACESFilmicToneMapping, AmbientLight, BackSide, BloomCompositeMaterial, Color, ColorManagement, DirectionalLight, DiscardMaterial, EnvironmentTextureLoader, Group, HemisphereLight, ImageBitmapLoaderThread, LinearSRGBColorSpace, LuminosityMaterial, MathUtils, Mesh, MeshStandardMaterial, MeshTransmissionDistortionMaterial, NoToneMapping, OrbitControls, OrthographicCamera, Panel, PanelItem, PerspectiveCamera, PhysicalMaterialOptions, Point3D, RepeatWrapping, Scene, SceneCompositeMaterial, SphereGeometry, TextureLoader, Thread, UI, UnrealBloomBlurMaterial, Vector2, WebGLRenderTarget, WebGLRenderer, getFullscreenTriangle, getKeyByValue, ticker } from '../../build/alien.three.js';
 
         ColorManagement.enabled = false; // Disable color management
 
         class Config {
-            static LIGHT_COLOR = 0xf44336;
+            static ICE_COLOR = 0x547691;
+            static FRESNEL_COLOR = 0xd3e0e7;
         }
 
-        import rgbshift from '../../src/shaders/modules/rgbshift/rgbshift.glsl.js';
+        // Based on https://github.com/pmndrs/drei/blob/master/src/core/MeshTransmissionMaterial.tsx by N8python
 
-        const vertexCompositeShader = /* glsl */ `
-            in vec3 position;
-            in vec2 uv;
-
-            out vec2 vUv;
-
-            void main() {
-                vUv = uv;
-
-                gl_Position = vec4(position, 1.0);
-            }
-        `;
-
-        const fragmentCompositeShader = /* glsl */ `
-            precision highp float;
-
-            uniform sampler2D tScene;
-            uniform sampler2D tBloom;
-            uniform float uBloomDistortion;
-
-            in vec2 vUv;
-
-            out vec4 FragColor;
-
-            ${rgbshift}
-
-            void main() {
-                FragColor = texture(tScene, vUv);
-
-                float angle = length(vUv - 0.5);
-                float amount = 0.001 * uBloomDistortion;
-
-                FragColor.rgb += getRGB(tBloom, vUv, angle, amount).rgb;
-            }
-        `;
-
-        class CompositeMaterial extends RawShaderMaterial {
-            constructor() {
-                super({
-                    glslVersion: GLSL3,
-                    uniforms: {
-                        tScene: { value: null },
-                        tBloom: { value: null },
-                        uBloomDistortion: { value: 1.45 }
-                    },
-                    vertexShader: vertexCompositeShader,
-                    fragmentShader: fragmentCompositeShader,
-                    blending: NoBlending,
-                    depthTest: false,
-                    depthWrite: false
-                });
-            }
-        }
-
-        class Ball extends Group {
+        class RenderGroup extends Group {
             constructor() {
                 super();
 
-                this.frameRotation = 0;
-                this.position.x = 0;
-                this.position.z = 1;
-
-                this.initLight();
+                this.initRenderer();
             }
 
-            initLight() {
-                const light = new PointLight(Config.LIGHT_COLOR, 0.2);
-                this.add(light);
+            initRenderer() {
+                const { renderer, scene, camera } = WorldController;
+
+                this.renderer = renderer;
+                this.scene = scene;
+                this.camera = camera;
+
+                // Render targets
+                this.renderTargetBack = new WebGLRenderTarget(1, 1);
+                this.renderTargetFront = this.renderTargetBack.clone();
+
+                // Occlusion material
+                this.discardMaterial = new DiscardMaterial();
+            }
+
+            /**
+             * Public methods
+             */
+
+            resize(width, height) {
+                this.renderTargetBack.setSize(width, height);
+                this.renderTargetFront.setSize(width, height);
+            }
+
+            update() {
+                if (typeof this.mesh.material.buffer === 'undefined') {
+                    return;
+                }
+
+                this.mesh.material.time = WorldController.time.value;
+
+                const currentRenderTarget = this.renderer.getRenderTarget();
+
+                const currentToneMapping = this.renderer.toneMapping;
+                this.renderer.toneMapping = NoToneMapping;
+
+                const currentMaterial = this.mesh.material;
+                const currentSide = this.mesh.material.side;
+
+                // Occlusion pass
+                this.mesh.material = this.discardMaterial;
+
+                if (this.mesh.userData.backside) {
+                    this.renderer.setRenderTarget(this.renderTargetBack);
+                    this.renderer.render(this.scene, this.camera);
+
+                    this.mesh.material = currentMaterial;
+                    this.mesh.material.buffer = this.renderTargetBack.texture;
+                    this.mesh.material.thickness = this.mesh.userData.backsideThickness;
+                    this.mesh.material.side = BackSide;
+                }
+
+                this.renderer.setRenderTarget(this.renderTargetFront);
+                this.renderer.render(this.scene, this.camera);
+
+                // Restore settings
+                this.mesh.material = currentMaterial;
+                this.mesh.material.buffer = this.renderTargetFront.texture;
+                this.mesh.material.thickness = this.mesh.userData.thickness;
+                this.mesh.material.side = currentSide;
+
+                this.renderer.toneMapping = currentToneMapping;
+                this.renderer.setRenderTarget(currentRenderTarget);
+            }
+        }
+
+        class IceSphere extends RenderGroup {
+            constructor() {
+                super();
+
+                this.position.x = 2.5;
             }
 
             async initMesh() {
                 const { anisotropy, loadTexture } = WorldController;
 
-                const geometry = new IcosahedronGeometry(0.25, 6);
+                const geometry = new SphereGeometry(1, 80, 80);
+
+                const normalMap = await loadTexture('assets/textures/pbr/polished_concrete_normal.jpg');
+
+                normalMap.anisotropy = anisotropy;
+                normalMap.wrapS = RepeatWrapping;
+                normalMap.wrapT = RepeatWrapping;
+                normalMap.repeat.set(2, 1);
+
+                const material = new MeshTransmissionDistortionMaterial({
+                    color: new Color(Config.ICE_COLOR),
+                    transmission: 0.3,
+                    thickness: 1,
+                    normalMap,
+                    normalScale: new Vector2(1, 1),
+                    envMapIntensity: 0.1,
+                    clearcoat: 1,
+                    clearcoatNormalMap: normalMap,
+                    clearcoatNormalScale: new Vector2(2, -2),
+                    specularColor: new Color(Config.FRESNEL_COLOR),
+                    specularIntensity: 1
+                });
+
+                const mesh = new Mesh(geometry, material);
+                this.add(mesh);
+
+                this.mesh = mesh;
+
+                // Transmission defaults
+                this.mesh.userData.thickness = 1;
+                this.mesh.userData.backside = false;
+                this.mesh.userData.backsideThickness = 3;
+            }
+        }
+
+        class DarkPlanet extends Group {
+            constructor() {
+                super();
+            }
+
+            async initMesh() {
+                const { anisotropy, loadTexture } = WorldController;
+
+                const geometry = new SphereGeometry(1, 80, 80);
 
                 // Second set of UVs for aoMap and lightMap
                 // https://threejs.org/docs/#api/en/materials/MeshStandardMaterial.aoMap
                 geometry.attributes.uv1 = geometry.attributes.uv;
 
                 // Textures
-                const [map, normalMap, ormMap, thicknessMap] = await Promise.all([
+                const [map, normalMap, ormMap] = await Promise.all([
                     // loadTexture('assets/textures/uv.jpg'),
                     loadTexture('assets/textures/pbr/pitted_metal_basecolor.jpg'),
                     loadTexture('assets/textures/pbr/pitted_metal_normal.jpg'),
                     // https://occlusion-roughness-metalness.glitch.me/
-                    loadTexture('assets/textures/pbr/pitted_metal_orm.jpg'),
-                    loadTexture('assets/textures/pbr/pitted_metal_height.jpg')
+                    loadTexture('assets/textures/pbr/pitted_metal_orm.jpg')
                 ]);
 
                 map.anisotropy = anisotropy;
@@ -125,267 +178,70 @@
                 ormMap.wrapT = RepeatWrapping;
                 ormMap.repeat.set(2, 1);
 
-                thicknessMap.anisotropy = anisotropy;
-                thicknessMap.wrapS = RepeatWrapping;
-                thicknessMap.wrapT = RepeatWrapping;
-                thicknessMap.repeat.set(2, 1);
-
                 const material = new MeshStandardMaterial({
-                    color: new Color(Config.LIGHT_COLOR),
-                    metalness: 0.6,
-                    roughness: 2,
+                    color: new Color(0x0e0e0e),
+                    metalness: 1,
+                    roughness: 1,
                     map,
                     metalnessMap: ormMap,
                     roughnessMap: ormMap,
                     aoMap: ormMap,
                     aoMapIntensity: 1,
                     normalMap,
-                    normalScale: new Vector2(3, 3),
-                    envMapIntensity: 1
+                    normalScale: new Vector2(1, 1),
+                    envMapIntensity: 0.5
                 });
 
                 // Second channel for aoMap and lightMap
                 // https://threejs.org/docs/#api/en/materials/MeshStandardMaterial.aoMap
                 material.aoMap.channel = 1;
 
-                // Based on https://github.com/mrdoob/three.js/blob/dev/examples/jsm/shaders/SubsurfaceScatteringShader.js by daoshengmu
-
-                material.onBeforeCompile = shader => {
-                    shader.uniforms.thicknessMap = { value: thicknessMap };
-                    shader.uniforms.thicknessDistortion = { value: 0.1 };
-                    shader.uniforms.thicknessAmbient = { value: 0 };
-                    shader.uniforms.thicknessAttenuation = { value: 0.8 };
-                    shader.uniforms.thicknessPower = { value: 2 };
-                    shader.uniforms.thicknessScale = { value: 16 };
-
-                    shader.fragmentShader = shader.fragmentShader.replace(
-                        'void main() {',
-                        /* glsl */ `
-                        uniform sampler2D thicknessMap;
-                        uniform float thicknessDistortion;
-                        uniform float thicknessAmbient;
-                        uniform float thicknessAttenuation;
-                        uniform float thicknessPower;
-                        uniform float thicknessScale;
-
-                        void RE_Direct_Scattering(IncidentLight directLight, vec2 uv, GeometricContext geometry, inout ReflectedLight reflectedLight) {
-                            vec3 thickness = directLight.color * texture(thicknessMap, uv).g;
-                            vec3 scatteringHalf = normalize(directLight.direction + (geometry.normal * thicknessDistortion));
-                            float scatteringDot = pow(saturate(dot(geometry.viewDir, -scatteringHalf)), thicknessPower) * thicknessScale;
-                            vec3 scatteringIllu = (scatteringDot + thicknessAmbient) * thickness;
-                            reflectedLight.directDiffuse += scatteringIllu * thicknessAttenuation * directLight.color;
-                        }
-
-                        void main() {
-                        `
-                    );
-
-                    shader.fragmentShader = shader.fragmentShader.replace(
-                        '#include <lights_fragment_begin>',
-                        ShaderChunk.lights_fragment_begin.replaceAll(
-                            'RE_Direct( directLight, geometry, material, reflectedLight );',
-                            /* glsl */ `
-                            RE_Direct( directLight, geometry, material, reflectedLight );
-                            RE_Direct_Scattering(directLight, vAoMapUv, geometry, reflectedLight);
-                            `
-                        )
-                    );
-                };
-
                 const mesh = new Mesh(geometry, material);
                 this.add(mesh);
             }
-
-            /**
-             * Public methods
-             */
-
-            update = () => {
-                this.frameRotation += 0.01;
-                this.position.x = 1 * Math.sin(this.frameRotation);
-                this.position.z = 1 * Math.cos(this.frameRotation);
-            };
-
-            ready = () => this.initMesh();
         }
 
-        class Sphere extends Group {
+        class PittedMetalSphere extends RenderGroup {
             constructor() {
                 super();
+
+                this.position.x = -2.5;
             }
 
             async initMesh() {
                 const { anisotropy, loadTexture } = WorldController;
 
-                const geometry = new IcosahedronGeometry(0.5, 12);
+                const geometry = new SphereGeometry(1, 80, 80);
 
-                // Second set of UVs for aoMap and lightMap
-                // https://threejs.org/docs/#api/en/materials/MeshStandardMaterial.aoMap
-                geometry.attributes.uv1 = geometry.attributes.uv;
-
-                // Textures
-                const [map, normalMap, ormMap, thicknessMap] = await Promise.all([
-                    // loadTexture('assets/textures/uv.jpg'),
-                    loadTexture('assets/textures/pbr/pitted_metal_basecolor.jpg'),
-                    loadTexture('assets/textures/pbr/pitted_metal_normal.jpg'),
-                    // https://occlusion-roughness-metalness.glitch.me/
-                    loadTexture('assets/textures/pbr/pitted_metal_orm.jpg'),
-                    loadTexture('assets/textures/pbr/pitted_metal_height.jpg')
-                ]);
-
-                map.anisotropy = anisotropy;
-                map.wrapS = RepeatWrapping;
-                map.wrapT = RepeatWrapping;
-                map.repeat.set(2, 1);
+                const normalMap = await loadTexture('assets/textures/pbr/pitted_metal_normal.jpg');
 
                 normalMap.anisotropy = anisotropy;
                 normalMap.wrapS = RepeatWrapping;
                 normalMap.wrapT = RepeatWrapping;
                 normalMap.repeat.set(2, 1);
 
-                ormMap.anisotropy = anisotropy;
-                ormMap.wrapS = RepeatWrapping;
-                ormMap.wrapT = RepeatWrapping;
-                ormMap.repeat.set(2, 1);
-
-                thicknessMap.anisotropy = anisotropy;
-                thicknessMap.wrapS = RepeatWrapping;
-                thicknessMap.wrapT = RepeatWrapping;
-                thicknessMap.repeat.set(2, 1);
-
-                const material = new MeshStandardMaterial({
-                    color: new Color().offsetHSL(0, 0, -0.65),
-                    metalness: 0.6,
-                    roughness: 2,
-                    map,
-                    metalnessMap: ormMap,
-                    roughnessMap: ormMap,
-                    aoMap: ormMap,
-                    aoMapIntensity: 1,
+                const material = new MeshTransmissionDistortionMaterial({
+                    color: new Color(),
                     normalMap,
-                    normalScale: new Vector2(3, 3),
-                    envMapIntensity: 1
+                    normalScale: new Vector2(1, 1),
+                    envMapIntensity: 0.5,
+                    ior: 1.2,
+                    transmission: 1,
+                    thickness: 0.1,
+                    specularColor: new Color().offsetHSL(0, 0, -0.65),
+                    specularIntensity: 1
                 });
-
-                // Second channel for aoMap and lightMap
-                // https://threejs.org/docs/#api/en/materials/MeshStandardMaterial.aoMap
-                material.aoMap.channel = 1;
-
-                // Based on https://github.com/mrdoob/three.js/blob/dev/examples/jsm/shaders/SubsurfaceScatteringShader.js by daoshengmu
-
-                const uniforms = {
-                    thicknessMap: { value: thicknessMap },
-                    thicknessDistortion: { value: 0.185 },
-                    thicknessAmbient: { value: 0 },
-                    thicknessAttenuation: { value: 1 },
-                    thicknessPower: { value: 20 },
-                    thicknessScale: { value: 16 }
-                };
-
-                material.onBeforeCompile = shader => {
-                    shader.uniforms = Object.assign(shader.uniforms, uniforms);
-
-                    shader.fragmentShader = shader.fragmentShader.replace(
-                        'void main() {',
-                        /* glsl */ `
-                        uniform sampler2D thicknessMap;
-                        uniform float thicknessDistortion;
-                        uniform float thicknessAmbient;
-                        uniform float thicknessAttenuation;
-                        uniform float thicknessPower;
-                        uniform float thicknessScale;
-
-                        void RE_Direct_Scattering(IncidentLight directLight, vec2 uv, GeometricContext geometry, PhysicalMaterial material, inout ReflectedLight reflectedLight) {
-                            vec3 thickness = directLight.color * texture(thicknessMap, uv).r;
-                            vec3 scatteringHalf = normalize(directLight.direction + (geometry.normal * thicknessDistortion));
-                            float scatteringDot = pow(saturate(dot(geometry.viewDir, -scatteringHalf)), thicknessPower) * thicknessScale;
-                            vec3 scatteringIllu = (scatteringDot + thicknessAmbient) * thickness;
-                            reflectedLight.directDiffuse += material.diffuseColor * directLight.color * scatteringIllu * thicknessAttenuation;
-                        }
-
-                        void main() {
-                        `
-                    );
-
-                    shader.fragmentShader = shader.fragmentShader.replace(
-                        '#include <lights_fragment_begin>',
-                        ShaderChunk.lights_fragment_begin.replaceAll(
-                            'RE_Direct( directLight, geometry, material, reflectedLight );',
-                            /* glsl */ `
-                            RE_Direct( directLight, geometry, material, reflectedLight );
-                            RE_Direct_Scattering(directLight, vAoMapUv, geometry, material, reflectedLight);
-                            `
-                        )
-                    );
-                };
 
                 const mesh = new Mesh(geometry, material);
                 this.add(mesh);
 
-                this.uniforms = uniforms;
+                this.mesh = mesh;
+
+                // Transmission defaults
+                this.mesh.userData.thickness = 0.1;
+                this.mesh.userData.backside = true;
+                this.mesh.userData.backsideThickness = 3;
             }
-
-            /**
-             * Public methods
-             */
-
-            ready = () => this.initMesh();
-        }
-
-        class Floor extends Group {
-            constructor() {
-                super();
-
-                this.initReflector();
-            }
-
-            initReflector() {
-                this.reflector = new Reflector({ blurIterations: 6 });
-            }
-
-            async initMesh() {
-                const { loadTexture } = WorldController;
-
-                const geometry = new PlaneGeometry(100, 100);
-
-                const map = await loadTexture('assets/textures/waterdudv.jpg');
-                map.wrapS = RepeatWrapping;
-                map.wrapT = RepeatWrapping;
-                map.repeat.set(6, 6);
-
-                const material = new ReflectorDudvMaterial({
-                    map,
-                    reflectivity: 0.8
-                });
-                material.uniforms.tReflect = { value: this.reflector.renderTarget.texture };
-                material.uniforms.tReflectBlur = this.reflector.renderTargetUniform;
-                material.uniforms.uMatrix = this.reflector.textureMatrixUniform;
-
-                const mesh = new Mesh(geometry, material);
-                mesh.position.y = -0.54;
-                mesh.rotation.x = -Math.PI / 2;
-                mesh.add(this.reflector);
-
-                mesh.onBeforeRender = (renderer, scene, camera) => {
-                    this.visible = false;
-                    this.reflector.update(renderer, scene, camera);
-                    this.visible = true;
-                };
-
-                this.add(mesh);
-            }
-
-            /**
-             * Public methods
-             */
-
-            resize = (width, height) => {
-                height = 1024;
-
-                this.reflector.setSize(width, height);
-            };
-
-            ready = () => this.initMesh();
         }
 
         class SceneView extends Group {
@@ -398,32 +254,34 @@
             }
 
             initViews() {
-                this.floor = new Floor();
-                this.add(this.floor);
+                this.pittedMetalSphere = new PittedMetalSphere();
+                this.add(this.pittedMetalSphere);
 
-                this.sphere = new Sphere();
-                this.add(this.sphere);
+                this.darkPlanet = new DarkPlanet();
+                this.add(this.darkPlanet);
 
-                this.ball = new Ball();
-                this.add(this.ball);
+                this.iceSphere = new IceSphere();
+                this.add(this.iceSphere);
             }
 
             /**
              * Public methods
              */
 
-            resize = (width, height) => {
-                this.floor.resize(width, height);
+            resize = (width, height, dpr) => {
+                this.pittedMetalSphere.resize(width, height, dpr);
+                this.iceSphere.resize(width, height, dpr);
             };
 
             update = () => {
-                this.ball.update();
+                this.pittedMetalSphere.update();
+                this.iceSphere.update();
             };
 
             ready = () => Promise.all([
-                this.floor.ready(),
-                this.sphere.ready(),
-                this.ball.ready()
+                this.pittedMetalSphere.initMesh(),
+                this.darkPlanet.initMesh(),
+                this.iceSphere.initMesh()
             ]);
         }
 
@@ -436,8 +294,8 @@
              * Public methods
              */
 
-            static resize = (width, height) => {
-                this.view.resize(width, height);
+            static resize = (width, height, dpr) => {
+                this.view.resize(width, height, dpr);
             };
 
             static update = () => {
@@ -455,11 +313,311 @@
             static ready = () => this.view.ready();
         }
 
-        class PanelController {
+        class TransmissionMaterialBackPanel extends Panel {
+            constructor(mesh) {
+                super();
+
+                this.mesh = mesh;
+
+                this.initPanel();
+            }
+
+            initPanel() {
+                const mesh = this.mesh;
+
+                const backsideOptions = {
+                    Off: false,
+                    On: true
+                };
+
+                const backsideItems = [
+                    {
+                        type: 'divider'
+                    },
+                    {
+                        type: 'slider',
+                        label: 'Thick',
+                        min: -10,
+                        max: 10,
+                        step: 0.1,
+                        value: mesh.userData.backsideThickness,
+                        callback: value => {
+                            mesh.userData.backsideThickness = value;
+                        }
+                    }
+                ];
+
+                const items = [
+                    {
+                        type: 'divider'
+                    },
+                    {
+                        type: 'list',
+                        list: backsideOptions,
+                        value: getKeyByValue(backsideOptions, mesh.userData.backside),
+                        callback: (value, panel) => {
+                            if (!panel.group) {
+                                const backsidePanel = new Panel();
+                                backsidePanel.animateIn(true);
+
+                                backsideItems.forEach(data => {
+                                    backsidePanel.add(new PanelItem(data));
+                                });
+
+                                panel.setContent(backsidePanel);
+                            }
+
+                            mesh.userData.backside = backsideOptions[value];
+
+                            if (mesh.userData.backside) {
+                                panel.group.show();
+                            } else {
+                                panel.group.hide();
+                            }
+                        }
+                    }
+                ];
+
+                items.forEach(data => {
+                    this.add(new PanelItem(data));
+                });
+            }
+        }
+
+        class TransmissionMaterialFrontPanel extends Panel {
+            constructor(mesh) {
+                super();
+
+                this.mesh = mesh;
+
+                this.initPanel();
+            }
+
+            initPanel() {
+                const mesh = this.mesh;
+
+                const items = [
+                    {
+                        type: 'divider'
+                    },
+                    {
+                        type: 'slider',
+                        label: 'Int',
+                        min: 0,
+                        max: 1,
+                        step: 0.01,
+                        value: mesh.material._transmission,
+                        callback: value => {
+                            mesh.material._transmission = value;
+                        }
+                    },
+                    {
+                        type: 'slider',
+                        label: 'Thick',
+                        min: -10,
+                        max: 10,
+                        step: 0.1,
+                        value: mesh.userData.thickness,
+                        callback: value => {
+                            mesh.userData.thickness = value;
+                        }
+                    },
+                    {
+                        type: 'color',
+                        value: mesh.material.attenuationColor,
+                        callback: value => {
+                            mesh.material.attenuationColor.copy(value);
+                        }
+                    },
+                    {
+                        type: 'slider',
+                        label: 'Distance',
+                        min: -10,
+                        max: 10,
+                        step: 0.1,
+                        value: mesh.material.attenuationDistance,
+                        callback: value => {
+                            mesh.material.attenuationDistance = value;
+                        }
+                    },
+                    {
+                        type: 'slider',
+                        label: 'IOR',
+                        min: 1,
+                        max: 2.333,
+                        step: 0.01,
+                        value: mesh.material.ior,
+                        callback: value => {
+                            mesh.material.ior = value;
+                        }
+                    },
+                    {
+                        type: 'slider',
+                        label: 'Reflect',
+                        min: 0,
+                        max: 1,
+                        step: 0.01,
+                        value: mesh.material.reflectivity,
+                        callback: value => {
+                            mesh.material.reflectivity = value;
+                        }
+                    },
+                    {
+                        type: 'slider',
+                        label: 'Chroma',
+                        min: 0,
+                        max: 1,
+                        step: 0.01,
+                        value: mesh.material.chromaticAberration,
+                        callback: value => {
+                            mesh.material.chromaticAberration = value;
+                        }
+                    },
+                    {
+                        type: 'slider',
+                        label: 'Anisotropy',
+                        min: 0,
+                        max: 1,
+                        step: 0.01,
+                        value: mesh.material.anisotropy,
+                        callback: value => {
+                            mesh.material.anisotropy = value;
+                        }
+                    },
+                    {
+                        type: 'slider',
+                        label: 'Distortion',
+                        min: 0,
+                        max: 1,
+                        step: 0.01,
+                        value: mesh.material.distortion,
+                        callback: value => {
+                            mesh.material.distortion = value;
+                        }
+                    },
+                    {
+                        type: 'slider',
+                        label: 'Scale',
+                        min: 0.01,
+                        max: 1,
+                        step: 0.01,
+                        value: mesh.material.distortionScale,
+                        callback: value => {
+                            mesh.material.distortionScale = value;
+                        }
+                    },
+                    {
+                        type: 'slider',
+                        label: 'Speed',
+                        min: 0,
+                        max: 1,
+                        step: 0.01,
+                        value: mesh.material.temporalDistortion,
+                        callback: value => {
+                            mesh.material.temporalDistortion = value;
+                        }
+                    }
+                    // TODO: Texture thumbnails
+                ];
+
+                items.forEach(data => {
+                    this.add(new PanelItem(data));
+                });
+            }
+        }
+
+        class TransmissionMaterialPanel extends Panel {
+            constructor(mesh) {
+                super();
+
+                this.mesh = mesh;
+
+                this.initPanel();
+            }
+
+            initPanel() {
+                const mesh = this.mesh;
+
+                const materialOptions = {
+                    Common: PhysicalMaterialOptions.Common,
+                    // TODO: Texture thumbnails
+                    // Map: PhysicalMaterialOptions.Map,
+                    Clearcoat: PhysicalMaterialOptions.Clearcoat,
+                    Sheen: PhysicalMaterialOptions.Sheen,
+                    Front: TransmissionMaterialFrontPanel,
+                    Back: TransmissionMaterialBackPanel,
+                    Env: PhysicalMaterialOptions.Env,
+                    Helper: PhysicalMaterialOptions.Helper
+                };
+
+                const items = [
+                    {
+                        type: 'divider'
+                    },
+                    {
+                        type: 'list',
+                        list: materialOptions,
+                        value: 'Common',
+                        callback: (value, panel) => {
+                            const MaterialPanel = materialOptions[value];
+
+                            const materialPanel = new MaterialPanel(mesh);
+                            materialPanel.animateIn(true);
+
+                            panel.setContent(materialPanel);
+                        }
+                    }
+                ];
+
+                items.forEach(data => {
+                    this.add(new PanelItem(data));
+                });
+            }
+        }
+
+        class ScenePanelController {
             static init(view) {
                 this.view = view;
 
+                this.initPanel();
+            }
+
+            static initPanel() {
+                const { pittedMetalSphere, iceSphere } = this.view;
+
+                const objects = [pittedMetalSphere, iceSphere];
+
+                objects.forEach(object => {
+                    object.point = new Point3D(object.mesh);
+                    object.add(object.point);
+
+                    const items = [
+                        {
+                            type: 'content',
+                            callback: (value, panel) => {
+                                const materialPanel = new TransmissionMaterialPanel(object.mesh);
+                                materialPanel.animateIn(true);
+
+                                panel.setContent(materialPanel);
+                            }
+                        }
+                    ];
+
+                    items.forEach(data => {
+                        object.point.addPanel(new PanelItem(data));
+                    });
+                });
+            }
+        }
+
+        class PanelController {
+            static init(scene, camera, view) {
+                this.scene = scene;
+                this.camera = camera;
+                this.view = view;
+
                 this.initViews();
+                this.initControllers();
                 this.initPanel();
             }
 
@@ -469,72 +627,20 @@
                 document.body.appendChild(this.ui.element);
             }
 
-            static initPanel() {
-                const { sphere } = this.view;
+            static initControllers() {
+                Point3D.init(this.scene, this.camera, {
+                    container: this.ui
+                });
 
-                const { luminosityMaterial, bloomCompositeMaterial, compositeMaterial } = RenderManager;
+                ScenePanelController.init(this.view);
+            }
+
+            static initPanel() {
+                const { luminosityMaterial, bloomCompositeMaterial } = RenderManager;
 
                 const items = [
                     {
                         label: 'FPS'
-                    },
-                    {
-                        type: 'divider'
-                    },
-                    {
-                        type: 'slider',
-                        label: 'Distort',
-                        min: 0,
-                        max: 1,
-                        step: 0.01,
-                        value: sphere.uniforms.thicknessDistortion.value,
-                        callback: value => {
-                            sphere.uniforms.thicknessDistortion.value = value;
-                        }
-                    },
-                    {
-                        type: 'slider',
-                        label: 'Ambient',
-                        min: 0,
-                        max: 5,
-                        step: 0.05,
-                        value: sphere.uniforms.thicknessAmbient.value,
-                        callback: value => {
-                            sphere.uniforms.thicknessAmbient.value = value;
-                        }
-                    },
-                    {
-                        type: 'slider',
-                        label: 'Atten',
-                        min: 0,
-                        max: 5,
-                        step: 0.05,
-                        value: sphere.uniforms.thicknessAttenuation.value,
-                        callback: value => {
-                            sphere.uniforms.thicknessAttenuation.value = value;
-                        }
-                    },
-                    {
-                        type: 'slider',
-                        label: 'Power',
-                        min: 1,
-                        max: 32,
-                        step: 0.1,
-                        value: sphere.uniforms.thicknessPower.value,
-                        callback: value => {
-                            sphere.uniforms.thicknessPower.value = value;
-                        }
-                    },
-                    {
-                        type: 'slider',
-                        label: 'Scale',
-                        min: 0,
-                        max: 64,
-                        step: 0.1,
-                        value: sphere.uniforms.thicknessScale.value,
-                        callback: value => {
-                            sphere.uniforms.thicknessScale.value = value;
-                        }
                     },
                     {
                         type: 'divider'
@@ -584,17 +690,6 @@
                             RenderManager.bloomRadius = value;
                             bloomCompositeMaterial.uniforms.uBloomFactors.value = RenderManager.bloomFactors();
                         }
-                    },
-                    {
-                        type: 'slider',
-                        label: 'Chroma',
-                        min: 0,
-                        max: 2,
-                        step: 0.01,
-                        value: compositeMaterial.uniforms.uBloomDistortion.value,
-                        callback: value => {
-                            compositeMaterial.uniforms.uBloomDistortion.value = value;
-                        }
                     }
                 ];
 
@@ -607,11 +702,12 @@
              * Public methods
              */
 
-            static update = () => {
+            static update = time => {
                 if (!this.ui) {
                     return;
                 }
 
+                Point3D.update(time);
                 this.ui.update();
             };
         }
@@ -629,7 +725,6 @@
                 this.luminositySmoothing = 1;
                 this.bloomStrength = 0.3;
                 this.bloomRadius = 0.2;
-                this.bloomDistortion = 1.45;
                 this.enabled = true;
 
                 this.initRenderer();
@@ -685,8 +780,7 @@
                 this.bloomCompositeMaterial.uniforms.uBloomFactors.value = this.bloomFactors();
 
                 // Composite material
-                this.compositeMaterial = new CompositeMaterial();
-                this.compositeMaterial.uniforms.uBloomDistortion.value = this.bloomDistortion;
+                this.compositeMaterial = new SceneCompositeMaterial();
             }
 
             static bloomFactors() {
@@ -788,83 +882,13 @@
             };
         }
 
-        class CameraController {
-            static init(camera) {
-                this.camera = camera;
-
-                this.mouse = new Vector2();
-                this.lookAt = new Vector3(0, 0, -2);
-                this.origin = new Vector3();
-                this.target = new Vector3();
-                this.targetXY = new Vector2(5, 0.4);
-                this.origin.copy(this.camera.position);
-
-                this.lerpSpeed = 0.02;
-                this.enabled = false;
-
-                this.addListeners();
-            }
-
-            static addListeners() {
-                window.addEventListener('pointerdown', this.onPointerDown);
-                window.addEventListener('pointermove', this.onPointerMove);
-                window.addEventListener('pointerup', this.onPointerUp);
-            }
-
-            /**
-             * Event handlers
-             */
-
-            static onPointerDown = e => {
-                this.onPointerMove(e);
-            };
-
-            static onPointerMove = ({ clientX, clientY }) => {
-                if (!this.enabled) {
-                    return;
-                }
-
-                this.mouse.x = (clientX / document.documentElement.clientWidth) * 2 - 1;
-                this.mouse.y = 1 - (clientY / document.documentElement.clientHeight) * 2;
-            };
-
-            static onPointerUp = e => {
-                this.onPointerMove(e);
-            };
-
-            /**
-             * Public methods
-             */
-
-            static resize = (width, height) => {
-                this.camera.aspect = width / height;
-                this.camera.updateProjectionMatrix();
-            };
-
-            static update = () => {
-                if (!this.enabled) {
-                    return;
-                }
-
-                this.target.x = this.origin.x + this.targetXY.x * this.mouse.x;
-                this.target.y = this.origin.y + this.targetXY.y * this.mouse.y;
-                this.target.z = this.origin.z;
-
-                this.camera.position.lerp(this.target, this.lerpSpeed);
-                this.camera.lookAt(this.lookAt);
-            };
-
-            static animateIn = () => {
-                this.enabled = true;
-            };
-        }
-
         class WorldController {
             static init() {
                 this.initWorld();
                 this.initLights();
                 this.initLoaders();
                 this.initEnvironment();
+                this.initControls();
 
                 this.addListeners();
             }
@@ -888,7 +912,7 @@
                 this.camera = new PerspectiveCamera(30);
                 this.camera.near = 0.5;
                 this.camera.far = 40;
-                this.camera.position.z = 8;
+                this.camera.position.z = 12;
                 this.camera.lookAt(this.scene.position);
 
                 // Global geometries
@@ -902,22 +926,35 @@
                 this.frame = { value: 0 };
 
                 // Global settings
-                this.anisotropy = this.renderer.capabilities.getMaxAnisotropy();
+                // this.anisotropy = this.renderer.capabilities.getMaxAnisotropy();
             }
 
             static initLights() {
                 this.scene.add(new AmbientLight(0xffffff, 0.2));
 
                 this.scene.add(new HemisphereLight(0x606060, 0x404040));
+
+                const light = new DirectionalLight(0xffffff, 0.4);
+                light.position.set(0.6, 0.5, 1);
+                this.scene.add(light);
             }
 
             static initLoaders() {
                 this.textureLoader = new TextureLoader();
+                this.textureLoader.cache = true;
+
                 this.environmentLoader = new EnvironmentTextureLoader(this.renderer);
+                this.environmentLoader.cache = true;
             }
 
             static async initEnvironment() {
                 this.scene.environment = await this.loadEnvironmentTexture('assets/textures/env/jewelry_black_contrast.jpg');
+            }
+
+            static initControls() {
+                this.controls = new OrbitControls(this.camera, this.renderer.domElement);
+                this.controls.enableDamping = true;
+                // this.controls.enableZoom = false;
             }
 
             static addListeners() {
@@ -937,6 +974,15 @@
              */
 
             static resize = (width, height, dpr) => {
+                this.camera.aspect = width / height;
+                this.camera.updateProjectionMatrix();
+
+                if (width < height) {
+                    this.camera.position.z = 14;
+                } else {
+                    this.camera.position.z = 12;
+                }
+
                 width = Math.round(width * dpr);
                 height = Math.round(height * dpr);
 
@@ -948,6 +994,8 @@
             static update = (time, delta, frame) => {
                 this.time.value = time;
                 this.frame.value = frame;
+
+                this.controls.update();
             };
 
             static getTexture = (path, callback) => this.textureLoader.load(path, callback);
@@ -978,7 +1026,6 @@
 
                 this.initPanel();
 
-                CameraController.animateIn();
                 SceneController.animateIn();
             }
 
@@ -1001,13 +1048,14 @@
             static initControllers() {
                 const { renderer, scene, camera } = WorldController;
 
-                CameraController.init(camera);
                 SceneController.init(this.view);
                 RenderManager.init(renderer, scene, camera);
             }
 
             static initPanel() {
-                PanelController.init(this.view);
+                const { scene, camera } = WorldController;
+
+                PanelController.init(scene, camera, this.view);
             }
 
             static addListeners() {
@@ -1026,14 +1074,12 @@
                 const dpr = window.devicePixelRatio;
 
                 WorldController.resize(width, height, dpr);
-                CameraController.resize(width, height);
-                SceneController.resize(width, height);
+                SceneController.resize(width, height, dpr);
                 RenderManager.resize(width, height, dpr);
             };
 
             static onUpdate = (time, delta, frame) => {
                 WorldController.update(time, delta, frame);
-                CameraController.update();
                 SceneController.update();
                 RenderManager.update(time, delta, frame);
                 PanelController.update();

@@ -64868,6 +64868,287 @@ class MeshTransmissionMaterial extends MeshPhysicalMaterial {
     }
 }
 
+// Based on https://github.com/pmndrs/drei/blob/master/src/core/MeshTransmissionMaterial.tsx by N8python
+
+class MeshTransmissionDistortionMaterial extends MeshPhysicalMaterial {
+    constructor({
+        chromaticAberration = 0.05,
+        anisotropy = 0.1,
+        distortion = 0,
+        distortionScale = 0.5,
+        temporalDistortion = 0,
+        samples = 6,
+        buffer = null,
+        time = 0,
+        ...parameters
+    } = {}) {
+        super(parameters);
+
+        const uniforms = {
+            chromaticAberration: { value: chromaticAberration },
+            // Transmission must always be 0
+            transmission: { value: 0 },
+            // Instead a workaround is used, see below for reasons why
+            _transmission: { value: parameters.transmission },
+            transmissionMap: { value: null },
+            // Roughness is 1 in MeshPhysicalMaterial but it makes little sense in a transmission material
+            roughness: { value: 0 },
+            thickness: { value: parameters.thickness },
+            thicknessMap: { value: null },
+            attenuationDistance: { value: Infinity },
+            attenuationColor: { value: new Color$1() },
+            anisotropy: { value: anisotropy },
+            distortion: { value: distortion },
+            distortionScale: { value: distortionScale },
+            temporalDistortion: { value: temporalDistortion },
+            buffer: { value: buffer },
+            time: { value: time }
+        };
+
+        this.onBeforeCompile = shader => {
+            shader.uniforms = Object.assign(shader.uniforms, uniforms);
+
+            // We do use use .transmission and must therefore force USE_TRANSMISSION
+            // because threejs won't inject it for us
+            shader.defines.USE_TRANSMISSION = '';
+
+            // Head
+            shader.fragmentShader =
+                /* glsl */ `
+                uniform float chromaticAberration;
+                uniform float anisotropy;
+                uniform float time;
+                uniform float distortion;
+                uniform float distortionScale;
+                uniform float temporalDistortion;
+                uniform sampler2D buffer;
+
+                vec3 random3(vec3 c) {
+                    float j = 4096.0*sin(dot(c,vec3(17.0, 59.4, 15.0)));
+                    vec3 r;
+                    r.z = fract(512.0*j);
+                    j *= .125;
+                    r.x = fract(512.0*j);
+                    j *= .125;
+                    r.y = fract(512.0*j);
+                    return r-0.5;
+                }
+
+                float seed = 0.0;
+                uint hash( uint x ) {
+                    x += ( x << 10u );
+                    x ^= ( x >>  6u );
+                    x += ( x <<  3u );
+                    x ^= ( x >> 11u );
+                    x += ( x << 15u );
+                    return x;
+                }
+
+                // Compound versions of the hashing algorithm I whipped together.
+                uint hash( uvec2 v ) { return hash( v.x ^ hash(v.y)                         ); }
+                uint hash( uvec3 v ) { return hash( v.x ^ hash(v.y) ^ hash(v.z)             ); }
+                uint hash( uvec4 v ) { return hash( v.x ^ hash(v.y) ^ hash(v.z) ^ hash(v.w) ); }
+
+                // Construct a float with half-open range [0:1] using low 23 bits.
+                // All zeroes yields 0.0, all ones yields the next smallest representable value below 1.0.
+                float floatConstruct( uint m ) {
+                    const uint ieeeMantissa = 0x007FFFFFu; // binary32 mantissa bitmask
+                    const uint ieeeOne      = 0x3F800000u; // 1.0 in IEEE binary32
+                    m &= ieeeMantissa;                     // Keep only mantissa bits (fractional part)
+                    m |= ieeeOne;                          // Add fractional part to 1.0
+                    float  f = uintBitsToFloat( m );       // Range [1:2]
+                    return f - 1.0;                        // Range [0:1]
+                }
+
+                // Pseudo-random value in half-open range [0:1].
+                float random( float x ) { return floatConstruct(hash(floatBitsToUint(x))); }
+                float random( vec2  v ) { return floatConstruct(hash(floatBitsToUint(v))); }
+                float random( vec3  v ) { return floatConstruct(hash(floatBitsToUint(v))); }
+                float random( vec4  v ) { return floatConstruct(hash(floatBitsToUint(v))); }
+
+                float rand() {
+                    float result = random(vec3(gl_FragCoord.xy, seed));
+                    seed += 1.0;
+                    return result;
+                }
+
+                const float F3 =  0.3333333;
+                const float G3 =  0.1666667;
+
+                float snoise(vec3 p) {
+                    vec3 s = floor(p + dot(p, vec3(F3)));
+                    vec3 x = p - s + dot(s, vec3(G3));
+                    vec3 e = step(vec3(0.0), x - x.yzx);
+                    vec3 i1 = e*(1.0 - e.zxy);
+                    vec3 i2 = 1.0 - e.zxy*(1.0 - e);
+                    vec3 x1 = x - i1 + G3;
+                    vec3 x2 = x - i2 + 2.0*G3;
+                    vec3 x3 = x - 1.0 + 3.0*G3;
+                    vec4 w, d;
+                    w.x = dot(x, x);
+                    w.y = dot(x1, x1);
+                    w.z = dot(x2, x2);
+                    w.w = dot(x3, x3);
+                    w = max(0.6 - w, 0.0);
+                    d.x = dot(random3(s), x);
+                    d.y = dot(random3(s + i1), x1);
+                    d.z = dot(random3(s + i2), x2);
+                    d.w = dot(random3(s + 1.0), x3);
+                    w *= w;
+                    w *= w;
+                    d *= w;
+                    return dot(d, vec4(52.0));
+                }
+
+                float snoiseFractal(vec3 m) {
+                    return 0.5333333* snoise(m)
+                          +0.2666667* snoise(2.0*m)
+                          +0.1333333* snoise(4.0*m)
+                          +0.0666667* snoise(8.0*m);
+                }
+                ` + shader.fragmentShader;
+
+            // Remove transmission
+            shader.fragmentShader = shader.fragmentShader.replace(
+                '#include <transmission_pars_fragment>',
+                /* glsl */ `
+                #ifdef USE_TRANSMISSION
+                    // Transmission code is based on glTF-Sampler-Viewer
+                    // https://github.com/KhronosGroup/glTF-Sample-Viewer
+                    uniform float _transmission;
+                    uniform float thickness;
+                    uniform float attenuationDistance;
+                    uniform vec3 attenuationColor;
+                    #ifdef USE_TRANSMISSIONMAP
+                        uniform sampler2D transmissionMap;
+                    #endif
+                    #ifdef USE_THICKNESSMAP
+                        uniform sampler2D thicknessMap;
+                    #endif
+                    uniform mat4 modelMatrix;
+                    uniform mat4 projectionMatrix;
+                    varying vec3 vWorldPosition;
+                    vec3 getVolumeTransmissionRay( const in vec3 n, const in vec3 v, const in float thickness, const in float ior, const in mat4 modelMatrix ) {
+                        // Direction of refracted light.
+                        vec3 refractionVector = refract( - v, normalize( n ), 1.0 / ior );
+                        // Compute rotation-independant scaling of the model matrix.
+                        vec3 modelScale;
+                        modelScale.x = length( vec3( modelMatrix[ 0 ].xyz ) );
+                        modelScale.y = length( vec3( modelMatrix[ 1 ].xyz ) );
+                        modelScale.z = length( vec3( modelMatrix[ 2 ].xyz ) );
+                        // The thickness is specified in local space.
+                        return normalize( refractionVector ) * thickness * modelScale;
+                    }
+                    float applyIorToRoughness( const in float roughness, const in float ior ) {
+                        // Scale roughness with IOR so that an IOR of 1.0 results in no microfacet refraction and
+                        // an IOR of 1.5 results in the default amount of microfacet refraction.
+                        return roughness * clamp( ior * 2.0 - 2.0, 0.0, 1.0 );
+                    }
+                    vec4 getTransmissionSample( const in vec2 fragCoord, const in float roughness, const in float ior ) {
+                        return texture2D(buffer, fragCoord.xy);
+                    }
+                    vec3 applyVolumeAttenuation( const in vec3 radiance, const in float transmissionDistance, const in vec3 attenuationColor, const in float attenuationDistance ) {
+                        if ( isinf( attenuationDistance ) ) {
+                            // Attenuation distance is +∞, i.e. the transmitted color is not attenuated at all.
+                            return radiance;
+                        } else {
+                            // Compute light attenuation using Beer's law.
+                            vec3 attenuationCoefficient = -log( attenuationColor ) / attenuationDistance;
+                            vec3 transmittance = exp( - attenuationCoefficient * transmissionDistance ); // Beer's law
+                            return transmittance * radiance;
+                        }
+                    }
+                    vec4 getIBLVolumeRefraction( const in vec3 n, const in vec3 v, const in float roughness, const in vec3 diffuseColor,
+                        const in vec3 specularColor, const in float specularF90, const in vec3 position, const in mat4 modelMatrix,
+                        const in mat4 viewMatrix, const in mat4 projMatrix, const in float ior, const in float thickness,
+                        const in vec3 attenuationColor, const in float attenuationDistance ) {
+                        vec3 transmissionRay = getVolumeTransmissionRay( n, v, thickness, ior, modelMatrix );
+                        vec3 refractedRayExit = position + transmissionRay;
+                        // Project refracted vector on the framebuffer, while mapping to normalized device coordinates.
+                        vec4 ndcPos = projMatrix * viewMatrix * vec4( refractedRayExit, 1.0 );
+                        vec2 refractionCoords = ndcPos.xy / ndcPos.w;
+                        refractionCoords += 1.0;
+                        refractionCoords /= 2.0;
+                        // Sample framebuffer to get pixel the refracted ray hits.
+                        vec4 transmittedLight = getTransmissionSample( refractionCoords, roughness, ior );
+                        vec3 attenuatedColor = applyVolumeAttenuation( transmittedLight.rgb, length( transmissionRay ), attenuationColor, attenuationDistance );
+                        // Get the specular component.
+                        vec3 F = EnvironmentBRDF( n, v, specularColor, specularF90, roughness );
+                        return vec4( ( 1.0 - F ) * attenuatedColor * diffuseColor, transmittedLight.a );
+                    }
+                #endif
+                `
+            );
+
+            // Add refraction
+            shader.fragmentShader = shader.fragmentShader.replace(
+                '#include <transmission_fragment>',
+                /* glsl */ `
+                // Improve the refraction to use the world pos
+                material.transmission = _transmission;
+                material.transmissionAlpha = 1.0;
+                material.thickness = thickness;
+                material.attenuationDistance = attenuationDistance;
+                material.attenuationColor = attenuationColor;
+                #ifdef USE_TRANSMISSIONMAP
+                    material.transmission *= texture2D( transmissionMap, vUv ).r;
+                #endif
+                #ifdef USE_THICKNESSMAP
+                    material.thickness *= texture2D( thicknessMap, vUv ).g;
+                #endif
+
+                vec3 pos = vWorldPosition;
+                vec3 v = normalize( cameraPosition - pos );
+                vec3 n = inverseTransformDirection( normal, viewMatrix );
+                vec3 transmission = vec3(0.0);
+                float transmissionR, transmissionB, transmissionG;
+                float randomCoords = rand();
+                float thickness_smear = thickness * max(pow(roughnessFactor, 0.33), anisotropy);
+                vec3 distortionNormal = vec3(0.0);
+                vec3 temporalOffset = vec3(time, -time, -time) * temporalDistortion;
+                if (distortion > 0.0) {
+                    distortionNormal = distortion * vec3(snoiseFractal(vec3((pos * distortionScale + temporalOffset))), snoiseFractal(vec3(pos.zxy * distortionScale - temporalOffset)), snoiseFractal(vec3(pos.yxz * distortionScale + temporalOffset)));
+                }
+                for (float i = 0.0; i < ${samples}.0; i ++) {
+                    vec3 sampleNorm = normalize(n + roughnessFactor * roughnessFactor * 2.0 * normalize(vec3(rand() - 0.5, rand() - 0.5, rand() - 0.5)) * pow(rand(), 0.33) + distortionNormal);
+                    transmissionR = getIBLVolumeRefraction(
+                        sampleNorm, v, material.roughness, material.diffuseColor, material.specularColor, material.specularF90,
+                        pos, modelMatrix, viewMatrix, projectionMatrix, material.ior, material.thickness  + thickness_smear * (i + randomCoords) / float(${samples}),
+                        material.attenuationColor, material.attenuationDistance
+                    ).r;
+                    transmissionG = getIBLVolumeRefraction(
+                        sampleNorm, v, material.roughness, material.diffuseColor, material.specularColor, material.specularF90,
+                        pos, modelMatrix, viewMatrix, projectionMatrix, material.ior  * (1.0 + chromaticAberration * (i + randomCoords) / float(${samples})) , material.thickness + thickness_smear * (i + randomCoords) / float(${samples}),
+                        material.attenuationColor, material.attenuationDistance
+                    ).g;
+                    transmissionB = getIBLVolumeRefraction(
+                        sampleNorm, v, material.roughness, material.diffuseColor, material.specularColor, material.specularF90,
+                        pos, modelMatrix, viewMatrix, projectionMatrix, material.ior * (1.0 + 2.0 * chromaticAberration * (i + randomCoords) / float(${samples})), material.thickness + thickness_smear * (i + randomCoords) / float(${samples}),
+                        material.attenuationColor, material.attenuationDistance
+                    ).b;
+                    transmission.r += transmissionR;
+                    transmission.g += transmissionG;
+                    transmission.b += transmissionB;
+                }
+                transmission /= ${samples}.0;
+                totalDiffuse = mix( totalDiffuse, transmission.rgb, material.transmission );
+                `
+            );
+        };
+
+        Object.keys(uniforms).forEach(name =>
+            Object.defineProperty(this, name, {
+                get() {
+                    return uniforms[name].value;
+                },
+                set(value) {
+                    uniforms[name].value = value;
+                }
+            })
+        );
+    }
+}
+
 // https://cs.nyu.edu/~perlin/noise/
 
 const _p = [ 151, 160, 137, 91, 90, 15, 131, 13, 201, 95, 96, 53, 194, 233, 7, 225, 140, 36, 103, 30, 69, 142, 8, 99, 37, 240, 21, 10,
@@ -112702,4 +112983,4 @@ class OrbitControls extends EventDispatcher {
 
 }
 
-export { ACESFilmicToneMapping, AddEquation, AddOperation, AdditiveAnimationBlendMode, AdditiveBlending, AfterimageMaterial, AlphaFormat, AlwaysDepth, AlwaysStencilFunc, AmbientLight, AmbientLightPanel, AmbientLightProbe, AnimationAction, AnimationClip, AnimationLoader, AnimationMixer, AnimationObjectGroup, AnimationUtils, ArcCurve, ArrayCamera, ArrowHelper, AssetLoader, Audio$1 as Audio, AudioAnalyser, AudioContext$1 as AudioContext, AudioListener, AudioLoader, AxesHelper, BackSide, BadTVMaterial, BasicDepthPacking, BasicMaterial, BasicMaterialCommonPanel, BasicMaterialEnvPanel, BasicMaterialOptions, BasicMaterialPanel, BasicShadowMap, BloomCompositeMaterial, BlurMaterial, BokehBlurMaterial1, BokehBlurMaterial2, Bone, BooleanKeyframeTrack, Box2, Box3, Box3Helper, BoxBufferGeometry, BoxGeometry$2 as BoxGeometry, BoxHelper, BufferAttribute, BufferGeometry, BufferGeometryLoader, BufferGeometryLoaderThread, BufferLoader, ByteType, Cache, Camera, CameraHelper, CameraMotionBlurMaterial, CanvasTexture, CapsuleBufferGeometry, CapsuleGeometry, CatmullRomCurve3, ChromaticAberrationMaterial, CineonToneMapping, CircleBufferGeometry, CircleGeometry, ClampToEdgeWrapping, Clock, Cluster, Color$1 as Color, ColorKeyframeTrack, ColorManagement, ColorMaterial, ColorPicker, CombineOptions, Component, CompressedArrayTexture, CompressedTexture, CompressedTextureLoader, ConeBufferGeometry, ConeGeometry, CopyMaterial, CubeCamera, CubeReflectionMapping, CubeRefractionMapping, CubeTexture, CubeTextureLoader, CubeUVReflectionMapping, CubicBezierCurve, CubicBezierCurve3, CubicInterpolant, CullFaceBack, CullFaceFront, CullFaceFrontBack, CullFaceNone, Curve, CurvePath, CustomBlending, CustomToneMapping, CylinderBufferGeometry, CylinderGeometry, Cylindrical, DEG2RAD$1 as DEG2RAD, Data3DTexture, DataArrayTexture, DataTexture, DataTextureLoader, DataUtils, DecrementStencilOp, DecrementWrapStencilOp, DefaultLoadingManager, DepthFormat, DepthMaskMaterial, DepthStencilFormat, DepthTexture, DirectionalLight, DirectionalLightHelper, DirectionalLightPanel, DiscardMaterial, DiscreteInterpolant, DisplayP3ColorSpace, DodecahedronBufferGeometry, DodecahedronGeometry, DoubleSide, DstAlphaFactor, DstColorFactor, DynamicCopyUsage, DynamicDrawUsage, DynamicReadUsage, Easing, EdgesGeometry, EllipseCurve, EnvironmentTextureLoader, EqualDepth, EqualStencilFunc, EquirectangularReflectionMapping, EquirectangularRefractionMapping, Euler, EventDispatcher, EventEmitter, ExtrudeBufferGeometry, ExtrudeGeometry, FXAAMaterial, FastGaussianBlurMaterial, FileLoader, FlatShadingOptions, Float16BufferAttribute, Float32BufferAttribute, Float64BufferAttribute, FloatType, FlowMaterial, Flowmap, Fog, FogExp2, FramebufferTexture, FresnelMaterial, FrontSide, Frustum, GLBufferAttribute, GLSL1, GLSL3, GLTFLoader, GammaCorrectionMaterial, GreaterDepth, GreaterEqualDepth, GreaterEqualStencilFunc, GreaterStencilFunc, GridHelper, Group, HalfFloatType, Header, HeaderInfo, HelperOptions, HemisphereLight, HemisphereLightHelper, HemisphereLightPanel, HemisphereLightProbe, IcosahedronBufferGeometry, IcosahedronGeometry, ImageBitmapLoader$1 as ImageBitmapLoader, ImageBitmapLoaderThread, ImageLoader, ImageUtils, IncrementStencilOp, IncrementWrapStencilOp, InstancedBufferAttribute, InstancedBufferGeometry, InstancedInterleavedBuffer, InstancedMesh, Int16BufferAttribute, Int32BufferAttribute, Int8BufferAttribute, IntType, Interface, InterleavedBuffer, InterleavedBufferAttribute, Interpolant, InterpolateDiscrete, InterpolateLinear, InterpolateSmooth, InvertStencilOp, KeepStencilOp, KeyframeTrack, LOD, LambertMaterialCommonPanel, LambertMaterialEnvPanel, LambertMaterialOptions, LambertMaterialPanel, LatheBufferGeometry, LatheGeometry, Layers, LensflareMaterial, LessDepth, LessEqualDepth, LessEqualStencilFunc, LessStencilFunc, Light, LightOptions, LightPanelController, LightProbe, Line, Line3, LineBasicMaterial, LineCurve, LineCurve3, LineDashedMaterial, LineLoop, LineSegments, LinearEncoding, LinearFilter, LinearInterpolant, LinearMipMapLinearFilter, LinearMipMapNearestFilter, LinearMipmapLinearFilter, LinearMipmapNearestFilter, LinearSRGBColorSpace, LinearToneMapping, Link, LinkedList, List, ListSelect, ListToggle, Loader$1 as Loader, LoaderUtils, LoadingManager, LoopOnce, LoopPingPong, LoopRepeat, LuminanceAlphaFormat, LuminanceFormat, LuminosityMaterial, MOUSE, Magnetic, MapPanel, MatcapMaterialCommonPanel, MatcapMaterialOptions, MatcapMaterialPanel, Material, MaterialLoader, MaterialOptions, MaterialPanelController, MathUtils, Matrix3, Matrix4, MaxEquation, Mesh, MeshBasicMaterial, MeshDepthMaterial, MeshDistanceMaterial, MeshHelperPanel, MeshLambertMaterial, MeshMatcapMaterial, MeshNormalMaterial, MeshPhongMaterial, MeshPhysicalMaterial, MeshStandardMaterial, MeshToonMaterial, MeshTransmissionMaterial, MinEquation, MirroredRepeatWrapping, MixOperation, MultiLoader, MultiplyBlending, MultiplyOperation, NearestFilter, NearestMipMapLinearFilter, NearestMipMapNearestFilter, NearestMipmapLinearFilter, NearestMipmapNearestFilter, NeverDepth, NeverStencilFunc, NoBlending, NoColorSpace, NoToneMapping, NormalAnimationBlendMode, NormalBlending, NormalMaterial, NormalMaterialCommonPanel, NormalMaterialOptions, NormalMaterialPanel, NormalsHelperOptions, NotEqualDepth, NotEqualStencilFunc, NumberKeyframeTrack, Object3D, ObjectLoader, ObjectPool, ObjectSpaceNormalMap, OctahedronBufferGeometry, OctahedronGeometry, OimoPhysics, OimoPhysicsBuffer, OimoPhysicsController, OneFactor, OneMinusDstAlphaFactor, OneMinusDstColorFactor, OneMinusSrcAlphaFactor, OneMinusSrcColorFactor, OrbitControls, OrthographicCamera, PCFShadowMap, PCFSoftShadowMap, PMREMGenerator, Panel, PanelItem, Path, PerspectiveCamera, PhongMaterialCommonPanel, PhongMaterialEnvPanel, PhongMaterialOptions, PhongMaterialPanel, PhysicalMaterialClearcoatPanel, PhysicalMaterialCommonPanel, PhysicalMaterialEnvPanel, PhysicalMaterialOptions, PhysicalMaterialPanel, PhysicalMaterialSheenPanel, PhysicalMaterialTransmissionPanel, Plane, PlaneBufferGeometry, PlaneGeometry, PlaneHelper, Point, Point3D, PointLight, PointLightHelper, PointLightPanel, PointText, Points, PointsMaterial, PoissonDiscBlurMaterial, PolarGridHelper, PolyhedronBufferGeometry, PolyhedronGeometry, PositionalAudio, PropertyBinding, PropertyMixer, QuadraticBezierCurve, QuadraticBezierCurve3, Quaternion, QuaternionKeyframeTrack, QuaternionLinearInterpolant, RAD2DEG$1 as RAD2DEG, RED_GREEN_RGTC2_Format, RED_RGTC1_Format, REVISION, RGBADepthPacking, RGBAFormat, RGBAIntegerFormat, RGBA_ASTC_10x10_Format, RGBA_ASTC_10x5_Format, RGBA_ASTC_10x6_Format, RGBA_ASTC_10x8_Format, RGBA_ASTC_12x10_Format, RGBA_ASTC_12x12_Format, RGBA_ASTC_4x4_Format, RGBA_ASTC_5x4_Format, RGBA_ASTC_5x5_Format, RGBA_ASTC_6x5_Format, RGBA_ASTC_6x6_Format, RGBA_ASTC_8x5_Format, RGBA_ASTC_8x6_Format, RGBA_ASTC_8x8_Format, RGBA_BPTC_Format, RGBA_ETC2_EAC_Format, RGBA_PVRTC_2BPPV1_Format, RGBA_PVRTC_4BPPV1_Format, RGBA_S3TC_DXT1_Format, RGBA_S3TC_DXT3_Format, RGBA_S3TC_DXT5_Format, RGBMaterial, RGB_ETC1_Format, RGB_ETC2_Format, RGB_PVRTC_2BPPV1_Format, RGB_PVRTC_4BPPV1_Format, RGB_S3TC_DXT1_Format, RGFormat, RGIntegerFormat, RawShaderMaterial, Ray, Raycaster, RectAreaLight, RectAreaLightPanel, RedFormat, RedIntegerFormat, Reflector, ReflectorBlurMaterial, ReflectorDudvMaterial, ReflectorMaterial, ReinhardToneMapping, RepeatWrapping, ReplaceStencilOp, Reticle, ReticleText, ReverseSubtractEquation, RigidBodyConfig$1 as RigidBodyConfig, RigidBodyType$1 as RigidBodyType, RingBufferGeometry, RingGeometry, SIGNED_RED_GREEN_RGTC2_Format, SIGNED_RED_RGTC1_Format, SMAABlendMaterial, SMAAEdgesMaterial, SMAAWeightsMaterial, SRGBColorSpace, SVGLoader, Scene, SceneCompositeMaterial, ShaderChunk, ShaderLib, ShaderMaterial, ShadowMaterial, ShadowTextureMaterial, Shape$2 as Shape, ShapeBufferGeometry, ShapeGeometry, ShapePath, ShapeUtils, ShortType, SideOptions, Skeleton, SkeletonHelper, SkinnedMesh, Slider, Smooth, SmoothSkew, SmoothViews, SoftShadows, Sound, Sound3D, Source, Sphere, SphereBufferGeometry, SphereGeometry$2 as SphereGeometry, Spherical, SphericalHarmonics3, SphericalJointConfig$1 as SphericalJointConfig, SplineCurve, SpotLight, SpotLightHelper, SpotLightPanel, Sprite, SpriteMaterial, SrcAlphaFactor, SrcAlphaSaturateFactor, SrcColorFactor, Stage, StandardMaterialCommonPanel, StandardMaterialEnvPanel, StandardMaterialOptions, StandardMaterialPanel, StaticCopyUsage, StaticDrawUsage, StaticReadUsage, StereoCamera, StreamCopyUsage, StreamDrawUsage, StreamReadUsage, StringKeyframeTrack, SubtractEquation, SubtractiveBlending, TOUCH, TangentSpaceNormalMap, TangentsHelperOptions, TargetNumber, TetrahedronBufferGeometry, TetrahedronGeometry, TextGeometry, TextMaterial, Texture, TextureLoader, Thread, Ticker, TiltShiftMaterial, ToonMaterialCommonPanel, ToonMaterialOptions, ToonMaterialPanel, TorusBufferGeometry, TorusGeometry, TorusKnotBufferGeometry, TorusKnotGeometry, Tracker, Triangle, TriangleFanDrawMode, TriangleStripDrawMode, TrianglesDrawMode, TubeBufferGeometry, TubeGeometry, Tween, TwoPassDoubleSide, UI, UVHelperOptions, UVMapping, Uint16BufferAttribute, Uint32BufferAttribute, Uint8BufferAttribute, Uint8ClampedBufferAttribute, Uniform, UniformsGroup, UniformsLib, UniformsUtils, UnrealBloomBlurMaterial, UnrealBloomCompositeMaterial, UnsignedByteType, UnsignedInt248Type, UnsignedIntType, UnsignedShort4444Type, UnsignedShort5551Type, UnsignedShortType, VSMShadowMap, Vector2$1 as Vector2, Vector3, Vector4, VectorKeyframeTrack, VideoGlitchMaterial, VideoTexture, VisibleOptions, VolumetricLightLensflareMaterial, VolumetricLightMaterial, WebAudio, WebAudio3D, WebAudioParam, WebGL1Renderer, WebGL3DRenderTarget, WebGLArrayRenderTarget, WebGLCubeRenderTarget, WebGLMultipleRenderTargets, WebGLRenderTarget, WebGLRenderer, WebGLUtils, WireframeGeometry, WireframeOptions, Wobble, WrapAroundEnding, WrapOptions, ZeroCurvatureEnding, ZeroFactor, ZeroSlopeEnding, ZeroStencilOp, _SRGBAFormat, absolute, basename, brightness, ceilPowerOfTwo$1 as ceilPowerOfTwo, clamp$1 as clamp, clearTween, defer, degToRad$1 as degToRad, delayedCall, euclideanModulo$1 as euclideanModulo, extension, floorPowerOfTwo$1 as floorPowerOfTwo, fract, getConstructor, getFrustum, getFrustumFromHeight, getFullscreenTriangle, getKeyByLight, getKeyByMaterial, getKeyByValue, getScreenSpaceBox, getSphericalCube, guid, headsTails, inverseLerp$1 as inverseLerp, isPowerOfTwo$1 as isPowerOfTwo, lerp$2 as lerp, lerpCameras, mapLinear$1 as mapLinear, parabola, pcurve, radToDeg$1 as radToDeg, randFloat$1 as randFloat, randFloatSpread$1 as randFloatSpread, randInt$1 as randInt, sRGBEncoding, shuffle, smootherstep$2 as smootherstep, smoothstep$1 as smoothstep, step, ticker, tween, wait };
+export { ACESFilmicToneMapping, AddEquation, AddOperation, AdditiveAnimationBlendMode, AdditiveBlending, AfterimageMaterial, AlphaFormat, AlwaysDepth, AlwaysStencilFunc, AmbientLight, AmbientLightPanel, AmbientLightProbe, AnimationAction, AnimationClip, AnimationLoader, AnimationMixer, AnimationObjectGroup, AnimationUtils, ArcCurve, ArrayCamera, ArrowHelper, AssetLoader, Audio$1 as Audio, AudioAnalyser, AudioContext$1 as AudioContext, AudioListener, AudioLoader, AxesHelper, BackSide, BadTVMaterial, BasicDepthPacking, BasicMaterial, BasicMaterialCommonPanel, BasicMaterialEnvPanel, BasicMaterialOptions, BasicMaterialPanel, BasicShadowMap, BloomCompositeMaterial, BlurMaterial, BokehBlurMaterial1, BokehBlurMaterial2, Bone, BooleanKeyframeTrack, Box2, Box3, Box3Helper, BoxBufferGeometry, BoxGeometry$2 as BoxGeometry, BoxHelper, BufferAttribute, BufferGeometry, BufferGeometryLoader, BufferGeometryLoaderThread, BufferLoader, ByteType, Cache, Camera, CameraHelper, CameraMotionBlurMaterial, CanvasTexture, CapsuleBufferGeometry, CapsuleGeometry, CatmullRomCurve3, ChromaticAberrationMaterial, CineonToneMapping, CircleBufferGeometry, CircleGeometry, ClampToEdgeWrapping, Clock, Cluster, Color$1 as Color, ColorKeyframeTrack, ColorManagement, ColorMaterial, ColorPicker, CombineOptions, Component, CompressedArrayTexture, CompressedTexture, CompressedTextureLoader, ConeBufferGeometry, ConeGeometry, CopyMaterial, CubeCamera, CubeReflectionMapping, CubeRefractionMapping, CubeTexture, CubeTextureLoader, CubeUVReflectionMapping, CubicBezierCurve, CubicBezierCurve3, CubicInterpolant, CullFaceBack, CullFaceFront, CullFaceFrontBack, CullFaceNone, Curve, CurvePath, CustomBlending, CustomToneMapping, CylinderBufferGeometry, CylinderGeometry, Cylindrical, DEG2RAD$1 as DEG2RAD, Data3DTexture, DataArrayTexture, DataTexture, DataTextureLoader, DataUtils, DecrementStencilOp, DecrementWrapStencilOp, DefaultLoadingManager, DepthFormat, DepthMaskMaterial, DepthStencilFormat, DepthTexture, DirectionalLight, DirectionalLightHelper, DirectionalLightPanel, DiscardMaterial, DiscreteInterpolant, DisplayP3ColorSpace, DodecahedronBufferGeometry, DodecahedronGeometry, DoubleSide, DstAlphaFactor, DstColorFactor, DynamicCopyUsage, DynamicDrawUsage, DynamicReadUsage, Easing, EdgesGeometry, EllipseCurve, EnvironmentTextureLoader, EqualDepth, EqualStencilFunc, EquirectangularReflectionMapping, EquirectangularRefractionMapping, Euler, EventDispatcher, EventEmitter, ExtrudeBufferGeometry, ExtrudeGeometry, FXAAMaterial, FastGaussianBlurMaterial, FileLoader, FlatShadingOptions, Float16BufferAttribute, Float32BufferAttribute, Float64BufferAttribute, FloatType, FlowMaterial, Flowmap, Fog, FogExp2, FramebufferTexture, FresnelMaterial, FrontSide, Frustum, GLBufferAttribute, GLSL1, GLSL3, GLTFLoader, GammaCorrectionMaterial, GreaterDepth, GreaterEqualDepth, GreaterEqualStencilFunc, GreaterStencilFunc, GridHelper, Group, HalfFloatType, Header, HeaderInfo, HelperOptions, HemisphereLight, HemisphereLightHelper, HemisphereLightPanel, HemisphereLightProbe, IcosahedronBufferGeometry, IcosahedronGeometry, ImageBitmapLoader$1 as ImageBitmapLoader, ImageBitmapLoaderThread, ImageLoader, ImageUtils, IncrementStencilOp, IncrementWrapStencilOp, InstancedBufferAttribute, InstancedBufferGeometry, InstancedInterleavedBuffer, InstancedMesh, Int16BufferAttribute, Int32BufferAttribute, Int8BufferAttribute, IntType, Interface, InterleavedBuffer, InterleavedBufferAttribute, Interpolant, InterpolateDiscrete, InterpolateLinear, InterpolateSmooth, InvertStencilOp, KeepStencilOp, KeyframeTrack, LOD, LambertMaterialCommonPanel, LambertMaterialEnvPanel, LambertMaterialOptions, LambertMaterialPanel, LatheBufferGeometry, LatheGeometry, Layers, LensflareMaterial, LessDepth, LessEqualDepth, LessEqualStencilFunc, LessStencilFunc, Light, LightOptions, LightPanelController, LightProbe, Line, Line3, LineBasicMaterial, LineCurve, LineCurve3, LineDashedMaterial, LineLoop, LineSegments, LinearEncoding, LinearFilter, LinearInterpolant, LinearMipMapLinearFilter, LinearMipMapNearestFilter, LinearMipmapLinearFilter, LinearMipmapNearestFilter, LinearSRGBColorSpace, LinearToneMapping, Link, LinkedList, List, ListSelect, ListToggle, Loader$1 as Loader, LoaderUtils, LoadingManager, LoopOnce, LoopPingPong, LoopRepeat, LuminanceAlphaFormat, LuminanceFormat, LuminosityMaterial, MOUSE, Magnetic, MapPanel, MatcapMaterialCommonPanel, MatcapMaterialOptions, MatcapMaterialPanel, Material, MaterialLoader, MaterialOptions, MaterialPanelController, MathUtils, Matrix3, Matrix4, MaxEquation, Mesh, MeshBasicMaterial, MeshDepthMaterial, MeshDistanceMaterial, MeshHelperPanel, MeshLambertMaterial, MeshMatcapMaterial, MeshNormalMaterial, MeshPhongMaterial, MeshPhysicalMaterial, MeshStandardMaterial, MeshToonMaterial, MeshTransmissionDistortionMaterial, MeshTransmissionMaterial, MinEquation, MirroredRepeatWrapping, MixOperation, MultiLoader, MultiplyBlending, MultiplyOperation, NearestFilter, NearestMipMapLinearFilter, NearestMipMapNearestFilter, NearestMipmapLinearFilter, NearestMipmapNearestFilter, NeverDepth, NeverStencilFunc, NoBlending, NoColorSpace, NoToneMapping, NormalAnimationBlendMode, NormalBlending, NormalMaterial, NormalMaterialCommonPanel, NormalMaterialOptions, NormalMaterialPanel, NormalsHelperOptions, NotEqualDepth, NotEqualStencilFunc, NumberKeyframeTrack, Object3D, ObjectLoader, ObjectPool, ObjectSpaceNormalMap, OctahedronBufferGeometry, OctahedronGeometry, OimoPhysics, OimoPhysicsBuffer, OimoPhysicsController, OneFactor, OneMinusDstAlphaFactor, OneMinusDstColorFactor, OneMinusSrcAlphaFactor, OneMinusSrcColorFactor, OrbitControls, OrthographicCamera, PCFShadowMap, PCFSoftShadowMap, PMREMGenerator, Panel, PanelItem, Path, PerspectiveCamera, PhongMaterialCommonPanel, PhongMaterialEnvPanel, PhongMaterialOptions, PhongMaterialPanel, PhysicalMaterialClearcoatPanel, PhysicalMaterialCommonPanel, PhysicalMaterialEnvPanel, PhysicalMaterialOptions, PhysicalMaterialPanel, PhysicalMaterialSheenPanel, PhysicalMaterialTransmissionPanel, Plane, PlaneBufferGeometry, PlaneGeometry, PlaneHelper, Point, Point3D, PointLight, PointLightHelper, PointLightPanel, PointText, Points, PointsMaterial, PoissonDiscBlurMaterial, PolarGridHelper, PolyhedronBufferGeometry, PolyhedronGeometry, PositionalAudio, PropertyBinding, PropertyMixer, QuadraticBezierCurve, QuadraticBezierCurve3, Quaternion, QuaternionKeyframeTrack, QuaternionLinearInterpolant, RAD2DEG$1 as RAD2DEG, RED_GREEN_RGTC2_Format, RED_RGTC1_Format, REVISION, RGBADepthPacking, RGBAFormat, RGBAIntegerFormat, RGBA_ASTC_10x10_Format, RGBA_ASTC_10x5_Format, RGBA_ASTC_10x6_Format, RGBA_ASTC_10x8_Format, RGBA_ASTC_12x10_Format, RGBA_ASTC_12x12_Format, RGBA_ASTC_4x4_Format, RGBA_ASTC_5x4_Format, RGBA_ASTC_5x5_Format, RGBA_ASTC_6x5_Format, RGBA_ASTC_6x6_Format, RGBA_ASTC_8x5_Format, RGBA_ASTC_8x6_Format, RGBA_ASTC_8x8_Format, RGBA_BPTC_Format, RGBA_ETC2_EAC_Format, RGBA_PVRTC_2BPPV1_Format, RGBA_PVRTC_4BPPV1_Format, RGBA_S3TC_DXT1_Format, RGBA_S3TC_DXT3_Format, RGBA_S3TC_DXT5_Format, RGBMaterial, RGB_ETC1_Format, RGB_ETC2_Format, RGB_PVRTC_2BPPV1_Format, RGB_PVRTC_4BPPV1_Format, RGB_S3TC_DXT1_Format, RGFormat, RGIntegerFormat, RawShaderMaterial, Ray, Raycaster, RectAreaLight, RectAreaLightPanel, RedFormat, RedIntegerFormat, Reflector, ReflectorBlurMaterial, ReflectorDudvMaterial, ReflectorMaterial, ReinhardToneMapping, RepeatWrapping, ReplaceStencilOp, Reticle, ReticleText, ReverseSubtractEquation, RigidBodyConfig$1 as RigidBodyConfig, RigidBodyType$1 as RigidBodyType, RingBufferGeometry, RingGeometry, SIGNED_RED_GREEN_RGTC2_Format, SIGNED_RED_RGTC1_Format, SMAABlendMaterial, SMAAEdgesMaterial, SMAAWeightsMaterial, SRGBColorSpace, SVGLoader, Scene, SceneCompositeMaterial, ShaderChunk, ShaderLib, ShaderMaterial, ShadowMaterial, ShadowTextureMaterial, Shape$2 as Shape, ShapeBufferGeometry, ShapeGeometry, ShapePath, ShapeUtils, ShortType, SideOptions, Skeleton, SkeletonHelper, SkinnedMesh, Slider, Smooth, SmoothSkew, SmoothViews, SoftShadows, Sound, Sound3D, Source, Sphere, SphereBufferGeometry, SphereGeometry$2 as SphereGeometry, Spherical, SphericalHarmonics3, SphericalJointConfig$1 as SphericalJointConfig, SplineCurve, SpotLight, SpotLightHelper, SpotLightPanel, Sprite, SpriteMaterial, SrcAlphaFactor, SrcAlphaSaturateFactor, SrcColorFactor, Stage, StandardMaterialCommonPanel, StandardMaterialEnvPanel, StandardMaterialOptions, StandardMaterialPanel, StaticCopyUsage, StaticDrawUsage, StaticReadUsage, StereoCamera, StreamCopyUsage, StreamDrawUsage, StreamReadUsage, StringKeyframeTrack, SubtractEquation, SubtractiveBlending, TOUCH, TangentSpaceNormalMap, TangentsHelperOptions, TargetNumber, TetrahedronBufferGeometry, TetrahedronGeometry, TextGeometry, TextMaterial, Texture, TextureLoader, Thread, Ticker, TiltShiftMaterial, ToonMaterialCommonPanel, ToonMaterialOptions, ToonMaterialPanel, TorusBufferGeometry, TorusGeometry, TorusKnotBufferGeometry, TorusKnotGeometry, Tracker, Triangle, TriangleFanDrawMode, TriangleStripDrawMode, TrianglesDrawMode, TubeBufferGeometry, TubeGeometry, Tween, TwoPassDoubleSide, UI, UVHelperOptions, UVMapping, Uint16BufferAttribute, Uint32BufferAttribute, Uint8BufferAttribute, Uint8ClampedBufferAttribute, Uniform, UniformsGroup, UniformsLib, UniformsUtils, UnrealBloomBlurMaterial, UnrealBloomCompositeMaterial, UnsignedByteType, UnsignedInt248Type, UnsignedIntType, UnsignedShort4444Type, UnsignedShort5551Type, UnsignedShortType, VSMShadowMap, Vector2$1 as Vector2, Vector3, Vector4, VectorKeyframeTrack, VideoGlitchMaterial, VideoTexture, VisibleOptions, VolumetricLightLensflareMaterial, VolumetricLightMaterial, WebAudio, WebAudio3D, WebAudioParam, WebGL1Renderer, WebGL3DRenderTarget, WebGLArrayRenderTarget, WebGLCubeRenderTarget, WebGLMultipleRenderTargets, WebGLRenderTarget, WebGLRenderer, WebGLUtils, WireframeGeometry, WireframeOptions, Wobble, WrapAroundEnding, WrapOptions, ZeroCurvatureEnding, ZeroFactor, ZeroSlopeEnding, ZeroStencilOp, _SRGBAFormat, absolute, basename, brightness, ceilPowerOfTwo$1 as ceilPowerOfTwo, clamp$1 as clamp, clearTween, defer, degToRad$1 as degToRad, delayedCall, euclideanModulo$1 as euclideanModulo, extension, floorPowerOfTwo$1 as floorPowerOfTwo, fract, getConstructor, getFrustum, getFrustumFromHeight, getFullscreenTriangle, getKeyByLight, getKeyByMaterial, getKeyByValue, getScreenSpaceBox, getSphericalCube, guid, headsTails, inverseLerp$1 as inverseLerp, isPowerOfTwo$1 as isPowerOfTwo, lerp$2 as lerp, lerpCameras, mapLinear$1 as mapLinear, parabola, pcurve, radToDeg$1 as radToDeg, randFloat$1 as randFloat, randFloatSpread$1 as randFloatSpread, randInt$1 as randInt, sRGBEncoding, shuffle, smootherstep$2 as smootherstep, smoothstep$1 as smoothstep, step, ticker, tween, wait };

@@ -439,7 +439,7 @@
                 };
 
                 const mesh = new Mesh(geometry, material);
-                mesh.position.y = 2.494;
+                mesh.position.y = 2.494; // 5 / 2 - 0.006
                 mesh.rotation.x = -Math.PI / 2;
                 mesh.receiveShadow = true;
                 mesh.add(this.reflector);
@@ -636,9 +636,9 @@
         }
 
         class SceneController {
-            static init(view, physics) {
-                this.view = view;
+            static init(physics, view) {
                 this.physics = physics;
+                this.view = view;
 
                 this.mouse = new Vector2();
                 this.target = new Vector2();
@@ -1285,7 +1285,7 @@
                 const { renderer, scene, camera, physics } = WorldController;
 
                 CameraController.init(camera);
-                SceneController.init(this.view, physics);
+                SceneController.init(physics, this.view);
                 RenderManager.init(renderer, scene, camera);
             }
 

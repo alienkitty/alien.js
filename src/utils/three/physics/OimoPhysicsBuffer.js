@@ -33,13 +33,21 @@ const Joint = oimo.dynamics.constraint.joint.Joint;
 // Common
 const Vec3 = oimo.common.Vec3;
 const Quat = oimo.common.Quat;
+const Setting = oimo.common.Setting;
 
 // Collision
 const BoxGeometry = oimo.collision.geometry.BoxGeometry;
 const SphereGeometry = oimo.collision.geometry.SphereGeometry;
+const ConeGeometry = oimo.collision.geometry.ConeGeometry;
+const CylinderGeometry = oimo.collision.geometry.CylinderGeometry;
+const CapsuleGeometry = oimo.collision.geometry.CapsuleGeometry;
+const ConvexHullGeometry = oimo.collision.geometry.ConvexHullGeometry;
 
 // Callback
 const ContactCallback = oimo.dynamics.callback.ContactCallback;
+
+// Defaults
+Setting.defaultGJKMargin = 0.0001; // Default 0.05
 
 export class OimoPhysicsBuffer {
     constructor({
@@ -100,7 +108,21 @@ export class OimoPhysicsBuffer {
         if (type === 'box') {
             shapeConfig.geometry = new BoxGeometry(new Vec3(size[0], size[1], size[2]));
         } else if (type === 'sphere') {
-            shapeConfig.geometry = new SphereGeometry(size);
+            shapeConfig.geometry = new SphereGeometry(size[0]);
+        } else if (type === 'cone') {
+            shapeConfig.geometry = new ConeGeometry(size[0], size[1]);
+        } else if (type === 'cylinder') {
+            shapeConfig.geometry = new CylinderGeometry(size[0], size[1]);
+        } else if (type === 'capsule') {
+            shapeConfig.geometry = new CapsuleGeometry(size[0], size[1]);
+        } else if (type === 'convex') {
+            const array = [];
+
+            for (let i = 0; i < size.length; i++) {
+                array.push(new Vec3(size[i * 3 + 0], size[i * 3 + 1], size[i * 3 + 2]));
+            }
+
+            shapeConfig.geometry = new ConvexHullGeometry(array);
         }
 
         if (position) {
@@ -219,6 +241,8 @@ export class OimoPhysicsBuffer {
         gravityScale,
         linearVelocity,
         angularVelocity,
+        linearDamping,
+        angularDamping,
         autoSleep,
         kinematic,
         shapes
@@ -285,6 +309,14 @@ export class OimoPhysicsBuffer {
             body.setAngularVelocity(angularVelocity);
         }
 
+        if (linearDamping) {
+            body.setLinearDamping(linearDamping);
+        }
+
+        if (angularDamping) {
+            body.setAngularDamping(angularDamping);
+        }
+
         this.world.addRigidBody(body);
 
         if (density !== 0) {
@@ -333,6 +365,18 @@ export class OimoPhysicsBuffer {
         const body = this.map.get(name);
 
         body.setAngularVelocity(this.vector3.init(array[0], array[1], array[2]));
+    }
+
+    setLinearDamping(name, array) {
+        const body = this.map.get(name);
+
+        body.setLinearDamping(this.vector3.init(array[0], array[1], array[2]));
+    }
+
+    setAngularDamping(name, array) {
+        const body = this.map.get(name);
+
+        body.setAngularDamping(this.vector3.init(array[0], array[1], array[2]));
     }
 
     setContactCallback(name, callback) {

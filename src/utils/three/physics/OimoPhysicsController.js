@@ -29,6 +29,8 @@ export class OimoPhysicsController {
         gravityScale,
         linearVelocity,
         angularVelocity,
+        linearDamping,
+        angularDamping,
         autoSleep,
         kinematic,
         shapes
@@ -63,7 +65,37 @@ export class OimoPhysicsController {
                 const radius = parameters.radius !== undefined ? parameters.radius * scale.x : 1;
 
                 object.type = 'sphere';
-                object.size = radius;
+                object.size = [radius];
+            } else if (geometry.type === 'ConeGeometry') {
+                const radius = parameters.radius !== undefined ? parameters.radius * scale.x : 1;
+                const height = parameters.height !== undefined ? (parameters.height * scale.y) / 2 : 0.5;
+
+                object.type = 'cone';
+                object.size = [radius, height];
+            } else if (geometry.type === 'CylinderGeometry') {
+                const radius = parameters.radiusTop !== undefined ? parameters.radiusTop * scale.x : 1;
+                const height = parameters.height !== undefined ? (parameters.height * scale.y) / 2 : 0.5;
+
+                object.type = 'cylinder';
+                object.size = [radius, height];
+            } else if (geometry.type === 'CapsuleGeometry') {
+                const radius = parameters.radius !== undefined ? parameters.radius * scale.x : 1;
+                const height = parameters.length !== undefined ? (parameters.length * scale.y) / 2 : 0.5;
+
+                object.type = 'capsule';
+                object.size = [radius, height];
+            } else {
+                const vertices = geometry.getAttribute('position');
+                const array = [];
+
+                for (let i = 0, j = 0; i < vertices.count; i++) {
+                    array[j] = vertices.array[j] * scale.x; j += 3;
+                    array[j] = vertices.array[j] * scale.y; j += 3;
+                    array[j] = vertices.array[j] * scale.z; j += 3;
+                }
+
+                object.type = 'convex';
+                object.size = array;
             }
         }
 
@@ -97,6 +129,14 @@ export class OimoPhysicsController {
 
         if (angularVelocity !== undefined) {
             object.angularVelocity = angularVelocity;
+        }
+
+        if (linearDamping !== undefined) {
+            object.linearDamping = linearDamping;
+        }
+
+        if (angularDamping !== undefined) {
+            object.angularDamping = angularDamping;
         }
 
         if (autoSleep !== undefined) {

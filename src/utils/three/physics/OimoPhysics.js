@@ -5,7 +5,7 @@
  * Based on https://github.com/lo-th/phy
  */
 
-import { Group, Matrix4 } from 'three';
+import { Group, Matrix4, Vector3 } from 'three';
 
 import { oimo } from 'oimophysics';
 
@@ -45,17 +45,20 @@ export const Transform = oimo.common.Transform;
 export const Setting = oimo.common.Setting;
 
 // Collision
-export const CapsuleGeometry = oimo.collision.geometry.CapsuleGeometry;
-export const ConvexHullGeometry = oimo.collision.geometry.ConvexHullGeometry;
 export const BoxGeometry = oimo.collision.geometry.BoxGeometry;
 export const SphereGeometry = oimo.collision.geometry.SphereGeometry;
-export const CylinderGeometry = oimo.collision.geometry.CylinderGeometry;
 export const ConeGeometry = oimo.collision.geometry.ConeGeometry;
+export const CylinderGeometry = oimo.collision.geometry.CylinderGeometry;
+export const CapsuleGeometry = oimo.collision.geometry.CapsuleGeometry;
+export const ConvexHullGeometry = oimo.collision.geometry.ConvexHullGeometry;
 export const Geometry = oimo.collision.geometry.Geometry;
 
 // Callback
 export const RayCastClosest = oimo.dynamics.callback.RayCastClosest;
 export const ContactCallback = oimo.dynamics.callback.ContactCallback;
+
+// Defaults
+Setting.defaultGJKMargin = 0.0001; // Default 0.05
 
 export class OimoPhysics {
     constructor({
@@ -75,6 +78,7 @@ export class OimoPhysics {
         this.objects = [];
         this.map = new WeakMap();
 
+        this.v = new Vector3();
         this.object = new Group();
         this.matrix = new Matrix4();
     }
@@ -120,6 +124,36 @@ export class OimoPhysics {
             const radius = parameters.radius !== undefined ? parameters.radius * scale.x : 1;
 
             shapeConfig.geometry = new SphereGeometry(radius);
+        } else if (geometry.type === 'ConeGeometry') {
+            const radius = parameters.radius !== undefined ? parameters.radius * scale.x : 1;
+            const height = parameters.height !== undefined ? (parameters.height * scale.y) / 2 : 0.5;
+
+            shapeConfig.geometry = new ConeGeometry(radius, height);
+        } else if (geometry.type === 'CylinderGeometry') {
+            const radius = parameters.radiusTop !== undefined ? parameters.radiusTop * scale.x : 1;
+            const height = parameters.height !== undefined ? (parameters.height * scale.y) / 2 : 0.5;
+
+            shapeConfig.geometry = new CylinderGeometry(radius, height);
+        } else if (geometry.type === 'CapsuleGeometry') {
+            const radius = parameters.radius !== undefined ? parameters.radius * scale.x : 1;
+            const height = parameters.length !== undefined ? (parameters.length * scale.y) / 2 : 0.5;
+
+            shapeConfig.geometry = new CapsuleGeometry(radius, height);
+        } else {
+            const vertices = geometry.getAttribute('position');
+            const array = [];
+
+            for (let i = 0; i < vertices.count; i++) {
+                const v = new Vec3(
+                    vertices.array[i * 3 + 0] * scale.x,
+                    vertices.array[i * 3 + 1] * scale.y,
+                    vertices.array[i * 3 + 2] * scale.z
+                );
+
+                array.push(v);
+            }
+
+            shapeConfig.geometry = new ConvexHullGeometry(array);
         }
 
         if (position) {
@@ -142,6 +176,8 @@ export class OimoPhysics {
         gravityScale,
         linearVelocity,
         angularVelocity,
+        linearDamping,
+        angularDamping,
         contactCallback,
         autoSleep,
         kinematic,
@@ -203,6 +239,14 @@ export class OimoPhysics {
 
         if (angularVelocity) {
             body.setAngularVelocity(angularVelocity);
+        }
+
+        if (linearDamping) {
+            body.setLinearDamping(linearDamping);
+        }
+
+        if (angularDamping) {
+            body.setAngularDamping(angularDamping);
         }
 
         if (contactCallback) {
@@ -339,10 +383,22 @@ export class OimoPhysics {
         return bodies;
     }
 
+    getPosition(object, index) {
+        const body = this.getObjectBody(object, index);
+
+        return this.v.copy(body.getPosition()).clone();
+    }
+
     setPosition(object, position, index) {
         const body = this.getObjectBody(object, index);
 
         body.setPosition(position);
+    }
+
+    getOrientation(object, index) {
+        const body = this.getObjectBody(object, index);
+
+        return this.v.copy(body.getOrientation()).clone();
     }
 
     setOrientation(object, position, index) {
@@ -351,10 +407,22 @@ export class OimoPhysics {
         body.setOrientation(position);
     }
 
+    getGravityScale(object, index) {
+        const body = this.getObjectBody(object, index);
+
+        return body.getGravityScale();
+    }
+
     setGravityScale(object, gravityScale, index) {
         const body = this.getObjectBody(object, index);
 
         body.setGravityScale(gravityScale);
+    }
+
+    getLinearVelocity(object, index) {
+        const body = this.getObjectBody(object, index);
+
+        return this.v.copy(body.getLinearVelocity()).clone();
     }
 
     setLinearVelocity(object, linearVelocity, index) {
@@ -363,10 +431,40 @@ export class OimoPhysics {
         body.setLinearVelocity(linearVelocity);
     }
 
+    getAngularVelocity(object, index) {
+        const body = this.getObjectBody(object, index);
+
+        return this.v.copy(body.getAngularVelocity()).clone();
+    }
+
     setAngularVelocity(object, angularVelocity, index) {
         const body = this.getObjectBody(object, index);
 
         body.setAngularVelocity(angularVelocity);
+    }
+
+    getLinearDamping(object, index) {
+        const body = this.getObjectBody(object, index);
+
+        return this.v.copy(body.getLinearDamping()).clone();
+    }
+
+    setLinearDamping(object, linearDamping, index) {
+        const body = this.getObjectBody(object, index);
+
+        body.setLinearDamping(linearDamping);
+    }
+
+    getAngularDamping(object, index) {
+        const body = this.getObjectBody(object, index);
+
+        return this.v.copy(body.getAngularDamping()).clone();
+    }
+
+    setAngularDamping(object, angularDamping, index) {
+        const body = this.getObjectBody(object, index);
+
+        body.setAngularDamping(angularDamping);
     }
 
     setContactCallback(object, callback, index) {

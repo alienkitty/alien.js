@@ -1664,7 +1664,7 @@ class CameraController {
 
         this.progress = 0;
 
-        tween(this, { progress: 1 }, 1000, 'easeInOutCubic', () => {
+        tween(this, { progress: 1 }, 1000, 'easeInOutSine', () => {
             this.view = next;
 
             if (this.next !== this.view) {

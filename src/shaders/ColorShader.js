@@ -13,10 +13,11 @@ export const fragmentShader = /* glsl */ `
 precision highp float;
 
 uniform vec3 uColor;
+uniform float uAlpha;
 
 out vec4 FragColor;
 
 void main() {
-    FragColor = vec4(uColor, 1.0);
+    FragColor = vec4(uColor, uAlpha);
 }
 `;

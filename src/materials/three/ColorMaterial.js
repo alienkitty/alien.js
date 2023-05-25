@@ -7,7 +7,8 @@ export class ColorMaterial extends RawShaderMaterial {
         super({
             glslVersion: GLSL3,
             uniforms: {
-                uColor: { value: color instanceof Color ? color : new Color(color) }
+                uColor: { value: color instanceof Color ? color : new Color(color) },
+                uAlpha: { value: 1 }
             },
             vertexShader,
             fragmentShader

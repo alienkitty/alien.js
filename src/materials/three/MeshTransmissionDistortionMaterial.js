@@ -5,7 +5,7 @@ import { Color, MeshPhysicalMaterial } from 'three';
 export class MeshTransmissionDistortionMaterial extends MeshPhysicalMaterial {
     constructor({
         chromaticAberration = 0.05,
-        anisotropy = 0.1,
+        anisotropicBlur = 0.1,
         distortion = 0,
         distortionScale = 0.5,
         temporalDistortion = 0,
@@ -29,7 +29,7 @@ export class MeshTransmissionDistortionMaterial extends MeshPhysicalMaterial {
             thicknessMap: { value: null },
             attenuationDistance: { value: Infinity },
             attenuationColor: { value: new Color() },
-            anisotropy: { value: anisotropy },
+            anisotropicBlur: { value: anisotropicBlur },
             distortion: { value: distortion },
             distortionScale: { value: distortionScale },
             temporalDistortion: { value: temporalDistortion },
@@ -48,7 +48,7 @@ export class MeshTransmissionDistortionMaterial extends MeshPhysicalMaterial {
             shader.fragmentShader =
                 /* glsl */ `
                 uniform float chromaticAberration;
-                uniform float anisotropy;
+                uniform float anisotropicBlur;
                 uniform float time;
                 uniform float distortion;
                 uniform float distortionScale;
@@ -235,7 +235,7 @@ export class MeshTransmissionDistortionMaterial extends MeshPhysicalMaterial {
                 vec3 transmission = vec3(0.0);
                 float transmissionR, transmissionB, transmissionG;
                 float randomCoords = rand();
-                float thickness_smear = thickness * max(pow(roughnessFactor, 0.33), anisotropy);
+                float thickness_smear = thickness * max(pow(roughnessFactor, 0.33), anisotropicBlur);
                 vec3 distortionNormal = vec3(0.0);
                 vec3 temporalOffset = vec3(time, -time, -time) * temporalDistortion;
                 if (distortion > 0.0) {

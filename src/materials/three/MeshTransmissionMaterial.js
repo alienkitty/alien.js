@@ -5,7 +5,7 @@ import { Color, MeshPhysicalMaterial } from 'three';
 export class MeshTransmissionMaterial extends MeshPhysicalMaterial {
     constructor({
         chromaticAberration = 0.05,
-        anisotropy = 0.1,
+        anisotropicBlur = 0.1,
         samples = 6,
         buffer = null,
         ...parameters
@@ -25,7 +25,7 @@ export class MeshTransmissionMaterial extends MeshPhysicalMaterial {
             thicknessMap: { value: null },
             attenuationDistance: { value: Infinity },
             attenuationColor: { value: new Color() },
-            anisotropy: { value: anisotropy },
+            anisotropicBlur: { value: anisotropicBlur },
             buffer: { value: buffer }
         };
 
@@ -40,7 +40,7 @@ export class MeshTransmissionMaterial extends MeshPhysicalMaterial {
             shader.fragmentShader =
                 /* glsl */ `
                 uniform float chromaticAberration;
-                uniform float anisotropy;
+                uniform float anisotropicBlur;
                 uniform sampler2D buffer;
 
                 float seed = 0.0;
@@ -177,7 +177,7 @@ export class MeshTransmissionMaterial extends MeshPhysicalMaterial {
                 vec3 transmission = vec3(0.0);
                 float transmissionR, transmissionB, transmissionG;
                 float randomCoords = rand();
-                float thickness_smear = thickness * max(pow(roughnessFactor, 0.33), anisotropy);
+                float thickness_smear = thickness * max(pow(roughnessFactor, 0.33), anisotropicBlur);
                 for (float i = 0.0; i < ${samples}.0; i ++) {
                     vec3 sampleNorm = normalize(n + roughnessFactor * roughnessFactor * 2.0 * normalize(vec3(rand() - 0.5, rand() - 0.5, rand() - 0.5)) * pow(rand(), 0.33));
                     transmissionR = getIBLVolumeRefraction(

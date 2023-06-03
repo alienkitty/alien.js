@@ -87,6 +87,6 @@ export { OimoPhysicsController } from './utils/three/physics/OimoPhysicsControll
 
 // Dependencies
 export * from 'three';
-export { SVGLoader } from 'three/examples/jsm/loaders/SVGLoader.js';
-export { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
-export { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
+export { SVGLoader } from 'three/addons/loaders/SVGLoader.js';
+export { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+export { OrbitControls } from 'three/addons/controls/OrbitControls.js';

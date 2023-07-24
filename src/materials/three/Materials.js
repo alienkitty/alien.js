@@ -2,6 +2,7 @@ export { NormalMaterial } from './NormalMaterial.js';
 export { ColorMaterial } from './ColorMaterial.js';
 export { BasicMaterial } from './BasicMaterial.js';
 export { ShadowTextureMaterial } from './ShadowTextureMaterial.js';
+export { MaskMaterial } from './MaskMaterial.js';
 export { FresnelMaterial } from './FresnelMaterial.js';
 export { FlowMaterial } from './FlowMaterial.js';
 export { CopyMaterial } from './CopyMaterial.js';

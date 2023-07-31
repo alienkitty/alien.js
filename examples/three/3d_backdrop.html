@@ -68,7 +68,7 @@
                 FragColor.rgb += getRGB(tBloom, vUv, angle, amount).rgb;
 
                 if (uToneMapping) {
-                    FragColor.rgb *= uExposure / 0.6; // Pre-exposed, outside of the tone mapping function
+                    FragColor.rgb *= uExposure;
 
                     FragColor = vec4(ACESFilmicToneMapping(FragColor.rgb), FragColor.a);
                 }

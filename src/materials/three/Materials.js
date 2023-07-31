@@ -6,6 +6,7 @@ export { MaskMaterial } from './MaskMaterial.js';
 export { FresnelMaterial } from './FresnelMaterial.js';
 export { FlowMaterial } from './FlowMaterial.js';
 export { CopyMaterial } from './CopyMaterial.js';
+export { ACESFilmicToneMappingMaterial } from './ACESFilmicToneMappingMaterial.js';
 export { GammaCorrectionMaterial } from './GammaCorrectionMaterial.js';
 export { FXAAMaterial } from './FXAAMaterial.js';
 export { SMAABlendMaterial } from './SMAABlendMaterial.js';

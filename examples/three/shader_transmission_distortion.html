@@ -11,7 +11,7 @@
     <link rel="stylesheet" href="assets/css/style.css">
 
     <script type="module">
-        import { ACESFilmicToneMapping, BackSide, BloomCompositeMaterial, Color, ColorManagement, DirectionalLight, DiscardMaterial, EnvironmentTextureLoader, Group, HemisphereLight, ImageBitmapLoaderThread, LinearSRGBColorSpace, LuminosityMaterial, MathUtils, Mesh, MeshStandardMaterial, MeshTransmissionDistortionMaterial, NoToneMapping, OrbitControls, OrthographicCamera, Panel, PanelItem, PerspectiveCamera, PhysicalMaterialOptions, Point3D, RepeatWrapping, Scene, SceneCompositeMaterial, SphereGeometry, TextureLoader, Thread, UI, UnrealBloomBlurMaterial, Vector2, WebGLRenderTarget, WebGLRenderer, getFullscreenTriangle, getKeyByValue, ticker } from '../../build/alien.three.js';
+        import { BackSide, BloomCompositeMaterial, Color, ColorManagement, DirectionalLight, DiscardMaterial, EnvironmentTextureLoader, Group, HemisphereLight, ImageBitmapLoaderThread, LuminosityMaterial, MathUtils, Mesh, MeshStandardMaterial, MeshTransmissionDistortionMaterial, OrbitControls, OrthographicCamera, Panel, PanelItem, PerspectiveCamera, PhysicalMaterialOptions, Point3D, RepeatWrapping, Scene, SceneCompositeMaterial, SphereGeometry, TextureLoader, Thread, UI, UnrealBloomBlurMaterial, Vector2, WebGLRenderTarget, WebGLRenderer, getFullscreenTriangle, getKeyByValue, ticker } from '../../build/alien.three.js';
 
         ColorManagement.enabled = false; // Disable color management
 
@@ -62,9 +62,6 @@
 
                 const currentRenderTarget = this.renderer.getRenderTarget();
 
-                const currentToneMapping = this.renderer.toneMapping;
-                this.renderer.toneMapping = NoToneMapping;
-
                 const currentMaterial = this.mesh.material;
                 const currentSide = this.mesh.material.side;
 
@@ -90,7 +87,6 @@
                 this.mesh.material.thickness = this.mesh.userData.thickness;
                 this.mesh.material.side = currentSide;
 
-                this.renderer.toneMapping = currentToneMapping;
                 this.renderer.setRenderTarget(currentRenderTarget);
             }
         }
@@ -906,11 +902,6 @@
                     antialias: true
                 });
                 this.element = this.renderer.domElement;
-
-                // Tone mapping and output color space encoding
-                this.renderer.toneMapping = ACESFilmicToneMapping;
-                this.renderer.toneMappingExposure = 1;
-                this.renderer.outputColorSpace = LinearSRGBColorSpace;
 
                 // 3D scene
                 this.scene = new Scene();

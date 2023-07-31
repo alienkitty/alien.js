@@ -19,7 +19,7 @@
     </style>
 
     <script type="module">
-        import { ACESFilmicToneMapping, AmbientLight, BasicShadowMap, BloomCompositeMaterial, CineonToneMapping, Color, ColorManagement, DirectionalLight, Easing, EnvironmentTextureLoader, GLSL3, Group, HemisphereLight, IcosahedronGeometry, LightPanelController, LinearSRGBColorSpace, LinearToneMapping, LuminosityMaterial, MathUtils, Mesh, MeshStandardMaterial, NoBlending, NoToneMapping, OrbitControls, OrthographicCamera, Panel, PanelItem, PerspectiveCamera, PlaneGeometry, RawShaderMaterial, ReinhardToneMapping, Scene, SoftShadows, TextureLoader, UI, UnrealBloomBlurMaterial, Vector2, WebGLRenderTarget, WebGLRenderer, getFullscreenTriangle, getKeyByValue, ticker } from '../../build/alien.three.js';
+        import { AmbientLight, BasicShadowMap, BloomCompositeMaterial, Color, ColorManagement, DirectionalLight, Easing, EnvironmentTextureLoader, GLSL3, Group, HemisphereLight, IcosahedronGeometry, LightPanelController, LuminosityMaterial, MathUtils, Mesh, MeshStandardMaterial, NoBlending, OrbitControls, OrthographicCamera, Panel, PanelItem, PerspectiveCamera, PlaneGeometry, RawShaderMaterial, Scene, SoftShadows, TextureLoader, UI, UnrealBloomBlurMaterial, Vector2, WebGLRenderTarget, WebGLRenderer, getFullscreenTriangle, getKeyByValue, ticker } from '../../build/alien.three.js';
 
         ColorManagement.enabled = false; // Disable color management
 
@@ -206,15 +206,6 @@
             }
 
             static initPanel() {
-                // https://threejs.org/examples/#webgl_tonemapping
-                const toneMappingOptions = {
-                    None: NoToneMapping,
-                    Linear: LinearToneMapping,
-                    Reinhard: ReinhardToneMapping,
-                    Cineon: CineonToneMapping,
-                    ACESFilmic: ACESFilmicToneMapping
-                };
-
                 const { luminosityMaterial, bloomCompositeMaterial, compositeMaterial } = RenderManager;
 
                 const postOptions = {
@@ -320,34 +311,6 @@
                 LightPanelController.init(this.scene, this.ui);
 
                 const items = [
-                    {
-                        type: 'divider'
-                    },
-                    {
-                        type: 'list',
-                        list: toneMappingOptions,
-                        value: getKeyByValue(toneMappingOptions, this.renderer.toneMapping),
-                        callback: value => {
-                            this.renderer.toneMapping = toneMappingOptions[value];
-
-                            this.scene.traverse(object => {
-                                if (object.isMesh) {
-                                    object.material.needsUpdate = true;
-                                }
-                            });
-                        }
-                    },
-                    {
-                        type: 'slider',
-                        label: 'Exp',
-                        min: 0,
-                        max: 2,
-                        step: 0.01,
-                        value: this.renderer.toneMappingExposure,
-                        callback: value => {
-                            this.renderer.toneMappingExposure = value;
-                        }
-                    },
                     {
                         type: 'divider'
                     },
@@ -588,11 +551,6 @@
                     antialias: true
                 });
                 this.element = this.renderer.domElement;
-
-                // Tone mapping and output color space encoding
-                this.renderer.toneMapping = ACESFilmicToneMapping;
-                this.renderer.toneMappingExposure = 1;
-                this.renderer.outputColorSpace = LinearSRGBColorSpace;
 
                 // 3D scene
                 this.scene = new Scene();

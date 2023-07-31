@@ -157,7 +157,7 @@
                     roughnessMap: ormMap,
                     normalMap,
                     normalScale: new Vector2(-3, -3),
-                    envMapIntensity: 1
+                    envMapIntensity: 1.2
                 });
 
                 material.onBeforeCompile = shader => {
@@ -711,9 +711,9 @@
             }
 
             static initLights() {
-                this.scene.add(new HemisphereLight(0x606060, 0x404040));
+                this.scene.add(new HemisphereLight(0x808080, 0x606060, 2.2));
 
-                const light = new DirectionalLight(0xffffff);
+                const light = new DirectionalLight(0xffffff, 2);
                 light.position.set(1, 1, 1);
                 this.scene.add(light);
             }

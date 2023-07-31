@@ -11,7 +11,7 @@
     <link rel="stylesheet" href="assets/css/style.css">
 
     <script type="module">
-        import { ACESFilmicToneMapping, AmbientLight, BackSide, BloomCompositeMaterial, Color, ColorManagement, DirectionalLight, DiscardMaterial, EnvironmentTextureLoader, Group, HemisphereLight, ImageBitmapLoaderThread, LinearSRGBColorSpace, LuminosityMaterial, MathUtils, Mesh, MeshStandardMaterial, MeshTransmissionDistortionMaterial, NoToneMapping, OrbitControls, OrthographicCamera, Panel, PanelItem, PerspectiveCamera, PhysicalMaterialOptions, Point3D, RepeatWrapping, Scene, SceneCompositeMaterial, SphereGeometry, TextureLoader, Thread, UI, UnrealBloomBlurMaterial, Vector2, WebGLRenderTarget, WebGLRenderer, getFullscreenTriangle, getKeyByValue, ticker } from '../../build/alien.three.js';
+        import { ACESFilmicToneMapping, BackSide, BloomCompositeMaterial, Color, ColorManagement, DirectionalLight, DiscardMaterial, EnvironmentTextureLoader, Group, HemisphereLight, ImageBitmapLoaderThread, LinearSRGBColorSpace, LuminosityMaterial, MathUtils, Mesh, MeshStandardMaterial, MeshTransmissionDistortionMaterial, NoToneMapping, OrbitControls, OrthographicCamera, Panel, PanelItem, PerspectiveCamera, PhysicalMaterialOptions, Point3D, RepeatWrapping, Scene, SceneCompositeMaterial, SphereGeometry, TextureLoader, Thread, UI, UnrealBloomBlurMaterial, Vector2, WebGLRenderTarget, WebGLRenderer, getFullscreenTriangle, getKeyByValue, ticker } from '../../build/alien.three.js';
 
         ColorManagement.enabled = false; // Disable color management
 
@@ -238,8 +238,10 @@
                 this.mesh = mesh;
 
                 // Transmission defaults
-                this.mesh.userData.thickness = 0.1;
-                this.mesh.userData.backside = true;
+                // this.mesh.userData.thickness = 0.1;
+                // this.mesh.userData.backside = true;
+                this.mesh.userData.thickness = 1;
+                this.mesh.userData.backside = false;
                 this.mesh.userData.backsideThickness = 3;
             }
         }
@@ -882,6 +884,8 @@
                 renderer.setRenderTarget(null);
                 renderer.render(this.screen, this.screenCamera);
             };
+
+            static compile = mesh => this.renderer.compile(mesh, this.camera);
         }
 
         class WorldController {
@@ -932,11 +936,9 @@
             }
 
             static initLights() {
-                this.scene.add(new AmbientLight(0xffffff, 0.2));
+                this.scene.add(new HemisphereLight(0x808080, 0x606060, 2.2));
 
-                this.scene.add(new HemisphereLight(0x606060, 0x404040));
-
-                const light = new DirectionalLight(0xffffff, 0.4);
+                const light = new DirectionalLight(0xffffff, 2);
                 light.position.set(0.6, 0.5, 1);
                 this.scene.add(light);
             }

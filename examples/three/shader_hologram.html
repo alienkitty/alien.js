@@ -11,7 +11,7 @@
     <link rel="stylesheet" href="assets/css/style.css">
 
     <script type="module">
-        import { ACESFilmicToneMapping, AdditiveBlending, AmbientLight, BloomCompositeMaterial, BlurMaterial, ChromaticAberrationMaterial, Color, ColorManagement, DirectionalLight, EdgesGeometry, EnvironmentTextureLoader, GLSL3, Group, HemisphereLight, ImageBitmapLoaderThread, LineBasicMaterial, LineSegments, LinearSRGBColorSpace, LuminosityMaterial, MathUtils, Mesh, MeshBasicMaterial, MeshStandardMaterial, NoBlending, OrbitControls, OrthographicCamera, PanelItem, PerspectiveCamera, RawShaderMaterial, RepeatWrapping, Scene, SphereGeometry, TextureLoader, Thread, UI, UnrealBloomBlurMaterial, Vector2, VideoGlitchMaterial, WebGLRenderTarget, WebGLRenderer, getFullscreenTriangle, ticker } from '../../build/alien.three.js';
+        import { ACESFilmicToneMapping, AdditiveBlending, BloomCompositeMaterial, BlurMaterial, ChromaticAberrationMaterial, Color, ColorManagement, DirectionalLight, EdgesGeometry, EnvironmentTextureLoader, GLSL3, Group, HemisphereLight, ImageBitmapLoaderThread, LineBasicMaterial, LineSegments, LinearSRGBColorSpace, LuminosityMaterial, MathUtils, Mesh, MeshBasicMaterial, MeshStandardMaterial, NoBlending, OrbitControls, OrthographicCamera, PanelItem, PerspectiveCamera, RawShaderMaterial, RepeatWrapping, Scene, SphereGeometry, TextureLoader, Thread, UI, UnrealBloomBlurMaterial, Vector2, VideoGlitchMaterial, WebGLRenderTarget, WebGLRenderer, getFullscreenTriangle, ticker } from '../../build/alien.three.js';
 
         ColorManagement.enabled = false; // Disable color management
 
@@ -138,7 +138,7 @@
 
                 const material = new MeshStandardMaterial({
                     color: new Color(Config.ICE_COLOR).offsetHSL(0, 0, -0.3),
-                    metalness: 0.65,
+                    metalness: 0.75,
                     roughness: 0.1,
                     map,
                     metalnessMap: ormMap,
@@ -1054,22 +1054,17 @@
             }
 
             static initLights() {
-                const ambientLight = new AmbientLight(0xffffff, 0.2);
+                const hemisphereLight = new HemisphereLight(0x808080, 0x606060, 2.2);
 
-                const hemisphereLight = new HemisphereLight(0x606060, 0x404040);
-
-                const directionalLight = new DirectionalLight(0xffffff, 0.4);
+                const directionalLight = new DirectionalLight(0xffffff, 2);
                 directionalLight.position.set(0.6, 0.5, 1);
 
-                this.scene.add(ambientLight);
                 this.scene.add(hemisphereLight);
                 this.scene.add(directionalLight);
 
                 // Important: Make sure your lights are on!
-                ambientLight.layers.enable(Layer.HOLOGRAM);
                 hemisphereLight.layers.enable(Layer.HOLOGRAM);
                 directionalLight.layers.enable(Layer.HOLOGRAM);
-                ambientLight.layers.enable(Layer.GLOW);
                 hemisphereLight.layers.enable(Layer.GLOW);
                 directionalLight.layers.enable(Layer.GLOW);
             }

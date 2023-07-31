@@ -11,7 +11,7 @@
     <link rel="stylesheet" href="assets/css/style.css">
 
     <script type="module">
-        import { ACESFilmicToneMapping, AmbientLight, BloomCompositeMaterial, Color, ColorManagement, DirectionalLight, EnvironmentTextureLoader, FrontSide, GLSL3, GLTFLoader, Group, Header, HemisphereLight, Interface, LinearSRGBColorSpace, LuminosityMaterial, MathUtils, Mesh, NoBlending, OrbitControls, OrthographicCamera, PanelItem, PerspectiveCamera, PointLight, PointLightHelper, RawShaderMaterial, Scene, UnrealBloomBlurMaterial, Vector2, Vector3, WebGLRenderTarget, WebGLRenderer, getFrustum, getFullscreenTriangle, getKeyByValue, ticker, tween } from '../../build/alien.three.js';
+        import { ACESFilmicToneMapping, BloomCompositeMaterial, Color, ColorManagement, EnvironmentTextureLoader, FrontSide, GLSL3, GLTFLoader, Group, Header, HemisphereLight, Interface, LinearSRGBColorSpace, LuminosityMaterial, MathUtils, Mesh, NoBlending, OrbitControls, OrthographicCamera, PanelItem, PerspectiveCamera, PointLight, PointLightHelper, RawShaderMaterial, Scene, UnrealBloomBlurMaterial, Vector2, Vector3, WebGLRenderTarget, WebGLRenderer, getFrustum, getFullscreenTriangle, getKeyByValue, ticker, tween } from '../../build/alien.three.js';
 
         ColorManagement.enabled = false; // Disable color management
 
@@ -184,7 +184,7 @@
             }
 
             initLight() {
-                const light = new PointLight(0xffffff, 0.2);
+                const light = new PointLight(0xffffff, 0.9, 100, 0);
                 this.add(light);
 
                 if (Config.DEBUG) {
@@ -213,6 +213,7 @@
                 // Crystal mesh
                 const mesh = model.children[0].children[0].children[0].children[0];
                 mesh.position.x = 20; // Centre the axis
+                mesh.material.envMapIntensity = 1.2;
                 mesh.material.side = FrontSide;
 
                 this.add(gltf.scene);
@@ -757,13 +758,7 @@
             }
 
             static initLights() {
-                this.scene.add(new AmbientLight(0xffffff, 0.2));
-
-                this.scene.add(new HemisphereLight(0x606060, 0x404040));
-
-                const light = new DirectionalLight(0xffffff, 0.4);
-                light.position.set(0.6, 0.5, 1);
-                this.scene.add(light);
+                this.scene.add(new HemisphereLight(0x808080, 0x606060, 2.2));
             }
 
             static initLoaders() {

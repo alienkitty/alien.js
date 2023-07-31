@@ -1,4 +1,4 @@
-import { ACESFilmicToneMapping, AmbientLight, AssetLoader, BloomCompositeMaterial, BoxGeometry, Color, ColorManagement, DirectionalLight, EnvironmentTextureLoader, GLSL3, Group, Header, HemisphereLight, IcosahedronGeometry, ImageBitmapLoaderThread, Interface, LinearSRGBColorSpace, LuminosityMaterial, MathUtils, Mesh, MeshStandardMaterial, OctahedronGeometry, OrthographicCamera, PanelItem, PerspectiveCamera, RawShaderMaterial, RepeatWrapping, Scene, SceneCompositeMaterial, Stage, TextureLoader, Thread, UnrealBloomBlurMaterial, Vector2, WebGLRenderTarget, WebGLRenderer, clearTween, getFullscreenTriangle, shuffle, ticker, tween } from '../../../../build/alien.three.js';
+import { ACESFilmicToneMapping, AssetLoader, BloomCompositeMaterial, BoxGeometry, Color, ColorManagement, DirectionalLight, EnvironmentTextureLoader, GLSL3, Group, Header, HemisphereLight, IcosahedronGeometry, ImageBitmapLoaderThread, Interface, LinearSRGBColorSpace, LuminosityMaterial, MathUtils, Mesh, MeshStandardMaterial, OctahedronGeometry, OrthographicCamera, PanelItem, PerspectiveCamera, RawShaderMaterial, RepeatWrapping, Scene, SceneCompositeMaterial, Stage, TextureLoader, Thread, UnrealBloomBlurMaterial, Vector2, WebGLRenderTarget, WebGLRenderer, clearTween, getFullscreenTriangle, shuffle, ticker, tween } from '../../../../build/alien.three.js';
 
 ColorManagement.enabled = false; // Disable color management
 
@@ -500,7 +500,7 @@ class AbstractCube extends Group {
 
         const material = new MeshStandardMaterial({
             color: new Color().offsetHSL(0, 0, -0.65),
-            metalness: 0.6,
+            metalness: 0.7,
             roughness: 0.7,
             map,
             metalnessMap: ormMap,
@@ -509,7 +509,7 @@ class AbstractCube extends Group {
             aoMapIntensity: 1,
             normalMap,
             normalScale: new Vector2(1, 1),
-            envMapIntensity: 1,
+            envMapIntensity: 1.2,
             flatShading: true
         });
 
@@ -574,7 +574,7 @@ class FloatingCrystal extends Group {
 
         const material = new MeshStandardMaterial({
             color: new Color().offsetHSL(0, 0, -0.65),
-            metalness: 0.6,
+            metalness: 0.7,
             roughness: 0.7,
             map,
             metalnessMap: ormMap,
@@ -583,7 +583,7 @@ class FloatingCrystal extends Group {
             aoMapIntensity: 1,
             normalMap,
             normalScale: new Vector2(1, 1),
-            envMapIntensity: 1,
+            envMapIntensity: 1.2,
             flatShading: true
         });
 
@@ -651,7 +651,7 @@ class DarkPlanet extends Group {
 
         const material = new MeshStandardMaterial({
             color: new Color().offsetHSL(0, 0, -0.65),
-            metalness: 0.6,
+            metalness: 0.7,
             roughness: 2,
             map,
             metalnessMap: ormMap,
@@ -660,7 +660,7 @@ class DarkPlanet extends Group {
             aoMapIntensity: 1,
             normalMap,
             normalScale: new Vector2(3, 3),
-            envMapIntensity: 1
+            envMapIntensity: 1.2
         });
 
         // Second channel for aoMap and lightMap
@@ -1131,11 +1131,9 @@ class WorldController {
     }
 
     static initLights() {
-        this.scene.add(new AmbientLight(0xffffff, 0.2));
+        this.scene.add(new HemisphereLight(0x606060, 0x404040, 2.2));
 
-        this.scene.add(new HemisphereLight(0x606060, 0x404040));
-
-        const light = new DirectionalLight(0xffffff, 0.4);
+        const light = new DirectionalLight(0xffffff, 2);
         light.position.set(0.6, 0.5, 1);
         this.scene.add(light);
     }

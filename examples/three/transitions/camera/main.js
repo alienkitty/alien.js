@@ -1,4 +1,4 @@
-import { ACESFilmicToneMapping, AmbientLight, AssetLoader, BasicShadowMap, BloomCompositeMaterial, BoxGeometry, CameraMotionBlurMaterial, Color, ColorManagement, DepthTexture, DirectionalLight, EnvironmentTextureLoader, GLSL3, Group, Header, HemisphereLight, IcosahedronGeometry, ImageBitmapLoaderThread, Interface, LinearSRGBColorSpace, LuminosityMaterial, MathUtils, Matrix4, Mesh, MeshStandardMaterial, NearestFilter, NoBlending, OctahedronGeometry, OrthographicCamera, PanelItem, PerspectiveCamera, PlaneGeometry, Point3D, RawShaderMaterial, Reflector, RepeatWrapping, Scene, SceneCompositeMaterial, ShadowMaterial, Stage, TextureLoader, Thread, UnrealBloomBlurMaterial, Vector2, Vector3, WebGLRenderTarget, WebGLRenderer, clearTween, delayedCall, getFullscreenTriangle, getKeyByValue, lerpCameras, shuffle, ticker, tween } from '../../../../build/alien.three.js';
+import { ACESFilmicToneMapping, AssetLoader, BasicShadowMap, BloomCompositeMaterial, BoxGeometry, CameraMotionBlurMaterial, Color, ColorManagement, DepthTexture, DirectionalLight, EnvironmentTextureLoader, GLSL3, Group, Header, HemisphereLight, IcosahedronGeometry, ImageBitmapLoaderThread, Interface, LinearSRGBColorSpace, LuminosityMaterial, MathUtils, Matrix4, Mesh, MeshStandardMaterial, NearestFilter, NoBlending, OctahedronGeometry, OrthographicCamera, PanelItem, PerspectiveCamera, PlaneGeometry, Point3D, RawShaderMaterial, Reflector, RepeatWrapping, Scene, SceneCompositeMaterial, ShadowMaterial, Stage, TextureLoader, Thread, UnrealBloomBlurMaterial, Vector2, Vector3, WebGLRenderTarget, WebGLRenderer, clearTween, delayedCall, getFullscreenTriangle, getKeyByValue, lerpCameras, shuffle, ticker, tween } from '../../../../build/alien.three.js';
 
 ColorManagement.enabled = false; // Disable color management
 
@@ -632,7 +632,7 @@ class AbstractCube extends Group {
         const material = new MeshStandardMaterial({
             name: 'Abstract Cube',
             color: new Color().offsetHSL(0, 0, -0.65),
-            metalness: 0.6,
+            metalness: 0.7,
             roughness: 0.7,
             map,
             metalnessMap: ormMap,
@@ -641,7 +641,7 @@ class AbstractCube extends Group {
             aoMapIntensity: 1,
             normalMap,
             normalScale: new Vector2(1, 1),
-            envMapIntensity: 1,
+            envMapIntensity: 1.2,
             flatShading: true,
             polygonOffset: true,
             polygonOffsetFactor: 1,
@@ -740,7 +740,7 @@ class FloatingCrystal extends Group {
         const material = new MeshStandardMaterial({
             name: 'Floating Crystal',
             color: new Color().offsetHSL(0, 0, -0.65),
-            metalness: 0.6,
+            metalness: 0.7,
             roughness: 0.7,
             map,
             metalnessMap: ormMap,
@@ -749,7 +749,7 @@ class FloatingCrystal extends Group {
             aoMapIntensity: 1,
             normalMap,
             normalScale: new Vector2(1, 1),
-            envMapIntensity: 1,
+            envMapIntensity: 1.2,
             flatShading: true,
             polygonOffset: true,
             polygonOffsetFactor: 1,
@@ -851,7 +851,7 @@ class DarkPlanet extends Group {
         const material = new MeshStandardMaterial({
             name: 'Dark Planet',
             color: new Color().offsetHSL(0, 0, -0.65),
-            metalness: 0.6,
+            metalness: 0.7,
             roughness: 2,
             map,
             metalnessMap: ormMap,
@@ -860,7 +860,7 @@ class DarkPlanet extends Group {
             aoMapIntensity: 1,
             normalMap,
             normalScale: new Vector2(3, 3),
-            envMapIntensity: 1,
+            envMapIntensity: 1.2,
             polygonOffset: true,
             polygonOffsetFactor: 1,
             polygonOffsetUnits: 1
@@ -1820,11 +1820,9 @@ class WorldController {
     }
 
     static initLights() {
-        this.scene.add(new AmbientLight(0xffffff, 0.2));
+        this.scene.add(new HemisphereLight(0x808080, 0x606060, 2.2));
 
-        this.scene.add(new HemisphereLight(0x606060, 0x404040));
-
-        const light = new DirectionalLight(0xffffff, 0.4);
+        const light = new DirectionalLight(0xffffff, 2);
         light.position.set(5, 5, 5);
         light.castShadow = true;
         light.shadow.mapSize.width = 2048;

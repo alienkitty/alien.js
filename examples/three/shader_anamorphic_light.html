@@ -11,7 +11,7 @@
     <link rel="stylesheet" href="assets/css/style.css">
 
     <script type="module">
-        import { ACESFilmicToneMapping, AmbientLight, BloomCompositeMaterial, BlurMaterial, Color, ColorManagement, EnvironmentTextureLoader, GLSL3, Group, HemisphereLight, IcosahedronGeometry, ImageBitmapLoaderThread, LinearSRGBColorSpace, LuminosityMaterial, MathUtils, Mesh, MeshBasicMaterial, MeshStandardMaterial, NoBlending, OrthographicCamera, PanelItem, PerspectiveCamera, PointLight, RawShaderMaterial, RepeatWrapping, Scene, ShaderChunk, TextureLoader, Thread, UI, UnrealBloomBlurMaterial, Vector2, Vector3, VolumetricLightMaterial, WebGLRenderTarget, WebGLRenderer, getFullscreenTriangle, ticker } from '../../build/alien.three.js';
+        import { ACESFilmicToneMapping, BloomCompositeMaterial, BlurMaterial, Color, ColorManagement, EnvironmentTextureLoader, GLSL3, Group, HemisphereLight, IcosahedronGeometry, ImageBitmapLoaderThread, LinearSRGBColorSpace, LuminosityMaterial, MathUtils, Mesh, MeshBasicMaterial, MeshStandardMaterial, NoBlending, OrthographicCamera, PanelItem, PerspectiveCamera, PointLight, RawShaderMaterial, RepeatWrapping, Scene, ShaderChunk, TextureLoader, Thread, UI, UnrealBloomBlurMaterial, Vector2, Vector3, VolumetricLightMaterial, WebGLRenderTarget, WebGLRenderer, getFullscreenTriangle, ticker } from '../../build/alien.three.js';
 
         ColorManagement.enabled = false; // Disable color management
 
@@ -96,7 +96,7 @@
             }
 
             initLight() {
-                const light = new PointLight(Config.LIGHT_COLOR, 0.4);
+                const light = new PointLight(Config.LIGHT_COLOR, 1.9, 2.2, 0);
                 this.add(light);
             }
 
@@ -141,7 +141,7 @@
 
                 const material = new MeshStandardMaterial({
                     color: new Color(Config.LIGHT_COLOR),
-                    metalness: 0.6,
+                    metalness: 0.7,
                     roughness: 2,
                     map,
                     metalnessMap: ormMap,
@@ -150,7 +150,7 @@
                     aoMapIntensity: 1,
                     normalMap,
                     normalScale: new Vector2(3, 3),
-                    envMapIntensity: 1
+                    envMapIntensity: 1.2
                 });
 
                 // Second channel for aoMap and lightMap
@@ -279,7 +279,7 @@
 
                 const material = new MeshStandardMaterial({
                     color: new Color().offsetHSL(0, 0, -0.65),
-                    metalness: 0.6,
+                    metalness: 0.7,
                     roughness: 2,
                     map,
                     metalnessMap: ormMap,
@@ -288,7 +288,7 @@
                     aoMapIntensity: 1,
                     normalMap,
                     normalScale: new Vector2(3, 3),
-                    envMapIntensity: 1
+                    envMapIntensity: 1.2
                 });
 
                 // Second channel for aoMap and lightMap
@@ -1048,9 +1048,7 @@
             }
 
             static initLights() {
-                this.scene.add(new AmbientLight(0xffffff, 0.2));
-
-                this.scene.add(new HemisphereLight(0x606060, 0x404040));
+                this.scene.add(new HemisphereLight(0x808080, 0x606060, 2.2));
             }
 
             static initLoaders() {

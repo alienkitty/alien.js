@@ -106,7 +106,8 @@
                 const material = new MeshStandardMaterial({
                     color: 0xefefef,
                     metalness: 0.6,
-                    roughness: 0.6,
+                    roughness: 0.9,
+                    envMapIntensity: 1.6,
                     dithering: true
                 });
 
@@ -159,7 +160,8 @@
                 const material = new MeshStandardMaterial({
                     color: 0xefefef,
                     metalness: 0.6,
-                    roughness: 0.6,
+                    roughness: 0.9,
+                    envMapIntensity: 1.6,
                     dithering: true
                 });
 
@@ -631,7 +633,7 @@
             static initLights() {
                 this.scene.add(new AmbientLight(0xffffff, 0.2));
 
-                this.scene.add(new HemisphereLight(0x606060, 0x404040));
+                this.scene.add(new HemisphereLight(0x808080, 0x606060, 2.2));
 
                 const directionalLight1 = new DirectionalLight(0xffffff, 0.8);
                 directionalLight1.position.set(5, 5, 5);

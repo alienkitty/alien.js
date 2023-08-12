@@ -4,6 +4,7 @@
   "description": "Future web pattern",
   "type": "module",
   "exports": {
+    "./ogl": "./src/ogl.js",
     "./three": "./src/three.js",
     "./three/oimophysics": "./src/three.oimophysics.js",
     "./all/three": "./src/all.three.js",

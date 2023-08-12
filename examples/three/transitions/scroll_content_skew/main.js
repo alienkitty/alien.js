@@ -1139,7 +1139,7 @@ class WorldController {
     }
 
     static initLights() {
-        this.scene.add(new HemisphereLight(0x606060, 0x404040, 2.2));
+        this.scene.add(new HemisphereLight(0x606060, 0x404040, 3));
 
         const light = new DirectionalLight(0xffffff, 2);
         light.position.set(0.6, 0.5, 1);

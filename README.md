@@ -178,11 +178,6 @@ const program = new FXAAProgram(gl);
 [multiuser fluid](https://multiuser-fluid.glitch.me/) (binary, [glitch](https://glitch.com/edit/#!/multiuser-fluid))  
 [multiuser blocks](https://multiuser-blocks.glitch.me/) (binary, [glitch](https://glitch.com/edit/#!/multiuser-blocks))  
 
-#### test
-
-[wobble](https://alien.js.org/examples/three/test_wobble.html)  
-[oimophysics](https://alien.js.org/examples/three/test_oimophysics.html)  
-
 ### Getting started
 
 Clone this repository and install its dependencies:

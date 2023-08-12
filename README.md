@@ -92,6 +92,7 @@ console.log(physics.world.getGravity());
 
 [noise](https://alien.js.org/examples/three/shader_noise.html)  
 [fxaa](https://alien.js.org/examples/three/shader_fxaa.html)  
+[fxaa](https://alien.js.org/examples/ogl/shader_fxaa.html) (OGL version)  
 [smaa](https://alien.js.org/examples/three/shader_smaa.html)  
 [blur](https://alien.js.org/examples/three/shader_blur.html) (Gaussian blur)  
 [blur](https://alien.js.org/examples/three/shader_poisson_disc_blur.html) (Poisson disc blur)  
@@ -189,6 +190,7 @@ npm start
 npm i -D eslint eslint-plugin-html
 npx eslint src
 npx eslint examples/about/src
+npx eslint examples/ogl/*.html
 npx eslint examples/three/*.html
 npx eslint examples/three/transitions
 ```

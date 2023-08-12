@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+    <title>OGL FXAA Post-processing — Alien.js</title>
+
+    <link rel="preconnect" href="https://fonts.gstatic.com">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto+Mono">
+    <link rel="stylesheet" href="../assets/css/style.css">
+
+    <script type="importmap">
+        {
+            "imports": {
+                "ogl": "https://unpkg.com/ogl",
+                "@alienkitty/space.js": "https://unpkg.com/@alienkitty/space.js/src/index.js"
+            }
+        }
+    </script>
+
+    <script type="module">
+        import { Camera, Color, Mesh, Program, RenderTarget, Renderer, Sphere, Transform, Triangle, Vec2 } from 'ogl';
+        import { FXAAProgram } from '../../src/ogl/programs/Programs.js';
+        import { PanelItem, UI, getKeyByValue, ticker } from '@alienkitty/space.js';
+
+        const params = {
+            backgroundColor: new Color('#0e0e0e')
+        };
+
+        import periodic3d from '../../src/shaders/modules/noise/periodic3d.glsl.js';
+
+        // Based on https://oframe.github.io/ogl/examples/?src=helpers.html by gordonnl
+        // Based on https://github.com/spite/perlin-experiments
+
+        const vertex = /* glsl */ `
+            attribute vec3 position;
+            attribute vec3 normal;
+
+            uniform mat4 modelViewMatrix;
+            uniform mat4 projectionMatrix;
+            uniform mat3 normalMatrix;
+
+            uniform float uTime;
+
+            varying vec3 vNormal;
+
+            ${periodic3d}
+
+            void main() {
+                vNormal = normalize(normalMatrix * normal);
+
+                float f = 0.05 * pnoise(vec3(2.0 * normal + uTime), vec3(10.0));
+
+                gl_Position = projectionMatrix * modelViewMatrix * vec4(position + f * normal, 1.0);
+            }
+        `;
+
+        const fragment = /* glsl */ `
+            precision highp float;
+
+            varying vec3 vNormal;
+
+            void main() {
+                vec3 normal = normalize(vNormal);
+                float lighting = dot(normal, normalize(vec3(1.0, 1.0, 1.0)));
+
+                gl_FragColor.rgb = vec3(0.75) + lighting * 0.25;
+                gl_FragColor.a = 1.0;
+            }
+        `;
+
+        class SceneView extends Transform {
+            constructor() {
+                super();
+
+                this.initMesh();
+            }
+
+            initMesh() {
+                const { gl, time } = WorldController;
+
+                const geometry = new Sphere(gl, { radius: 1, widthSegments: 80, heightSegments: 80 });
+
+                const program = new Program(gl, {
+                    uniforms: {
+                        uTime: time
+                    },
+                    vertex,
+                    fragment
+                });
+
+                const mesh = new Mesh(gl, { geometry, program });
+                this.addChild(mesh);
+            }
+        }
+
+        class PanelController {
+            static init() {
+                this.initViews();
+                this.initPanel();
+            }
+
+            static initViews() {
+                this.ui = new UI({ fps: true });
+                this.ui.animateIn();
+                document.body.appendChild(this.ui.element);
+            }
+
+            static initPanel() {
+                const postOptions = {
+                    Off: false,
+                    FXAA: true
+                };
+
+                const items = [
+                    {
+                        label: 'FPS'
+                    },
+                    {
+                        type: 'divider'
+                    },
+                    {
+                        type: 'list',
+                        list: postOptions,
+                        value: getKeyByValue(postOptions, RenderManager.enabled),
+                        callback: value => {
+                            RenderManager.enabled = postOptions[value];
+                        }
+                    }
+                ];
+
+                items.forEach(data => {
+                    this.ui.addPanel(new PanelItem(data));
+                });
+            }
+
+            // Public methods
+
+            static update = () => {
+                if (!this.ui) {
+                    return;
+                }
+
+                this.ui.update();
+            };
+        }
+
+        class RenderManager {
+            static init(renderer, scene, camera) {
+                this.renderer = renderer;
+                this.scene = scene;
+                this.camera = camera;
+
+                this.enabled = true;
+
+                this.initRenderer();
+            }
+
+            static initRenderer() {
+                const { gl, screenTriangle: geometry, resolution } = WorldController;
+
+                // Fullscreen triangle
+                this.screen = new Mesh(gl, { geometry });
+                this.screen.frustumCulled = false;
+
+                // Render targets
+                this.renderTarget = new RenderTarget(gl);
+
+                // FXAA program
+                this.fxaaProgram = new FXAAProgram(gl);
+                this.fxaaProgram.uniforms.tMap.value = this.renderTarget.texture;
+                this.fxaaProgram.uniforms.uResolution = resolution;
+                this.screen.program = this.fxaaProgram;
+            }
+
+            // Public methods
+
+            static resize = (width, height, dpr) => {
+                this.renderer.dpr = dpr;
+                this.renderer.setSize(width, height);
+
+                width = Math.round(width * dpr);
+                height = Math.round(height * dpr);
+
+                this.renderTarget.setSize(width, height);
+            };
+
+            static update = () => {
+                const renderer = this.renderer;
+                const scene = this.scene;
+                const camera = this.camera;
+
+                if (!this.enabled) {
+                    renderer.render({ scene, camera });
+                    return;
+                }
+
+                // Scene pass
+                renderer.render({ scene, camera, target: this.renderTarget });
+
+                // FXAA pass (render to screen)
+                renderer.render({ scene: this.screen });
+            };
+        }
+
+        class WorldController {
+            static init() {
+                this.initWorld();
+
+                this.addListeners();
+            }
+
+            static initWorld() {
+                this.renderer = new Renderer({
+                    powerPreference: 'high-performance'
+                });
+                this.gl = this.renderer.gl;
+                this.element = this.gl.canvas;
+
+                // Clear color
+                this.gl.clearColor(...params.backgroundColor, 1);
+
+                // 3D scene
+                this.scene = new Transform();
+                this.camera = new Camera(this.gl, { fov: 30, near: 0.5, far: 40 });
+                this.camera.position.z = 8;
+                this.camera.lookAt([0, 0, 0]);
+
+                // Global geometries
+                this.screenTriangle = new Triangle(this.gl);
+
+                // Global uniforms
+                this.resolution = { value: new Vec2() };
+                this.texelSize = { value: new Vec2() };
+                this.aspect = { value: 1 };
+                this.time = { value: 0 };
+                this.frame = { value: 0 };
+            }
+
+            static addListeners() {
+                this.gl.canvas.addEventListener('touchstart', this.onTouchStart);
+            }
+
+            // Event handlers
+
+            static onTouchStart = e => {
+                e.preventDefault();
+            };
+
+            // Public methods
+
+            static resize = (width, height, dpr) => {
+                this.camera.aspect = width / height;
+                this.camera.perspective();
+
+                if (width < height) {
+                    this.camera.position.z = 10;
+                } else {
+                    this.camera.position.z = 8;
+                }
+
+                width = Math.round(width * dpr);
+                height = Math.round(height * dpr);
+
+                this.resolution.value.set(width, height);
+                this.texelSize.value.set(1 / width, 1 / height);
+                this.aspect.value = width / height;
+            };
+
+            static update = (time, delta, frame) => {
+                this.time.value = time;
+                this.frame.value = frame;
+            };
+        }
+
+        class App {
+            static async init() {
+                this.initWorld();
+                this.initViews();
+                this.initControllers();
+
+                this.addListeners();
+                this.onResize();
+
+                this.initPanel();
+            }
+
+            static initWorld() {
+                WorldController.init();
+                document.body.appendChild(WorldController.element);
+            }
+
+            static initViews() {
+                this.view = new SceneView();
+                WorldController.scene.addChild(this.view);
+            }
+
+            static initControllers() {
+                const { renderer, scene, camera } = WorldController;
+
+                RenderManager.init(renderer, scene, camera);
+            }
+
+            static initPanel() {
+                PanelController.init();
+            }
+
+            static addListeners() {
+                window.addEventListener('resize', this.onResize);
+                ticker.add(this.onUpdate);
+                ticker.start();
+            }
+
+            // Event handlers
+
+            static onResize = () => {
+                const width = document.documentElement.clientWidth;
+                const height = document.documentElement.clientHeight;
+                const dpr = window.devicePixelRatio;
+
+                WorldController.resize(width, height, dpr);
+                RenderManager.resize(width, height, dpr);
+            };
+
+            static onUpdate = (time, delta, frame) => {
+                WorldController.update(time, delta, frame);
+                RenderManager.update(time, delta, frame);
+                PanelController.update();
+            };
+        }
+
+        App.init();
+    </script>
+</head>
+<body>
+</body>
+</html>

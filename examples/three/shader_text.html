@@ -8,7 +8,7 @@
 
     <link rel="preconnect" href="https://fonts.gstatic.com">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto+Mono">
-    <link rel="stylesheet" href="assets/css/style.css">
+    <link rel="stylesheet" href="../assets/css/style.css">
 
     <script type="module">
         import { BloomCompositeMaterial, BufferAttribute, BufferGeometry, Color, ColorManagement, DirectionalLight, Fog, GLSL3, Group, HemisphereLight, LinearFilter, LuminosityMaterial, MathUtils, Mesh, MeshStandardMaterial, NoBlending, OrthographicCamera, PanelItem, PerspectiveCamera, PlaneGeometry, RawShaderMaterial, Reflector, RepeatWrapping, Scene, TextGeometry, TextMaterial, TextureLoader, UI, UnrealBloomBlurMaterial, Vector2, Vector3, WebGLRenderTarget, WebGLRenderer, getFullscreenTriangle, ticker } from '../../build/alien.three.js';
@@ -100,14 +100,14 @@
             async initMesh() {
                 const { loadTexture, camera } = WorldController;
 
-                const map = await loadTexture('assets/fonts/Roboto-Bold.png');
+                const map = await loadTexture('../assets/fonts/Roboto-Bold.png');
                 map.minFilter = LinearFilter;
                 map.generateMipmaps = false;
 
                 const material = new TextMaterial({ map });
                 material.uniforms.uAlpha.value = 0.94;
 
-                const font = await (await fetch('assets/fonts/Roboto-Bold.json')).json();
+                const font = await (await fetch('../assets/fonts/Roboto-Bold.json')).json();
 
                 const text = new TextGeometry({
                     font,
@@ -180,11 +180,11 @@
 
                 // Textures
                 const [map, normalMap, ormMap] = await Promise.all([
-                    // loadTexture('assets/textures/uv.jpg'),
-                    loadTexture('assets/textures/pbr/polished_concrete_basecolor.jpg'),
-                    loadTexture('assets/textures/pbr/polished_concrete_normal.jpg'),
+                    // loadTexture('../assets/textures/uv.jpg'),
+                    loadTexture('../assets/textures/pbr/polished_concrete_basecolor.jpg'),
+                    loadTexture('../assets/textures/pbr/polished_concrete_normal.jpg'),
                     // https://occlusion-roughness-metalness.glitch.me/
-                    loadTexture('assets/textures/pbr/polished_concrete_orm.jpg')
+                    loadTexture('../assets/textures/pbr/polished_concrete_orm.jpg')
                 ]);
 
                 map.wrapS = RepeatWrapping;

@@ -8,7 +8,7 @@
 
     <link rel="preconnect" href="https://fonts.gstatic.com">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto+Mono">
-    <link rel="stylesheet" href="assets/css/style.css">
+    <link rel="stylesheet" href="../assets/css/style.css">
 
     <style>
         :root {
@@ -31,7 +31,7 @@
             async initGeometry() {
                 const { loadBufferGeometry } = WorldController;
 
-                const geometry = await loadBufferGeometry('assets/geometry/cube.json');
+                const geometry = await loadBufferGeometry('../assets/geometry/cube.json');
 
                 // Use second set of UVs for cubemap row layout
                 // https://docs.unrealengine.com/4.27/en-US/RenderingAndGraphics/Textures/Cubemaps/CreatingCubemaps/
@@ -43,8 +43,8 @@
             async initMaterial() {
                 const { anisotropy, loadTexture } = WorldController;
 
-                // const map = await loadTexture('assets/textures/cubemap.jpg');
-                const map = await loadTexture('assets/textures/cube/cube_basecolor.jpg');
+                // const map = await loadTexture('../assets/textures/cubemap.jpg');
+                const map = await loadTexture('../assets/textures/cube/cube_basecolor.jpg');
                 map.anisotropy = anisotropy;
 
                 this.material = new BasicMaterial(map);
@@ -85,7 +85,7 @@
 
                 const geometry = new PlaneGeometry(100, 100);
 
-                const map = await loadTexture('assets/textures/waterdudv.jpg');
+                const map = await loadTexture('../assets/textures/waterdudv.jpg');
                 map.wrapS = RepeatWrapping;
                 map.wrapT = RepeatWrapping;
                 map.repeat.set(6, 3);

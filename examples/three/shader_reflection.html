@@ -8,7 +8,7 @@
 
     <link rel="preconnect" href="https://fonts.gstatic.com">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto+Mono">
-    <link rel="stylesheet" href="assets/css/style.css">
+    <link rel="stylesheet" href="../assets/css/style.css">
 
     <script type="module">
         import { BloomCompositeMaterial, Color, ColorManagement, DirectionalLight, Fog, GLSL3, Group, HemisphereLight, LuminosityMaterial, MathUtils, Mesh, MeshBasicMaterial, NoBlending, OrthographicCamera, PanelItem, PerspectiveCamera, PlaneGeometry, RawShaderMaterial, Reflector, ReflectorMaterial, RepeatWrapping, SVGLoader, Scene, TextureLoader, UI, UnrealBloomBlurMaterial, Vector2, Vector3, WebGLRenderTarget, WebGLRenderer, getFullscreenTriangle, ticker } from '../../build/alien.three.js';
@@ -129,10 +129,10 @@
 
                 // Textures
                 const [map, normalMap] = await Promise.all([
-                    // loadTexture('assets/textures/uv.jpg'),
-                    loadTexture('assets/textures/pbr/concrete_wet_floor_basecolor.jpg'),
-                    // loadTexture('assets/textures/waternormals.jpg')
-                    loadTexture('assets/textures/pbr/concrete_wet_floor_normal.jpg')
+                    // loadTexture('../assets/textures/uv.jpg'),
+                    loadTexture('../assets/textures/pbr/concrete_wet_floor_basecolor.jpg'),
+                    // loadTexture('../assets/textures/waternormals.jpg')
+                    loadTexture('../assets/textures/pbr/concrete_wet_floor_normal.jpg')
                 ]);
 
                 map.wrapS = RepeatWrapping;

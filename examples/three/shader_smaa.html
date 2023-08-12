@@ -8,10 +8,10 @@
 
     <link rel="preconnect" href="https://fonts.gstatic.com">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto+Mono">
-    <link rel="stylesheet" href="assets/css/style.css">
+    <link rel="stylesheet" href="../assets/css/style.css">
 
     <script type="module">
-        import { Color, ColorManagement, DirectionalLight, Group, HemisphereLight, Mesh, MeshStandardMaterial, OrthographicCamera, PanelItem, PerspectiveCamera, SMAABlendMaterial, SMAAEdgesMaterial, SMAAWeightsMaterial, Scene, SphereGeometry, UI, Vector2, WebGLRenderTarget, WebGLRenderer, getFullscreenTriangle, getKeyByValue, ticker } from '../../build/alien.three.js';
+        import { Color, ColorManagement, DirectionalLight, Group, HemisphereLight, Mesh, MeshStandardMaterial, OrthographicCamera, PanelItem, PerspectiveCamera, SMAABlendMaterial, SMAAEdgesMaterial, SMAAWeightsMaterial, Scene, SphereGeometry, TextureLoader, UI, Vector2, WebGLRenderTarget, WebGLRenderer, getFullscreenTriangle, getKeyByValue, ticker } from '../../build/alien.three.js';
 
         ColorManagement.enabled = false; // Disable color management
 
@@ -129,7 +129,7 @@
             }
 
             static initRenderer() {
-                const { screenTriangle, texelSize } = WorldController;
+                const { screenTriangle, texelSize, textureLoader } = WorldController;
 
                 // Fullscreen triangle
                 this.screenCamera = new OrthographicCamera(-1, 1, 1, -1, 0, 1);
@@ -151,7 +151,7 @@
                 this.edgesMaterial.uniforms.uTexelSize = texelSize;
 
                 // SMAA weights material
-                this.weightsMaterial = new SMAAWeightsMaterial();
+                this.weightsMaterial = new SMAAWeightsMaterial(textureLoader);
                 this.weightsMaterial.uniforms.uTexelSize = texelSize;
 
                 // SMAA material
@@ -219,6 +219,7 @@
             static init() {
                 this.initWorld();
                 this.initLights();
+                this.initLoaders();
 
                 this.addListeners();
             }
@@ -256,6 +257,11 @@
                 const light = new DirectionalLight(0xffffff, 2);
                 light.position.set(1, 1, 1);
                 this.scene.add(light);
+            }
+
+            static initLoaders() {
+                this.textureLoader = new TextureLoader();
+                this.textureLoader.setPath('../');
             }
 
             static addListeners() {

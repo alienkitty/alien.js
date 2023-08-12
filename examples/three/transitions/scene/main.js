@@ -8,7 +8,6 @@ class Global {
 }
 
 class Config {
-    static PATH = '/examples/three/';
     static BREAKPOINT = 1000;
 }
 
@@ -21,7 +20,7 @@ class Page {
 }
 
 class Data {
-    static path = `${Config.PATH}transitions/scene/`;
+    static path = '/examples/three/transitions/scene/';
 
     static init() {
         this.setIndexes();
@@ -1309,10 +1308,10 @@ class WorldController {
 
     static initLoaders() {
         this.textureLoader = new TextureLoader();
-        this.textureLoader.setPath(Config.PATH);
+        this.textureLoader.setPath('/examples/');
 
         this.environmentLoader = new EnvironmentTextureLoader(this.renderer);
-        this.environmentLoader.setPath(Config.PATH);
+        this.environmentLoader.setPath('/examples/');
     }
 
     static addListeners() {
@@ -1392,7 +1391,7 @@ class App {
 
     static initLoader() {
         this.assetLoader = new AssetLoader();
-        this.assetLoader.setPath(Config.PATH);
+        this.assetLoader.setPath('/examples/three/');
     }
 
     static initStage() {

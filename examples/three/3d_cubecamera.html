@@ -8,7 +8,7 @@
 
     <link rel="preconnect" href="https://fonts.gstatic.com">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto+Mono">
-    <link rel="stylesheet" href="assets/css/style.css">
+    <link rel="stylesheet" href="../assets/css/style.css">
 
     <script type="module">
         import { AdditiveBlending, BackSide, BlurMaterial, Color, ColorManagement, CubeCamera, GLSL3, Group, IcosahedronGeometry, ImageBitmapLoaderThread, LinearMipmapLinearFilter, MathUtils, Mesh, MeshBasicMaterial, NoBlending, OrthographicCamera, PanelItem, PerspectiveCamera, RawShaderMaterial, Scene, SphereGeometry, Sprite, SpriteMaterial, TextureLoader, Thread, UI, Vector2, Vector3, WebGLCubeRenderTarget, WebGLRenderTarget, WebGLRenderer, Wobble, getFullscreenTriangle, getKeyByValue, ticker, tween } from '../../build/alien.three.js';
@@ -144,7 +144,7 @@
                     uniforms: {
                         tScene: { value: null },
                         tBloom: { value: null },
-                        tLensDirt: { value: getTexture('assets/textures/lens_dirt.jpg') },
+                        tLensDirt: { value: getTexture('../assets/textures/lens_dirt.jpg') },
                         uDistortion: { value: 0.2 },
                         uMinBright: { value: 0.07 },
                         uBlurBright: { value: 0.4166 },
@@ -204,7 +204,7 @@
                 const { getTexture } = WorldController;
 
                 const material = new SpriteMaterial({
-                    map: getTexture('assets/textures/particle2.png'),
+                    map: getTexture('../assets/textures/particle2.png'),
                     color: new Color(Config.PARTICLE_COLOR),
                     transparent: true,
                     blending: AdditiveBlending,
@@ -265,7 +265,7 @@
 
                 const geometry = new IcosahedronGeometry(40, 3);
 
-                const map = await loadTexture('assets/textures/space.jpg');
+                const map = await loadTexture('../assets/textures/space.jpg');
 
                 const material = new MeshBasicMaterial({
                     map,

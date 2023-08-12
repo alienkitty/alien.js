@@ -8,7 +8,7 @@
 
     <link rel="preconnect" href="https://fonts.gstatic.com">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto+Mono">
-    <link rel="stylesheet" href="assets/css/style.css">
+    <link rel="stylesheet" href="../assets/css/style.css">
 
     <script type="module">
         import { Color, ColorManagement, Group, Mesh, MeshMatcapMaterial, PerspectiveCamera, Scene, SphereGeometry, TextureLoader, Vector2, WebGLRenderer, getFullscreenTriangle, ticker } from '../../build/alien.three.js';
@@ -29,8 +29,8 @@
 
                 const geometry = new SphereGeometry(1, 80, 80);
 
-                const matcap = await loadTexture('assets/textures/matcaps/040full.jpg');
-                // const matcap = await loadTexture('assets/textures/matcaps/defaultwax.jpg');
+                const matcap = await loadTexture('../assets/textures/matcaps/040full.jpg');
+                // const matcap = await loadTexture('../assets/textures/matcaps/defaultwax.jpg');
 
                 const material = new MeshMatcapMaterial({ matcap });
 

@@ -15,7 +15,7 @@ This library is part of two sibling libraries, [Space.js](https://github.com/ali
 
 Alien.js is divided into two entry points depending on your use case.
 
-The `@alienkitty/alien.js/three` entry point for [three.js](https://github.com/mrdoob/three.js) custom [utilities](src/utils/three) and [materials](src/materials/three).
+The `@alienkitty/alien.js/three` entry point for [three.js](https://github.com/mrdoob/three.js) utilities and materials.
 
 ```sh
 npm i three @alienkitty/alien.js
@@ -39,7 +39,7 @@ function animate(time) {
 requestAnimationFrame(animate);
 ```
 
-And the `@alienkitty/alien.js/three/oimophysics` entry point for [OimoPhysics](https://github.com/saharan/OimoPhysics) custom [utilities](src/utils/three/physics).
+And the `@alienkitty/alien.js/three/oimophysics` entry point for [OimoPhysics](https://github.com/saharan/OimoPhysics) utilities.
 
 ```sh
 npm i three saharan/OimoPhysics#v1.2.3 @alienkitty/alien.js

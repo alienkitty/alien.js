@@ -1,4 +1,4 @@
 // Physics
-export * from './utils/three/physics/OimoPhysics.js';
-export { OimoPhysicsBuffer } from './utils/three/physics/OimoPhysicsBuffer.js';
-export { OimoPhysicsController } from './utils/three/physics/OimoPhysicsController.js';
+export * from './three/utils/physics/OimoPhysics.js';
+export { OimoPhysicsBuffer } from './three/utils/physics/OimoPhysicsBuffer.js';
+export { OimoPhysicsController } from './three/utils/physics/OimoPhysicsController.js';

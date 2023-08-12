@@ -60,9 +60,7 @@ export class NavLink extends Interface {
         this.element.removeEventListener('click', this.onClick);
     }
 
-    /**
-     * Event handlers
-     */
+    // Event handlers
 
     onHover = ({ type }) => {
         if (type === 'mouseenter') {
@@ -78,9 +76,7 @@ export class NavLink extends Interface {
         this.events.emit('click');
     };
 
-    /**
-     * Public methods
-     */
+    // Public methods
 
     destroy = () => {
         this.removeListeners();

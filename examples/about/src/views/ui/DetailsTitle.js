@@ -36,9 +36,7 @@ export class DetailsTitle extends Interface {
         });
     }
 
-    /**
-     * Public methods
-     */
+    // Public methods
 
     animateIn = () => {
         shuffle(this.letters);

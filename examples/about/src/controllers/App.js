@@ -60,9 +60,7 @@ export class App {
         ticker.add(this.onUpdate);
     }
 
-    /**
-     * Event handlers
-     */
+    // Event handlers
 
     static onResize = () => {
         const width = document.documentElement.clientWidth;
@@ -81,9 +79,7 @@ export class App {
         this.ui.update();
     };
 
-    /**
-     * Public methods
-     */
+    // Public methods
 
     static start = async () => {
         AudioController.start();

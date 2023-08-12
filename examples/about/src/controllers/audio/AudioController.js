@@ -55,9 +55,7 @@ export class AudioController {
         return this.water[id].mouseSpeed;
     }
 
-    /**
-     * Event handlers
-     */
+    // Event handlers
 
     static onVisibility = () => {
         if (!Global.SOUND) {
@@ -83,9 +81,7 @@ export class AudioController {
         this.trigger('bass_drum');
     };
 
-    /**
-     * Public methods
-     */
+    // Public methods
 
     static resize = () => {
         if (document.documentElement.clientWidth < Config.BREAKPOINT) {

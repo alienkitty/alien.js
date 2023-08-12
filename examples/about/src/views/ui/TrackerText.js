@@ -32,9 +32,7 @@ export class TrackerText extends Interface {
         this.add(this.latency);
     }
 
-    /**
-     * Public methods
-     */
+    // Public methods
 
     setData = data => {
         if (!data) {

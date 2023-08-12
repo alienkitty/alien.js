@@ -30,9 +30,7 @@ export class ProgressCanvas extends Interface {
         ticker.remove(this.onUpdate);
     }
 
-    /**
-     * Event handlers
-     */
+    // Event handlers
 
     onUpdate = () => {
         if (this.needsUpdate) {
@@ -60,9 +58,7 @@ export class ProgressCanvas extends Interface {
         this.events.emit('complete');
     };
 
-    /**
-     * Public methods
-     */
+    // Public methods
 
     resize = () => {
         const dpr = 2;

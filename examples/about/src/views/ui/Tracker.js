@@ -45,9 +45,7 @@ export class Tracker extends Interface {
         this.add(this.text);
     }
 
-    /**
-     * Public methods
-     */
+    // Public methods
 
     setData = data => {
         this.text.setData(data);

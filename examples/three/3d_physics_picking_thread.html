@@ -106,9 +106,7 @@
                 this.physics.setContactCallback('cube', this.onContact);
             }
 
-            /**
-             * Event handlers
-             */
+            // Event handlers
 
             onContact = (body/* , name, contact */) => {
                 if (this.contact) {
@@ -136,9 +134,7 @@
                 }
             };
 
-            /**
-             * Public methods
-             */
+            // Public methods
 
             step = () => {
                 this.physics.step();
@@ -194,9 +190,7 @@
                 addEventListener('message', this.onMessage);
             }
 
-            /**
-             * Event handlers
-             */
+            // Event handlers
 
             onMessage = ({ data }) => {
                 this[data.message.fn].call(this, data.message);
@@ -210,9 +204,7 @@
                 postMessage({ event: 'contact', message: { force } });
             };
 
-            /**
-             * Public methods
-             */
+            // Public methods
 
             init = ({ shapes }) => {
                 this.physics = new ScenePhysics(shapes);
@@ -299,9 +291,7 @@
                 }
             }
 
-            /**
-             * Event handlers
-             */
+            // Event handlers
 
             onBuffer = ({ array }) => {
                 this.buffer.push(array);
@@ -311,9 +301,7 @@
                 AudioController.trigger('gong', force);
             };
 
-            /**
-             * Public methods
-             */
+            // Public methods
 
             update = () => {
                 let array;
@@ -462,9 +450,7 @@
                 physics.add(mesh);
             }
 
-            /**
-             * Public methods
-             */
+            // Public methods
 
             ready = () => this.initMesh();
         }
@@ -573,9 +559,7 @@
                 physics.add(mesh);
             }
 
-            /**
-             * Public methods
-             */
+            // Public methods
 
             ready = () => this.initMesh();
         }
@@ -715,9 +699,7 @@
                 physics.add(floor);
             }
 
-            /**
-             * Public methods
-             */
+            // Public methods
 
             resize = (width, height) => {
                 height = 1024;
@@ -748,9 +730,7 @@
                 this.add(this.ball);
             }
 
-            /**
-             * Public methods
-             */
+            // Public methods
 
             resize = (width, height) => {
                 this.floor.resize(width, height);
@@ -775,9 +755,7 @@
                 this.enabled = true;
             }
 
-            /**
-             * Public methods
-             */
+            // Public methods
 
             static resize = (width, height) => {
                 this.view.resize(width, height);
@@ -815,9 +793,7 @@
                 window.addEventListener('pointerdown', this.onPointerDown);
             }
 
-            /**
-             * Event handlers
-             */
+            // Event handlers
 
             static onVisibility = () => {
                 if (document.hidden) {
@@ -833,9 +809,7 @@
                 WebAudio.resume();
             };
 
-            /**
-             * Public methods
-             */
+            // Public methods
 
             static trigger = (event, force) => {
                 switch (event) {
@@ -1013,9 +987,7 @@
                 });
             }
 
-            /**
-             * Public methods
-             */
+            // Public methods
 
             static update = () => {
                 if (!this.ui) {
@@ -1110,9 +1082,7 @@
                 return bloomFactors;
             }
 
-            /**
-             * Public methods
-             */
+            // Public methods
 
             static resize = (width, height, dpr) => {
                 this.renderer.setPixelRatio(dpr);
@@ -1242,9 +1212,7 @@
                 window.addEventListener('pointerup', this.onPointerUp);
             }
 
-            /**
-             * Event handlers
-             */
+            // Event handlers
 
             static onPointerDown = e => {
                 if (!this.enabled) {
@@ -1369,9 +1337,7 @@
                 window.addEventListener('pointerup', this.onPointerUp);
             }
 
-            /**
-             * Event handlers
-             */
+            // Event handlers
 
             static onPointerDown = e => {
                 this.onPointerMove(e);
@@ -1390,9 +1356,7 @@
                 this.onPointerMove(e);
             };
 
-            /**
-             * Public methods
-             */
+            // Public methods
 
             static resize = (width, height) => {
                 this.camera.aspect = width / height;
@@ -1500,17 +1464,13 @@
                 this.renderer.domElement.addEventListener('touchstart', this.onTouchStart);
             }
 
-            /**
-             * Event handlers
-             */
+            // Event handlers
 
             static onTouchStart = e => {
                 e.preventDefault();
             };
 
-            /**
-             * Public methods
-             */
+            // Public methods
 
             static resize = (width, height, dpr) => {
                 width = Math.round(width * dpr);
@@ -1611,9 +1571,7 @@
                 ticker.start();
             }
 
-            /**
-             * Event handlers
-             */
+            // Event handlers
 
             static onResize = () => {
                 const width = document.documentElement.clientWidth;

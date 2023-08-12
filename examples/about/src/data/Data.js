@@ -6,9 +6,7 @@ export class Data {
         this.Socket = new Socket();
     }
 
-    /**
-     * Public methods
-     */
+    // Public methods
 
     static getUser = id => {
         return Global.USERS.find(item => item.id === id);

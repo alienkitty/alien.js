@@ -45,9 +45,7 @@ export class PreloaderView extends Interface {
         this.view.events.off('complete', this.onComplete);
     }
 
-    /**
-     * Event handlers
-     */
+    // Event handlers
 
     onProgress = e => {
         this.view.onProgress(e);
@@ -57,9 +55,7 @@ export class PreloaderView extends Interface {
         this.events.emit('complete');
     };
 
-    /**
-     * Public methods
-     */
+    // Public methods
 
     animateIn = () => {
         this.view.animateIn();

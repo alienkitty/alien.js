@@ -38,9 +38,7 @@ class Data {
         Stage.events.on('state_change', this.onStateChange);
     }
 
-    /**
-     * Event handlers
-     */
+    // Event handlers
 
     static onStateChange = () => {
         const { path } = Stage;
@@ -67,9 +65,7 @@ class Data {
         Global.PAGE_DIRECTION = position - lastPosition < 0 ? -1 : 1;
     };
 
-    /**
-     * Public methods
-     */
+    // Public methods
 
     static getPath = path => {
         return this.path + path;
@@ -150,9 +146,7 @@ class UILink extends Interface {
         this.element.addEventListener('click', this.onClick);
     }
 
-    /**
-     * Event handlers
-     */
+    // Event handlers
 
     onHover = ({ type }) => {
         this.line.clearTween();
@@ -170,9 +164,7 @@ class UILink extends Interface {
         Data.setPage(this.link);
     };
 
-    /**
-     * Public methods
-     */
+    // Public methods
 
     setLink = link => {
         this.link = link;
@@ -240,9 +232,7 @@ class UITitle extends Interface {
         });
     }
 
-    /**
-     * Public methods
-     */
+    // Public methods
 
     setTitle = (title, direction = 1) => {
         this.title = title;
@@ -352,9 +342,7 @@ class UI extends Interface {
         window.addEventListener('resize', this.onResize);
     }
 
-    /**
-     * Event handlers
-     */
+    // Event handlers
 
     onStateChange = () => {
         this.title.animateOut();
@@ -388,9 +376,7 @@ class UI extends Interface {
         }
     };
 
-    /**
-     * Public methods
-     */
+    // Public methods
 
     addPanel = item => {
         this.header.info.panel.add(item);
@@ -534,9 +520,7 @@ class RenderScene {
         this.scene.environment = await loadEnvironmentTexture('assets/textures/env/jewelry_black_contrast.jpg');
     }
 
-    /**
-     * Public methods
-     */
+    // Public methods
 
     resize(width, height, dpr) {
         width = Math.round(width * dpr);
@@ -611,9 +595,7 @@ class AbstractCube extends Group {
         this.mesh = mesh;
     }
 
-    /**
-     * Public methods
-     */
+    // Public methods
 
     update = () => {
         this.mesh.rotation.y -= 0.005;
@@ -634,9 +616,7 @@ class AbstractCubeScene extends RenderScene {
         this.scene.add(this.abstractCube);
     }
 
-    /**
-     * Public methods
-     */
+    // Public methods
 
     update = time => {
         if (!this.scene.visible) {
@@ -723,9 +703,7 @@ class FloatingCrystal extends Group {
         this.mesh = mesh;
     }
 
-    /**
-     * Public methods
-     */
+    // Public methods
 
     update = time => {
         this.mesh.position.y = Math.sin(time) * 0.1;
@@ -747,9 +725,7 @@ class FloatingCrystalScene extends RenderScene {
         this.scene.add(this.floatingCrystal);
     }
 
-    /**
-     * Public methods
-     */
+    // Public methods
 
     update = time => {
         if (!this.scene.visible) {
@@ -837,9 +813,7 @@ class DarkPlanet extends Group {
         this.mesh = mesh;
     }
 
-    /**
-     * Public methods
-     */
+    // Public methods
 
     update = () => {
         // Counter clockwise rotation
@@ -861,9 +835,7 @@ class DarkPlanetScene extends RenderScene {
         this.scene.add(this.darkPlanet);
     }
 
-    /**
-     * Public methods
-     */
+    // Public methods
 
     update = time => {
         if (!this.scene.visible) {
@@ -904,9 +876,7 @@ class SceneView extends Component {
         this.add(this.abstractCube);
     }
 
-    /**
-     * Public methods
-     */
+    // Public methods
 
     resize = (width, height, dpr) => {
         this.darkPlanet.resize(width, height, dpr);
@@ -936,9 +906,7 @@ class SceneController {
         Stage.events.on('state_change', this.onStateChange);
     }
 
-    /**
-     * Event handlers
-     */
+    // Event handlers
 
     static onStateChange = () => {
         const view = this.getView();
@@ -946,9 +914,7 @@ class SceneController {
         RenderManager.setView(view, Global.PAGE_DIRECTION);
     };
 
-    /**
-     * Public methods
-     */
+    // Public methods
 
     static getView = () => {
         switch (Global.PAGE_INDEX) {
@@ -1167,9 +1133,7 @@ class RenderManager {
         return bloomFactors;
     }
 
-    /**
-     * Public methods
-     */
+    // Public methods
 
     static setView = (view, direction = 1) => {
         if (this.view) {
@@ -1339,17 +1303,13 @@ class WorldController {
         this.renderer.domElement.addEventListener('touchstart', this.onTouchStart);
     }
 
-    /**
-     * Event handlers
-     */
+    // Event handlers
 
     static onTouchStart = e => {
         e.preventDefault();
     };
 
-    /**
-     * Public methods
-     */
+    // Public methods
 
     static resize = (width, height, dpr) => {
         this.camera.aspect = width / height;
@@ -1466,9 +1426,7 @@ class App {
         ticker.add(this.onUpdate);
     }
 
-    /**
-     * Event handlers
-     */
+    // Event handlers
 
     static onResize = () => {
         const width = document.documentElement.clientWidth;
@@ -1487,9 +1445,7 @@ class App {
         this.ui.update();
     };
 
-    /**
-     * Public methods
-     */
+    // Public methods
 
     static animateIn = () => {
         SceneController.animateIn();

@@ -64,9 +64,7 @@ export class FluidController {
         Data.Socket.on('motion', this.onMotion);
     }
 
-    /**
-     * Event handlers
-     */
+    // Event handlers
 
     static onUsers = e => {
         const ids = e.map(user => user.id);
@@ -153,9 +151,7 @@ export class FluidController {
         this.pointer[e.id].target.set(e.x * this.width, e.y * this.height);
     };
 
-    /**
-     * Public methods
-     */
+    // Public methods
 
     static resize = (width, height, dpr) => {
         this.width = width;

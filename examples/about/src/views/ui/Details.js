@@ -100,9 +100,7 @@ export class Details extends Interface {
         this.bg.element.removeEventListener('click', this.onClick);
     }
 
-    /**
-     * Event handlers
-     */
+    // Event handlers
 
     onResize = () => {
         if (document.documentElement.clientWidth < Config.BREAKPOINT) {
@@ -126,9 +124,7 @@ export class Details extends Interface {
         this.events.emit('click');
     };
 
-    /**
-     * Public methods
-     */
+    // Public methods
 
     animateIn = () => {
         this.clearTween();

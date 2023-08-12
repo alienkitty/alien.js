@@ -58,9 +58,7 @@ export class UI extends Interface {
         this.detailsButton.events.on('click', this.onDetails);
     }
 
-    /**
-     * Event handlers
-     */
+    // Event handlers
 
     onUsers = () => {
         this.detailsButton.setNumber();
@@ -94,9 +92,7 @@ export class UI extends Interface {
         }
     };
 
-    /**
-     * Public methods
-     */
+    // Public methods
 
     update = () => {
         this.buttons.forEach(button => {

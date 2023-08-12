@@ -48,9 +48,7 @@ export class Socket extends EventEmitter {
         return (ipl >>> 24) + '.' + (ipl >> 16 & 255) + '.' + (ipl >> 8 & 255) + '.' + (ipl & 255);
     }
 
-    /**
-     * Event handlers
-     */
+    // Event handlers
 
     onClose = () => {
         this.connected = false;
@@ -112,9 +110,7 @@ export class Socket extends EventEmitter {
         this.send(e);
     };
 
-    /**
-     * Public methods
-     */
+    // Public methods
 
     nickname = text => {
         const data = this.views[2];

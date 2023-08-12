@@ -46,9 +46,7 @@ export class DetailsLink extends Interface {
         this.element.removeEventListener('click', this.onClick);
     }
 
-    /**
-     * Event handlers
-     */
+    // Event handlers
 
     onHover = ({ type }) => {
         this.line.tween({ x: type === 'mouseenter' ? 10 : 0 }, 200, 'easeOutCubic');
@@ -58,9 +56,7 @@ export class DetailsLink extends Interface {
         this.events.emit('click');
     };
 
-    /**
-     * Public methods
-     */
+    // Public methods
 
     destroy = () => {
         this.removeListeners();

@@ -111,9 +111,7 @@ export class DetailsButton extends Interface {
         this.element.removeEventListener('click', this.onClick);
     }
 
-    /**
-     * Event handlers
-     */
+    // Event handlers
 
     onResize = () => {
         if (document.documentElement.clientWidth < Config.BREAKPOINT) {
@@ -183,9 +181,7 @@ export class DetailsButton extends Interface {
         this.events.emit('click');
     };
 
-    /**
-     * Public methods
-     */
+    // Public methods
 
     setNumber = () => {
         if (String(Global.USERS.length) === this.number.text()) {

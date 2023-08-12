@@ -30,9 +30,7 @@ export class HeaderInfo extends Interface {
         this.add(this.number);
     }
 
-    /**
-     * Public methods
-     */
+    // Public methods
 
     update = () => {
         this.time = performance.now();

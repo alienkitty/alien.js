@@ -57,9 +57,7 @@ class DetailsLink extends Interface {
         this.element.addEventListener('mouseleave', this.onHover);
     }
 
-    /**
-     * Event handlers
-     */
+    // Event handlers
 
     onHover = ({ type }) => {
         this.line.tween({ x: type === 'mouseenter' ? 10 : 0 }, 200, 'easeOutCubic');
@@ -107,9 +105,7 @@ class DetailsTitle extends Interface {
         });
     }
 
-    /**
-     * Public methods
-     */
+    // Public methods
 
     animateIn = () => {
         shuffle(this.letters);
@@ -208,9 +204,7 @@ class Details extends Interface {
         window.addEventListener('resize', this.onResize);
     }
 
-    /**
-     * Event handlers
-     */
+    // Event handlers
 
     onResize = () => {
         if (document.documentElement.clientWidth < Config.BREAKPOINT) {
@@ -230,9 +224,7 @@ class Details extends Interface {
         }
     };
 
-    /**
-     * Public methods
-     */
+    // Public methods
 
     animateIn = () => {
         this.visible();
@@ -300,9 +292,7 @@ class Section extends Interface {
         this.observer.observe(this.element);
     }
 
-    /**
-     * Event handlers
-     */
+    // Event handlers
 
     onIntersect = ([entry]) => {
         if (entry.isIntersecting) {
@@ -454,9 +444,7 @@ class AbstractCube extends Group {
         this.mesh = mesh;
     }
 
-    /**
-     * Public methods
-     */
+    // Public methods
 
     update = () => {
         this.mesh.rotation.y -= 0.005;
@@ -527,9 +515,7 @@ class FloatingCrystal extends Group {
         this.mesh = mesh;
     }
 
-    /**
-     * Public methods
-     */
+    // Public methods
 
     update = time => {
         this.mesh.position.y = Math.sin(time) * 0.1;
@@ -602,9 +588,7 @@ class DarkPlanet extends Group {
         this.mesh = mesh;
     }
 
-    /**
-     * Public methods
-     */
+    // Public methods
 
     update = () => {
         // Counter clockwise rotation
@@ -632,9 +616,7 @@ class SceneView extends Group {
         this.add(this.abstractCube);
     }
 
-    /**
-     * Public methods
-     */
+    // Public methods
 
     update = time => {
         this.darkPlanet.update(time);
@@ -660,9 +642,7 @@ class SceneController {
         Stage.events.on('view_change', this.onViewChange);
     }
 
-    /**
-     * Event handlers
-     */
+    // Event handlers
 
     static onViewChange = ({ index }) => {
         if (index !== Global.SECTION_INDEX) {
@@ -672,9 +652,7 @@ class SceneController {
         }
     };
 
-    /**
-     * Public methods
-     */
+    // Public methods
 
     static setView = index => {
         this.view.darkPlanet.visible = false;
@@ -845,9 +823,7 @@ class PanelController {
         });
     }
 
-    /**
-     * Public methods
-     */
+    // Public methods
 
     static update = () => {
         if (!this.ui) {
@@ -966,9 +942,7 @@ class RenderManager {
         });
     }
 
-    /**
-     * Public methods
-     */
+    // Public methods
 
     static setView = index => {
         this.next = index;
@@ -1188,17 +1162,13 @@ class WorldController {
         this.renderer.domElement.addEventListener('touchstart', this.onTouchStart);
     }
 
-    /**
-     * Event handlers
-     */
+    // Event handlers
 
     static onTouchStart = e => {
         e.preventDefault();
     };
 
-    /**
-     * Public methods
-     */
+    // Public methods
 
     static resize = (width, height, dpr) => {
         this.camera.aspect = width / height;
@@ -1317,9 +1287,7 @@ class App {
         ticker.add(this.onUpdate);
     }
 
-    /**
-     * Event handlers
-     */
+    // Event handlers
 
     static onResize = () => {
         const width = document.documentElement.clientWidth;
@@ -1338,9 +1306,7 @@ class App {
         PanelController.update();
     };
 
-    /**
-     * Public methods
-     */
+    // Public methods
 
     static animateIn = () => {
         SceneController.animateIn();

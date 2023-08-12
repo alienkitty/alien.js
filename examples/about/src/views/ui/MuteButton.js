@@ -109,9 +109,7 @@ export class MuteButton extends Interface {
         this.element.removeEventListener('click', this.onClick);
     }
 
-    /**
-     * Event handlers
-     */
+    // Event handlers
 
     onResize = () => {
         if (document.documentElement.clientWidth < Config.BREAKPOINT) {
@@ -175,9 +173,7 @@ export class MuteButton extends Interface {
         localStorage.setItem('sound', JSON.stringify(Global.SOUND));
     };
 
-    /**
-     * Public methods
-     */
+    // Public methods
 
     update = () => {
         this.context.clearRect(0, 0, this.canvas.element.width, this.canvas.element.height);

@@ -37,9 +37,7 @@ class Data {
         Stage.events.on('state_change', this.onStateChange);
     }
 
-    /**
-     * Event handlers
-     */
+    // Event handlers
 
     static onStateChange = () => {
         const { path } = Stage;
@@ -53,9 +51,7 @@ class Data {
         }
     };
 
-    /**
-     * Public methods
-     */
+    // Public methods
 
     static getPath = path => {
         return this.path + path;
@@ -133,9 +129,7 @@ class UILink extends Interface {
         this.element.addEventListener('click', this.onClick);
     }
 
-    /**
-     * Event handlers
-     */
+    // Event handlers
 
     onHover = ({ type }) => {
         this.line.clearTween();
@@ -153,9 +147,7 @@ class UILink extends Interface {
         Data.setPage(this.link);
     };
 
-    /**
-     * Public methods
-     */
+    // Public methods
 
     setLink = link => {
         this.link = link;
@@ -207,9 +199,7 @@ class UITitle extends Interface {
         });
     }
 
-    /**
-     * Public methods
-     */
+    // Public methods
 
     setTitle = title => {
         this.title = title;
@@ -319,9 +309,7 @@ class UI extends Interface {
         window.addEventListener('resize', this.onResize);
     }
 
-    /**
-     * Event handlers
-     */
+    // Event handlers
 
     onStateChange = () => {
         SceneController.setView();
@@ -350,9 +338,7 @@ class UI extends Interface {
         }
     };
 
-    /**
-     * Public methods
-     */
+    // Public methods
 
     addPanel = item => {
         this.header.info.panel.add(item);
@@ -435,9 +421,7 @@ class AbstractCube extends Group {
         this.mesh = mesh;
     }
 
-    /**
-     * Public methods
-     */
+    // Public methods
 
     update = () => {
         this.mesh.rotation.y -= 0.005;
@@ -508,9 +492,7 @@ class FloatingCrystal extends Group {
         this.mesh = mesh;
     }
 
-    /**
-     * Public methods
-     */
+    // Public methods
 
     update = time => {
         this.mesh.position.y = Math.sin(time) * 0.1;
@@ -583,9 +565,7 @@ class DarkPlanet extends Group {
         this.mesh = mesh;
     }
 
-    /**
-     * Public methods
-     */
+    // Public methods
 
     update = () => {
         // Counter clockwise rotation
@@ -613,9 +593,7 @@ class SceneView extends Group {
         this.add(this.abstractCube);
     }
 
-    /**
-     * Public methods
-     */
+    // Public methods
 
     update = time => {
         this.darkPlanet.update(time);
@@ -635,9 +613,7 @@ class SceneController {
         this.view = view;
     }
 
-    /**
-     * Public methods
-     */
+    // Public methods
 
     static setView = () => {
         this.view.darkPlanet.visible = false;
@@ -836,9 +812,7 @@ class RenderManager {
         return bloomFactors;
     }
 
-    /**
-     * Public methods
-     */
+    // Public methods
 
     static resize = (width, height, dpr) => {
         this.renderer.setPixelRatio(dpr);
@@ -989,17 +963,13 @@ class WorldController {
         this.renderer.domElement.addEventListener('touchstart', this.onTouchStart);
     }
 
-    /**
-     * Event handlers
-     */
+    // Event handlers
 
     static onTouchStart = e => {
         e.preventDefault();
     };
 
-    /**
-     * Public methods
-     */
+    // Public methods
 
     static resize = (width, height, dpr) => {
         this.camera.aspect = width / height;
@@ -1117,9 +1087,7 @@ class App {
         ticker.add(this.onUpdate);
     }
 
-    /**
-     * Event handlers
-     */
+    // Event handlers
 
     static onResize = () => {
         const width = document.documentElement.clientWidth;
@@ -1138,9 +1106,7 @@ class App {
         this.ui.update();
     };
 
-    /**
-     * Public methods
-     */
+    // Public methods
 
     static animateIn = () => {
         SceneController.animateIn();

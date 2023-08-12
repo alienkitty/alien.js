@@ -40,9 +40,7 @@ export class Instructions extends Interface {
         this.container.add(this.text);
     }
 
-    /**
-     * Public methods
-     */
+    // Public methods
 
     toggle = (show, delay = 0) => {
         if (show) {

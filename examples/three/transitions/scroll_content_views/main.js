@@ -56,9 +56,7 @@ class DetailsLink extends Interface {
         this.element.addEventListener('mouseleave', this.onHover);
     }
 
-    /**
-     * Event handlers
-     */
+    // Event handlers
 
     onHover = ({ type }) => {
         this.line.tween({ x: type === 'mouseenter' ? 10 : 0 }, 200, 'easeOutCubic');
@@ -106,9 +104,7 @@ class DetailsTitle extends Interface {
         });
     }
 
-    /**
-     * Public methods
-     */
+    // Public methods
 
     animateIn = () => {
         shuffle(this.letters);
@@ -207,9 +203,7 @@ class Details extends Interface {
         window.addEventListener('resize', this.onResize);
     }
 
-    /**
-     * Event handlers
-     */
+    // Event handlers
 
     onResize = () => {
         if (document.documentElement.clientWidth < Config.BREAKPOINT) {
@@ -229,9 +223,7 @@ class Details extends Interface {
         }
     };
 
-    /**
-     * Public methods
-     */
+    // Public methods
 
     animateIn = () => {
         this.visible();
@@ -299,9 +291,7 @@ class Section extends Interface {
         this.observer.observe(this.element);
     }
 
-    /**
-     * Event handlers
-     */
+    // Event handlers
 
     onIntersect = ([entry]) => {
         if (entry.isIntersecting) {
@@ -452,9 +442,7 @@ class RenderScene {
         this.scene.environment = await loadEnvironmentTexture('assets/textures/env/jewelry_black_contrast.jpg');
     }
 
-    /**
-     * Public methods
-     */
+    // Public methods
 
     resize(width, height, dpr) {
         width = Math.round(width * dpr);
@@ -529,9 +517,7 @@ class AbstractCube extends Group {
         this.mesh = mesh;
     }
 
-    /**
-     * Public methods
-     */
+    // Public methods
 
     update = () => {
         this.mesh.rotation.y -= 0.005;
@@ -552,9 +538,7 @@ class AbstractCubeScene extends RenderScene {
         this.scene.add(this.abstractCube);
     }
 
-    /**
-     * Public methods
-     */
+    // Public methods
 
     update = time => {
         if (!this.scene.visible) {
@@ -641,9 +625,7 @@ class FloatingCrystal extends Group {
         this.mesh = mesh;
     }
 
-    /**
-     * Public methods
-     */
+    // Public methods
 
     update = time => {
         this.mesh.position.y = Math.sin(time) * 0.1;
@@ -665,9 +647,7 @@ class FloatingCrystalScene extends RenderScene {
         this.scene.add(this.floatingCrystal);
     }
 
-    /**
-     * Public methods
-     */
+    // Public methods
 
     update = time => {
         if (!this.scene.visible) {
@@ -755,9 +735,7 @@ class DarkPlanet extends Group {
         this.mesh = mesh;
     }
 
-    /**
-     * Public methods
-     */
+    // Public methods
 
     update = () => {
         // Counter clockwise rotation
@@ -779,9 +757,7 @@ class DarkPlanetScene extends RenderScene {
         this.scene.add(this.darkPlanet);
     }
 
-    /**
-     * Public methods
-     */
+    // Public methods
 
     update = time => {
         if (!this.scene.visible) {
@@ -822,9 +798,7 @@ class SceneView extends Component {
         this.add(this.abstractCube);
     }
 
-    /**
-     * Public methods
-     */
+    // Public methods
 
     resize = (width, height, dpr) => {
         this.darkPlanet.resize(width, height, dpr);
@@ -850,9 +824,7 @@ class SceneController {
         this.view = view;
     }
 
-    /**
-     * Public methods
-     */
+    // Public methods
 
     static resize = (width, height, dpr) => {
         this.view.resize(width, height, dpr);
@@ -993,9 +965,7 @@ class PanelController {
         });
     }
 
-    /**
-     * Public methods
-     */
+    // Public methods
 
     static update = () => {
         if (!this.ui) {
@@ -1104,9 +1074,7 @@ class RenderManager {
         });
     }
 
-    /**
-     * Public methods
-     */
+    // Public methods
 
     static setView = index => {
         this.smooth.setScroll(index);
@@ -1270,17 +1238,13 @@ class WorldController {
         this.renderer.domElement.addEventListener('touchstart', this.onTouchStart);
     }
 
-    /**
-     * Event handlers
-     */
+    // Event handlers
 
     static onTouchStart = e => {
         e.preventDefault();
     };
 
-    /**
-     * Public methods
-     */
+    // Public methods
 
     static resize = (width, height, dpr) => {
         this.camera.aspect = width / height;
@@ -1398,9 +1362,7 @@ class App {
         ticker.add(this.onUpdate);
     }
 
-    /**
-     * Event handlers
-     */
+    // Event handlers
 
     static onResize = () => {
         const width = document.documentElement.clientWidth;
@@ -1419,9 +1381,7 @@ class App {
         PanelController.update();
     };
 
-    /**
-     * Public methods
-     */
+    // Public methods
 
     static animateIn = () => {
         SceneController.animateIn();

@@ -11,7 +11,7 @@
     <link rel="stylesheet" href="../assets/css/style.css">
 
     <script type="module">
-        import { BackSide, BloomCompositeMaterial, Color, ColorManagement, DirectionalLight, DiscardMaterial, EnvironmentTextureLoader, Group, HemisphereLight, ImageBitmapLoaderThread, LuminosityMaterial, MathUtils, Mesh, MeshStandardMaterial, MeshTransmissionDistortionMaterial, OrbitControls, OrthographicCamera, Panel, PanelItem, PerspectiveCamera, PhysicalMaterialOptions, Point3D, RepeatWrapping, Scene, SceneCompositeMaterial, SphereGeometry, TextureLoader, Thread, UI, UnrealBloomBlurMaterial, Vector2, WebGLRenderTarget, WebGLRenderer, getFullscreenTriangle, getKeyByValue, ticker } from '../../build/alien.three.js';
+        import { BackSide, BloomCompositeMaterial, Color, ColorManagement, DirectionalLight, DiscardMaterial, EnvironmentTextureLoader, Group, HemisphereLight, ImageBitmapLoaderThread, LinearSRGBColorSpace, LuminosityMaterial, MathUtils, Mesh, MeshStandardMaterial, MeshTransmissionDistortionMaterial, OrbitControls, OrthographicCamera, Panel, PanelItem, PerspectiveCamera, PhysicalMaterialOptions, Point3D, RepeatWrapping, Scene, SceneCompositeMaterial, SphereGeometry, TextureLoader, Thread, UI, UnrealBloomBlurMaterial, Vector2, WebGLRenderTarget, WebGLRenderer, getFullscreenTriangle, getKeyByValue, ticker } from '../../build/alien.three.js';
 
         ColorManagement.enabled = false; // Disable color management
 
@@ -891,6 +891,8 @@
                     stencil: false,
                     antialias: true
                 });
+                this.renderer.outputColorSpace = LinearSRGBColorSpace;
+
                 this.element = this.renderer.domElement;
 
                 // 3D scene

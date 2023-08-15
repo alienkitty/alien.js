@@ -19,7 +19,7 @@
     </style>
 
     <script type="module">
-        import { BasicMaterial, BufferGeometryLoader, BufferGeometryLoaderThread, Color, ColorManagement, DoubleSide, Group, ImageBitmapLoaderThread, Mesh, OrbitControls, PerspectiveCamera, Scene, ShadowTextureMaterial, TextureLoader, Thread, Vector2, WebGLRenderer, getFullscreenTriangle, ticker } from '../../build/alien.three.js';
+        import { BasicMaterial, BufferGeometryLoader, BufferGeometryLoaderThread, Color, ColorManagement, DoubleSide, Group, ImageBitmapLoaderThread, LinearSRGBColorSpace, Mesh, OrbitControls, PerspectiveCamera, Scene, ShadowTextureMaterial, TextureLoader, Thread, Vector2, WebGLRenderer, getFullscreenTriangle, ticker } from '../../build/alien.three.js';
 
         ColorManagement.enabled = false; // Disable color management
 
@@ -172,6 +172,8 @@
                     stencil: false,
                     antialias: true
                 });
+                this.renderer.outputColorSpace = LinearSRGBColorSpace;
+
                 this.element = this.renderer.domElement;
 
                 // 3D scene

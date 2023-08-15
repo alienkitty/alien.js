@@ -11,7 +11,7 @@
     <link rel="stylesheet" href="../assets/css/style.css">
 
     <script type="module">
-        import { ColorManagement, GLSL3, Mesh, NoBlending, OrthographicCamera, PanelItem, RawShaderMaterial, UI, Vector2, WebGLRenderer, getFullscreenTriangle, ticker } from '../../build/alien.three.js';
+        import { ColorManagement, GLSL3, LinearSRGBColorSpace, Mesh, NoBlending, OrthographicCamera, PanelItem, RawShaderMaterial, UI, Vector2, WebGLRenderer, getFullscreenTriangle, ticker } from '../../build/alien.three.js';
 
         ColorManagement.enabled = false; // Disable color management
 
@@ -194,6 +194,8 @@
                     powerPreference: 'high-performance',
                     stencil: false
                 });
+                this.renderer.outputColorSpace = LinearSRGBColorSpace;
+
                 this.element = this.renderer.domElement;
 
                 // Fullscreen triangle

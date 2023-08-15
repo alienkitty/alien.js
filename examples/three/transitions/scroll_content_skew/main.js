@@ -1,4 +1,4 @@
-import { AssetLoader, BloomCompositeMaterial, BlurMaterial, BoxGeometry, Color, ColorManagement, DirectionalLight, EnvironmentTextureLoader, GLSL3, Group, HemisphereLight, IcosahedronGeometry, ImageBitmapLoaderThread, Interface, LuminosityMaterial, MathUtils, Mesh, MeshStandardMaterial, NoBlending, OctahedronGeometry, OrthographicCamera, PanelItem, PerspectiveCamera, RawShaderMaterial, RepeatWrapping, Scene, SceneCompositeMaterial, SmoothSkew, Stage, TextureLoader, Thread, UI, UnrealBloomBlurMaterial, Vector2, WebGLRenderTarget, WebGLRenderer, clearTween, defer, getFullscreenTriangle, shuffle, ticker, tween } from '../../../../build/alien.three.js';
+import { AssetLoader, BloomCompositeMaterial, BlurMaterial, BoxGeometry, Color, ColorManagement, DirectionalLight, EnvironmentTextureLoader, GLSL3, Group, HemisphereLight, IcosahedronGeometry, ImageBitmapLoaderThread, Interface, LinearSRGBColorSpace, LuminosityMaterial, MathUtils, Mesh, MeshStandardMaterial, NoBlending, OctahedronGeometry, OrthographicCamera, PanelItem, PerspectiveCamera, RawShaderMaterial, RepeatWrapping, Scene, SceneCompositeMaterial, SmoothSkew, Stage, TextureLoader, Thread, UI, UnrealBloomBlurMaterial, Vector2, WebGLRenderTarget, WebGLRenderer, clearTween, defer, getFullscreenTriangle, shuffle, ticker, tween } from '../../../../build/alien.three.js';
 
 ColorManagement.enabled = false; // Disable color management
 
@@ -1112,6 +1112,8 @@ class WorldController {
             stencil: false,
             antialias: true
         });
+        this.renderer.outputColorSpace = LinearSRGBColorSpace;
+
         this.element = this.renderer.domElement;
 
         // 3D scene

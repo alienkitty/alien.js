@@ -1,4 +1,4 @@
-import { ColorManagement, Mesh, OrthographicCamera, Vector2, WebGLRenderer } from 'three';
+import { ColorManagement, LinearSRGBColorSpace, Mesh, OrthographicCamera, Vector2, WebGLRenderer } from 'three';
 
 ColorManagement.enabled = false; // Disable color management
 
@@ -17,6 +17,8 @@ export class WorldController {
             stencil: false,
             depth: false
         });
+        this.renderer.outputColorSpace = LinearSRGBColorSpace;
+
         this.element = this.renderer.domElement;
 
         // Fullscreen triangle

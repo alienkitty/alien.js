@@ -8,10 +8,10 @@
 
     <link rel="preconnect" href="https://fonts.gstatic.com">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto+Mono">
-    <link rel="stylesheet" href="assets/css/style.css">
+    <link rel="stylesheet" href="../assets/css/style.css">
 
     <script type="module">
-        import { ACESFilmicToneMapping, AdditiveBlending, AmbientLight, BloomCompositeMaterial, BufferGeometry, ChromaticAberrationMaterial, Color, ColorManagement, CopyMaterial, DepthTexture, DirectionalLight, EnvironmentTextureLoader, Float32BufferAttribute, GLSL3, Group, HemisphereLight, ImageBitmapLoaderThread, LinearSRGBColorSpace, LuminosityMaterial, MathUtils, Mesh, MeshStandardMaterial, OrbitControls, OrthographicCamera, PanelItem, PerspectiveCamera, Points, RawShaderMaterial, RepeatWrapping, Scene, SphereGeometry, TextureLoader, Thread, UI, UnrealBloomBlurMaterial, Vector2, WebGLRenderTarget, WebGLRenderer, getFullscreenTriangle, ticker } from '../../build/alien.three.js';
+        import { AdditiveBlending, BloomCompositeMaterial, BufferGeometry, ChromaticAberrationMaterial, Color, ColorManagement, CopyMaterial, DepthTexture, DirectionalLight, EnvironmentTextureLoader, Float32BufferAttribute, GLSL3, Group, HemisphereLight, ImageBitmapLoaderThread, LinearSRGBColorSpace, LuminosityMaterial, MathUtils, Mesh, MeshStandardMaterial, OrbitControls, OrthographicCamera, PanelItem, PerspectiveCamera, Points, RawShaderMaterial, RepeatWrapping, Scene, SphereGeometry, TextureLoader, Thread, UI, UnrealBloomBlurMaterial, Vector2, WebGLRenderTarget, WebGLRenderer, getFullscreenTriangle, ticker } from '../../build/alien.three.js';
 
         ColorManagement.enabled = false; // Disable color management
 
@@ -130,7 +130,7 @@
                 const material = new RawShaderMaterial({
                     glslVersion: GLSL3,
                     uniforms: {
-                        tMap: { value: getTexture('assets/textures/particle.png') },
+                        tMap: { value: getTexture('../assets/textures/particle.png') },
                         tDepth: { value: null },
                         uScale: { value: window.devicePixelRatio / 2 },
                         uAlpha: { value: 1 },
@@ -172,11 +172,11 @@
 
                 // Textures
                 const [map, normalMap, ormMap] = await Promise.all([
-                    // loadTexture('assets/textures/uv.jpg'),
-                    loadTexture('assets/textures/pbr/pitted_metal_basecolor.jpg'),
-                    loadTexture('assets/textures/pbr/pitted_metal_normal.jpg'),
+                    // loadTexture('../assets/textures/uv.jpg'),
+                    loadTexture('../assets/textures/pbr/pitted_metal_basecolor.jpg'),
+                    loadTexture('../assets/textures/pbr/pitted_metal_normal.jpg'),
                     // https://occlusion-roughness-metalness.glitch.me/
-                    loadTexture('assets/textures/pbr/pitted_metal_orm.jpg')
+                    loadTexture('../assets/textures/pbr/pitted_metal_orm.jpg')
                 ]);
 
                 map.anisotropy = anisotropy;
@@ -339,9 +339,7 @@
                 });
             }
 
-            /**
-             * Public methods
-             */
+            // Public methods
 
             static update = () => {
                 if (!this.ui) {
@@ -460,9 +458,7 @@
                 return bloomFactors;
             }
 
-            /**
-             * Public methods
-             */
+            // Public methods
 
             static resize = (width, height, dpr) => {
                 this.renderer.setPixelRatio(dpr);
@@ -582,12 +578,9 @@
                     stencil: false,
                     antialias: true
                 });
-                this.element = this.renderer.domElement;
-
-                // Tone mapping and output color space encoding
-                this.renderer.toneMapping = ACESFilmicToneMapping;
-                this.renderer.toneMappingExposure = 1;
                 this.renderer.outputColorSpace = LinearSRGBColorSpace;
+
+                this.element = this.renderer.domElement;
 
                 // 3D scene
                 this.scene = new Scene();
@@ -613,11 +606,9 @@
             }
 
             static initLights() {
-                this.scene.add(new AmbientLight(0xffffff, 0.2));
+                this.scene.add(new HemisphereLight(0x606060, 0x404040, 3));
 
-                this.scene.add(new HemisphereLight(0x606060, 0x404040));
-
-                const light = new DirectionalLight(0xffffff, 0.4);
+                const light = new DirectionalLight(0xffffff, 2);
                 light.position.set(0.6, 0.5, 1);
                 this.scene.add(light);
             }
@@ -628,7 +619,7 @@
             }
 
             static async initEnvironment() {
-                this.scene.environment = await this.loadEnvironmentTexture('assets/textures/env/jewelry_black_contrast.jpg');
+                this.scene.environment = await this.loadEnvironmentTexture('../assets/textures/env/jewelry_black_contrast.jpg');
             }
 
             static initControls() {
@@ -641,17 +632,13 @@
                 this.renderer.domElement.addEventListener('touchstart', this.onTouchStart);
             }
 
-            /**
-             * Event handlers
-             */
+            // Event handlers
 
             static onTouchStart = e => {
                 e.preventDefault();
             };
 
-            /**
-             * Public methods
-             */
+            // Public methods
 
             static resize = (width, height, dpr) => {
                 this.camera.aspect = width / height;
@@ -735,9 +722,7 @@
                 ticker.start();
             }
 
-            /**
-             * Event handlers
-             */
+            // Event handlers
 
             static onResize = () => {
                 const width = document.documentElement.clientWidth;

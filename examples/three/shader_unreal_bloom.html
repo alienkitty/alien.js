@@ -8,7 +8,7 @@
 
     <link rel="preconnect" href="https://fonts.gstatic.com">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto+Mono">
-    <link rel="stylesheet" href="assets/css/style.css">
+    <link rel="stylesheet" href="../assets/css/style.css">
 
     <script type="module">
         import { Color, ColorManagement, DirectionalLight, Group, HemisphereLight, LinearSRGBColorSpace, LuminosityMaterial, MathUtils, Mesh, MeshStandardMaterial, OrthographicCamera, PanelItem, PerspectiveCamera, Scene, SceneCompositeMaterial, SphereGeometry, UI, UnrealBloomBlurMaterial, UnrealBloomCompositeMaterial, Vector2, Vector3, WebGLRenderTarget, WebGLRenderer, getFullscreenTriangle, ticker } from '../../build/alien.three.js';
@@ -134,9 +134,7 @@
                 });
             }
 
-            /**
-             * Public methods
-             */
+            // Public methods
 
             static update = () => {
                 if (!this.ui) {
@@ -232,9 +230,7 @@
                 this.compositeMaterial = new SceneCompositeMaterial();
             }
 
-            /**
-             * Public methods
-             */
+            // Public methods
 
             static resize = (width, height, dpr) => {
                 this.renderer.setPixelRatio(dpr);
@@ -334,10 +330,9 @@
                     stencil: false,
                     antialias: true
                 });
-                this.element = this.renderer.domElement;
-
-                // Output color space encoding
                 this.renderer.outputColorSpace = LinearSRGBColorSpace;
+
+                this.element = this.renderer.domElement;
 
                 // 3D scene
                 this.scene = new Scene();
@@ -360,9 +355,9 @@
             }
 
             static initLights() {
-                this.scene.add(new HemisphereLight(0x606060, 0x404040));
+                this.scene.add(new HemisphereLight(0x606060, 0x404040, 3));
 
-                const light = new DirectionalLight(0xffffff, 0.35);
+                const light = new DirectionalLight(0xffffff, 1.2);
                 light.position.set(1, 1, 1);
                 this.scene.add(light);
             }
@@ -371,17 +366,13 @@
                 this.renderer.domElement.addEventListener('touchstart', this.onTouchStart);
             }
 
-            /**
-             * Event handlers
-             */
+            // Event handlers
 
             static onTouchStart = e => {
                 e.preventDefault();
             };
 
-            /**
-             * Public methods
-             */
+            // Public methods
 
             static resize = (width, height, dpr) => {
                 this.camera.aspect = width / height;
@@ -445,9 +436,7 @@
                 ticker.start();
             }
 
-            /**
-             * Event handlers
-             */
+            // Event handlers
 
             static onResize = () => {
                 const width = document.documentElement.clientWidth;

@@ -8,10 +8,10 @@
 
     <link rel="preconnect" href="https://fonts.gstatic.com">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto+Mono">
-    <link rel="stylesheet" href="assets/css/style.css">
+    <link rel="stylesheet" href="../assets/css/style.css">
 
     <script type="module">
-        import { ACESFilmicToneMapping, AmbientLight, BasicShadowMap, BloomCompositeMaterial, BoxGeometry, Color, ColorManagement, DirectionalLight, DynamicDrawUsage, EnvironmentTextureLoader, EventEmitter, GLSL3, Group, HemisphereLight, IcosahedronGeometry, ImageBitmapLoaderThread, InstancedMesh, LinearSRGBColorSpace, LuminosityMaterial, MathUtils, Matrix4, Mesh, MeshBasicMaterial, MeshStandardMaterial, NoBlending, OimoPhysicsBuffer, OimoPhysicsController, OrthographicCamera, PanelItem, PerspectiveCamera, PlaneGeometry, PointLight, RawShaderMaterial, Reflector, RepeatWrapping, Scene, ShaderChunk, ShadowMaterial, SphereGeometry, TextureLoader, Thread, UI, UnrealBloomBlurMaterial, Vector2, Vector3, WebGLRenderTarget, WebGLRenderer, getFrustum, getFullscreenTriangle, getKeyByValue, ticker } from '../../build/alien.three.js';
+        import { BasicShadowMap, BloomCompositeMaterial, BoxGeometry, Color, ColorManagement, DirectionalLight, DynamicDrawUsage, EnvironmentTextureLoader, EventEmitter, GLSL3, Group, HemisphereLight, IcosahedronGeometry, ImageBitmapLoaderThread, InstancedMesh, LinearSRGBColorSpace, LuminosityMaterial, MathUtils, Matrix4, Mesh, MeshBasicMaterial, MeshStandardMaterial, NoBlending, OimoPhysicsBuffer, OimoPhysicsController, OrthographicCamera, PanelItem, PerspectiveCamera, PlaneGeometry, PointLight, RawShaderMaterial, Reflector, RepeatWrapping, Scene, ShaderChunk, ShadowMaterial, SphereGeometry, TextureLoader, Thread, UI, UnrealBloomBlurMaterial, Vector2, Vector3, WebGLRenderTarget, WebGLRenderer, getFrustum, getFullscreenTriangle, getKeyByValue, ticker } from '../../build/alien.three.js';
 
         ColorManagement.enabled = false; // Disable color management
 
@@ -92,9 +92,7 @@
                 this.shapes.forEach(shape => this.physics.add(shape));
             }
 
-            /**
-             * Public methods
-             */
+            // Public methods
 
             step = () => {
                 this.physics.step();
@@ -142,9 +140,7 @@
                 addEventListener('message', this.onMessage);
             }
 
-            /**
-             * Event handlers
-             */
+            // Event handlers
 
             onMessage = ({ data }) => {
                 this[data.message.fn].call(this, data.message);
@@ -154,9 +150,7 @@
                 postMessage({ event: 'buffer', message: { array } }, buffer);
             };
 
-            /**
-             * Public methods
-             */
+            // Public methods
 
             init = ({ shapes }) => {
                 this.physics = new ScenePhysics(shapes);
@@ -227,17 +221,13 @@
                 }
             }
 
-            /**
-             * Event handlers
-             */
+            // Event handlers
 
             onBuffer = ({ array }) => {
                 this.buffer.push(array);
             };
 
-            /**
-             * Public methods
-             */
+            // Public methods
 
             update = () => {
                 let array;
@@ -312,7 +302,7 @@
             }
 
             initLight() {
-                const light = new PointLight(Config.LIGHT_COLOR, 0.2);
+                const light = new PointLight(Config.LIGHT_COLOR, 0.9, 100, 0);
                 this.add(light);
             }
 
@@ -355,7 +345,7 @@
 
                 const geometry = new PlaneGeometry(100, 100);
 
-                const map = await loadTexture('assets/textures/waterdudv.jpg');
+                const map = await loadTexture('../assets/textures/waterdudv.jpg');
                 map.wrapS = RepeatWrapping;
                 map.wrapT = RepeatWrapping;
                 map.repeat.set(6, 3);
@@ -439,7 +429,7 @@
                 };
 
                 const mesh = new Mesh(geometry, material);
-                mesh.position.y = 2.494;
+                mesh.position.y = 2.494; // 5 / 2 - 0.006
                 mesh.rotation.x = -Math.PI / 2;
                 mesh.receiveShadow = true;
                 mesh.add(this.reflector);
@@ -464,9 +454,7 @@
                 physics.add(floor, { density: 0 });
             }
 
-            /**
-             * Public methods
-             */
+            // Public methods
 
             resize = (width, height) => {
                 height = 1024;
@@ -499,12 +487,12 @@
 
                 // Textures
                 const [map, normalMap, ormMap, thicknessMap] = await Promise.all([
-                    // loadTexture('assets/textures/uv.jpg'),
-                    loadTexture('assets/textures/pbr/pitted_metal_basecolor.jpg'),
-                    loadTexture('assets/textures/pbr/pitted_metal_normal.jpg'),
+                    // loadTexture('../assets/textures/uv.jpg'),
+                    loadTexture('../assets/textures/pbr/pitted_metal_basecolor.jpg'),
+                    loadTexture('../assets/textures/pbr/pitted_metal_normal.jpg'),
                     // https://occlusion-roughness-metalness.glitch.me/
-                    loadTexture('assets/textures/pbr/pitted_metal_orm.jpg'),
-                    loadTexture('assets/textures/pbr/pitted_metal_height.jpg')
+                    loadTexture('../assets/textures/pbr/pitted_metal_orm.jpg'),
+                    loadTexture('../assets/textures/pbr/pitted_metal_height.jpg')
                 ]);
 
                 map.anisotropy = anisotropy;
@@ -514,7 +502,7 @@
 
                 const material = new MeshStandardMaterial({
                     color: new Color().offsetHSL(0, 0, -0.65),
-                    metalness: 0.6,
+                    metalness: 0.7,
                     roughness: 2,
                     map,
                     metalnessMap: ormMap,
@@ -523,7 +511,7 @@
                     aoMapIntensity: 1,
                     normalMap,
                     normalScale: new Vector2(3, 3),
-                    envMapIntensity: 1
+                    envMapIntensity: 1.2
                 });
 
                 // Second channel for aoMap and lightMap
@@ -625,9 +613,7 @@
                 this.spheres = spheres;
             }
 
-            /**
-             * Public methods
-             */
+            // Public methods
 
             ready = () => Promise.all([
                 this.floor.ready(),
@@ -636,9 +622,9 @@
         }
 
         class SceneController {
-            static init(view, physics) {
-                this.view = view;
+            static init(physics, view) {
                 this.physics = physics;
+                this.view = view;
 
                 this.mouse = new Vector2();
                 this.target = new Vector2();
@@ -657,9 +643,7 @@
                 window.addEventListener('pointerup', this.onPointerUp);
             }
 
-            /**
-             * Event handlers
-             */
+            // Event handlers
 
             static onPointerDown = e => {
                 this.onPointerMove(e);
@@ -678,9 +662,7 @@
                 this.onPointerMove(e);
             };
 
-            /**
-             * Public methods
-             */
+            // Public methods
 
             static resize = (width, height) => {
                 this.view.floor.resize(width, height);
@@ -865,9 +847,7 @@
                 });
             }
 
-            /**
-             * Public methods
-             */
+            // Public methods
 
             static update = () => {
                 if (!this.ui) {
@@ -962,9 +942,7 @@
                 return bloomFactors;
             }
 
-            /**
-             * Public methods
-             */
+            // Public methods
 
             static resize = (width, height, dpr) => {
                 this.renderer.setPixelRatio(dpr);
@@ -1073,9 +1051,7 @@
                 window.addEventListener('pointerup', this.onPointerUp);
             }
 
-            /**
-             * Event handlers
-             */
+            // Event handlers
 
             static onPointerDown = e => {
                 this.onPointerMove(e);
@@ -1094,9 +1070,7 @@
                 this.onPointerMove(e);
             };
 
-            /**
-             * Public methods
-             */
+            // Public methods
 
             static resize = (width, height) => {
                 this.camera.aspect = width / height;
@@ -1138,16 +1112,13 @@
                     stencil: false,
                     antialias: true
                 });
+                this.renderer.outputColorSpace = LinearSRGBColorSpace;
+
                 this.element = this.renderer.domElement;
 
                 // Shadows
                 this.renderer.shadowMap.enabled = true;
                 this.renderer.shadowMap.type = BasicShadowMap;
-
-                // Tone mapping and output color space encoding
-                this.renderer.toneMapping = ACESFilmicToneMapping;
-                this.renderer.toneMappingExposure = 1;
-                this.renderer.outputColorSpace = LinearSRGBColorSpace;
 
                 // 3D scene
                 this.scene = new Scene();
@@ -1173,11 +1144,9 @@
             }
 
             static initLights() {
-                this.scene.add(new AmbientLight(0xffffff, 0.2));
+                this.scene.add(new HemisphereLight(0x606060, 0x404040, 3));
 
-                this.scene.add(new HemisphereLight(0x606060, 0x404040));
-
-                const light = new DirectionalLight(0xffffff, 0.4);
+                const light = new DirectionalLight(0xffffff, 2);
                 light.position.set(5, 5, 5);
                 light.castShadow = true;
                 light.shadow.mapSize.width = 2048;
@@ -1193,7 +1162,7 @@
             }
 
             static async initEnvironment() {
-                this.scene.environment = await this.loadEnvironmentTexture('assets/textures/env/jewelry_black_contrast.jpg');
+                this.scene.environment = await this.loadEnvironmentTexture('../assets/textures/env/jewelry_black_contrast.jpg');
             }
 
             static initPhysics() {
@@ -1204,17 +1173,13 @@
                 this.renderer.domElement.addEventListener('touchstart', this.onTouchStart);
             }
 
-            /**
-             * Event handlers
-             */
+            // Event handlers
 
             static onTouchStart = e => {
                 e.preventDefault();
             };
 
-            /**
-             * Public methods
-             */
+            // Public methods
 
             static resize = (width, height, dpr) => {
                 width = Math.round(width * dpr);
@@ -1285,7 +1250,7 @@
                 const { renderer, scene, camera, physics } = WorldController;
 
                 CameraController.init(camera);
-                SceneController.init(this.view, physics);
+                SceneController.init(physics, this.view);
                 RenderManager.init(renderer, scene, camera);
             }
 
@@ -1299,9 +1264,7 @@
                 ticker.start();
             }
 
-            /**
-             * Event handlers
-             */
+            // Event handlers
 
             static onResize = () => {
                 const width = document.documentElement.clientWidth;

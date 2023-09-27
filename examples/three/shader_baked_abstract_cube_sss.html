@@ -8,10 +8,10 @@
 
     <link rel="preconnect" href="https://fonts.gstatic.com">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto+Mono">
-    <link rel="stylesheet" href="assets/css/style.css">
+    <link rel="stylesheet" href="../assets/css/style.css">
 
     <script type="module">
-        import { ACESFilmicToneMapping, AmbientLight, BloomCompositeMaterial, BufferGeometryLoader, BufferGeometryLoaderThread, Color, ColorManagement, EnvironmentTextureLoader, GLSL3, Group, HemisphereLight, ImageBitmapLoaderThread, LinearSRGBColorSpace, LuminosityMaterial, MathUtils, Mesh, MeshStandardMaterial, NoBlending, OrthographicCamera, PanelItem, PerspectiveCamera, PlaneGeometry, PointLight, PointLightHelper, RawShaderMaterial, Reflector, ReflectorDudvMaterial, RepeatWrapping, Scene, ShaderChunk, TextureLoader, Thread, UI, UnrealBloomBlurMaterial, Vector2, Vector3, WebGLRenderTarget, WebGLRenderer, getFrustum, getFullscreenTriangle, ticker } from '../../build/alien.three.js';
+        import { BloomCompositeMaterial, BufferGeometryLoader, BufferGeometryLoaderThread, Color, ColorManagement, EnvironmentTextureLoader, GLSL3, Group, HemisphereLight, ImageBitmapLoaderThread, LinearSRGBColorSpace, LuminosityMaterial, MathUtils, Mesh, MeshStandardMaterial, NoBlending, OrthographicCamera, PanelItem, PerspectiveCamera, PlaneGeometry, PointLight, PointLightHelper, RawShaderMaterial, Reflector, ReflectorDudvMaterial, RepeatWrapping, Scene, ShaderChunk, TextureLoader, Thread, UI, UnrealBloomBlurMaterial, Vector2, Vector3, WebGLRenderTarget, WebGLRenderer, getFrustum, getFullscreenTriangle, ticker } from '../../build/alien.three.js';
 
         ColorManagement.enabled = false; // Disable color management
 
@@ -85,7 +85,7 @@
             }
 
             initLight() {
-                const light = new PointLight(0xf44336, 0.2);
+                const light = new PointLight(0xf44336, 0.9, 100, 0);
                 this.add(light);
 
                 if (Config.DEBUG) {
@@ -102,7 +102,7 @@
             async initGeometry() {
                 const { loadBufferGeometry } = WorldController;
 
-                this.geometry = await loadBufferGeometry('assets/geometry/abstract_cube.json');
+                this.geometry = await loadBufferGeometry('../assets/geometry/abstract_cube.json');
             }
 
             async initMaterial() {
@@ -110,12 +110,12 @@
 
                 // Textures
                 const [map, normalMap, ormMap, thicknessMap] = await Promise.all([
-                    // loadTexture('assets/textures/uv.jpg'),
-                    loadTexture('assets/textures/pbr/pitted_metal_basecolor.jpg'),
-                    loadTexture('assets/textures/pbr/pitted_metal_normal.jpg'),
+                    // loadTexture('../assets/textures/uv.jpg'),
+                    loadTexture('../assets/textures/pbr/pitted_metal_basecolor.jpg'),
+                    loadTexture('../assets/textures/pbr/pitted_metal_normal.jpg'),
                     // https://occlusion-roughness-metalness.glitch.me/
-                    loadTexture('assets/textures/pbr/pitted_metal_orm.jpg'),
-                    loadTexture('assets/textures/abstract_cube/abstract_cube_thickness.jpg')
+                    loadTexture('../assets/textures/pbr/pitted_metal_orm.jpg'),
+                    loadTexture('../assets/textures/abstract_cube/abstract_cube_thickness.jpg')
                 ]);
 
                 map.anisotropy = anisotropy;
@@ -125,7 +125,7 @@
 
                 const material = new MeshStandardMaterial({
                     color: new Color().offsetHSL(0, 0, -0.65),
-                    metalness: 0.6,
+                    metalness: 0.7,
                     roughness: 2,
                     map,
                     metalnessMap: ormMap,
@@ -134,7 +134,7 @@
                     aoMapIntensity: 1,
                     normalMap,
                     normalScale: new Vector2(3, 3),
-                    envMapIntensity: 1,
+                    envMapIntensity: 1.2,
                     flatShading: true
                 });
 
@@ -199,9 +199,7 @@
                 this.add(this.mesh);
             }
 
-            /**
-             * Public methods
-             */
+            // Public methods
 
             ready = async () => {
                 await Promise.all([
@@ -229,7 +227,7 @@
 
                 const geometry = new PlaneGeometry(100, 100);
 
-                const map = await loadTexture('assets/textures/waterdudv.jpg');
+                const map = await loadTexture('../assets/textures/waterdudv.jpg');
                 map.wrapS = RepeatWrapping;
                 map.wrapT = RepeatWrapping;
                 map.repeat.set(6, 6);
@@ -256,9 +254,7 @@
                 this.add(mesh);
             }
 
-            /**
-             * Public methods
-             */
+            // Public methods
 
             resize = (width, height) => {
                 height = 1024;
@@ -289,9 +285,7 @@
                 this.add(this.light);
             }
 
-            /**
-             * Public methods
-             */
+            // Public methods
 
             ready = () => Promise.all([
                 this.floor.ready(),
@@ -317,9 +311,7 @@
                 window.addEventListener('pointerup', this.onPointerUp);
             }
 
-            /**
-             * Event handlers
-             */
+            // Event handlers
 
             static onPointerDown = e => {
                 this.onPointerMove(e);
@@ -338,9 +330,7 @@
                 this.onPointerMove(e);
             };
 
-            /**
-             * Public methods
-             */
+            // Public methods
 
             static resize = (width, height) => {
                 this.view.floor.resize(width, height);
@@ -520,9 +510,7 @@
                 });
             }
 
-            /**
-             * Public methods
-             */
+            // Public methods
 
             static update = () => {
                 if (!this.ui) {
@@ -617,9 +605,7 @@
                 return bloomFactors;
             }
 
-            /**
-             * Public methods
-             */
+            // Public methods
 
             static resize = (width, height, dpr) => {
                 this.renderer.setPixelRatio(dpr);
@@ -728,9 +714,7 @@
                 window.addEventListener('pointerup', this.onPointerUp);
             }
 
-            /**
-             * Event handlers
-             */
+            // Event handlers
 
             static onPointerDown = e => {
                 this.onPointerMove(e);
@@ -749,9 +733,7 @@
                 this.onPointerMove(e);
             };
 
-            /**
-             * Public methods
-             */
+            // Public methods
 
             static resize = (width, height) => {
                 this.camera.aspect = width / height;
@@ -792,12 +774,9 @@
                     stencil: false,
                     antialias: true
                 });
-                this.element = this.renderer.domElement;
-
-                // Tone mapping and output color space encoding
-                this.renderer.toneMapping = ACESFilmicToneMapping;
-                this.renderer.toneMappingExposure = 1;
                 this.renderer.outputColorSpace = LinearSRGBColorSpace;
+
+                this.element = this.renderer.domElement;
 
                 // 3D scene
                 this.scene = new Scene();
@@ -823,9 +802,7 @@
             }
 
             static initLights() {
-                this.scene.add(new AmbientLight(0xffffff, 0.2));
-
-                this.scene.add(new HemisphereLight(0x606060, 0x404040));
+                this.scene.add(new HemisphereLight(0x606060, 0x404040, 3));
             }
 
             static initLoaders() {
@@ -835,24 +812,20 @@
             }
 
             static async initEnvironment() {
-                this.scene.environment = await this.loadEnvironmentTexture('assets/textures/env/jewelry_black_contrast.jpg');
+                this.scene.environment = await this.loadEnvironmentTexture('../assets/textures/env/jewelry_black_contrast.jpg');
             }
 
             static addListeners() {
                 this.renderer.domElement.addEventListener('touchstart', this.onTouchStart);
             }
 
-            /**
-             * Event handlers
-             */
+            // Event handlers
 
             static onTouchStart = e => {
                 e.preventDefault();
             };
 
-            /**
-             * Public methods
-             */
+            // Public methods
 
             static resize = (width, height, dpr) => {
                 width = Math.round(width * dpr);
@@ -941,9 +914,7 @@
                 ticker.start();
             }
 
-            /**
-             * Event handlers
-             */
+            // Event handlers
 
             static onResize = () => {
                 const width = document.documentElement.clientWidth;

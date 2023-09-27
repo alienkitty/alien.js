@@ -8,10 +8,10 @@
 
     <link rel="preconnect" href="https://fonts.gstatic.com">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto+Mono">
-    <link rel="stylesheet" href="assets/css/style.css">
+    <link rel="stylesheet" href="../assets/css/style.css">
 
     <script type="module">
-        import { ACESFilmicToneMapping, AmbientLight, BloomCompositeMaterial, BoxGeometry, BufferGeometry, Color, ColorManagement, DirectionalLight, Float32BufferAttribute, GLSL3, Group, HemisphereLight, LinearSRGBColorSpace, LuminosityMaterial, MathUtils, Mesh, MeshStandardMaterial, NoBlending, OrthographicCamera, PanelItem, PlaneGeometry, RawShaderMaterial, Scene, UI, UnrealBloomBlurMaterial, Vector2, WebGLRenderTarget, WebGLRenderer, getFullscreenTriangle, ticker } from '../../build/alien.three.js';
+        import { BloomCompositeMaterial, BoxGeometry, BufferGeometry, Color, ColorManagement, DirectionalLight, Float32BufferAttribute, GLSL3, Group, LinearSRGBColorSpace, LuminosityMaterial, MathUtils, Mesh, MeshStandardMaterial, NoBlending, OrthographicCamera, PanelItem, PlaneGeometry, RawShaderMaterial, Scene, UI, UnrealBloomBlurMaterial, Vector2, WebGLRenderTarget, WebGLRenderer, getFullscreenTriangle, ticker } from '../../build/alien.three.js';
 
         ColorManagement.enabled = false; // Disable color management
 
@@ -208,9 +208,7 @@
                 });
             }
 
-            /**
-             * Public methods
-             */
+            // Public methods
 
             static update = () => {
                 if (!this.ui) {
@@ -305,9 +303,7 @@
                 return bloomFactors;
             }
 
-            /**
-             * Public methods
-             */
+            // Public methods
 
             static resize = (width, height, dpr) => {
                 this.renderer.setPixelRatio(dpr);
@@ -407,12 +403,9 @@
                     stencil: false,
                     antialias: true
                 });
-                this.element = this.renderer.domElement;
-
-                // Tone mapping and output color space encoding
-                this.renderer.toneMapping = ACESFilmicToneMapping;
-                this.renderer.toneMappingExposure = 1;
                 this.renderer.outputColorSpace = LinearSRGBColorSpace;
+
+                this.element = this.renderer.domElement;
 
                 // Isometric scene
                 this.scene = new Scene();
@@ -433,11 +426,7 @@
             }
 
             static initLights() {
-                this.scene.add(new AmbientLight(0xffffff));
-
-                this.scene.add(new HemisphereLight(0x606060, 0x404040));
-
-                const light = new DirectionalLight(0xffffff, 2);
+                const light = new DirectionalLight(0xffffff, 7);
                 light.position.set(60, 100, 20);
                 this.scene.add(light);
             }
@@ -446,17 +435,13 @@
                 this.renderer.domElement.addEventListener('touchstart', this.onTouchStart);
             }
 
-            /**
-             * Event handlers
-             */
+            // Event handlers
 
             static onTouchStart = e => {
                 e.preventDefault();
             };
 
-            /**
-             * Public methods
-             */
+            // Public methods
 
             static resize = (width, height, dpr) => {
                 this.camera.left = -width / 2;
@@ -524,9 +509,7 @@
                 ticker.start();
             }
 
-            /**
-             * Event handlers
-             */
+            // Event handlers
 
             static onResize = () => {
                 const width = document.documentElement.clientWidth;

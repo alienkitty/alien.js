@@ -8,7 +8,7 @@
 
     <link rel="preconnect" href="https://fonts.gstatic.com">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto+Mono">
-    <link rel="stylesheet" href="assets/css/style.css">
+    <link rel="stylesheet" href="../assets/css/style.css">
 
     <style>
         :root {
@@ -19,7 +19,7 @@
     </style>
 
     <script type="module">
-        import { AmbientLight, BasicShadowMap, BufferGeometryLoader, BufferGeometryLoaderThread, Color, ColorManagement, DirectionalLight, Group, HemisphereLight, ImageBitmapLoaderThread, LinearSRGBColorSpace, Mesh, MeshPhongMaterial, NoBlending, OrbitControls, PanelItem, PerspectiveCamera, PlaneGeometry, Reflector, RepeatWrapping, Scene, ShadowMaterial, SoftShadows, SphereGeometry, TextureLoader, Thread, UI, Vector2, WebGLRenderer, getFullscreenTriangle, ticker } from '../../build/alien.three.js';
+        import { BasicShadowMap, BufferGeometryLoader, BufferGeometryLoaderThread, Color, ColorManagement, DirectionalLight, Group, HemisphereLight, ImageBitmapLoaderThread, LinearSRGBColorSpace, Mesh, MeshPhongMaterial, NoBlending, OrbitControls, PanelItem, PerspectiveCamera, PlaneGeometry, Reflector, RepeatWrapping, Scene, ShadowMaterial, SoftShadows, SphereGeometry, TextureLoader, Thread, UI, Vector2, WebGLRenderer, getFullscreenTriangle, ticker } from '../../build/alien.three.js';
 
         ColorManagement.enabled = false; // Disable color management
 
@@ -46,9 +46,7 @@
                 this.mesh = mesh;
             }
 
-            /**
-             * Public methods
-             */
+            // Public methods
 
             update = time => {
                 this.mesh.position.y = Math.sin(time) * 0.6;
@@ -77,7 +75,7 @@
 
                 const geometry = new PlaneGeometry(100, 100);
 
-                const map = await loadTexture('assets/textures/waterdudv.jpg');
+                const map = await loadTexture('../assets/textures/waterdudv.jpg');
                 map.wrapS = RepeatWrapping;
                 map.wrapT = RepeatWrapping;
                 map.repeat.set(6, 3);
@@ -177,9 +175,7 @@
                 this.add(mesh);
             }
 
-            /**
-             * Public methods
-             */
+            // Public methods
 
             resize = (width, height) => {
                 height = 1024;
@@ -207,9 +203,7 @@
                 this.add(this.sphere);
             }
 
-            /**
-             * Public methods
-             */
+            // Public methods
 
             resize = (width, height) => {
                 this.floor.resize(width, height);
@@ -229,9 +223,7 @@
                 this.view = view;
             }
 
-            /**
-             * Public methods
-             */
+            // Public methods
 
             static resize = (width, height) => {
                 this.view.resize(width, height);
@@ -293,9 +285,7 @@
                 });
             }
 
-            /**
-             * Public methods
-             */
+            // Public methods
 
             static update = () => {
                 if (!this.ui) {
@@ -313,9 +303,7 @@
                 this.camera = camera;
             }
 
-            /**
-             * Public methods
-             */
+            // Public methods
 
             static resize = (width, height, dpr) => {
                 this.renderer.setPixelRatio(dpr);
@@ -344,10 +332,9 @@
                     stencil: false,
                     antialias: true
                 });
-                this.element = this.renderer.domElement;
-
-                // Output color space encoding
                 this.renderer.outputColorSpace = LinearSRGBColorSpace;
+
+                this.element = this.renderer.domElement;
 
                 // 3D scene
                 this.scene = new Scene();
@@ -386,11 +373,9 @@
             }
 
             static initLights() {
-                this.scene.add(new AmbientLight(0xffffff, 0.2));
+                this.scene.add(new HemisphereLight(0x606060, 0x404040, 3));
 
-                this.scene.add(new HemisphereLight(0x606060, 0x404040));
-
-                const light = new DirectionalLight(0xffffff, 0.4);
+                const light = new DirectionalLight(0xffffff, 2);
                 light.position.set(5, 5, 5);
                 light.castShadow = true;
                 light.shadow.mapSize.width = 1024;
@@ -417,17 +402,13 @@
                 this.renderer.domElement.addEventListener('touchstart', this.onTouchStart);
             }
 
-            /**
-             * Event handlers
-             */
+            // Event handlers
 
             static onTouchStart = e => {
                 e.preventDefault();
             };
 
-            /**
-             * Public methods
-             */
+            // Public methods
 
             static resize = (width, height, dpr) => {
                 this.camera.aspect = width / height;
@@ -518,9 +499,7 @@
                 ticker.start();
             }
 
-            /**
-             * Event handlers
-             */
+            // Event handlers
 
             static onResize = () => {
                 const width = document.documentElement.clientWidth;

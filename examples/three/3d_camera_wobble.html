@@ -8,10 +8,10 @@
 
     <link rel="preconnect" href="https://fonts.gstatic.com">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto+Mono">
-    <link rel="stylesheet" href="assets/css/style.css">
+    <link rel="stylesheet" href="../assets/css/style.css">
 
     <script type="module">
-        import { ACESFilmicToneMapping, BloomCompositeMaterial, Color, ColorManagement, DirectionalLight, Fog, GLSL3, Group, HemisphereLight, LinearSRGBColorSpace, LuminosityMaterial, MathUtils, Mesh, MeshBasicMaterial, MeshStandardMaterial, NoBlending, OrthographicCamera, PanelItem, PerspectiveCamera, PlaneGeometry, RawShaderMaterial, Reflector, RepeatWrapping, SVGLoader, Scene, TextureLoader, UI, UnrealBloomBlurMaterial, Vector2, Vector3, WebGLRenderTarget, WebGLRenderer, Wobble, getFullscreenTriangle, ticker } from '../../build/alien.three.js';
+        import { BloomCompositeMaterial, Color, ColorManagement, DirectionalLight, Fog, GLSL3, Group, HemisphereLight, LinearSRGBColorSpace, LuminosityMaterial, MathUtils, Mesh, MeshBasicMaterial, MeshStandardMaterial, NoBlending, OrthographicCamera, PanelItem, PerspectiveCamera, PlaneGeometry, RawShaderMaterial, Reflector, RepeatWrapping, SVGLoader, Scene, TextureLoader, UI, UnrealBloomBlurMaterial, Vector2, Vector3, WebGLRenderTarget, WebGLRenderer, Wobble, getFullscreenTriangle, ticker } from '../../build/alien.three.js';
 
         ColorManagement.enabled = false; // Disable color management
 
@@ -79,7 +79,7 @@
             async initMesh() {
                 const { camera, loadSVG } = WorldController;
 
-                const data = await loadSVG('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg"><path stroke-width="0.25" d="M 3 0 L 0 5 H 6 Z"/></svg>');
+                const data = await loadSVG('data:image/svg+xml;utf8,<svg><path d="M 3 0 L 0 5 H 6 Z" stroke-width="0.25"/></svg>');
                 const paths = data.paths;
 
                 const group = new Group();
@@ -131,11 +131,11 @@
 
                 // Textures
                 const [map, normalMap, ormMap] = await Promise.all([
-                    // loadTexture('assets/textures/uv.jpg'),
-                    loadTexture('assets/textures/pbr/polished_concrete_basecolor.jpg'),
-                    loadTexture('assets/textures/pbr/polished_concrete_normal.jpg'),
+                    // loadTexture('../assets/textures/uv.jpg'),
+                    loadTexture('../assets/textures/pbr/polished_concrete_basecolor.jpg'),
+                    loadTexture('../assets/textures/pbr/polished_concrete_normal.jpg'),
                     // https://occlusion-roughness-metalness.glitch.me/
-                    loadTexture('assets/textures/pbr/polished_concrete_orm.jpg')
+                    loadTexture('../assets/textures/pbr/polished_concrete_orm.jpg')
                 ]);
 
                 map.wrapS = RepeatWrapping;
@@ -249,9 +249,7 @@
                 this.add(mesh);
             }
 
-            /**
-             * Public methods
-             */
+            // Public methods
 
             resize = (width, height) => {
                 width = MathUtils.floorPowerOfTwo(width) / 2;
@@ -278,9 +276,7 @@
                 this.add(this.triangle);
             }
 
-            /**
-             * Public methods
-             */
+            // Public methods
 
             resize = (width, height) => {
                 this.floor.resize(width, height);
@@ -297,9 +293,7 @@
                 this.view = view;
             }
 
-            /**
-             * Public methods
-             */
+            // Public methods
 
             static resize = (width, height) => {
                 this.view.resize(width, height);
@@ -401,9 +395,7 @@
                 });
             }
 
-            /**
-             * Public methods
-             */
+            // Public methods
 
             static update = () => {
                 if (!this.ui) {
@@ -498,9 +490,7 @@
                 return bloomFactors;
             }
 
-            /**
-             * Public methods
-             */
+            // Public methods
 
             static resize = (width, height, dpr) => {
                 this.renderer.setPixelRatio(dpr);
@@ -634,9 +624,7 @@
                 window.addEventListener('pointerup', this.onPointerUp);
             }
 
-            /**
-             * Event handlers
-             */
+            // Event handlers
 
             static onPointerDown = e => {
                 this.onPointerMove(e);
@@ -654,9 +642,7 @@
                 this.onPointerMove(e);
             };
 
-            /**
-             * Public methods
-             */
+            // Public methods
 
             static resize = (width, height) => {
                 this.camera.aspect = width / height;
@@ -729,12 +715,9 @@
                     stencil: false,
                     antialias: true
                 });
-                this.element = this.renderer.domElement;
-
-                // Tone mapping and output color space encoding
-                this.renderer.toneMapping = ACESFilmicToneMapping;
-                this.renderer.toneMappingExposure = 1;
                 this.renderer.outputColorSpace = LinearSRGBColorSpace;
+
+                this.element = this.renderer.domElement;
 
                 // 3D scene
                 this.scene = new Scene();
@@ -758,9 +741,9 @@
             }
 
             static initLights() {
-                this.scene.add(new HemisphereLight(0x606060, 0x404040));
+                this.scene.add(new HemisphereLight(0x606060, 0x404040, 3));
 
-                const light = new DirectionalLight(0xffffff);
+                const light = new DirectionalLight(0xffffff, 2);
                 light.position.set(1, 1, 1);
                 this.scene.add(light);
             }
@@ -774,17 +757,13 @@
                 this.renderer.domElement.addEventListener('touchstart', this.onTouchStart);
             }
 
-            /**
-             * Event handlers
-             */
+            // Event handlers
 
             static onTouchStart = e => {
                 e.preventDefault();
             };
 
-            /**
-             * Public methods
-             */
+            // Public methods
 
             static resize = (width, height, dpr) => {
                 width = Math.round(width * dpr);
@@ -852,9 +831,7 @@
                 ticker.start();
             }
 
-            /**
-             * Event handlers
-             */
+            // Event handlers
 
             static onResize = () => {
                 const width = document.documentElement.clientWidth;

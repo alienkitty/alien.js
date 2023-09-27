@@ -8,7 +8,7 @@
 
     <link rel="preconnect" href="https://fonts.gstatic.com">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto+Mono">
-    <link rel="stylesheet" href="assets/css/style.css">
+    <link rel="stylesheet" href="../assets/css/style.css">
 
     <script type="module">
         import { Color, ColorManagement, Group, LinearSRGBColorSpace, Mesh, MeshMatcapMaterial, PerspectiveCamera, Scene, SphereGeometry, TextureLoader, Vector2, WebGLRenderer, getFullscreenTriangle, ticker } from '../../build/alien.three.js';
@@ -29,8 +29,8 @@
 
                 const geometry = new SphereGeometry(1, 80, 80);
 
-                const matcap = await loadTexture('assets/textures/matcaps/040full.jpg');
-                // const matcap = await loadTexture('assets/textures/matcaps/defaultwax.jpg');
+                const matcap = await loadTexture('../assets/textures/matcaps/040full.jpg');
+                // const matcap = await loadTexture('../assets/textures/matcaps/defaultwax.jpg');
 
                 const material = new MeshMatcapMaterial({ matcap });
 
@@ -71,9 +71,7 @@
                 this.camera = camera;
             }
 
-            /**
-             * Public methods
-             */
+            // Public methods
 
             static resize = (width, height, dpr) => {
                 this.renderer.setPixelRatio(dpr);
@@ -99,10 +97,9 @@
                     stencil: false,
                     antialias: true
                 });
-                this.element = this.renderer.domElement;
-
-                // Output color space encoding
                 this.renderer.outputColorSpace = LinearSRGBColorSpace;
+
+                this.element = this.renderer.domElement;
 
                 // 3D scene
                 this.scene = new Scene();
@@ -132,17 +129,13 @@
                 this.renderer.domElement.addEventListener('touchstart', this.onTouchStart);
             }
 
-            /**
-             * Event handlers
-             */
+            // Event handlers
 
             static onTouchStart = e => {
                 e.preventDefault();
             };
 
-            /**
-             * Public methods
-             */
+            // Public methods
 
             static resize = (width, height, dpr) => {
                 this.camera.aspect = width / height;
@@ -204,9 +197,7 @@
                 ticker.start();
             }
 
-            /**
-             * Event handlers
-             */
+            // Event handlers
 
             static onResize = () => {
                 const width = document.documentElement.clientWidth;

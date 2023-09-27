@@ -8,10 +8,10 @@
 
     <link rel="preconnect" href="https://fonts.gstatic.com">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto+Mono">
-    <link rel="stylesheet" href="assets/css/style.css">
+    <link rel="stylesheet" href="../assets/css/style.css">
 
     <script type="module">
-        import { ACESFilmicToneMapping, BloomCompositeMaterial, Color, ColorManagement, DoubleSide, EnvironmentTextureLoader, GLSL3, Group, ImageBitmapLoaderThread, LinearSRGBColorSpace, LuminosityMaterial, MathUtils, Mesh, MeshPhysicalMaterial, NoBlending, OrbitControls, OrthographicCamera, PanelItem, PerspectiveCamera, PlaneGeometry, PolyhedronGeometry, RawShaderMaterial, Reflector, ReflectorDudvMaterial, RepeatWrapping, Scene, TetrahedronGeometry, TextureLoader, Thread, UI, UnrealBloomBlurMaterial, Vector2, Vector3, WebGLRenderTarget, WebGLRenderer, getFullscreenTriangle, getKeyByValue, ticker } from '../../build/alien.three.js';
+        import { BloomCompositeMaterial, Color, ColorManagement, DoubleSide, EnvironmentTextureLoader, GLSL3, Group, ImageBitmapLoaderThread, LinearSRGBColorSpace, LuminosityMaterial, MathUtils, Mesh, MeshPhysicalMaterial, NoBlending, OrbitControls, OrthographicCamera, PanelItem, PerspectiveCamera, PlaneGeometry, PolyhedronGeometry, RawShaderMaterial, Reflector, ReflectorDudvMaterial, RepeatWrapping, Scene, TetrahedronGeometry, TextureLoader, Thread, UI, UnrealBloomBlurMaterial, Vector2, Vector3, WebGLRenderTarget, WebGLRenderer, getFullscreenTriangle, getKeyByValue, ticker } from '../../build/alien.three.js';
 
         ColorManagement.enabled = false; // Disable color management
 
@@ -147,9 +147,7 @@
                 this.mesh = mesh;
             }
 
-            /**
-             * Public methods
-             */
+            // Public methods
 
             update = time => {
                 this.mesh.position.y = Math.sin(this.random + time) * 0.1;
@@ -212,9 +210,7 @@
                 this.mesh = mesh;
             }
 
-            /**
-             * Public methods
-             */
+            // Public methods
 
             update = time => {
                 this.mesh.position.y = Math.sin(this.random + time) * 0.1;
@@ -260,9 +256,7 @@
                 this.mesh = mesh;
             }
 
-            /**
-             * Public methods
-             */
+            // Public methods
 
             update = () => {
             };
@@ -284,7 +278,7 @@
 
                 const geometry = new PlaneGeometry(100, 100);
 
-                const map = await loadTexture('assets/textures/waterdudv.jpg');
+                const map = await loadTexture('../assets/textures/waterdudv.jpg');
                 map.wrapS = RepeatWrapping;
                 map.wrapT = RepeatWrapping;
                 map.repeat.set(6, 6);
@@ -313,9 +307,7 @@
                 this.material = material;
             }
 
-            /**
-             * Public methods
-             */
+            // Public methods
 
             resize = (width, height) => {
                 height = 1024;
@@ -349,9 +341,7 @@
                 this.add(this.floatingCrystal);
             }
 
-            /**
-             * Public methods
-             */
+            // Public methods
 
             resize = (width, height) => {
                 this.floor.resize(width, height);
@@ -376,9 +366,7 @@
                 this.view = view;
             }
 
-            /**
-             * Public methods
-             */
+            // Public methods
 
             static resize = (width, height) => {
                 this.view.resize(width, height);
@@ -519,9 +507,7 @@
                 });
             }
 
-            /**
-             * Public methods
-             */
+            // Public methods
 
             static update = () => {
                 if (!this.ui) {
@@ -616,9 +602,7 @@
                 return bloomFactors;
             }
 
-            /**
-             * Public methods
-             */
+            // Public methods
 
             static resize = (width, height, dpr) => {
                 this.renderer.setPixelRatio(dpr);
@@ -731,9 +715,7 @@
                 window.addEventListener('pointerup', this.onPointerUp);
             }
 
-            /**
-             * Event handlers
-             */
+            // Event handlers
 
             static onPointerDown = e => {
                 this.onPointerMove(e);
@@ -752,9 +734,7 @@
                 this.onPointerMove(e);
             };
 
-            /**
-             * Public methods
-             */
+            // Public methods
 
             static resize = (width, height) => {
                 this.camera.aspect = width / height;
@@ -800,12 +780,9 @@
                     stencil: false,
                     antialias: true
                 });
-                this.element = this.renderer.domElement;
-
-                // Tone mapping and output color space encoding
-                this.renderer.toneMapping = ACESFilmicToneMapping;
-                this.renderer.toneMappingExposure = 1;
                 this.renderer.outputColorSpace = LinearSRGBColorSpace;
+
+                this.element = this.renderer.domElement;
 
                 // 3D scene
                 this.scene = new Scene();
@@ -839,7 +816,7 @@
             }
 
             static async initEnvironment() {
-                this.scene.environment = await this.loadEnvironmentTexture('assets/textures/env/2294472375_24a3b8ef46_o.jpg');
+                this.scene.environment = await this.loadEnvironmentTexture('../assets/textures/env/2294472375_24a3b8ef46_o.jpg');
             }
 
             static initControls() {
@@ -855,17 +832,13 @@
                 this.renderer.domElement.addEventListener('touchstart', this.onTouchStart);
             }
 
-            /**
-             * Event handlers
-             */
+            // Event handlers
 
             static onTouchStart = e => {
                 e.preventDefault();
             };
 
-            /**
-             * Public methods
-             */
+            // Public methods
 
             static resize = (width, height, dpr) => {
                 width = Math.round(width * dpr);
@@ -951,9 +924,7 @@
                 ticker.start();
             }
 
-            /**
-             * Event handlers
-             */
+            // Event handlers
 
             static onResize = () => {
                 const width = document.documentElement.clientWidth;

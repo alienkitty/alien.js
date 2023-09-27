@@ -8,7 +8,7 @@
 
     <link rel="preconnect" href="https://fonts.gstatic.com">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto+Mono">
-    <link rel="stylesheet" href="assets/css/style.css">
+    <link rel="stylesheet" href="../assets/css/style.css">
 
     <style>
         :root {
@@ -19,13 +19,14 @@
     </style>
 
     <script type="module">
-        import { ACESFilmicToneMapping, AmbientLight, BasicShadowMap, BloomCompositeMaterial, CineonToneMapping, Color, ColorManagement, DirectionalLight, Easing, EnvironmentTextureLoader, GLSL3, Group, HemisphereLight, IcosahedronGeometry, LightPanelController, LinearSRGBColorSpace, LinearToneMapping, LuminosityMaterial, MathUtils, Mesh, MeshStandardMaterial, NoBlending, NoToneMapping, OrbitControls, OrthographicCamera, Panel, PanelItem, PerspectiveCamera, PlaneGeometry, RawShaderMaterial, ReinhardToneMapping, Scene, SoftShadows, TextureLoader, UI, UnrealBloomBlurMaterial, Vector2, WebGLRenderTarget, WebGLRenderer, getFullscreenTriangle, getKeyByValue, ticker } from '../../build/alien.three.js';
+        import { AmbientLight, BasicShadowMap, BloomCompositeMaterial, Color, ColorManagement, DirectionalLight, Easing, EnvironmentTextureLoader, GLSL3, Group, HemisphereLight, IcosahedronGeometry, LightPanelController, LinearSRGBColorSpace, LuminosityMaterial, MathUtils, Mesh, MeshStandardMaterial, NoBlending, OrbitControls, OrthographicCamera, Panel, PanelItem, PerspectiveCamera, PlaneGeometry, RawShaderMaterial, Scene, SoftShadows, TextureLoader, UI, UnrealBloomBlurMaterial, Vector2, WebGLRenderTarget, WebGLRenderer, getFullscreenTriangle, getKeyByValue, ticker } from '../../build/alien.three.js';
 
         ColorManagement.enabled = false; // Disable color management
 
         import rgbshift from '../../src/shaders/modules/rgbshift/rgbshift.glsl.js';
         import encodings from '../../src/shaders/modules/encodings/encodings.glsl.js';
 
+        // Based on https://github.com/mrdoob/three.js/blob/dev/examples/jsm/shaders/ACESFilmicToneMappingShader.js by WestLangley
         // Based on https://github.com/mrdoob/three.js/blob/dev/examples/jsm/shaders/GammaCorrectionShader.js by WestLangley
 
         const vertexCompositeShader = /* glsl */ `
@@ -47,8 +48,9 @@
             uniform sampler2D tScene;
             uniform sampler2D tBloom;
             uniform float uBloomDistortion;
-            uniform bool uGamma;
+            uniform bool uToneMapping;
             uniform float uExposure;
+            uniform bool uGamma;
 
             in vec2 vUv;
 
@@ -65,10 +67,14 @@
 
                 FragColor.rgb += getRGB(tBloom, vUv, angle, amount).rgb;
 
-                if (uGamma) {
+                if (uToneMapping) {
                     FragColor.rgb *= uExposure;
 
-                    FragColor = linearToSRGB(FragColor);
+                    FragColor = vec4(ACESFilmicToneMapping(FragColor.rgb), FragColor.a);
+                }
+
+                if (uGamma) {
+                    FragColor = LinearToSRGB(FragColor);
                 }
             }
         `;
@@ -81,8 +87,9 @@
                         tScene: { value: null },
                         tBloom: { value: null },
                         uBloomDistortion: { value: 1.45 },
-                        uGamma: { value: true },
-                        uExposure: { value: 1 }
+                        uToneMapping: { value: false },
+                        uExposure: { value: 1 },
+                        uGamma: { value: true }
                     },
                     vertexShader: vertexCompositeShader,
                     fragmentShader: fragmentCompositeShader,
@@ -106,7 +113,8 @@
                 const material = new MeshStandardMaterial({
                     color: 0xefefef,
                     metalness: 0.6,
-                    roughness: 0.6,
+                    roughness: 0.9,
+                    envMapIntensity: 1.6,
                     dithering: true
                 });
 
@@ -159,7 +167,8 @@
                 const material = new MeshStandardMaterial({
                     color: 0xefefef,
                     metalness: 0.6,
-                    roughness: 0.6,
+                    roughness: 0.9,
+                    envMapIntensity: 1.6,
                     dithering: true
                 });
 
@@ -204,20 +213,16 @@
             }
 
             static initPanel() {
-                // https://threejs.org/examples/#webgl_tonemapping
-                const toneMappingOptions = {
-                    None: NoToneMapping,
-                    Linear: LinearToneMapping,
-                    Reinhard: ReinhardToneMapping,
-                    Cineon: CineonToneMapping,
-                    ACESFilmic: ACESFilmicToneMapping
-                };
-
                 const { luminosityMaterial, bloomCompositeMaterial, compositeMaterial } = RenderManager;
 
                 const postOptions = {
                     Off: false,
                     Post: true
+                };
+
+                const toneMappingOptions = {
+                    Off: false,
+                    Tone: true
                 };
 
                 const gammaOptions = {
@@ -287,11 +292,14 @@
                         }
                     },
                     {
+                        type: 'divider'
+                    },
+                    {
                         type: 'list',
-                        list: gammaOptions,
-                        value: getKeyByValue(gammaOptions, compositeMaterial.uniforms.uGamma.value),
+                        list: toneMappingOptions,
+                        value: getKeyByValue(toneMappingOptions, compositeMaterial.uniforms.uToneMapping.value),
                         callback: value => {
-                            compositeMaterial.uniforms.uGamma.value = gammaOptions[value];
+                            compositeMaterial.uniforms.uToneMapping.value = toneMappingOptions[value];
                         }
                     },
                     {
@@ -303,6 +311,17 @@
                         value: compositeMaterial.uniforms.uExposure.value,
                         callback: value => {
                             compositeMaterial.uniforms.uExposure.value = value;
+                        }
+                    },
+                    {
+                        type: 'divider'
+                    },
+                    {
+                        type: 'list',
+                        list: gammaOptions,
+                        value: getKeyByValue(gammaOptions, compositeMaterial.uniforms.uGamma.value),
+                        callback: value => {
+                            compositeMaterial.uniforms.uGamma.value = gammaOptions[value];
                         }
                     }
                 ];
@@ -318,34 +337,6 @@
                 LightPanelController.init(this.scene, this.ui);
 
                 const items = [
-                    {
-                        type: 'divider'
-                    },
-                    {
-                        type: 'list',
-                        list: toneMappingOptions,
-                        value: getKeyByValue(toneMappingOptions, this.renderer.toneMapping),
-                        callback: value => {
-                            this.renderer.toneMapping = toneMappingOptions[value];
-
-                            this.scene.traverse(object => {
-                                if (object.isMesh) {
-                                    object.material.needsUpdate = true;
-                                }
-                            });
-                        }
-                    },
-                    {
-                        type: 'slider',
-                        label: 'Exp',
-                        min: 0,
-                        max: 2,
-                        step: 0.01,
-                        value: this.renderer.toneMappingExposure,
-                        callback: value => {
-                            this.renderer.toneMappingExposure = value;
-                        }
-                    },
                     {
                         type: 'divider'
                     },
@@ -381,9 +372,7 @@
                 });
             }
 
-            /**
-             * Public methods
-             */
+            // Public methods
 
             static update = () => {
                 if (!this.ui) {
@@ -479,9 +468,7 @@
                 return bloomFactors;
             }
 
-            /**
-             * Public methods
-             */
+            // Public methods
 
             static resize = (width, height, dpr) => {
                 this.renderer.setPixelRatio(dpr);
@@ -585,12 +572,9 @@
                     stencil: false,
                     antialias: true
                 });
-                this.element = this.renderer.domElement;
-
-                // Tone mapping and output color space encoding
-                this.renderer.toneMapping = ACESFilmicToneMapping;
-                this.renderer.toneMappingExposure = 1;
                 this.renderer.outputColorSpace = LinearSRGBColorSpace;
+
+                this.element = this.renderer.domElement;
 
                 // 3D scene
                 this.scene = new Scene();
@@ -631,7 +615,7 @@
             static initLights() {
                 this.scene.add(new AmbientLight(0xffffff, 0.2));
 
-                this.scene.add(new HemisphereLight(0x606060, 0x404040));
+                this.scene.add(new HemisphereLight(0x606060, 0x404040, 3));
 
                 const directionalLight1 = new DirectionalLight(0xffffff, 0.8);
                 directionalLight1.position.set(5, 5, 5);
@@ -658,7 +642,7 @@
             }
 
             static async initEnvironment() {
-                this.scene.environment = await this.loadEnvironmentTexture('assets/textures/env/jewelry_black_contrast.jpg');
+                this.scene.environment = await this.loadEnvironmentTexture('../assets/textures/env/jewelry_black_contrast.jpg');
             }
 
             static initControls() {
@@ -670,17 +654,13 @@
                 this.renderer.domElement.addEventListener('touchstart', this.onTouchStart);
             }
 
-            /**
-             * Event handlers
-             */
+            // Event handlers
 
             static onTouchStart = e => {
                 e.preventDefault();
             };
 
-            /**
-             * Public methods
-             */
+            // Public methods
 
             static resize = (width, height, dpr) => {
                 this.camera.aspect = width / height;
@@ -753,9 +733,7 @@
                 ticker.start();
             }
 
-            /**
-             * Event handlers
-             */
+            // Event handlers
 
             static onResize = () => {
                 const width = document.documentElement.clientWidth;

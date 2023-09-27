@@ -8,7 +8,7 @@
 
     <link rel="preconnect" href="https://fonts.gstatic.com">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto+Mono">
-    <link rel="stylesheet" href="assets/css/style.css">
+    <link rel="stylesheet" href="../assets/css/style.css">
 
     <style>
         :root {
@@ -31,7 +31,7 @@
             async initGeometry() {
                 const { loadBufferGeometry } = WorldController;
 
-                const geometry = await loadBufferGeometry('assets/geometry/cube.json');
+                const geometry = await loadBufferGeometry('../assets/geometry/cube.json');
 
                 // Use second set of UVs for cubemap row layout
                 // https://docs.unrealengine.com/4.27/en-US/RenderingAndGraphics/Textures/Cubemaps/CreatingCubemaps/
@@ -43,8 +43,8 @@
             async initMaterial() {
                 const { anisotropy, loadTexture } = WorldController;
 
-                // const map = await loadTexture('assets/textures/cubemap.jpg');
-                const map = await loadTexture('assets/textures/cube/cube_basecolor.jpg');
+                // const map = await loadTexture('../assets/textures/cubemap.jpg');
+                const map = await loadTexture('../assets/textures/cube/cube_basecolor.jpg');
                 map.anisotropy = anisotropy;
 
                 this.material = new BasicMaterial(map);
@@ -55,9 +55,7 @@
                 this.add(mesh);
             }
 
-            /**
-             * Public methods
-             */
+            // Public methods
 
             ready = async () => {
                 await Promise.all([
@@ -85,7 +83,7 @@
 
                 const geometry = new PlaneGeometry(100, 100);
 
-                const map = await loadTexture('assets/textures/waterdudv.jpg');
+                const map = await loadTexture('../assets/textures/waterdudv.jpg');
                 map.wrapS = RepeatWrapping;
                 map.wrapT = RepeatWrapping;
                 map.repeat.set(6, 3);
@@ -112,9 +110,7 @@
                 this.add(mesh);
             }
 
-            /**
-             * Public methods
-             */
+            // Public methods
 
             resize = (width, height) => {
                 height = 1024;
@@ -142,9 +138,7 @@
                 this.add(this.cube);
             }
 
-            /**
-             * Public methods
-             */
+            // Public methods
 
             resize = (width, height) => {
                 this.floor.resize(width, height);
@@ -161,9 +155,7 @@
                 this.view = view;
             }
 
-            /**
-             * Public methods
-             */
+            // Public methods
 
             static resize = (width, height) => {
                 this.view.resize(width, height);
@@ -186,9 +178,7 @@
                 this.camera = camera;
             }
 
-            /**
-             * Public methods
-             */
+            // Public methods
 
             static resize = (width, height, dpr) => {
                 this.renderer.setPixelRatio(dpr);
@@ -215,10 +205,9 @@
                     stencil: false,
                     antialias: true
                 });
-                this.element = this.renderer.domElement;
-
-                // Output color space encoding
                 this.renderer.outputColorSpace = LinearSRGBColorSpace;
+
+                this.element = this.renderer.domElement;
 
                 // 3D scene
                 this.scene = new Scene();
@@ -258,17 +247,13 @@
                 this.renderer.domElement.addEventListener('touchstart', this.onTouchStart);
             }
 
-            /**
-             * Event handlers
-             */
+            // Event handlers
 
             static onTouchStart = e => {
                 e.preventDefault();
             };
 
-            /**
-             * Public methods
-             */
+            // Public methods
 
             static resize = (width, height, dpr) => {
                 this.camera.aspect = width / height;
@@ -351,9 +336,7 @@
                 ticker.start();
             }
 
-            /**
-             * Event handlers
-             */
+            // Event handlers
 
             static onResize = () => {
                 const width = document.documentElement.clientWidth;

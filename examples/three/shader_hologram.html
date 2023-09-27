@@ -8,10 +8,10 @@
 
     <link rel="preconnect" href="https://fonts.gstatic.com">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto+Mono">
-    <link rel="stylesheet" href="assets/css/style.css">
+    <link rel="stylesheet" href="../assets/css/style.css">
 
     <script type="module">
-        import { ACESFilmicToneMapping, AdditiveBlending, AmbientLight, BloomCompositeMaterial, BlurMaterial, ChromaticAberrationMaterial, Color, ColorManagement, DirectionalLight, EdgesGeometry, EnvironmentTextureLoader, GLSL3, Group, HemisphereLight, ImageBitmapLoaderThread, LineBasicMaterial, LineSegments, LinearSRGBColorSpace, LuminosityMaterial, MathUtils, Mesh, MeshBasicMaterial, MeshStandardMaterial, NoBlending, OrbitControls, OrthographicCamera, PanelItem, PerspectiveCamera, RawShaderMaterial, RepeatWrapping, Scene, SphereGeometry, TextureLoader, Thread, UI, UnrealBloomBlurMaterial, Vector2, VideoGlitchMaterial, WebGLRenderTarget, WebGLRenderer, getFullscreenTriangle, ticker } from '../../build/alien.three.js';
+        import { AdditiveBlending, BloomCompositeMaterial, BlurMaterial, ChromaticAberrationMaterial, Color, ColorManagement, DirectionalLight, EdgesGeometry, EnvironmentTextureLoader, GLSL3, Group, HemisphereLight, ImageBitmapLoaderThread, LineBasicMaterial, LineSegments, LinearSRGBColorSpace, LuminosityMaterial, MathUtils, Mesh, MeshBasicMaterial, MeshStandardMaterial, NoBlending, OrbitControls, OrthographicCamera, PanelItem, PerspectiveCamera, RawShaderMaterial, RepeatWrapping, Scene, SphereGeometry, TextureLoader, Thread, UI, UnrealBloomBlurMaterial, Vector2, VideoGlitchMaterial, WebGLRenderTarget, WebGLRenderer, getFullscreenTriangle, ticker } from '../../build/alien.three.js';
 
         ColorManagement.enabled = false; // Disable color management
 
@@ -114,11 +114,11 @@
 
                 // Textures
                 const [map, normalMap, ormMap] = await Promise.all([
-                    // loadTexture('assets/textures/uv.jpg'),
-                    loadTexture('assets/textures/pbr/polished_concrete_basecolor.jpg'),
-                    loadTexture('assets/textures/pbr/polished_concrete_normal.jpg'),
+                    // loadTexture('../assets/textures/uv.jpg'),
+                    loadTexture('../assets/textures/pbr/polished_concrete_basecolor.jpg'),
+                    loadTexture('../assets/textures/pbr/polished_concrete_normal.jpg'),
                     // https://occlusion-roughness-metalness.glitch.me/
-                    loadTexture('assets/textures/pbr/polished_concrete_orm.jpg')
+                    loadTexture('../assets/textures/pbr/polished_concrete_orm.jpg')
                 ]);
 
                 map.anisotropy = anisotropy;
@@ -138,7 +138,7 @@
 
                 const material = new MeshStandardMaterial({
                     color: new Color(Config.ICE_COLOR).offsetHSL(0, 0, -0.3),
-                    metalness: 0.65,
+                    metalness: 0.75,
                     roughness: 0.1,
                     map,
                     metalnessMap: ormMap,
@@ -258,11 +258,11 @@
 
                 // Textures
                 const [map, normalMap, ormMap] = await Promise.all([
-                    // loadTexture('assets/textures/uv.jpg'),
-                    loadTexture('assets/textures/pbr/pitted_metal_basecolor.jpg'),
-                    loadTexture('assets/textures/pbr/pitted_metal_normal.jpg'),
+                    // loadTexture('../assets/textures/uv.jpg'),
+                    loadTexture('../assets/textures/pbr/pitted_metal_basecolor.jpg'),
+                    loadTexture('../assets/textures/pbr/pitted_metal_normal.jpg'),
                     // https://occlusion-roughness-metalness.glitch.me/
-                    loadTexture('assets/textures/pbr/pitted_metal_orm.jpg')
+                    loadTexture('../assets/textures/pbr/pitted_metal_orm.jpg')
                 ]);
 
                 map.anisotropy = anisotropy;
@@ -321,11 +321,11 @@
 
                 // Textures
                 const [map, normalMap, ormMap] = await Promise.all([
-                    // loadTexture('assets/textures/uv.jpg'),
-                    loadTexture('assets/textures/pbr/pitted_metal_basecolor.jpg'),
-                    loadTexture('assets/textures/pbr/pitted_metal_normal.jpg'),
+                    // loadTexture('../assets/textures/uv.jpg'),
+                    loadTexture('../assets/textures/pbr/pitted_metal_basecolor.jpg'),
+                    loadTexture('../assets/textures/pbr/pitted_metal_normal.jpg'),
                     // https://occlusion-roughness-metalness.glitch.me/
-                    loadTexture('assets/textures/pbr/pitted_metal_orm.jpg')
+                    loadTexture('../assets/textures/pbr/pitted_metal_orm.jpg')
                 ]);
 
                 map.anisotropy = anisotropy;
@@ -469,9 +469,7 @@
                 this.add(this.polishedConcreteSphere);
             }
 
-            /**
-             * Public methods
-             */
+            // Public methods
 
             ready = () => Promise.all([
                 this.pittedMetalSphere.initMesh(),
@@ -485,9 +483,7 @@
                 this.view = view;
             }
 
-            /**
-             * Public methods
-             */
+            // Public methods
 
             static animateIn = () => {
                 this.view.visible = true;
@@ -685,9 +681,7 @@
                 });
             }
 
-            /**
-             * Public methods
-             */
+            // Public methods
 
             static update = () => {
                 if (!this.ui) {
@@ -827,9 +821,7 @@
                 return bloomFactors;
             }
 
-            /**
-             * Public methods
-             */
+            // Public methods
 
             static resize = (width, height, dpr) => {
                 this.renderer.setPixelRatio(dpr);
@@ -1023,12 +1015,9 @@
                     stencil: false,
                     antialias: true
                 });
-                this.element = this.renderer.domElement;
-
-                // Tone mapping and output color space encoding
-                this.renderer.toneMapping = ACESFilmicToneMapping;
-                this.renderer.toneMappingExposure = 1;
                 this.renderer.outputColorSpace = LinearSRGBColorSpace;
+
+                this.element = this.renderer.domElement;
 
                 // 3D scene
                 this.scene = new Scene();
@@ -1054,22 +1043,17 @@
             }
 
             static initLights() {
-                const ambientLight = new AmbientLight(0xffffff, 0.2);
+                const hemisphereLight = new HemisphereLight(0x606060, 0x404040, 3);
 
-                const hemisphereLight = new HemisphereLight(0x606060, 0x404040);
-
-                const directionalLight = new DirectionalLight(0xffffff, 0.4);
+                const directionalLight = new DirectionalLight(0xffffff, 2);
                 directionalLight.position.set(0.6, 0.5, 1);
 
-                this.scene.add(ambientLight);
                 this.scene.add(hemisphereLight);
                 this.scene.add(directionalLight);
 
                 // Important: Make sure your lights are on!
-                ambientLight.layers.enable(Layer.HOLOGRAM);
                 hemisphereLight.layers.enable(Layer.HOLOGRAM);
                 directionalLight.layers.enable(Layer.HOLOGRAM);
-                ambientLight.layers.enable(Layer.GLOW);
                 hemisphereLight.layers.enable(Layer.GLOW);
                 directionalLight.layers.enable(Layer.GLOW);
             }
@@ -1083,7 +1067,7 @@
             }
 
             static async initEnvironment() {
-                this.scene.environment = await this.loadEnvironmentTexture('assets/textures/env/jewelry_black_contrast.jpg');
+                this.scene.environment = await this.loadEnvironmentTexture('../assets/textures/env/jewelry_black_contrast.jpg');
             }
 
             static initControls() {
@@ -1096,17 +1080,13 @@
                 this.renderer.domElement.addEventListener('touchstart', this.onTouchStart);
             }
 
-            /**
-             * Event handlers
-             */
+            // Event handlers
 
             static onTouchStart = e => {
                 e.preventDefault();
             };
 
-            /**
-             * Public methods
-             */
+            // Public methods
 
             static resize = (width, height, dpr) => {
                 this.camera.aspect = width / height;
@@ -1197,9 +1177,7 @@
                 ticker.start();
             }
 
-            /**
-             * Event handlers
-             */
+            // Event handlers
 
             static onResize = () => {
                 const width = document.documentElement.clientWidth;

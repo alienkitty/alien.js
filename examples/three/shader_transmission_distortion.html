@@ -8,10 +8,10 @@
 
     <link rel="preconnect" href="https://fonts.gstatic.com">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto+Mono">
-    <link rel="stylesheet" href="assets/css/style.css">
+    <link rel="stylesheet" href="../assets/css/style.css">
 
     <script type="module">
-        import { ACESFilmicToneMapping, AmbientLight, BackSide, BloomCompositeMaterial, Color, ColorManagement, DirectionalLight, DiscardMaterial, EnvironmentTextureLoader, Group, HemisphereLight, ImageBitmapLoaderThread, LinearSRGBColorSpace, LuminosityMaterial, MathUtils, Mesh, MeshStandardMaterial, MeshTransmissionDistortionMaterial, NoToneMapping, OrbitControls, OrthographicCamera, Panel, PanelItem, PerspectiveCamera, PhysicalMaterialOptions, Point3D, RepeatWrapping, Scene, SceneCompositeMaterial, SphereGeometry, TextureLoader, Thread, UI, UnrealBloomBlurMaterial, Vector2, WebGLRenderTarget, WebGLRenderer, getFullscreenTriangle, getKeyByValue, ticker } from '../../build/alien.three.js';
+        import { BackSide, BloomCompositeMaterial, Color, ColorManagement, DirectionalLight, DiscardMaterial, EnvironmentTextureLoader, Group, HemisphereLight, ImageBitmapLoaderThread, LinearSRGBColorSpace, LuminosityMaterial, MathUtils, Mesh, MeshStandardMaterial, MeshTransmissionDistortionMaterial, OrbitControls, OrthographicCamera, Panel, PanelItem, PerspectiveCamera, PhysicalMaterialOptions, Point3D, RepeatWrapping, Scene, SceneCompositeMaterial, SphereGeometry, TextureLoader, Thread, UI, UnrealBloomBlurMaterial, Vector2, WebGLRenderTarget, WebGLRenderer, getFullscreenTriangle, getKeyByValue, ticker } from '../../build/alien.three.js';
 
         ColorManagement.enabled = false; // Disable color management
 
@@ -44,9 +44,7 @@
                 this.discardMaterial = new DiscardMaterial();
             }
 
-            /**
-             * Public methods
-             */
+            // Public methods
 
             resize(width, height) {
                 this.renderTargetBack.setSize(width, height);
@@ -61,9 +59,6 @@
                 this.mesh.material.time = WorldController.time.value;
 
                 const currentRenderTarget = this.renderer.getRenderTarget();
-
-                const currentToneMapping = this.renderer.toneMapping;
-                this.renderer.toneMapping = NoToneMapping;
 
                 const currentMaterial = this.mesh.material;
                 const currentSide = this.mesh.material.side;
@@ -90,7 +85,6 @@
                 this.mesh.material.thickness = this.mesh.userData.thickness;
                 this.mesh.material.side = currentSide;
 
-                this.renderer.toneMapping = currentToneMapping;
                 this.renderer.setRenderTarget(currentRenderTarget);
             }
         }
@@ -107,7 +101,7 @@
 
                 const geometry = new SphereGeometry(1, 80, 80);
 
-                const normalMap = await loadTexture('assets/textures/pbr/polished_concrete_normal.jpg');
+                const normalMap = await loadTexture('../assets/textures/pbr/polished_concrete_normal.jpg');
 
                 normalMap.anisotropy = anisotropy;
                 normalMap.wrapS = RepeatWrapping;
@@ -156,11 +150,11 @@
 
                 // Textures
                 const [map, normalMap, ormMap] = await Promise.all([
-                    // loadTexture('assets/textures/uv.jpg'),
-                    loadTexture('assets/textures/pbr/pitted_metal_basecolor.jpg'),
-                    loadTexture('assets/textures/pbr/pitted_metal_normal.jpg'),
+                    // loadTexture('../assets/textures/uv.jpg'),
+                    loadTexture('../assets/textures/pbr/pitted_metal_basecolor.jpg'),
+                    loadTexture('../assets/textures/pbr/pitted_metal_normal.jpg'),
                     // https://occlusion-roughness-metalness.glitch.me/
-                    loadTexture('assets/textures/pbr/pitted_metal_orm.jpg')
+                    loadTexture('../assets/textures/pbr/pitted_metal_orm.jpg')
                 ]);
 
                 map.anisotropy = anisotropy;
@@ -213,7 +207,7 @@
 
                 const geometry = new SphereGeometry(1, 80, 80);
 
-                const normalMap = await loadTexture('assets/textures/pbr/pitted_metal_normal.jpg');
+                const normalMap = await loadTexture('../assets/textures/pbr/pitted_metal_normal.jpg');
 
                 normalMap.anisotropy = anisotropy;
                 normalMap.wrapS = RepeatWrapping;
@@ -238,8 +232,10 @@
                 this.mesh = mesh;
 
                 // Transmission defaults
-                this.mesh.userData.thickness = 0.1;
-                this.mesh.userData.backside = true;
+                // this.mesh.userData.thickness = 0.1;
+                // this.mesh.userData.backside = true;
+                this.mesh.userData.thickness = 1;
+                this.mesh.userData.backside = false;
                 this.mesh.userData.backsideThickness = 3;
             }
         }
@@ -264,9 +260,7 @@
                 this.add(this.iceSphere);
             }
 
-            /**
-             * Public methods
-             */
+            // Public methods
 
             resize = (width, height, dpr) => {
                 this.pittedMetalSphere.resize(width, height, dpr);
@@ -290,9 +284,7 @@
                 this.view = view;
             }
 
-            /**
-             * Public methods
-             */
+            // Public methods
 
             static resize = (width, height, dpr) => {
                 this.view.resize(width, height, dpr);
@@ -479,9 +471,9 @@
                         min: 0,
                         max: 1,
                         step: 0.01,
-                        value: mesh.material.anisotropy,
+                        value: mesh.material.anisotropicBlur,
                         callback: value => {
-                            mesh.material.anisotropy = value;
+                            mesh.material.anisotropicBlur = value;
                         }
                     },
                     {
@@ -543,6 +535,8 @@
                     // TODO: Texture thumbnails
                     // Map: PhysicalMaterialOptions.Map,
                     Clearcoat: PhysicalMaterialOptions.Clearcoat,
+                    Iridescence: PhysicalMaterialOptions.Iridescence,
+                    Anisotropy: PhysicalMaterialOptions.Anisotropy,
                     Sheen: PhysicalMaterialOptions.Sheen,
                     Front: TransmissionMaterialFrontPanel,
                     Back: TransmissionMaterialBackPanel,
@@ -698,9 +692,7 @@
                 });
             }
 
-            /**
-             * Public methods
-             */
+            // Public methods
 
             static update = time => {
                 if (!this.ui) {
@@ -794,9 +786,7 @@
                 return bloomFactors;
             }
 
-            /**
-             * Public methods
-             */
+            // Public methods
 
             static resize = (width, height, dpr) => {
                 this.renderer.setPixelRatio(dpr);
@@ -880,6 +870,8 @@
                 renderer.setRenderTarget(null);
                 renderer.render(this.screen, this.screenCamera);
             };
+
+            static compile = mesh => this.renderer.compile(mesh, this.camera);
         }
 
         class WorldController {
@@ -899,12 +891,9 @@
                     stencil: false,
                     antialias: true
                 });
-                this.element = this.renderer.domElement;
-
-                // Tone mapping and output color space encoding
-                this.renderer.toneMapping = ACESFilmicToneMapping;
-                this.renderer.toneMappingExposure = 1;
                 this.renderer.outputColorSpace = LinearSRGBColorSpace;
+
+                this.element = this.renderer.domElement;
 
                 // 3D scene
                 this.scene = new Scene();
@@ -930,11 +919,9 @@
             }
 
             static initLights() {
-                this.scene.add(new AmbientLight(0xffffff, 0.2));
+                this.scene.add(new HemisphereLight(0x606060, 0x404040, 3));
 
-                this.scene.add(new HemisphereLight(0x606060, 0x404040));
-
-                const light = new DirectionalLight(0xffffff, 0.4);
+                const light = new DirectionalLight(0xffffff, 2);
                 light.position.set(0.6, 0.5, 1);
                 this.scene.add(light);
             }
@@ -948,7 +935,7 @@
             }
 
             static async initEnvironment() {
-                this.scene.environment = await this.loadEnvironmentTexture('assets/textures/env/jewelry_black_contrast.jpg');
+                this.scene.environment = await this.loadEnvironmentTexture('../assets/textures/env/jewelry_black_contrast.jpg');
             }
 
             static initControls() {
@@ -961,17 +948,13 @@
                 this.renderer.domElement.addEventListener('touchstart', this.onTouchStart);
             }
 
-            /**
-             * Event handlers
-             */
+            // Event handlers
 
             static onTouchStart = e => {
                 e.preventDefault();
             };
 
-            /**
-             * Public methods
-             */
+            // Public methods
 
             static resize = (width, height, dpr) => {
                 this.camera.aspect = width / height;
@@ -1064,9 +1047,7 @@
                 ticker.start();
             }
 
-            /**
-             * Event handlers
-             */
+            // Event handlers
 
             static onResize = () => {
                 const width = document.documentElement.clientWidth;

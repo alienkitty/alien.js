@@ -8,7 +8,7 @@
 
     <link rel="preconnect" href="https://fonts.gstatic.com">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto+Mono">
-    <link rel="stylesheet" href="assets/css/style.css">
+    <link rel="stylesheet" href="../assets/css/style.css">
 
     <style>
         :root {
@@ -31,7 +31,7 @@
             async initGeometry() {
                 const { loadBufferGeometry } = WorldController;
 
-                const geometry = await loadBufferGeometry('assets/geometry/spherical_cube.json');
+                const geometry = await loadBufferGeometry('../assets/geometry/spherical_cube.json');
 
                 // Use second set of UVs for cubemap row layout
                 // https://docs.unrealengine.com/4.27/en-US/RenderingAndGraphics/Textures/Cubemaps/CreatingCubemaps/
@@ -43,8 +43,8 @@
             async initMaterial() {
                 const { anisotropy, loadTexture } = WorldController;
 
-                // const map = await loadTexture('assets/textures/cubemap.jpg');
-                const map = await loadTexture('assets/textures/spherical_cube/spherical_cube_basecolor.jpg');
+                // const map = await loadTexture('../assets/textures/cubemap.jpg');
+                const map = await loadTexture('../assets/textures/spherical_cube/spherical_cube_basecolor.jpg');
                 map.anisotropy = anisotropy;
 
                 this.material = new BasicMaterial(map);
@@ -55,9 +55,7 @@
                 this.add(mesh);
             }
 
-            /**
-             * Public methods
-             */
+            // Public methods
 
             ready = async () => {
                 await Promise.all([
@@ -79,14 +77,14 @@
             async initGeometry() {
                 const { loadBufferGeometry } = WorldController;
 
-                this.geometry = await loadBufferGeometry('assets/geometry/floor.json');
+                this.geometry = await loadBufferGeometry('../assets/geometry/floor.json');
             }
 
             async initMaterial() {
                 const { anisotropy, loadTexture } = WorldController;
 
-                // const map = await loadTexture('assets/textures/uv.jpg');
-                const map = await loadTexture('assets/textures/spherical_cube/spherical_cube_shadow.jpg');
+                // const map = await loadTexture('../assets/textures/uv.jpg');
+                const map = await loadTexture('../assets/textures/spherical_cube/spherical_cube_shadow.jpg');
                 map.anisotropy = anisotropy;
 
                 this.material = new ShadowTextureMaterial(map);
@@ -99,9 +97,7 @@
                 this.add(mesh);
             }
 
-            /**
-             * Public methods
-             */
+            // Public methods
 
             ready = async () => {
                 await Promise.all([
@@ -130,9 +126,7 @@
                 this.add(this.sphere);
             }
 
-            /**
-             * Public methods
-             */
+            // Public methods
 
             animateIn = () => {
                 this.visible = true;
@@ -151,9 +145,7 @@
                 this.camera = camera;
             }
 
-            /**
-             * Public methods
-             */
+            // Public methods
 
             static resize = (width, height, dpr) => {
                 this.renderer.setPixelRatio(dpr);
@@ -180,10 +172,9 @@
                     stencil: false,
                     antialias: true
                 });
-                this.element = this.renderer.domElement;
-
-                // Output color space encoding
                 this.renderer.outputColorSpace = LinearSRGBColorSpace;
+
+                this.element = this.renderer.domElement;
 
                 // 3D scene
                 this.scene = new Scene();
@@ -223,17 +214,13 @@
                 this.renderer.domElement.addEventListener('touchstart', this.onTouchStart);
             }
 
-            /**
-             * Event handlers
-             */
+            // Event handlers
 
             static onTouchStart = e => {
                 e.preventDefault();
             };
 
-            /**
-             * Public methods
-             */
+            // Public methods
 
             static resize = (width, height, dpr) => {
                 this.camera.aspect = width / height;
@@ -315,9 +302,7 @@
                 ticker.start();
             }
 
-            /**
-             * Event handlers
-             */
+            // Event handlers
 
             static onResize = () => {
                 const width = document.documentElement.clientWidth;

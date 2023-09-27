@@ -8,10 +8,10 @@
 
     <link rel="preconnect" href="https://fonts.gstatic.com">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto+Mono">
-    <link rel="stylesheet" href="assets/css/style.css">
+    <link rel="stylesheet" href="../assets/css/style.css">
 
     <script type="module">
-        import { ACESFilmicToneMapping, AdditiveBlending, BackSide, BlurMaterial, Color, ColorManagement, CubeCamera, GLSL3, Group, IcosahedronGeometry, ImageBitmapLoaderThread, LinearMipmapLinearFilter, LinearSRGBColorSpace, MathUtils, Mesh, MeshBasicMaterial, NoBlending, OrthographicCamera, PanelItem, PerspectiveCamera, RawShaderMaterial, Scene, SphereGeometry, Sprite, SpriteMaterial, TextureLoader, Thread, UI, Vector2, Vector3, WebGLCubeRenderTarget, WebGLRenderTarget, WebGLRenderer, Wobble, getFullscreenTriangle, getKeyByValue, ticker, tween } from '../../build/alien.three.js';
+        import { AdditiveBlending, BackSide, BlurMaterial, Color, ColorManagement, CubeCamera, GLSL3, Group, IcosahedronGeometry, ImageBitmapLoaderThread, LinearMipmapLinearFilter, LinearSRGBColorSpace, MathUtils, Mesh, MeshBasicMaterial, NoBlending, OrthographicCamera, PanelItem, PerspectiveCamera, RawShaderMaterial, Scene, SphereGeometry, Sprite, SpriteMaterial, TextureLoader, Thread, UI, Vector2, Vector3, WebGLCubeRenderTarget, WebGLRenderTarget, WebGLRenderer, Wobble, getFullscreenTriangle, getKeyByValue, ticker, tween } from '../../build/alien.three.js';
 
         ColorManagement.enabled = false; // Disable color management
 
@@ -144,7 +144,7 @@
                     uniforms: {
                         tScene: { value: null },
                         tBloom: { value: null },
-                        tLensDirt: { value: getTexture('assets/textures/lens_dirt.jpg') },
+                        tLensDirt: { value: getTexture('../assets/textures/lens_dirt.jpg') },
                         uDistortion: { value: 0.2 },
                         uMinBright: { value: 0.07 },
                         uBlurBright: { value: 0.4166 },
@@ -204,7 +204,7 @@
                 const { getTexture } = WorldController;
 
                 const material = new SpriteMaterial({
-                    map: getTexture('assets/textures/particle2.png'),
+                    map: getTexture('../assets/textures/particle2.png'),
                     color: new Color(Config.PARTICLE_COLOR),
                     transparent: true,
                     blending: AdditiveBlending,
@@ -237,9 +237,7 @@
                 }
             }
 
-            /**
-             * Public methods
-             */
+            // Public methods
 
             update = (time, near) => {
                 this.sprites.forEach(sprite => {
@@ -265,7 +263,7 @@
 
                 const geometry = new IcosahedronGeometry(40, 3);
 
-                const map = await loadTexture('assets/textures/space.jpg');
+                const map = await loadTexture('../assets/textures/space.jpg');
 
                 const material = new MeshBasicMaterial({
                     map,
@@ -278,9 +276,7 @@
                 this.add(mesh);
             }
 
-            /**
-             * Public methods
-             */
+            // Public methods
 
             ready = () => this.initMesh();
         }
@@ -314,9 +310,7 @@
                 this.add(this.sphere);
             }
 
-            /**
-             * Public methods
-             */
+            // Public methods
 
             update = time => {
                 this.sphere.visible = false;
@@ -334,9 +328,7 @@
                 this.view = view;
             }
 
-            /**
-             * Public methods
-             */
+            // Public methods
 
             static resize = () => {
             };
@@ -477,9 +469,7 @@
                 });
             }
 
-            /**
-             * Public methods
-             */
+            // Public methods
 
             static update = () => {
                 if (!this.ui) {
@@ -537,9 +527,7 @@
                 this.compositeMaterial.uniforms.uTime = time;
             }
 
-            /**
-             * Public methods
-             */
+            // Public methods
 
             static resize = (width, height, dpr) => {
                 this.renderer.setPixelRatio(dpr);
@@ -631,9 +619,7 @@
                 window.addEventListener('pointerup', this.onPointerUp);
             }
 
-            /**
-             * Event handlers
-             */
+            // Event handlers
 
             static onPointerDown = e => {
                 this.onPointerMove(e);
@@ -655,9 +641,7 @@
                 this.onPointerMove(e);
             };
 
-            /**
-             * Public methods
-             */
+            // Public methods
 
             static resize = (width, height) => {
                 this.camera.aspect = width / height;
@@ -719,12 +703,9 @@
                     stencil: false,
                     antialias: true
                 });
-                this.element = this.renderer.domElement;
-
-                // Tone mapping and output color space encoding
-                this.renderer.toneMapping = ACESFilmicToneMapping;
-                this.renderer.toneMappingExposure = 1;
                 this.renderer.outputColorSpace = LinearSRGBColorSpace;
+
+                this.element = this.renderer.domElement;
 
                 // 3D scene
                 this.scene = new Scene();
@@ -768,17 +749,13 @@
                 this.renderer.domElement.addEventListener('touchstart', this.onTouchStart);
             }
 
-            /**
-             * Event handlers
-             */
+            // Event handlers
 
             static onTouchStart = e => {
                 e.preventDefault();
             };
 
-            /**
-             * Public methods
-             */
+            // Public methods
 
             static resize = (width, height, dpr) => {
                 width = Math.round(width * dpr);
@@ -854,9 +831,7 @@
                 ticker.start();
             }
 
-            /**
-             * Event handlers
-             */
+            // Event handlers
 
             static onResize = () => {
                 const width = document.documentElement.clientWidth;

@@ -1,4 +1,4 @@
-import { ACESFilmicToneMapping, AmbientLight, AssetLoader, BloomCompositeMaterial, BoxGeometry, Color, ColorManagement, Component, DirectionalLight, EnvironmentTextureLoader, GLSL3, Group, Header, HemisphereLight, IcosahedronGeometry, ImageBitmapLoaderThread, Interface, LinearSRGBColorSpace, LuminosityMaterial, MathUtils, Mesh, MeshStandardMaterial, NoBlending, OctahedronGeometry, OrthographicCamera, PanelItem, PerspectiveCamera, RawShaderMaterial, RepeatWrapping, Scene, SceneCompositeMaterial, SmoothViews, Stage, TextureLoader, Thread, UnrealBloomBlurMaterial, Vector2, WebGLRenderTarget, WebGLRenderer, defer, getFullscreenTriangle, shuffle, ticker } from '../../../../build/alien.three.js';
+import { AssetLoader, BloomCompositeMaterial, BoxGeometry, Color, ColorManagement, Component, DirectionalLight, EnvironmentTextureLoader, GLSL3, Group, Header, HemisphereLight, IcosahedronGeometry, ImageBitmapLoaderThread, Interface, LinearSRGBColorSpace, LuminosityMaterial, MathUtils, Mesh, MeshStandardMaterial, NoBlending, OctahedronGeometry, OrthographicCamera, PanelItem, PerspectiveCamera, RawShaderMaterial, RepeatWrapping, Scene, SceneCompositeMaterial, SmoothViews, Stage, TextureLoader, Thread, UnrealBloomBlurMaterial, Vector2, WebGLRenderTarget, WebGLRenderer, defer, getFullscreenTriangle, shuffle, ticker } from '../../../../build/alien.three.js';
 
 ColorManagement.enabled = false; // Disable color management
 
@@ -8,7 +8,6 @@ class Global {
 }
 
 class Config {
-    static PATH = '/examples/three/';
     static BREAKPOINT = 1000;
 
     static DEBUG = /[?&]debug/.test(location.search);
@@ -23,9 +22,7 @@ class Data {
         Global.SECTIONS.forEach((item, i) => item.index = i);
     }
 
-    /**
-     * Public methods
-     */
+    // Public methods
 
     static setSection = index => {
         if (index !== Global.SECTION_INDEX) {
@@ -89,9 +86,7 @@ class UINext extends Interface {
         this.element.addEventListener('click', this.onClick);
     }
 
-    /**
-     * Event handlers
-     */
+    // Event handlers
 
     onHover = ({ type }) => {
         this.line.clearTween();
@@ -155,9 +150,7 @@ class UITitle extends Interface {
         });
     }
 
-    /**
-     * Public methods
-     */
+    // Public methods
 
     setTitle = title => {
         this.title = title;
@@ -264,9 +257,7 @@ class UI extends Interface {
         window.addEventListener('resize', this.onResize);
     }
 
-    /**
-     * Event handlers
-     */
+    // Event handlers
 
     onViewChange = ({ index }) => {
         this.clearTimeout(this.timeout);
@@ -288,9 +279,7 @@ class UI extends Interface {
         }
     };
 
-    /**
-     * Public methods
-     */
+    // Public methods
 
     addPanel = item => {
         this.header.info.panel.add(item);
@@ -361,9 +350,7 @@ class Section extends Interface {
         this.observer.observe(this.element);
     }
 
-    /**
-     * Event handlers
-     */
+    // Event handlers
 
     onIntersect = ([entry]) => {
         if (entry.isIntersecting) {
@@ -497,11 +484,9 @@ class RenderScene {
     }
 
     initLights() {
-        this.scene.add(new AmbientLight(0xffffff, 0.2));
+        this.scene.add(new HemisphereLight(0x606060, 0x404040, 3));
 
-        this.scene.add(new HemisphereLight(0x606060, 0x404040));
-
-        const light = new DirectionalLight(0xffffff, 0.4);
+        const light = new DirectionalLight(0xffffff, 2);
         light.position.set(0.6, 0.5, 1);
         this.scene.add(light);
     }
@@ -512,9 +497,7 @@ class RenderScene {
         this.scene.environment = await loadEnvironmentTexture('assets/textures/env/jewelry_black_contrast.jpg');
     }
 
-    /**
-     * Public methods
-     */
+    // Public methods
 
     resize(width, height, dpr) {
         width = Math.round(width * dpr);
@@ -564,7 +547,7 @@ class AbstractCube extends Group {
 
         const material = new MeshStandardMaterial({
             color: new Color().offsetHSL(0, 0, -0.65),
-            metalness: 0.6,
+            metalness: 0.7,
             roughness: 0.7,
             map,
             metalnessMap: ormMap,
@@ -573,7 +556,7 @@ class AbstractCube extends Group {
             aoMapIntensity: 1,
             normalMap,
             normalScale: new Vector2(1, 1),
-            envMapIntensity: 1,
+            envMapIntensity: 1.2,
             flatShading: true
         });
 
@@ -589,9 +572,7 @@ class AbstractCube extends Group {
         this.mesh = mesh;
     }
 
-    /**
-     * Public methods
-     */
+    // Public methods
 
     update = () => {
         this.mesh.rotation.y -= 0.005;
@@ -612,9 +593,7 @@ class AbstractCubeScene extends RenderScene {
         this.scene.add(this.abstractCube);
     }
 
-    /**
-     * Public methods
-     */
+    // Public methods
 
     update = time => {
         if (!this.scene.visible) {
@@ -677,7 +656,7 @@ class FloatingCrystal extends Group {
 
         const material = new MeshStandardMaterial({
             color: new Color().offsetHSL(0, 0, -0.65),
-            metalness: 0.6,
+            metalness: 0.7,
             roughness: 0.7,
             map,
             metalnessMap: ormMap,
@@ -686,7 +665,7 @@ class FloatingCrystal extends Group {
             aoMapIntensity: 1,
             normalMap,
             normalScale: new Vector2(1, 1),
-            envMapIntensity: 1,
+            envMapIntensity: 1.2,
             flatShading: true
         });
 
@@ -701,9 +680,7 @@ class FloatingCrystal extends Group {
         this.mesh = mesh;
     }
 
-    /**
-     * Public methods
-     */
+    // Public methods
 
     update = time => {
         this.mesh.position.y = Math.sin(time) * 0.1;
@@ -725,9 +702,7 @@ class FloatingCrystalScene extends RenderScene {
         this.scene.add(this.floatingCrystal);
     }
 
-    /**
-     * Public methods
-     */
+    // Public methods
 
     update = time => {
         if (!this.scene.visible) {
@@ -793,7 +768,7 @@ class DarkPlanet extends Group {
 
         const material = new MeshStandardMaterial({
             color: new Color().offsetHSL(0, 0, -0.65),
-            metalness: 0.6,
+            metalness: 0.7,
             roughness: 2,
             map,
             metalnessMap: ormMap,
@@ -802,7 +777,7 @@ class DarkPlanet extends Group {
             aoMapIntensity: 1,
             normalMap,
             normalScale: new Vector2(3, 3),
-            envMapIntensity: 1
+            envMapIntensity: 1.2
         });
 
         // Second channel for aoMap and lightMap
@@ -815,9 +790,7 @@ class DarkPlanet extends Group {
         this.mesh = mesh;
     }
 
-    /**
-     * Public methods
-     */
+    // Public methods
 
     update = () => {
         // Counter clockwise rotation
@@ -839,9 +812,7 @@ class DarkPlanetScene extends RenderScene {
         this.scene.add(this.darkPlanet);
     }
 
-    /**
-     * Public methods
-     */
+    // Public methods
 
     update = time => {
         if (!this.scene.visible) {
@@ -882,9 +853,7 @@ class SceneView extends Component {
         this.add(this.abstractCube);
     }
 
-    /**
-     * Public methods
-     */
+    // Public methods
 
     resize = (width, height, dpr) => {
         this.darkPlanet.resize(width, height, dpr);
@@ -910,9 +879,7 @@ class SceneController {
         this.view = view;
     }
 
-    /**
-     * Public methods
-     */
+    // Public methods
 
     static resize = (width, height, dpr) => {
         this.view.resize(width, height, dpr);
@@ -1147,9 +1114,7 @@ class RenderManager {
         });
     }
 
-    /**
-     * Public methods
-     */
+    // Public methods
 
     static setView = index => {
         this.smooth.setScroll(index);
@@ -1273,12 +1238,9 @@ class WorldController {
             stencil: false,
             antialias: true
         });
-        this.element = this.renderer.domElement;
-
-        // Tone mapping and output color space encoding
-        this.renderer.toneMapping = ACESFilmicToneMapping;
-        this.renderer.toneMappingExposure = 1;
         this.renderer.outputColorSpace = LinearSRGBColorSpace;
+
+        this.element = this.renderer.domElement;
 
         // Global 3D camera
         this.camera = new PerspectiveCamera(30);
@@ -1302,27 +1264,23 @@ class WorldController {
 
     static initLoaders() {
         this.textureLoader = new TextureLoader();
-        this.textureLoader.setPath(Config.PATH);
+        this.textureLoader.setPath('/examples/');
 
         this.environmentLoader = new EnvironmentTextureLoader(this.renderer);
-        this.environmentLoader.setPath(Config.PATH);
+        this.environmentLoader.setPath('/examples/');
     }
 
     static addListeners() {
         this.renderer.domElement.addEventListener('touchstart', this.onTouchStart);
     }
 
-    /**
-     * Event handlers
-     */
+    // Event handlers
 
     static onTouchStart = e => {
         e.preventDefault();
     };
 
-    /**
-     * Public methods
-     */
+    // Public methods
 
     static resize = (width, height, dpr) => {
         this.camera.aspect = width / height;
@@ -1385,7 +1343,7 @@ class App {
 
     static initLoader() {
         this.assetLoader = new AssetLoader();
-        this.assetLoader.setPath(Config.PATH);
+        this.assetLoader.setPath('/examples/three/');
     }
 
     static initStage() {
@@ -1434,9 +1392,7 @@ class App {
         ticker.add(this.onUpdate);
     }
 
-    /**
-     * Event handlers
-     */
+    // Event handlers
 
     static onResize = () => {
         const width = document.documentElement.clientWidth;
@@ -1455,9 +1411,7 @@ class App {
         this.ui.update();
     };
 
-    /**
-     * Public methods
-     */
+    // Public methods
 
     static animateIn = () => {
         SceneController.animateIn();

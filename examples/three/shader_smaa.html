@@ -8,10 +8,10 @@
 
     <link rel="preconnect" href="https://fonts.gstatic.com">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto+Mono">
-    <link rel="stylesheet" href="assets/css/style.css">
+    <link rel="stylesheet" href="../assets/css/style.css">
 
     <script type="module">
-        import { Color, ColorManagement, DirectionalLight, Group, HemisphereLight, LinearSRGBColorSpace, Mesh, MeshStandardMaterial, OrthographicCamera, PanelItem, PerspectiveCamera, SMAABlendMaterial, SMAAEdgesMaterial, SMAAWeightsMaterial, Scene, SphereGeometry, UI, Vector2, WebGLRenderTarget, WebGLRenderer, getFullscreenTriangle, getKeyByValue, ticker } from '../../build/alien.three.js';
+        import { Color, ColorManagement, DirectionalLight, Group, HemisphereLight, LinearSRGBColorSpace, Mesh, MeshStandardMaterial, OrthographicCamera, PanelItem, PerspectiveCamera, SMAABlendMaterial, SMAAEdgesMaterial, SMAAWeightsMaterial, Scene, SphereGeometry, TextureLoader, UI, Vector2, WebGLRenderTarget, WebGLRenderer, getFullscreenTriangle, getKeyByValue, ticker } from '../../build/alien.three.js';
 
         ColorManagement.enabled = false; // Disable color management
 
@@ -101,9 +101,7 @@
                 });
             }
 
-            /**
-             * Public methods
-             */
+            // Public methods
 
             static update = () => {
                 if (!this.ui) {
@@ -129,7 +127,7 @@
             }
 
             static initRenderer() {
-                const { screenTriangle, texelSize } = WorldController;
+                const { screenTriangle, texelSize, textureLoader } = WorldController;
 
                 // Fullscreen triangle
                 this.screenCamera = new OrthographicCamera(-1, 1, 1, -1, 0, 1);
@@ -151,7 +149,7 @@
                 this.edgesMaterial.uniforms.uTexelSize = texelSize;
 
                 // SMAA weights material
-                this.weightsMaterial = new SMAAWeightsMaterial();
+                this.weightsMaterial = new SMAAWeightsMaterial(textureLoader);
                 this.weightsMaterial.uniforms.uTexelSize = texelSize;
 
                 // SMAA material
@@ -160,9 +158,7 @@
                 this.smaaMaterial.uniforms.uTexelSize = texelSize;
             }
 
-            /**
-             * Public methods
-             */
+            // Public methods
 
             static resize = (width, height, dpr) => {
                 this.renderer.setPixelRatio(dpr);
@@ -219,6 +215,7 @@
             static init() {
                 this.initWorld();
                 this.initLights();
+                this.initLoaders();
 
                 this.addListeners();
             }
@@ -228,10 +225,9 @@
                     powerPreference: 'high-performance',
                     stencil: false
                 });
-                this.element = this.renderer.domElement;
-
-                // Output color space encoding
                 this.renderer.outputColorSpace = LinearSRGBColorSpace;
+
+                this.element = this.renderer.domElement;
 
                 // 3D scene
                 this.scene = new Scene();
@@ -254,28 +250,29 @@
             }
 
             static initLights() {
-                this.scene.add(new HemisphereLight(0x606060, 0x404040));
+                this.scene.add(new HemisphereLight(0x606060, 0x404040, 3));
 
-                const light = new DirectionalLight(0xffffff, 0.6);
+                const light = new DirectionalLight(0xffffff, 2);
                 light.position.set(1, 1, 1);
                 this.scene.add(light);
+            }
+
+            static initLoaders() {
+                this.textureLoader = new TextureLoader();
+                this.textureLoader.setPath('../');
             }
 
             static addListeners() {
                 this.renderer.domElement.addEventListener('touchstart', this.onTouchStart);
             }
 
-            /**
-             * Event handlers
-             */
+            // Event handlers
 
             static onTouchStart = e => {
                 e.preventDefault();
             };
 
-            /**
-             * Public methods
-             */
+            // Public methods
 
             static resize = (width, height, dpr) => {
                 this.camera.aspect = width / height;
@@ -339,9 +336,7 @@
                 ticker.start();
             }
 
-            /**
-             * Event handlers
-             */
+            // Event handlers
 
             static onResize = () => {
                 const width = document.documentElement.clientWidth;

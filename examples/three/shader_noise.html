@@ -8,10 +8,10 @@
 
     <link rel="preconnect" href="https://fonts.gstatic.com">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto+Mono">
-    <link rel="stylesheet" href="assets/css/style.css">
+    <link rel="stylesheet" href="../assets/css/style.css">
 
     <script type="module">
-        import { ColorManagement, GLSL3, Mesh, NoBlending, OrthographicCamera, PanelItem, RawShaderMaterial, UI, Vector2, WebGLRenderer, getFullscreenTriangle, ticker } from '../../build/alien.three.js';
+        import { ColorManagement, GLSL3, LinearSRGBColorSpace, Mesh, NoBlending, OrthographicCamera, PanelItem, RawShaderMaterial, UI, Vector2, WebGLRenderer, getFullscreenTriangle, ticker } from '../../build/alien.three.js';
 
         ColorManagement.enabled = false; // Disable color management
 
@@ -146,9 +146,7 @@
                 });
             }
 
-            /**
-             * Public methods
-             */
+            // Public methods
 
             static update = () => {
                 if (!this.ui) {
@@ -172,9 +170,7 @@
                 this.screen.material = new NoiseMaterial();
             }
 
-            /**
-             * Public methods
-             */
+            // Public methods
 
             static resize = (width, height, dpr) => {
                 this.renderer.setPixelRatio(dpr);
@@ -198,6 +194,8 @@
                     powerPreference: 'high-performance',
                     stencil: false
                 });
+                this.renderer.outputColorSpace = LinearSRGBColorSpace;
+
                 this.element = this.renderer.domElement;
 
                 // Fullscreen triangle
@@ -218,17 +216,13 @@
                 this.renderer.domElement.addEventListener('touchstart', this.onTouchStart);
             }
 
-            /**
-             * Event handlers
-             */
+            // Event handlers
 
             static onTouchStart = e => {
                 e.preventDefault();
             };
 
-            /**
-             * Public methods
-             */
+            // Public methods
 
             static resize = (width, height, dpr) => {
                 width = Math.round(width * dpr);
@@ -277,9 +271,7 @@
                 ticker.start();
             }
 
-            /**
-             * Event handlers
-             */
+            // Event handlers
 
             static onResize = () => {
                 const width = document.documentElement.clientWidth;

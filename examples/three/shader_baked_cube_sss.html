@@ -16,6 +16,8 @@
         ColorManagement.enabled = false; // Disable color management
 
         class Config {
+            static LIGHT_COLOR = 0xf44336;
+
             static DEBUG = /[?&]debug/.test(location.search);
         }
 
@@ -85,7 +87,7 @@
             }
 
             initLight() {
-                const light = new PointLight(0xf44336, 0.9, 100, 0);
+                const light = new PointLight(Config.LIGHT_COLOR, 0.9, 100, 0);
                 this.add(light);
 
                 if (Config.DEBUG) {
@@ -166,10 +168,10 @@
                         uniform float thicknessPower;
                         uniform float thicknessScale;
 
-                        void RE_Direct_Scattering(IncidentLight directLight, vec2 uv, GeometricContext geometry, inout ReflectedLight reflectedLight) {
+                        void RE_Direct_Scattering(IncidentLight directLight, vec2 uv, vec3 geometryPosition, vec3 geometryNormal, vec3 geometryViewDir, vec3 geometryClearcoatNormal, inout ReflectedLight reflectedLight) {
                             vec3 thickness = directLight.color * texture(thicknessMap, uv).g;
-                            vec3 scatteringHalf = normalize(directLight.direction + (geometry.normal * thicknessDistortion));
-                            float scatteringDot = pow(saturate(dot(geometry.viewDir, -scatteringHalf)), thicknessPower) * thicknessScale;
+                            vec3 scatteringHalf = normalize(directLight.direction + (geometryNormal * thicknessDistortion));
+                            float scatteringDot = pow(saturate(dot(geometryViewDir, -scatteringHalf)), thicknessPower) * thicknessScale;
                             vec3 scatteringIllu = (scatteringDot + thicknessAmbient) * thickness;
                             reflectedLight.directDiffuse += scatteringIllu * thicknessAttenuation * directLight.color;
                         }
@@ -181,10 +183,10 @@
                     shader.fragmentShader = shader.fragmentShader.replace(
                         '#include <lights_fragment_begin>',
                         ShaderChunk.lights_fragment_begin.replaceAll(
-                            'RE_Direct( directLight, geometry, material, reflectedLight );',
+                            'RE_Direct( directLight, geometryPosition, geometryNormal, geometryViewDir, geometryClearcoatNormal, material, reflectedLight );',
                             /* glsl */ `
-                            RE_Direct( directLight, geometry, material, reflectedLight );
-                            RE_Direct_Scattering(directLight, vAoMapUv, geometry, reflectedLight);
+                            RE_Direct( directLight, geometryPosition, geometryNormal, geometryViewDir, geometryClearcoatNormal, material, reflectedLight );
+                            RE_Direct_Scattering(directLight, vAoMapUv, geometryPosition, geometryNormal, geometryViewDir, geometryClearcoatNormal, reflectedLight);
                             `
                         )
                     );

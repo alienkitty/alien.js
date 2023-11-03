@@ -538,10 +538,10 @@
                         uniform float thicknessPower;
                         uniform float thicknessScale;
 
-                        void RE_Direct_Scattering(IncidentLight directLight, vec2 uv, GeometricContext geometry, inout ReflectedLight reflectedLight) {
+                        void RE_Direct_Scattering(IncidentLight directLight, vec2 uv, vec3 geometryPosition, vec3 geometryNormal, vec3 geometryViewDir, vec3 geometryClearcoatNormal, inout ReflectedLight reflectedLight) {
                             vec3 thickness = directLight.color * texture(thicknessMap, uv).g;
-                            vec3 scatteringHalf = normalize(directLight.direction + (geometry.normal * thicknessDistortion));
-                            float scatteringDot = pow(saturate(dot(geometry.viewDir, -scatteringHalf)), thicknessPower) * thicknessScale;
+                            vec3 scatteringHalf = normalize(directLight.direction + (geometryNormal * thicknessDistortion));
+                            float scatteringDot = pow(saturate(dot(geometryViewDir, -scatteringHalf)), thicknessPower) * thicknessScale;
                             vec3 scatteringIllu = (scatteringDot + thicknessAmbient) * thickness;
                             reflectedLight.directDiffuse += scatteringIllu * thicknessAttenuation * directLight.color;
                         }
@@ -554,10 +554,10 @@
                         '#include <lights_fragment_begin>',
                         // ShaderChunk.lights_fragment_begin.replaceAll(
                         ShaderChunk.lights_fragment_begin.replace(
-                            'RE_Direct( directLight, geometry, material, reflectedLight );',
+                            'RE_Direct( directLight, geometryPosition, geometryNormal, geometryViewDir, geometryClearcoatNormal, material, reflectedLight );',
                             /* glsl */ `
-                            RE_Direct( directLight, geometry, material, reflectedLight );
-                            RE_Direct_Scattering(directLight, vAoMapUv, geometry, reflectedLight);
+                            RE_Direct( directLight, geometryPosition, geometryNormal, geometryViewDir, geometryClearcoatNormal, material, reflectedLight );
+                            RE_Direct_Scattering(directLight, vAoMapUv, geometryPosition, geometryNormal, geometryViewDir, geometryClearcoatNormal, reflectedLight);
                             `
                         )
                     );

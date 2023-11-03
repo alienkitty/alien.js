@@ -540,12 +540,12 @@
             }
 
             static addListeners() {
-                Point3D.events.on('click', this.onClick);
+                Point3D.events.on('change', this.onChange);
             }
 
             // Event handlers
 
-            static onClick = ({ selected }) => {
+            static onChange = ({ selected }) => {
                 if (selected.length) {
                     CameraController.enabled = false;
                 } else {

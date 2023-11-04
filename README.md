@@ -96,9 +96,6 @@ const program = new FXAAProgram(gl);
 [cubecamera rainbow](https://alien.js.org/examples/three/3d_cubecamera_rainbow.html) (orbit camera, [debug](https://alien.js.org/examples/three/3d_cubecamera_rainbow.html?debug))  
 [camera wobble](https://alien.js.org/examples/three/3d_camera_wobble.html)  
 [panel tracking](https://alien.js.org/examples/three/3d_panel_tracking.html) ([debug](https://alien.js.org/examples/three/3d_panel_tracking.html?debug))  
-[panel tracking crystals](https://alien.js.org/examples/three/3d_panel_tracking_crystals.html) ([debug](https://alien.js.org/examples/three/3d_panel_tracking_crystals.html?debug))  
-[crystals](https://alien.js.org/examples/three/3d_crystals.html) ([orbit controls](https://alien.js.org/examples/three/3d_crystals.html?orbit))  
-[dark crystals](https://alien.js.org/examples/three/3d_dark_crystals.html) ([orbit controls](https://alien.js.org/examples/three/3d_dark_crystals.html?orbit))  
 [backdrop](https://alien.js.org/examples/three/3d_backdrop.html)  
 
 #### shader
@@ -131,8 +128,6 @@ const program = new FXAAProgram(gl);
 [depth](https://alien.js.org/examples/three/shader_depth.html) (fragment depth with dither)  
 [fresnel](https://alien.js.org/examples/three/shader_fresnel.html) (with looping noise)  
 [hologram](https://alien.js.org/examples/three/shader_hologram.html)  
-[transmission](https://alien.js.org/examples/three/shader_transmission.html) (modified physically based material)  
-[distortion](https://alien.js.org/examples/three/shader_transmission_distortion.html) (transmission with distortion)  
 [subsurface scattering](https://alien.js.org/examples/three/shader_subsurface_scattering.html) (SSS)  
 [volumetric light](https://alien.js.org/examples/three/shader_volumetric_light.html) (god rays)  
 [anamorphic light](https://alien.js.org/examples/three/shader_anamorphic_light.html) (fast anamorphic lens flares)  
@@ -165,8 +160,7 @@ const program = new FXAAProgram(gl);
 
 #### thread
 
-[transmission](https://alien.js.org/examples/three/shader_transmission.html) (texture loader thread)  
-[cubemap uv](https://alien.js.org/examples/three/3d_cubemap_uv.html) (buffer geometry loader thread)  
+[cubemap uv](https://alien.js.org/examples/three/3d_cubemap_uv.html) (texture and buffer geometry loader thread)  
 [instancing](https://alien.js.org/examples/three/3d_physics_instancing_thread.html) (physics thread)  
 [picking](https://alien.js.org/examples/three/3d_physics_picking_thread.html) (physics thread)  
 [multiuser blocks](https://multiuser-blocks.glitch.me/) (websocket thread, [glitch](https://glitch.com/edit/#!/multiuser-blocks))  

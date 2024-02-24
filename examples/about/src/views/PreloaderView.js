@@ -1,18 +1,16 @@
-import { Interface } from '@alienkitty/space.js/three';
-
-import { ProgressCanvas } from './ui/ProgressCanvas.js';
+import { Interface, ProgressCanvas } from '@alienkitty/space.js/three';
 
 export class PreloaderView extends Interface {
     constructor() {
         super('.preloader');
 
-        this.initHTML();
+        this.init();
         this.initView();
 
         this.addListeners();
     }
 
-    initHTML() {
+    init() {
         this.css({
             position: 'absolute',
             left: 0,

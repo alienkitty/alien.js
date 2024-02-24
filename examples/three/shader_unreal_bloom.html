@@ -13,8 +13,6 @@
     <script type="module">
         import { Color, ColorManagement, DirectionalLight, Group, HemisphereLight, LinearSRGBColorSpace, LuminosityMaterial, MathUtils, Mesh, MeshStandardMaterial, OrthographicCamera, PanelItem, PerspectiveCamera, Scene, SceneCompositeMaterial, SphereGeometry, UI, UnrealBloomBlurMaterial, UnrealBloomCompositeMaterial, Vector2, Vector3, WebGLRenderTarget, WebGLRenderer, getFullscreenTriangle, ticker } from '../../build/alien.three.js';
 
-        ColorManagement.enabled = false; // Disable color management
-
         import periodic3d from '../../src/shaders/modules/noise/periodic3d.glsl.js';
 
         class SceneView extends Group {
@@ -62,15 +60,10 @@
         }
 
         class PanelController {
-            static init() {
-                this.initViews();
-                this.initPanel();
-            }
+            static init(ui) {
+                this.ui = ui;
 
-            static initViews() {
-                this.ui = new UI({ fps: true });
-                this.ui.animateIn();
-                document.body.appendChild(this.ui.element);
+                this.initPanel();
             }
 
             static initPanel() {
@@ -78,14 +71,14 @@
 
                 const items = [
                     {
-                        label: 'FPS'
+                        name: 'FPS'
                     },
                     {
                         type: 'divider'
                     },
                     {
                         type: 'slider',
-                        label: 'Thresh',
+                        name: 'Thresh',
                         min: 0,
                         max: 1,
                         step: 0.01,
@@ -96,7 +89,7 @@
                     },
                     {
                         type: 'slider',
-                        label: 'Smooth',
+                        name: 'Smooth',
                         min: 0,
                         max: 1,
                         step: 0.01,
@@ -107,7 +100,7 @@
                     },
                     {
                         type: 'slider',
-                        label: 'Strength',
+                        name: 'Strength',
                         min: 0,
                         max: 2,
                         step: 0.01,
@@ -118,7 +111,7 @@
                     },
                     {
                         type: 'slider',
-                        label: 'Radius',
+                        name: 'Radius',
                         min: 0,
                         max: 1,
                         step: 0.01,
@@ -133,16 +126,6 @@
                     this.ui.addPanel(new PanelItem(data));
                 });
             }
-
-            // Public methods
-
-            static update = () => {
-                if (!this.ui) {
-                    return;
-                }
-
-                this.ui.update();
-            };
         }
 
         // Based on https://github.com/mrdoob/three.js/blob/dev/examples/jsm/postprocessing/UnrealBloomPass.js by spidersharma03 and bhouston
@@ -327,11 +310,15 @@
             static initWorld() {
                 this.renderer = new WebGLRenderer({
                     powerPreference: 'high-performance',
-                    stencil: false,
-                    antialias: true
+                    antialias: true,
+                    stencil: false
                 });
+
+                // Disable color management
+                ColorManagement.enabled = false;
                 this.renderer.outputColorSpace = LinearSRGBColorSpace;
 
+                // Output canvas
                 this.element = this.renderer.domElement;
 
                 // 3D scene
@@ -418,6 +405,10 @@
             static initViews() {
                 this.view = new SceneView();
                 WorldController.scene.add(this.view);
+
+                this.ui = new UI({ fps: true });
+                this.ui.animateIn();
+                document.body.appendChild(this.ui.element);
             }
 
             static initControllers() {
@@ -427,7 +418,7 @@
             }
 
             static initPanel() {
-                PanelController.init();
+                PanelController.init(this.ui);
             }
 
             static addListeners() {
@@ -450,7 +441,7 @@
             static onUpdate = (time, delta, frame) => {
                 WorldController.update(time, delta, frame);
                 RenderManager.update(time, delta, frame);
-                PanelController.update();
+                this.ui.update();
             };
         }
 

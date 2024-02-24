@@ -1,6 +1,6 @@
 import { EventEmitter, Stage } from '@alienkitty/space.js/three';
 
-import { Global } from '../config/Global.js';
+import { store } from '../config/Config.js';
 
 export class Socket extends EventEmitter {
     constructor() {
@@ -94,7 +94,7 @@ export class Socket extends EventEmitter {
     };
 
     onUsers = e => {
-        Global.USERS = e;
+        store.users = e;
 
         Stage.events.emit('update', e);
     };
@@ -104,7 +104,7 @@ export class Socket extends EventEmitter {
             this.connected = true;
             this.id = e.getUint8(1).toString();
 
-            this.nickname(Global.NICKNAME);
+            this.nickname(store.nickname);
         }
 
         this.send(e);

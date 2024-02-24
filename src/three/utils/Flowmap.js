@@ -4,20 +4,54 @@
  * Based on https://oframe.github.io/ogl/examples/?src=mouse-flowmap.html by gordonnl
  */
 
-import {
-    GLSL3,
-    HalfFloatType,
-    Mesh,
-    NoBlending,
-    OrthographicCamera,
-    RawShaderMaterial,
-    Vector2,
-    WebGLRenderTarget
-} from 'three';
+import { GLSL3, HalfFloatType, Mesh, NoBlending, OrthographicCamera, RawShaderMaterial, Vector2 } from 'three';
 
-import { getFullscreenTriangle } from '@alienkitty/space.js/three';
+import { getDoubleRenderTarget, getFullscreenTriangle } from '@alienkitty/space.js/three';
 
-import { vertexShader, fragmentShader } from '../../shaders/FlowmapShader.js';
+const vertexShader = /* glsl */ `
+in vec3 position;
+in vec2 uv;
+
+out vec2 vUv;
+
+void main() {
+    vUv = uv;
+
+    gl_Position = vec4(position, 1.0);
+}
+`;
+
+const fragmentShader = /* glsl */ `
+precision highp float;
+
+uniform sampler2D tMap;
+
+uniform float uFalloff;
+uniform float uAlpha;
+uniform float uDissipation;
+
+uniform float uAspect;
+uniform vec2 uMouse;
+uniform vec2 uVelocity;
+
+in vec2 vUv;
+
+out vec4 FragColor;
+
+void main() {
+    vec4 color = texture(tMap, vUv) * uDissipation;
+
+    vec2 cursor = vUv - uMouse;
+    cursor.x *= uAspect;
+
+    vec3 stamp = vec3(uVelocity * vec2(1, -1), 1.0 - pow(1.0 - min(1.0, length(uVelocity)), 3.0));
+    float falloff = smoothstep(uFalloff, 0.0, length(cursor)) * uAlpha;
+
+    color.rgb = mix(color.rgb, stamp, falloff);
+
+    FragColor = color;
+}
+`;
 
 export class Flowmap {
     constructor(renderer, {
@@ -32,15 +66,13 @@ export class Flowmap {
         this.velocity = new Vector2();
 
         // Render targets
-        this.renderTargetRead = new WebGLRenderTarget(size, size, {
+        this.mask = getDoubleRenderTarget(size, size, {
             type: HalfFloatType,
             depthBuffer: false
         });
 
-        this.renderTargetWrite = this.renderTargetRead.clone();
-
         // Output uniform containing render target textures
-        this.uniform = { value: this.renderTargetRead.texture };
+        this.uniform = { value: this.mask.read.texture };
 
         // Flowmap material
         this.material = new RawShaderMaterial({
@@ -76,15 +108,11 @@ export class Flowmap {
         const currentAutoClear = this.renderer.autoClear;
         this.renderer.autoClear = false;
 
-        this.renderer.setRenderTarget(this.renderTargetWrite);
+        this.renderer.setRenderTarget(this.mask.write);
         this.renderer.render(this.screen, this.screenCamera);
+        this.mask.swap();
 
-        // Swap render targets
-        const temp = this.renderTargetRead;
-        this.renderTargetRead = this.renderTargetWrite;
-        this.renderTargetWrite = temp;
-
-        this.uniform.value = this.renderTargetRead.texture;
+        this.uniform.value = this.mask.read.texture;
 
         // Restore renderer settings
         this.renderer.autoClear = currentAutoClear;
@@ -92,8 +120,7 @@ export class Flowmap {
     }
 
     destroy() {
-        this.renderTargetWrite.dispose();
-        this.renderTargetRead.dispose();
+        this.mask.dispose();
         this.material.dispose();
         this.screenTriangle.dispose();
 

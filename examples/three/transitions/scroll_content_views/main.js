@@ -1,248 +1,20 @@
-import { AssetLoader, BloomCompositeMaterial, BoxGeometry, Color, ColorManagement, Component, DirectionalLight, EnvironmentTextureLoader, GLSL3, Group, HemisphereLight, IcosahedronGeometry, ImageBitmapLoaderThread, Interface, LinearSRGBColorSpace, LuminosityMaterial, MathUtils, Mesh, MeshStandardMaterial, NoBlending, OctahedronGeometry, OrthographicCamera, PanelItem, PerspectiveCamera, RawShaderMaterial, RepeatWrapping, Scene, SceneCompositeMaterial, SmoothViews, Stage, TextureLoader, Thread, UI, UnrealBloomBlurMaterial, Vector2, WebGLRenderTarget, WebGLRenderer, defer, getFullscreenTriangle, shuffle, ticker } from '../../../../build/alien.three.js';
+import { AssetLoader, BloomCompositeMaterial, BoxGeometry, Color, ColorManagement, Component, Details, DirectionalLight, EnvironmentTextureLoader, GLSL3, Group, HemisphereLight, IcosahedronGeometry, ImageBitmapLoaderThread, Interface, LinearSRGBColorSpace, LuminosityMaterial, MathUtils, Mesh, MeshStandardMaterial, NoBlending, OctahedronGeometry, OrthographicCamera, PanelItem, PerspectiveCamera, RawShaderMaterial, RepeatWrapping, Scene, SceneCompositeMaterial, SmoothViews, Stage, TextureLoader, Thread, UI, UnrealBloomBlurMaterial, Vector2, WebGLRenderTarget, WebGLRenderer, defer, getFullscreenTriangle, ticker } from '../../../../build/alien.three.js';
 
-ColorManagement.enabled = false; // Disable color management
+const isDebug = /[?&]debug/.test(location.search);
 
-class Global {
-    static SECTIONS = [];
-}
+const breakpoint = 1000;
 
-class Config {
-    static BREAKPOINT = 1000;
+class Data {
+    static init({ pages }) {
+        this.sections = pages;
+        this.sectionIndex = 0;
 
-    static DEBUG = /[?&]debug/.test(location.search);
-}
-
-class DetailsLink extends Interface {
-    constructor(title, link) {
-        super('.link', 'a');
-
-        this.title = title;
-        this.link = link;
-
-        this.initHTML();
-
-        this.addListeners();
+        this.setIndexes();
     }
 
-    initHTML() {
-        this.css({
-            fontFamily: 'Gothic A1, sans-serif',
-            fontWeight: '400',
-            fontSize: 13,
-            lineHeight: 22,
-            letterSpacing: 'normal'
-        });
-        this.attr({ href: this.link });
-
-        this.text = new Interface('.text');
-        this.text.css({
-            display: 'inline-block'
-        });
-        this.text.text(this.title);
-        this.add(this.text);
-
-        this.line = new Interface('.line');
-        this.line.css({
-            display: 'inline-block',
-            fontWeight: '700',
-            verticalAlign: 'middle'
-        });
-        this.line.html('&nbsp;&nbsp;―');
-        this.add(this.line);
+    static setIndexes() {
+        this.sections.forEach((section, i) => section.index = i);
     }
-
-    addListeners() {
-        this.element.addEventListener('mouseenter', this.onHover);
-        this.element.addEventListener('mouseleave', this.onHover);
-    }
-
-    // Event handlers
-
-    onHover = ({ type }) => {
-        this.line.tween({ x: type === 'mouseenter' ? 10 : 0 }, 200, 'easeOutCubic');
-    };
-}
-
-class DetailsTitle extends Interface {
-    constructor(title) {
-        super('.title', 'h1');
-
-        this.title = title;
-        this.letters = [];
-
-        this.initHTML();
-        this.initText();
-    }
-
-    initHTML() {
-        this.css({
-            width: 'fit-content',
-            margin: '0 0 6px -1px',
-            fontFamily: 'Roboto, sans-serif',
-            fontWeight: '300',
-            fontSize: 23,
-            lineHeight: '1.3',
-            letterSpacing: 'normal',
-            textTransform: 'uppercase'
-        });
-    }
-
-    initText() {
-        const split = this.title.split('');
-
-        split.forEach(str => {
-            if (str === ' ') {
-                str = '&nbsp';
-            }
-
-            const letter = new Interface(null, 'span');
-            letter.css({ display: 'inline-block' });
-            letter.html(str);
-            this.add(letter);
-
-            this.letters.push(letter);
-        });
-    }
-
-    // Public methods
-
-    animateIn = () => {
-        shuffle(this.letters);
-
-        const underscores = this.letters.filter(letter => letter === '_');
-
-        underscores.forEach((letter, i) => {
-            letter.css({ opacity: 0 }).tween({ opacity: 1 }, 2000, 'easeOutCubic', i * 15);
-        });
-
-        const letters = this.letters.filter(letter => letter !== '_').slice(0, 2);
-
-        letters.forEach((letter, i) => {
-            letter.css({ opacity: 0 }).tween({ opacity: 1 }, 2000, 'easeOutCubic', 100 + i * 15);
-        });
-    };
-}
-
-class Details extends Interface {
-    constructor(title) {
-        super('.details');
-
-        this.title = title;
-        this.texts = [];
-
-        this.initHTML();
-        this.initViews();
-
-        this.addListeners();
-        this.onResize();
-    }
-
-    initHTML() {
-        this.invisible();
-        this.css({
-            position: 'absolute',
-            left: 0,
-            top: 0,
-            width: '100%',
-            height: '100%',
-            display: 'flex',
-            alignItems: 'center',
-            pointerEvents: 'none',
-            opacity: 0
-        });
-
-        this.container = new Interface('.container');
-        this.container.css({
-            width: 400,
-            margin: '10% 10% 13%'
-        });
-        this.add(this.container);
-    }
-
-    initViews() {
-        this.title = new DetailsTitle(this.title.replace(/[\s.]+/g, '_'));
-        this.title.css({
-            width: 'fit-content'
-        });
-        this.container.add(this.title);
-        this.texts.push(this.title);
-
-        this.text = new Interface('.text', 'p');
-        this.text.css({
-            width: 'fit-content',
-            margin: '6px 0',
-            fontFamily: 'Gothic A1, sans-serif',
-            fontWeight: '400',
-            fontSize: 13,
-            lineHeight: '1.5',
-            letterSpacing: 'normal'
-        });
-        this.text.html('Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.');
-        this.container.add(this.text);
-        this.texts.push(this.text);
-
-        const items = [
-            {
-                title: 'Lorem ipsum',
-                link: 'https://en.wikipedia.org/wiki/Lorem_ipsum'
-            }
-        ];
-
-        items.forEach(data => {
-            const link = new DetailsLink(data.title, data.link);
-            link.css({
-                display: 'block',
-                width: 'fit-content'
-            });
-            this.container.add(link);
-            this.texts.push(link);
-        });
-    }
-
-    addListeners() {
-        window.addEventListener('resize', this.onResize);
-    }
-
-    // Event handlers
-
-    onResize = () => {
-        if (document.documentElement.clientWidth < Config.BREAKPOINT) {
-            this.css({ display: '' });
-
-            this.container.css({
-                width: '',
-                margin: '24px 20px 0'
-            });
-        } else {
-            this.css({ display: 'flex' });
-
-            this.container.css({
-                width: 400,
-                margin: '10% 10% 13%'
-            });
-        }
-    };
-
-    // Public methods
-
-    animateIn = () => {
-        this.visible();
-        this.css({
-            pointerEvents: 'auto',
-            opacity: 1
-        });
-
-        const duration = 2000;
-        const stagger = 175;
-
-        this.texts.forEach((text, i) => {
-            const delay = i === 0 ? 0 : duration;
-
-            text.css({ opacity: 0 }).tween({ opacity: 1 }, duration, 'easeOutCubic', delay + i * stagger);
-        });
-
-        this.title.animateIn();
-    };
 }
 
 class Section extends Interface {
@@ -253,19 +25,19 @@ class Section extends Interface {
         this.index = index;
         this.animatedIn = false;
 
-        this.initHTML();
+        this.init();
         this.initViews();
 
         this.addListeners();
     }
 
-    initHTML() {
+    init() {
         this.css({
             position: 'relative',
             height: '100svh'
         });
 
-        if (Config.DEBUG) {
+        if (isDebug) {
             this.css({
                 backgroundColor: `rgba(
                     ${Math.floor(Math.random() * 255)},
@@ -278,7 +50,18 @@ class Section extends Interface {
     }
 
     initViews() {
-        this.details = new Details(this.title);
+        this.details = new Details({
+            title: this.title.replace(/[\s.]+/g, '_'),
+            content: /* html */ `
+Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
+            `,
+            links: [
+                {
+                    title: 'Lorem ipsum',
+                    link: 'https://en.wikipedia.org/wiki/Lorem_ipsum'
+                }
+            ]
+        });
         this.add(this.details);
     }
 
@@ -308,81 +91,25 @@ class Container extends Interface {
     constructor() {
         super('.container');
 
-        this.initHTML();
+        this.init();
         this.initViews();
     }
 
-    initHTML() {
+    init() {
         this.css({ position: 'static' });
     }
 
     initViews() {
-        this.darkPlanet = new Section(Global.SECTIONS[0]);
+        this.darkPlanet = new Section(Data.sections[0]);
         this.add(this.darkPlanet);
 
-        this.floatingCrystal = new Section(Global.SECTIONS[1]);
+        this.floatingCrystal = new Section(Data.sections[1]);
         this.add(this.floatingCrystal);
 
-        this.abstractCube = new Section(Global.SECTIONS[2]);
+        this.abstractCube = new Section(Data.sections[2]);
         this.add(this.abstractCube);
     }
 }
-
-const vertexTransitionShader = /* glsl */ `
-    in vec3 position;
-    in vec2 uv;
-
-    out vec2 vUv;
-
-    void main() {
-        vUv = uv;
-
-        gl_Position = vec4(position, 1.0);
-    }
-`;
-
-const fragmentTransitionShader = /* glsl */ `
-    precision highp float;
-
-    uniform sampler2D tMap1;
-    uniform sampler2D tMap2;
-    uniform float uProgress;
-    uniform vec2 uResolution;
-    uniform float uTime;
-
-    in vec2 vUv;
-
-    out vec4 FragColor;
-
-    // Based on https://gl-transitions.com/editor/flyeye by gre
-
-    uniform float uSize;
-    uniform float uZoom;
-    uniform float uColorSeparation;
-
-    void main() {
-        if (uProgress == 0.0) {
-            FragColor = texture(tMap1, vUv);
-            return;
-        } else if (uProgress == 1.0) {
-            FragColor = texture(tMap2, vUv);
-            return;
-        }
-
-        float inv = 1.0 - uProgress;
-        vec2 disp = uSize * vec2(cos(uZoom * vUv.x), sin(uZoom * vUv.y));
-
-        vec4 texTo = texture(tMap2, vUv + inv * disp);
-        vec4 texFrom = vec4(
-            texture(tMap1, vUv + uProgress * disp * (1.0 - uColorSeparation)).r,
-            texture(tMap1, vUv + uProgress * disp).g,
-            texture(tMap1, vUv + uProgress * disp * (1.0 + uColorSeparation)).b,
-            1.0
-        );
-
-        FragColor = texTo * uProgress + texFrom * inv;
-    }
-`;
 
 class TransitionMaterial extends RawShaderMaterial {
     constructor() {
@@ -398,8 +125,60 @@ class TransitionMaterial extends RawShaderMaterial {
                 uResolution: { value: new Vector2() },
                 uTime: { value: 0 }
             },
-            vertexShader: vertexTransitionShader,
-            fragmentShader: fragmentTransitionShader,
+            vertexShader: /* glsl */ `
+                in vec3 position;
+                in vec2 uv;
+            
+                out vec2 vUv;
+            
+                void main() {
+                    vUv = uv;
+            
+                    gl_Position = vec4(position, 1.0);
+                }
+            `,
+            fragmentShader: /* glsl */ `
+                precision highp float;
+            
+                uniform sampler2D tMap1;
+                uniform sampler2D tMap2;
+                uniform float uProgress;
+                uniform vec2 uResolution;
+                uniform float uTime;
+            
+                in vec2 vUv;
+            
+                out vec4 FragColor;
+
+                // Based on https://gl-transitions.com/editor/flyeye by gre
+            
+                uniform float uSize;
+                uniform float uZoom;
+                uniform float uColorSeparation;
+            
+                void main() {
+                    if (uProgress == 0.0) {
+                        FragColor = texture(tMap1, vUv);
+                        return;
+                    } else if (uProgress == 1.0) {
+                        FragColor = texture(tMap2, vUv);
+                        return;
+                    }
+            
+                    float inv = 1.0 - uProgress;
+                    vec2 disp = uSize * vec2(cos(uZoom * vUv.x), sin(uZoom * vUv.y));
+            
+                    vec4 texTo = texture(tMap2, vUv + inv * disp);
+                    vec4 texFrom = vec4(
+                        texture(tMap1, vUv + uProgress * disp * (1.0 - uColorSeparation)).r,
+                        texture(tMap1, vUv + uProgress * disp).g,
+                        texture(tMap1, vUv + uProgress * disp * (1.0 + uColorSeparation)).b,
+                        1.0
+                    );
+            
+                    FragColor = texTo * uProgress + texFrom * inv;
+                }
+            `,
             blending: NoBlending,
             depthTest: false,
             depthWrite: false
@@ -442,7 +221,7 @@ class RenderScene {
         this.scene.environment = await loadEnvironmentTexture('assets/textures/env/jewelry_black_contrast.jpg');
     }
 
-    // Public methods
+    // Inheritable methods
 
     resize(width, height, dpr) {
         width = Math.round(width * dpr);
@@ -555,6 +334,7 @@ class AbstractCubeScene extends RenderScene {
             this.abstractCube.initMesh()
         ]);
 
+        // Prerender
         this.scene.visible = true;
         super.update();
         this.scene.visible = false;
@@ -664,6 +444,7 @@ class FloatingCrystalScene extends RenderScene {
             this.floatingCrystal.initMesh()
         ]);
 
+        // Prerender
         this.scene.visible = true;
         super.update();
         this.scene.visible = false;
@@ -774,6 +555,7 @@ class DarkPlanetScene extends RenderScene {
             this.darkPlanet.initMesh()
         ]);
 
+        // Prerender
         this.scene.visible = true;
         super.update();
         this.scene.visible = false;
@@ -841,15 +623,10 @@ class SceneController {
 }
 
 class PanelController {
-    static init() {
-        this.initViews();
-        this.initPanel();
-    }
+    static init(ui) {
+        this.ui = ui;
 
-    static initViews() {
-        this.ui = new UI({ fps: true });
-        this.ui.animateIn();
-        Stage.add(this.ui);
+        this.initPanel();
     }
 
     static initPanel() {
@@ -857,14 +634,14 @@ class PanelController {
 
         const items = [
             {
-                label: 'FPS'
+                name: 'FPS'
             },
             {
                 type: 'divider'
             },
             {
                 type: 'slider',
-                label: 'Thresh',
+                name: 'Thresh',
                 min: 0,
                 max: 1,
                 step: 0.01,
@@ -875,7 +652,7 @@ class PanelController {
             },
             {
                 type: 'slider',
-                label: 'Smooth',
+                name: 'Smooth',
                 min: 0,
                 max: 1,
                 step: 0.01,
@@ -886,7 +663,7 @@ class PanelController {
             },
             {
                 type: 'slider',
-                label: 'Strength',
+                name: 'Strength',
                 min: 0,
                 max: 2,
                 step: 0.01,
@@ -898,7 +675,7 @@ class PanelController {
             },
             {
                 type: 'slider',
-                label: 'Radius',
+                name: 'Radius',
                 min: 0,
                 max: 1,
                 step: 0.01,
@@ -913,7 +690,7 @@ class PanelController {
             },
             {
                 type: 'slider',
-                label: 'Size',
+                name: 'Size',
                 min: 0,
                 max: 1,
                 step: 0.01,
@@ -924,7 +701,7 @@ class PanelController {
             },
             {
                 type: 'slider',
-                label: 'Zoom',
+                name: 'Zoom',
                 min: 0,
                 max: 100,
                 step: 0.2,
@@ -935,7 +712,7 @@ class PanelController {
             },
             {
                 type: 'slider',
-                label: 'Chroma',
+                name: 'Chroma',
                 min: 0,
                 max: 2,
                 step: 0.01,
@@ -949,7 +726,7 @@ class PanelController {
             },
             {
                 type: 'slider',
-                label: 'Lerp',
+                name: 'Lerp',
                 min: 0,
                 max: 1,
                 step: 0.01,
@@ -964,16 +741,6 @@ class PanelController {
             this.ui.addPanel(new PanelItem(data));
         });
     }
-
-    // Public methods
-
-    static update = () => {
-        if (!this.ui) {
-            return;
-        }
-
-        this.ui.update();
-    };
 }
 
 const BlurDirectionX = new Vector2(1, 0);
@@ -1199,11 +966,15 @@ class WorldController {
     static initWorld() {
         this.renderer = new WebGLRenderer({
             powerPreference: 'high-performance',
-            stencil: false,
-            antialias: true
+            antialias: true,
+            stencil: false
         });
+
+        // Disable color management
+        ColorManagement.enabled = false;
         this.renderer.outputColorSpace = LinearSRGBColorSpace;
 
+        // Output canvas
         this.element = this.renderer.domElement;
 
         // Global 3D camera
@@ -1251,7 +1022,7 @@ class WorldController {
     static resize = (width, height, dpr) => {
         this.camera.aspect = width / height;
 
-        if (width < Config.BREAKPOINT) {
+        if (width < breakpoint) {
             this.camera.lookAt(0, 0.5, -2);
             this.camera.zoom = 1;
         } else {
@@ -1273,6 +1044,8 @@ class WorldController {
         this.time.value = time;
         this.frame.value = frame;
     };
+
+    // Global handlers
 
     static getTexture = (path, callback) => this.textureLoader.load(path, callback);
 
@@ -1331,11 +1104,20 @@ class App {
         Stage.add(WorldController.element);
     }
 
+    static async loadData() {
+        const data = await this.assetLoader.loadData('transitions/data.json');
+
+        Data.init(data);
+    }
+
     static initViews() {
         this.view = new SceneView();
 
         this.container = new Container();
         Stage.add(this.container);
+
+        this.ui = new UI({ fps: true, breakpoint });
+        Stage.add(this.ui);
     }
 
     static initControllers() {
@@ -1346,17 +1128,7 @@ class App {
     }
 
     static initPanel() {
-        PanelController.init();
-    }
-
-    static async loadData() {
-        const data = await this.assetLoader.loadData('transitions/data.json');
-
-        data.pages.forEach((item, i) => {
-            item.index = i;
-
-            Global.SECTIONS.push(item);
-        });
+        PanelController.init(this.ui);
     }
 
     static addListeners() {
@@ -1380,7 +1152,7 @@ class App {
         WorldController.update(time, delta, frame);
         SceneController.update(time);
         RenderManager.update(time, delta, frame);
-        PanelController.update();
+        this.ui.update();
     };
 
     // Public methods
@@ -1388,6 +1160,7 @@ class App {
     static animateIn = () => {
         SceneController.animateIn();
         RenderManager.animateIn();
+        this.ui.animateIn();
 
         Stage.tween({ opacity: 1 }, 1000, 'linear', () => {
             Stage.css({ opacity: '' });

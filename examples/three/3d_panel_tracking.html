@@ -13,49 +13,9 @@
     <script type="module">
         import { BasicShadowMap, BloomCompositeMaterial, BoxGeometry, Color, ColorManagement, DirectionalLight, EnvironmentTextureLoader, GLSL3, Group, HemisphereLight, IcosahedronGeometry, ImageBitmapLoaderThread, LinearSRGBColorSpace, LuminosityMaterial, MathUtils, Mesh, MeshStandardMaterial, NoBlending, OctahedronGeometry, OrthographicCamera, PanelItem, PerspectiveCamera, PlaneGeometry, Point3D, RawShaderMaterial, Reflector, RepeatWrapping, Scene, ShadowMaterial, StandardMaterialPanel, TextureLoader, Thread, UI, UnrealBloomBlurMaterial, Vector2, Vector3, WebGLRenderTarget, WebGLRenderer, getFullscreenTriangle, ticker } from '../../build/alien.three.js';
 
-        ColorManagement.enabled = false; // Disable color management
-
-        class Config {
-            static DEBUG = /[?&]debug/.test(location.search);
-        }
+        const isDebug = /[?&]debug/.test(location.search);
 
         import rgbshift from '../../src/shaders/modules/rgbshift/rgbshift.glsl.js';
-
-        const vertexCompositeShader = /* glsl */ `
-            in vec3 position;
-            in vec2 uv;
-
-            out vec2 vUv;
-
-            void main() {
-                vUv = uv;
-
-                gl_Position = vec4(position, 1.0);
-            }
-        `;
-
-        const fragmentCompositeShader = /* glsl */ `
-            precision highp float;
-
-            uniform sampler2D tScene;
-            uniform sampler2D tBloom;
-            uniform float uBloomDistortion;
-
-            in vec2 vUv;
-
-            out vec4 FragColor;
-
-            ${rgbshift}
-
-            void main() {
-                FragColor = texture(tScene, vUv);
-
-                float angle = length(vUv - 0.5);
-                float amount = 0.001 * uBloomDistortion;
-
-                FragColor.rgb += getRGB(tBloom, vUv, angle, amount).rgb;
-            }
-        `;
 
         class CompositeMaterial extends RawShaderMaterial {
             constructor() {
@@ -66,8 +26,40 @@
                         tBloom: { value: null },
                         uBloomDistortion: { value: 1.45 }
                     },
-                    vertexShader: vertexCompositeShader,
-                    fragmentShader: fragmentCompositeShader,
+                    vertexShader: /* glsl */ `
+                        in vec3 position;
+                        in vec2 uv;
+
+                        out vec2 vUv;
+
+                        void main() {
+                            vUv = uv;
+
+                            gl_Position = vec4(position, 1.0);
+                        }
+                    `,
+                    fragmentShader: /* glsl */ `
+                        precision highp float;
+
+                        uniform sampler2D tScene;
+                        uniform sampler2D tBloom;
+                        uniform float uBloomDistortion;
+
+                        in vec2 vUv;
+
+                        out vec4 FragColor;
+
+                        ${rgbshift}
+
+                        void main() {
+                            FragColor = texture(tScene, vUv);
+
+                            float angle = length(vUv - 0.5);
+                            float amount = 0.001 * uBloomDistortion;
+
+                            FragColor.rgb += getRGB(tBloom, vUv, angle, amount).rgb;
+                        }
+                    `,
                     blending: NoBlending,
                     depthTest: false,
                     depthWrite: false
@@ -555,26 +547,20 @@
         }
 
         class PanelController {
-            static init(scene, camera, view) {
+            static init(scene, camera, view, ui) {
                 this.scene = scene;
                 this.camera = camera;
                 this.view = view;
+                this.ui = ui;
 
-                this.initViews();
                 this.initControllers();
                 this.initPanel();
-            }
-
-            static initViews() {
-                this.ui = new UI({ fps: true });
-                this.ui.animateIn();
-                document.body.appendChild(this.ui.element);
             }
 
             static initControllers() {
                 Point3D.init(this.scene, this.camera, {
                     container: this.ui,
-                    debug: Config.DEBUG
+                    debug: isDebug
                 });
 
                 ScenePanelController.init(this.view);
@@ -585,14 +571,14 @@
 
                 const items = [
                     {
-                        label: 'FPS'
+                        name: 'FPS'
                     },
                     {
                         type: 'divider'
                     },
                     {
                         type: 'slider',
-                        label: 'Thresh',
+                        name: 'Thresh',
                         min: 0,
                         max: 1,
                         step: 0.01,
@@ -603,7 +589,7 @@
                     },
                     {
                         type: 'slider',
-                        label: 'Smooth',
+                        name: 'Smooth',
                         min: 0,
                         max: 1,
                         step: 0.01,
@@ -614,7 +600,7 @@
                     },
                     {
                         type: 'slider',
-                        label: 'Strength',
+                        name: 'Strength',
                         min: 0,
                         max: 2,
                         step: 0.01,
@@ -626,7 +612,7 @@
                     },
                     {
                         type: 'slider',
-                        label: 'Radius',
+                        name: 'Radius',
                         min: 0,
                         max: 1,
                         step: 0.01,
@@ -638,7 +624,7 @@
                     },
                     {
                         type: 'slider',
-                        label: 'Chroma',
+                        name: 'Chroma',
                         min: 0,
                         max: 2,
                         step: 0.01,
@@ -662,7 +648,6 @@
                 }
 
                 Point3D.update(time);
-                this.ui.update();
             };
         }
 
@@ -916,11 +901,15 @@
             static initWorld() {
                 this.renderer = new WebGLRenderer({
                     powerPreference: 'high-performance',
-                    stencil: false,
-                    antialias: true
+                    antialias: true,
+                    stencil: false
                 });
+
+                // Disable color management
+                ColorManagement.enabled = false;
                 this.renderer.outputColorSpace = LinearSRGBColorSpace;
 
+                // Output canvas
                 this.element = this.renderer.domElement;
 
                 // Shadows
@@ -1000,6 +989,8 @@
                 this.frame.value = frame;
             };
 
+            // Global handlers
+
             static getTexture = (path, callback) => this.textureLoader.load(path, callback);
 
             static loadTexture = path => this.textureLoader.loadAsync(path);
@@ -1046,6 +1037,10 @@
             static initViews() {
                 this.view = new SceneView();
                 WorldController.scene.add(this.view);
+
+                this.ui = new UI({ fps: true });
+                this.ui.animateIn();
+                document.body.appendChild(this.ui.element);
             }
 
             static initControllers() {
@@ -1059,7 +1054,7 @@
             static initPanel() {
                 const { scene, camera } = WorldController;
 
-                PanelController.init(scene, camera, this.view);
+                PanelController.init(scene, camera, this.view, this.ui);
             }
 
             static addListeners() {
@@ -1087,6 +1082,7 @@
                 SceneController.update(time);
                 RenderManager.update(time, delta, frame);
                 PanelController.update(time);
+                this.ui.update();
             };
         }
 

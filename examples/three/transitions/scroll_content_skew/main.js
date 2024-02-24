@@ -1,249 +1,20 @@
-import { AssetLoader, BloomCompositeMaterial, BlurMaterial, BoxGeometry, Color, ColorManagement, DirectionalLight, EnvironmentTextureLoader, GLSL3, Group, HemisphereLight, IcosahedronGeometry, ImageBitmapLoaderThread, Interface, LinearSRGBColorSpace, LuminosityMaterial, MathUtils, Mesh, MeshStandardMaterial, NoBlending, OctahedronGeometry, OrthographicCamera, PanelItem, PerspectiveCamera, RawShaderMaterial, RepeatWrapping, Scene, SceneCompositeMaterial, SmoothSkew, Stage, TextureLoader, Thread, UI, UnrealBloomBlurMaterial, Vector2, WebGLRenderTarget, WebGLRenderer, clearTween, defer, getFullscreenTriangle, shuffle, ticker, tween } from '../../../../build/alien.three.js';
+import { AssetLoader, BloomCompositeMaterial, BlurMaterial, BoxGeometry, Color, ColorManagement, Details, DirectionalLight, EnvironmentTextureLoader, GLSL3, Group, HemisphereLight, IcosahedronGeometry, ImageBitmapLoaderThread, Interface, LinearSRGBColorSpace, LuminosityMaterial, MathUtils, Mesh, MeshStandardMaterial, NoBlending, OctahedronGeometry, OrthographicCamera, PanelItem, PerspectiveCamera, RawShaderMaterial, RepeatWrapping, Scene, SceneCompositeMaterial, SmoothSkew, Stage, TextureLoader, Thread, UI, UnrealBloomBlurMaterial, Vector2, WebGLRenderTarget, WebGLRenderer, clearTween, defer, getFullscreenTriangle, ticker, tween } from '../../../../build/alien.three.js';
 
-ColorManagement.enabled = false; // Disable color management
+const isDebug = /[?&]debug/.test(location.search);
 
-class Global {
-    static SECTIONS = [];
-    static SECTION_INDEX = 0;
-}
+const breakpoint = 1000;
 
-class Config {
-    static BREAKPOINT = 1000;
+class Data {
+    static init({ pages }) {
+        this.sections = pages;
+        this.sectionIndex = 0;
 
-    static DEBUG = /[?&]debug/.test(location.search);
-}
-
-class DetailsLink extends Interface {
-    constructor(title, link) {
-        super('.link', 'a');
-
-        this.title = title;
-        this.link = link;
-
-        this.initHTML();
-
-        this.addListeners();
+        this.setIndexes();
     }
 
-    initHTML() {
-        this.css({
-            fontFamily: 'Gothic A1, sans-serif',
-            fontWeight: '400',
-            fontSize: 13,
-            lineHeight: 22,
-            letterSpacing: 'normal'
-        });
-        this.attr({ href: this.link });
-
-        this.text = new Interface('.text');
-        this.text.css({
-            display: 'inline-block'
-        });
-        this.text.text(this.title);
-        this.add(this.text);
-
-        this.line = new Interface('.line');
-        this.line.css({
-            display: 'inline-block',
-            fontWeight: '700',
-            verticalAlign: 'middle'
-        });
-        this.line.html('&nbsp;&nbsp;―');
-        this.add(this.line);
+    static setIndexes() {
+        this.sections.forEach((section, i) => section.index = i);
     }
-
-    addListeners() {
-        this.element.addEventListener('mouseenter', this.onHover);
-        this.element.addEventListener('mouseleave', this.onHover);
-    }
-
-    // Event handlers
-
-    onHover = ({ type }) => {
-        this.line.tween({ x: type === 'mouseenter' ? 10 : 0 }, 200, 'easeOutCubic');
-    };
-}
-
-class DetailsTitle extends Interface {
-    constructor(title) {
-        super('.title', 'h1');
-
-        this.title = title;
-        this.letters = [];
-
-        this.initHTML();
-        this.initText();
-    }
-
-    initHTML() {
-        this.css({
-            width: 'fit-content',
-            margin: '0 0 6px -1px',
-            fontFamily: 'Roboto, sans-serif',
-            fontWeight: '300',
-            fontSize: 23,
-            lineHeight: '1.3',
-            letterSpacing: 'normal',
-            textTransform: 'uppercase'
-        });
-    }
-
-    initText() {
-        const split = this.title.split('');
-
-        split.forEach(str => {
-            if (str === ' ') {
-                str = '&nbsp';
-            }
-
-            const letter = new Interface(null, 'span');
-            letter.css({ display: 'inline-block' });
-            letter.html(str);
-            this.add(letter);
-
-            this.letters.push(letter);
-        });
-    }
-
-    // Public methods
-
-    animateIn = () => {
-        shuffle(this.letters);
-
-        const underscores = this.letters.filter(letter => letter === '_');
-
-        underscores.forEach((letter, i) => {
-            letter.css({ opacity: 0 }).tween({ opacity: 1 }, 2000, 'easeOutCubic', i * 15);
-        });
-
-        const letters = this.letters.filter(letter => letter !== '_').slice(0, 2);
-
-        letters.forEach((letter, i) => {
-            letter.css({ opacity: 0 }).tween({ opacity: 1 }, 2000, 'easeOutCubic', 100 + i * 15);
-        });
-    };
-}
-
-class Details extends Interface {
-    constructor(title) {
-        super('.details');
-
-        this.title = title;
-        this.texts = [];
-
-        this.initHTML();
-        this.initViews();
-
-        this.addListeners();
-        this.onResize();
-    }
-
-    initHTML() {
-        this.invisible();
-        this.css({
-            position: 'absolute',
-            left: 0,
-            top: 0,
-            width: '100%',
-            height: '100%',
-            display: 'flex',
-            alignItems: 'center',
-            pointerEvents: 'none',
-            opacity: 0
-        });
-
-        this.container = new Interface('.container');
-        this.container.css({
-            width: 400,
-            margin: '10% 10% 13%'
-        });
-        this.add(this.container);
-    }
-
-    initViews() {
-        this.title = new DetailsTitle(this.title.replace(/[\s.]+/g, '_'));
-        this.title.css({
-            width: 'fit-content'
-        });
-        this.container.add(this.title);
-        this.texts.push(this.title);
-
-        this.text = new Interface('.text', 'p');
-        this.text.css({
-            width: 'fit-content',
-            margin: '6px 0',
-            fontFamily: 'Gothic A1, sans-serif',
-            fontWeight: '400',
-            fontSize: 13,
-            lineHeight: '1.5',
-            letterSpacing: 'normal'
-        });
-        this.text.html('Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.');
-        this.container.add(this.text);
-        this.texts.push(this.text);
-
-        const items = [
-            {
-                title: 'Lorem ipsum',
-                link: 'https://en.wikipedia.org/wiki/Lorem_ipsum'
-            }
-        ];
-
-        items.forEach(data => {
-            const link = new DetailsLink(data.title, data.link);
-            link.css({
-                display: 'block',
-                width: 'fit-content'
-            });
-            this.container.add(link);
-            this.texts.push(link);
-        });
-    }
-
-    addListeners() {
-        window.addEventListener('resize', this.onResize);
-    }
-
-    // Event handlers
-
-    onResize = () => {
-        if (document.documentElement.clientWidth < Config.BREAKPOINT) {
-            this.css({ display: '' });
-
-            this.container.css({
-                width: '',
-                margin: '24px 20px 0'
-            });
-        } else {
-            this.css({ display: 'flex' });
-
-            this.container.css({
-                width: 400,
-                margin: '10% 10% 13%'
-            });
-        }
-    };
-
-    // Public methods
-
-    animateIn = () => {
-        this.visible();
-        this.css({
-            pointerEvents: 'auto',
-            opacity: 1
-        });
-
-        const duration = 2000;
-        const stagger = 175;
-
-        this.texts.forEach((text, i) => {
-            const delay = i === 0 ? 0 : duration;
-
-            text.css({ opacity: 0 }).tween({ opacity: 1 }, duration, 'easeOutCubic', delay + i * stagger);
-        });
-
-        this.title.animateIn();
-    };
 }
 
 class Section extends Interface {
@@ -254,19 +25,19 @@ class Section extends Interface {
         this.index = index;
         this.animatedIn = false;
 
-        this.initHTML();
+        this.init();
         this.initViews();
 
         this.addListeners();
     }
 
-    initHTML() {
+    init() {
         this.css({
             position: 'relative',
             height: '100svh'
         });
 
-        if (Config.DEBUG) {
+        if (isDebug) {
             this.css({
                 backgroundColor: `rgba(
                     ${Math.floor(Math.random() * 255)},
@@ -279,7 +50,18 @@ class Section extends Interface {
     }
 
     initViews() {
-        this.details = new Details(this.title);
+        this.details = new Details({
+            title: this.title.replace(/[\s.]+/g, '_'),
+            content: /* html */ `
+Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
+            `,
+            links: [
+                {
+                    title: 'Lorem ipsum',
+                    link: 'https://en.wikipedia.org/wiki/Lorem_ipsum'
+                }
+            ]
+        });
         this.add(this.details);
     }
 
@@ -311,65 +93,28 @@ class Container extends Interface {
     constructor() {
         super('.container');
 
-        this.initHTML();
+        this.init();
         this.initViews();
     }
 
-    initHTML() {
+    init() {
         this.css({ position: 'static' });
     }
 
     initViews() {
-        this.darkPlanet = new Section(Global.SECTIONS[0]);
+        this.darkPlanet = new Section(Data.sections[0]);
         this.add(this.darkPlanet);
 
-        this.floatingCrystal = new Section(Global.SECTIONS[1]);
+        this.floatingCrystal = new Section(Data.sections[1]);
         this.add(this.floatingCrystal);
 
-        this.abstractCube = new Section(Global.SECTIONS[2]);
+        this.abstractCube = new Section(Data.sections[2]);
         this.add(this.abstractCube);
     }
 }
 
 import rgbshift from '../../../../src/shaders/modules/rgbshift/rgbshift.glsl.js';
 import dither from '../../../../src/shaders/modules/dither/dither.glsl.js';
-
-const vertexCompositeShader = /* glsl */ `
-    in vec3 position;
-    in vec2 uv;
-
-    out vec2 vUv;
-
-    void main() {
-        vUv = uv;
-
-        gl_Position = vec4(position, 1.0);
-    }
-`;
-
-const fragmentCompositeShader = /* glsl */ `
-    precision highp float;
-
-    uniform sampler2D tScene;
-    uniform vec3 uColor;
-    uniform float uDistortion;
-    uniform float uOpacity;
-
-    in vec2 vUv;
-
-    out vec4 FragColor;
-
-    ${rgbshift}
-    ${dither}
-
-    void main() {
-        FragColor = getRGB(tScene, vUv, 0.1, 0.001 * uDistortion * (1.0 - uOpacity));
-
-        FragColor.rgb = mix(uColor, FragColor.rgb, uOpacity);
-
-        FragColor.rgb = dither(FragColor.rgb);
-    }
-`;
 
 class CompositeMaterial extends RawShaderMaterial {
     constructor() {
@@ -381,8 +126,41 @@ class CompositeMaterial extends RawShaderMaterial {
                 uDistortion: { value: 1.45 },
                 uOpacity: { value: 0 }
             },
-            vertexShader: vertexCompositeShader,
-            fragmentShader: fragmentCompositeShader,
+            vertexShader: /* glsl */ `
+                in vec3 position;
+                in vec2 uv;
+            
+                out vec2 vUv;
+            
+                void main() {
+                    vUv = uv;
+            
+                    gl_Position = vec4(position, 1.0);
+                }
+            `,
+            fragmentShader: /* glsl */ `
+                precision highp float;
+            
+                uniform sampler2D tScene;
+                uniform vec3 uColor;
+                uniform float uDistortion;
+                uniform float uOpacity;
+            
+                in vec2 vUv;
+            
+                out vec4 FragColor;
+            
+                ${rgbshift}
+                ${dither}
+            
+                void main() {
+                    FragColor = getRGB(tScene, vUv, 0.1, 0.002 * uDistortion * (1.0 - uOpacity));
+            
+                    FragColor.rgb = mix(uColor, FragColor.rgb, uOpacity);
+            
+                    FragColor.rgb = dither(FragColor.rgb);
+                }
+            `,
             blending: NoBlending,
             depthTest: false,
             depthWrite: false
@@ -645,8 +423,8 @@ class SceneController {
     // Event handlers
 
     static onViewChange = ({ index }) => {
-        if (index !== Global.SECTION_INDEX) {
-            Global.SECTION_INDEX = index;
+        if (index !== Data.sectionIndex) {
+            Data.sectionIndex = index;
 
             RenderManager.setView(index);
         }
@@ -684,7 +462,7 @@ class SceneController {
     };
 
     static animateIn = () => {
-        this.setView(Global.SECTION_INDEX);
+        this.setView(Data.sectionIndex);
 
         this.view.visible = true;
     };
@@ -692,6 +470,7 @@ class SceneController {
     static ready = async () => {
         await this.view.ready();
 
+        // Prerender
         this.view.visible = true;
         RenderManager.update();
         this.view.visible = false;
@@ -699,15 +478,10 @@ class SceneController {
 }
 
 class PanelController {
-    static init() {
-        this.initViews();
-        this.initPanel();
-    }
+    static init(ui) {
+        this.ui = ui;
 
-    static initViews() {
-        this.ui = new UI({ fps: true });
-        this.ui.animateIn();
-        Stage.add(this.ui);
+        this.initPanel();
     }
 
     static initPanel() {
@@ -715,14 +489,14 @@ class PanelController {
 
         const items = [
             {
-                label: 'FPS'
+                name: 'FPS'
             },
             {
                 type: 'divider'
             },
             {
                 type: 'slider',
-                label: 'Thresh',
+                name: 'Thresh',
                 min: 0,
                 max: 1,
                 step: 0.01,
@@ -733,7 +507,7 @@ class PanelController {
             },
             {
                 type: 'slider',
-                label: 'Smooth',
+                name: 'Smooth',
                 min: 0,
                 max: 1,
                 step: 0.01,
@@ -744,7 +518,7 @@ class PanelController {
             },
             {
                 type: 'slider',
-                label: 'Strength',
+                name: 'Strength',
                 min: 0,
                 max: 2,
                 step: 0.01,
@@ -756,7 +530,7 @@ class PanelController {
             },
             {
                 type: 'slider',
-                label: 'Radius',
+                name: 'Radius',
                 min: 0,
                 max: 1,
                 step: 0.01,
@@ -771,7 +545,7 @@ class PanelController {
             },
             {
                 type: 'slider',
-                label: 'Blur',
+                name: 'Blur',
                 min: 0,
                 max: 10,
                 step: 0.1,
@@ -782,7 +556,7 @@ class PanelController {
             },
             {
                 type: 'slider',
-                label: 'Opacity',
+                name: 'Opacity',
                 min: 0,
                 max: 1,
                 step: 0.01,
@@ -796,7 +570,7 @@ class PanelController {
             },
             {
                 type: 'slider',
-                label: 'Lerp',
+                name: 'Lerp',
                 min: 0,
                 max: 1,
                 step: 0.01,
@@ -807,7 +581,7 @@ class PanelController {
             },
             {
                 type: 'slider',
-                label: 'Skew',
+                name: 'Skew',
                 min: 0,
                 max: 10,
                 step: 0.1,
@@ -822,16 +596,6 @@ class PanelController {
             this.ui.addPanel(new PanelItem(data));
         });
     }
-
-    // Public methods
-
-    static update = () => {
-        if (!this.ui) {
-            return;
-        }
-
-        this.ui.update();
-    };
 }
 
 const BlurDirectionX = new Vector2(1, 0);
@@ -1109,11 +873,15 @@ class WorldController {
     static initWorld() {
         this.renderer = new WebGLRenderer({
             powerPreference: 'high-performance',
-            stencil: false,
-            antialias: true
+            antialias: true,
+            stencil: false
         });
+
+        // Disable color management
+        ColorManagement.enabled = false;
         this.renderer.outputColorSpace = LinearSRGBColorSpace;
 
+        // Output canvas
         this.element = this.renderer.domElement;
 
         // 3D scene
@@ -1175,7 +943,7 @@ class WorldController {
     static resize = (width, height, dpr) => {
         this.camera.aspect = width / height;
 
-        if (width < Config.BREAKPOINT) {
+        if (width < breakpoint) {
             this.camera.lookAt(0, 0.5, -2);
             this.camera.zoom = 1;
         } else {
@@ -1197,6 +965,8 @@ class WorldController {
         this.time.value = time;
         this.frame.value = frame;
     };
+
+    // Global handlers
 
     static getTexture = (path, callback) => this.textureLoader.load(path, callback);
 
@@ -1255,12 +1025,21 @@ class App {
         Stage.add(WorldController.element);
     }
 
+    static async loadData() {
+        const data = await this.assetLoader.loadData('transitions/data.json');
+
+        Data.init(data);
+    }
+
     static initViews() {
         this.view = new SceneView();
         WorldController.scene.add(this.view);
 
         this.container = new Container();
         Stage.add(this.container);
+
+        this.ui = new UI({ fps: true, breakpoint });
+        Stage.add(this.ui);
     }
 
     static initControllers() {
@@ -1271,17 +1050,7 @@ class App {
     }
 
     static initPanel() {
-        PanelController.init();
-    }
-
-    static async loadData() {
-        const data = await this.assetLoader.loadData('transitions/data.json');
-
-        data.pages.forEach((item, i) => {
-            item.index = i;
-
-            Global.SECTIONS.push(item);
-        });
+        PanelController.init(this.ui);
     }
 
     static addListeners() {
@@ -1305,7 +1074,7 @@ class App {
         WorldController.update(time, delta, frame);
         SceneController.update(time);
         RenderManager.update(time, delta, frame);
-        PanelController.update();
+        this.ui.update();
     };
 
     // Public methods
@@ -1313,6 +1082,7 @@ class App {
     static animateIn = () => {
         SceneController.animateIn();
         RenderManager.animateIn();
+        this.ui.animateIn();
 
         Stage.tween({ opacity: 1 }, 1000, 'linear', () => {
             Stage.css({ opacity: '' });

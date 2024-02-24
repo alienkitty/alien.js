@@ -13,58 +13,16 @@
     <script type="module">
         import { BloomCompositeMaterial, BlurMaterial, Color, ColorManagement, EnvironmentTextureLoader, GLSL3, Group, HemisphereLight, IcosahedronGeometry, ImageBitmapLoaderThread, LinearSRGBColorSpace, LuminosityMaterial, MathUtils, Mesh, MeshBasicMaterial, MeshStandardMaterial, NoBlending, OrthographicCamera, PanelItem, PerspectiveCamera, PointLight, RawShaderMaterial, RepeatWrapping, Scene, ShaderChunk, TextureLoader, Thread, UI, UnrealBloomBlurMaterial, Vector2, Vector3, VolumetricLightMaterial, WebGLRenderTarget, WebGLRenderer, getFullscreenTriangle, ticker } from '../../build/alien.three.js';
 
-        ColorManagement.enabled = false; // Disable color management
+        const colors = {
+            lightColor: 0xf44336
+        };
 
-        class Config {
-            static LIGHT_COLOR = 0xf44336;
-        }
-
-        class Layer {
-            static DEFAULT = 0;
-            static OCCLUSION = 1;
-        }
+        const layers = {
+            default: 0,
+            occlusion: 1
+        };
 
         import dither from '../../src/shaders/modules/dither/dither.glsl.js';
-
-        // Based on https://codepen.io/peterhry/pen/egzjGR
-
-        const vertexCompositeShader = /* glsl */ `
-            in vec3 position;
-            in vec2 uv;
-
-            out vec2 vUv;
-
-            void main() {
-                vUv = uv;
-
-                gl_Position = vec4(position, 1.0);
-            }
-        `;
-
-        const fragmentCompositeShader = /* glsl */ `
-            precision highp float;
-
-            uniform sampler2D tScene;
-            uniform sampler2D tBloom;
-            uniform sampler2D tAdd;
-
-            in vec2 vUv;
-
-            out vec4 FragColor;
-
-            ${dither}
-
-            void main() {
-                FragColor = texture(tScene, vUv);
-
-                FragColor.rgb += texture(tBloom, vUv).rgb;
-
-                FragColor.rgb += texture(tAdd, vUv).rgb;
-
-                FragColor.rgb = dither(FragColor.rgb);
-                FragColor.a = 1.0;
-            }
-        `;
 
         class CompositeMaterial extends RawShaderMaterial {
             constructor() {
@@ -75,8 +33,42 @@
                         tBloom: { value: null },
                         tAdd: { value: null }
                     },
-                    vertexShader: vertexCompositeShader,
-                    fragmentShader: fragmentCompositeShader,
+                    vertexShader: /* glsl */ `
+                        in vec3 position;
+                        in vec2 uv;
+
+                        out vec2 vUv;
+
+                        void main() {
+                            vUv = uv;
+
+                            gl_Position = vec4(position, 1.0);
+                        }
+                    `,
+                    fragmentShader: /* glsl */ `
+                        precision highp float;
+
+                        uniform sampler2D tScene;
+                        uniform sampler2D tBloom;
+                        uniform sampler2D tAdd;
+
+                        in vec2 vUv;
+
+                        out vec4 FragColor;
+
+                        ${dither}
+
+                        void main() {
+                            FragColor = texture(tScene, vUv);
+
+                            FragColor.rgb += texture(tBloom, vUv).rgb;
+
+                            FragColor.rgb += texture(tAdd, vUv).rgb;
+
+                            FragColor.rgb = dither(FragColor.rgb);
+                            FragColor.a = 1.0;
+                        }
+                    `,
                     blending: NoBlending,
                     depthTest: false,
                     depthWrite: false
@@ -96,7 +88,7 @@
             }
 
             initLight() {
-                const light = new PointLight(Config.LIGHT_COLOR, 1.9, 2.2, 0);
+                const light = new PointLight(colors.lightColor, 1.9, 2.2, 0);
                 this.add(light);
             }
 
@@ -140,7 +132,7 @@
                 thicknessMap.repeat.set(2, 1);
 
                 const material = new MeshStandardMaterial({
-                    color: new Color(Config.LIGHT_COLOR),
+                    color: new Color(colors.lightColor),
                     metalness: 0.7,
                     roughness: 2,
                     map,
@@ -206,13 +198,13 @@
                 // Occlusion
                 const occMesh = new Mesh(
                     geometry,
-                    new MeshBasicMaterial({ color: Config.LIGHT_COLOR })
+                    new MeshBasicMaterial({ color: colors.lightColor })
                 );
                 occMesh.position.copy(mesh.position);
                 occMesh.scale.copy(mesh.scale);
 
                 // Layers
-                occMesh.layers.set(Layer.OCCLUSION);
+                occMesh.layers.set(layers.occlusion);
 
                 this.add(mesh);
                 this.add(occMesh);
@@ -403,17 +395,11 @@
         }
 
         class PanelController {
-            static init(view) {
+            static init(view, ui) {
                 this.view = view;
+                this.ui = ui;
 
-                this.initViews();
                 this.initPanel();
-            }
-
-            static initViews() {
-                this.ui = new UI({ fps: true });
-                this.ui.animateIn();
-                document.body.appendChild(this.ui.element);
             }
 
             static initPanel() {
@@ -423,14 +409,14 @@
 
                 const items = [
                     {
-                        label: 'FPS'
+                        name: 'FPS'
                     },
                     {
                         type: 'divider'
                     },
                     {
                         type: 'slider',
-                        label: 'Exp',
+                        name: 'Exp',
                         min: 0,
                         max: 1,
                         step: 0.01,
@@ -441,7 +427,7 @@
                     },
                     {
                         type: 'slider',
-                        label: 'Decay',
+                        name: 'Decay',
                         min: 0.6,
                         max: 1,
                         step: 0.01,
@@ -452,7 +438,7 @@
                     },
                     {
                         type: 'slider',
-                        label: 'Density',
+                        name: 'Density',
                         min: 0,
                         max: 1,
                         step: 0.01,
@@ -463,7 +449,7 @@
                     },
                     {
                         type: 'slider',
-                        label: 'Weight',
+                        name: 'Weight',
                         min: 0,
                         max: 1,
                         step: 0.01,
@@ -474,7 +460,7 @@
                     },
                     {
                         type: 'slider',
-                        label: 'Clamp',
+                        name: 'Clamp',
                         min: 0,
                         max: 1,
                         step: 0.01,
@@ -488,7 +474,7 @@
                     },
                     {
                         type: 'slider',
-                        label: 'Distort',
+                        name: 'Distort',
                         min: 0,
                         max: 1,
                         step: 0.01,
@@ -499,7 +485,7 @@
                     },
                     {
                         type: 'slider',
-                        label: 'Ambient',
+                        name: 'Ambient',
                         min: 0,
                         max: 5,
                         step: 0.05,
@@ -510,7 +496,7 @@
                     },
                     {
                         type: 'slider',
-                        label: 'Atten',
+                        name: 'Atten',
                         min: 0,
                         max: 5,
                         step: 0.05,
@@ -521,7 +507,7 @@
                     },
                     {
                         type: 'slider',
-                        label: 'Power',
+                        name: 'Power',
                         min: 1,
                         max: 32,
                         step: 0.1,
@@ -532,7 +518,7 @@
                     },
                     {
                         type: 'slider',
-                        label: 'Scale',
+                        name: 'Scale',
                         min: 0,
                         max: 64,
                         step: 0.1,
@@ -546,7 +532,7 @@
                     },
                     {
                         type: 'slider',
-                        label: 'Thresh',
+                        name: 'Thresh',
                         min: 0,
                         max: 1,
                         step: 0.01,
@@ -557,7 +543,7 @@
                     },
                     {
                         type: 'slider',
-                        label: 'Smooth',
+                        name: 'Smooth',
                         min: 0,
                         max: 1,
                         step: 0.01,
@@ -568,7 +554,7 @@
                     },
                     {
                         type: 'slider',
-                        label: 'Strength',
+                        name: 'Strength',
                         min: 0,
                         max: 2,
                         step: 0.01,
@@ -580,7 +566,7 @@
                     },
                     {
                         type: 'slider',
-                        label: 'Radius',
+                        name: 'Radius',
                         min: 0,
                         max: 1,
                         step: 0.01,
@@ -596,16 +582,6 @@
                     this.ui.addPanel(new PanelItem(data));
                 });
             }
-
-            // Public methods
-
-            static update = () => {
-                if (!this.ui) {
-                    return;
-                }
-
-                this.ui.update();
-            };
         }
 
         const BlurDirectionX = new Vector2(1, 0);
@@ -639,6 +615,7 @@
             static initRenderer() {
                 const { screenTriangle } = WorldController;
 
+                // Manually clear
                 this.renderer.autoClear = false;
 
                 // Fullscreen triangle
@@ -792,7 +769,7 @@
                 const currentBackground = scene.background;
                 const currentClearAlpha = renderer.getClearAlpha();
 
-                camera.layers.set(Layer.DEFAULT);
+                camera.layers.set(layers.default);
 
                 // Scene layer
                 renderer.setRenderTarget(renderTarget);
@@ -809,7 +786,7 @@
                 renderer.render(scene, camera);
                 scene.overrideMaterial = currentOverrideMaterial;
 
-                camera.layers.set(Layer.OCCLUSION);
+                camera.layers.set(layers.occlusion);
 
                 renderer.render(scene, camera);
 
@@ -960,11 +937,15 @@
             static initWorld() {
                 this.renderer = new WebGLRenderer({
                     powerPreference: 'high-performance',
-                    stencil: false,
-                    antialias: true
+                    antialias: true,
+                    stencil: false
                 });
+
+                // Disable color management
+                ColorManagement.enabled = false;
                 this.renderer.outputColorSpace = LinearSRGBColorSpace;
 
+                // Output canvas
                 this.element = this.renderer.domElement;
 
                 // 3D scene
@@ -1029,6 +1010,8 @@
                 this.frame.value = frame;
             };
 
+            // Global handlers
+
             static getTexture = (path, callback) => this.textureLoader.load(path, callback);
 
             static loadTexture = path => this.textureLoader.loadAsync(path);
@@ -1075,6 +1058,10 @@
             static initViews() {
                 this.view = new SceneView();
                 WorldController.scene.add(this.view);
+
+                this.ui = new UI({ fps: true });
+                this.ui.animateIn();
+                document.body.appendChild(this.ui.element);
             }
 
             static initControllers() {
@@ -1086,7 +1073,7 @@
             }
 
             static initPanel() {
-                PanelController.init(this.view);
+                PanelController.init(this.view, this.ui);
             }
 
             static addListeners() {
@@ -1112,7 +1099,7 @@
                 CameraController.update();
                 SceneController.update();
                 RenderManager.update(time, delta, frame);
-                PanelController.update();
+                this.ui.update();
             };
         }
 

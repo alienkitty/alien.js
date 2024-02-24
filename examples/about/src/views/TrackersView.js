@@ -1,13 +1,13 @@
 import { Interface } from '@alienkitty/space.js/three';
 
-export class Trackers extends Interface {
+export class TrackersView extends Interface {
     constructor() {
         super('.trackers');
 
-        this.initHTML();
+        this.init();
     }
 
-    initHTML() {
+    init() {
         this.css({
             position: 'absolute',
             left: 0,

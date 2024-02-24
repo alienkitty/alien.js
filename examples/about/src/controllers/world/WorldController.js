@@ -1,7 +1,5 @@
 import { ColorManagement, LinearSRGBColorSpace, Mesh, OrthographicCamera, Vector2, WebGLRenderer } from 'three';
 
-ColorManagement.enabled = false; // Disable color management
-
 import { getFullscreenTriangle } from '@alienkitty/space.js/three';
 
 export class WorldController {
@@ -17,8 +15,12 @@ export class WorldController {
             stencil: false,
             depth: false
         });
+
+        // Disable color management
+        ColorManagement.enabled = false;
         this.renderer.outputColorSpace = LinearSRGBColorSpace;
 
+        // Output canvas
         this.element = this.renderer.domElement;
 
         // Fullscreen triangle

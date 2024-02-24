@@ -1,13 +1,12 @@
 import { WebAudio, clamp, tween } from '@alienkitty/space.js/three';
 
-import { Config } from '../../config/Config.js';
-import { Global } from '../../config/Global.js';
+import { breakpoint, store } from '../../config/Config.js';
 
 export class AudioController {
-    static init(instructions) {
-        this.instructions = instructions;
+    static init(ui) {
+        this.ui = ui;
 
-        if (!Global.SOUND) {
+        if (!store.sound) {
             WebAudio.mute(true);
         }
 
@@ -24,11 +23,11 @@ export class AudioController {
         document.addEventListener('visibilitychange', this.onVisibility);
         window.addEventListener('pointerdown', this.onPointerDown);
 
-        if (this.enabled || !Global.SOUND) {
+        if (this.enabled || !store.sound) {
             return;
         }
 
-        this.instructions.toggle(true, 3000);
+        this.ui.instructions.animateIn(3000);
     }
 
     static getMouseSpeed(id, normalX, normalY) {
@@ -58,7 +57,7 @@ export class AudioController {
     // Event handlers
 
     static onVisibility = () => {
-        if (!Global.SOUND) {
+        if (!store.sound) {
             return;
         }
 
@@ -76,7 +75,7 @@ export class AudioController {
 
         WebAudio.resume();
 
-        this.instructions.toggle(false);
+        this.ui.instructions.animateOut();
 
         this.trigger('bass_drum');
     };
@@ -84,7 +83,7 @@ export class AudioController {
     // Public methods
 
     static resize = () => {
-        if (document.documentElement.clientWidth < Config.BREAKPOINT) {
+        if (document.documentElement.clientWidth < breakpoint) {
             this.easing = 0.8;
         } else {
             this.easing = 0.97;
@@ -149,7 +148,7 @@ export class AudioController {
                 tween(WebAudio.gain, { value: 0 }, 500, 'easeOutSine');
                 break;
             case 'sound_on':
-                tween(WebAudio.gain, { value: Global.DETAILS_OPEN ? 0.3 : 1 }, 500, 'easeOutSine');
+                tween(WebAudio.gain, { value: this.ui.isDetailsOpen ? 0.3 : 1 }, 500, 'easeOutSine');
                 break;
         }
     };

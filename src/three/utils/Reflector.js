@@ -18,7 +18,7 @@ import {
 
 import { ReflectorBlurMaterial } from '../materials/ReflectorBlurMaterial.js';
 
-import { getFullscreenTriangle } from '@alienkitty/space.js/three';
+import { getDoubleRenderTarget, getFullscreenTriangle } from '@alienkitty/space.js/three';
 
 export class Reflector extends Group {
     constructor({
@@ -51,35 +51,36 @@ export class Reflector extends Group {
         this.textureMatrixUniform = { value: this.textureMatrix };
 
         // Render targets
-        this.renderTarget = new WebGLRenderTarget(width, height, {
-            depthBuffer: false
-        });
+        this.renderTarget = new WebGLRenderTarget(width, height);
 
-        this.renderTargetRead = this.renderTarget.clone();
-        this.renderTargetWrite = this.renderTarget.clone();
+        if (this.blurIterations > 0) {
+            this.blur = getDoubleRenderTarget(1, 1, {
+                depthBuffer: false
+            });
 
-        this.renderTarget.depthBuffer = true;
+            // Reflection blur material
+            this.blurMaterial = new ReflectorBlurMaterial();
+            this.blurMaterial.uniforms.uResolution.value.set(width, height);
+
+            // Fullscreen triangle
+            this.screenCamera = new OrthographicCamera(-1, 1, 1, -1, 0, 1);
+            this.screenTriangle = getFullscreenTriangle();
+            this.screen = new Mesh(this.screenTriangle, this.blurMaterial);
+            this.screen.frustumCulled = false;
+        }
 
         // Uniform containing render target textures
-        this.renderTargetUniform = { value: this.blurIterations > 0 ? this.renderTargetRead.texture : this.renderTarget.texture };
-
-        // Reflection blur material
-        this.blurMaterial = new ReflectorBlurMaterial();
-        this.blurMaterial.uniforms.uResolution.value.set(width, height);
-
-        // Fullscreen triangle
-        this.screenCamera = new OrthographicCamera(-1, 1, 1, -1, 0, 1);
-        this.screenTriangle = getFullscreenTriangle();
-        this.screen = new Mesh(this.screenTriangle, this.blurMaterial);
-        this.screen.frustumCulled = false;
+        this.renderTargetUniform = { value: this.blur ? this.blur.read.texture : this.renderTarget.texture };
     }
 
     setSize(width, height) {
         this.renderTarget.setSize(width, height);
-        this.renderTargetRead.setSize(width, height);
-        this.renderTargetWrite.setSize(width, height);
 
-        this.blurMaterial.uniforms.uResolution.value.set(width, height);
+        if (this.blur) {
+            this.blur.setSize(width, height);
+
+            this.blurMaterial.uniforms.uResolution.value.set(width, height);
+        }
     }
 
     update(renderer, scene, camera) {
@@ -177,35 +178,33 @@ export class Reflector extends Group {
         renderer.render(scene, this.virtualCamera);
 
         // Blur reflection
-        const blurIterations = this.blurIterations;
+        if (this.blur) {
+            const blurIterations = this.blurIterations;
 
-        for (let i = 0; i < blurIterations; i++) {
-            if (i === 0) {
-                this.blurMaterial.uniforms.tMap.value = this.renderTarget.texture;
-            } else {
-                this.blurMaterial.uniforms.tMap.value = this.renderTargetRead.texture;
+            for (let i = 0; i < blurIterations; i++) {
+                if (i === 0) {
+                    this.blurMaterial.uniforms.tMap.value = this.renderTarget.texture;
+                } else {
+                    this.blurMaterial.uniforms.tMap.value = this.blur.read.texture;
+                }
+
+                const radius = (blurIterations - i - 1) * 0.5;
+                this.blurMaterial.uniforms.uDirection.value.set(
+                    i % 2 === 0 ? radius : 0,
+                    i % 2 === 0 ? 0 : radius
+                );
+
+                renderer.setRenderTarget(this.blur.write);
+
+                if (renderer.autoClear === false) {
+                    renderer.clear();
+                }
+
+                renderer.render(this.screen, this.screenCamera);
+                this.blur.swap();
+
+                this.renderTargetUniform.value = this.blur.read.texture;
             }
-
-            const radius = (blurIterations - i - 1) * 0.5;
-            this.blurMaterial.uniforms.uDirection.value.set(
-                i % 2 === 0 ? radius : 0,
-                i % 2 === 0 ? 0 : radius
-            );
-
-            renderer.setRenderTarget(this.renderTargetWrite);
-
-            if (renderer.autoClear === false) {
-                renderer.clear();
-            }
-
-            renderer.render(this.screen, this.screenCamera);
-
-            // Swap render targets
-            const temp = this.renderTargetRead;
-            this.renderTargetRead = this.renderTargetWrite;
-            this.renderTargetWrite = temp;
-
-            this.renderTargetUniform.value = this.renderTargetRead.texture;
         }
 
         // Restore renderer settings
@@ -215,11 +214,13 @@ export class Reflector extends Group {
     }
 
     destroy() {
-        this.renderTargetWrite.dispose();
-        this.renderTargetRead.dispose();
         this.renderTarget.dispose();
-        this.blurMaterial.dispose();
-        this.screenTriangle.dispose();
+
+        if (this.blur) {
+            this.blur.dispose();
+            this.blurMaterial.dispose();
+            this.screenTriangle.dispose();
+        }
 
         for (const prop in this) {
             this[prop] = null;

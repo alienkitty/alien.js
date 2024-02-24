@@ -13,45 +13,7 @@
     <script type="module">
         import { BloomCompositeMaterial, BoxGeometry, Color, ColorManagement, DirectionalLight, EnvironmentTextureLoader, GLSL3, Group, HemisphereLight, ImageBitmapLoaderThread, LinearSRGBColorSpace, LuminosityMaterial, MathUtils, Mesh, MeshStandardMaterial, NoBlending, OrthographicCamera, PanelItem, PerspectiveCamera, PlaneGeometry, RawShaderMaterial, Reflector, ReflectorDudvMaterial, RepeatWrapping, Scene, TextureLoader, Thread, UI, UnrealBloomBlurMaterial, Vector2, Vector3, WebGLRenderTarget, WebGLRenderer, getFullscreenTriangle, ticker } from '../../build/alien.three.js';
 
-        ColorManagement.enabled = false; // Disable color management
-
         import rgbshift from '../../src/shaders/modules/rgbshift/rgbshift.glsl.js';
-
-        const vertexCompositeShader = /* glsl */ `
-            in vec3 position;
-            in vec2 uv;
-
-            out vec2 vUv;
-
-            void main() {
-                vUv = uv;
-
-                gl_Position = vec4(position, 1.0);
-            }
-        `;
-
-        const fragmentCompositeShader = /* glsl */ `
-            precision highp float;
-
-            uniform sampler2D tScene;
-            uniform sampler2D tBloom;
-            uniform float uBloomDistortion;
-
-            in vec2 vUv;
-
-            out vec4 FragColor;
-
-            ${rgbshift}
-
-            void main() {
-                FragColor = texture(tScene, vUv);
-
-                float angle = length(vUv - 0.5);
-                float amount = 0.001 * uBloomDistortion;
-
-                FragColor.rgb += getRGB(tBloom, vUv, angle, amount).rgb;
-            }
-        `;
 
         class CompositeMaterial extends RawShaderMaterial {
             constructor() {
@@ -62,8 +24,40 @@
                         tBloom: { value: null },
                         uBloomDistortion: { value: 1.45 }
                     },
-                    vertexShader: vertexCompositeShader,
-                    fragmentShader: fragmentCompositeShader,
+                    vertexShader: /* glsl */ `
+                        in vec3 position;
+                        in vec2 uv;
+
+                        out vec2 vUv;
+
+                        void main() {
+                            vUv = uv;
+
+                            gl_Position = vec4(position, 1.0);
+                        }
+                    `,
+                    fragmentShader: /* glsl */ `
+                        precision highp float;
+
+                        uniform sampler2D tScene;
+                        uniform sampler2D tBloom;
+                        uniform float uBloomDistortion;
+
+                        in vec2 vUv;
+
+                        out vec4 FragColor;
+
+                        ${rgbshift}
+
+                        void main() {
+                            FragColor = texture(tScene, vUv);
+
+                            float angle = length(vUv - 0.5);
+                            float amount = 0.001 * uBloomDistortion;
+
+                            FragColor.rgb += getRGB(tBloom, vUv, angle, amount).rgb;
+                        }
+                    `,
                     blending: NoBlending,
                     depthTest: false,
                     depthWrite: false
@@ -155,7 +149,7 @@
 
                 const material = new ReflectorDudvMaterial({
                     map,
-                    reflectivity: 0.8
+                    reflectivity: 0.5
                 });
                 material.uniforms.tReflect = { value: this.reflector.renderTarget.texture };
                 material.uniforms.tReflectBlur = this.reflector.renderTargetUniform;
@@ -244,15 +238,10 @@
         }
 
         class PanelController {
-            static init() {
-                this.initViews();
-                this.initPanel();
-            }
+            static init(ui) {
+                this.ui = ui;
 
-            static initViews() {
-                this.ui = new UI({ fps: true });
-                this.ui.animateIn();
-                document.body.appendChild(this.ui.element);
+                this.initPanel();
             }
 
             static initPanel() {
@@ -260,14 +249,14 @@
 
                 const items = [
                     {
-                        label: 'FPS'
+                        name: 'FPS'
                     },
                     {
                         type: 'divider'
                     },
                     {
                         type: 'slider',
-                        label: 'Thresh',
+                        name: 'Thresh',
                         min: 0,
                         max: 1,
                         step: 0.01,
@@ -278,7 +267,7 @@
                     },
                     {
                         type: 'slider',
-                        label: 'Smooth',
+                        name: 'Smooth',
                         min: 0,
                         max: 1,
                         step: 0.01,
@@ -289,7 +278,7 @@
                     },
                     {
                         type: 'slider',
-                        label: 'Strength',
+                        name: 'Strength',
                         min: 0,
                         max: 2,
                         step: 0.01,
@@ -301,7 +290,7 @@
                     },
                     {
                         type: 'slider',
-                        label: 'Radius',
+                        name: 'Radius',
                         min: 0,
                         max: 1,
                         step: 0.01,
@@ -313,7 +302,7 @@
                     },
                     {
                         type: 'slider',
-                        label: 'Chroma',
+                        name: 'Chroma',
                         min: 0,
                         max: 2,
                         step: 0.01,
@@ -328,16 +317,6 @@
                     this.ui.addPanel(new PanelItem(data));
                 });
             }
-
-            // Public methods
-
-            static update = () => {
-                if (!this.ui) {
-                    return;
-                }
-
-                this.ui.update();
-            };
         }
 
         const BlurDirectionX = new Vector2(1, 0);
@@ -590,11 +569,15 @@
             static initWorld() {
                 this.renderer = new WebGLRenderer({
                     powerPreference: 'high-performance',
-                    stencil: false,
-                    antialias: true
+                    antialias: true,
+                    stencil: false
                 });
+
+                // Disable color management
+                ColorManagement.enabled = false;
                 this.renderer.outputColorSpace = LinearSRGBColorSpace;
 
+                // Output canvas
                 this.element = this.renderer.domElement;
 
                 // 3D scene
@@ -663,6 +646,8 @@
                 this.frame.value = frame;
             };
 
+            // Global handlers
+
             static getTexture = (path, callback) => this.textureLoader.load(path, callback);
 
             static loadTexture = path => this.textureLoader.loadAsync(path);
@@ -709,6 +694,10 @@
             static initViews() {
                 this.view = new SceneView();
                 WorldController.scene.add(this.view);
+
+                this.ui = new UI({ fps: true });
+                this.ui.animateIn();
+                document.body.appendChild(this.ui.element);
             }
 
             static initControllers() {
@@ -720,7 +709,7 @@
             }
 
             static initPanel() {
-                PanelController.init();
+                PanelController.init(this.ui);
             }
 
             static addListeners() {
@@ -747,7 +736,7 @@
                 CameraController.update();
                 SceneController.update();
                 RenderManager.update(time, delta, frame);
-                PanelController.update();
+                this.ui.update();
             };
         }
 

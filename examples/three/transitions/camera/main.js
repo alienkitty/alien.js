@@ -1,416 +1,34 @@
-import { AssetLoader, BasicShadowMap, BloomCompositeMaterial, BoxGeometry, CameraMotionBlurMaterial, Color, ColorManagement, DepthTexture, DirectionalLight, EnvironmentTextureLoader, GLSL3, Group, Header, HemisphereLight, IcosahedronGeometry, ImageBitmapLoaderThread, Interface, LinearSRGBColorSpace, LuminosityMaterial, MathUtils, Matrix4, Mesh, MeshStandardMaterial, NearestFilter, NoBlending, OctahedronGeometry, OrthographicCamera, PanelItem, PerspectiveCamera, PlaneGeometry, Point3D, RawShaderMaterial, Reflector, RepeatWrapping, Scene, SceneCompositeMaterial, ShadowMaterial, Stage, TextureLoader, Thread, UnrealBloomBlurMaterial, Vector2, Vector3, WebGLRenderTarget, WebGLRenderer, clearTween, delayedCall, getFullscreenTriangle, getKeyByValue, lerpCameras, shuffle, ticker, tween } from '../../../../build/alien.three.js';
+import { AssetLoader, BasicShadowMap, BloomCompositeMaterial, BoxGeometry, CameraMotionBlurMaterial, Color, ColorManagement, DepthTexture, DirectionalLight, EnvironmentTextureLoader, GLSL3, Group, HemisphereLight, IcosahedronGeometry, ImageBitmapLoaderThread, LinearSRGBColorSpace, LuminosityMaterial, MathUtils, Matrix4, Mesh, MeshStandardMaterial, NearestFilter, NoBlending, OctahedronGeometry, OrthographicCamera, PanelItem, PerspectiveCamera, PlaneGeometry, Point3D, RawShaderMaterial, Reflector, RepeatWrapping, Router, Scene, SceneCompositeMaterial, ShadowMaterial, Stage, TextureLoader, Thread, UI, UnrealBloomBlurMaterial, Vector2, Vector3, WebGLRenderTarget, WebGLRenderer, clearTween, delayedCall, getFullscreenTriangle, getKeyByValue, lerpCameras, ticker, tween } from '../../../../build/alien.three.js';
 
-ColorManagement.enabled = false; // Disable color management
+const isDebug = /[?&]debug/.test(location.search);
 
-class Global {
-    static PAGES = [];
-    static PAGE_INDEX = 0;
-}
-
-class Config {
-    static BREAKPOINT = 1000;
-
-    static DEBUG = /[?&]debug/.test(location.search);
-}
+const breakpoint = 1000;
 
 class Page {
     constructor({ path, title }) {
         this.path = path;
         this.title = title;
-        this.pageTitle = `${this.title} — Alien.js`;
+
+        document.title = `${this.title} — Alien.js`;
     }
 }
 
 class Data {
-    static path = '/examples/three/transitions/camera/';
-
-    static init() {
-        this.setIndexes();
-
-        this.addListeners();
+    static init({ pages }) {
+        this.pages = pages;
+        this.pageIndex = 0;
     }
-
-    static setIndexes() {
-        Global.PAGES.forEach((item, i) => item.index = i);
-    }
-
-    static addListeners() {
-        Stage.events.on('state_change', this.onStateChange);
-    }
-
-    // Event handlers
-
-    static onStateChange = () => {
-        const { path } = Stage;
-
-        const item = this.getPage(path);
-
-        if (item) {
-            Global.PAGE_INDEX = item.index;
-        } else {
-            Global.PAGE_INDEX = 0;
-        }
-    };
 
     // Public methods
 
-    static getPath = path => {
-        return this.path + path;
-    };
+    static getNext = page => {
+        let index = this.pages.indexOf(page);
 
-    static getPage = path => {
-        return Global.PAGES.find(item => path.includes(item.path));
-    };
-
-    static setPage = path => {
-        const item = this.getPage(path);
-
-        if (item && item.index !== Global.PAGE_INDEX) {
-            Global.PAGE_INDEX = item.index;
-
-            Stage.setPath(path);
-            Stage.setTitle(item.pageTitle);
-        } else {
-            // Home page
-            const item = this.getPage(this.path);
-
-            if (item && item.index !== Global.PAGE_INDEX) {
-                Global.PAGE_INDEX = item.index;
-
-                Stage.setPath(this.path);
-                Stage.setTitle(item.pageTitle);
-            }
-        }
-    };
-
-    static getNext = () => {
-        let index = Global.PAGE_INDEX + 1;
-
-        if (index > Global.PAGES.length - 1) {
+        if (!~index || ++index > this.pages.length - 1) {
             index = 0;
         }
 
-        return Global.PAGES[index];
-    };
-}
-
-class DetailsLink extends Interface {
-    constructor(title, link) {
-        super('.link', 'a');
-
-        this.title = title;
-        this.link = link;
-
-        this.initHTML();
-
-        this.addListeners();
-    }
-
-    initHTML() {
-        this.css({
-            fontFamily: 'Gothic A1, sans-serif',
-            fontWeight: '400',
-            fontSize: 13,
-            lineHeight: 22,
-            letterSpacing: 'normal'
-        });
-        this.attr({ href: this.link });
-
-        this.text = new Interface('.text');
-        this.text.css({
-            display: 'inline-block'
-        });
-        this.text.text(this.title);
-        this.add(this.text);
-
-        this.line = new Interface('.line');
-        this.line.css({
-            display: 'inline-block',
-            fontWeight: '700',
-            verticalAlign: 'middle'
-        });
-        this.line.html('&nbsp;&nbsp;―');
-        this.add(this.line);
-    }
-
-    addListeners() {
-        this.element.addEventListener('mouseenter', this.onHover);
-        this.element.addEventListener('mouseleave', this.onHover);
-        this.element.addEventListener('click', this.onClick);
-    }
-
-    // Event handlers
-
-    onHover = ({ type }) => {
-        this.line.clearTween().tween({ x: type === 'mouseenter' ? 10 : 0 }, 200, 'easeOutCubic');
-    };
-
-    onClick = e => {
-        e.preventDefault();
-
-        this.onHover({ type: 'mouseenter' });
-
-        Data.setPage(this.link);
-    };
-
-    // Public methods
-
-    setLink = link => {
-        this.link = link;
-
-        this.attr({ href: this.link });
-    };
-}
-
-class DetailsTitle extends Interface {
-    constructor(title) {
-        super('.title', 'h1');
-
-        this.title = title;
-        this.letters = [];
-
-        this.initHTML();
-        this.initText();
-    }
-
-    initHTML() {
-        this.css({
-            width: 'fit-content',
-            margin: '0 0 6px -1px',
-            fontFamily: 'Roboto, sans-serif',
-            fontWeight: '300',
-            fontSize: 23,
-            lineHeight: '1.3',
-            letterSpacing: 'normal',
-            textTransform: 'uppercase'
-        });
-    }
-
-    initText() {
-        const split = this.title.replace(/[\s.]+/g, '_').split('');
-
-        split.forEach(str => {
-            if (str === ' ') {
-                str = '&nbsp';
-            }
-
-            const letter = new Interface(null, 'span');
-            letter.css({ display: 'inline-block' });
-            letter.html(str);
-            this.add(letter);
-
-            this.letters.push(letter);
-        });
-    }
-
-    // Public methods
-
-    setTitle = title => {
-        this.title = title;
-        this.letters = [];
-
-        this.empty();
-        this.initText();
-        this.animateIn();
-    };
-
-    animateIn = () => {
-        shuffle(this.letters);
-
-        const underscores = this.letters.filter(letter => letter === '_');
-
-        underscores.forEach((letter, i) => {
-            letter.css({ opacity: 0 }).tween({ opacity: 1 }, 2000, 'easeOutCubic', i * 15);
-        });
-
-        const letters = this.letters.filter(letter => letter !== '_').slice(0, 2);
-
-        letters.forEach((letter, i) => {
-            letter.css({ opacity: 0 }).tween({ opacity: 1 }, 2000, 'easeOutCubic', 100 + i * 15);
-        });
-    };
-}
-
-class Details extends Interface {
-    constructor() {
-        super('.details');
-
-        this.texts = [];
-
-        this.initHTML();
-        this.initViews();
-
-        this.addListeners();
-        this.onResize();
-    }
-
-    initHTML() {
-        this.css({
-            position: 'absolute',
-            left: 0,
-            top: 0,
-            width: '100%',
-            height: '100%',
-            display: 'flex',
-            alignItems: 'center',
-            pointerEvents: 'none'
-        });
-
-        this.container = new Interface('.container');
-        this.container.invisible();
-        this.container.css({
-            width: 400,
-            margin: '10% 10% 13%',
-            pointerEvents: 'none',
-            opacity: 0
-        });
-        this.add(this.container);
-    }
-
-    initViews() {
-        this.title = new DetailsTitle(Global.PAGES[Global.PAGE_INDEX].title);
-        this.title.css({
-            width: 'fit-content'
-        });
-        this.container.add(this.title);
-        this.texts.push(this.title);
-
-        this.text = new Interface('.text', 'p');
-        this.text.css({
-            width: 'fit-content',
-            margin: '6px 0',
-            fontFamily: 'Gothic A1, sans-serif',
-            fontWeight: '400',
-            fontSize: 13,
-            lineHeight: '1.5',
-            letterSpacing: 'normal'
-        });
-        this.text.html('Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.');
-        this.container.add(this.text);
-        this.texts.push(this.text);
-
-        const item = Data.getNext();
-        const link = Data.getPath(item.path);
-
-        this.link = new DetailsLink('Next', link);
-        this.link.css({
-            display: 'block',
-            width: 'fit-content'
-        });
-        this.container.add(this.link);
-        this.texts.push(this.link);
-    }
-
-    addListeners() {
-        window.addEventListener('resize', this.onResize);
-    }
-
-    // Event handlers
-
-    onResize = () => {
-        if (document.documentElement.clientWidth < Config.BREAKPOINT) {
-            this.css({ display: '' });
-
-            this.container.css({
-                width: '',
-                margin: '24px 20px 0'
-            });
-        } else {
-            this.css({ display: 'flex' });
-
-            this.container.css({
-                width: 400,
-                margin: '10% 10% 13%'
-            });
-        }
-    };
-
-    // Public methods
-
-    animateIn = () => {
-        this.container.clearTween();
-        this.container.visible();
-        this.container.css({
-            pointerEvents: 'none',
-            opacity: 1
-        });
-
-        const duration = 2000;
-        const stagger = 175;
-
-        this.texts.forEach((text, i) => {
-            const delay = i === 0 ? 0 : duration;
-
-            text.clearTween().css({ opacity: 0 }).tween({ opacity: 1 }, duration, 'easeOutCubic', delay + i * stagger);
-        });
-
-        this.title.setTitle(Global.PAGES[Global.PAGE_INDEX].title);
-
-        const item = Data.getNext();
-        const link = Data.getPath(item.path);
-
-        this.link.setLink(link);
-        this.link.onHover({ type: 'mouseleave' });
-
-        this.clearTimeout(this.timeout);
-
-        this.timeout = this.delayedCall(2000, () => {
-            this.container.css({ pointerEvents: 'auto' });
-        });
-    };
-
-    animateOut = callback => {
-        this.container.css({ pointerEvents: 'none' });
-
-        this.container.clearTween().tween({ opacity: 0 }, 300, 'easeInSine', () => {
-            this.container.invisible();
-
-            if (callback) {
-                callback();
-            }
-        });
-    };
-}
-
-class UI extends Interface {
-    constructor() {
-        super('.ui');
-
-        this.initHTML();
-        this.initViews();
-    }
-
-    initHTML() {
-        this.css({
-            position: 'fixed',
-            left: 0,
-            top: 0,
-            width: '100%',
-            height: '100%',
-            pointerEvents: 'none'
-        });
-    }
-
-    initViews() {
-        this.details = new Details();
-        this.add(this.details);
-
-        this.header = new Header();
-        this.add(this.header);
-    }
-
-    // Public methods
-
-    addPanel = item => {
-        this.header.info.panel.add(item);
-    };
-
-    update = () => {
-        this.header.info.update();
-    };
-
-    animateIn = () => {
-        this.header.animateIn();
+        return this.pages[index];
     };
 }
 
@@ -418,47 +36,6 @@ import smootherstep from '../../../../src/shaders/modules/smootherstep/smoothers
 import rotateUV from '../../../../src/shaders/modules/transformUV/rotateUV.glsl.js';
 import rgbshift from '../../../../src/shaders/modules/rgbshift/rgbshift.glsl.js';
 import dither from '../../../../src/shaders/modules/dither/dither.glsl.js';
-
-const vertexCompositeShader = /* glsl */ `
-    in vec3 position;
-    in vec2 uv;
-
-    out vec2 vUv;
-
-    void main() {
-        vUv = uv;
-
-        gl_Position = vec4(position, 1.0);
-    }
-`;
-
-const fragmentCompositeShader = /* glsl */ `
-    precision highp float;
-
-    uniform sampler2D tScene;
-    uniform float uFocus;
-    uniform float uRotation;
-    uniform float uBluriness;
-    uniform float uDistortion;
-
-    in vec2 vUv;
-
-    out vec4 FragColor;
-
-    ${smootherstep}
-    ${rotateUV}
-    ${rgbshift}
-    ${dither}
-
-    void main() {
-        float d = abs(uFocus - rotateUV(vUv, uRotation).y);
-        float t = smootherstep(0.0, 1.0, d);
-
-        FragColor = getRGB(tScene, vUv, 0.1, 0.001 * uDistortion * uBluriness * t);
-
-        FragColor.rgb = dither(FragColor.rgb);
-    }
-`;
 
 class CompositeMaterial extends RawShaderMaterial {
     constructor() {
@@ -471,8 +48,45 @@ class CompositeMaterial extends RawShaderMaterial {
                 uBluriness: { value: 1 },
                 uDistortion: { value: 1.45 }
             },
-            vertexShader: vertexCompositeShader,
-            fragmentShader: fragmentCompositeShader,
+            vertexShader: /* glsl */ `
+                in vec3 position;
+                in vec2 uv;
+
+                out vec2 vUv;
+
+                void main() {
+                    vUv = uv;
+
+                    gl_Position = vec4(position, 1.0);
+                }
+            `,
+            fragmentShader: /* glsl */ `
+                precision highp float;
+
+                uniform sampler2D tScene;
+                uniform float uFocus;
+                uniform float uRotation;
+                uniform float uBluriness;
+                uniform float uDistortion;
+
+                in vec2 vUv;
+
+                out vec4 FragColor;
+
+                ${smootherstep}
+                ${rotateUV}
+                ${rgbshift}
+                ${dither}
+
+                void main() {
+                    float d = abs(uFocus - rotateUV(vUv, uRotation).y);
+                    float t = smootherstep(0.0, 1.0, d);
+
+                    FragColor = getRGB(tScene, vUv, 0.1, 0.002 * uDistortion * uBluriness * t);
+
+                    FragColor.rgb = dither(FragColor.rgb);
+                }
+            `,
             blending: NoBlending,
             depthTest: false,
             depthWrite: false
@@ -482,60 +96,6 @@ class CompositeMaterial extends RawShaderMaterial {
 
 import blur from '../../../../src/shaders/modules/blur/blur.glsl.js';
 import blueNoise from '../../../../src/shaders/modules/noise/blue-noise.glsl.js';
-
-const vertexBlurShader = /* glsl */ `
-    in vec3 position;
-    in vec2 uv;
-
-    out vec2 vUv;
-
-    void main() {
-        vUv = uv;
-
-        gl_Position = vec4(position, 1.0);
-    }
-`;
-
-const fragmentBlurShader = /* glsl */ `
-    precision highp float;
-
-    uniform sampler2D tMap;
-    uniform sampler2D tBlueNoise;
-    uniform vec2 uBlueNoiseResolution;
-    uniform float uFocus;
-    uniform float uRotation;
-    uniform float uBluriness;
-    uniform vec2 uDirection;
-    uniform bool uDebug;
-    uniform vec2 uResolution;
-    uniform float uTime;
-
-    in vec2 vUv;
-
-    out vec4 FragColor;
-
-    vec2 rot2d(vec2 p, float a) {
-        vec2 sc = vec2(sin(a), cos(a));
-        return vec2(dot(p, vec2(sc.y, -sc.x)), dot(p, sc.xy));
-    }
-
-    ${smootherstep}
-    ${rotateUV}
-    ${blur}
-    ${blueNoise}
-
-    void main() {
-        float d = abs(uFocus - rotateUV(vUv, uRotation).y);
-        float t = smootherstep(0.0, 1.0, d);
-        float rnd = getBlueNoise(tBlueNoise, gl_FragCoord.xy, uBlueNoiseResolution, vec2(fract(uTime)));
-
-        FragColor = blur(tMap, vUv, uResolution, 20.0 * uBluriness * t * rot2d(uDirection, rnd));
-
-        if (uDebug) {
-            FragColor.rgb = mix(FragColor.rgb, mix(FragColor.rgb, vec3(1), 0.5), vec3(uBluriness * t));
-        }
-    }
-`;
 
 class BlurMaterial extends RawShaderMaterial {
     constructor(direction = new Vector2(0.5, 0.5)) {
@@ -558,12 +118,62 @@ class BlurMaterial extends RawShaderMaterial {
                 uRotation: { value: 0 },
                 uBluriness: { value: 1 },
                 uDirection: { value: direction },
-                uDebug: { value: Config.DEBUG },
+                uDebug: { value: isDebug },
                 uResolution: { value: new Vector2() },
                 uTime: { value: 0 }
             },
-            vertexShader: vertexBlurShader,
-            fragmentShader: fragmentBlurShader,
+            vertexShader: /* glsl */ `
+                in vec3 position;
+                in vec2 uv;
+
+                out vec2 vUv;
+
+                void main() {
+                    vUv = uv;
+
+                    gl_Position = vec4(position, 1.0);
+                }
+            `,
+            fragmentShader: /* glsl */ `
+                precision highp float;
+
+                uniform sampler2D tMap;
+                uniform sampler2D tBlueNoise;
+                uniform vec2 uBlueNoiseResolution;
+                uniform float uFocus;
+                uniform float uRotation;
+                uniform float uBluriness;
+                uniform vec2 uDirection;
+                uniform bool uDebug;
+                uniform vec2 uResolution;
+                uniform float uTime;
+
+                in vec2 vUv;
+
+                out vec4 FragColor;
+
+                vec2 rot2d(vec2 p, float a) {
+                    vec2 sc = vec2(sin(a), cos(a));
+                    return vec2(dot(p, vec2(sc.y, -sc.x)), dot(p, sc.xy));
+                }
+
+                ${smootherstep}
+                ${rotateUV}
+                ${blur}
+                ${blueNoise}
+
+                void main() {
+                    float d = abs(uFocus - rotateUV(vUv, uRotation).y);
+                    float t = smootherstep(0.0, 1.0, d);
+                    float rnd = getBlueNoise(tBlueNoise, gl_FragCoord.xy, uBlueNoiseResolution, vec2(fract(uTime)));
+
+                    FragColor = blur(tMap, vUv, uResolution, 20.0 * uBluriness * t * rot2d(uDirection, rnd));
+
+                    if (uDebug) {
+                        FragColor.rgb = mix(FragColor.rgb, mix(FragColor.rgb, vec3(1), 0.5), vec3(uBluriness * t));
+                    }
+                }
+            `,
             blending: NoBlending,
             depthTest: false,
             depthWrite: false
@@ -650,7 +260,7 @@ class AbstractCube extends Group {
     resize = (width, height) => {
         this.camera.aspect = width / height;
 
-        if (width < Config.BREAKPOINT) {
+        if (width < breakpoint) {
             this.camera.lookAt(this.position.x, this.position.y, 0);
             this.camera.zoom = 1;
         } else {
@@ -755,7 +365,7 @@ class FloatingCrystal extends Group {
     resize = (width, height) => {
         this.camera.aspect = width / height;
 
-        if (width < Config.BREAKPOINT) {
+        if (width < breakpoint) {
             this.camera.lookAt(this.position.x, this.position.y, 0);
             this.camera.zoom = 1;
         } else {
@@ -862,7 +472,7 @@ class DarkPlanet extends Group {
     resize = (width, height) => {
         this.camera.aspect = width / height;
 
-        if (width < Config.BREAKPOINT) {
+        if (width < breakpoint) {
             this.camera.lookAt(this.position.x, this.position.y, 0);
             this.camera.zoom = 1;
         } else {
@@ -1054,12 +664,12 @@ class SceneController {
     }
 
     static addListeners() {
-        Stage.events.on('state_change', this.onStateChange);
+        window.addEventListener('popstate', this.onPopState);
     }
 
     // Event handlers
 
-    static onStateChange = () => {
+    static onPopState = () => {
         const view = this.getView();
 
         CameraController.setView(view);
@@ -1068,18 +678,20 @@ class SceneController {
     // Public methods
 
     static getView = () => {
-        switch (Global.PAGE_INDEX) {
-            case 0:
+        const { data } = Router.get(location.pathname);
+
+        switch (data.path) {
+            case '/dark_planet':
                 return this.view.darkPlanet;
-            case 1:
+            case '/floating_crystal':
                 return this.view.floatingCrystal;
-            case 2:
+            case '/abstract_cube':
                 return this.view.abstractCube;
         }
     };
 
-    static resize = (width, height) => {
-        this.view.resize(width, height);
+    static resize = (width, height, dpr) => {
+        this.view.resize(width, height, dpr);
     };
 
     static update = time => {
@@ -1092,7 +704,7 @@ class SceneController {
 
     static animateIn = () => {
         this.addListeners();
-        this.onStateChange();
+        this.onPopState();
 
         this.view.visible = true;
     };
@@ -1134,12 +746,12 @@ class ScenePanelController {
     // Event handlers
 
     static onClick = ({ target }) => {
-        const item = Global.PAGES[target.index];
+        const data = Data.pages[target.index];
 
-        if (item && item.path) {
-            const path = Data.getPath(item.path);
+        if (data && data.path) {
+            const path = Router.getPath(data.path);
 
-            Data.setPage(path);
+            Router.setPath(`${path}/`);
             Point3D.animateOut();
         }
     };
@@ -1160,7 +772,7 @@ class PanelController {
         Point3D.init(this.scene, this.camera, {
             root: Stage,
             container: this.ui,
-            debug: Config.DEBUG
+            debug: isDebug
         });
 
         ScenePanelController.init(this.view);
@@ -1176,14 +788,14 @@ class PanelController {
 
         const items = [
             {
-                label: 'FPS'
+                name: 'FPS'
             },
             {
                 type: 'divider'
             },
             {
                 type: 'slider',
-                label: 'Focus',
+                name: 'Focus',
                 min: 0,
                 max: 1,
                 step: 0.01,
@@ -1196,7 +808,7 @@ class PanelController {
             },
             {
                 type: 'slider',
-                label: 'Rotate',
+                name: 'Rotate',
                 min: 0,
                 max: 360,
                 step: 0.3,
@@ -1210,7 +822,7 @@ class PanelController {
             },
             {
                 type: 'slider',
-                label: 'Blur',
+                name: 'Blur',
                 min: 0,
                 max: 2,
                 step: 0.01,
@@ -1221,7 +833,7 @@ class PanelController {
             },
             {
                 type: 'slider',
-                label: 'Camera',
+                name: 'Camera',
                 min: 0,
                 max: 1,
                 step: 0.01,
@@ -1232,7 +844,7 @@ class PanelController {
             },
             {
                 type: 'slider',
-                label: 'Chroma',
+                name: 'Chroma',
                 min: 0,
                 max: 2,
                 step: 0.01,
@@ -1254,7 +866,7 @@ class PanelController {
             },
             {
                 type: 'slider',
-                label: 'Thresh',
+                name: 'Thresh',
                 min: 0,
                 max: 1,
                 step: 0.01,
@@ -1265,7 +877,7 @@ class PanelController {
             },
             {
                 type: 'slider',
-                label: 'Smooth',
+                name: 'Smooth',
                 min: 0,
                 max: 1,
                 step: 0.01,
@@ -1276,7 +888,7 @@ class PanelController {
             },
             {
                 type: 'slider',
-                label: 'Strength',
+                name: 'Strength',
                 min: 0,
                 max: 2,
                 step: 0.01,
@@ -1288,7 +900,7 @@ class PanelController {
             },
             {
                 type: 'slider',
-                label: 'Radius',
+                name: 'Radius',
                 min: 0,
                 max: 1,
                 step: 0.01,
@@ -1313,7 +925,6 @@ class PanelController {
         }
 
         Point3D.update(time);
-        this.ui.update();
     };
 }
 
@@ -1643,6 +1254,15 @@ class CameraController {
 
         if (this.zoomedIn) {
             this.ui.details.animateOut(() => {
+                const { data } = Router.get(location.pathname);
+
+                this.ui.details.title.setTitle(data.title.replace(/[\s.]+/g, '_'));
+
+                const next = Data.getNext(data);
+                const path = Router.getPath(next.path);
+
+                this.ui.link.setLink(next.path !== '/' ? `${path}/` : path);
+
                 this.ui.details.animateIn();
             });
 
@@ -1741,11 +1361,15 @@ class WorldController {
     static initWorld() {
         this.renderer = new WebGLRenderer({
             powerPreference: 'high-performance',
-            stencil: false,
-            antialias: true
+            antialias: true,
+            stencil: false
         });
+
+        // Disable color management
+        ColorManagement.enabled = false;
         this.renderer.outputColorSpace = LinearSRGBColorSpace;
 
+        // Output canvas
         this.element = this.renderer.domElement;
 
         // Shadows
@@ -1824,6 +1448,8 @@ class WorldController {
         this.frame.value = frame;
     };
 
+    // Global handlers
+
     static getTexture = (path, callback) => this.textureLoader.load(path, callback);
 
     static loadTexture = path => this.textureLoader.loadAsync(path);
@@ -1843,6 +1469,7 @@ class App {
 
         await this.loadData();
 
+        this.initRouter();
         this.initViews();
         this.initControllers();
 
@@ -1884,11 +1511,58 @@ class App {
         Stage.add(WorldController.element);
     }
 
+    static async loadData() {
+        const data = await this.assetLoader.loadData('transitions/data.json');
+
+        Data.init(data);
+    }
+
+    static initRouter() {
+        Data.pages.forEach(page => {
+            Router.add(page.path, Page, page);
+        });
+
+        // Landing and 404 page
+        let home;
+
+        if (!navigator.maxTouchPoints) {
+            home = {
+                path: '/',
+                title: 'Camera Transition'
+            };
+
+            Data.pages.push(home);
+            Data.pageIndex = Data.pages.length - 1;
+        } else {
+            home = Data.pages[0]; // Dark Planet
+        }
+
+        Router.add('/', Page, home);
+        Router.add('404', Page, home);
+
+        Router.init({ path: '/examples/three/transitions/camera' });
+    }
+
     static initViews() {
         this.view = new SceneView();
         WorldController.scene.add(this.view);
 
-        this.ui = new UI();
+        this.ui = new UI({
+            fps: true,
+            breakpoint,
+            details: {
+                title: '',
+                content: /* html */ `
+Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
+                `,
+                links: [
+                    {
+                        title: 'Next'
+                    }
+                ]
+            }
+        });
+        this.ui.link = this.ui.details.links[0];
         Stage.add(this.ui);
     }
 
@@ -1906,36 +1580,10 @@ class App {
         PanelController.init(scene, camera, this.view, this.ui);
     }
 
-    static async loadData() {
-        const data = await this.assetLoader.loadData('transitions/data.json');
-
-        data.pages.forEach(item => {
-            Global.PAGES.push(new Page(item));
-        });
-
-        // Home page
-        if (!navigator.maxTouchPoints) {
-            Global.PAGES.push(new Page({
-                path: '',
-                title: 'Camera Transition'
-            }));
-            Global.PAGE_INDEX = Global.PAGES.length - 1;
-        }
-
-        Data.init();
-
-        const item = Data.getPage(Stage.path);
-
-        if (item && item.path) {
-            const path = Data.getPath(item.path);
-
-            Data.setPage(path);
-        }
-    }
-
     static addListeners() {
         window.addEventListener('resize', this.onResize);
         ticker.add(this.onUpdate);
+        this.ui.link.events.on('click', this.onClick);
     }
 
     // Event handlers
@@ -1957,6 +1605,13 @@ class App {
         SceneController.update(time);
         RenderManager.update(time, delta, frame);
         PanelController.update(time);
+        this.ui.update();
+    };
+
+    static onClick = (e, { target }) => {
+        e.preventDefault();
+
+        Router.setPath(target.link);
     };
 
     // Public methods

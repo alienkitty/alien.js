@@ -13,44 +13,10 @@
     <script type="module">
         import { Color, ColorManagement, GLSL3, Group, LinearSRGBColorSpace, Mesh, OrbitControls, PerspectiveCamera, RawShaderMaterial, Scene, SphereGeometry, Vector2, WebGLRenderer, getFullscreenTriangle, ticker } from '../../build/alien.three.js';
 
-        ColorManagement.enabled = false; // Disable color management
-
         import periodic3d from '../../src/shaders/modules/noise/periodic3d.glsl.js';
         import dither from '../../src/shaders/modules/dither/dither.glsl.js';
 
         // Based on https://github.com/spite/perlin-experiments
-
-        const vertexShader = /* glsl */ `
-            in vec3 position;
-            in vec3 normal;
-
-            uniform mat4 modelViewMatrix;
-            uniform mat4 projectionMatrix;
-
-            uniform float uTime;
-
-            ${periodic3d}
-
-            void main() {
-                float f = 0.05 * pnoise(vec3(2.0 * normal + uTime), vec3(10.0));
-
-                gl_Position = projectionMatrix * modelViewMatrix * vec4(position + f * normal, 1.0);
-            }
-        `;
-
-        const fragmentShader = /* glsl */ `
-            precision highp float;
-
-            out vec4 FragColor;
-
-            ${dither}
-
-            void main() {
-                FragColor = vec4(vec3(gl_FragCoord.w), 1.0);
-
-                FragColor.rgb = dither(FragColor.rgb);
-            }
-        `;
 
         class DepthMaterial extends RawShaderMaterial {
             constructor() {
@@ -59,8 +25,36 @@
                     uniforms: {
                         uTime: WorldController.time
                     },
-                    vertexShader,
-                    fragmentShader
+                    vertexShader: /* glsl */ `
+                        in vec3 position;
+                        in vec3 normal;
+
+                        uniform mat4 modelViewMatrix;
+                        uniform mat4 projectionMatrix;
+
+                        uniform float uTime;
+
+                        ${periodic3d}
+
+                        void main() {
+                            float f = 0.05 * pnoise(vec3(2.0 * normal + uTime), vec3(10.0));
+
+                            gl_Position = projectionMatrix * modelViewMatrix * vec4(position + f * normal, 1.0);
+                        }
+                    `,
+                    fragmentShader: /* glsl */ `
+                        precision highp float;
+
+                        out vec4 FragColor;
+
+                        ${dither}
+
+                        void main() {
+                            FragColor = vec4(vec3(gl_FragCoord.w), 1.0);
+
+                            FragColor.rgb = dither(FragColor.rgb);
+                        }
+                    `
                 });
             }
         }
@@ -111,11 +105,15 @@
             static initWorld() {
                 this.renderer = new WebGLRenderer({
                     powerPreference: 'high-performance',
-                    stencil: false,
-                    antialias: true
+                    antialias: true,
+                    stencil: false
                 });
+
+                // Disable color management
+                ColorManagement.enabled = false;
                 this.renderer.outputColorSpace = LinearSRGBColorSpace;
 
+                // Output canvas
                 this.element = this.renderer.domElement;
 
                 // 3D scene

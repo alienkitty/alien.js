@@ -1,293 +1,114 @@
-import { AssetLoader, BloomCompositeMaterial, BoxGeometry, Color, ColorManagement, Component, DirectionalLight, EnvironmentTextureLoader, GLSL3, Group, Header, HemisphereLight, IcosahedronGeometry, ImageBitmapLoaderThread, Interface, LinearSRGBColorSpace, LuminosityMaterial, MathUtils, Mesh, MeshStandardMaterial, NoBlending, OctahedronGeometry, OrthographicCamera, PanelItem, PerspectiveCamera, RawShaderMaterial, RepeatWrapping, Scene, SceneCompositeMaterial, SmoothViews, Stage, TextureLoader, Thread, UnrealBloomBlurMaterial, Vector2, WebGLRenderTarget, WebGLRenderer, defer, getFullscreenTriangle, shuffle, ticker } from '../../../../build/alien.three.js';
+import { AssetLoader, BloomCompositeMaterial, BoxGeometry, Color, ColorManagement, Component, DirectionalLight, EnvironmentTextureLoader, GLSL3, Group, HemisphereLight, IcosahedronGeometry, ImageBitmapLoaderThread, Interface, LinearSRGBColorSpace, Link, LuminosityMaterial, MathUtils, Mesh, MeshStandardMaterial, NoBlending, OctahedronGeometry, OrthographicCamera, PanelItem, PerspectiveCamera, RawShaderMaterial, RepeatWrapping, Scene, SceneCompositeMaterial, SmoothViews, Stage, TextureLoader, Thread, Title, UI, UnrealBloomBlurMaterial, Vector2, WebGLRenderTarget, WebGLRenderer, clearTween, defer, delayedCall, getFullscreenTriangle, ticker } from '../../../../build/alien.three.js';
 
-ColorManagement.enabled = false; // Disable color management
+const isDebug = /[?&]debug/.test(location.search);
 
-class Global {
-    static SECTIONS = [];
-    static SECTION_INDEX = 0;
-}
-
-class Config {
-    static BREAKPOINT = 1000;
-
-    static DEBUG = /[?&]debug/.test(location.search);
-}
+const breakpoint = 1000;
 
 class Data {
-    static init() {
+    static init({ pages }) {
+        this.sections = pages;
+        this.sectionIndex = 0;
+
         this.setIndexes();
     }
 
     static setIndexes() {
-        Global.SECTIONS.forEach((item, i) => item.index = i);
+        this.sections.forEach((section, i) => section.index = i);
     }
 
     // Public methods
 
     static setSection = index => {
-        if (index !== Global.SECTION_INDEX) {
-            Global.SECTION_INDEX = index;
+        if (index !== this.sectionIndex) {
+            this.sectionIndex = index;
 
             RenderManager.setView(index);
         }
     };
 
     static getNext = () => {
-        let index = Global.SECTION_INDEX + 1;
+        let index = this.sectionIndex + 1;
 
-        if (index > Global.SECTIONS.length - 1) {
+        if (index > this.sections.length - 1) {
             index = 0;
         }
 
-        return Global.SECTIONS[index];
+        return this.sections[index];
     };
 }
 
-class UINext extends Interface {
+class UIContainer extends Interface {
     constructor() {
-        super('.next');
+        super('.container');
 
-        this.initHTML();
-
-        this.addListeners();
-    }
-
-    initHTML() {
-        this.css({
-            position: 'relative',
-            display: 'inline-block',
-            padding: 10,
-            fontFamily: 'Gothic A1, sans-serif',
-            fontWeight: '400',
-            fontSize: 13,
-            lineHeight: '1.4',
-            letterSpacing: '0.03em',
-            textTransform: 'uppercase',
-            cursor: 'pointer'
-        });
-        this.text('Next');
-
-        this.line = new Interface('.line');
-        this.line.css({
-            position: 'absolute',
-            left: 10,
-            right: 10,
-            bottom: 10,
-            height: 1,
-            backgroundColor: 'var(--ui-color)',
-            scaleX: 0
-        });
-        this.add(this.line);
-    }
-
-    addListeners() {
-        this.element.addEventListener('mouseenter', this.onHover);
-        this.element.addEventListener('mouseleave', this.onHover);
-        this.element.addEventListener('click', this.onClick);
-    }
-
-    // Event handlers
-
-    onHover = ({ type }) => {
-        this.line.clearTween();
-
-        if (type === 'mouseenter') {
-            this.line.css({ transformOrigin: 'left center', scaleX: 0 }).tween({ scaleX: 1 }, 800, 'easeOutQuint');
-        } else {
-            this.line.css({ transformOrigin: 'right center' }).tween({ scaleX: 0 }, 500, 'easeOutQuint');
-        }
-    };
-
-    onClick = e => {
-        e.preventDefault();
-
-        const item = Data.getNext();
-
-        Data.setSection(item.index);
-    };
-}
-
-class UITitle extends Interface {
-    constructor(title) {
-        super('.title', 'h1');
-
-        this.title = title;
-        this.letters = [];
-
-        this.initHTML();
-        this.initText();
-    }
-
-    initHTML() {
-        this.invisible();
-        this.css({
-            margin: 0,
-            fontFamily: 'Roboto, sans-serif',
-            fontWeight: '300',
-            fontSize: 23,
-            lineHeight: '1.3',
-            letterSpacing: 'normal',
-            textTransform: 'uppercase',
-            pointerEvents: 'none',
-            opacity: 0
-        });
-    }
-
-    initText() {
-        const split = this.title.replace(/[\s.]+/g, '_').split('');
-
-        split.forEach(str => {
-            if (str === ' ') {
-                str = '&nbsp';
-            }
-
-            const letter = new Interface(null, 'span');
-            letter.css({ display: 'inline-block' });
-            letter.html(str);
-            this.add(letter);
-
-            this.letters.push(letter);
-        });
-    }
-
-    // Public methods
-
-    setTitle = (title, direction = 1) => {
-        this.title = title;
-        this.letters = [];
-
-        this.clearTween().tween({ y: -10 * direction, opacity: 0 }, 300, 'easeInSine', () => {
-            this.empty();
-            this.initText();
-            this.animateIn();
-            this.css({ y: 10 * direction }).tween({ y: 0, opacity: 1 }, 1000, 'easeOutCubic');
-        });
-    };
-
-    animateIn = () => {
-        this.visible();
-        this.css({ pointerEvents: 'auto' });
-
-        shuffle(this.letters);
-
-        const underscores = this.letters.filter(letter => letter === '_');
-
-        underscores.forEach((letter, i) => {
-            if (!letter.element) {
-                return;
-            }
-
-            letter.css({ opacity: 0 }).tween({ opacity: 1 }, 2000, 'easeOutCubic', i * 15);
-        });
-
-        const letters = this.letters.filter(letter => letter !== '_').slice(0, 2);
-
-        letters.forEach((letter, i) => {
-            if (!letter.element) {
-                return;
-            }
-
-            letter.css({ opacity: 0 }).tween({ opacity: 1 }, 2000, 'easeOutCubic', 100 + i * 15);
-        });
-
-        this.clearTween().tween({ opacity: 1 }, 1000, 'easeOutSine');
-    };
-
-    animateOut = callback => {
-        this.css({ pointerEvents: 'none' });
-
-        this.clearTween().tween({ opacity: 0 }, 300, 'easeInSine', () => {
-            this.invisible();
-
-            if (callback) {
-                callback();
-            }
-        });
-    };
-}
-
-class UI extends Interface {
-    constructor() {
-        super('.ui');
-
-        this.initHTML();
+        this.init();
         this.initViews();
 
         this.addListeners();
         this.onResize();
     }
 
-    initHTML() {
+    init() {
         this.invisible();
         this.css({
-            position: 'fixed',
-            left: 0,
-            top: 0,
-            width: '100%',
-            height: '100%',
-            pointerEvents: 'none',
-            opacity: 0
-        });
-
-        this.container = new Interface('.container');
-        this.container.css({
             display: 'flex',
             flexDirection: 'column',
             alignItems: 'center',
             height: '100%',
-            padding: '24px 0'
+            padding: '55px 0',
+            pointerEvents: 'none',
+            opacity: 0
         });
-        this.add(this.container);
     }
 
     initViews() {
-        this.header = new Header();
-        this.add(this.header);
+        this.title = new Title(Data.sections[Data.sectionIndex].title.replace(/[\s.]+/g, '_'));
+        this.add(this.title);
 
-        this.title = new UITitle(Global.SECTIONS[Global.SECTION_INDEX].title);
-        this.container.add(this.title);
-
-        this.link = new UINext();
+        this.link = new Link('Next');
         this.link.css({ marginTop: 'auto' });
-        this.container.add(this.link);
+        this.add(this.link);
     }
 
     addListeners() {
         Stage.events.on('view_change', this.onViewChange);
         window.addEventListener('resize', this.onResize);
+        this.link.events.on('click', this.onClick);
     }
 
     // Event handlers
 
     onViewChange = ({ index }) => {
-        this.clearTimeout(this.timeout);
+        clearTween(this.timeout);
 
-        this.timeout = this.delayedCall(300, () => {
-            this.title.setTitle(Global.SECTIONS[index].title, RenderManager.smooth.direction);
+        this.timeout = delayedCall(300, () => {
+            this.title.setTitle(Data.sections[index].title.replace(/[\s.]+/g, '_'), RenderManager.smooth.direction);
         });
     };
 
     onResize = () => {
-        if (document.documentElement.clientWidth < Config.BREAKPOINT) {
-            this.container.css({
+        const width = document.documentElement.clientWidth;
+
+        if (width < breakpoint) {
+            this.css({
                 padding: '24px 0'
             });
         } else {
-            this.container.css({
+            this.css({
                 padding: '55px 0'
             });
         }
     };
 
+    onClick = e => {
+        e.preventDefault();
+
+        const next = Data.getNext();
+
+        Data.setSection(next.index);
+    };
+
     // Public methods
-
-    addPanel = item => {
-        this.header.info.panel.add(item);
-    };
-
-    update = () => {
-        this.header.info.update();
-    };
 
     animateIn = () => {
         this.visible();
@@ -303,7 +124,7 @@ class UI extends Interface {
             view.css({ opacity: 0 }).tween({ opacity: 1 }, duration, 'easeOutCubic', i * stagger);
         });
 
-        this.header.animateIn();
+        this.link.animateIn();
     };
 }
 
@@ -314,19 +135,19 @@ class Section extends Interface {
         this.title = title;
         this.index = index;
 
-        this.initHTML();
+        this.init();
         this.initViews();
 
         this.addListeners();
     }
 
-    initHTML() {
+    init() {
         this.css({
             position: 'relative',
             height: '100svh'
         });
 
-        if (Config.DEBUG) {
+        if (isDebug) {
             this.css({
                 backgroundColor: `rgba(
                     ${Math.floor(Math.random() * 255)},
@@ -363,81 +184,25 @@ class Container extends Interface {
     constructor() {
         super('.container');
 
-        this.initHTML();
+        this.init();
         this.initViews();
     }
 
-    initHTML() {
+    init() {
         this.css({ position: 'static' });
     }
 
     initViews() {
-        this.darkPlanet = new Section(Global.SECTIONS[0]);
+        this.darkPlanet = new Section(Data.sections[0]);
         this.add(this.darkPlanet);
 
-        this.floatingCrystal = new Section(Global.SECTIONS[1]);
+        this.floatingCrystal = new Section(Data.sections[1]);
         this.add(this.floatingCrystal);
 
-        this.abstractCube = new Section(Global.SECTIONS[2]);
+        this.abstractCube = new Section(Data.sections[2]);
         this.add(this.abstractCube);
     }
 }
-
-const vertexTransitionShader = /* glsl */ `
-    in vec3 position;
-    in vec2 uv;
-
-    out vec2 vUv;
-
-    void main() {
-        vUv = uv;
-
-        gl_Position = vec4(position, 1.0);
-    }
-`;
-
-const fragmentTransitionShader = /* glsl */ `
-    precision highp float;
-
-    uniform sampler2D tMap1;
-    uniform sampler2D tMap2;
-    uniform float uProgress;
-    uniform vec2 uResolution;
-    uniform float uTime;
-
-    in vec2 vUv;
-
-    out vec4 FragColor;
-
-    // Based on https://gl-transitions.com/editor/flyeye by gre
-
-    uniform float uSize;
-    uniform float uZoom;
-    uniform float uColorSeparation;
-
-    void main() {
-        if (uProgress == 0.0) {
-            FragColor = texture(tMap1, vUv);
-            return;
-        } else if (uProgress == 1.0) {
-            FragColor = texture(tMap2, vUv);
-            return;
-        }
-
-        float inv = 1.0 - uProgress;
-        vec2 disp = uSize * vec2(cos(uZoom * vUv.x), sin(uZoom * vUv.y));
-
-        vec4 texTo = texture(tMap2, vUv + inv * disp);
-        vec4 texFrom = vec4(
-            texture(tMap1, vUv + uProgress * disp * (1.0 - uColorSeparation)).r,
-            texture(tMap1, vUv + uProgress * disp).g,
-            texture(tMap1, vUv + uProgress * disp * (1.0 + uColorSeparation)).b,
-            1.0
-        );
-
-        FragColor = texTo * uProgress + texFrom * inv;
-    }
-`;
 
 class TransitionMaterial extends RawShaderMaterial {
     constructor() {
@@ -453,8 +218,60 @@ class TransitionMaterial extends RawShaderMaterial {
                 uResolution: { value: new Vector2() },
                 uTime: { value: 0 }
             },
-            vertexShader: vertexTransitionShader,
-            fragmentShader: fragmentTransitionShader,
+            vertexShader: /* glsl */ `
+                in vec3 position;
+                in vec2 uv;
+            
+                out vec2 vUv;
+            
+                void main() {
+                    vUv = uv;
+            
+                    gl_Position = vec4(position, 1.0);
+                }
+            `,
+            fragmentShader: /* glsl */ `
+                precision highp float;
+            
+                uniform sampler2D tMap1;
+                uniform sampler2D tMap2;
+                uniform float uProgress;
+                uniform vec2 uResolution;
+                uniform float uTime;
+            
+                in vec2 vUv;
+            
+                out vec4 FragColor;
+
+                // Based on https://gl-transitions.com/editor/flyeye by gre
+            
+                uniform float uSize;
+                uniform float uZoom;
+                uniform float uColorSeparation;
+            
+                void main() {
+                    if (uProgress == 0.0) {
+                        FragColor = texture(tMap1, vUv);
+                        return;
+                    } else if (uProgress == 1.0) {
+                        FragColor = texture(tMap2, vUv);
+                        return;
+                    }
+            
+                    float inv = 1.0 - uProgress;
+                    vec2 disp = uSize * vec2(cos(uZoom * vUv.x), sin(uZoom * vUv.y));
+            
+                    vec4 texTo = texture(tMap2, vUv + inv * disp);
+                    vec4 texFrom = vec4(
+                        texture(tMap1, vUv + uProgress * disp * (1.0 - uColorSeparation)).r,
+                        texture(tMap1, vUv + uProgress * disp).g,
+                        texture(tMap1, vUv + uProgress * disp * (1.0 + uColorSeparation)).b,
+                        1.0
+                    );
+            
+                    FragColor = texTo * uProgress + texFrom * inv;
+                }
+            `,
             blending: NoBlending,
             depthTest: false,
             depthWrite: false
@@ -497,7 +314,7 @@ class RenderScene {
         this.scene.environment = await loadEnvironmentTexture('assets/textures/env/jewelry_black_contrast.jpg');
     }
 
-    // Public methods
+    // Inheritable methods
 
     resize(width, height, dpr) {
         width = Math.round(width * dpr);
@@ -610,6 +427,7 @@ class AbstractCubeScene extends RenderScene {
             this.abstractCube.initMesh()
         ]);
 
+        // Prerender
         this.scene.visible = true;
         super.update();
         this.scene.visible = false;
@@ -719,6 +537,7 @@ class FloatingCrystalScene extends RenderScene {
             this.floatingCrystal.initMesh()
         ]);
 
+        // Prerender
         this.scene.visible = true;
         super.update();
         this.scene.visible = false;
@@ -829,6 +648,7 @@ class DarkPlanetScene extends RenderScene {
             this.darkPlanet.initMesh()
         ]);
 
+        // Prerender
         this.scene.visible = true;
         super.update();
         this.scene.visible = false;
@@ -907,14 +727,14 @@ class PanelController {
 
         const items = [
             {
-                label: 'FPS'
+                name: 'FPS'
             },
             {
                 type: 'divider'
             },
             {
                 type: 'slider',
-                label: 'Thresh',
+                name: 'Thresh',
                 min: 0,
                 max: 1,
                 step: 0.01,
@@ -925,7 +745,7 @@ class PanelController {
             },
             {
                 type: 'slider',
-                label: 'Smooth',
+                name: 'Smooth',
                 min: 0,
                 max: 1,
                 step: 0.01,
@@ -936,7 +756,7 @@ class PanelController {
             },
             {
                 type: 'slider',
-                label: 'Strength',
+                name: 'Strength',
                 min: 0,
                 max: 2,
                 step: 0.01,
@@ -948,7 +768,7 @@ class PanelController {
             },
             {
                 type: 'slider',
-                label: 'Radius',
+                name: 'Radius',
                 min: 0,
                 max: 1,
                 step: 0.01,
@@ -963,7 +783,7 @@ class PanelController {
             },
             {
                 type: 'slider',
-                label: 'Size',
+                name: 'Size',
                 min: 0,
                 max: 1,
                 step: 0.01,
@@ -974,7 +794,7 @@ class PanelController {
             },
             {
                 type: 'slider',
-                label: 'Zoom',
+                name: 'Zoom',
                 min: 0,
                 max: 100,
                 step: 0.2,
@@ -985,7 +805,7 @@ class PanelController {
             },
             {
                 type: 'slider',
-                label: 'Chroma',
+                name: 'Chroma',
                 min: 0,
                 max: 2,
                 step: 0.01,
@@ -999,7 +819,7 @@ class PanelController {
             },
             {
                 type: 'slider',
-                label: 'Lerp',
+                name: 'Lerp',
                 min: 0,
                 max: 1,
                 step: 0.01,
@@ -1239,11 +1059,15 @@ class WorldController {
     static initWorld() {
         this.renderer = new WebGLRenderer({
             powerPreference: 'high-performance',
-            stencil: false,
-            antialias: true
+            antialias: true,
+            stencil: false
         });
+
+        // Disable color management
+        ColorManagement.enabled = false;
         this.renderer.outputColorSpace = LinearSRGBColorSpace;
 
+        // Output canvas
         this.element = this.renderer.domElement;
 
         // Global 3D camera
@@ -1303,6 +1127,8 @@ class WorldController {
         this.frame.value = frame;
     };
 
+    // Global handlers
+
     static getTexture = (path, callback) => this.textureLoader.load(path, callback);
 
     static loadTexture = path => this.textureLoader.loadAsync(path);
@@ -1360,13 +1186,21 @@ class App {
         Stage.add(WorldController.element);
     }
 
+    static async loadData() {
+        const data = await this.assetLoader.loadData('transitions/data.json');
+
+        Data.init(data);
+    }
+
     static initViews() {
         this.view = new SceneView();
 
         this.container = new Container();
         Stage.add(this.container);
 
-        this.ui = new UI();
+        this.ui = new UI({ fps: true, breakpoint });
+        this.ui.container = new UIContainer();
+        this.ui.add(this.ui.container);
         Stage.add(this.ui);
     }
 
@@ -1379,16 +1213,6 @@ class App {
 
     static initPanel() {
         PanelController.init(this.ui);
-    }
-
-    static async loadData() {
-        const data = await this.assetLoader.loadData('transitions/data.json');
-
-        data.pages.forEach(item => {
-            Global.SECTIONS.push(item);
-        });
-
-        Data.init();
     }
 
     static addListeners() {
@@ -1421,6 +1245,7 @@ class App {
         SceneController.animateIn();
         RenderManager.animateIn();
         this.ui.animateIn();
+        this.ui.container.animateIn();
 
         Stage.tween({ opacity: 1 }, 1000, 'linear', () => {
             Stage.css({ opacity: '' });

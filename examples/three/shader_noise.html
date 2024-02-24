@@ -13,69 +13,9 @@
     <script type="module">
         import { ColorManagement, GLSL3, LinearSRGBColorSpace, Mesh, NoBlending, OrthographicCamera, PanelItem, RawShaderMaterial, UI, Vector2, WebGLRenderer, getFullscreenTriangle, ticker } from '../../build/alien.three.js';
 
-        ColorManagement.enabled = false; // Disable color management
-
         import simplex2d from '../../src/shaders/modules/noise/simplex2d.glsl.js';
 
         // Based on https://codepen.io/vaalentin/pen/MKMmXG
-
-        const vertexShader = /* glsl */ `
-            in vec3 position;
-            in vec2 uv;
-
-            out vec2 vUv;
-
-            void main() {
-                vUv = uv;
-
-                gl_Position = vec4(position, 1.0);
-            }
-        `;
-
-        const fragmentShader = /* glsl */ `
-            precision highp float;
-
-            uniform float uMultiplier;
-            uniform float uSpeed;
-            uniform float uTime;
-
-            in vec2 vUv;
-
-            out vec4 FragColor;
-
-            ${simplex2d}
-
-            float fbm(vec2 pos) {
-                float a = sin(uTime * uSpeed);
-                float b = cos(uTime * uSpeed);
-                mat2 m = mat2(-0.80, 0.36, -0.60, -0.48);
-
-                float total;
-
-                total = 0.5000 * snoise(pos) * a;
-                pos = m * pos * 2.02;
-
-                total += 0.2500 * snoise(pos) * b;
-                pos = m * pos * 2.03;
-
-                total += 0.1250 * snoise(pos) * a;
-                pos = m * pos * 2.01;
-
-                total += 0.0625 * snoise(pos) * b;
-
-                return total;
-            }
-
-            void main() {
-                vec2 pos = vUv.xy;
-
-                vec2 q = vec2(fbm(pos + vec2(0.0)), fbm(pos + vec2(0.0)));
-
-                float c = fbm(pos + sin(uTime * uSpeed) * uMultiplier * q);
-
-                FragColor = vec4(vec3(c), 1.0);
-            }
-        `;
 
         class NoiseMaterial extends RawShaderMaterial {
             constructor() {
@@ -86,8 +26,62 @@
                         uSpeed: { value: 0.5 },
                         uTime: WorldController.time
                     },
-                    vertexShader,
-                    fragmentShader,
+                    vertexShader: /* glsl */ `
+                        in vec3 position;
+                        in vec2 uv;
+
+                        out vec2 vUv;
+
+                        void main() {
+                            vUv = uv;
+
+                            gl_Position = vec4(position, 1.0);
+                        }
+                    `,
+                    fragmentShader: /* glsl */ `
+                        precision highp float;
+
+                        uniform float uMultiplier;
+                        uniform float uSpeed;
+                        uniform float uTime;
+
+                        in vec2 vUv;
+
+                        out vec4 FragColor;
+
+                        ${simplex2d}
+
+                        float fbm(vec2 pos) {
+                            float a = sin(uTime * uSpeed);
+                            float b = cos(uTime * uSpeed);
+                            mat2 m = mat2(-0.80, 0.36, -0.60, -0.48);
+
+                            float total;
+
+                            total = 0.5000 * snoise(pos) * a;
+                            pos = m * pos * 2.02;
+
+                            total += 0.2500 * snoise(pos) * b;
+                            pos = m * pos * 2.03;
+
+                            total += 0.1250 * snoise(pos) * a;
+                            pos = m * pos * 2.01;
+
+                            total += 0.0625 * snoise(pos) * b;
+
+                            return total;
+                        }
+
+                        void main() {
+                            vec2 pos = vUv.xy;
+
+                            vec2 q = vec2(fbm(pos + vec2(0.0)), fbm(pos + vec2(0.0)));
+
+                            float c = fbm(pos + sin(uTime * uSpeed) * uMultiplier * q);
+
+                            FragColor = vec4(vec3(c), 1.0);
+                        }
+                    `,
                     blending: NoBlending,
                     depthTest: false,
                     depthWrite: false
@@ -96,15 +90,10 @@
         }
 
         class PanelController {
-            static init() {
-                this.initViews();
-                this.initPanel();
-            }
+            static init(ui) {
+                this.ui = ui;
 
-            static initViews() {
-                this.ui = new UI({ fps: true });
-                this.ui.animateIn();
-                document.body.appendChild(this.ui.element);
+                this.initPanel();
             }
 
             static initPanel() {
@@ -112,14 +101,14 @@
 
                 const items = [
                     {
-                        label: 'FPS'
+                        name: 'FPS'
                     },
                     {
                         type: 'divider'
                     },
                     {
                         type: 'slider',
-                        label: 'Multiply',
+                        name: 'Multiply',
                         min: -5,
                         max: 5,
                         step: 0.05,
@@ -130,7 +119,7 @@
                     },
                     {
                         type: 'slider',
-                        label: 'Speed',
+                        name: 'Speed',
                         min: 0,
                         max: 1,
                         step: 0.01,
@@ -145,16 +134,6 @@
                     this.ui.addPanel(new PanelItem(data));
                 });
             }
-
-            // Public methods
-
-            static update = () => {
-                if (!this.ui) {
-                    return;
-                }
-
-                this.ui.update();
-            };
         }
 
         class RenderManager {
@@ -194,8 +173,12 @@
                     powerPreference: 'high-performance',
                     stencil: false
                 });
+
+                // Disable color management
+                ColorManagement.enabled = false;
                 this.renderer.outputColorSpace = LinearSRGBColorSpace;
 
+                // Output canvas
                 this.element = this.renderer.domElement;
 
                 // Fullscreen triangle
@@ -242,6 +225,7 @@
         class App {
             static async init() {
                 this.initWorld();
+                this.initViews();
                 this.initControllers();
 
                 this.addListeners();
@@ -255,6 +239,12 @@
                 document.body.appendChild(WorldController.element);
             }
 
+            static initViews() {
+                this.ui = new UI({ fps: true });
+                this.ui.animateIn();
+                document.body.appendChild(this.ui.element);
+            }
+
             static initControllers() {
                 const { renderer, screen, screenCamera } = WorldController;
 
@@ -262,7 +252,7 @@
             }
 
             static initPanel() {
-                PanelController.init();
+                PanelController.init(this.ui);
             }
 
             static addListeners() {
@@ -285,7 +275,7 @@
             static onUpdate = (time, delta, frame) => {
                 WorldController.update(time, delta, frame);
                 RenderManager.update(time, delta, frame);
-                PanelController.update();
+                this.ui.update();
             };
         }
 

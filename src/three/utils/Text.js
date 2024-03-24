@@ -4,7 +4,7 @@
  * Based on https://oframe.github.io/ogl/examples/?src=msdf-text.html by gordonnl
  */
 
-export class TextGeometry {
+export class Text {
     constructor({
         font,
         text,
@@ -244,7 +244,7 @@ export class TextGeometry {
         this.layout();
     }
 
-    // Completely change text (like creating new TextGeometry)
+    // Completely change text (like creating new Text)
     update({ text }) {
         this.text = text;
         this.createGeometry();

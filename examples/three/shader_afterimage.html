@@ -11,11 +11,11 @@
     <link rel="stylesheet" href="../assets/css/style.css">
 
     <script type="module">
-        import { AfterimageMaterial, BloomCompositeMaterial, BufferAttribute, BufferGeometry, Color, ColorManagement, DirectionalLight, Fog, Group, HemisphereLight, LinearFilter, LinearSRGBColorSpace, LuminosityMaterial, MathUtils, Mesh, MeshStandardMaterial, OrthographicCamera, PanelItem, PerspectiveCamera, PlaneGeometry, Reflector, RepeatWrapping, Scene, SceneCompositeMaterial, TextGeometry, TextMaterial, TextureLoader, UI, UnrealBloomBlurMaterial, Vector2, Vector3, WebGLRenderTarget, WebGLRenderer, getFullscreenTriangle, getKeyByValue, ticker } from '../../build/alien.three.js';
+        import { AfterimageMaterial, BloomCompositeMaterial, BufferAttribute, BufferGeometry, Color, ColorManagement, DirectionalLight, Fog, Group, HemisphereLight, LinearFilter, LinearSRGBColorSpace, LuminosityMaterial, MathUtils, Mesh, MeshStandardMaterial, OrthographicCamera, PanelItem, PerspectiveCamera, PlaneGeometry, Reflector, RepeatWrapping, Scene, SceneCompositeMaterial, Text, TextMaterial, TextureLoader, UI, UnrealBloomBlurMaterial, Vector2, Vector3, WebGLRenderTarget, WebGLRenderer, getFullscreenTriangle, getKeyByValue, ticker } from '../../build/alien.three.js';
 
         ColorManagement.enabled = false; // Disable color management
 
-        class Text extends Group {
+        class Text2D extends Group {
             constructor() {
                 super();
 
@@ -37,7 +37,7 @@
 
                 const font = await (await fetch('../assets/fonts/Roboto-Bold.json')).json();
 
-                const text = new TextGeometry({
+                const text = new Text({
                     font,
                     text: this.fps.toString(),
                     width: 4,
@@ -247,7 +247,7 @@
                 this.floor = new Floor();
                 this.add(this.floor);
 
-                this.text = new Text();
+                this.text = new Text2D();
                 this.add(this.text);
             }
 

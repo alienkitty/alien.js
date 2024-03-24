@@ -46,7 +46,7 @@ class CompositeMaterial extends RawShaderMaterial {
                 uFocus: { value: 0.5 },
                 uRotation: { value: 0 },
                 uBluriness: { value: 1 },
-                uDistortion: { value: 1.45 }
+                uDistortion: { value: 1.5 }
             },
             vertexShader: /* glsl */ `
                 in vec3 position;

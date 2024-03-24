@@ -151,7 +151,7 @@ class CompositeMaterial extends RawShaderMaterial {
             uniforms: {
                 tScene: { value: null },
                 uColor: { value: new Color(0x0e0e0e) },
-                uDistortion: { value: 1.45 },
+                uDistortion: { value: 1.5 },
                 uOpacity: { value: 0 }
             },
             vertexShader: /* glsl */ `

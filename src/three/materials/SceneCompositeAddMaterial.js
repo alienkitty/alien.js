@@ -1,8 +1,8 @@
 import { GLSL3, NoBlending, RawShaderMaterial } from 'three';
 
-import { vertexShader, fragmentShader } from '../../shaders/SceneCompositeShader.js';
+import { vertexShader, fragmentShader } from '../../shaders/SceneCompositeAddShader.js';
 
-export class SceneCompositeMaterial extends RawShaderMaterial {
+export class SceneCompositeAddMaterial extends RawShaderMaterial {
     constructor({
         dithering = false
     } = {}) {
@@ -13,7 +13,8 @@ export class SceneCompositeMaterial extends RawShaderMaterial {
             },
             uniforms: {
                 tScene: { value: null },
-                tBloom: { value: null }
+                tBloom: { value: null },
+                tAdd: { value: null }
             },
             vertexShader,
             fragmentShader,

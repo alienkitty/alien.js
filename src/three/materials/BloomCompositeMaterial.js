@@ -4,7 +4,7 @@ import { vertexShader, fragmentShader } from '../../shaders/BloomCompositeShader
 
 export class BloomCompositeMaterial extends RawShaderMaterial {
     constructor({
-        dithering
+        dithering = false
     } = {}) {
         super({
             glslVersion: GLSL3,

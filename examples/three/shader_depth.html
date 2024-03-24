@@ -53,6 +53,7 @@
                             FragColor = vec4(vec3(gl_FragCoord.w), 1.0);
 
                             FragColor.rgb = dither(FragColor.rgb);
+                            FragColor.a = 1.0;
                         }
                     `
                 });

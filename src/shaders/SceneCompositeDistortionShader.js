@@ -1,3 +1,4 @@
+import rgbshift from './modules/rgbshift/rgbshift.glsl.js';
 import dither from './modules/dither/dither.glsl.js';
 
 export const vertexShader = /* glsl */ `
@@ -18,17 +19,22 @@ precision highp float;
 
 uniform sampler2D tScene;
 uniform sampler2D tBloom;
+uniform float uBloomDistortion;
 
 in vec2 vUv;
 
 out vec4 FragColor;
 
+${rgbshift}
 ${dither}
 
 void main() {
     FragColor = texture(tScene, vUv);
 
-    FragColor.rgb += texture(tBloom, vUv).rgb;
+    float angle = length(vUv - 0.5);
+    float amount = 0.001 * uBloomDistortion;
+
+    FragColor.rgb += getRGB(tBloom, vUv, angle, amount).rgb;
 
     #ifdef DITHERING
         FragColor.rgb = dither(FragColor.rgb);

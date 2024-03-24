@@ -14,6 +14,7 @@
         import { BloomCompositeMaterial, Color, ColorManagement, DirectionalLight, Flowmap, Fog, GLSL3, Group, HemisphereLight, LinearSRGBColorSpace, LuminosityMaterial, MathUtils, Mesh, MeshBasicMaterial, MeshStandardMaterial, NoBlending, OrthographicCamera, PanelItem, PerspectiveCamera, PlaneGeometry, RawShaderMaterial, Reflector, RepeatWrapping, SVGLoader, Scene, TextureLoader, UI, UnrealBloomBlurMaterial, Vector2, Vector3, WebGLRenderTarget, WebGLRenderer, getFullscreenTriangle, ticker } from '../../build/alien.three.js';
 
         import rgbshift from '../../src/shaders/modules/rgbshift/rgbshift.glsl.js';
+        import dither from '../../src/shaders/modules/dither/dither.glsl.js';
 
         // Based on https://oframe.github.io/ogl/examples/?src=mouse-flowmap.html by gordonnl
 
@@ -52,6 +53,7 @@
                         out vec4 FragColor;
 
                         ${rgbshift}
+                        ${dither}
 
                         void main() {
                             // R and G values are velocity in the X and Y direction
@@ -67,6 +69,9 @@
                             float amount = 0.001 * uBloomDistortion;
 
                             FragColor.rgb += getRGB(tBloom, uv, angle, amount).rgb;
+
+                            FragColor.rgb = dither(FragColor.rgb);
+                            FragColor.a = 1.0;
                         }
                     `,
                     blending: NoBlending,

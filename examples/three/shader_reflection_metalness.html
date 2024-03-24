@@ -11,59 +11,7 @@
     <link rel="stylesheet" href="../assets/css/style.css">
 
     <script type="module">
-        import { BloomCompositeMaterial, Color, ColorManagement, DirectionalLight, EnvironmentTextureLoader, Fog, GLSL3, Group, HemisphereLight, LinearSRGBColorSpace, LuminosityMaterial, MathUtils, Mesh, MeshBasicMaterial, MeshStandardMaterial, NoBlending, OrthographicCamera, PanelItem, PerspectiveCamera, PlaneGeometry, RawShaderMaterial, Reflector, RepeatWrapping, SVGLoader, Scene, StandardMaterialPanel, TextureLoader, UI, UnrealBloomBlurMaterial, Vector2, Vector3, WebGLRenderTarget, WebGLRenderer, getFullscreenTriangle, ticker } from '../../build/alien.three.js';
-
-        import rgbshift from '../../src/shaders/modules/rgbshift/rgbshift.glsl.js';
-
-        class CompositeMaterial extends RawShaderMaterial {
-            constructor() {
-                super({
-                    glslVersion: GLSL3,
-                    uniforms: {
-                        tScene: { value: null },
-                        tBloom: { value: null },
-                        uBloomDistortion: { value: 1.45 }
-                    },
-                    vertexShader: /* glsl */ `
-                        in vec3 position;
-                        in vec2 uv;
-
-                        out vec2 vUv;
-
-                        void main() {
-                            vUv = uv;
-
-                            gl_Position = vec4(position, 1.0);
-                        }
-                    `,
-                    fragmentShader: /* glsl */ `
-                        precision highp float;
-
-                        uniform sampler2D tScene;
-                        uniform sampler2D tBloom;
-                        uniform float uBloomDistortion;
-
-                        in vec2 vUv;
-
-                        out vec4 FragColor;
-
-                        ${rgbshift}
-
-                        void main() {
-                            FragColor = texture(tScene, vUv);
-
-                            float angle = length(vUv - 0.5);
-                            float amount = 0.001 * uBloomDistortion;
-
-                            FragColor.rgb += getRGB(tBloom, vUv, angle, amount).rgb;
-                        }
-                    `,
-                    blending: NoBlending,
-                    depthTest: false,
-                    depthWrite: false
-                });
-            }
-        }
+        import { BloomCompositeMaterial, Color, ColorManagement, DirectionalLight, EnvironmentTextureLoader, Fog, Group, HemisphereLight, LinearSRGBColorSpace, LuminosityMaterial, MathUtils, Mesh, MeshBasicMaterial, MeshStandardMaterial, OrthographicCamera, PanelItem, PerspectiveCamera, PlaneGeometry, Reflector, RepeatWrapping, SVGLoader, Scene, SceneCompositeDistortionMaterial, StandardMaterialPanel, TextureLoader, UI, UnrealBloomBlurMaterial, Vector2, Vector3, WebGLRenderTarget, WebGLRenderer, getFullscreenTriangle, ticker } from '../../build/alien.three.js';
 
         // https://vimeo.com/69949278
 
@@ -452,7 +400,7 @@
                 this.bloomCompositeMaterial.uniforms.uBloomFactors.value = this.bloomFactors();
 
                 // Composite material
-                this.compositeMaterial = new CompositeMaterial();
+                this.compositeMaterial = new SceneCompositeDistortionMaterial({ dithering: true });
                 this.compositeMaterial.uniforms.uBloomDistortion.value = this.bloomDistortion;
             }
 

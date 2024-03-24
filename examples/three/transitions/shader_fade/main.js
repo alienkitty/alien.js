@@ -187,6 +187,7 @@ class CompositeMaterial extends RawShaderMaterial {
                     FragColor.rgb = mix(uColor, FragColor.rgb, uOpacity);
 
                     FragColor.rgb = dither(FragColor.rgb);
+                    FragColor.a = 1.0;
                 }
             `,
             blending: NoBlending,

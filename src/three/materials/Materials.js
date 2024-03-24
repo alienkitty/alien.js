@@ -20,6 +20,8 @@ export { UnrealBloomBlurMaterial } from './UnrealBloomBlurMaterial.js';
 export { UnrealBloomCompositeMaterial } from './UnrealBloomCompositeMaterial.js';
 export { BloomCompositeMaterial } from './BloomCompositeMaterial.js';
 export { SceneCompositeMaterial } from './SceneCompositeMaterial.js';
+export { SceneCompositeAddMaterial } from './SceneCompositeAddMaterial.js';
+export { SceneCompositeDistortionMaterial } from './SceneCompositeDistortionMaterial.js';
 export { PoissonDiscBlurMaterial } from './PoissonDiscBlurMaterial.js';
 export { CameraMotionBlurMaterial } from './CameraMotionBlurMaterial.js';
 export { BokehBlurMaterial1 } from './BokehBlurMaterial1.js';

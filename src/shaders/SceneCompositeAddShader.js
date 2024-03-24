@@ -18,6 +18,7 @@ precision highp float;
 
 uniform sampler2D tScene;
 uniform sampler2D tBloom;
+uniform sampler2D tAdd;
 
 in vec2 vUv;
 
@@ -29,6 +30,8 @@ void main() {
     FragColor = texture(tScene, vUv);
 
     FragColor.rgb += texture(tBloom, vUv).rgb;
+
+    FragColor.rgb += texture(tAdd, vUv).rgb;
 
     #ifdef DITHERING
         FragColor.rgb = dither(FragColor.rgb);

@@ -11,62 +11,10 @@
     <link rel="stylesheet" href="../assets/css/style.css">
 
     <script type="module">
-        import { BloomCompositeMaterial, Color, ColorManagement, EnvironmentTextureLoader, FrontSide, GLSL3, GLTFLoader, Group, HemisphereLight, LinearSRGBColorSpace, LuminosityMaterial, MathUtils, Mesh, NoBlending, OrbitControls, OrthographicCamera, PanelItem, PerspectiveCamera, PointLight, PointLightHelper, RawShaderMaterial, Scene, UI, UnrealBloomBlurMaterial, Vector2, Vector3, WebGLRenderTarget, WebGLRenderer, getFrustum, getFullscreenTriangle, getKeyByValue, ticker, tween } from '../../build/alien.three.js';
+        import { BloomCompositeMaterial, Color, ColorManagement, EnvironmentTextureLoader, FrontSide, GLTFLoader, Group, HemisphereLight, LinearSRGBColorSpace, LuminosityMaterial, MathUtils, Mesh, OrbitControls, OrthographicCamera, PanelItem, PerspectiveCamera, PointLight, PointLightHelper, Scene, SceneCompositeDistortionMaterial, UI, UnrealBloomBlurMaterial, Vector2, Vector3, WebGLRenderTarget, WebGLRenderer, getFrustum, getFullscreenTriangle, getKeyByValue, ticker, tween } from '../../build/alien.three.js';
 
         const isDebug = /[?&]debug/.test(location.search);
         const isOrbit = /[?&]orbit/.test(location.search);
-
-        import rgbshift from '../../src/shaders/modules/rgbshift/rgbshift.glsl.js';
-
-        class CompositeMaterial extends RawShaderMaterial {
-            constructor() {
-                super({
-                    glslVersion: GLSL3,
-                    uniforms: {
-                        tScene: { value: null },
-                        tBloom: { value: null },
-                        uBloomDistortion: { value: 1.45 }
-                    },
-                    vertexShader: /* glsl */ `
-                        in vec3 position;
-                        in vec2 uv;
-
-                        out vec2 vUv;
-
-                        void main() {
-                            vUv = uv;
-
-                            gl_Position = vec4(position, 1.0);
-                        }
-                    `,
-                    fragmentShader: /* glsl */ `
-                        precision highp float;
-
-                        uniform sampler2D tScene;
-                        uniform sampler2D tBloom;
-                        uniform float uBloomDistortion;
-
-                        in vec2 vUv;
-
-                        out vec4 FragColor;
-
-                        ${rgbshift}
-
-                        void main() {
-                            FragColor = texture(tScene, vUv);
-
-                            float angle = length(vUv - 0.5);
-                            float amount = 0.001 * uBloomDistortion;
-
-                            FragColor.rgb += getRGB(tBloom, vUv, angle, amount).rgb;
-                        }
-                    `,
-                    blending: NoBlending,
-                    depthTest: false,
-                    depthWrite: false
-                });
-            }
-        }
 
         class MouseLight extends Group {
             constructor() {
@@ -370,7 +318,7 @@
                 this.bloomCompositeMaterial.uniforms.uBloomFactors.value = this.bloomFactors();
 
                 // Composite material
-                this.compositeMaterial = new CompositeMaterial();
+                this.compositeMaterial = new SceneCompositeDistortionMaterial({ dithering: true });
                 this.compositeMaterial.uniforms.uBloomDistortion.value = this.bloomDistortion;
             }
 

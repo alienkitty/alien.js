@@ -31,7 +31,8 @@ ${dither}
 void main() {
     FragColor = texture(tScene, vUv);
 
-    float angle = length(vUv - 0.5);
+    vec2 dir = 0.5 - vUv;
+    float angle = atan(dir.y, dir.x);
     float amount = 0.001 * uBloomDistortion;
 
     FragColor.rgb += getRGB(tBloom, vUv, angle, amount).rgb;

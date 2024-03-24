@@ -65,7 +65,8 @@
 
                             FragColor = texture(tScene, uv);
 
-                            float angle = length(vUv - 0.5);
+                            vec2 dir = 0.5 - vUv;
+                            float angle = atan(dir.y, dir.x);
                             float amount = 0.001 * uBloomDistortion;
 
                             FragColor.rgb += getRGB(tBloom, uv, angle, amount).rgb;
@@ -422,8 +423,8 @@
                         type: 'slider',
                         name: 'Chroma',
                         min: 0,
-                        max: 2,
-                        step: 0.01,
+                        max: 10,
+                        step: 0.1,
                         value: compositeMaterial.uniforms.uBloomDistortion.value,
                         callback: value => {
                             compositeMaterial.uniforms.uBloomDistortion.value = value;

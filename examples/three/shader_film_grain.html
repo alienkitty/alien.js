@@ -66,7 +66,11 @@
 
                             FragColor = texture(tScene, vUv);
 
-                            FragColor.rgb += getRGB(tBloom, vUv, center, 0.001 * uBloomDistortion).rgb;
+                            vec2 dir = 0.5 - vUv;
+                            float angle = atan(dir.y, dir.x);
+                            float amount = 0.001 * uBloomDistortion;
+
+                            FragColor.rgb += getRGB(tBloom, vUv, angle, amount).rgb;
 
                             // Film grain
                             FragColor.rgb += vec3(uGrain * random(vUv + vec2(uTime, 0.0) * 0.06));
@@ -248,8 +252,8 @@
                         type: 'slider',
                         name: 'Chroma',
                         min: 0,
-                        max: 2,
-                        step: 0.01,
+                        max: 10,
+                        step: 0.1,
                         value: compositeMaterial.uniforms.uBloomDistortion.value,
                         callback: value => {
                             compositeMaterial.uniforms.uBloomDistortion.value = value;

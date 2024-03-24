@@ -63,7 +63,8 @@
                             // Use flow to adjust the UV lookup of a texture
                             vec2 uv = vUv - flow.rg * 0.05;
 
-                            float angle = length(vUv - 0.5);
+                            vec2 dir = 0.5 - vUv;
+                            float angle = atan(dir.y, dir.x);
                             float amount = length(flow.rg) * 0.025;
 
                             FragColor = getRGB(tScene, uv, angle, amount);
@@ -422,8 +423,8 @@
                         type: 'slider',
                         name: 'Chroma',
                         min: 0,
-                        max: 2,
-                        step: 0.01,
+                        max: 10,
+                        step: 0.1,
                         value: compositeMaterial.uniforms.uBloomDistortion.value,
                         callback: value => {
                             compositeMaterial.uniforms.uBloomDistortion.value = value;

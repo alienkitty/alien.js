@@ -807,8 +807,8 @@ class PanelController {
                 type: 'slider',
                 name: 'Chroma',
                 min: 0,
-                max: 2,
-                step: 0.01,
+                max: 10,
+                step: 0.1,
                 value: transitionMaterial.uniforms.uColorSeparation.value,
                 callback: value => {
                     transitionMaterial.uniforms.uColorSeparation.value = value;

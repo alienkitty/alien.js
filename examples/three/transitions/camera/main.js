@@ -46,7 +46,7 @@ class CompositeMaterial extends RawShaderMaterial {
                 uFocus: { value: 0.5 },
                 uRotation: { value: 0 },
                 uBluriness: { value: 1 },
-                uDistortion: { value: 1.45 }
+                uDistortion: { value: 1.5 }
             },
             vertexShader: /* glsl */ `
                 in vec3 position;
@@ -82,7 +82,11 @@ class CompositeMaterial extends RawShaderMaterial {
                     float d = abs(uFocus - rotateUV(vUv, uRotation).y);
                     float t = smootherstep(0.0, 1.0, d);
 
-                    FragColor = getRGB(tScene, vUv, 0.1, 0.002 * uDistortion * uBluriness * t);
+                    vec2 dir = 0.5 - vUv;
+                    float angle = atan(dir.y, dir.x);
+                    float amount = 0.002 * uDistortion * uBluriness * t;
+
+                    FragColor += getRGB(tScene, vUv, angle, amount);
 
                     FragColor.rgb = dither(FragColor.rgb);
                     FragColor.a = 1.0;

@@ -14,7 +14,7 @@ export class SceneCompositeDistortionMaterial extends RawShaderMaterial {
             uniforms: {
                 tScene: { value: null },
                 tBloom: { value: null },
-                uBloomDistortion: { value: 1.45 }
+                uBloomDistortion: { value: 1.5 }
             },
             vertexShader,
             fragmentShader,

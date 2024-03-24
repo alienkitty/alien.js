@@ -14,26 +14,19 @@
         import { AdditiveBlending, BloomCompositeMaterial, BufferGeometry, Color, ColorManagement, CopyMaterial, DepthTexture, DirectionalLight, EnvironmentTextureLoader, Float32BufferAttribute, GLSL3, Group, HemisphereLight, ImageBitmapLoaderThread, LinearSRGBColorSpace, LuminosityMaterial, MathUtils, Mesh, MeshStandardMaterial, NoBlending, OrbitControls, OrthographicCamera, PanelItem, PerspectiveCamera, Points, RawShaderMaterial, RepeatWrapping, Scene, SphereGeometry, TextureLoader, Thread, UI, UnrealBloomBlurMaterial, Vector2, WebGLRenderTarget, WebGLRenderer, getFullscreenTriangle, ticker } from '../../build/alien.three.js';
 
         import blur from '../../src/shaders/modules/blur/radial-blur8-rgbshift.glsl.js';
-        // import blur from '../../src/shaders/modules/blur/radial-blur10-rgbshift.glsl.js';
-        import depth from '../../src/shaders/modules/depth/depth.glsl.js';
 
         // Based on https://github.com/OGRECave/ogre/blob/master/Samples/Media/materials/programs/GLSL/Radial_Blur_FP.glsl
         // Based on https://stackoverflow.com/questions/4579020/how-do-i-use-a-glsl-shader-to-apply-a-radial-blur-to-an-entire-scene
 
         class CompositeMaterial extends RawShaderMaterial {
             constructor() {
-                const { camera } = WorldController;
-
                 super({
                     glslVersion: GLSL3,
                     uniforms: {
                         tMap: { value: null },
-                        tDepth: { value: null },
                         uBlurDist: { value: 1 },
                         uBlurStrength: { value: 2.2 },
-                        uRGBStrength: { value: 1 },
-                        uCameraNear: { value: camera.near },
-                        uCameraFar: { value: camera.far }
+                        uRGBStrength: { value: 2.2 }
                     },
                     vertexShader: /* glsl */ `
                         in vec3 position;
@@ -50,40 +43,25 @@
                     fragmentShader: /* glsl */ `
                         precision highp float;
 
-                        #include <packing>
-
                         uniform sampler2D tMap;
-                        uniform sampler2D tDepth;
                         uniform float uBlurDist;
                         uniform float uBlurStrength;
                         uniform float uRGBStrength;
-                        uniform float uCameraNear;
-                        uniform float uCameraFar;
 
                         in vec2 vUv;
 
                         out vec4 FragColor;
 
                         ${blur}
-                        ${depth}
 
                         void main() {
-                            vec4 depth = texture(tDepth, vUv);
-                            float sceneDepth = getDepth(tDepth, vUv, uCameraNear, uCameraFar);
-
                             vec2 dir = 0.5 - vUv;
                             float dist = length(dir);
                             dist = clamp(smoothstep(0.2, 0.7, dist), 0.0, 1.0);
                             float angle = atan(dir.y, dir.x);
-                            // float amount = 0.002 * depth.r * uRGBStrength;
                             float amount = 0.002 * dist * uRGBStrength;
 
-                            // FragColor = radialBlurRGB(tMap, vUv, 0.1 * depth.r * uBlurDist, uBlurStrength, angle, amount);
-                            // FragColor = radialBlurRGB(tMap, vUv, 0.1 * sceneDepth * uBlurDist, uBlurStrength, angle, amount);
-                            // FragColor = radialBlurRGB(tMap, vUv, 0.1 * uBlurDist, uBlurStrength, angle, amount);
                             FragColor = radialBlurRGB(tMap, vUv, 0.1 * dist * uBlurDist, uBlurStrength, angle, amount);
-                            // FragColor = vec4(vec3(texture(tDepth, vUv).r), 1.0);
-                            // FragColor = vec4(vec3(sceneDepth), 1.0);
                         }
                     `,
                     blending: NoBlending,
@@ -94,6 +72,7 @@
         }
 
         import simplex3d from '../../src/shaders/modules/noise/simplex3d.glsl.js';
+        import depth from '../../src/shaders/modules/depth/depth.glsl.js';
 
         class Dust extends Group {
             constructor(numParticles) {
@@ -485,7 +464,6 @@
 
                 // Composite material
                 this.compositeMaterial = new CompositeMaterial();
-                this.compositeMaterial.uniforms.tDepth.value = this.renderTargetA.depthTexture;
             }
 
             static bloomFactors() {

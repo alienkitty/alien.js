@@ -116,6 +116,7 @@ const program = new FXAAProgram(gl);
 [tilt shift](https://alien.js.org/examples/three/shader_tilt_shift.html) (with Gaussian blur)  
 [dof](https://alien.js.org/examples/three/shader_dof_fake.html) (fake with Bokeh blur, [debug](https://alien.js.org/examples/three/shader_dof_fake.html?debug))  
 [chromatic aberration](https://alien.js.org/examples/three/shader_chromatic_aberration.html)  
+[barrel distortion](https://alien.js.org/examples/three/shader_barrel_distortion.html) (RGB shift)  
 [film grain](https://alien.js.org/examples/three/shader_film_grain.html)  
 [reflection](https://alien.js.org/examples/three/shader_reflection.html) (with fast Gaussian blur)  
 [reflection](https://alien.js.org/examples/three/shader_reflection_diffuse.html) (diffuse)  

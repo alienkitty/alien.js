@@ -72,10 +72,11 @@
         }
 
         class Stars extends Group {
-            constructor(numParticles, wireframeColor) {
+            constructor(numParticles, blockSize, wireframeColor) {
                 super();
 
                 this.numParticles = numParticles;
+                this.blockSize = blockSize;
                 this.wireframeColor = wireframeColor;
 
                 this.initPoints();
@@ -87,9 +88,9 @@
                 const vertices = [];
 
                 for (let i = 0; i < this.numParticles; i++) {
-                    vertices[i * 3 + 0] = MathUtils.randFloatSpread(40 / 2);
-                    vertices[i * 3 + 1] = MathUtils.randFloatSpread(40 / 2);
-                    vertices[i * 3 + 2] = -40 / 2 + MathUtils.randFloatSpread(40);
+                    vertices[i * 3 + 0] = MathUtils.randFloatSpread(this.blockSize / 2);
+                    vertices[i * 3 + 1] = MathUtils.randFloatSpread(this.blockSize / 2);
+                    vertices[i * 3 + 2] = -this.blockSize / 2 + MathUtils.randFloatSpread(this.blockSize);
                 }
 
                 const geometry = new BufferGeometry();
@@ -102,7 +103,7 @@
                         uScale: { value: window.devicePixelRatio / 2 },
                         uAlpha: { value: 1 },
                         uCameraNear: { value: camera.near },
-                        uCameraFar: { value: 40 },
+                        uCameraFar: { value: this.blockSize },
                         uResolution: resolution,
                         uTime: time
                     },
@@ -124,7 +125,7 @@
                         void main() {
                             vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
 
-                            gl_PointSize = uScale * (16.0 * (150.0 / -mvPosition.z));
+                            gl_PointSize = uScale * (150.0 / -mvPosition.z);
                             gl_Position = projectionMatrix * mvPosition;
 
                             vec3 pos = (modelMatrix * vec4(position, 1.0)).xyz;
@@ -166,23 +167,24 @@
                 this.material = material;
 
                 const wireframe = new Mesh(
-                    new BoxGeometry(40 / 2, 40 / 2, 40),
+                    new BoxGeometry(this.blockSize / 2, this.blockSize / 2, this.blockSize),
                     new MeshBasicMaterial({
                         color: this.wireframeColor,
                         wireframe: true
                     })
                 );
-                wireframe.position.set(0, 0, -40 / 2);
+                wireframe.position.set(0, 0, -this.blockSize / 2);
                 this.add(wireframe);
             }
         }
 
         class InfiniteStars extends Group {
-            constructor(camera, numParticles, zSpeed) {
+            constructor(camera, numParticles, blockSize, zSpeed) {
                 super();
 
                 this.camera = camera;
                 this.numParticles = numParticles;
+                this.blockSize = blockSize;
                 this.zSpeed = zSpeed / 100;
 
                 this.wireframeColors = [
@@ -196,8 +198,8 @@
 
             initStars() {
                 for (let i = 0; i < 3; i++) {
-                    const stars = new Stars(this.numParticles, this.wireframeColors[i]);
-                    stars.position.z = i * -40;
+                    const stars = new Stars(this.numParticles, this.blockSize, this.wireframeColors[i]);
+                    stars.position.z = i * -this.blockSize;
                     this.add(stars);
                 }
             }
@@ -209,8 +211,8 @@
                     const stars = this.children[i];
                     const z = this.position.z + stars.position.z;
 
-                    if (z > 40 * 2) {
-                        stars.position.z -= 40 * 3;
+                    if (z > this.blockSize * 2) {
+                        stars.position.z -= this.blockSize * 3;
                     }
                 }
             }
@@ -491,7 +493,7 @@
                 this.scene.background = new Color(0x0e0e0e);
                 this.camera = new PerspectiveCamera(30);
                 this.camera.near = 0.5;
-                this.camera.far = 400;
+                this.camera.far = 40 * 4;
                 this.camera.position.z = 8;
                 this.camera.lookAt(this.scene.position);
 
@@ -586,7 +588,7 @@
                 this.view = new SceneView();
                 WorldController.scene.add(this.view);
 
-                this.stars = new InfiniteStars(camera, 1000, 16 * 0.4);
+                this.stars = new InfiniteStars(camera, 1000, 40, 0.4 * 16);
 
                 this.ui = new UI({ fps: true });
                 this.ui.animateIn();

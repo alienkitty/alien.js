@@ -3,6 +3,7 @@ export { ColorMaterial } from './ColorMaterial.js';
 export { BasicMaterial } from './BasicMaterial.js';
 export { ShadowTextureMaterial } from './ShadowTextureMaterial.js';
 export { MaskMaterial } from './MaskMaterial.js';
+export { DepthMaterial } from './DepthMaterial.js';
 export { FresnelMaterial } from './FresnelMaterial.js';
 export { CopyMaterial } from './CopyMaterial.js';
 export { ACESFilmicToneMappingMaterial } from './ACESFilmicToneMappingMaterial.js';

@@ -11,7 +11,7 @@
     <link rel="stylesheet" href="../assets/css/style.css">
 
     <script type="module">
-        import { AdditiveBlending, BloomCompositeMaterial, BufferGeometry, Color, ColorManagement, CopyMaterial, Float32BufferAttribute, GLSL3, Group, LinearSRGBColorSpace, LuminosityMaterial, MathUtils, Mesh, NoBlending, OrbitControls, OrthographicCamera, PerspectiveCamera, Points, RawShaderMaterial, Scene, TextureLoader, UnrealBloomBlurMaterial, Vector2, WebGLRenderTarget, WebGLRenderer, getFullscreenTriangle, ticker } from '../../build/alien.three.js';
+        import { AdditiveBlending, BloomCompositeMaterial, BufferGeometry, Color, ColorManagement, CopyMaterial, Float32BufferAttribute, GLSL3, Group, LinearSRGBColorSpace, LuminosityMaterial, MathUtils, Mesh, NoBlending, OrbitControls, OrthographicCamera, PanelItem, PerspectiveCamera, Points, RawShaderMaterial, Scene, TextureLoader, UI, UnrealBloomBlurMaterial, Vector2, WebGLRenderTarget, WebGLRenderer, getFullscreenTriangle, ticker } from '../../build/alien.three.js';
 
         import blur from '../../src/shaders/modules/blur/radial-blur8-rgbshift.glsl.js';
 
@@ -172,7 +172,7 @@
 
                 this.camera = camera;
                 this.numParticles = numParticles;
-                this.zSpeed = zSpeed;
+                this.zSpeed = zSpeed / 100;
 
                 this.initStars();
             }
@@ -207,6 +207,41 @@
             }
 
             async initMesh() {
+            }
+        }
+
+        class PanelController {
+            static init(stars, ui) {
+                this.stars = stars;
+                this.ui = ui;
+
+                this.initPanel();
+            }
+
+            static initPanel() {
+                const items = [
+                    {
+                        name: 'FPS'
+                    },
+                    {
+                        type: 'divider'
+                    },
+                    {
+                        type: 'slider',
+                        name: 'Speed',
+                        min: 0,
+                        max: 10,
+                        step: 0.1,
+                        value: this.stars.zSpeed * 100,
+                        callback: value => {
+                            this.stars.zSpeed = value / 100;
+                        }
+                    }
+                ];
+
+                items.forEach(data => {
+                    this.ui.addPanel(new PanelItem(data));
+                });
             }
         }
 
@@ -519,6 +554,8 @@
 
                 this.addListeners();
                 this.onResize();
+
+                this.initPanel();
             }
 
             static initWorld() {
@@ -532,13 +569,21 @@
                 this.view = new SceneView();
                 WorldController.scene.add(this.view);
 
-                this.stars = new InfiniteStars(camera, 1000, 0.004);
+                this.stars = new InfiniteStars(camera, 1000, 0.4);
+
+                this.ui = new UI({ fps: true });
+                this.ui.animateIn();
+                document.body.appendChild(this.ui.element);
             }
 
             static initControllers() {
                 const { renderer, scene, camera } = WorldController;
 
                 RenderManager.init(renderer, scene, camera, this.stars);
+            }
+
+            static initPanel() {
+                PanelController.init(this.stars, this.ui);
             }
 
             static addListeners() {
@@ -562,6 +607,7 @@
                 WorldController.update(time, delta, frame);
                 this.stars.update(time, delta, frame);
                 RenderManager.update(time, delta, frame);
+                this.ui.update();
             };
         }
 

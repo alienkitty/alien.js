@@ -11,7 +11,7 @@
     <link rel="stylesheet" href="../assets/css/style.css">
 
     <script type="module">
-        import { Color, ColorManagement, GLSL3, Group, LinearSRGBColorSpace, Mesh, OrbitControls, PerspectiveCamera, RawShaderMaterial, Scene, SphereGeometry, Vector2, WebGLRenderer, getFullscreenTriangle, ticker } from '../../build/alien.three.js';
+        import { Color, ColorManagement, GLSL3, Group, LinearSRGBColorSpace, Mesh, OrbitControls, PanelItem, PerspectiveCamera, RawShaderMaterial, Scene, SphereGeometry, UI, Vector2, WebGLRenderer, getFullscreenTriangle, ticker } from '../../build/alien.three.js';
 
         import periodic3d from '../../src/shaders/modules/noise/periodic3d.glsl.js';
         import dither from '../../src/shaders/modules/dither/dither.glsl.js';
@@ -20,9 +20,12 @@
 
         class DepthMaterial extends RawShaderMaterial {
             constructor() {
+                const { camera } = WorldController;
+
                 super({
                     glslVersion: GLSL3,
                     uniforms: {
+                        uAperture: { value: camera.position.z },
                         uTime: WorldController.time
                     },
                     vertexShader: /* glsl */ `
@@ -31,12 +34,21 @@
 
                         uniform mat4 modelViewMatrix;
                         uniform mat4 projectionMatrix;
+                        uniform vec3 cameraPosition;
 
+                        uniform float uAperture;
                         uniform float uTime;
+
+                        out vec3 vColor;
 
                         ${periodic3d}
 
                         void main() {
+                            float linearDepth = 1.0 / uAperture;
+                            float linearPos = length(cameraPosition - position) * linearDepth;
+
+                            vColor = vec3(1.0 - linearPos);
+
                             float f = 0.05 * pnoise(vec3(2.0 * normal + uTime), vec3(10.0));
 
                             gl_Position = projectionMatrix * modelViewMatrix * vec4(position + f * normal, 1.0);
@@ -45,12 +57,14 @@
                     fragmentShader: /* glsl */ `
                         precision highp float;
 
+                        in vec3 vColor;
+
                         out vec4 FragColor;
 
                         ${dither}
 
                         void main() {
-                            FragColor = vec4(vec3(gl_FragCoord.w), 1.0);
+                            FragColor = vec4(vColor, 1.0);
 
                             FragColor.rgb = dither(FragColor.rgb);
                             FragColor.a = 1.0;
@@ -68,11 +82,48 @@
             }
 
             initMesh() {
-                const mesh = new Mesh(
+                this.mesh = new Mesh(
                     new SphereGeometry(1, 80, 80),
                     new DepthMaterial()
                 );
-                this.add(mesh);
+                this.add(this.mesh);
+            }
+        }
+
+        class PanelController {
+            static init(view, ui) {
+                this.view = view;
+                this.ui = ui;
+
+                this.initPanel();
+            }
+
+            static initPanel() {
+                const { mesh } = this.view;
+
+                const items = [
+                    {
+                        name: 'FPS'
+                    },
+                    {
+                        type: 'divider'
+                    },
+                    {
+                        type: 'slider',
+                        name: 'Aperture',
+                        min: 0,
+                        max: 50,
+                        step: 0.1,
+                        value: mesh.material.uniforms.uAperture.value,
+                        callback: value => {
+                            mesh.material.uniforms.uAperture.value = value;
+                        }
+                    }
+                ];
+
+                items.forEach(data => {
+                    this.ui.addPanel(new PanelItem(data));
+                });
             }
         }
 
@@ -188,6 +239,8 @@
 
                 this.addListeners();
                 this.onResize();
+
+                this.initPanel();
             }
 
             static initWorld() {
@@ -198,12 +251,20 @@
             static initViews() {
                 this.view = new SceneView();
                 WorldController.scene.add(this.view);
+
+                this.ui = new UI({ fps: true });
+                this.ui.animateIn();
+                document.body.appendChild(this.ui.element);
             }
 
             static initControllers() {
                 const { renderer, scene, camera } = WorldController;
 
                 RenderManager.init(renderer, scene, camera);
+            }
+
+            static initPanel() {
+                PanelController.init(this.view, this.ui);
             }
 
             static addListeners() {
@@ -226,6 +287,7 @@
             static onUpdate = (time, delta, frame) => {
                 WorldController.update(time, delta, frame);
                 RenderManager.update(time, delta, frame);
+                this.ui.update();
             };
         }
 

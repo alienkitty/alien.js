@@ -86,9 +86,9 @@
                 const vertices = [];
 
                 for (let i = 0; i < this.numParticles; i++) {
-                    vertices[i * 3 + 0] = MathUtils.randFloatSpread(camera.far / 2);
-                    vertices[i * 3 + 1] = MathUtils.randFloatSpread(camera.far / 2);
-                    vertices[i * 3 + 2] = -camera.far / 2 + MathUtils.randFloatSpread(camera.far);
+                    vertices[i * 3 + 0] = MathUtils.randFloatSpread(40 / 2);
+                    vertices[i * 3 + 1] = MathUtils.randFloatSpread(40 / 2);
+                    vertices[i * 3 + 2] = -40 / 2 + MathUtils.randFloatSpread(40);
                 }
 
                 const geometry = new BufferGeometry();
@@ -101,7 +101,7 @@
                         uScale: { value: window.devicePixelRatio / 2 },
                         uAlpha: { value: 1 },
                         uCameraNear: { value: camera.near },
-                        uCameraFar: { value: camera.far },
+                        uCameraFar: { value: 40 },
                         uResolution: resolution,
                         uTime: time
                     },
@@ -123,7 +123,7 @@
                         void main() {
                             vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
 
-                            gl_PointSize = uScale * (150.0 / -mvPosition.z);
+                            gl_PointSize = uScale * (2.0 * (150.0 / -mvPosition.z));
                             gl_Position = projectionMatrix * mvPosition;
 
                             vec3 pos = (modelMatrix * vec4(position, 1.0)).xyz;
@@ -149,8 +149,8 @@
 
                         void main() {
                             FragColor = texture(tMap, vec2(gl_PointCoord.x, 1.0 - gl_PointCoord.y));
-                            FragColor.a *= vFade;
-                            FragColor.a *= uAlpha;
+                            // FragColor.a *= vFade;
+                            // FragColor.a *= uAlpha;
                         }
                     `,
                     transparent: true,
@@ -180,7 +180,7 @@
             initStars() {
                 for (let i = 0; i < 3; i++) {
                     const stars = new Stars(this.numParticles);
-                    stars.position.z = i * -this.camera.far;
+                    stars.position.z = i * -40;
                     this.add(stars);
                 }
             }
@@ -192,8 +192,8 @@
                     const stars = this.children[i];
                     const z = this.position.z + stars.position.z;
 
-                    if (z > this.camera.far * 2) {
-                        stars.position.z -= this.camera.far * 3;
+                    if (z > 40 * 2) {
+                        stars.position.z -= 40 * 3;
                     }
                 }
             }
@@ -474,7 +474,7 @@
                 this.scene.background = new Color(0x0e0e0e);
                 this.camera = new PerspectiveCamera(30);
                 this.camera.near = 0.5;
-                this.camera.far = 40;
+                this.camera.far = 400;
                 this.camera.position.z = 8;
                 this.camera.lookAt(this.scene.position);
 
@@ -569,7 +569,7 @@
                 this.view = new SceneView();
                 WorldController.scene.add(this.view);
 
-                this.stars = new InfiniteStars(camera, 1000, 0.4);
+                this.stars = new InfiniteStars(camera, 1000, 16 * 0.4);
 
                 this.ui = new UI({ fps: true });
                 this.ui.animateIn();

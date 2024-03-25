@@ -97,6 +97,7 @@ const program = new FXAAProgram(gl);
 [camera wobble](https://alien.js.org/examples/three/3d_camera_wobble.html)  
 [panel tracking](https://alien.js.org/examples/three/3d_panel_tracking.html) ([debug](https://alien.js.org/examples/three/3d_panel_tracking.html?debug))  
 [backdrop](https://alien.js.org/examples/three/3d_backdrop.html)  
+[infinite stars](https://alien.js.org/examples/three/3d_infinite_stars_rgbshift.html) (RGB shift)  
 
 #### shader
 

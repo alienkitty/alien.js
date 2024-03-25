@@ -8,13 +8,12 @@ in vec2 uv;
 
 uniform vec2 uResolution;
 
+out vec2 vUv;
 out vec2 v_rgbNW;
 out vec2 v_rgbNE;
 out vec2 v_rgbSW;
 out vec2 v_rgbSE;
 out vec2 v_rgbM;
-
-out vec2 vUv;
 
 void main() {
     vUv = uv;
@@ -37,13 +36,12 @@ precision highp float;
 uniform sampler2D tMap;
 uniform vec2 uResolution;
 
+in vec2 vUv;
 in vec2 v_rgbNW;
 in vec2 v_rgbNE;
 in vec2 v_rgbSW;
 in vec2 v_rgbSE;
 in vec2 v_rgbM;
-
-in vec2 vUv;
 
 out vec4 FragColor;
 

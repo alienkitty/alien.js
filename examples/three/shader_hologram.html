@@ -13,68 +13,22 @@
     <script type="module">
         import { AdditiveBlending, BloomCompositeMaterial, BlurMaterial, ChromaticAberrationMaterial, Color, ColorManagement, DirectionalLight, EdgesGeometry, EnvironmentTextureLoader, GLSL3, Group, HemisphereLight, ImageBitmapLoaderThread, LineBasicMaterial, LineSegments, LinearSRGBColorSpace, LuminosityMaterial, MathUtils, Mesh, MeshBasicMaterial, MeshStandardMaterial, NoBlending, OrbitControls, OrthographicCamera, PanelItem, PerspectiveCamera, RawShaderMaterial, RepeatWrapping, Scene, SphereGeometry, TextureLoader, Thread, UI, UnrealBloomBlurMaterial, Vector2, VideoGlitchMaterial, WebGLRenderTarget, WebGLRenderer, getFullscreenTriangle, ticker } from '../../build/alien.three.js';
 
-        ColorManagement.enabled = false; // Disable color management
+        // Based on https://codepen.io/peterhry/pen/egzjGR
 
-        class Config {
-            static ICE_COLOR = 0x547691;
+        const colors = {
+            iceColor: 0x547691,
+            lightColor: 0x00ffff,
+            errorColor: 0xff0000
+        };
 
-            static LIGHT_COLOR = 0x00ffff;
-            static ERROR_COLOR = 0xff0000;
-        }
-
-        class Layer {
-            static DEFAULT = 0;
-            static HOLOGRAM = 1;
-            static GLOW = 2;
-        }
+        const layers = {
+            default: 0,
+            hologram: 1,
+            glow: 2
+        };
 
         import blendScreen from '../../src/shaders/modules/blending/screen.glsl.js';
         import blendSoftLight from '../../src/shaders/modules/blending/soft-light.glsl.js';
-
-        // Based on https://codepen.io/peterhry/pen/egzjGR
-
-        const vertexCompositeShader = /* glsl */ `
-            in vec3 position;
-            in vec2 uv;
-
-            out vec2 vUv;
-
-            void main() {
-                vUv = uv;
-
-                gl_Position = vec4(position, 1.0);
-            }
-        `;
-
-        const fragmentCompositeShader = /* glsl */ `
-            precision highp float;
-
-            uniform sampler2D tScene;
-            uniform sampler2D tHologram;
-            uniform sampler2D tGlow;
-
-            in vec2 vUv;
-
-            out vec4 FragColor;
-
-            ${blendScreen}
-            ${blendSoftLight}
-
-            void main() {
-                vec4 base = texture(tScene, vUv);
-                vec4 blend = texture(tHologram, vUv);
-
-                // Blend soft light with background color
-                blend = blendSoftLight(blend, vec4(vec3(0.11), 1.0), 0.75);
-
-                FragColor = blendScreen(base, blend, 1.0);
-
-                base = FragColor;
-                blend = texture(tGlow, vUv);
-
-                FragColor = blendScreen(base, blend, 1.0);
-            }
-        `;
 
         class CompositeMaterial extends RawShaderMaterial {
             constructor() {
@@ -85,8 +39,47 @@
                         tHologram: { value: null },
                         tGlow: { value: null }
                     },
-                    vertexShader: vertexCompositeShader,
-                    fragmentShader: fragmentCompositeShader,
+                    vertexShader: /* glsl */ `
+                        in vec3 position;
+                        in vec2 uv;
+
+                        out vec2 vUv;
+
+                        void main() {
+                            vUv = uv;
+
+                            gl_Position = vec4(position, 1.0);
+                        }
+                    `,
+                    fragmentShader: /* glsl */ `
+                        precision highp float;
+
+                        uniform sampler2D tScene;
+                        uniform sampler2D tHologram;
+                        uniform sampler2D tGlow;
+
+                        in vec2 vUv;
+
+                        out vec4 FragColor;
+
+                        ${blendScreen}
+                        ${blendSoftLight}
+
+                        void main() {
+                            vec4 base = texture(tScene, vUv);
+                            vec4 blend = texture(tHologram, vUv);
+
+                            // Blend soft light with background color
+                            blend = blendSoftLight(blend, vec4(vec3(0.11), 1.0), 0.75);
+
+                            FragColor = blendScreen(base, blend, 1.0);
+
+                            base = FragColor;
+                            blend = texture(tGlow, vUv);
+
+                            FragColor = blendScreen(base, blend, 1.0);
+                        }
+                    `,
                     blending: NoBlending,
                     depthTest: false,
                     depthWrite: false
@@ -137,7 +130,7 @@
                 ormMap.repeat.set(2, 1);
 
                 const material = new MeshStandardMaterial({
-                    color: new Color(Config.ICE_COLOR).offsetHSL(0, 0, -0.3),
+                    color: new Color(colors.iceColor).offsetHSL(0, 0, -0.3),
                     metalness: 0.75,
                     roughness: 0.1,
                     map,
@@ -161,12 +154,12 @@
 
                 // Hologram
                 const glowMaterial = material.clone();
-                glowMaterial.color = new Color(Config.ERROR_COLOR);
-                glowMaterial.emissive = new Color(Config.ERROR_COLOR);
+                glowMaterial.color = new Color(colors.errorColor);
+                glowMaterial.emissive = new Color(colors.errorColor);
                 glowMaterial.emissiveIntensity = 0.125;
 
                 const uniforms = {
-                    fresnelColor: { value: new Color(Config.ERROR_COLOR).offsetHSL(0, 0, 0.25) },
+                    fresnelColor: { value: new Color(colors.errorColor).offsetHSL(0, 0, 0.25) },
                     fresnelPower: { value: 1.5 }
                 };
 
@@ -226,14 +219,14 @@
                 // Wireframe
                 const wireframe = new LineSegments(
                     new EdgesGeometry(mesh.geometry),
-                    new LineBasicMaterial({ color: new Color(Config.ERROR_COLOR).offsetHSL(0, 0, 0.25) })
+                    new LineBasicMaterial({ color: new Color(colors.errorColor).offsetHSL(0, 0, 0.25) })
                 );
                 glowMesh.add(wireframe);
 
                 // Layers
-                mesh.layers.set(Layer.HOLOGRAM);
-                glowMesh.layers.set(Layer.GLOW);
-                wireframe.layers.set(Layer.HOLOGRAM);
+                mesh.layers.set(layers.hologram);
+                glowMesh.layers.set(layers.glow);
+                wireframe.layers.set(layers.hologram);
 
                 this.add(mesh);
                 this.add(glowMesh);
@@ -368,12 +361,12 @@
 
                 // Hologram
                 const glowMaterial = material.clone();
-                glowMaterial.color = new Color(Config.LIGHT_COLOR);
-                glowMaterial.emissive = new Color(Config.LIGHT_COLOR);
+                glowMaterial.color = new Color(colors.lightColor);
+                glowMaterial.emissive = new Color(colors.lightColor);
                 glowMaterial.emissiveIntensity = 0.125;
 
                 const uniforms = {
-                    fresnelColor: { value: new Color(Config.LIGHT_COLOR).offsetHSL(0, 0, 0.25) },
+                    fresnelColor: { value: new Color(colors.lightColor).offsetHSL(0, 0, 0.25) },
                     fresnelPower: { value: 1.5 }
                 };
 
@@ -433,14 +426,14 @@
                 // Wireframe
                 const wireframe = new LineSegments(
                     new EdgesGeometry(mesh.geometry),
-                    new LineBasicMaterial({ color: new Color(Config.LIGHT_COLOR).offsetHSL(0, 0, 0.25) })
+                    new LineBasicMaterial({ color: new Color(colors.lightColor).offsetHSL(0, 0, 0.25) })
                 );
                 glowMesh.add(wireframe);
 
                 // Layers
-                mesh.layers.set(Layer.HOLOGRAM);
-                glowMesh.layers.set(Layer.GLOW);
-                wireframe.layers.set(Layer.HOLOGRAM);
+                mesh.layers.set(layers.hologram);
+                glowMesh.layers.set(layers.glow);
+                wireframe.layers.set(layers.hologram);
 
                 this.add(mesh);
                 this.add(glowMesh);
@@ -493,17 +486,11 @@
         }
 
         class PanelController {
-            static init(view) {
+            static init(view, ui) {
                 this.view = view;
+                this.ui = ui;
 
-                this.initViews();
                 this.initPanel();
-            }
-
-            static initViews() {
-                this.ui = new UI({ fps: true });
-                this.ui.animateIn();
-                document.body.appendChild(this.ui.element);
             }
 
             static initPanel() {
@@ -513,14 +500,14 @@
 
                 const items = [
                     {
-                        label: 'FPS'
+                        name: 'FPS'
                     },
                     {
                         type: 'divider'
                     },
                     {
                         type: 'slider',
-                        label: 'Fresnel',
+                        name: 'Fresnel',
                         min: 0,
                         max: 3,
                         step: 0.01,
@@ -532,7 +519,7 @@
                     },
                     {
                         type: 'slider',
-                        label: 'Glow',
+                        name: 'Glow',
                         min: 0,
                         max: 10,
                         step: 0.1,
@@ -547,7 +534,7 @@
                     },
                     {
                         type: 'slider',
-                        label: 'Distort',
+                        name: 'Distort',
                         min: 0,
                         max: 2,
                         step: 0.01,
@@ -558,7 +545,7 @@
                     },
                     {
                         type: 'slider',
-                        label: 'Distort2',
+                        name: 'Distort2',
                         min: 0,
                         max: 1,
                         step: 0.01,
@@ -569,7 +556,7 @@
                     },
                     {
                         type: 'slider',
-                        label: 'Speed',
+                        name: 'Speed',
                         min: 0,
                         max: 2,
                         step: 0.01,
@@ -583,7 +570,7 @@
                     },
                     {
                         type: 'slider',
-                        label: 'Thresh',
+                        name: 'Thresh',
                         min: 0,
                         max: 1,
                         step: 0.01,
@@ -594,7 +581,7 @@
                     },
                     {
                         type: 'slider',
-                        label: 'Smooth',
+                        name: 'Smooth',
                         min: 0,
                         max: 1,
                         step: 0.01,
@@ -605,7 +592,7 @@
                     },
                     {
                         type: 'slider',
-                        label: 'Strength',
+                        name: 'Strength',
                         min: 0,
                         max: 2,
                         step: 0.01,
@@ -617,7 +604,7 @@
                     },
                     {
                         type: 'slider',
-                        label: 'Radius',
+                        name: 'Radius',
                         min: 0,
                         max: 1,
                         step: 0.01,
@@ -632,7 +619,7 @@
                     },
                     {
                         type: 'slider',
-                        label: 'Red',
+                        name: 'Red',
                         min: -4,
                         max: 4,
                         step: 0.05,
@@ -643,7 +630,7 @@
                     },
                     {
                         type: 'slider',
-                        label: 'Green',
+                        name: 'Green',
                         min: -4,
                         max: 4,
                         step: 0.05,
@@ -654,7 +641,7 @@
                     },
                     {
                         type: 'slider',
-                        label: 'Blue',
+                        name: 'Blue',
                         min: -4,
                         max: 4,
                         step: 0.05,
@@ -665,7 +652,7 @@
                     },
                     {
                         type: 'slider',
-                        label: 'Int',
+                        name: 'Int',
                         min: 0,
                         max: 3,
                         step: 0.01,
@@ -680,16 +667,6 @@
                     this.ui.addPanel(new PanelItem(data));
                 });
             }
-
-            // Public methods
-
-            static update = () => {
-                if (!this.ui) {
-                    return;
-                }
-
-                this.ui.update();
-            };
         }
 
         const BlurDirectionX = new Vector2(1, 0);
@@ -722,6 +699,7 @@
             static initRenderer() {
                 const { screenTriangle, time } = WorldController;
 
+                // Manually clear
                 this.renderer.autoClear = false;
 
                 // Fullscreen triangle
@@ -886,7 +864,7 @@
                 const currentBackground = scene.background;
                 const currentClearAlpha = renderer.getClearAlpha();
 
-                camera.layers.set(Layer.DEFAULT);
+                camera.layers.set(layers.default);
 
                 // Scene layer
                 renderer.setRenderTarget(renderTargetA);
@@ -903,7 +881,7 @@
                 renderer.render(scene, camera);
                 scene.overrideMaterial = currentOverrideMaterial;
 
-                camera.layers.set(Layer.HOLOGRAM);
+                camera.layers.set(layers.hologram);
 
                 renderer.render(scene, camera);
 
@@ -914,7 +892,7 @@
                 renderer.render(this.screen, this.screenCamera);
 
                 // Glow layer
-                camera.layers.set(Layer.DEFAULT);
+                camera.layers.set(layers.default);
 
                 scene.overrideMaterial = this.blackoutMaterial;
                 renderer.setRenderTarget(renderTargetBlurA);
@@ -922,7 +900,7 @@
                 renderer.render(scene, camera);
                 scene.overrideMaterial = currentOverrideMaterial;
 
-                camera.layers.set(Layer.GLOW);
+                camera.layers.set(layers.glow);
 
                 renderer.render(scene, camera);
 
@@ -1012,11 +990,15 @@
             static initWorld() {
                 this.renderer = new WebGLRenderer({
                     powerPreference: 'high-performance',
-                    stencil: false,
-                    antialias: true
+                    antialias: true,
+                    stencil: false
                 });
+
+                // Disable color management
+                ColorManagement.enabled = false;
                 this.renderer.outputColorSpace = LinearSRGBColorSpace;
 
+                // Output canvas
                 this.element = this.renderer.domElement;
 
                 // 3D scene
@@ -1052,10 +1034,10 @@
                 this.scene.add(directionalLight);
 
                 // Important: Make sure your lights are on!
-                hemisphereLight.layers.enable(Layer.HOLOGRAM);
-                directionalLight.layers.enable(Layer.HOLOGRAM);
-                hemisphereLight.layers.enable(Layer.GLOW);
-                directionalLight.layers.enable(Layer.GLOW);
+                hemisphereLight.layers.enable(layers.hologram);
+                directionalLight.layers.enable(layers.hologram);
+                hemisphereLight.layers.enable(layers.glow);
+                directionalLight.layers.enable(layers.glow);
             }
 
             static initLoaders() {
@@ -1113,6 +1095,8 @@
                 this.controls.update();
             };
 
+            // Global handlers
+
             static getTexture = (path, callback) => this.textureLoader.load(path, callback);
 
             static loadTexture = path => this.textureLoader.loadAsync(path);
@@ -1158,6 +1142,10 @@
             static initViews() {
                 this.view = new SceneView();
                 WorldController.scene.add(this.view);
+
+                this.ui = new UI({ fps: true });
+                this.ui.animateIn();
+                document.body.appendChild(this.ui.element);
             }
 
             static initControllers() {
@@ -1168,7 +1156,7 @@
             }
 
             static initPanel() {
-                PanelController.init(this.view);
+                PanelController.init(this.view, this.ui);
             }
 
             static addListeners() {
@@ -1191,7 +1179,7 @@
             static onUpdate = (time, delta, frame) => {
                 WorldController.update(time, delta, frame);
                 RenderManager.update(time, delta, frame);
-                PanelController.update();
+                this.ui.update();
             };
         }
 

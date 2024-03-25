@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
 
-    <title>Flowmap Shader — Alien.js</title>
+    <title>Flowmap Post-processing — Alien.js</title>
 
     <link rel="preconnect" href="https://fonts.gstatic.com">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto+Mono">
@@ -13,56 +13,10 @@
     <script type="module">
         import { BloomCompositeMaterial, Color, ColorManagement, DirectionalLight, Flowmap, Fog, GLSL3, Group, HemisphereLight, LinearSRGBColorSpace, LuminosityMaterial, MathUtils, Mesh, MeshBasicMaterial, MeshStandardMaterial, NoBlending, OrthographicCamera, PanelItem, PerspectiveCamera, PlaneGeometry, RawShaderMaterial, Reflector, RepeatWrapping, SVGLoader, Scene, TextureLoader, UI, UnrealBloomBlurMaterial, Vector2, Vector3, WebGLRenderTarget, WebGLRenderer, getFullscreenTriangle, ticker } from '../../build/alien.three.js';
 
-        ColorManagement.enabled = false; // Disable color management
-
         import rgbshift from '../../src/shaders/modules/rgbshift/rgbshift.glsl.js';
+        import dither from '../../src/shaders/modules/dither/dither.glsl.js';
 
         // Based on https://oframe.github.io/ogl/examples/?src=mouse-flowmap.html by gordonnl
-
-        const vertexCompositeShader = /* glsl */ `
-            in vec3 position;
-            in vec2 uv;
-
-            out vec2 vUv;
-
-            void main() {
-                vUv = uv;
-
-                gl_Position = vec4(position, 1.0);
-            }
-        `;
-
-        const fragmentCompositeShader = /* glsl */ `
-            precision highp float;
-
-            uniform sampler2D tScene;
-            uniform sampler2D tBloom;
-            uniform sampler2D tFlow;
-            uniform float uBloomDistortion;
-
-            in vec2 vUv;
-
-            out vec4 FragColor;
-
-            ${rgbshift}
-
-            void main() {
-                // R and G values are velocity in the X and Y direction
-                // B value is the velocity length
-                vec3 flow = texture(tFlow, vUv).rgb;
-
-                // Use flow to adjust the UV lookup of a texture
-                vec2 uv = vUv;
-                uv += flow.rg * -0.05;
-
-                FragColor = texture(tScene, uv);
-
-                float angle = length(vUv - 0.5);
-                float amount = 0.001 * uBloomDistortion;
-
-                FragColor.rgb += getRGB(tBloom, uv, angle, amount).rgb;
-            }
-        `;
 
         class CompositeMaterial extends RawShaderMaterial {
             constructor() {
@@ -72,10 +26,55 @@
                         tScene: { value: null },
                         tBloom: { value: null },
                         tFlow: { value: null },
-                        uBloomDistortion: { value: 1.45 }
+                        uBloomDistortion: { value: 1.5 }
                     },
-                    vertexShader: vertexCompositeShader,
-                    fragmentShader: fragmentCompositeShader,
+                    vertexShader: /* glsl */ `
+                        in vec3 position;
+                        in vec2 uv;
+
+                        out vec2 vUv;
+
+                        void main() {
+                            vUv = uv;
+
+                            gl_Position = vec4(position, 1.0);
+                        }
+                    `,
+                    fragmentShader: /* glsl */ `
+                        precision highp float;
+
+                        uniform sampler2D tScene;
+                        uniform sampler2D tBloom;
+                        uniform sampler2D tFlow;
+                        uniform float uBloomDistortion;
+
+                        in vec2 vUv;
+
+                        out vec4 FragColor;
+
+                        ${rgbshift}
+                        ${dither}
+
+                        void main() {
+                            // R and G values are velocity in the X and Y direction
+                            // B value is the velocity length
+                            vec3 flow = texture(tFlow, vUv).rgb;
+
+                            // Use flow to adjust the UV lookup of a texture
+                            vec2 uv = vUv - flow.rg * 0.05;
+
+                            FragColor = texture(tScene, uv);
+
+                            vec2 dir = 0.5 - vUv;
+                            float angle = atan(dir.y, dir.x);
+                            float amount = 0.001 * uBloomDistortion;
+
+                            FragColor.rgb += getRGB(tBloom, uv, angle, amount).rgb;
+
+                            FragColor.rgb = dither(FragColor.rgb);
+                            FragColor.a = 1.0;
+                        }
+                    `,
                     blending: NoBlending,
                     depthTest: false,
                     depthWrite: false
@@ -322,15 +321,10 @@
         }
 
         class PanelController {
-            static init() {
-                this.initViews();
-                this.initPanel();
-            }
+            static init(ui) {
+                this.ui = ui;
 
-            static initViews() {
-                this.ui = new UI({ fps: true });
-                this.ui.animateIn();
-                document.body.appendChild(this.ui.element);
+                this.initPanel();
             }
 
             static initPanel() {
@@ -338,14 +332,14 @@
 
                 const items = [
                     {
-                        label: 'FPS'
+                        name: 'FPS'
                     },
                     {
                         type: 'divider'
                     },
                     {
                         type: 'slider',
-                        label: 'Falloff',
+                        name: 'Falloff',
                         min: 0,
                         max: 1,
                         step: 0.01,
@@ -356,7 +350,7 @@
                     },
                     {
                         type: 'slider',
-                        label: 'Alpha',
+                        name: 'Alpha',
                         min: 0,
                         max: 1,
                         step: 0.01,
@@ -367,7 +361,7 @@
                     },
                     {
                         type: 'slider',
-                        label: 'Dissipate',
+                        name: 'Dissipate',
                         min: 0,
                         max: 1,
                         step: 0.01,
@@ -381,7 +375,7 @@
                     },
                     {
                         type: 'slider',
-                        label: 'Thresh',
+                        name: 'Thresh',
                         min: 0,
                         max: 1,
                         step: 0.01,
@@ -392,7 +386,7 @@
                     },
                     {
                         type: 'slider',
-                        label: 'Smooth',
+                        name: 'Smooth',
                         min: 0,
                         max: 1,
                         step: 0.01,
@@ -403,7 +397,7 @@
                     },
                     {
                         type: 'slider',
-                        label: 'Strength',
+                        name: 'Strength',
                         min: 0,
                         max: 2,
                         step: 0.01,
@@ -415,7 +409,7 @@
                     },
                     {
                         type: 'slider',
-                        label: 'Radius',
+                        name: 'Radius',
                         min: 0,
                         max: 1,
                         step: 0.01,
@@ -427,10 +421,10 @@
                     },
                     {
                         type: 'slider',
-                        label: 'Chroma',
+                        name: 'Chroma',
                         min: 0,
-                        max: 2,
-                        step: 0.01,
+                        max: 10,
+                        step: 0.1,
                         value: compositeMaterial.uniforms.uBloomDistortion.value,
                         callback: value => {
                             compositeMaterial.uniforms.uBloomDistortion.value = value;
@@ -442,16 +436,6 @@
                     this.ui.addPanel(new PanelItem(data));
                 });
             }
-
-            // Public methods
-
-            static update = () => {
-                if (!this.ui) {
-                    return;
-                }
-
-                this.ui.update();
-            };
         }
 
         const BlurDirectionX = new Vector2(1, 0);
@@ -477,7 +461,7 @@
                 this.luminositySmoothing = 1;
                 this.bloomStrength = 0.3;
                 this.bloomRadius = 0.2;
-                this.bloomDistortion = 1.45;
+                this.bloomDistortion = 1.5;
 
                 this.enabled = true;
 
@@ -584,7 +568,7 @@
                     1 - event.y / this.height
                 );
 
-                // Calculate velocity
+                // First frame
                 if (!this.lastTime) {
                     this.lastTime = performance.now();
                     this.lastMouse.copy(event);
@@ -601,6 +585,7 @@
                 const delta = Math.max(14, time - this.lastTime);
                 this.lastTime = time;
 
+                // Calculate velocity
                 this.velocity.x = deltaX / delta;
                 this.velocity.y = deltaY / delta;
 
@@ -805,11 +790,15 @@
             static initWorld() {
                 this.renderer = new WebGLRenderer({
                     powerPreference: 'high-performance',
-                    stencil: false,
-                    antialias: true
+                    antialias: true,
+                    stencil: false
                 });
+
+                // Disable color management
+                ColorManagement.enabled = false;
                 this.renderer.outputColorSpace = LinearSRGBColorSpace;
 
+                // Output canvas
                 this.element = this.renderer.domElement;
 
                 // 3D scene
@@ -872,6 +861,8 @@
                 this.frame.value = frame;
             };
 
+            // Global handlers
+
             static getTexture = (path, callback) => this.textureLoader.load(path, callback);
 
             static loadTexture = path => this.textureLoader.loadAsync(path);
@@ -904,6 +895,10 @@
             static initViews() {
                 this.view = new SceneView();
                 WorldController.scene.add(this.view);
+
+                this.ui = new UI({ fps: true });
+                this.ui.animateIn();
+                document.body.appendChild(this.ui.element);
             }
 
             static initControllers() {
@@ -915,7 +910,7 @@
             }
 
             static initPanel() {
-                PanelController.init();
+                PanelController.init(this.ui);
             }
 
             static addListeners() {
@@ -942,7 +937,7 @@
                 CameraController.update();
                 SceneController.update();
                 RenderManager.update(time, delta, frame);
-                PanelController.update();
+                this.ui.update();
             };
         }
 

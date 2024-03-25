@@ -21,8 +21,6 @@
     <script type="module">
         import { BasicShadowMap, BufferGeometryLoader, BufferGeometryLoaderThread, Color, ColorManagement, DirectionalLight, Group, HemisphereLight, ImageBitmapLoaderThread, LinearSRGBColorSpace, Mesh, MeshPhongMaterial, NoBlending, OrbitControls, PanelItem, PerspectiveCamera, PlaneGeometry, Reflector, RepeatWrapping, Scene, ShadowMaterial, SoftShadows, SphereGeometry, TextureLoader, Thread, UI, Vector2, WebGLRenderer, getFullscreenTriangle, ticker } from '../../build/alien.three.js';
 
-        ColorManagement.enabled = false; // Disable color management
-
         // Based on https://threejs.org/examples/#webgl_shadowmap_pcss by spidersharma03
 
         class Sphere extends Group {
@@ -245,30 +243,24 @@
         }
 
         class PanelController {
-            static init(light) {
+            static init(light, ui) {
                 this.light = light;
+                this.ui = ui;
 
-                this.initViews();
                 this.initPanel();
-            }
-
-            static initViews() {
-                this.ui = new UI({ fps: true });
-                this.ui.animateIn();
-                document.body.appendChild(this.ui.element);
             }
 
             static initPanel() {
                 const items = [
                     {
-                        label: 'FPS'
+                        name: 'FPS'
                     },
                     {
                         type: 'divider'
                     },
                     {
                         type: 'slider',
-                        label: 'Penumbra',
+                        name: 'Penumbra',
                         min: 20,
                         max: 108,
                         step: 1,
@@ -284,16 +276,6 @@
                     this.ui.addPanel(new PanelItem(data));
                 });
             }
-
-            // Public methods
-
-            static update = () => {
-                if (!this.ui) {
-                    return;
-                }
-
-                this.ui.update();
-            };
         }
 
         class RenderManager {
@@ -329,11 +311,15 @@
             static initWorld() {
                 this.renderer = new WebGLRenderer({
                     powerPreference: 'high-performance',
-                    stencil: false,
-                    antialias: true
+                    antialias: true,
+                    stencil: false
                 });
+
+                // Disable color management
+                ColorManagement.enabled = false;
                 this.renderer.outputColorSpace = LinearSRGBColorSpace;
 
+                // Output canvas
                 this.element = this.renderer.domElement;
 
                 // 3D scene
@@ -435,6 +421,8 @@
                 this.controls.update();
             };
 
+            // Global handlers
+
             static getTexture = (path, callback) => this.textureLoader.load(path, callback);
 
             static loadTexture = path => this.textureLoader.loadAsync(path);
@@ -478,6 +466,10 @@
             static initViews() {
                 this.view = new SceneView();
                 WorldController.scene.add(this.view);
+
+                this.ui = new UI({ fps: true });
+                this.ui.animateIn();
+                document.body.appendChild(this.ui.element);
             }
 
             static initControllers() {
@@ -490,7 +482,7 @@
             static initPanel() {
                 const { light } = WorldController;
 
-                PanelController.init(light);
+                PanelController.init(light, this.ui);
             }
 
             static addListeners() {
@@ -515,7 +507,7 @@
                 WorldController.update(time, delta, frame);
                 SceneController.update(time);
                 RenderManager.update(time, delta, frame);
-                PanelController.update();
+                this.ui.update();
             };
         }
 

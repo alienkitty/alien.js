@@ -11,164 +11,10 @@
     <link rel="stylesheet" href="../assets/css/style.css">
 
     <script type="module">
-        import { BloomCompositeMaterial, Color, ColorManagement, EnvironmentTextureLoader, FrontSide, GLSL3, GLTFLoader, Group, Header, HemisphereLight, Interface, LinearSRGBColorSpace, LuminosityMaterial, MathUtils, Mesh, NoBlending, OrbitControls, OrthographicCamera, PanelItem, PerspectiveCamera, PointLight, PointLightHelper, RawShaderMaterial, Scene, UnrealBloomBlurMaterial, Vector2, Vector3, WebGLRenderTarget, WebGLRenderer, getFrustum, getFullscreenTriangle, getKeyByValue, ticker, tween } from '../../build/alien.three.js';
+        import { BloomCompositeMaterial, Color, ColorManagement, EnvironmentTextureLoader, FrontSide, GLTFLoader, Group, HemisphereLight, LinearSRGBColorSpace, LuminosityMaterial, MathUtils, Mesh, OrbitControls, OrthographicCamera, PanelItem, PerspectiveCamera, PointLight, PointLightHelper, Scene, SceneCompositeDistortionMaterial, UI, UnrealBloomBlurMaterial, Vector2, Vector3, WebGLRenderTarget, WebGLRenderer, getFrustum, getFullscreenTriangle, getKeyByValue, ticker, tween } from '../../build/alien.three.js';
 
-        ColorManagement.enabled = false; // Disable color management
-
-        class Config {
-            static DEBUG = /[?&]debug/.test(location.search);
-            static ORBIT = /[?&]orbit/.test(location.search);
-        }
-
-        class Info extends Interface {
-            constructor() {
-                super('.info');
-
-                this.initHTML();
-            }
-
-            initHTML() {
-                this.invisible();
-                this.css({
-                    position: 'absolute',
-                    left: '50%',
-                    top: 55,
-                    width: 300,
-                    marginLeft: -300 / 2,
-                    opacity: 0
-                });
-
-                this.container = new Interface('.container');
-                this.container.css({
-                    position: 'absolute',
-                    top: 0,
-                    width: '100%'
-                });
-                this.add(this.container);
-
-                this.text = new Interface('.text');
-                this.text.css({
-                    fontFamily: 'Gothic A1, sans-serif',
-                    fontWeight: '700',
-                    fontSize: 10,
-                    lineHeight: 20,
-                    letterSpacing: 0.8,
-                    textAlign: 'center',
-                    textTransform: 'uppercase',
-                    opacity: 0.7
-                });
-                this.text.html('<a href="https://sketchfab.com/3d-models/crystal-cristal-6bac0beae27748899ef260a8bac3e4a8" target="_blank" rel="noopener">Crystal / Cristal</a> by <a href="https://sketchfab.com/LM3D" target="_blank" rel="noopener">Luciano O. Mollo</a>');
-                this.container.add(this.text);
-            }
-
-            // Public methods
-
-            animateIn = () => {
-                this.visible();
-                this.css({ pointerEvents: 'auto' });
-                this.tween({ opacity: 1 }, 800, 'easeInOutSine');
-                this.text.css({ y: 10 }).tween({ y: 0 }, 1200, 'easeOutCubic');
-            };
-        }
-
-        class UI extends Interface {
-            constructor() {
-                super('.ui');
-
-                this.initHTML();
-                this.initViews();
-            }
-
-            initHTML() {
-                this.css({
-                    position: 'fixed',
-                    left: 0,
-                    top: 0,
-                    width: '100%',
-                    height: '100%',
-                    pointerEvents: 'none'
-                });
-            }
-
-            initViews() {
-                this.info = new Info();
-                this.add(this.info);
-
-                this.header = new Header();
-                this.add(this.header);
-            }
-
-            // Public methods
-
-            addPanel = item => {
-                this.header.info.panel.add(item);
-            };
-
-            update = () => {
-                this.header.info.update();
-            };
-
-            animateIn = () => {
-                this.info.animateIn();
-                this.header.animateIn();
-            };
-        }
-
-        import rgbshift from '../../src/shaders/modules/rgbshift/rgbshift.glsl.js';
-
-        const vertexCompositeShader = /* glsl */ `
-            in vec3 position;
-            in vec2 uv;
-
-            out vec2 vUv;
-
-            void main() {
-                vUv = uv;
-
-                gl_Position = vec4(position, 1.0);
-            }
-        `;
-
-        const fragmentCompositeShader = /* glsl */ `
-            precision highp float;
-
-            uniform sampler2D tScene;
-            uniform sampler2D tBloom;
-            uniform float uBloomDistortion;
-
-            in vec2 vUv;
-
-            out vec4 FragColor;
-
-            ${rgbshift}
-
-            void main() {
-                FragColor = texture(tScene, vUv);
-
-                float angle = length(vUv - 0.5);
-                float amount = 0.001 * uBloomDistortion;
-
-                FragColor.rgb += getRGB(tBloom, vUv, angle, amount).rgb;
-            }
-        `;
-
-        class CompositeMaterial extends RawShaderMaterial {
-            constructor() {
-                super({
-                    glslVersion: GLSL3,
-                    uniforms: {
-                        tScene: { value: null },
-                        tBloom: { value: null },
-                        uBloomDistortion: { value: 1.45 }
-                    },
-                    vertexShader: vertexCompositeShader,
-                    fragmentShader: fragmentCompositeShader,
-                    blending: NoBlending,
-                    depthTest: false,
-                    depthWrite: false
-                });
-            }
-        }
+        const isDebug = /[?&]debug/.test(location.search);
+        const isOrbit = /[?&]orbit/.test(location.search);
 
         class MouseLight extends Group {
             constructor() {
@@ -183,7 +29,7 @@
                 const light = new PointLight(0xffffff, 0.9, 100, 0);
                 this.add(light);
 
-                if (Config.DEBUG) {
+                if (isDebug) {
                     WorldController.scene.add(new PointLightHelper(light, 0.125));
                 }
             }
@@ -322,7 +168,7 @@
 
                 const items = [
                     {
-                        label: 'FPS'
+                        name: 'FPS'
                     },
                     {
                         type: 'divider'
@@ -340,7 +186,7 @@
                     },
                     {
                         type: 'slider',
-                        label: 'Thresh',
+                        name: 'Thresh',
                         min: 0,
                         max: 1,
                         step: 0.01,
@@ -351,7 +197,7 @@
                     },
                     {
                         type: 'slider',
-                        label: 'Smooth',
+                        name: 'Smooth',
                         min: 0,
                         max: 1,
                         step: 0.01,
@@ -362,7 +208,7 @@
                     },
                     {
                         type: 'slider',
-                        label: 'Strength',
+                        name: 'Strength',
                         min: 0,
                         max: 2,
                         step: 0.01,
@@ -374,7 +220,7 @@
                     },
                     {
                         type: 'slider',
-                        label: 'Radius',
+                        name: 'Radius',
                         min: 0,
                         max: 1,
                         step: 0.01,
@@ -386,10 +232,10 @@
                     },
                     {
                         type: 'slider',
-                        label: 'Chroma',
+                        name: 'Chroma',
                         min: 0,
-                        max: 2,
-                        step: 0.01,
+                        max: 10,
+                        step: 0.1,
                         value: compositeMaterial.uniforms.uBloomDistortion.value,
                         callback: value => {
                             compositeMaterial.uniforms.uBloomDistortion.value = value;
@@ -401,16 +247,6 @@
                     this.ui.addPanel(new PanelItem(data));
                 });
             }
-
-            // Public methods
-
-            static update = () => {
-                if (!this.ui) {
-                    return;
-                }
-
-                this.ui.update();
-            };
         }
 
         const BlurDirectionX = new Vector2(1, 0);
@@ -426,7 +262,7 @@
                 this.luminositySmoothing = 1;
                 this.bloomStrength = 0.3;
                 this.bloomRadius = 0.2;
-                this.bloomDistortion = 1.45;
+                this.bloomDistortion = 1.5;
                 this.enabled = true;
 
                 this.initRenderer();
@@ -482,7 +318,7 @@
                 this.bloomCompositeMaterial.uniforms.uBloomFactors.value = this.bloomFactors();
 
                 // Composite material
-                this.compositeMaterial = new CompositeMaterial();
+                this.compositeMaterial = new SceneCompositeDistortionMaterial({ dithering: true });
                 this.compositeMaterial.uniforms.uBloomDistortion.value = this.bloomDistortion;
             }
 
@@ -610,7 +446,7 @@
             }
 
             static addListeners() {
-                if (Config.ORBIT) {
+                if (isOrbit) {
                     return;
                 }
 
@@ -680,7 +516,7 @@
             };
 
             static animateIn = () => {
-                if (Config.ORBIT) {
+                if (isOrbit) {
                     return;
                 }
 
@@ -706,11 +542,15 @@
             static initWorld() {
                 this.renderer = new WebGLRenderer({
                     powerPreference: 'high-performance',
-                    stencil: false,
-                    antialias: true
+                    antialias: true,
+                    stencil: false
                 });
+
+                // Disable color management
+                ColorManagement.enabled = false;
                 this.renderer.outputColorSpace = LinearSRGBColorSpace;
 
+                // Output canvas
                 this.element = this.renderer.domElement;
 
                 // 3D scene
@@ -750,7 +590,7 @@
             }
 
             static initControls() {
-                if (!Config.ORBIT) {
+                if (!isOrbit) {
                     return;
                 }
 
@@ -787,6 +627,8 @@
                     this.controls.update();
                 }
             };
+
+            // Global handlers
 
             static loadEnvironmentTexture = path => this.environmentLoader.loadAsync(path);
 
@@ -826,7 +668,14 @@
                 this.view = new SceneView();
                 WorldController.scene.add(this.view);
 
-                this.ui = new UI();
+                this.ui = new UI({
+                    fps: true,
+                    info: {
+                        content: '<a href="https://sketchfab.com/3d-models/crystal-6bac0beae27748899ef260a8bac3e4a8" target="_blank" rel="noopener">Crystal</a> by <a href="https://sketchfab.com/LM3D" target="_blank" rel="noopener">Luciano O. Mollo</a>'
+                    }
+                });
+                this.ui.info.css({ pointerEvents: 'auto' });
+                this.ui.info.animateIn();
                 document.body.appendChild(this.ui.element);
             }
 
@@ -867,7 +716,7 @@
                 CameraController.update();
                 SceneController.update();
                 RenderManager.update(time, delta, frame);
-                PanelController.update();
+                this.ui.update();
             };
 
             static onLoad = () => {

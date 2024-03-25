@@ -13,145 +13,29 @@
     <script type="module">
         import { AdditiveBlending, BackSide, BlurMaterial, Color, ColorManagement, CubeCamera, GLSL3, Group, IcosahedronGeometry, ImageBitmapLoaderThread, LinearMipmapLinearFilter, LinearSRGBColorSpace, MathUtils, Mesh, MeshBasicMaterial, NoBlending, OrthographicCamera, PanelItem, PerspectiveCamera, RawShaderMaterial, Scene, SphereGeometry, Sprite, SpriteMaterial, TextureLoader, Thread, UI, Vector2, Vector3, WebGLCubeRenderTarget, WebGLRenderTarget, WebGLRenderer, Wobble, getFullscreenTriangle, getKeyByValue, ticker, tween } from '../../build/alien.three.js';
 
-        ColorManagement.enabled = false; // Disable color management
+        const isDebug = /[?&]debug/.test(location.search);
 
-        class Config {
-            static BG_COLOR = new Color(0x030627);
-            static LIGHT_COLOR = new Color(0xff8dfc);
-            static PARTICLE_COLOR = new Color(0x8080ff);
-
-            static DEBUG = /[?&]debug/.test(location.search);
-        }
-
-        // Based on https://github.com/yuichiroharai/glsl-y-hsv
+        const colors = {
+            backgroundColor: 0x030627,
+            lightColor: 0xff8dfc,
+            particleColor: 0x8080ff
+        };
 
         import hsv2rgbSmooth from '../../src/shaders/modules/hsv/hsv2rgbSmooth.glsl.js';
         import rgb2hsv from '../../src/shaders/modules/hsv/rgb2hsv.glsl.js';
-
         import noise from '../../src/shaders/modules/noise/noise2d.glsl.js';
         import rgbshift from '../../src/shaders/modules/rgbshift/rgbshift.glsl.js';
         import blendOverlay from '../../src/shaders/modules/blending/overlay.glsl.js';
         import blendSoftLight from '../../src/shaders/modules/blending/soft-light.glsl.js';
 
+        // https://twitter.com/pschroen/status/1405600020284444674
+
+        // Based on https://github.com/yuichiroharai/glsl-y-hsv
         // Based on https://github.com/spite/codevember-2016
-
-        const vertexCompositeShader = /* glsl */ `
-            in vec3 position;
-            in vec2 uv;
-
-            out vec2 vUv;
-
-            void main() {
-                vUv = uv;
-
-                gl_Position = vec4(position, 1.0);
-            }
-        `;
-
-        const fragmentCompositeShader = /* glsl */ `
-            precision highp float;
-
-            uniform sampler2D tScene;
-            uniform sampler2D tBloom;
-            uniform sampler2D tLensDirt;
-            uniform float uDistortion;
-            uniform float uMinBright;
-            uniform float uBlurBright;
-            uniform vec3 uLightColor;
-            uniform vec3 uColor;
-            uniform float uHue;
-            uniform float uBoost;
-            uniform float uReduction;
-            uniform bool uDebug;
-            uniform bool uLensDirt;
-            uniform vec2 uResolution;
-            uniform float uTime;
-
-            in vec2 vUv;
-
-            out vec4 FragColor;
-
-            ${hsv2rgbSmooth}
-            ${rgb2hsv}
-            ${noise}
-            ${rgbshift}
-            ${blendOverlay}
-            ${blendSoftLight}
-
-            void main() {
-                float center = length(vUv - 0.5);
-
-                vec3 rgb = uColor;
-                vec3 hsv = rgb2hsv(rgb);
-                hsv.x += vUv.x + uHue;
-
-                rgb = hsv2rgbSmooth(hsv);
-
-                // Linear gradient
-                vec4 color = vec4(mix(rgb, vec3(0.0), smoothstep(0.0, 0.6, vUv.y)), 1.0);
-
-                color += getRGB(tScene, vUv, 0.1, 0.001 * uDistortion);
-
-                vec4 bloom = texture(tBloom, vUv);
-                bloom.x = max(0.0, bloom.x - uMinBright);
-                bloom.y = max(0.0, bloom.y - uMinBright);
-                bloom.z = max(0.0, bloom.z - uMinBright);
-
-                color.rgb += bloom.rgb * uBlurBright;
-
-                // Blend overlay noise lighting
-                float noise = noise(vUv + uTime * 0.06);
-                float amount = smoothstep(0.2, 0.7, center) * noise;
-
-                if (uDebug) {
-                    color += vec4(vec3(1.0, 0.0, 0.0), 1.0) * amount;
-                } else {
-                    color = blendOverlay(color, vec4(uLightColor, 1.0), amount);
-                }
-
-                // Blend overlay vignetting
-                float vignette = uBoost - center * uReduction;
-
-                vec4 base = color;
-                vec4 blend = vec4(vec3(vignette), 1.0);
-
-                color = blendOverlay(base, blend, 1.0);
-
-                // Blend soft light with background color
-                base = color;
-                blend = vec4(rgb, 1.0);
-
-                color = blendSoftLight(base, blend, 0.8);
-
-                // Dirt lens texture
-                if (uLensDirt) {
-                    vec2 vUv2 = vUv;
-
-                    float aspectRatio2 = 1.0;
-                    float aspectRatio = uResolution.x / uResolution.y;
-
-                    if (aspectRatio2 > aspectRatio) {
-                        float widthRatio = aspectRatio / aspectRatio2;
-                        vUv2.x = vUv.x * widthRatio;
-                        vUv2.x += 0.5 * (1.0 - widthRatio);
-                        vUv2.y = vUv.y;
-                    } else {
-                        float heightRatio = aspectRatio2 / aspectRatio;
-                        vUv2.x = vUv.x;
-                        vUv2.y = vUv.y * heightRatio;
-                        vUv2.y += 0.5 * (1.0 - heightRatio);
-                    }
-
-                    color.rgb += smoothstep(0.0, 0.4, bloom.rgb) * texture(tLensDirt, vUv2).rgb;
-                }
-
-                FragColor = color;
-            }
-        `;
 
         class CompositeMaterial extends RawShaderMaterial {
             constructor() {
-                const { getTexture } = WorldController;
+                const { getTexture, scene } = WorldController;
 
                 super({
                     glslVersion: GLSL3,
@@ -162,18 +46,128 @@
                         uDistortion: { value: 0.2 },
                         uMinBright: { value: 0.07 },
                         uBlurBright: { value: 0.4166 },
-                        uLightColor: { value: Config.LIGHT_COLOR },
-                        uColor: { value: Config.BG_COLOR },
+                        uLightColor: { value: new Color(colors.lightColor) },
+                        uColor: { value: scene.background },
                         uHue: { value: 0 },
                         uBoost: { value: 1 },
                         uReduction: { value: 1.2 },
-                        uDebug: { value: Config.DEBUG },
                         uLensDirt: { value: true },
+                        uDebug: { value: isDebug },
                         uResolution: { value: new Vector2() },
                         uTime: { value: 0 }
                     },
-                    vertexShader: vertexCompositeShader,
-                    fragmentShader: fragmentCompositeShader,
+                    vertexShader: /* glsl */ `
+                        in vec3 position;
+                        in vec2 uv;
+
+                        out vec2 vUv;
+
+                        void main() {
+                            vUv = uv;
+
+                            gl_Position = vec4(position, 1.0);
+                        }
+                    `,
+                    fragmentShader: /* glsl */ `
+                        precision highp float;
+
+                        uniform sampler2D tScene;
+                        uniform sampler2D tBloom;
+                        uniform sampler2D tLensDirt;
+                        uniform float uDistortion;
+                        uniform float uMinBright;
+                        uniform float uBlurBright;
+                        uniform vec3 uLightColor;
+                        uniform vec3 uColor;
+                        uniform float uHue;
+                        uniform float uBoost;
+                        uniform float uReduction;
+                        uniform bool uLensDirt;
+                        uniform bool uDebug;
+                        uniform vec2 uResolution;
+                        uniform float uTime;
+
+                        in vec2 vUv;
+
+                        out vec4 FragColor;
+
+                        ${hsv2rgbSmooth}
+                        ${rgb2hsv}
+                        ${noise}
+                        ${rgbshift}
+                        ${blendOverlay}
+                        ${blendSoftLight}
+
+                        void main() {
+                            float center = length(vUv - 0.5);
+
+                            vec3 rgb = uColor;
+                            vec3 hsv = rgb2hsv(rgb);
+                            hsv.x += vUv.x + uHue;
+
+                            rgb = hsv2rgbSmooth(hsv);
+
+                            // Linear gradient
+                            vec4 color = vec4(mix(rgb, vec3(0.0), smoothstep(0.0, 0.6, vUv.y)), 1.0);
+
+                            color += getRGB(tScene, vUv, 0.1, 0.002 * uDistortion);
+
+                            vec4 bloom = texture(tBloom, vUv);
+                            bloom.x = max(0.0, bloom.x - uMinBright);
+                            bloom.y = max(0.0, bloom.y - uMinBright);
+                            bloom.z = max(0.0, bloom.z - uMinBright);
+
+                            color.rgb += bloom.rgb * uBlurBright;
+
+                            // Blend overlay noise lighting
+                            float noise = noise(vUv + uTime * 0.06);
+                            float amount = smoothstep(0.2, 0.7, center) * noise;
+
+                            if (uDebug) {
+                                color += vec4(vec3(1.0, 0.0, 0.0), 1.0) * amount;
+                            } else {
+                                color = blendOverlay(color, vec4(uLightColor, 1.0), amount);
+                            }
+
+                            // Blend overlay vignetting
+                            float vignette = uBoost - center * uReduction;
+
+                            vec4 base = color;
+                            vec4 blend = vec4(vec3(vignette), 1.0);
+
+                            color = blendOverlay(base, blend, 1.0);
+
+                            // Blend soft light with background color
+                            base = color;
+                            blend = vec4(rgb, 1.0);
+
+                            color = blendSoftLight(base, blend, 0.8);
+
+                            // Dirt lens texture
+                            if (uLensDirt) {
+                                vec2 vUv2 = vUv;
+
+                                float aspectRatio2 = 1.0;
+                                float aspectRatio = uResolution.x / uResolution.y;
+
+                                if (aspectRatio2 > aspectRatio) {
+                                    float widthRatio = aspectRatio / aspectRatio2;
+                                    vUv2.x = vUv.x * widthRatio;
+                                    vUv2.x += 0.5 * (1.0 - widthRatio);
+                                    vUv2.y = vUv.y;
+                                } else {
+                                    float heightRatio = aspectRatio2 / aspectRatio;
+                                    vUv2.x = vUv.x;
+                                    vUv2.y = vUv.y * heightRatio;
+                                    vUv2.y += 0.5 * (1.0 - heightRatio);
+                                }
+
+                                color.rgb += smoothstep(0.0, 0.4, bloom.rgb) * texture(tLensDirt, vUv2).rgb;
+                            }
+
+                            FragColor = color;
+                        }
+                    `,
                     blending: NoBlending,
                     depthTest: false,
                     depthWrite: false
@@ -220,7 +214,7 @@
 
                 const material = new SpriteMaterial({
                     map: getTexture('../assets/textures/particle2.png'),
-                    color: Config.PARTICLE_COLOR,
+                    color: new Color(colors.particleColor),
                     transparent: true,
                     blending: AdditiveBlending,
                     depthWrite: false
@@ -392,15 +386,10 @@
         }
 
         class PanelController {
-            static init() {
-                this.initViews();
-                this.initPanel();
-            }
+            static init(ui) {
+                this.ui = ui;
 
-            static initViews() {
-                this.ui = new UI({ fps: true });
-                this.ui.animateIn();
-                document.body.appendChild(this.ui.element);
+                this.initPanel();
             }
 
             static initPanel() {
@@ -418,17 +407,17 @@
 
                 const items = [
                     {
-                        label: 'FPS'
+                        name: 'FPS'
                     },
                     {
                         type: 'divider'
                     },
                     {
                         type: 'slider',
-                        label: 'Chroma',
+                        name: 'Chroma',
                         min: 0,
-                        max: 2,
-                        step: 0.01,
+                        max: 10,
+                        step: 0.1,
                         value: compositeMaterial.uniforms.uDistortion.value,
                         callback: value => {
                             compositeMaterial.uniforms.uDistortion.value = value;
@@ -436,7 +425,7 @@
                     },
                     {
                         type: 'slider',
-                        label: 'Boost',
+                        name: 'Boost',
                         min: 0,
                         max: 2,
                         step: 0.01,
@@ -447,7 +436,7 @@
                     },
                     {
                         type: 'slider',
-                        label: 'Reduce',
+                        name: 'Reduce',
                         min: 0,
                         max: 2,
                         step: 0.01,
@@ -469,7 +458,7 @@
                     },
                     {
                         type: 'slider',
-                        label: 'Blur',
+                        name: 'Blur',
                         min: 0,
                         max: 10,
                         step: 0.1,
@@ -481,7 +470,7 @@
                     },
                     {
                         type: 'slider',
-                        label: 'Reduce',
+                        name: 'Reduce',
                         min: 0,
                         max: 1,
                         step: 0.01,
@@ -492,7 +481,7 @@
                     },
                     {
                         type: 'slider',
-                        label: 'Bright',
+                        name: 'Bright',
                         min: 0,
                         max: 1,
                         step: 0.01,
@@ -515,16 +504,6 @@
                     this.ui.addPanel(new PanelItem(data));
                 });
             }
-
-            // Public methods
-
-            static update = () => {
-                if (!this.ui) {
-                    return;
-                }
-
-                this.ui.update();
-            };
         }
 
         const BlurDirectionX = new Vector2(1, 0);
@@ -738,10 +717,6 @@
 
         class WorldController {
             static init() {
-                this.color = {};
-
-                Config.BG_COLOR.getHSL(this.color);
-
                 this.initWorld();
                 this.initLights();
                 this.initLoaders();
@@ -752,16 +727,20 @@
             static initWorld() {
                 this.renderer = new WebGLRenderer({
                     powerPreference: 'high-performance',
-                    stencil: false,
-                    antialias: true
+                    antialias: true,
+                    stencil: false
                 });
+
+                // Disable color management
+                ColorManagement.enabled = false;
                 this.renderer.outputColorSpace = LinearSRGBColorSpace;
 
+                // Output canvas
                 this.element = this.renderer.domElement;
 
                 // 3D scene
                 this.scene = new Scene();
-                this.scene.background = Config.BG_COLOR;
+                this.scene.background = new Color(colors.backgroundColor);
                 this.camera = new PerspectiveCamera(30);
                 this.camera.near = 0.5;
                 this.camera.far = 50;
@@ -781,6 +760,10 @@
 
                 // Global geometries
                 this.screenTriangle = getFullscreenTriangle();
+
+                // Initial background color
+                this.color = {};
+                this.scene.background.getHSL(this.color);
 
                 // Global uniforms
                 this.hue = { value: this.color.h };
@@ -822,11 +805,13 @@
             static update = (time, delta, frame) => {
                 this.hue.value += 0.0005;
 
-                Config.BG_COLOR.setHSL(this.hue.value, this.color.s, this.color.l);
+                this.scene.background.setHSL(this.hue.value, this.color.s, this.color.l);
 
                 this.time.value = time;
                 this.frame.value = frame;
             };
+
+            // Global handlers
 
             static getTexture = (path, callback) => this.textureLoader.load(path, callback);
 
@@ -868,6 +853,10 @@
             static initViews() {
                 this.view = new SceneView();
                 WorldController.scene.add(this.view);
+
+                this.ui = new UI({ fps: true });
+                this.ui.animateIn();
+                document.body.appendChild(this.ui.element);
             }
 
             static initControllers() {
@@ -879,7 +868,7 @@
             }
 
             static initPanel() {
-                PanelController.init();
+                PanelController.init(this.ui);
             }
 
             static addListeners() {
@@ -906,7 +895,7 @@
                 CameraController.update();
                 SceneController.update(time);
                 RenderManager.update(time, delta, frame);
-                PanelController.update();
+                this.ui.update();
             };
         }
 

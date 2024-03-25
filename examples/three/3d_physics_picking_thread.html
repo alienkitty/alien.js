@@ -11,76 +11,18 @@
     <link rel="stylesheet" href="../assets/css/style.css">
 
     <script type="module">
-        import { BasicShadowMap, BloomCompositeMaterial, BoxGeometry, BufferLoader, Color, ColorManagement, DirectionalLight, EnvironmentTextureLoader, EventEmitter, GLSL3, Group, HemisphereLight, IcosahedronGeometry, ImageBitmapLoaderThread, LinearSRGBColorSpace, LuminosityMaterial, MathUtils, Mesh, MeshBasicMaterial, MeshPhongMaterial, MeshStandardMaterial, NoBlending, OimoPhysicsBuffer, OimoPhysicsController, OrthographicCamera, PanelItem, PerspectiveCamera, PlaneGeometry, PointLight, RawShaderMaterial, Raycaster, Reflector, RepeatWrapping, Scene, ShaderChunk, ShadowMaterial, Sound3D, SphereGeometry, TextureLoader, Thread, UI, UnrealBloomBlurMaterial, Vector2, Vector3, WebAudio, WebGLRenderTarget, WebGLRenderer, delayedCall, getFullscreenTriangle, getKeyByValue, ticker } from '../../build/alien.three.js';
+        import { BasicShadowMap, BloomCompositeMaterial, BoxGeometry, BufferLoader, Color, ColorManagement, DirectionalLight, EnvironmentTextureLoader, EventEmitter, Group, HemisphereLight, IcosahedronGeometry, ImageBitmapLoaderThread, LinearSRGBColorSpace, LuminosityMaterial, MathUtils, Mesh, MeshBasicMaterial, MeshPhongMaterial, MeshStandardMaterial, NoBlending, OimoPhysicsBuffer, OimoPhysicsController, OrthographicCamera, PanelItem, PerspectiveCamera, PlaneGeometry, PointLight, Raycaster, Reflector, RepeatWrapping, Scene, SceneCompositeDistortionMaterial, ShaderChunk, ShadowMaterial, Sound3D, SphereGeometry, TextureLoader, Thread, UI, UnrealBloomBlurMaterial, Vector2, Vector3, WebAudio, WebGLRenderTarget, WebGLRenderer, delayedCall, getFullscreenTriangle, getKeyByValue, ticker } from '../../build/alien.three.js';
 
-        ColorManagement.enabled = false; // Disable color management
+        const isDebug = /[?&]debug/.test(location.search);
 
-        class Config {
-            static LIGHT_COLOR = 0xf44336;
+        const colors = {
+            lightColor: 0xf44336
+        };
 
-            static DEBUG = /[?&]debug/.test(location.search);
-        }
-
-        class Layer {
-            static DEFAULT = 0;
-            static PICKING = 1;
-        }
-
-        import rgbshift from '../../src/shaders/modules/rgbshift/rgbshift.glsl.js';
-
-        const vertexCompositeShader = /* glsl */ `
-            in vec3 position;
-            in vec2 uv;
-
-            out vec2 vUv;
-
-            void main() {
-                vUv = uv;
-
-                gl_Position = vec4(position, 1.0);
-            }
-        `;
-
-        const fragmentCompositeShader = /* glsl */ `
-            precision highp float;
-
-            uniform sampler2D tScene;
-            uniform sampler2D tBloom;
-            uniform float uBloomDistortion;
-
-            in vec2 vUv;
-
-            out vec4 FragColor;
-
-            ${rgbshift}
-
-            void main() {
-                FragColor = texture(tScene, vUv);
-
-                float angle = length(vUv - 0.5);
-                float amount = 0.001 * uBloomDistortion;
-
-                FragColor.rgb += getRGB(tBloom, vUv, angle, amount).rgb;
-            }
-        `;
-
-        class CompositeMaterial extends RawShaderMaterial {
-            constructor() {
-                super({
-                    glslVersion: GLSL3,
-                    uniforms: {
-                        tScene: { value: null },
-                        tBloom: { value: null },
-                        uBloomDistortion: { value: 1.45 }
-                    },
-                    vertexShader: vertexCompositeShader,
-                    fragmentShader: fragmentCompositeShader,
-                    blending: NoBlending,
-                    depthTest: false,
-                    depthWrite: false
-                });
-            }
-        }
+        const layers = {
+            default: 0,
+            picking: 1
+        };
 
         class ScenePhysics extends EventEmitter {
             constructor(shapes) {
@@ -386,7 +328,7 @@
             }
 
             initLight() {
-                const light = new PointLight(Config.LIGHT_COLOR, 0.9, 100, 0);
+                const light = new PointLight(colors.lightColor, 0.9, 100, 0);
                 this.add(light);
             }
 
@@ -396,7 +338,7 @@
                 const geometry = new IcosahedronGeometry(this.radius, 3);
 
                 const material = new MeshPhongMaterial({
-                    color: new Color(Config.LIGHT_COLOR).offsetHSL(0, 0, -0.3)
+                    color: new Color(colors.lightColor).offsetHSL(0, 0, -0.3)
                 });
 
                 // Based on https://github.com/mrdoob/three.js/blob/dev/examples/jsm/shaders/SubsurfaceScatteringShader.js by daoshengmu
@@ -444,7 +386,7 @@
                 const mesh = new Mesh(geometry, material);
                 mesh.castShadow = true;
                 mesh.receiveShadow = true;
-                mesh.layers.enable(Layer.PICKING);
+                mesh.layers.enable(layers.picking);
                 this.add(mesh);
 
                 physics.add(mesh);
@@ -554,7 +496,7 @@
                 const mesh = new Mesh(geometry, material);
                 mesh.castShadow = true;
                 mesh.receiveShadow = true;
-                mesh.layers.enable(Layer.PICKING);
+                mesh.layers.enable(layers.picking);
                 this.add(mesh);
 
                 physics.add(mesh);
@@ -822,7 +764,7 @@
 
                         let mesh;
 
-                        if (Config.DEBUG) {
+                        if (isDebug) {
                             mesh = new Mesh(
                                 new SphereGeometry(0.0625),
                                 new MeshPhongMaterial({ color: 0x0000ff })
@@ -857,15 +799,10 @@
         }
 
         class PanelController {
-            static init() {
-                this.initViews();
-                this.initPanel();
-            }
+            static init(ui) {
+                this.ui = ui;
 
-            static initViews() {
-                this.ui = new UI({ fps: true });
-                this.ui.animateIn();
-                document.body.appendChild(this.ui.element);
+                this.initPanel();
             }
 
             static initPanel() {
@@ -881,7 +818,7 @@
 
                 const items = [
                     {
-                        label: 'FPS'
+                        name: 'FPS'
                     },
                     {
                         type: 'divider'
@@ -904,14 +841,14 @@
                                 SceneController.physics.setLinearVelocity('ball', array);
                                 SceneController.physics.setAngularVelocity('ball', array);
 
-                                // Flush last frame
+                                // Flush the last frame
                                 SceneController.physics.update();
                             }
                         }
                     },
                     {
                         type: 'slider',
-                        label: 'Gravity',
+                        name: 'Gravity',
                         min: -10,
                         max: 10,
                         step: 0.1,
@@ -926,7 +863,7 @@
                     },
                     {
                         type: 'slider',
-                        label: 'Thresh',
+                        name: 'Thresh',
                         min: 0,
                         max: 1,
                         step: 0.01,
@@ -937,7 +874,7 @@
                     },
                     {
                         type: 'slider',
-                        label: 'Smooth',
+                        name: 'Smooth',
                         min: 0,
                         max: 1,
                         step: 0.01,
@@ -948,7 +885,7 @@
                     },
                     {
                         type: 'slider',
-                        label: 'Strength',
+                        name: 'Strength',
                         min: 0,
                         max: 2,
                         step: 0.01,
@@ -960,7 +897,7 @@
                     },
                     {
                         type: 'slider',
-                        label: 'Radius',
+                        name: 'Radius',
                         min: 0,
                         max: 1,
                         step: 0.01,
@@ -972,10 +909,10 @@
                     },
                     {
                         type: 'slider',
-                        label: 'Chroma',
+                        name: 'Chroma',
                         min: 0,
-                        max: 2,
-                        step: 0.01,
+                        max: 10,
+                        step: 0.1,
                         value: compositeMaterial.uniforms.uBloomDistortion.value,
                         callback: value => {
                             compositeMaterial.uniforms.uBloomDistortion.value = value;
@@ -987,16 +924,6 @@
                     this.ui.addPanel(new PanelItem(data));
                 });
             }
-
-            // Public methods
-
-            static update = () => {
-                if (!this.ui) {
-                    return;
-                }
-
-                this.ui.update();
-            };
         }
 
         const BlurDirectionX = new Vector2(1, 0);
@@ -1012,7 +939,7 @@
                 this.luminositySmoothing = 1;
                 this.bloomStrength = 0.3;
                 this.bloomRadius = 0.2;
-                this.bloomDistortion = 1.45;
+                this.bloomDistortion = 1.5;
                 this.enabled = true;
 
                 this.initRenderer();
@@ -1068,7 +995,7 @@
                 this.bloomCompositeMaterial.uniforms.uBloomFactors.value = this.bloomFactors();
 
                 // Composite material
-                this.compositeMaterial = new CompositeMaterial();
+                this.compositeMaterial = new SceneCompositeDistortionMaterial({ dithering: true });
                 this.compositeMaterial.uniforms.uBloomDistortion.value = this.bloomDistortion;
             }
 
@@ -1175,7 +1102,7 @@
                 this.camera = camera;
 
                 this.raycaster = new Raycaster();
-                this.raycaster.layers.set(Layer.PICKING);
+                this.raycaster.layers.set(layers.picking);
 
                 this.mouse = new Vector2();
                 this.hover = null;
@@ -1193,7 +1120,7 @@
 
                 let material;
 
-                if (Config.DEBUG) {
+                if (isDebug) {
                     material = new MeshBasicMaterial({
                         color: 0xff0000,
                         wireframe: true
@@ -1204,7 +1131,7 @@
 
                 this.dragPlane = new Mesh(quad, material);
                 this.dragPlane.scale.multiplyScalar(200);
-                this.dragPlane.layers.enable(Layer.PICKING);
+                this.dragPlane.layers.enable(layers.picking);
             }
 
             static addListeners() {
@@ -1402,11 +1329,15 @@
             static initWorld() {
                 this.renderer = new WebGLRenderer({
                     powerPreference: 'high-performance',
-                    stencil: false,
-                    antialias: true
+                    antialias: true,
+                    stencil: false
                 });
+
+                // Disable color management
+                ColorManagement.enabled = false;
                 this.renderer.outputColorSpace = LinearSRGBColorSpace;
 
+                // Output canvas
                 this.element = this.renderer.domElement;
 
                 // Shadows
@@ -1489,6 +1420,8 @@
                 this.frame.value = frame;
             };
 
+            // Global handlers
+
             static getTexture = (path, callback) => this.textureLoader.load(path, callback);
 
             static loadTexture = path => this.textureLoader.loadAsync(path);
@@ -1544,6 +1477,10 @@
             static initViews() {
                 this.view = new SceneView();
                 WorldController.scene.add(this.view);
+
+                this.ui = new UI({ fps: true });
+                this.ui.animateIn();
+                document.body.appendChild(this.ui.element);
             }
 
             static initControllers() {
@@ -1565,7 +1502,7 @@
             }
 
             static initPanel() {
-                PanelController.init();
+                PanelController.init(this.ui);
             }
 
             static addListeners() {
@@ -1592,7 +1529,7 @@
                 CameraController.update();
                 SceneController.update();
                 RenderManager.update(time, delta, frame);
-                PanelController.update();
+                this.ui.update();
             };
         }
 

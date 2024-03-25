@@ -13,8 +13,6 @@
     <script type="module">
         import { AssetLoader, Color, ColorManagement, DirectionalLight, Group, Interface, LinearFilter, LinearSRGBColorSpace, Mesh, MeshStandardMaterial, PerspectiveCamera, PlaneGeometry, Scene, Texture, Vector2, WebGLRenderer, clearTween, delayedCall, getFrustum, ticker } from '../../build/alien.three.js';
 
-        ColorManagement.enabled = false; // Disable color management
-
         class GridCanvas extends Interface {
             constructor() {
                 super(null, 'canvas');
@@ -54,9 +52,7 @@
                 this.context.stroke();
             }
 
-            /**
-            * Public methods
-            */
+            // Public methods
 
             resize = (width, height, dpr) => {
                 this.width = width;
@@ -102,10 +98,10 @@
 
             initMesh() {
                 this.material = new MeshStandardMaterial({
+                    // wireframe: true,
                     displacementScale: 0.3,
                     depthTest: false,
-                    depthWrite: false,
-                    // wireframe: true
+                    depthWrite: false
                 });
 
                 this.mesh = new Mesh(new PlaneGeometry(1, 1, 64, 64), this.material);
@@ -343,7 +339,7 @@
             static constantWaving = () => {
                 this.view.wave(1);
 
-                this.constant = delayedCall(1000 * Math.random() + 1000, this.constantWaving);
+                this.constant = delayedCall(1000 + Math.random() * 1000, this.constantWaving);
             };
 
             static animateIn = () => {
@@ -384,11 +380,15 @@
             static initWorld() {
                 this.renderer = new WebGLRenderer({
                     powerPreference: 'high-performance',
-                    stencil: false,
-                    antialias: true
+                    antialias: true,
+                    stencil: false
                 });
+
+                // Disable color management
+                ColorManagement.enabled = false;
                 this.renderer.outputColorSpace = LinearSRGBColorSpace;
 
+                // Output canvas
                 this.element = this.renderer.domElement;
 
                 // 3D scene
@@ -446,6 +446,8 @@
                 this.time.value = time;
                 this.frame.value = frame;
             };
+
+            // Global handlers
 
             static loadImage = path => this.assetLoader.loadImage(path);
 

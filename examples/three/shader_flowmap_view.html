@@ -4,65 +4,18 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
 
-    <title>Flowmap Shader View — Alien.js</title>
+    <title>Flowmap Post-processing View — Alien.js</title>
 
     <link rel="preconnect" href="https://fonts.gstatic.com">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto+Mono">
     <link rel="stylesheet" href="../assets/css/style.css">
 
     <script type="module">
-        import { AdditiveBlending, BloomCompositeMaterial, Color, ColorManagement, DirectionalLight, Flowmap, Fog, GLSL3, Group, HemisphereLight, LinearSRGBColorSpace, LuminosityMaterial, MathUtils, Mesh, MeshBasicMaterial, MeshStandardMaterial, NoBlending, OrthographicCamera, PanelItem, PerspectiveCamera, PlaneGeometry, RawShaderMaterial, Reflector, RepeatWrapping, SVGLoader, Scene, TextureLoader, UI, UnrealBloomBlurMaterial, Vector2, Vector3, WebGLRenderTarget, WebGLRenderer, getFrustum, getFullscreenTriangle, ticker } from '../../build/alien.three.js';
-
-        ColorManagement.enabled = false; // Disable color management
+        import { AdditiveBlending, BloomCompositeMaterial, Color, ColorManagement, DirectionalLight, Flowmap, Fog, GLSL3, Group, HemisphereLight, LinearSRGBColorSpace, LuminosityMaterial, MathUtils, Mesh, MeshBasicMaterial, MeshStandardMaterial, OrthographicCamera, PanelItem, PerspectiveCamera, PlaneGeometry, RawShaderMaterial, Reflector, RepeatWrapping, SVGLoader, Scene, SceneCompositeDistortionMaterial, TextureLoader, UI, UnrealBloomBlurMaterial, Vector2, Vector3, WebGLRenderTarget, WebGLRenderer, getFrustum, getFullscreenTriangle, ticker } from '../../build/alien.three.js';
 
         import rgbshift from '../../src/shaders/modules/rgbshift/rgbshift.glsl.js';
 
         // Based on https://oframe.github.io/ogl/examples/?src=mouse-flowmap.html by gordonnl
-
-        const vertexFlowShader = /* glsl */ `
-            in vec3 position;
-            in vec2 uv;
-
-            uniform mat4 modelViewMatrix;
-            uniform mat4 projectionMatrix;
-
-            out vec2 vUv;
-
-            void main() {
-                vUv = uv;
-
-                gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
-            }
-        `;
-
-        const fragmentFlowShader = /* glsl */ `
-            precision highp float;
-
-            uniform sampler2D tMap;
-            uniform sampler2D tFlow;
-
-            in vec2 vUv;
-
-            out vec4 FragColor;
-
-            ${rgbshift}
-
-            void main() {
-                // R and G values are velocity in the X and Y direction
-                // B value is the velocity length
-                vec3 flow = texture(tFlow, vUv).rgb;
-
-                // Use flow to adjust the UV lookup of a texture
-                vec2 uv = vUv;
-                uv += flow.rg * -0.05;
-
-                float angle = length(vUv - 0.5);
-                float amount = length(flow.rg) * 0.025;
-
-                FragColor = getRGB(tMap, uv, angle, amount);
-                FragColor.a = 1.0;
-            }
-        `;
 
         class FlowMaterial extends RawShaderMaterial {
             constructor() {
@@ -72,63 +25,50 @@
                         tMap: { value: null },
                         tFlow: { value: null }
                     },
-                    vertexShader: vertexFlowShader,
-                    fragmentShader: fragmentFlowShader,
+                    vertexShader: /* glsl */ `
+                        in vec3 position;
+                        in vec2 uv;
+
+                        uniform mat4 modelViewMatrix;
+                        uniform mat4 projectionMatrix;
+
+                        out vec2 vUv;
+
+                        void main() {
+                            vUv = uv;
+
+                            gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+                        }
+                    `,
+                    fragmentShader: /* glsl */ `
+                        precision highp float;
+
+                        uniform sampler2D tMap;
+                        uniform sampler2D tFlow;
+
+                        in vec2 vUv;
+
+                        out vec4 FragColor;
+
+                        ${rgbshift}
+
+                        void main() {
+                            // R and G values are velocity in the X and Y direction
+                            // B value is the velocity length
+                            vec3 flow = texture(tFlow, vUv).rgb;
+
+                            // Use flow to adjust the UV lookup of a texture
+                            vec2 uv = vUv - flow.rg * 0.05;
+
+                            vec2 dir = 0.5 - vUv;
+                            float angle = atan(dir.y, dir.x);
+                            float amount = length(flow.rg) * 0.025;
+
+                            FragColor = getRGB(tMap, uv, angle, amount);
+                            FragColor.a = 1.0;
+                        }
+                    `,
                     blending: AdditiveBlending
-                });
-            }
-        }
-
-        const vertexCompositeShader = /* glsl */ `
-            in vec3 position;
-            in vec2 uv;
-
-            out vec2 vUv;
-
-            void main() {
-                vUv = uv;
-
-                gl_Position = vec4(position, 1.0);
-            }
-        `;
-
-        const fragmentCompositeShader = /* glsl */ `
-            precision highp float;
-
-            uniform sampler2D tScene;
-            uniform sampler2D tBloom;
-            uniform float uBloomDistortion;
-
-            in vec2 vUv;
-
-            out vec4 FragColor;
-
-            ${rgbshift}
-
-            void main() {
-                FragColor = texture(tScene, vUv);
-
-                float angle = length(vUv - 0.5);
-                float amount = 0.001 * uBloomDistortion;
-
-                FragColor.rgb += getRGB(tBloom, vUv, angle, amount).rgb;
-            }
-        `;
-
-        class CompositeMaterial extends RawShaderMaterial {
-            constructor() {
-                super({
-                    glslVersion: GLSL3,
-                    uniforms: {
-                        tScene: { value: null },
-                        tBloom: { value: null },
-                        uBloomDistortion: { value: 1.45 }
-                    },
-                    vertexShader: vertexCompositeShader,
-                    fragmentShader: fragmentCompositeShader,
-                    blending: NoBlending,
-                    depthTest: false,
-                    depthWrite: false
                 });
             }
         }
@@ -506,7 +446,7 @@
                     1 - MathUtils.mapLinear(event.y, this.screenSpacePosition.y, this.screenSpacePosition.y + triangleHeight, 0, 1)
                 );
 
-                // Calculate velocity
+                // First frame
                 if (!this.lastTime) {
                     this.lastTime = performance.now();
                     this.lastMouse.copy(event);
@@ -523,6 +463,7 @@
                 const delta = Math.max(14, time - this.lastTime);
                 this.lastTime = time;
 
+                // Calculate velocity
                 this.velocity.x = deltaX / delta;
                 this.velocity.y = deltaY / delta;
 
@@ -568,17 +509,11 @@
         }
 
         class PanelController {
-            static init(view) {
+            static init(view, ui) {
                 this.view = view;
+                this.ui = ui;
 
-                this.initViews();
                 this.initPanel();
-            }
-
-            static initViews() {
-                this.ui = new UI({ fps: true });
-                this.ui.animateIn();
-                document.body.appendChild(this.ui.element);
             }
 
             static initPanel() {
@@ -588,14 +523,14 @@
 
                 const items = [
                     {
-                        label: 'FPS'
+                        name: 'FPS'
                     },
                     {
                         type: 'divider'
                     },
                     {
                         type: 'slider',
-                        label: 'Falloff',
+                        name: 'Falloff',
                         min: 0,
                         max: 1,
                         step: 0.01,
@@ -606,7 +541,7 @@
                     },
                     {
                         type: 'slider',
-                        label: 'Alpha',
+                        name: 'Alpha',
                         min: 0,
                         max: 1,
                         step: 0.01,
@@ -617,7 +552,7 @@
                     },
                     {
                         type: 'slider',
-                        label: 'Dissipate',
+                        name: 'Dissipate',
                         min: 0,
                         max: 1,
                         step: 0.01,
@@ -631,7 +566,7 @@
                     },
                     {
                         type: 'slider',
-                        label: 'Thresh',
+                        name: 'Thresh',
                         min: 0,
                         max: 1,
                         step: 0.01,
@@ -642,7 +577,7 @@
                     },
                     {
                         type: 'slider',
-                        label: 'Smooth',
+                        name: 'Smooth',
                         min: 0,
                         max: 1,
                         step: 0.01,
@@ -653,7 +588,7 @@
                     },
                     {
                         type: 'slider',
-                        label: 'Strength',
+                        name: 'Strength',
                         min: 0,
                         max: 2,
                         step: 0.01,
@@ -665,7 +600,7 @@
                     },
                     {
                         type: 'slider',
-                        label: 'Radius',
+                        name: 'Radius',
                         min: 0,
                         max: 1,
                         step: 0.01,
@@ -677,10 +612,10 @@
                     },
                     {
                         type: 'slider',
-                        label: 'Chroma',
+                        name: 'Chroma',
                         min: 0,
-                        max: 2,
-                        step: 0.01,
+                        max: 10,
+                        step: 0.1,
                         value: compositeMaterial.uniforms.uBloomDistortion.value,
                         callback: value => {
                             compositeMaterial.uniforms.uBloomDistortion.value = value;
@@ -692,16 +627,6 @@
                     this.ui.addPanel(new PanelItem(data));
                 });
             }
-
-            // Public methods
-
-            static update = () => {
-                if (!this.ui) {
-                    return;
-                }
-
-                this.ui.update();
-            };
         }
 
         const BlurDirectionX = new Vector2(1, 0);
@@ -717,7 +642,7 @@
                 this.luminositySmoothing = 1;
                 this.bloomStrength = 0.3;
                 this.bloomRadius = 0.2;
-                this.bloomDistortion = 1.45;
+                this.bloomDistortion = 1.5;
                 this.enabled = true;
 
                 this.initRenderer();
@@ -773,7 +698,7 @@
                 this.bloomCompositeMaterial.uniforms.uBloomFactors.value = this.bloomFactors();
 
                 // Composite material
-                this.compositeMaterial = new CompositeMaterial();
+                this.compositeMaterial = new SceneCompositeDistortionMaterial({ dithering: true });
                 this.compositeMaterial.uniforms.uBloomDistortion.value = this.bloomDistortion;
             }
 
@@ -963,11 +888,15 @@
             static initWorld() {
                 this.renderer = new WebGLRenderer({
                     powerPreference: 'high-performance',
-                    stencil: false,
-                    antialias: true
+                    antialias: true,
+                    stencil: false
                 });
+
+                // Disable color management
+                ColorManagement.enabled = false;
                 this.renderer.outputColorSpace = LinearSRGBColorSpace;
 
+                // Output canvas
                 this.element = this.renderer.domElement;
 
                 // 3D scene
@@ -1031,6 +960,8 @@
                 this.frame.value = frame;
             };
 
+            // Global handlers
+
             static getTexture = (path, callback) => this.textureLoader.load(path, callback);
 
             static loadTexture = path => this.textureLoader.loadAsync(path);
@@ -1065,6 +996,10 @@
             static initViews() {
                 this.view = new SceneView();
                 WorldController.scene.add(this.view);
+
+                this.ui = new UI({ fps: true });
+                this.ui.animateIn();
+                document.body.appendChild(this.ui.element);
             }
 
             static initControllers() {
@@ -1076,7 +1011,7 @@
             }
 
             static initPanel() {
-                PanelController.init(this.view);
+                PanelController.init(this.view, this.ui);
             }
 
             static addListeners() {
@@ -1103,7 +1038,7 @@
                 CameraController.update();
                 SceneController.update();
                 RenderManager.update(time, delta, frame);
-                PanelController.update();
+                this.ui.update();
             };
         }
 

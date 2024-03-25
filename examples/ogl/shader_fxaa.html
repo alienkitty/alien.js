@@ -24,51 +24,11 @@
         import { FXAAProgram } from '../../src/ogl/programs/Programs.js';
         import { PanelItem, UI, getKeyByValue, ticker } from '@alienkitty/space.js';
 
-        const params = {
+        const colors = {
             backgroundColor: new Color('#0e0e0e')
         };
 
         import periodic3d from '../../src/shaders/modules/noise/periodic3d.glsl.js';
-
-        // Based on https://oframe.github.io/ogl/examples/?src=helpers.html by gordonnl
-        // Based on https://github.com/spite/perlin-experiments
-
-        const vertex = /* glsl */ `
-            attribute vec3 position;
-            attribute vec3 normal;
-
-            uniform mat4 modelViewMatrix;
-            uniform mat4 projectionMatrix;
-            uniform mat3 normalMatrix;
-
-            uniform float uTime;
-
-            varying vec3 vNormal;
-
-            ${periodic3d}
-
-            void main() {
-                vNormal = normalize(normalMatrix * normal);
-
-                float f = 0.05 * pnoise(vec3(2.0 * normal + uTime), vec3(10.0));
-
-                gl_Position = projectionMatrix * modelViewMatrix * vec4(position + f * normal, 1.0);
-            }
-        `;
-
-        const fragment = /* glsl */ `
-            precision highp float;
-
-            varying vec3 vNormal;
-
-            void main() {
-                vec3 normal = normalize(vNormal);
-                float lighting = dot(normal, normalize(vec3(1.0, 1.0, 1.0)));
-
-                gl_FragColor.rgb = vec3(0.75) + lighting * 0.25;
-                gl_FragColor.a = 1.0;
-            }
-        `;
 
         class SceneView extends Transform {
             constructor() {
@@ -82,12 +42,48 @@
 
                 const geometry = new Sphere(gl, { radius: 1, widthSegments: 80, heightSegments: 80 });
 
+                // Based on https://oframe.github.io/ogl/examples/?src=helpers.html by gordonnl
+                // Based on https://github.com/spite/perlin-experiments
+
                 const program = new Program(gl, {
                     uniforms: {
                         uTime: time
                     },
-                    vertex,
-                    fragment
+                    vertex: /* glsl */ `
+                        attribute vec3 position;
+                        attribute vec3 normal;
+
+                        uniform mat4 modelViewMatrix;
+                        uniform mat4 projectionMatrix;
+                        uniform mat3 normalMatrix;
+
+                        uniform float uTime;
+
+                        varying vec3 vNormal;
+
+                        ${periodic3d}
+
+                        void main() {
+                            vNormal = normalize(normalMatrix * normal);
+
+                            float f = 0.05 * pnoise(vec3(2.0 * normal + uTime), vec3(10.0));
+
+                            gl_Position = projectionMatrix * modelViewMatrix * vec4(position + f * normal, 1.0);
+                        }
+                    `,
+                    fragment: /* glsl */ `
+                        precision highp float;
+
+                        varying vec3 vNormal;
+
+                        void main() {
+                            vec3 normal = normalize(vNormal);
+                            float lighting = dot(normal, normalize(vec3(1.0, 1.0, 1.0)));
+
+                            gl_FragColor.rgb = vec3(0.75) + lighting * 0.25;
+                            gl_FragColor.a = 1.0;
+                        }
+                    `
                 });
 
                 const mesh = new Mesh(gl, { geometry, program });
@@ -96,15 +92,10 @@
         }
 
         class PanelController {
-            static init() {
-                this.initViews();
-                this.initPanel();
-            }
+            static init(ui) {
+                this.ui = ui;
 
-            static initViews() {
-                this.ui = new UI({ fps: true });
-                this.ui.animateIn();
-                document.body.appendChild(this.ui.element);
+                this.initPanel();
             }
 
             static initPanel() {
@@ -115,7 +106,7 @@
 
                 const items = [
                     {
-                        label: 'FPS'
+                        name: 'FPS'
                     },
                     {
                         type: 'divider'
@@ -134,16 +125,6 @@
                     this.ui.addPanel(new PanelItem(data));
                 });
             }
-
-            // Public methods
-
-            static update = () => {
-                if (!this.ui) {
-                    return;
-                }
-
-                this.ui.update();
-            };
         }
 
         class RenderManager {
@@ -219,7 +200,7 @@
                 this.element = this.gl.canvas;
 
                 // Clear color
-                this.gl.clearColor(...params.backgroundColor, 1);
+                this.gl.clearColor(...colors.backgroundColor, 1);
 
                 // 3D scene
                 this.scene = new Transform();
@@ -294,6 +275,10 @@
             static initViews() {
                 this.view = new SceneView();
                 WorldController.scene.addChild(this.view);
+
+                this.ui = new UI({ fps: true });
+                this.ui.animateIn();
+                document.body.appendChild(this.ui.element);
             }
 
             static initControllers() {
@@ -303,7 +288,7 @@
             }
 
             static initPanel() {
-                PanelController.init();
+                PanelController.init(this.ui);
             }
 
             static addListeners() {
@@ -326,7 +311,7 @@
             static onUpdate = (time, delta, frame) => {
                 WorldController.update(time, delta, frame);
                 RenderManager.update(time, delta, frame);
-                PanelController.update();
+                this.ui.update();
             };
         }
 

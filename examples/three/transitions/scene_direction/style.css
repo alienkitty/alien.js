@@ -1,0 +1,14 @@
+body {
+    -moz-osx-font-smoothing: auto;
+    -webkit-font-smoothing: auto;
+}
+
+h1 {
+    margin: 0;
+}
+
+.link {
+    font-weight: 400;
+    font-size: 13px;
+    line-height: 1.4;
+}

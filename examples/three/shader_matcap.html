@@ -13,8 +13,6 @@
     <script type="module">
         import { Color, ColorManagement, Group, LinearSRGBColorSpace, Mesh, MeshMatcapMaterial, PerspectiveCamera, Scene, SphereGeometry, TextureLoader, Vector2, WebGLRenderer, getFullscreenTriangle, ticker } from '../../build/alien.three.js';
 
-        ColorManagement.enabled = false; // Disable color management
-
         import periodic3d from '../../src/shaders/modules/noise/periodic3d.glsl.js';
 
         class SceneView extends Group {
@@ -94,11 +92,15 @@
             static initWorld() {
                 this.renderer = new WebGLRenderer({
                     powerPreference: 'high-performance',
-                    stencil: false,
-                    antialias: true
+                    antialias: true,
+                    stencil: false
                 });
+
+                // Disable color management
+                ColorManagement.enabled = false;
                 this.renderer.outputColorSpace = LinearSRGBColorSpace;
 
+                // Output canvas
                 this.element = this.renderer.domElement;
 
                 // 3D scene
@@ -159,6 +161,8 @@
                 this.time.value = time;
                 this.frame.value = frame;
             };
+
+            // Global handlers
 
             static getTexture = (path, callback) => this.textureLoader.load(path, callback);
 

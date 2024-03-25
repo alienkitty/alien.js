@@ -11,7 +11,7 @@
     <link rel="stylesheet" href="../assets/css/style.css">
 
     <script type="module">
-        import { AdditiveBlending, BloomCompositeMaterial, BufferGeometry, Color, ColorManagement, CopyMaterial, Float32BufferAttribute, GLSL3, Group, LinearSRGBColorSpace, LuminosityMaterial, MathUtils, Mesh, NoBlending, OrbitControls, OrthographicCamera, PanelItem, PerspectiveCamera, Points, RawShaderMaterial, Scene, TextureLoader, UI, UnrealBloomBlurMaterial, Vector2, WebGLRenderTarget, WebGLRenderer, getFullscreenTriangle, ticker } from '../../build/alien.three.js';
+        import { AdditiveBlending, BloomCompositeMaterial, BoxGeometry, BufferGeometry, Color, ColorManagement, CopyMaterial, Float32BufferAttribute, GLSL3, Group, LinearSRGBColorSpace, LuminosityMaterial, MathUtils, Mesh, MeshBasicMaterial, NoBlending, OrbitControls, OrthographicCamera, PanelItem, PerspectiveCamera, Points, RawShaderMaterial, Scene, TextureLoader, UI, UnrealBloomBlurMaterial, Vector2, WebGLRenderTarget, WebGLRenderer, getFullscreenTriangle, ticker } from '../../build/alien.three.js';
 
         import blur from '../../src/shaders/modules/blur/radial-blur8-rgbshift.glsl.js';
 
@@ -72,10 +72,11 @@
         }
 
         class Stars extends Group {
-            constructor(numParticles) {
+            constructor(numParticles, wireframeColor) {
                 super();
 
                 this.numParticles = numParticles;
+                this.wireframeColor = wireframeColor;
 
                 this.initPoints();
             }
@@ -123,7 +124,7 @@
                         void main() {
                             vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
 
-                            gl_PointSize = uScale * (2.0 * (150.0 / -mvPosition.z));
+                            gl_PointSize = uScale * (16.0 * (150.0 / -mvPosition.z));
                             gl_Position = projectionMatrix * mvPosition;
 
                             vec3 pos = (modelMatrix * vec4(position, 1.0)).xyz;
@@ -163,6 +164,16 @@
                 this.add(points);
 
                 this.material = material;
+
+                const wireframe = new Mesh(
+                    new BoxGeometry(40 / 2, 40 / 2, 40),
+                    new MeshBasicMaterial({
+                        color: this.wireframeColor,
+                        wireframe: true
+                    })
+                );
+                wireframe.position.set(0, 0, -40 / 2);
+                this.add(wireframe);
             }
         }
 
@@ -174,12 +185,18 @@
                 this.numParticles = numParticles;
                 this.zSpeed = zSpeed / 100;
 
+                this.wireframeColors = [
+                    0xff0000,
+                    0x00ff00,
+                    0x0000ff
+                ];
+
                 this.initStars();
             }
 
             initStars() {
                 for (let i = 0; i < 3; i++) {
-                    const stars = new Stars(this.numParticles);
+                    const stars = new Stars(this.numParticles, this.wireframeColors[i]);
                     stars.position.z = i * -40;
                     this.add(stars);
                 }

@@ -4,26 +4,27 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
 
-    <title>Flowmap Post-processing View — Alien.js</title>
+    <title>Fluid Distortion Post-processing View — Alien.js</title>
 
     <link rel="preconnect" href="https://fonts.gstatic.com">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto+Mono">
     <link rel="stylesheet" href="../assets/css/style.css">
 
     <script type="module">
-        import { AdditiveBlending, BloomCompositeMaterial, Color, ColorManagement, DirectionalLight, Flowmap, Fog, GLSL3, Group, HemisphereLight, LinearSRGBColorSpace, LuminosityMaterial, MathUtils, Mesh, MeshBasicMaterial, MeshStandardMaterial, OrthographicCamera, PanelItem, PerspectiveCamera, PlaneGeometry, RawShaderMaterial, Reflector, RepeatWrapping, SVGLoader, Scene, SceneCompositeDistortionMaterial, TextureLoader, UI, UnrealBloomBlurMaterial, Vector2, Vector3, WebGLRenderTarget, WebGLRenderer, getFrustum, getFullscreenTriangle, ticker } from '../../build/alien.three.js';
+        import { AdditiveBlending, BloomCompositeMaterial, Color, ColorManagement, DirectionalLight, Fluid, Fog, GLSL3, Group, HemisphereLight, LinearSRGBColorSpace, LuminosityMaterial, MathUtils, Mesh, MeshBasicMaterial, MeshStandardMaterial, OrthographicCamera, PanelItem, PerspectiveCamera, PlaneGeometry, RawShaderMaterial, Reflector, RepeatWrapping, SVGLoader, Scene, SceneCompositeDistortionMaterial, TextureLoader, UI, UnrealBloomBlurMaterial, Vector2, Vector3, WebGLRenderTarget, WebGLRenderer, getFrustum, getFullscreenTriangle, ticker } from '../../build/alien.three.js';
 
         import rgbshift from '../../src/shaders/modules/rgbshift/rgbshift.glsl.js';
 
-        // Based on https://oframe.github.io/ogl/examples/?src=mouse-flowmap.html by gordonnl
+        // Based on https://github.com/PavelDoGreat/WebGL-Fluid-Simulation
+        // Based on https://oframe.github.io/ogl/examples/?src=post-fluid-distortion.html by gordonnl
 
-        class FlowMaterial extends RawShaderMaterial {
+        class FluidMaterial extends RawShaderMaterial {
             constructor() {
                 super({
                     glslVersion: GLSL3,
                     uniforms: {
                         tMap: { value: null },
-                        tFlow: { value: null }
+                        tFluid: { value: null }
                     },
                     vertexShader: /* glsl */ `
                         in vec3 position;
@@ -44,7 +45,7 @@
                         precision highp float;
 
                         uniform sampler2D tMap;
-                        uniform sampler2D tFlow;
+                        uniform sampler2D tFluid;
 
                         in vec2 vUv;
 
@@ -53,16 +54,12 @@
                         ${rgbshift}
 
                         void main() {
-                            // R and G values are velocity in the X and Y direction
-                            // B value is the velocity length
-                            vec3 flow = texture(tFlow, vUv).rgb;
-
-                            // Use flow to adjust the UV lookup of a texture
-                            vec2 uv = vUv - flow.rg * 0.05;
+                            vec3 fluid = texture(tFluid, vUv).rgb;
+                            vec2 uv = vUv - fluid.rg * 0.0002;
 
                             vec2 dir = 0.5 - vUv;
                             float angle = atan(dir.y, dir.x);
-                            float amount = length(flow.rg) * 0.025;
+                            float amount = length(fluid.rg) * 0.0001;
 
                             FragColor = getRGB(tMap, uv, angle, amount);
                             FragColor.a = 1.0;
@@ -136,19 +133,19 @@
                     depthBuffer: false
                 });
 
-                // Flowmap
-                this.flowmap = new Flowmap(this.renderer, {
-                    alpha: 0.25
+                // Fluid simulation
+                this.fluid = new Fluid(this.renderer, {
+                    curlStrength: 0
                 });
-                this.flowmap.material.uniforms.uAspect = aspect;
+                this.fluid.splatMaterial.uniforms.uAspect = aspect;
             }
 
             initMesh() {
                 const { camera, quad } = WorldController;
 
-                const material = new FlowMaterial();
+                const material = new FluidMaterial();
                 material.uniforms.tMap.value = this.renderTarget.texture;
-                material.uniforms.tFlow = this.flowmap.uniform;
+                material.uniforms.tFluid = this.fluid.uniform;
 
                 const mesh = new Mesh(quad, material);
                 mesh.position.set(0, 1.4, -11);
@@ -164,7 +161,7 @@
             initViews() {
                 this.triangle = new Triangle();
 
-                // Reduce size to make room for flowmap dissipation
+                // Reduce size to make room for fluid dissipation
                 this.triangle.scale.multiplyScalar(0.8);
 
                 this.scene.add(this.triangle);
@@ -394,10 +391,7 @@
                 this.camera = camera;
                 this.view = view;
 
-                // Flowmap
-                this.mouse = new Vector2(-1, -1);
-                this.velocity = new Vector2();
-                this.lastTime = null;
+                // Fluid simulation
                 this.lastMouse = new Vector2();
 
                 this.triangleWorldPosition = new Vector3();
@@ -442,15 +436,9 @@
                 this.screenSpacePosition.x = (this.screenSpacePosition.x * halfWidth) + halfWidth - triangleHalfWidth;
                 this.screenSpacePosition.y = -(this.screenSpacePosition.y * halfHeight) + halfHeight - triangleHalfHeight;
 
-                // Get mouse value in 0 to 1 range, with Y flipped
-                this.mouse.set(
-                    MathUtils.mapLinear(event.x, this.screenSpacePosition.x, this.screenSpacePosition.x + triangleWidth, 0, 1),
-                    1 - MathUtils.mapLinear(event.y, this.screenSpacePosition.y, this.screenSpacePosition.y + triangleHeight, 0, 1)
-                );
-
-                // First frame
-                if (!this.lastTime) {
-                    this.lastTime = performance.now();
+                // First input
+                if (!this.lastMouse.isInit) {
+                    this.lastMouse.isInit = true;
                     this.lastMouse.copy(event);
                 }
 
@@ -459,18 +447,17 @@
 
                 this.lastMouse.copy(event);
 
-                const time = performance.now();
-
-                // Avoid dividing by 0
-                const delta = Math.max(14, time - this.lastTime);
-                this.lastTime = time;
-
-                // Calculate velocity
-                this.velocity.x = deltaX / delta;
-                this.velocity.y = deltaY / delta;
-
-                // Flag update to prevent hanging velocity values when not moving
-                this.velocity.needsUpdate = true;
+                // Add if the mouse is moving
+                if (Math.abs(deltaX) || Math.abs(deltaY)) {
+                    // Update fluid simulation inputs
+                    this.view.triangle.fluid.splats.push({
+                        // Get mouse value in 0 to 1 range, with Y flipped
+                        x: MathUtils.mapLinear(event.x, this.screenSpacePosition.x, this.screenSpacePosition.x + triangleWidth, 0, 1),
+                        y: 1 - MathUtils.mapLinear(event.y, this.screenSpacePosition.y, this.screenSpacePosition.y + triangleHeight, 0, 1),
+                        dx: deltaX * 5,
+                        dy: deltaY * -5
+                    });
+                }
             };
 
             static onPointerUp = e => {
@@ -487,20 +474,8 @@
             };
 
             static update = () => {
-                // Reset velocity when mouse not moving
-                if (!this.velocity.needsUpdate) {
-                    this.mouse.set(-1, -1);
-                    this.velocity.set(0, 0);
-                    this.lastTime = null;
-                }
-                this.velocity.needsUpdate = false;
-
-                // Update flowmap inputs
-                this.view.triangle.flowmap.mouse.copy(this.mouse);
-
-                // Ease velocity input, slower when fading out
-                this.view.triangle.flowmap.velocity.lerp(this.velocity, this.velocity.length() ? 0.5 : 0.1);
-                this.view.triangle.flowmap.update();
+                // Perform all of the fluid simulation renders
+                this.view.triangle.fluid.update();
             };
 
             static animateIn = () => {
@@ -519,49 +494,11 @@
             }
 
             static initPanel() {
-                const { triangle } = this.view;
-
                 const { luminosityMaterial, bloomCompositeMaterial, compositeMaterial } = RenderManager;
 
                 const items = [
                     {
                         name: 'FPS'
-                    },
-                    {
-                        type: 'divider'
-                    },
-                    {
-                        type: 'slider',
-                        name: 'Falloff',
-                        min: 0,
-                        max: 1,
-                        step: 0.01,
-                        value: triangle.flowmap.material.uniforms.uFalloff.value,
-                        callback: value => {
-                            triangle.flowmap.material.uniforms.uFalloff.value = value;
-                        }
-                    },
-                    {
-                        type: 'slider',
-                        name: 'Alpha',
-                        min: 0,
-                        max: 1,
-                        step: 0.01,
-                        value: triangle.flowmap.material.uniforms.uAlpha.value,
-                        callback: value => {
-                            triangle.flowmap.material.uniforms.uAlpha.value = value;
-                        }
-                    },
-                    {
-                        type: 'slider',
-                        name: 'Dissipate',
-                        min: 0,
-                        max: 1,
-                        step: 0.01,
-                        value: triangle.flowmap.material.uniforms.uDissipation.value,
-                        callback: value => {
-                            triangle.flowmap.material.uniforms.uDissipation.value = value;
-                        }
                     },
                     {
                         type: 'divider'

@@ -131,6 +131,7 @@ const program = new FXAAProgram(gl);
 [flowmap](https://alien.js.org/examples/three/shader_flowmap_view.html) (view)  
 [fluid distortion](https://alien.js.org/examples/three/shader_fluid_distortion.html)  
 [fluid distortion](https://alien.js.org/examples/three/shader_fluid_distortion_rgbshift.html) (RGB shift)  
+[fluid distortion](https://alien.js.org/examples/three/shader_fluid_distortion_view.html) (view)  
 [depth](https://alien.js.org/examples/three/shader_depth.html) (aperture with dither)  
 [fresnel](https://alien.js.org/examples/three/shader_fresnel.html) (with looping noise)  
 [hologram](https://alien.js.org/examples/three/shader_hologram.html)  

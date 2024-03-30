@@ -88,13 +88,13 @@
                             vec3 fluid = texture(tFluid, vUv).rgb;
                             vec2 uv = vUv - fluid.rg * 0.0002;
 
-                            FragColor = texture(tScene, uv);
-
                             vec2 dir = 0.5 - vUv;
                             float angle = atan(dir.y, dir.x);
-                            float amount = 0.001 * uBloomDistortion;
+                            float amount = length(fluid.rg) * 0.0001;
 
-                            FragColor.rgb += getRGB(tBloom, uv, angle, amount).rgb;
+                            FragColor = getRGB(tScene, uv, angle, amount);
+
+                            FragColor.rgb += getRGB(tBloom, uv, angle, amount + 0.001 * uBloomDistortion).rgb;
                         }
                     `,
                     blending: NoBlending,

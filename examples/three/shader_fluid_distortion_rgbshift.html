@@ -95,6 +95,8 @@
                             FragColor = getRGB(tScene, uv, angle, amount);
 
                             FragColor.rgb += getRGB(tBloom, uv, angle, amount + 0.001 * uBloomDistortion).rgb;
+
+                            // FragColor = texture(tFluid, vUv);
                         }
                     `,
                     blending: NoBlending,
@@ -1084,7 +1086,7 @@
                 renderer.render(this.screen, this.screenCamera);
 
                 this.vorticityMaterial.uniforms.uVelocity.value = this.velocity.read.texture;
-                this.vorticityMaterial.uniforms.uCurl.value = this.curl.texture;
+                // this.vorticityMaterial.uniforms.uCurl.value = this.curl.texture;
                 this.screen.material = this.vorticityMaterial;
                 renderer.setRenderTarget(this.velocity.write);
                 renderer.render(this.screen, this.screenCamera);

@@ -3,15 +3,15 @@ import { GLSL3, NoBlending, RawShaderMaterial } from 'three';
 import { vertexShader, fragmentShader } from '../../shaders/MotionBlurCompositeShader.js';
 
 export class MotionBlurCompositeMaterial extends RawShaderMaterial {
-    constructor() {
+    constructor(samples) {
         super({
             glslVersion: GLSL3,
             defines: {
-                SAMPLES: 30
+                SAMPLES: samples
             },
             uniforms: {
-                sourceBuffer: { value: null },
-                velocityBuffer: { value: null }
+                tMap: { value: null },
+                tVelocity: { value: null }
             },
             vertexShader,
             fragmentShader,

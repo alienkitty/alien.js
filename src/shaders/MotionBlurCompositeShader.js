@@ -1,4 +1,5 @@
 // Based on https://github.com/gkjohnson/threejs-sandbox/tree/master/motionBlurPass
+// Based on https://github.com/gkjohnson/threejs-sandbox/tree/master/shader-replacement
 
 export const vertexShader = /* glsl */ `
 in vec3 position;
@@ -16,15 +17,15 @@ void main() {
 export const fragmentShader = /* glsl */ `
 precision highp float;
 
-uniform sampler2D sourceBuffer;
-uniform sampler2D velocityBuffer;
+uniform sampler2D tMap;
+uniform sampler2D tVelocity;
 
 in vec2 vUv;
 
 out vec4 FragColor;
 
 void main() {
-    vec2 vel = texture(velocityBuffer, vUv).xy;
+    vec2 vel = texture(tVelocity, vUv).xy;
 
     vec4 result;
 
@@ -33,11 +34,12 @@ void main() {
 
     for (int i = 0; i < SAMPLES; i++) {
         vec2 sampleUv = mix(startUv, endUv, float(i) / float(SAMPLES));
-        result += texture(sourceBuffer, sampleUv);
+        result += texture(tMap, sampleUv);
     }
 
     result /= float(SAMPLES);
 
     FragColor = result;
+    // FragColor = texture(tVelocity, vUv);
 }
 `;

@@ -1,6 +1,5 @@
 // Based on https://github.com/gkjohnson/threejs-sandbox/tree/master/motionBlurPass
-
-import { ShaderChunk } from 'three';
+// Based on https://github.com/gkjohnson/threejs-sandbox/tree/master/shader-replacement
 
 export const vertexShader = /* glsl */ `
 in vec3 position;
@@ -10,61 +9,50 @@ uniform mat4 modelViewMatrix;
 uniform mat4 projectionMatrix;
 uniform mat3 normalMatrix;
 
-uniform mat4 prevProjectionMatrix;
-uniform mat4 prevModelViewMatrix;
-uniform float expandGeometry;
-uniform float interpolateGeometry;
+uniform mat4 uPrevModelViewMatrix;
+uniform mat4 uPrevProjectionMatrix;
 
-out vec4 prevPosition;
-out vec4 newPosition;
+out vec4 vPrevPosition;
+out vec4 vNewPosition;
+
+out vec3 vNormal;
 
 void main() {
     // Outputs the position of the current and last frame positions
-    vec3 transformed;
+    vNewPosition = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+    vPrevPosition = uPrevProjectionMatrix * uPrevModelViewMatrix * vec4(position, 1.0);
 
-    // Get the normal
-    ${ShaderChunk.beginnormal_vertex}
-    ${ShaderChunk.defaultnormal_vertex}
+    vNormal = normalMatrix * normal;
 
-    // Get the current vertex position
-    transformed = vec3(position);
-    newPosition = modelViewMatrix * vec4(transformed, 1.0);
-
-    // Get the previous vertex position
-    transformed = vec3(position);
-    prevPosition = prevModelViewMatrix * vec4(transformed, 1.0);
-
-    // The delta between frames
-    vec3 delta = newPosition.xyz - prevPosition.xyz;
-    vec3 direction = normalize(delta);
-
-    // Stretch along the velocity axes
-    float stretchDot = dot(direction, transformedNormal);
-    vec4 expandDir = vec4(direction, 0.0) * stretchDot * expandGeometry * length(delta);
-    vec4 newPosition2 = projectionMatrix * (newPosition + expandDir);
-    vec4 prevPosition2 = prevProjectionMatrix * (prevPosition + expandDir);
-
-    newPosition = projectionMatrix * newPosition;
-    prevPosition = prevProjectionMatrix * prevPosition;
-
-    gl_Position = mix(newPosition2, prevPosition2, interpolateGeometry * (1.0 - step(0.0, stretchDot)));
+    gl_Position = vPrevPosition;
 }
 `;
 
 export const fragmentShader = /* glsl */ `
 precision highp float;
 
-uniform float smearIntensity;
+uniform float uIntensity;
 
-in vec4 prevPosition;
-in vec4 newPosition;
+in vec4 vPrevPosition;
+in vec4 vNewPosition;
+
+in vec3 vNormal;
 
 out vec4 FragColor;
 
 void main() {
     // Compute velocities in screen UV space
-    vec3 vel = (newPosition.xyz / newPosition.w) - (prevPosition.xyz / prevPosition.w);
+    vec3 pos0 = vPrevPosition.xyz / vPrevPosition.w;
+    pos0 += 1.0;
+    pos0 /= 2.0;
 
-    FragColor = vec4(vel * smearIntensity, 1.0);
+    vec3 pos1 = vNewPosition.xyz / vNewPosition.w;
+    pos1 += 1.0;
+    pos1 /= 2.0;
+
+    vec3 vel = pos1 - pos0;
+    FragColor = vec4(vel * uIntensity, 1.0);
+
+    // FragColor = vec4(vNormal, 1.0);
 }
 `;

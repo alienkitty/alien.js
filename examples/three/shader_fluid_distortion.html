@@ -1,0 +1,1429 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+    <title>Fluid Distortion Post-processing — Alien.js</title>
+
+    <link rel="preconnect" href="https://fonts.gstatic.com">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto+Mono">
+    <link rel="stylesheet" href="../assets/css/style.css">
+
+    <script type="module">
+        import { BloomCompositeMaterial, Color, ColorManagement, DirectionalLight, Fog, GLSL3, Group, HalfFloatType, HemisphereLight, LinearFilter, LinearSRGBColorSpace, LuminosityMaterial, MathUtils, Mesh, MeshBasicMaterial, MeshStandardMaterial, NearestFilter, NoBlending, OrthographicCamera, PanelItem, PerspectiveCamera, PlaneGeometry, RGFormat, RawShaderMaterial, RedFormat, Reflector, RepeatWrapping, SVGLoader, Scene, TextureLoader, UI, UnrealBloomBlurMaterial, Vector2, Vector3, WebGLRenderTarget, WebGLRenderer, getFullscreenTriangle, ticker } from '../../build/alien.three.js';
+
+        // Helper to create a ping-pong FBO pairing for simulating on GPU
+        function getDoubleRenderTarget({ width, height, wrapS, wrapT, magFilter = LinearFilter, minFilter = magFilter, type, format, depthBuffer } = {}) {
+            const options = { wrapS, wrapT, magFilter, minFilter, type, format, depthBuffer };
+            const fbo = {
+                read: new WebGLRenderTarget(width, height, options),
+                write: new WebGLRenderTarget(width, height, options),
+                swap: () => {
+                    const temp = fbo.read;
+                    fbo.read = fbo.write;
+                    fbo.write = temp;
+                }
+            };
+            return fbo;
+        }
+
+        // Resolution of simulation
+        const simRes = 128;
+        const dyeRes = 512;
+
+        // Main inputs to control look and feel of fluid
+        const iterations = 3;
+        const densityDissipation = 0.97;
+        const velocityDissipation = 0.98;
+        const pressureDissipation = 0.8;
+        const curlStrength = 20;
+        const radius = 0.2;
+
+        // Common uniform
+        const texelSize = { value: new Vector2(1 / simRes, 1 / simRes) };
+
+        import rgbshift from '../../src/shaders/modules/rgbshift/rgbshift.glsl.js';
+
+        // Based on https://github.com/PavelDoGreat/WebGL-Fluid-Simulation
+        // Based on https://oframe.github.io/ogl/examples/?src=post-fluid-distortion.html by gordonnl
+
+        class CompositeMaterial extends RawShaderMaterial {
+            constructor() {
+                super({
+                    glslVersion: GLSL3,
+                    uniforms: {
+                        tMap: { value: null },
+                        tFluid: { value: null },
+                        uTime: { value: 0 }
+                    },
+                    vertexShader: /* glsl */ `
+                        in vec3 position;
+                        in vec2 uv;
+
+                        out vec2 vUv;
+
+                        void main() {
+                            vUv = uv;
+
+                            gl_Position = vec4(position, 1.0);
+                        }
+                    `,
+                    fragmentShader: /* glsl */ `
+                        precision highp float;
+
+                        uniform sampler2D tMap;
+                        uniform sampler2D tFluid;
+                        uniform float uTime;
+
+                        in vec2 vUv;
+
+                        out vec4 FragColor;
+
+                        void main() {
+                            vec3 fluid = texture(tFluid, vUv).rgb;
+                            vec2 uv = vUv - fluid.rg * 0.0002;
+
+                            FragColor = mix(texture(tMap, uv), vec4(fluid * 0.1 + 0.5, 1), step(0.5, vUv.x));
+
+                            // Oscillate between fluid values and the distorted scene
+                            // FragColor = mix(texture(tMap, uv), vec4(fluid * 0.1 + 0.5, 1), smoothstep(0.0, 0.7, sin(uTime)));
+                        }
+                    `,
+                    blending: NoBlending,
+                    depthTest: false,
+                    depthWrite: false
+                });
+            }
+        }
+
+        const baseVertexShader = /* glsl */ `
+            precision highp float;
+
+            in vec3 position;
+            in vec2 uv;
+
+            uniform vec2 texelSize;
+
+            out vec2 vUv;
+            out vec2 vL;
+            out vec2 vR;
+            out vec2 vT;
+            out vec2 vB;
+
+            void main () {
+                vUv = uv;
+                vL = vUv - vec2(texelSize.x, 0.0);
+                vR = vUv + vec2(texelSize.x, 0.0);
+                vT = vUv + vec2(0.0, texelSize.y);
+                vB = vUv - vec2(0.0, texelSize.y);
+
+                gl_Position = vec4(position, 1.0);
+            }
+        `;
+
+        const clearShader = /* glsl */ `
+            precision mediump float;
+            precision mediump sampler2D;
+
+            uniform sampler2D uTexture;
+            uniform float value;
+
+            in highp vec2 vUv;
+
+            out vec4 FragColor;
+
+            void main () {
+                FragColor = value * texture(uTexture, vUv);
+            }
+        `;
+
+        const splatShader = /* glsl */ `
+            precision highp float;
+            precision highp sampler2D;
+
+            uniform sampler2D uTarget;
+            uniform float aspectRatio;
+            uniform vec3 color;
+            uniform vec2 point;
+            uniform float radius;
+
+            in vec2 vUv;
+
+            out vec4 FragColor;
+
+            void main () {
+                vec2 p = vUv - point.xy;
+                p.x *= aspectRatio;
+                vec3 splat = exp(-dot(p, p) / radius) * color;
+                vec3 base = texture(uTarget, vUv).xyz;
+
+                FragColor = vec4(base + splat, 1.0);
+            }
+        `;
+
+        const advectionShader = /* glsl */ `
+            precision highp float;
+            precision highp sampler2D;
+
+            uniform sampler2D uVelocity;
+            uniform sampler2D uSource;
+            uniform vec2 texelSize;
+            uniform float dt;
+            uniform float dissipation;
+
+            in vec2 vUv;
+
+            out vec4 FragColor;
+
+            void main () {
+                vec2 coord = vUv - dt * texture(uVelocity, vUv).xy * texelSize;
+
+                FragColor = dissipation * texture(uSource, coord);
+                FragColor.a = 1.0;
+            }
+        `;
+
+        const divergenceShader = /* glsl */ `
+            precision mediump float;
+            precision mediump sampler2D;
+
+            uniform sampler2D uVelocity;
+
+            in highp vec2 vUv;
+            in highp vec2 vL;
+            in highp vec2 vR;
+            in highp vec2 vT;
+            in highp vec2 vB;
+
+            out vec4 FragColor;
+
+            void main () {
+                float L = texture(uVelocity, vL).x;
+                float R = texture(uVelocity, vR).x;
+                float T = texture(uVelocity, vT).y;
+                float B = texture(uVelocity, vB).y;
+                vec2 C = texture(uVelocity, vUv).xy;
+                if (vL.x < 0.0) { L = -C.x; }
+                if (vR.x > 1.0) { R = -C.x; }
+                if (vT.y > 1.0) { T = -C.y; }
+                if (vB.y < 0.0) { B = -C.y; }
+                float div = 0.5 * (R - L + T - B);
+
+                FragColor = vec4(div, 0.0, 0.0, 1.0);
+            }
+        `;
+
+        const curlShader = /* glsl */ `
+            precision mediump float;
+            precision mediump sampler2D;
+
+            uniform sampler2D uVelocity;
+
+            in highp vec2 vUv;
+            in highp vec2 vL;
+            in highp vec2 vR;
+            in highp vec2 vT;
+            in highp vec2 vB;
+
+            out vec4 FragColor;
+
+            void main () {
+                float L = texture(uVelocity, vL).y;
+                float R = texture(uVelocity, vR).y;
+                float T = texture(uVelocity, vT).x;
+                float B = texture(uVelocity, vB).x;
+                float vorticity = R - L - T + B;
+
+                FragColor = vec4(0.5 * vorticity, 0.0, 0.0, 1.0);
+            }
+        `;
+
+        const vorticityShader = /* glsl */ `
+            precision highp float;
+            precision highp sampler2D;
+
+            uniform sampler2D uVelocity;
+            uniform sampler2D uCurl;
+            uniform float curl;
+            uniform float dt;
+
+            in vec2 vUv;
+            in vec2 vL;
+            in vec2 vR;
+            in vec2 vT;
+            in vec2 vB;
+
+            out vec4 FragColor;
+
+            void main () {
+                float L = texture(uCurl, vL).x;
+                float R = texture(uCurl, vR).x;
+                float T = texture(uCurl, vT).x;
+                float B = texture(uCurl, vB).x;
+                float C = texture(uCurl, vUv).x;
+                vec2 force = 0.5 * vec2(abs(T) - abs(B), abs(R) - abs(L));
+                force /= length(force) + 0.0001;
+                force *= curl * C;
+                force.y *= -1.0;
+                vec2 vel = texture(uVelocity, vUv).xy;
+
+                FragColor = vec4(vel + force * dt, 0.0, 1.0);
+            }
+        `;
+
+        const pressureShader = /* glsl */ `
+            precision mediump float;
+            precision mediump sampler2D;
+
+            uniform sampler2D uPressure;
+            uniform sampler2D uDivergence;
+
+            in highp vec2 vUv;
+            in highp vec2 vL;
+            in highp vec2 vR;
+            in highp vec2 vT;
+            in highp vec2 vB;
+
+            out vec4 FragColor;
+
+            void main () {
+                float L = texture(uPressure, vL).x;
+                float R = texture(uPressure, vR).x;
+                float T = texture(uPressure, vT).x;
+                float B = texture(uPressure, vB).x;
+                float C = texture(uPressure, vUv).x;
+                float divergence = texture(uDivergence, vUv).x;
+                float pressure = (L + R + B + T - divergence) * 0.25;
+
+                FragColor = vec4(pressure, 0.0, 0.0, 1.0);
+            }
+        `;
+
+        const gradientSubtractShader = /* glsl */ `
+            precision mediump float;
+            precision mediump sampler2D;
+
+            uniform sampler2D uPressure;
+            uniform sampler2D uVelocity;
+
+            in highp vec2 vUv;
+            in highp vec2 vL;
+            in highp vec2 vR;
+            in highp vec2 vT;
+            in highp vec2 vB;
+
+            out vec4 FragColor;
+
+            void main () {
+                float L = texture(uPressure, vL).x;
+                float R = texture(uPressure, vR).x;
+                float T = texture(uPressure, vT).x;
+                float B = texture(uPressure, vB).x;
+                vec2 velocity = texture(uVelocity, vUv).xy;
+                velocity.xy -= vec2(R - L, T - B);
+
+                FragColor = vec4(velocity, 0.0, 1.0);
+            }
+        `;
+
+        class ClearMaterial extends RawShaderMaterial {
+            constructor() {
+                super({
+                    glslVersion: GLSL3,
+                    uniforms: {
+                        texelSize,
+                        uTexture: { value: null },
+                        value: { value: pressureDissipation }
+                    },
+                    vertexShader: baseVertexShader,
+                    fragmentShader: clearShader,
+                    blending: NoBlending,
+                    depthTest: false,
+                    depthWrite: false
+                });
+            }
+        }
+
+        class SplatMaterial extends RawShaderMaterial {
+            constructor() {
+                super({
+                    glslVersion: GLSL3,
+                    uniforms: {
+                        texelSize,
+                        uTarget: { value: null },
+                        aspectRatio: { value: 1 },
+                        color: { value: new Color() },
+                        point: { value: new Vector2() },
+                        radius: { value: radius / 100 }
+                    },
+                    vertexShader: baseVertexShader,
+                    fragmentShader: splatShader,
+                    blending: NoBlending,
+                    depthTest: false,
+                    depthWrite: false
+                });
+            }
+        }
+
+        class AdvectionMaterial extends RawShaderMaterial {
+            constructor() {
+                super({
+                    glslVersion: GLSL3,
+                    uniforms: {
+                        texelSize,
+                        dyeTexelSize: { value: new Vector2(1 / dyeRes, 1 / dyeRes) },
+                        uVelocity: { value: null },
+                        uSource: { value: null },
+                        dt: { value: 0.016 },
+                        dissipation: { value: 1 }
+                    },
+                    vertexShader: baseVertexShader,
+                    fragmentShader: advectionShader,
+                    blending: NoBlending,
+                    depthTest: false,
+                    depthWrite: false
+                });
+            }
+        }
+
+        class DivergenceMaterial extends RawShaderMaterial {
+            constructor() {
+                super({
+                    glslVersion: GLSL3,
+                    uniforms: {
+                        texelSize,
+                        uVelocity: { value: null }
+                    },
+                    vertexShader: baseVertexShader,
+                    fragmentShader: divergenceShader,
+                    blending: NoBlending,
+                    depthTest: false,
+                    depthWrite: false
+                });
+            }
+        }
+
+        class CurlMaterial extends RawShaderMaterial {
+            constructor() {
+                super({
+                    glslVersion: GLSL3,
+                    uniforms: {
+                        texelSize,
+                        uVelocity: { value: null }
+                    },
+                    vertexShader: baseVertexShader,
+                    fragmentShader: curlShader,
+                    blending: NoBlending,
+                    depthTest: false,
+                    depthWrite: false
+                });
+            }
+        }
+
+        class VorticityMaterial extends RawShaderMaterial {
+            constructor() {
+                super({
+                    glslVersion: GLSL3,
+                    uniforms: {
+                        texelSize,
+                        uVelocity: { value: null },
+                        uCurl: { value: null },
+                        curl: { value: curlStrength },
+                        dt: { value: 0.016 }
+                    },
+                    vertexShader: baseVertexShader,
+                    fragmentShader: vorticityShader,
+                    blending: NoBlending,
+                    depthTest: false,
+                    depthWrite: false
+                });
+            }
+        }
+
+        class PressureMaterial extends RawShaderMaterial {
+            constructor() {
+                super({
+                    glslVersion: GLSL3,
+                    uniforms: {
+                        texelSize,
+                        uPressure: { value: null },
+                        uDivergence: { value: null }
+                    },
+                    vertexShader: baseVertexShader,
+                    fragmentShader: pressureShader,
+                    blending: NoBlending,
+                    depthTest: false,
+                    depthWrite: false
+                });
+            }
+        }
+
+        class gradientSubtractMaterial extends RawShaderMaterial {
+            constructor() {
+                super({
+                    glslVersion: GLSL3,
+                    uniforms: {
+                        texelSize,
+                        uPressure: { value: null },
+                        uVelocity: { value: null }
+                    },
+                    vertexShader: baseVertexShader,
+                    fragmentShader: gradientSubtractShader,
+                    blending: NoBlending,
+                    depthTest: false,
+                    depthWrite: false
+                });
+            }
+        }
+
+        class Triangle extends Group {
+            constructor() {
+                super();
+            }
+
+            async initMesh() {
+                const { camera, loadSVG } = WorldController;
+
+                const data = await loadSVG('data:image/svg+xml;utf8,<svg><path d="M 3 0 L 0 5 H 6 Z" stroke-width="0.25"/></svg>');
+                const paths = data.paths;
+
+                const group = new Group();
+                group.position.set(0, 1.4, -11);
+                group.scale.y *= -1;
+                group.lookAt(camera.position);
+
+                for (let i = 0, l = paths.length; i < l; i++) {
+                    const path = paths[i];
+
+                    const material = new MeshBasicMaterial();
+
+                    for (let j = 0, jl = path.subPaths.length; j < jl; j++) {
+                        const subPath = path.subPaths[j];
+                        const geometry = SVGLoader.pointsToStroke(subPath.getPoints(), path.userData.style);
+
+                        if (geometry) {
+                            geometry.center();
+
+                            const mesh = new Mesh(geometry, material);
+                            group.add(mesh);
+                        }
+                    }
+                }
+
+                this.add(group);
+            }
+        }
+
+        class Floor extends Group {
+            constructor() {
+                super();
+
+                this.initReflector();
+            }
+
+            initReflector() {
+                this.reflector = new Reflector();
+            }
+
+            async initMesh() {
+                const { loadTexture } = WorldController;
+
+                const geometry = new PlaneGeometry(100, 100);
+
+                // Second set of UVs for aoMap and lightMap
+                // https://threejs.org/docs/#api/en/materials/MeshStandardMaterial.aoMap
+                geometry.attributes.uv1 = geometry.attributes.uv;
+
+                // Textures
+                const [map, normalMap, ormMap] = await Promise.all([
+                    // loadTexture('../assets/textures/uv.jpg'),
+                    loadTexture('../assets/textures/pbr/polished_concrete_basecolor.jpg'),
+                    loadTexture('../assets/textures/pbr/polished_concrete_normal.jpg'),
+                    // https://occlusion-roughness-metalness.glitch.me/
+                    loadTexture('../assets/textures/pbr/polished_concrete_orm.jpg')
+                ]);
+
+                map.wrapS = RepeatWrapping;
+                map.wrapT = RepeatWrapping;
+                map.repeat.set(16, 16);
+
+                normalMap.wrapS = RepeatWrapping;
+                normalMap.wrapT = RepeatWrapping;
+                normalMap.repeat.set(16, 16);
+
+                ormMap.wrapS = RepeatWrapping;
+                ormMap.wrapT = RepeatWrapping;
+                ormMap.repeat.set(16, 16);
+
+                const material = new MeshStandardMaterial({
+                    color: new Color().offsetHSL(0, 0, -0.65),
+                    metalness: 1,
+                    roughness: 1,
+                    map,
+                    metalnessMap: ormMap,
+                    roughnessMap: ormMap,
+                    aoMap: ormMap,
+                    aoMapIntensity: 1,
+                    normalMap,
+                    normalScale: new Vector2(3, 3)
+                });
+
+                // Second channel for aoMap and lightMap
+                // https://threejs.org/docs/#api/en/materials/MeshStandardMaterial.aoMap
+                material.aoMap.channel = 1;
+
+                const uniforms = {
+                    mirror: { value: 0 },
+                    mixStrength: { value: 10 }
+                };
+
+                material.onBeforeCompile = shader => {
+                    shader.uniforms.reflectMap = this.reflector.renderTargetUniform;
+                    shader.uniforms.textureMatrix = this.reflector.textureMatrixUniform;
+
+                    shader.uniforms = Object.assign(shader.uniforms, uniforms);
+
+                    shader.vertexShader = shader.vertexShader.replace(
+                        'void main() {',
+                        /* glsl */ `
+                        uniform mat4 textureMatrix;
+                        out vec4 vCoord;
+                        out vec3 vToEye;
+
+                        void main() {
+                        `
+                    );
+
+                    shader.vertexShader = shader.vertexShader.replace(
+                        '#include <project_vertex>',
+                        /* glsl */ `
+                        #include <project_vertex>
+
+                        vCoord = textureMatrix * vec4(transformed, 1.0);
+                        vToEye = cameraPosition - (modelMatrix * vec4(transformed, 1.0)).xyz;
+                        `
+                    );
+
+                    shader.fragmentShader = shader.fragmentShader.replace(
+                        'void main() {',
+                        /* glsl */ `
+                        uniform sampler2D reflectMap;
+                        uniform float mirror;
+                        uniform float mixStrength;
+                        in vec4 vCoord;
+                        in vec3 vToEye;
+
+                        void main() {
+                        `
+                    );
+
+                    shader.fragmentShader = shader.fragmentShader.replace(
+                        '#include <emissivemap_fragment>',
+                        /* glsl */ `
+                        #include <emissivemap_fragment>
+
+                        vec4 normalColor = texture(normalMap, vNormalMapUv * normalScale);
+                        vec3 reflectNormal = normalize(vec3(normalColor.r * 2.0 - 1.0, normalColor.b, normalColor.g * 2.0 - 1.0));
+                        vec3 reflectCoord = vCoord.xyz / vCoord.w;
+                        vec2 reflectUv = reflectCoord.xy + reflectCoord.z * reflectNormal.xz * 0.05;
+                        vec4 reflectColor = texture(reflectMap, reflectUv);
+
+                        // Fresnel term
+                        vec3 toEye = normalize(vToEye);
+                        float theta = max(dot(toEye, normal), 0.0);
+                        float reflectance = pow((1.0 - theta), 5.0);
+
+                        reflectColor = mix(vec4(0), reflectColor, reflectance);
+
+                        diffuseColor.rgb = diffuseColor.rgb * ((1.0 - min(1.0, mirror)) + reflectColor.rgb * mixStrength);
+                        `
+                    );
+                };
+
+                const mesh = new Mesh(geometry, material);
+                mesh.position.y = -1.6;
+                mesh.rotation.x = -Math.PI / 2;
+                mesh.add(this.reflector);
+
+                mesh.onBeforeRender = (renderer, scene, camera) => {
+                    this.visible = false;
+                    this.reflector.update(renderer, scene, camera);
+                    this.visible = true;
+                };
+
+                this.add(mesh);
+            }
+
+            // Public methods
+
+            resize = (width, height) => {
+                width = MathUtils.floorPowerOfTwo(width) / 2;
+                height = 1024;
+
+                this.reflector.setSize(width, height);
+            };
+        }
+
+        class SceneView extends Group {
+            constructor() {
+                super();
+
+                this.visible = false;
+
+                this.initViews();
+            }
+
+            initViews() {
+                this.floor = new Floor();
+                this.add(this.floor);
+
+                this.triangle = new Triangle();
+                this.add(this.triangle);
+            }
+
+            // Public methods
+
+            resize = (width, height) => {
+                this.floor.resize(width, height);
+            };
+
+            ready = () => Promise.all([
+                this.floor.initMesh(),
+                this.triangle.initMesh()
+            ]);
+        }
+
+        class SceneController {
+            static init(view) {
+                this.view = view;
+            }
+
+            // Public methods
+
+            static resize = (width, height) => {
+                this.view.resize(width, height);
+            };
+
+            static update = () => {
+            };
+
+            static animateIn = () => {
+                this.view.visible = true;
+            };
+
+            static ready = () => this.view.ready();
+        }
+
+        class PanelController {
+            static init(ui) {
+                this.ui = ui;
+
+                this.initPanel();
+            }
+
+            static initPanel() {
+                const { luminosityMaterial, bloomCompositeMaterial, compositeMaterial } = RenderManager;
+
+                const items = [
+                    {
+                        name: 'FPS'
+                    },
+                    {
+                        type: 'divider'
+                    },
+                    {
+                        type: 'slider',
+                        name: 'Thresh',
+                        min: 0,
+                        max: 1,
+                        step: 0.01,
+                        value: luminosityMaterial.uniforms.uThreshold.value,
+                        callback: value => {
+                            luminosityMaterial.uniforms.uThreshold.value = value;
+                        }
+                    },
+                    {
+                        type: 'slider',
+                        name: 'Smooth',
+                        min: 0,
+                        max: 1,
+                        step: 0.01,
+                        value: luminosityMaterial.uniforms.uSmoothing.value,
+                        callback: value => {
+                            luminosityMaterial.uniforms.uSmoothing.value = value;
+                        }
+                    },
+                    {
+                        type: 'slider',
+                        name: 'Strength',
+                        min: 0,
+                        max: 2,
+                        step: 0.01,
+                        value: RenderManager.bloomStrength,
+                        callback: value => {
+                            RenderManager.bloomStrength = value;
+                            bloomCompositeMaterial.uniforms.uBloomFactors.value = RenderManager.bloomFactors();
+                        }
+                    },
+                    {
+                        type: 'slider',
+                        name: 'Radius',
+                        min: 0,
+                        max: 1,
+                        step: 0.01,
+                        value: RenderManager.bloomRadius,
+                        callback: value => {
+                            RenderManager.bloomRadius = value;
+                            bloomCompositeMaterial.uniforms.uBloomFactors.value = RenderManager.bloomFactors();
+                        }
+                    },
+                    /* {
+                        type: 'slider',
+                        name: 'Chroma',
+                        min: 0,
+                        max: 10,
+                        step: 0.1,
+                        value: compositeMaterial.uniforms.uBloomDistortion.value,
+                        callback: value => {
+                            compositeMaterial.uniforms.uBloomDistortion.value = value;
+                        }
+                    } */
+                ];
+
+                items.forEach(data => {
+                    this.ui.addPanel(new PanelItem(data));
+                });
+            }
+        }
+
+        const BlurDirectionX = new Vector2(1, 0);
+        const BlurDirectionY = new Vector2(0, 1);
+
+        class RenderManager {
+            static init(renderer, scene, camera) {
+                this.renderer = renderer;
+                this.scene = scene;
+                this.camera = camera;
+
+                this.width = 1;
+                this.height = 1;
+
+                // Fluid simulation
+                this.splats = [];
+                this.lastMouse = new Vector2();
+
+                // Bloom
+                this.luminosityThreshold = 0.1;
+                this.luminositySmoothing = 1;
+                this.bloomStrength = 0.3;
+                this.bloomRadius = 0.2;
+                this.bloomDistortion = 1.5;
+
+                this.enabled = true;
+
+                this.initRenderer();
+
+                this.addListeners();
+            }
+
+            static initRenderer() {
+                const { screenTriangle, aspect, time } = WorldController;
+
+                // Manually clear
+                this.renderer.autoClear = false;
+
+                // Fullscreen triangle
+                this.screenCamera = new OrthographicCamera(-1, 1, 1, -1, 0, 1);
+                this.screen = new Mesh(screenTriangle);
+                this.screen.frustumCulled = false;
+
+                // Render targets
+                this.renderTarget = new WebGLRenderTarget(1, 1, {
+                    depthBuffer: false
+                });
+
+                this.renderTargetsHorizontal = [];
+                this.renderTargetsVertical = [];
+                this.nMips = 5;
+
+                this.renderTargetBright = this.renderTarget.clone();
+
+                for (let i = 0, l = this.nMips; i < l; i++) {
+                    this.renderTargetsHorizontal.push(this.renderTarget.clone());
+                    this.renderTargetsVertical.push(this.renderTarget.clone());
+                }
+
+                this.renderTarget.depthBuffer = true;
+
+                // Fluid simulation render targets
+                this.density = getDoubleRenderTarget({
+                    width: dyeRes,
+                    height: dyeRes,
+                    type: HalfFloatType,
+                    depthBuffer: false
+                });
+
+                this.velocity = getDoubleRenderTarget({
+                    width: simRes,
+                    height: simRes,
+                    type: HalfFloatType,
+                    format: RGFormat,
+                    depthBuffer: false
+                });
+
+                this.pressure = getDoubleRenderTarget({
+                    width: simRes,
+                    height: simRes,
+                    type: HalfFloatType,
+                    format: RedFormat,
+                    magFilter: NearestFilter,
+                    minFilter: NearestFilter,
+                    depthBuffer: false
+                });
+
+                this.divergence = new WebGLRenderTarget(simRes, simRes, {
+                    type: HalfFloatType,
+                    format: RedFormat,
+                    magFilter: NearestFilter,
+                    minFilter: NearestFilter,
+                    depthBuffer: false
+                });
+
+                this.curl = new WebGLRenderTarget(simRes, simRes, {
+                    type: HalfFloatType,
+                    format: RedFormat,
+                    magFilter: NearestFilter,
+                    minFilter: NearestFilter,
+                    depthBuffer: false
+                });
+
+                // Fluid simulation materials
+                this.clearMaterial = new ClearMaterial();
+
+                this.splatMaterial = new SplatMaterial();
+                this.splatMaterial.uniforms.aspectRatio = aspect;
+
+                this.advectionMaterial = new AdvectionMaterial();
+
+                this.divergenceMaterial = new DivergenceMaterial();
+
+                this.curlMaterial = new CurlMaterial();
+
+                this.vorticityMaterial = new VorticityMaterial();
+
+                this.pressureMaterial = new PressureMaterial();
+
+                this.gradientSubtractMaterial = new gradientSubtractMaterial();
+
+                // Luminosity high pass material
+                this.luminosityMaterial = new LuminosityMaterial();
+                this.luminosityMaterial.uniforms.uThreshold.value = this.luminosityThreshold;
+                this.luminosityMaterial.uniforms.uSmoothing.value = this.luminositySmoothing;
+
+                // Separable Gaussian blur materials
+                this.blurMaterials = [];
+
+                const kernelSizeArray = [3, 5, 7, 9, 11];
+
+                for (let i = 0, l = this.nMips; i < l; i++) {
+                    this.blurMaterials.push(new UnrealBloomBlurMaterial(kernelSizeArray[i]));
+                }
+
+                // Bloom composite material
+                this.bloomCompositeMaterial = new BloomCompositeMaterial();
+                this.bloomCompositeMaterial.uniforms.tBlur1.value = this.renderTargetsVertical[0].texture;
+                this.bloomCompositeMaterial.uniforms.tBlur2.value = this.renderTargetsVertical[1].texture;
+                this.bloomCompositeMaterial.uniforms.tBlur3.value = this.renderTargetsVertical[2].texture;
+                this.bloomCompositeMaterial.uniforms.tBlur4.value = this.renderTargetsVertical[3].texture;
+                this.bloomCompositeMaterial.uniforms.tBlur5.value = this.renderTargetsVertical[4].texture;
+                this.bloomCompositeMaterial.uniforms.uBloomFactors.value = this.bloomFactors();
+
+                // Composite material
+                this.compositeMaterial = new CompositeMaterial();
+                this.compositeMaterial.uniforms.uTime = time;
+            }
+
+            static bloomFactors() {
+                const bloomFactors = [1, 0.8, 0.6, 0.4, 0.2];
+
+                for (let i = 0, l = this.nMips; i < l; i++) {
+                    const factor = bloomFactors[i];
+                    bloomFactors[i] = this.bloomStrength * MathUtils.lerp(factor, 1.2 - factor, this.bloomRadius);
+                }
+
+                return bloomFactors;
+            }
+
+            static addListeners() {
+                window.addEventListener('pointerdown', this.onPointerDown);
+                window.addEventListener('pointermove', this.onPointerMove);
+                window.addEventListener('pointerup', this.onPointerUp);
+            }
+
+            // Event handlers
+
+            static onPointerDown = e => {
+                this.onPointerMove(e);
+            };
+
+            static onPointerMove = ({ clientX, clientY }) => {
+                if (!this.enabled) {
+                    return;
+                }
+
+                const event = {
+                    x: clientX,
+                    y: clientY
+                };
+
+                if (!this.lastMouse.isInit) {
+                    this.lastMouse.isInit = true;
+
+                    // First input
+                    this.lastMouse.copy(event);
+                }
+
+                const deltaX = event.x - this.lastMouse.x;
+                const deltaY = event.y - this.lastMouse.y;
+
+                this.lastMouse.copy(event);
+
+                // Add if the mouse is moving
+                if (Math.abs(deltaX) || Math.abs(deltaY)) {
+                    this.splats.push({
+                        // Get mouse value in 0 to 1 range, with Y flipped
+                        x: event.x / this.width,
+                        y: 1 - event.y / this.height,
+                        dx: deltaX * 5,
+                        dy: deltaY * -5
+                    });
+                }
+            };
+
+            static onPointerUp = e => {
+                this.onPointerMove(e);
+            };
+
+            // Public methods
+
+            static resize = (width, height, dpr) => {
+                this.width = width;
+                this.height = height;
+
+                this.renderer.setPixelRatio(dpr);
+                this.renderer.setSize(width, height);
+
+                width = Math.round(width * dpr);
+                height = Math.round(height * dpr);
+
+                this.renderTarget.setSize(width, height);
+
+                width = MathUtils.floorPowerOfTwo(width) / 2;
+                height = MathUtils.floorPowerOfTwo(height) / 2;
+
+                this.renderTargetBright.setSize(width, height);
+
+                for (let i = 0, l = this.nMips; i < l; i++) {
+                    this.renderTargetsHorizontal[i].setSize(width, height);
+                    this.renderTargetsVertical[i].setSize(width, height);
+
+                    this.blurMaterials[i].uniforms.uResolution.value.set(width, height);
+
+                    width /= 2;
+                    height /= 2;
+                }
+            };
+
+            static update = () => {
+                const renderer = this.renderer;
+                const scene = this.scene;
+                const camera = this.camera;
+
+                if (!this.enabled) {
+                    renderer.setRenderTarget(null);
+                    renderer.clear();
+                    renderer.render(scene, camera);
+                    return;
+                }
+
+                const renderTarget = this.renderTarget;
+                const renderTargetBright = this.renderTargetBright;
+                const renderTargetsHorizontal = this.renderTargetsHorizontal;
+                const renderTargetsVertical = this.renderTargetsVertical;
+
+                // Render all of the inputs since the last frame
+                for (let i = this.splats.length - 1; i >= 0; i--) {
+                    const { x, y, dx, dy } = this.splats.splice(i, 1)[0];
+
+                    this.splatMaterial.uniforms.uTarget.value = this.velocity.read.texture;
+                    this.splatMaterial.uniforms.point.value.set(x, y);
+                    this.splatMaterial.uniforms.color.value.set(dx, dy, 1);
+                    this.screen.material = this.splatMaterial;
+                    renderer.setRenderTarget(this.velocity.write);
+                    renderer.render(this.screen, this.screenCamera);
+                    this.velocity.swap();
+
+                    this.splatMaterial.uniforms.uTarget.value = this.density.read.texture;
+                    this.screen.material = this.splatMaterial;
+                    renderer.setRenderTarget(this.density.write);
+                    renderer.render(this.screen, this.screenCamera);
+                    this.density.swap();
+                }
+
+                // Perform all of the fluid simulation renders
+                this.curlMaterial.uniforms.uVelocity.value = this.velocity.read.texture;
+                this.screen.material = this.curlMaterial;
+                renderer.setRenderTarget(this.curl);
+                renderer.render(this.screen, this.screenCamera);
+
+                this.vorticityMaterial.uniforms.uVelocity.value = this.velocity.read.texture;
+                this.vorticityMaterial.uniforms.uCurl.value = this.curl.texture;
+                this.screen.material = this.vorticityMaterial;
+                renderer.setRenderTarget(this.velocity.write);
+                renderer.render(this.screen, this.screenCamera);
+                this.velocity.swap();
+
+                this.divergenceMaterial.uniforms.uVelocity.value = this.velocity.read.texture;
+                this.screen.material = this.divergenceMaterial;
+                renderer.setRenderTarget(this.divergence);
+                renderer.render(this.screen, this.screenCamera);
+
+                this.clearMaterial.uniforms.uTexture.value = this.pressure.read.texture;
+                this.screen.material = this.clearMaterial;
+                renderer.setRenderTarget(this.pressure.write);
+                renderer.render(this.screen, this.screenCamera);
+                this.pressure.swap();
+
+                this.pressureMaterial.uniforms.uDivergence.value = this.divergence.texture;
+
+                for (let i = 0; i < iterations; i++) {
+                    this.pressureMaterial.uniforms.uPressure.value = this.pressure.read.texture;
+                    this.screen.material = this.pressureMaterial;
+                    renderer.setRenderTarget(this.pressure.write);
+                    renderer.render(this.screen, this.screenCamera);
+                    this.pressure.swap();
+                }
+
+                this.gradientSubtractMaterial.uniforms.uPressure.value = this.pressure.read.texture;
+                this.gradientSubtractMaterial.uniforms.uVelocity.value = this.velocity.read.texture;
+                this.screen.material = this.gradientSubtractMaterial;
+                renderer.setRenderTarget(this.velocity.write);
+                renderer.render(this.screen, this.screenCamera);
+                this.velocity.swap();
+
+                this.advectionMaterial.uniforms.dyeTexelSize.value.set(1 / simRes, 1 / simRes);
+                this.advectionMaterial.uniforms.uVelocity.value = this.velocity.read.texture;
+                this.advectionMaterial.uniforms.uSource.value = this.velocity.read.texture;
+                this.advectionMaterial.uniforms.dissipation.value = velocityDissipation;
+                this.screen.material = this.advectionMaterial;
+                renderer.setRenderTarget(this.velocity.write);
+                renderer.render(this.screen, this.screenCamera);
+                this.velocity.swap();
+
+                this.advectionMaterial.uniforms.dyeTexelSize.value.set(1 / dyeRes, 1 / dyeRes);
+                this.advectionMaterial.uniforms.uVelocity.value = this.velocity.read.texture;
+                this.advectionMaterial.uniforms.uSource.value = this.density.read.texture;
+                this.advectionMaterial.uniforms.dissipation.value = densityDissipation;
+                this.screen.material = this.advectionMaterial;
+                renderer.setRenderTarget(this.density.write);
+                renderer.render(this.screen, this.screenCamera);
+                this.density.swap();
+
+                // Scene pass
+                renderer.setRenderTarget(renderTarget);
+                renderer.clear();
+                renderer.render(scene, camera);
+
+                // Extract bright areas
+                this.luminosityMaterial.uniforms.tMap.value = renderTarget.texture;
+                this.screen.material = this.luminosityMaterial;
+                renderer.setRenderTarget(renderTargetBright);
+                renderer.clear();
+                renderer.render(this.screen, this.screenCamera);
+
+                // Blur all the mips progressively
+                let inputRenderTarget = renderTargetBright;
+
+                for (let i = 0, l = this.nMips; i < l; i++) {
+                    this.screen.material = this.blurMaterials[i];
+
+                    this.blurMaterials[i].uniforms.tMap.value = inputRenderTarget.texture;
+                    this.blurMaterials[i].uniforms.uDirection.value = BlurDirectionX;
+                    renderer.setRenderTarget(renderTargetsHorizontal[i]);
+                    renderer.clear();
+                    renderer.render(this.screen, this.screenCamera);
+
+                    this.blurMaterials[i].uniforms.tMap.value = this.renderTargetsHorizontal[i].texture;
+                    this.blurMaterials[i].uniforms.uDirection.value = BlurDirectionY;
+                    renderer.setRenderTarget(renderTargetsVertical[i]);
+                    renderer.clear();
+                    renderer.render(this.screen, this.screenCamera);
+
+                    inputRenderTarget = renderTargetsVertical[i];
+                }
+
+                // Composite all the mips
+                this.screen.material = this.bloomCompositeMaterial;
+                renderer.setRenderTarget(renderTargetsHorizontal[0]);
+                renderer.clear();
+                renderer.render(this.screen, this.screenCamera);
+
+                // Composite pass (render to screen)
+                this.compositeMaterial.uniforms.tMap.value = renderTarget.texture;
+                this.compositeMaterial.uniforms.tFluid.value = this.density.read.texture;
+                // this.compositeMaterial.uniforms.tScene.value = renderTarget.texture;
+                // this.compositeMaterial.uniforms.tBloom.value = renderTargetsHorizontal[0].texture;
+                this.screen.material = this.compositeMaterial;
+                renderer.setRenderTarget(null);
+                renderer.clear();
+                renderer.render(this.screen, this.screenCamera);
+            };
+        }
+
+        class CameraController {
+            static init(camera) {
+                this.camera = camera;
+
+                this.mouse = new Vector2();
+                this.lookAt = new Vector3(0, 0, -2);
+                this.origin = new Vector3();
+                this.target = new Vector3();
+                this.targetXY = new Vector2(5, 1);
+                this.origin.copy(this.camera.position);
+
+                this.lerpSpeed = 0.02;
+                this.enabled = false;
+
+                this.addListeners();
+            }
+
+            static addListeners() {
+                window.addEventListener('pointerdown', this.onPointerDown);
+                window.addEventListener('pointermove', this.onPointerMove);
+                window.addEventListener('pointerup', this.onPointerUp);
+            }
+
+            // Event handlers
+
+            static onPointerDown = e => {
+                this.onPointerMove(e);
+            };
+
+            static onPointerMove = ({ clientX, clientY }) => {
+                if (!this.enabled) {
+                    return;
+                }
+
+                this.mouse.x = (clientX / document.documentElement.clientWidth) * 2 - 1;
+                this.mouse.y = 1 - (clientY / document.documentElement.clientHeight) * 2;
+            };
+
+            static onPointerUp = e => {
+                this.onPointerMove(e);
+            };
+
+            // Public methods
+
+            static resize = (width, height) => {
+                this.camera.aspect = width / height;
+                this.camera.updateProjectionMatrix();
+
+                if (width < height) {
+                    this.camera.position.z = 14;
+                } else {
+                    this.camera.position.z = 10;
+                }
+
+                this.origin.z = this.camera.position.z;
+
+                this.camera.lookAt(this.lookAt);
+            };
+
+            static update = () => {
+                if (!this.enabled) {
+                    return;
+                }
+
+                this.target.x = this.origin.x + this.targetXY.x * this.mouse.x;
+                this.target.y = this.origin.y + this.targetXY.y * this.mouse.y;
+                this.target.z = this.origin.z;
+
+                this.camera.position.lerp(this.target, this.lerpSpeed);
+                this.camera.lookAt(this.lookAt);
+            };
+
+            static animateIn = () => {
+                this.enabled = true;
+            };
+        }
+
+        class WorldController {
+            static init() {
+                this.initWorld();
+                this.initLights();
+                this.initLoaders();
+
+                this.addListeners();
+            }
+
+            static initWorld() {
+                this.renderer = new WebGLRenderer({
+                    powerPreference: 'high-performance',
+                    antialias: true,
+                    stencil: false
+                });
+
+                // Disable color management
+                ColorManagement.enabled = false;
+                this.renderer.outputColorSpace = LinearSRGBColorSpace;
+
+                // Output canvas
+                this.element = this.renderer.domElement;
+
+                // 3D scene
+                this.scene = new Scene();
+                this.scene.background = new Color(0x0e0e0e);
+                this.scene.fog = new Fog(this.scene.background, 1, 100);
+                this.camera = new PerspectiveCamera(30);
+                this.camera.near = 0.5;
+                this.camera.far = 40;
+                this.camera.position.z = 10;
+                this.camera.lookAt(this.scene.position);
+
+                // Global geometries
+                this.screenTriangle = getFullscreenTriangle();
+
+                // Global uniforms
+                this.resolution = { value: new Vector2() };
+                this.texelSize = { value: new Vector2() };
+                this.aspect = { value: 1 };
+                this.time = { value: 0 };
+                this.frame = { value: 0 };
+            }
+
+            static initLights() {
+                this.scene.add(new HemisphereLight(0x606060, 0x404040, 3));
+
+                const light = new DirectionalLight(0xffffff, 2);
+                light.position.set(1, 1, 1);
+                this.scene.add(light);
+            }
+
+            static initLoaders() {
+                this.textureLoader = new TextureLoader();
+                this.svgLoader = new SVGLoader();
+            }
+
+            static addListeners() {
+                this.renderer.domElement.addEventListener('touchstart', this.onTouchStart);
+            }
+
+            // Event handlers
+
+            static onTouchStart = e => {
+                e.preventDefault();
+            };
+
+            // Public methods
+
+            static resize = (width, height, dpr) => {
+                width = Math.round(width * dpr);
+                height = Math.round(height * dpr);
+
+                this.resolution.value.set(width, height);
+                this.texelSize.value.set(1 / width, 1 / height);
+                this.aspect.value = width / height;
+            };
+
+            static update = (time, delta, frame) => {
+                this.time.value = time;
+                this.frame.value = frame;
+            };
+
+            // Global handlers
+
+            static getTexture = (path, callback) => this.textureLoader.load(path, callback);
+
+            static loadTexture = path => this.textureLoader.loadAsync(path);
+
+            static loadSVG = path => this.svgLoader.loadAsync(path);
+        }
+
+        class App {
+            static async init() {
+                this.initWorld();
+                this.initViews();
+                this.initControllers();
+
+                this.addListeners();
+                this.onResize();
+
+                await SceneController.ready();
+
+                this.initPanel();
+
+                CameraController.animateIn();
+                SceneController.animateIn();
+            }
+
+            static initWorld() {
+                WorldController.init();
+                document.body.appendChild(WorldController.element);
+            }
+
+            static initViews() {
+                this.view = new SceneView();
+                WorldController.scene.add(this.view);
+
+                this.ui = new UI({ fps: true });
+                this.ui.animateIn();
+                document.body.appendChild(this.ui.element);
+            }
+
+            static initControllers() {
+                const { renderer, scene, camera } = WorldController;
+
+                CameraController.init(camera);
+                SceneController.init(this.view);
+                RenderManager.init(renderer, scene, camera);
+            }
+
+            static initPanel() {
+                PanelController.init(this.ui);
+            }
+
+            static addListeners() {
+                window.addEventListener('resize', this.onResize);
+                ticker.add(this.onUpdate);
+                ticker.start();
+            }
+
+            // Event handlers
+
+            static onResize = () => {
+                const width = document.documentElement.clientWidth;
+                const height = document.documentElement.clientHeight;
+                const dpr = window.devicePixelRatio;
+
+                WorldController.resize(width, height, dpr);
+                CameraController.resize(width, height);
+                SceneController.resize(width, height);
+                RenderManager.resize(width, height, dpr);
+            };
+
+            static onUpdate = (time, delta, frame) => {
+                WorldController.update(time, delta, frame);
+                CameraController.update();
+                SceneController.update();
+                RenderManager.update(time, delta, frame);
+                this.ui.update();
+            };
+        }
+
+        App.init();
+    </script>
+</head>
+<body>
+</body>
+</html>

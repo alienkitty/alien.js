@@ -8,9 +8,7 @@
 import { Group, MathUtils, Matrix4 } from 'three';
 
 export class OimoPhysicsController {
-    constructor(view) {
-        this.view = view;
-
+    constructor() {
         this.shapes = [];
         this.objects = [];
         this.map = new WeakMap();

@@ -158,7 +158,7 @@ export class Reflector extends Group {
         projectionMatrix.elements[10] = this.clipPlane.z + 1 - this.clipBias;
         projectionMatrix.elements[14] = this.clipPlane.w;
 
-        // Render
+        // Renderer state
         const currentRenderTarget = renderer.getRenderTarget();
         const currentXrEnabled = renderer.xr.enabled;
         const currentShadowAutoUpdate = renderer.shadowMap.autoUpdate;

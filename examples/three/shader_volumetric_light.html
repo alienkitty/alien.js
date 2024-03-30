@@ -711,20 +711,19 @@
                 const renderTargetsHorizontal = this.renderTargetsHorizontal;
                 const renderTargetsVertical = this.renderTargetsVertical;
 
+                // Renderer state
                 const currentOverrideMaterial = scene.overrideMaterial;
                 const currentBackground = scene.background;
-                const currentClearAlpha = renderer.getClearAlpha();
-
-                camera.layers.set(layers.default);
 
                 // Scene layer
+                camera.layers.set(layers.default);
+
                 renderer.setRenderTarget(renderTarget);
                 renderer.clear();
                 renderer.render(scene, camera);
 
                 // Occlusion layer
                 scene.background = null;
-                renderer.setClearAlpha(0);
 
                 scene.overrideMaterial = this.blackoutMaterial;
                 renderer.setRenderTarget(renderTargetBlurA);
@@ -736,7 +735,7 @@
 
                 renderer.render(scene, camera);
 
-                renderer.setClearAlpha(currentClearAlpha);
+                // Restore renderer settings
                 scene.background = currentBackground;
 
                 this.hBlurMaterial.uniforms.tMap.value = renderTargetBlurA.texture;

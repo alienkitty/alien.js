@@ -251,6 +251,7 @@ class RenderScene {
     }
 
     update() {
+        // Renderer state
         const currentRenderTarget = this.renderer.getRenderTarget();
 
         // Scene pass

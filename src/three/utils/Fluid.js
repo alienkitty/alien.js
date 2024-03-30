@@ -448,6 +448,7 @@ export class Fluid {
         const densityDissipation = this.densityDissipation;
         const velocityDissipation = this.velocityDissipation;
 
+        // Renderer state
         const currentRenderTarget = renderer.getRenderTarget();
         const currentAutoClear = renderer.autoClear;
         renderer.autoClear = false;

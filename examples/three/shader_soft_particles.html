@@ -435,6 +435,7 @@
                 this.copyMaterial.uniforms.tMap.value = renderTargetA.texture;
                 this.screen.material = this.copyMaterial;
                 renderer.setRenderTarget(renderTargetB);
+                renderer.clear();
                 renderer.render(this.screen, this.screenCamera);
 
                 // Extract bright areas

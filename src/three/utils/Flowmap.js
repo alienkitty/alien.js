@@ -104,6 +104,7 @@ export class Flowmap {
     }
 
     update() {
+        // Renderer state
         const currentRenderTarget = this.renderer.getRenderTarget();
         const currentAutoClear = this.renderer.autoClear;
         this.renderer.autoClear = false;

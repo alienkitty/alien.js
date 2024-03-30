@@ -1,8 +1,12 @@
-import { AssetLoader, BasicShadowMap, BloomCompositeMaterial, BoxGeometry, CameraMotionBlurMaterial, Color, ColorManagement, DepthTexture, DirectionalLight, EnvironmentTextureLoader, GLSL3, Group, HemisphereLight, IcosahedronGeometry, ImageBitmapLoaderThread, LinearSRGBColorSpace, LuminosityMaterial, MathUtils, Matrix4, Mesh, MeshStandardMaterial, NearestFilter, NoBlending, OctahedronGeometry, OrthographicCamera, PanelItem, PerspectiveCamera, PlaneGeometry, Point3D, RawShaderMaterial, Reflector, RepeatWrapping, Router, Scene, SceneCompositeMaterial, ShadowMaterial, Stage, TextureLoader, Thread, UI, UnrealBloomBlurMaterial, Vector2, Vector3, WebGLRenderTarget, WebGLRenderer, clearTween, delayedCall, getFullscreenTriangle, getKeyByValue, lerpCameras, ticker, tween } from '../../../../build/alien.three.js';
+import { AssetLoader, BasicShadowMap, BloomCompositeMaterial, BoxGeometry, Color, ColorManagement, DepthTexture, DirectionalLight, EnvironmentTextureLoader, GLSL3, Group, HemisphereLight, IcosahedronGeometry, ImageBitmapLoaderThread, LinearSRGBColorSpace, LuminosityMaterial, MathUtils, Mesh, MeshStandardMaterial, MotionBlur, MotionBlurCompositeMaterial, MotionBlurMesh, NearestFilter, NoBlending, OctahedronGeometry, OrthographicCamera, PanelItem, PerspectiveCamera, PlaneGeometry, Point3D, RawShaderMaterial, Reflector, RepeatWrapping, Router, Scene, SceneCompositeMaterial, ShadowMaterial, Stage, TextureLoader, Thread, UI, UnrealBloomBlurMaterial, Vector2, Vector3, WebGLRenderTarget, WebGLRenderer, clearTween, delayedCall, getFullscreenTriangle, getKeyByValue, lerpCameras, ticker, tween } from '../../../../build/alien.three.js';
 
 const isDebug = /[?&]debug/.test(location.search);
 
 const breakpoint = 1000;
+
+const params = {
+    speed: 20
+};
 
 class Page {
     constructor({ path, title }) {
@@ -250,7 +254,7 @@ class AbstractCube extends Group {
         // https://threejs.org/docs/#api/en/materials/MeshStandardMaterial.aoMap
         material.aoMap.channel = 1;
 
-        const mesh = new Mesh(geometry, material);
+        const mesh = new MotionBlurMesh(geometry, material);
         mesh.rotation.x = MathUtils.degToRad(-45);
         mesh.rotation.z = MathUtils.degToRad(-45);
         mesh.castShadow = true;
@@ -276,8 +280,9 @@ class AbstractCube extends Group {
         this.camera.updateProjectionMatrix();
     };
 
-    update = () => {
-        this.mesh.rotation.y -= 0.005;
+    update = time => {
+        // this.mesh.rotation.y -= 0.005;
+        this.mesh.position.y = Math.sin(time * params.speed) * 2;
     };
 }
 
@@ -356,7 +361,7 @@ class FloatingCrystal extends Group {
         // https://threejs.org/docs/#api/en/materials/MeshStandardMaterial.aoMap
         material.aoMap.channel = 1;
 
-        const mesh = new Mesh(geometry, material);
+        const mesh = new MotionBlurMesh(geometry, material);
         mesh.scale.set(0.5, 1, 0.5);
         mesh.castShadow = true;
         mesh.receiveShadow = true;
@@ -382,8 +387,9 @@ class FloatingCrystal extends Group {
     };
 
     update = time => {
-        this.mesh.position.y = Math.sin(time) * 0.1;
-        this.mesh.rotation.y += 0.01;
+        // this.mesh.position.y = (1 + Math.sin(time)) * 0.1;
+        // this.mesh.rotation.y += 0.01;
+        this.mesh.scale.set(0.5, 1, 0.5).multiplyScalar(0.25 + (1 + Math.sin(time * params.speed)) * 0.4);
     };
 }
 
@@ -464,7 +470,7 @@ class DarkPlanet extends Group {
         // https://threejs.org/docs/#api/en/materials/MeshStandardMaterial.aoMap
         material.aoMap.channel = 1;
 
-        const mesh = new Mesh(geometry, material);
+        const mesh = new MotionBlurMesh(geometry, material);
         mesh.castShadow = true;
         mesh.receiveShadow = true;
         this.add(mesh);
@@ -490,7 +496,9 @@ class DarkPlanet extends Group {
 
     update = () => {
         // Counter clockwise rotation
-        this.mesh.rotation.y += 0.005;
+        // this.mesh.rotation.y += 0.005;
+        // this.mesh.rotation.y += 0.005 * 20;
+        this.mesh.rotation.y += 0.01 * params.speed;
     };
 }
 
@@ -784,7 +792,7 @@ class PanelController {
     }
 
     static initPanel() {
-        const { cameraMotionBlurMaterial, hBlurMaterial, vBlurMaterial, luminosityMaterial, bloomCompositeMaterial, compositeMaterial } = RenderManager;
+        const { motionBlur, hBlurMaterial, vBlurMaterial, luminosityMaterial, bloomCompositeMaterial, compositeMaterial } = RenderManager;
 
         const debugOptions = {
             Off: false,
@@ -794,6 +802,31 @@ class PanelController {
         const items = [
             {
                 name: 'FPS'
+            },
+            {
+                type: 'divider'
+            },
+            {
+                type: 'slider',
+                name: 'Speed',
+                min: 0,
+                max: 50,
+                step: 0.1,
+                value: params.speed,
+                callback: value => {
+                    params.speed = value;
+                }
+            },
+            {
+                type: 'slider',
+                name: 'Smear',
+                min: 0,
+                max: 4,
+                step: 0.02,
+                value: motionBlur.smearIntensity,
+                callback: value => {
+                    motionBlur.smearIntensity = value;
+                }
             },
             {
                 type: 'divider'
@@ -834,17 +867,6 @@ class PanelController {
                 value: RenderManager.blurFactor,
                 callback: value => {
                     RenderManager.blurFactor = value;
-                }
-            },
-            {
-                type: 'slider',
-                name: 'Camera',
-                min: 0,
-                max: 1,
-                step: 0.01,
-                value: cameraMotionBlurMaterial.uniforms.uVelocityFactor.value,
-                callback: value => {
-                    cameraMotionBlurMaterial.uniforms.uVelocityFactor.value = value;
                 }
             },
             {
@@ -985,15 +1007,11 @@ class RenderManager {
         this.renderTargetA.depthBuffer = true;
         this.renderTargetA.depthTexture = new DepthTexture();
 
-        // Camera motion blur material
-        this.cameraMotionBlurMaterial = new CameraMotionBlurMaterial();
-        this.cameraMotionBlurMaterial.uniforms.tDepth.value = this.renderTargetA.depthTexture;
-        this.cameraMotionBlurMaterial.uniforms.uVelocityFactor.value = this.blurVelocityFactor;
+        // Motion blur
+        this.motionBlur = new MotionBlur();
 
-        this.previousMatrixWorldInverse = new Matrix4();
-        this.previousProjectionMatrix = new Matrix4();
-        this.previousCameraPosition = new Vector3();
-        this.tmpMatrix = new Matrix4();
+        this.motionBlurCompositeMaterial = new MotionBlurCompositeMaterial(7);
+        this.motionBlurCompositeMaterial.uniforms.tVelocity.value = this.motionBlur.renderTarget.texture;
 
         // Gaussian blur materials
         this.hBlurMaterial = new BlurMaterial(BlurDirectionX);
@@ -1083,7 +1101,7 @@ class RenderManager {
         }
     };
 
-    static update = (time, delta) => {
+    static update = () => {
         const renderer = this.renderer;
         const scene = this.scene;
         const camera = this.camera;
@@ -1105,30 +1123,16 @@ class RenderManager {
         renderer.setRenderTarget(renderTargetA);
         renderer.render(scene, camera);
 
-        // Camera motion blur pass
-        if (!this.blurFactor) {
-            this.cameraMotionBlurMaterial.uniforms.uDelta.value = delta;
-            this.cameraMotionBlurMaterial.uniforms.uClipToWorldMatrix.value
-                .copy(this.camera.matrixWorldInverse).invert().multiply(this.tmpMatrix.copy(this.camera.projectionMatrix).invert());
-            this.cameraMotionBlurMaterial.uniforms.uWorldToClipMatrix.value
-                .copy(this.camera.projectionMatrix).multiply(this.camera.matrixWorldInverse);
-            this.cameraMotionBlurMaterial.uniforms.uPreviousWorldToClipMatrix.value
-                .copy(this.previousProjectionMatrix.multiply(this.previousMatrixWorldInverse));
-            this.cameraMotionBlurMaterial.uniforms.uCameraMove.value
-                .copy(this.camera.position).sub(this.previousCameraPosition);
+        // Motion blur pass
+        this.motionBlur.update(renderer, scene, camera);
 
-            this.cameraMotionBlurMaterial.uniforms.tMap.value = renderTargetA.texture;
-            this.screen.material = this.cameraMotionBlurMaterial;
-            renderer.setRenderTarget(renderTargetB);
-            renderer.render(this.screen, this.screenCamera);
-        }
-
-        this.previousMatrixWorldInverse.copy(this.camera.matrixWorldInverse);
-        this.previousProjectionMatrix.copy(this.camera.projectionMatrix);
-        this.previousCameraPosition.copy(this.camera.position);
+        this.motionBlurCompositeMaterial.uniforms.tMap.value = renderTargetA.texture;
+        this.screen.material = this.motionBlurCompositeMaterial;
+        renderer.setRenderTarget(renderTargetB);
+        renderer.render(this.screen, this.screenCamera);
 
         // Extract bright areas
-        this.luminosityMaterial.uniforms.tMap.value = !this.blurFactor ? renderTargetB.texture : renderTargetA.texture;
+        this.luminosityMaterial.uniforms.tMap.value = renderTargetB.texture;
         this.screen.material = this.luminosityMaterial;
         renderer.setRenderTarget(renderTargetBright);
         renderer.render(this.screen, this.screenCamera);
@@ -1158,7 +1162,7 @@ class RenderManager {
         renderer.render(this.screen, this.screenCamera);
 
         // Scene composite pass
-        this.sceneCompositeMaterial.uniforms.tScene.value = !this.blurFactor ? renderTargetB.texture : renderTargetA.texture;
+        this.sceneCompositeMaterial.uniforms.tScene.value = renderTargetB.texture;
         this.sceneCompositeMaterial.uniforms.tBloom.value = renderTargetsHorizontal[0].texture;
         this.screen.material = this.sceneCompositeMaterial;
         renderer.setRenderTarget(renderTargetC);

@@ -1,16 +1,17 @@
-import { AssetLoader, BasicShadowMap, BloomCompositeMaterial, BoxGeometry, Color, ColorManagement, DepthTexture, DirectionalLight, EnvironmentTextureLoader, GLSL3, Group, HemisphereLight, IcosahedronGeometry, ImageBitmapLoaderThread, LinearSRGBColorSpace, LuminosityMaterial, MathUtils, Mesh, MeshStandardMaterial, MotionBlur, MotionBlurCompositeMaterial, MotionBlurMesh, NearestFilter, NoBlending, OctahedronGeometry, OrthographicCamera, PanelItem, PerspectiveCamera, PlaneGeometry, Point3D, RawShaderMaterial, Reflector, RepeatWrapping, Router, Scene, SceneCompositeMaterial, ShadowMaterial, Stage, TextureLoader, Thread, UI, UnrealBloomBlurMaterial, Vector2, Vector3, WebGLRenderTarget, WebGLRenderer, clearTween, delayedCall, getFullscreenTriangle, getKeyByValue, lerpCameras, ticker, tween } from '../../../../build/alien.three.js';
+import { AdditiveBlending, AssetLoader, BasicShadowMap, BloomCompositeMaterial, BoxGeometry, Color, ColorManagement, CopyMaterial, DepthMaterial, DirectionalLight, DisplayOptions, EnvironmentTextureLoader, GLSL3, Group, HemisphereLight, IcosahedronGeometry, ImageBitmapLoaderThread, LinearSRGBColorSpace, LuminosityMaterial, MathUtils, Mesh, MeshBasicMaterial, MeshMatcapMaterial, MeshStandardMaterial, MotionBlur, MotionBlurCompositeMaterial, NearestFilter, NoBlending, NormalMaterial, OctahedronGeometry, OrthographicCamera, PanelItem, PerspectiveCamera, PlaneGeometry, Point3D, RawShaderMaterial, Reflector, RepeatWrapping, Router, Scene, SceneCompositeMaterial, ShadowMaterial, Stage, TextureLoader, Thread, UI, UnrealBloomBlurMaterial, Vector2, Vector3, WebGLRenderTarget, WebGLRenderer, clearTween, delayedCall, getFullscreenTriangle, getKeyByValue, lerpCameras, ticker, tween } from '../../../../build/alien.three.js';
 
 const isDebug = /[?&]debug/.test(location.search);
 
 const breakpoint = 1000;
 
-const params = {
-    speed: 20
-};
-
 const layers = {
     default: 0,
-    velocity: 1
+    velocity: 1,
+    geometry: 2
+};
+
+const params = {
+    speed: 20
 };
 
 class Page {
@@ -259,11 +260,16 @@ class AbstractCube extends Group {
         // https://threejs.org/docs/#api/en/materials/MeshStandardMaterial.aoMap
         material.aoMap.channel = 1;
 
-        const mesh = new MotionBlurMesh(geometry, material, layers.velocity);
+        const mesh = new Mesh(geometry, material);
         mesh.rotation.x = MathUtils.degToRad(-45);
         mesh.rotation.z = MathUtils.degToRad(-45);
         mesh.castShadow = true;
         mesh.receiveShadow = true;
+
+        // Layers
+        mesh.layers.enable(layers.velocity);
+        mesh.layers.enable(layers.geometry);
+
         this.add(mesh);
 
         this.mesh = mesh;
@@ -366,10 +372,15 @@ class FloatingCrystal extends Group {
         // https://threejs.org/docs/#api/en/materials/MeshStandardMaterial.aoMap
         material.aoMap.channel = 1;
 
-        const mesh = new MotionBlurMesh(geometry, material, layers.velocity);
+        const mesh = new Mesh(geometry, material);
         mesh.scale.set(0.5, 1, 0.5);
         mesh.castShadow = true;
         mesh.receiveShadow = true;
+
+        // Layers
+        mesh.layers.enable(layers.velocity);
+        mesh.layers.enable(layers.geometry);
+
         this.add(mesh);
 
         this.mesh = mesh;
@@ -475,9 +486,14 @@ class DarkPlanet extends Group {
         // https://threejs.org/docs/#api/en/materials/MeshStandardMaterial.aoMap
         material.aoMap.channel = 1;
 
-        const mesh = new MotionBlurMesh(geometry, material, layers.velocity);
+        const mesh = new Mesh(geometry, material);
         mesh.castShadow = true;
         mesh.receiveShadow = true;
+
+        // Layers
+        mesh.layers.enable(layers.velocity);
+        mesh.layers.enable(layers.geometry);
+
         this.add(mesh);
 
         this.mesh = mesh;
@@ -812,15 +828,15 @@ class PanelController {
                 type: 'divider'
             },
             {
-                type: 'slider',
-                name: 'Speed',
-                min: 0,
-                max: 50,
-                step: 0.1,
-                value: params.speed,
+                type: 'list',
+                list: DisplayOptions,
+                value: getKeyByValue(DisplayOptions, RenderManager.display),
                 callback: value => {
-                    params.speed = value;
+                    RenderManager.display = DisplayOptions[value];
                 }
+            },
+            {
+                type: 'divider'
             },
             {
                 type: 'slider',
@@ -941,6 +957,20 @@ class PanelController {
                     RenderManager.bloomRadius = value;
                     bloomCompositeMaterial.uniforms.uBloomFactors.value = RenderManager.bloomFactors();
                 }
+            },
+            {
+                type: 'divider'
+            },
+            {
+                type: 'slider',
+                name: 'Speed',
+                min: 0,
+                max: 50,
+                step: 0.1,
+                value: params.speed,
+                callback: value => {
+                    params.speed = value;
+                }
             }
         ];
 
@@ -969,6 +999,8 @@ class RenderManager {
         this.scene = scene;
         this.camera = camera;
 
+        this.display = DisplayOptions.Default;
+
         // Blur
         this.blurFocus = navigator.maxTouchPoints ? 0.5 : 0.25;
         this.blurRotation = navigator.maxTouchPoints ? 0 : MathUtils.degToRad(75);
@@ -987,7 +1019,10 @@ class RenderManager {
     }
 
     static initRenderer() {
-        const { screenTriangle, time } = WorldController;
+        const { screenTriangle, time, getTexture } = WorldController;
+
+        // Manually clear
+        this.renderer.autoClear = false;
 
         // Fullscreen triangle
         this.screenCamera = new OrthographicCamera(-1, 1, 1, -1, 0, 1);
@@ -1014,10 +1049,9 @@ class RenderManager {
         }
 
         this.renderTargetA.depthBuffer = true;
-        this.renderTargetA.depthTexture = new DepthTexture();
 
         // Motion blur
-        this.motionBlur = new MotionBlur();
+        this.motionBlur = new MotionBlur(layers.velocity);
 
         this.motionBlurCompositeMaterial = new MotionBlurCompositeMaterial(7);
         this.motionBlurCompositeMaterial.uniforms.tVelocity.value = this.motionBlur.renderTarget.texture;
@@ -1065,6 +1099,14 @@ class RenderManager {
         this.compositeMaterial.uniforms.uFocus.value = this.blurFocus;
         this.compositeMaterial.uniforms.uRotation.value = this.blurRotation;
         this.compositeMaterial.uniforms.uBluriness.value = this.blurFactor;
+
+        // Debug materials
+        this.blackoutMaterial = new MeshBasicMaterial({ color: 0x000000 });
+        this.matcap1Material = new MeshMatcapMaterial({ matcap: getTexture('assets/textures/matcaps/040full.jpg') });
+        this.matcap2Material = new MeshMatcapMaterial({ matcap: getTexture('assets/textures/matcaps/defaultwax.jpg') });
+        this.normalMaterial = new NormalMaterial();
+        this.depthMaterial = new DepthMaterial();
+        this.copyMaterial = new CopyMaterial();
     }
 
     static bloomFactors() {
@@ -1117,6 +1159,7 @@ class RenderManager {
 
         if (!this.enabled) {
             renderer.setRenderTarget(null);
+            renderer.clear();
             renderer.render(scene, camera);
             return;
         }
@@ -1128,27 +1171,92 @@ class RenderManager {
         const renderTargetsHorizontal = this.renderTargetsHorizontal;
         const renderTargetsVertical = this.renderTargetsVertical;
 
+        // Renderer state
+        const currentOverrideMaterial = scene.overrideMaterial;
+        const currentBackground = scene.background;
+
         // Scene layer
         camera.layers.set(layers.default);
 
         renderer.setRenderTarget(renderTargetA);
+        renderer.clear();
         renderer.render(scene, camera);
 
+        if (this.display === DisplayOptions.Depth) {
+            // Debug pass (render to screen)
+            /* this.copyMaterial.uniforms.tMap.value = renderTargetA.depthTexture;
+            this.screen.material = this.copyMaterial;
+            renderer.setRenderTarget(null);
+            renderer.clear();
+            renderer.render(this.screen, this.screenCamera); */
+            scene.overrideMaterial = this.depthMaterial;
+            renderer.setRenderTarget(null);
+            renderer.clear();
+            renderer.render(scene, camera);
+            scene.overrideMaterial = currentOverrideMaterial;
+            return;
+        } else if (this.display === DisplayOptions.Geometry) {
+            scene.overrideMaterial = this.normalMaterial;
+            renderer.setRenderTarget(null);
+            renderer.clear();
+            renderer.render(scene, camera);
+            scene.overrideMaterial = currentOverrideMaterial;
+            return;
+        } else if (this.display === DisplayOptions.Matcap1) {
+            scene.overrideMaterial = this.matcap1Material;
+            renderer.setRenderTarget(null);
+            renderer.clear();
+            renderer.render(scene, camera);
+            scene.overrideMaterial = currentOverrideMaterial;
+            return;
+        } else if (this.display === DisplayOptions.Matcap2) {
+            scene.overrideMaterial = this.matcap2Material;
+            renderer.setRenderTarget(null);
+            renderer.clear();
+            renderer.render(scene, camera);
+            scene.overrideMaterial = currentOverrideMaterial;
+            return;
+        }
+
         // Motion blur layer
+        scene.background = null;
+
         camera.layers.set(layers.velocity);
 
-        this.motionBlur.update(renderer, scene, camera);
+        if (this.display === DisplayOptions.Velocity) {
+            // Debug pass (render to screen)
+            this.motionBlur.update(renderer, scene, camera, true);
+            return;
+        } else {
+            this.motionBlur.update(renderer, scene, camera);
+        }
 
         this.motionBlurCompositeMaterial.uniforms.tMap.value = renderTargetA.texture;
         this.screen.material = this.motionBlurCompositeMaterial;
         renderer.setRenderTarget(renderTargetB);
+        renderer.clear();
         renderer.render(this.screen, this.screenCamera);
 
         // Extract bright areas
         this.luminosityMaterial.uniforms.tMap.value = renderTargetB.texture;
-        this.screen.material = this.luminosityMaterial;
-        renderer.setRenderTarget(renderTargetBright);
-        renderer.render(this.screen, this.screenCamera);
+
+        if (this.display === DisplayOptions.Luma) {
+            // Debug pass (render to screen)
+            this.screen.material = this.blackoutMaterial;
+            renderer.setRenderTarget(null);
+            renderer.clear();
+            renderer.render(this.screen, this.screenCamera);
+            this.screen.material = this.luminosityMaterial;
+            this.screen.material.blending = AdditiveBlending;
+            renderer.render(this.screen, this.screenCamera);
+            return;
+        } else {
+            this.screen.material = this.luminosityMaterial;
+            this.screen.material.blending = NoBlending;
+            renderer.setRenderTarget(renderTargetBright);
+            renderer.clear();
+            renderer.render(this.screen, this.screenCamera);
+        }
 
         // Blur all the mips progressively
         let inputRenderTarget = renderTargetBright;
@@ -1159,11 +1267,13 @@ class RenderManager {
             this.blurMaterials[i].uniforms.tMap.value = inputRenderTarget.texture;
             this.blurMaterials[i].uniforms.uDirection.value = BlurDirectionX;
             renderer.setRenderTarget(renderTargetsHorizontal[i]);
+            renderer.clear();
             renderer.render(this.screen, this.screenCamera);
 
             this.blurMaterials[i].uniforms.tMap.value = this.renderTargetsHorizontal[i].texture;
             this.blurMaterials[i].uniforms.uDirection.value = BlurDirectionY;
             renderer.setRenderTarget(renderTargetsVertical[i]);
+            renderer.clear();
             renderer.render(this.screen, this.screenCamera);
 
             inputRenderTarget = renderTargetsVertical[i];
@@ -1171,14 +1281,25 @@ class RenderManager {
 
         // Composite all the mips
         this.screen.material = this.bloomCompositeMaterial;
-        renderer.setRenderTarget(renderTargetsHorizontal[0]);
-        renderer.render(this.screen, this.screenCamera);
+
+        if (this.display === DisplayOptions.Bloom) {
+            // Debug pass (render to screen)
+            renderer.setRenderTarget(null);
+            renderer.clear();
+            renderer.render(this.screen, this.screenCamera);
+            return;
+        } else {
+            renderer.setRenderTarget(renderTargetsHorizontal[0]);
+            renderer.clear();
+            renderer.render(this.screen, this.screenCamera);
+        }
 
         // Scene composite pass
         this.sceneCompositeMaterial.uniforms.tScene.value = renderTargetB.texture;
         this.sceneCompositeMaterial.uniforms.tBloom.value = renderTargetsHorizontal[0].texture;
         this.screen.material = this.sceneCompositeMaterial;
         renderer.setRenderTarget(renderTargetC);
+        renderer.clear();
         renderer.render(this.screen, this.screenCamera);
 
         // Two pass Gaussian blur (horizontal and vertical)
@@ -1187,12 +1308,14 @@ class RenderManager {
             this.hBlurMaterial.uniforms.uBluriness.value = this.blurFactor;
             this.screen.material = this.hBlurMaterial;
             renderer.setRenderTarget(renderTargetA);
+            renderer.clear();
             renderer.render(this.screen, this.screenCamera);
 
             this.vBlurMaterial.uniforms.tMap.value = renderTargetA.texture;
             this.vBlurMaterial.uniforms.uBluriness.value = this.blurFactor;
             this.screen.material = this.vBlurMaterial;
             renderer.setRenderTarget(renderTargetC);
+            renderer.clear();
             renderer.render(this.screen, this.screenCamera);
         }
 
@@ -1201,7 +1324,11 @@ class RenderManager {
         this.compositeMaterial.uniforms.uBluriness.value = this.blurFactor;
         this.screen.material = this.compositeMaterial;
         renderer.setRenderTarget(null);
+        renderer.clear();
         renderer.render(this.screen, this.screenCamera);
+
+        // Restore renderer settings
+        scene.background = currentBackground;
     };
 
     static start = () => {

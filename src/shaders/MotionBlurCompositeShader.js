@@ -40,6 +40,5 @@ void main() {
     result /= float(SAMPLES);
 
     FragColor = result;
-    // FragColor = texture(tVelocity, vUv);
 }
 `;

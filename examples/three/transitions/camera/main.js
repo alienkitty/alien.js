@@ -8,6 +8,11 @@ const params = {
     speed: 20
 };
 
+const layers = {
+    default: 0,
+    velocity: 1
+};
+
 class Page {
     constructor({ path, title }) {
         this.path = path;
@@ -254,7 +259,7 @@ class AbstractCube extends Group {
         // https://threejs.org/docs/#api/en/materials/MeshStandardMaterial.aoMap
         material.aoMap.channel = 1;
 
-        const mesh = new MotionBlurMesh(geometry, material);
+        const mesh = new MotionBlurMesh(geometry, material, layers.velocity);
         mesh.rotation.x = MathUtils.degToRad(-45);
         mesh.rotation.z = MathUtils.degToRad(-45);
         mesh.castShadow = true;
@@ -361,7 +366,7 @@ class FloatingCrystal extends Group {
         // https://threejs.org/docs/#api/en/materials/MeshStandardMaterial.aoMap
         material.aoMap.channel = 1;
 
-        const mesh = new MotionBlurMesh(geometry, material);
+        const mesh = new MotionBlurMesh(geometry, material, layers.velocity);
         mesh.scale.set(0.5, 1, 0.5);
         mesh.castShadow = true;
         mesh.receiveShadow = true;
@@ -470,7 +475,7 @@ class DarkPlanet extends Group {
         // https://threejs.org/docs/#api/en/materials/MeshStandardMaterial.aoMap
         material.aoMap.channel = 1;
 
-        const mesh = new MotionBlurMesh(geometry, material);
+        const mesh = new MotionBlurMesh(geometry, material, layers.velocity);
         mesh.castShadow = true;
         mesh.receiveShadow = true;
         this.add(mesh);
@@ -1123,11 +1128,15 @@ class RenderManager {
         const renderTargetsHorizontal = this.renderTargetsHorizontal;
         const renderTargetsVertical = this.renderTargetsVertical;
 
-        // Scene pass
+        // Scene layer
+        camera.layers.set(layers.default);
+
         renderer.setRenderTarget(renderTargetA);
         renderer.render(scene, camera);
 
-        // Motion blur pass
+        // Motion blur layer
+        camera.layers.set(layers.velocity);
+
         this.motionBlur.update(renderer, scene, camera);
 
         this.motionBlurCompositeMaterial.uniforms.tMap.value = renderTargetA.texture;

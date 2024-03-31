@@ -107,17 +107,21 @@ export class MotionBlur {
 }
 
 export class MotionBlurMesh extends Mesh {
-    constructor(geometry, material) {
+    constructor(geometry, material, channel) {
         super(geometry, material);
 
         this.isMotionBlurMesh = true;
 
         this.prevMatrixWorld = new Matrix4();
 
+        this.channel = channel;
+
         this.initialized = false;
 
         this.originalMaterial = material;
         this.velocityMaterial = new MotionBlurVelocityMaterial();
+
+        this.layers.enable(channel);
     }
 
     dispose() {

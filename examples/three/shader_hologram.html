@@ -678,19 +678,25 @@
                 this.scene = scene;
                 this.camera = camera;
 
+                // Hologram
                 this.glitchDistortion = 0.15;
                 this.glitchDistortion2 = 0.04;
                 this.glitchSpeed = 0.01;
                 this.blurResolutionScale = 0.25;
                 this.blurFactor = 1.5;
+
+                // Bloom
                 this.luminosityThreshold = 0.1;
                 this.luminositySmoothing = 1;
                 this.bloomStrength = 0.3;
                 this.bloomRadius = 0.2;
+
+                // Chromatic aberration
                 this.caRedOffset = 0;
                 this.caGreenOffset = 4;
                 this.caBlueOffset = 0;
                 this.caIntensity = 1.5;
+
                 this.enabled = true;
 
                 this.initRenderer();

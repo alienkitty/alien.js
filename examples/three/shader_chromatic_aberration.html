@@ -339,14 +339,18 @@
                 this.camera = camera;
                 this.dust = dust;
 
+                // Chromatic aberration
                 this.caRedOffset = 0;
                 this.caGreenOffset = 4;
                 this.caBlueOffset = 0;
                 this.caIntensity = 2.2;
+
+                // Bloom
                 this.luminosityThreshold = 0.1;
                 this.luminositySmoothing = 1;
                 this.bloomStrength = 0.3;
                 this.bloomRadius = 0.2;
+
                 this.enabled = true;
 
                 this.initRenderer();

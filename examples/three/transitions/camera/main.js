@@ -964,14 +964,18 @@ class RenderManager {
         this.scene = scene;
         this.camera = camera;
 
+        // Blur
         this.blurFocus = navigator.maxTouchPoints ? 0.5 : 0.25;
         this.blurRotation = navigator.maxTouchPoints ? 0 : MathUtils.degToRad(75);
         this.blurFactor = 1;
         this.blurVelocityFactor = 0.1;
+
+        // Bloom
         this.luminosityThreshold = 0.1;
         this.luminositySmoothing = 1;
         this.bloomStrength = 0.3;
         this.bloomRadius = 0.2;
+
         this.enabled = true;
 
         this.initRenderer();

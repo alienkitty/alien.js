@@ -815,10 +815,12 @@ class RenderManager {
     static init(renderer) {
         this.renderer = renderer;
 
+        // Bloom
         this.luminosityThreshold = 0.1;
         this.luminositySmoothing = 1;
         this.bloomStrength = 0.3;
         this.bloomRadius = 0.2;
+
         this.animatedIn = false;
 
         this.initRenderer();

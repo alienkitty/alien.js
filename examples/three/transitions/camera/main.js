@@ -1,4 +1,4 @@
-import { AdditiveBlending, AssetLoader, BasicShadowMap, BloomCompositeMaterial, BoxGeometry, Color, ColorManagement, CopyMaterial, DepthMaterial, DirectionalLight, DisplayOptions, EnvironmentTextureLoader, GLSL3, Group, HemisphereLight, IcosahedronGeometry, ImageBitmapLoaderThread, LinearSRGBColorSpace, LuminosityMaterial, MathUtils, Mesh, MeshBasicMaterial, MeshMatcapMaterial, MeshStandardMaterial, MotionBlur, MotionBlurCompositeMaterial, NearestFilter, NoBlending, NormalMaterial, OctahedronGeometry, OrthographicCamera, PanelItem, PerspectiveCamera, PlaneGeometry, Point3D, RawShaderMaterial, Reflector, RepeatWrapping, Router, Scene, SceneCompositeMaterial, ShadowMaterial, Stage, TextureLoader, Thread, UI, UnrealBloomBlurMaterial, Vector2, Vector3, WebGLRenderTarget, WebGLRenderer, clearTween, delayedCall, getFullscreenTriangle, getKeyByValue, lerpCameras, ticker, tween } from '../../../../build/alien.three.js';
+import { AdditiveBlending, AssetLoader, BasicShadowMap, BloomCompositeMaterial, BoxGeometry, Color, ColorManagement, DepthMaterial, DirectionalLight, DisplayOptions, EnvironmentTextureLoader, GLSL3, Group, HemisphereLight, IcosahedronGeometry, ImageBitmapLoaderThread, LinearSRGBColorSpace, LuminosityMaterial, MathUtils, Mesh, MeshBasicMaterial, MeshMatcapMaterial, MeshStandardMaterial, MotionBlur, MotionBlurCompositeMaterial, NearestFilter, NoBlending, NormalMaterial, OctahedronGeometry, OrthographicCamera, PanelItem, PerspectiveCamera, PlaneGeometry, Point3D, RawShaderMaterial, Reflector, RepeatWrapping, Router, Scene, SceneCompositeMaterial, ShadowMaterial, Stage, TextureLoader, Thread, UI, UnrealBloomBlurMaterial, Vector2, Vector3, WebGLRenderTarget, WebGLRenderer, clearTween, delayedCall, getFullscreenTriangle, getKeyByValue, lerpCameras, ticker, tween } from '../../../../build/alien.three.js';
 
 const isDebug = /[?&]debug/.test(location.search);
 
@@ -6,8 +6,7 @@ const breakpoint = 1000;
 
 const layers = {
     default: 0,
-    velocity: 1,
-    geometry: 2
+    velocity: 1
 };
 
 const params = {
@@ -268,7 +267,6 @@ class AbstractCube extends Group {
 
         // Layers
         mesh.layers.enable(layers.velocity);
-        mesh.layers.enable(layers.geometry);
 
         this.add(mesh);
 
@@ -379,7 +377,6 @@ class FloatingCrystal extends Group {
 
         // Layers
         mesh.layers.enable(layers.velocity);
-        mesh.layers.enable(layers.geometry);
 
         this.add(mesh);
 
@@ -492,7 +489,6 @@ class DarkPlanet extends Group {
 
         // Layers
         mesh.layers.enable(layers.velocity);
-        mesh.layers.enable(layers.geometry);
 
         this.add(mesh);
 
@@ -999,6 +995,7 @@ class RenderManager {
         this.scene = scene;
         this.camera = camera;
 
+        // Debug
         this.display = DisplayOptions.Default;
 
         // Blur
@@ -1106,7 +1103,6 @@ class RenderManager {
         this.matcap2Material = new MeshMatcapMaterial({ matcap: getTexture('assets/textures/matcaps/defaultwax.jpg') });
         this.normalMaterial = new NormalMaterial();
         this.depthMaterial = new DepthMaterial();
-        this.copyMaterial = new CopyMaterial();
     }
 
     static bloomFactors() {
@@ -1178,17 +1174,8 @@ class RenderManager {
         // Scene layer
         camera.layers.set(layers.default);
 
-        renderer.setRenderTarget(renderTargetA);
-        renderer.clear();
-        renderer.render(scene, camera);
-
         if (this.display === DisplayOptions.Depth) {
             // Debug pass (render to screen)
-            /* this.copyMaterial.uniforms.tMap.value = renderTargetA.depthTexture;
-            this.screen.material = this.copyMaterial;
-            renderer.setRenderTarget(null);
-            renderer.clear();
-            renderer.render(this.screen, this.screenCamera); */
             scene.overrideMaterial = this.depthMaterial;
             renderer.setRenderTarget(null);
             renderer.clear();
@@ -1217,6 +1204,10 @@ class RenderManager {
             scene.overrideMaterial = currentOverrideMaterial;
             return;
         }
+
+        renderer.setRenderTarget(renderTargetA);
+        renderer.clear();
+        renderer.render(scene, camera);
 
         // Motion blur layer
         scene.background = null;

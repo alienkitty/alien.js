@@ -23,16 +23,16 @@ vec4 radialBlurRGB(sampler2D image, vec2 uv, float sampleDist, float sampleStren
     float dist = sqrt(dir.x * dir.x + dir.y * dir.y);
     dir = dir / dist;
 
-    vec4 texel = getRGB(image, uv, rgbAngle, rgbStrength);
-    vec4 sum = texel;
+    vec4 color = getRGB(image, uv, rgbAngle, rgbStrength);
+    vec4 sum = color;
 
     for (int i = 0; i < 10; i++) {
         sum += getRGB(image, uv + dir * samples[i] * sampleDist, rgbAngle, rgbStrength);
     }
 
-    sum *= 1.0 / 10.0;
+    sum /= 10.0;
     float t = clamp(dist * sampleStrength, 0.0, 1.0);
 
-    return mix(texel, sum, t);
+    return mix(color, sum, t);
 }
 `;

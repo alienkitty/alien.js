@@ -392,10 +392,12 @@
                 this.camera = camera;
                 this.dust = dust;
 
+                // Bloom
                 this.luminosityThreshold = 0.1;
                 this.luminositySmoothing = 1;
                 this.bloomStrength = 0.3;
                 this.bloomRadius = 0.2;
+
                 this.enabled = true;
 
                 this.initRenderer();
@@ -538,6 +540,7 @@
                 this.copyMaterial.uniforms.tMap.value = renderTargetA.texture;
                 this.screen.material = this.copyMaterial;
                 renderer.setRenderTarget(renderTargetB);
+                renderer.clear();
                 renderer.render(this.screen, this.screenCamera);
 
                 // Extract bright areas

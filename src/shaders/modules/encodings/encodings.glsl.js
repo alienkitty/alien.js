@@ -1,5 +1,5 @@
 // Based on https://github.com/mrdoob/three.js/blob/dev/examples/jsm/shaders/ACESFilmicToneMappingShader.js by WestLangley
-// Based on https://github.com/mrdoob/three.js/blob/dev/examples/jsm/shaders/GammaCorrectionShader.js by WestLangley
+// Based on https://oframe.github.io/ogl/examples/?src=pbr.html by gordonnl
 
 export default /* glsl */ `
 vec3 RRTAndODTFit(vec3 v) {
@@ -34,7 +34,17 @@ vec3 ACESFilmicToneMapping(vec3 color) {
     return clamp(color, 0.0, 1.0);
 }
 
-vec4 LinearToSRGB(vec4 value) {
-    return vec4(mix(pow(value.rgb, vec3(0.41666)) * 1.055 - vec3(0.055), value.rgb * 12.92, vec3(lessThanEqual(value.rgb, vec3(0.0031308)))), value.a);
+vec4 SRGBtoLinear(vec4 srgb) {
+    vec3 linOut = pow(srgb.xyz, vec3(2.2));
+    return vec4(linOut, srgb.w);;
+}
+
+vec4 RGBMToLinear(vec4 value) {
+    float maxRange = 6.0;
+    return vec4(value.xyz * value.w * maxRange, 1.0);
+}
+
+vec3 linearToSRGB(vec3 color) {
+    return pow(color, vec3(1.0 / 2.2));
 }
 `;

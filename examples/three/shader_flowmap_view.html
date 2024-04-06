@@ -189,6 +189,7 @@
             };
 
             update = () => {
+                // Renderer state
                 const currentRenderTarget = this.renderer.getRenderTarget();
 
                 // Scene pass
@@ -393,6 +394,7 @@
                 this.camera = camera;
                 this.view = view;
 
+                // Flowmap
                 this.mouse = new Vector2(-1, -1);
                 this.velocity = new Vector2();
                 this.lastTime = null;
@@ -638,11 +640,13 @@
                 this.scene = scene;
                 this.camera = camera;
 
+                // Bloom
                 this.luminosityThreshold = 0.1;
                 this.luminositySmoothing = 1;
                 this.bloomStrength = 0.3;
                 this.bloomRadius = 0.2;
                 this.bloomDistortion = 1.5;
+
                 this.enabled = true;
 
                 this.initRenderer();

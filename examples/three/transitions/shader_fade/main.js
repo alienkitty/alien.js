@@ -597,11 +597,15 @@ class RenderManager {
         this.scene = scene;
         this.camera = camera;
 
+        // Blur
         this.blurFactor = 10;
+
+        // Bloom
         this.luminosityThreshold = 0.1;
         this.luminositySmoothing = 1;
         this.bloomStrength = 0.3;
         this.bloomRadius = 0.2;
+
         this.enabled = true;
 
         this.initRenderer();

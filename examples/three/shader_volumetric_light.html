@@ -542,6 +542,7 @@
 
                 this.lightPosition = new Vector3();
 
+                // Volumetric light
                 this.vlExposure = 0.1;
                 this.vlDecay = 1.0;
                 this.vlDensity = 0.96;
@@ -549,10 +550,13 @@
                 this.vlClamp = 1;
                 this.blurResolutionScale = 0.25;
                 this.blurFactor = 2.5;
+
+                // Bloom
                 this.luminosityThreshold = 0.1;
                 this.luminositySmoothing = 1;
                 this.bloomStrength = 0.3;
                 this.bloomRadius = 0.2;
+
                 this.enabled = true;
 
                 this.initRenderer();
@@ -711,13 +715,13 @@
                 const renderTargetsHorizontal = this.renderTargetsHorizontal;
                 const renderTargetsVertical = this.renderTargetsVertical;
 
+                // Renderer state
                 const currentOverrideMaterial = scene.overrideMaterial;
                 const currentBackground = scene.background;
-                const currentClearAlpha = renderer.getClearAlpha();
-
-                camera.layers.set(layers.default);
 
                 // Scene layer
+                camera.layers.set(layers.default);
+
                 renderer.setRenderTarget(renderTarget);
                 renderer.clear();
                 renderer.render(scene, camera);
@@ -736,7 +740,7 @@
 
                 renderer.render(scene, camera);
 
-                renderer.setClearAlpha(currentClearAlpha);
+                // Restore renderer settings
                 scene.background = currentBackground;
 
                 this.hBlurMaterial.uniforms.tMap.value = renderTargetBlurA.texture;

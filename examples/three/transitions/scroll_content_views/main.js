@@ -231,6 +231,7 @@ class RenderScene {
     }
 
     update() {
+        // Renderer state
         const currentRenderTarget = this.renderer.getRenderTarget();
 
         // Scene pass
@@ -753,10 +754,12 @@ class RenderManager {
         this.container = container;
         this.sections = container.children;
 
+        // Bloom
         this.luminosityThreshold = 0.1;
         this.luminositySmoothing = 1;
         this.bloomStrength = 0.3;
         this.bloomRadius = 0.2;
+
         this.animatedIn = false;
 
         this.initRenderer();

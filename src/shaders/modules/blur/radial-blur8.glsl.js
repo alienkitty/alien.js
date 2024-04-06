@@ -17,16 +17,16 @@ vec4 radialBlur(sampler2D image, vec2 uv, float sampleDist, float sampleStrength
     float dist = sqrt(dir.x * dir.x + dir.y * dir.y);
     dir = dir / dist;
 
-    vec4 texel = texture(image, uv);
-    vec4 sum = texel;
+    vec4 color = texture(image, uv);
+    vec4 sum = color;
 
     for (int i = 0; i < 8; i++) {
         sum += texture(image, uv + dir * samples[i] * sampleDist);
     }
 
-    sum *= 1.0 / 8.0;
+    sum /= 8.0;
     float t = clamp(dist * sampleStrength, 0.0, 1.0);
 
-    return mix(texel, sum, t);
+    return mix(color, sum, t);
 }
 `;

@@ -77,6 +77,6 @@ void main() {
     flare *= uLensflareExposure;
     flare = clamp(flare, 0.0, uLensflareClamp);
 
-    FragColor = vec4(flare + color.rgb, 1.0);
+    FragColor = vec4(color.rgb + flare, 1.0);
 }
 `;

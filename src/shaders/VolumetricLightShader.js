@@ -52,6 +52,6 @@ void main() {
     color *= uExposure;
     color = clamp(color, 0.0, uClamp);
 
-    FragColor = color;
+    FragColor = vec4(color.rgb, 1.0);
 }
 `;

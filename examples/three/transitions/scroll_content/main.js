@@ -129,33 +129,33 @@ class CompositeMaterial extends RawShaderMaterial {
             vertexShader: /* glsl */ `
                 in vec3 position;
                 in vec2 uv;
-            
+
                 out vec2 vUv;
-            
+
                 void main() {
                     vUv = uv;
-            
+
                     gl_Position = vec4(position, 1.0);
                 }
             `,
             fragmentShader: /* glsl */ `
                 precision highp float;
-            
+
                 uniform sampler2D tScene;
                 uniform vec3 uColor;
                 uniform float uDistortion;
                 uniform float uOpacity;
-            
+
                 in vec2 vUv;
-            
+
                 out vec4 FragColor;
-            
+
                 ${rgbshift}
                 ${dither}
-            
+
                 void main() {
                     FragColor = getRGB(tScene, vUv, 0.1, 0.002 * uDistortion * (1.0 - uOpacity));
-            
+
                     FragColor.rgb = mix(uColor, FragColor.rgb, uOpacity);
 
                     FragColor.rgb = dither(FragColor.rgb);

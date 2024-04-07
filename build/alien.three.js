@@ -71616,6 +71616,7 @@ class Fluid {
         const densityDissipation = this.densityDissipation;
         const velocityDissipation = this.velocityDissipation;
 
+        // Renderer state
         const currentRenderTarget = renderer.getRenderTarget();
         const currentAutoClear = renderer.autoClear;
         renderer.autoClear = false;
@@ -71972,6 +71973,10 @@ class MotionBlur {
         this.initialized = false;
         this.enabled = true;
 
+        // Clear colors
+        this.clearColor = new Color$1(0, 0, 0);
+        this.currentClearColor = new Color$1();
+
         // Render targets
         this.renderTarget = new WebGLRenderTarget(width, height, {
             type: HalfFloatType
@@ -71988,18 +71993,21 @@ class MotionBlur {
             return;
         }
 
-        // Renderer state
-        const currentRenderTarget = renderer.getRenderTarget();
-        const currentBackground = scene.background;
-
-        // Velocity pass
-        scene.background = null;
-
         if (!this.initialized) {
             this.prevProjectionMatrix.copy(camera.projectionMatrix);
             this.prevMatrixWorldInverse.copy(camera.matrixWorldInverse);
             this.initialized = true;
         }
+
+        // Renderer state
+        const currentRenderTarget = renderer.getRenderTarget();
+        const currentBackground = scene.background;
+        renderer.getClearColor(this.currentClearColor);
+        const currentClearAlpha = renderer.getClearAlpha();
+
+        // Velocity pass
+        scene.background = null;
+        renderer.setClearColor(this.clearColor, 1);
 
         scene.traverseVisible(this.setVelocityMaterial);
         renderer.setRenderTarget(renderToScreen ? null : this.renderTarget);
@@ -72017,6 +72025,7 @@ class MotionBlur {
 
         // Restore renderer settings
         scene.background = currentBackground;
+        renderer.setClearColor(this.currentClearColor, currentClearAlpha);
         renderer.setRenderTarget(currentRenderTarget);
     }
 

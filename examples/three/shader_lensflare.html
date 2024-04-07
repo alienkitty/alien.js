@@ -594,6 +594,10 @@
                 // Manually clear
                 this.renderer.autoClear = false;
 
+                // Clear colors
+                this.clearColor = new Color(0, 0, 0);
+                this.currentClearColor = new Color();
+
                 // Fullscreen triangle
                 this.screenCamera = new OrthographicCamera(-1, 1, 1, -1, 0, 1);
                 this.screen = new Mesh(screenTriangle);
@@ -743,6 +747,8 @@
                 // Renderer state
                 const currentOverrideMaterial = scene.overrideMaterial;
                 const currentBackground = scene.background;
+                renderer.getClearColor(this.currentClearColor);
+                const currentClearAlpha = renderer.getClearAlpha();
 
                 // Scene layer
                 camera.layers.set(layers.default);
@@ -753,7 +759,7 @@
 
                 // Occlusion layer
                 scene.background = null;
-                renderer.setClearAlpha(0);
+                renderer.setClearColor(this.clearColor, 1);
 
                 scene.overrideMaterial = this.blackoutMaterial;
                 renderer.setRenderTarget(renderTargetBlurA);
@@ -767,6 +773,7 @@
 
                 // Restore renderer settings
                 scene.background = currentBackground;
+                renderer.setClearColor(this.currentClearColor, currentClearAlpha);
 
                 this.hBlurMaterial.uniforms.tMap.value = renderTargetBlurA.texture;
                 this.screen.material = this.hBlurMaterial;

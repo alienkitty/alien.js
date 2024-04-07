@@ -6,12 +6,11 @@ const breakpoint = 1000;
 
 const layers = {
     default: 0,
-    velocity: 1,
-    geometry: 2
+    velocity: 1
 };
 
 const params = {
-    speed: 20
+    speed: 1
 };
 
 class Page {
@@ -268,7 +267,6 @@ class AbstractCube extends Group {
 
         // Layers
         mesh.layers.enable(layers.velocity);
-        mesh.layers.enable(layers.geometry);
 
         this.add(mesh);
 
@@ -291,9 +289,8 @@ class AbstractCube extends Group {
         this.camera.updateProjectionMatrix();
     };
 
-    update = time => {
-        // this.mesh.rotation.y -= 0.005;
-        this.mesh.position.y = Math.sin(time * params.speed) * 2;
+    update = () => {
+        this.mesh.rotation.y -= 0.005 * params.speed;
     };
 }
 
@@ -379,7 +376,6 @@ class FloatingCrystal extends Group {
 
         // Layers
         mesh.layers.enable(layers.velocity);
-        mesh.layers.enable(layers.geometry);
 
         this.add(mesh);
 
@@ -403,9 +399,8 @@ class FloatingCrystal extends Group {
     };
 
     update = time => {
-        // this.mesh.position.y = (1 + Math.sin(time)) * 0.1;
-        // this.mesh.rotation.y += 0.01;
-        this.mesh.scale.set(0.5, 1, 0.5).multiplyScalar(0.25 + (1 + Math.sin(time * params.speed)) * 0.4);
+        this.mesh.position.y = (1 + Math.sin(time * params.speed)) * 0.1;
+        this.mesh.rotation.y += 0.01 * params.speed;
     };
 }
 
@@ -492,7 +487,6 @@ class DarkPlanet extends Group {
 
         // Layers
         mesh.layers.enable(layers.velocity);
-        mesh.layers.enable(layers.geometry);
 
         this.add(mesh);
 
@@ -517,9 +511,7 @@ class DarkPlanet extends Group {
 
     update = () => {
         // Counter clockwise rotation
-        // this.mesh.rotation.y += 0.005;
-        // this.mesh.rotation.y += 0.005 * 20;
-        this.mesh.rotation.y += 0.01 * params.speed;
+        this.mesh.rotation.y += 0.005 * params.speed;
     };
 }
 
@@ -999,6 +991,7 @@ class RenderManager {
         this.scene = scene;
         this.camera = camera;
 
+        // Debug
         this.display = DisplayOptions.Default;
 
         // Blur
@@ -1023,6 +1016,10 @@ class RenderManager {
 
         // Manually clear
         this.renderer.autoClear = false;
+
+        // Clear colors
+        this.clearColor = new Color(0, 0, 0);
+        this.currentClearColor = new Color();
 
         // Fullscreen triangle
         this.screenCamera = new OrthographicCamera(-1, 1, 1, -1, 0, 1);
@@ -1119,6 +1116,19 @@ class RenderManager {
         return bloomFactors;
     }
 
+    static rendererState() {
+        this.currentOverrideMaterial = this.scene.overrideMaterial;
+        this.currentBackground = this.scene.background;
+        this.renderer.getClearColor(this.currentClearColor);
+        this.currentClearAlpha = this.renderer.getClearAlpha();
+    }
+
+    static restoreRendererState() {
+        this.scene.overrideMaterial = this.currentOverrideMaterial;
+        this.scene.background = this.currentBackground;
+        this.renderer.setClearColor(this.currentClearColor, this.currentClearAlpha);
+    }
+
     // Public methods
 
     static resize = (width, height, dpr) => {
@@ -1171,11 +1181,18 @@ class RenderManager {
         const renderTargetsVertical = this.renderTargetsVertical;
 
         // Renderer state
-        const currentOverrideMaterial = scene.overrideMaterial;
-        const currentBackground = scene.background;
+        this.rendererState();
 
         // Scene layer
         camera.layers.set(layers.default);
+
+        renderer.setRenderTarget(renderTargetA);
+        renderer.clear();
+        renderer.render(scene, camera);
+
+        // Post-processing
+        scene.background = null;
+        renderer.setClearColor(this.clearColor, 1);
 
         if (this.display === DisplayOptions.Depth) {
             // Debug pass (render to screen)
@@ -1183,43 +1200,38 @@ class RenderManager {
             renderer.setRenderTarget(null);
             renderer.clear();
             renderer.render(scene, camera);
-            scene.overrideMaterial = currentOverrideMaterial;
+            this.restoreRendererState();
             return;
         } else if (this.display === DisplayOptions.Geometry) {
             scene.overrideMaterial = this.normalMaterial;
             renderer.setRenderTarget(null);
             renderer.clear();
             renderer.render(scene, camera);
-            scene.overrideMaterial = currentOverrideMaterial;
+            this.restoreRendererState();
             return;
         } else if (this.display === DisplayOptions.Matcap1) {
             scene.overrideMaterial = this.matcap1Material;
             renderer.setRenderTarget(null);
             renderer.clear();
             renderer.render(scene, camera);
-            scene.overrideMaterial = currentOverrideMaterial;
+            this.restoreRendererState();
             return;
         } else if (this.display === DisplayOptions.Matcap2) {
             scene.overrideMaterial = this.matcap2Material;
             renderer.setRenderTarget(null);
             renderer.clear();
             renderer.render(scene, camera);
-            scene.overrideMaterial = currentOverrideMaterial;
+            this.restoreRendererState();
             return;
         }
 
-        renderer.setRenderTarget(renderTargetA);
-        renderer.clear();
-        renderer.render(scene, camera);
-
         // Motion blur layer
-        scene.background = null;
-
         camera.layers.set(layers.velocity);
 
         if (this.display === DisplayOptions.Velocity) {
             // Debug pass (render to screen)
             this.motionBlur.update(renderer, scene, camera, true);
+            this.restoreRendererState();
             return;
         } else {
             this.motionBlur.update(renderer, scene, camera);
@@ -1243,6 +1255,7 @@ class RenderManager {
             this.screen.material = this.luminosityMaterial;
             this.screen.material.blending = AdditiveBlending;
             renderer.render(this.screen, this.screenCamera);
+            this.restoreRendererState();
             return;
         } else {
             this.screen.material = this.luminosityMaterial;
@@ -1281,6 +1294,7 @@ class RenderManager {
             renderer.setRenderTarget(null);
             renderer.clear();
             renderer.render(this.screen, this.screenCamera);
+            this.restoreRendererState();
             return;
         } else {
             renderer.setRenderTarget(renderTargetsHorizontal[0]);
@@ -1322,7 +1336,7 @@ class RenderManager {
         renderer.render(this.screen, this.screenCamera);
 
         // Restore renderer settings
-        scene.background = currentBackground;
+        this.restoreRendererState();
     };
 
     static start = () => {

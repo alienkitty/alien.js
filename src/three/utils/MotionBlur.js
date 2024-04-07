@@ -5,7 +5,7 @@
  * Based on https://github.com/gkjohnson/threejs-sandbox/tree/master/shader-replacement
  */
 
-import { HalfFloatType, Matrix4, WebGLRenderTarget } from 'three';
+import { Color, HalfFloatType, Matrix4, WebGLRenderTarget } from 'three';
 
 import { MotionBlurVelocityMaterial } from '../materials/MotionBlurVelocityMaterial.js';
 
@@ -24,6 +24,10 @@ export class MotionBlur {
 
         this.initialized = false;
         this.enabled = true;
+
+        // Clear colors
+        this.clearColor = new Color(0, 0, 0);
+        this.currentClearColor = new Color();
 
         // Render targets
         this.renderTarget = new WebGLRenderTarget(width, height, {
@@ -44,9 +48,12 @@ export class MotionBlur {
         // Renderer state
         const currentRenderTarget = renderer.getRenderTarget();
         const currentBackground = scene.background;
+        renderer.getClearColor(this.currentClearColor);
+        const currentClearAlpha = renderer.getClearAlpha();
 
         // Velocity pass
         scene.background = null;
+        renderer.setClearColor(this.clearColor, 1);
 
         if (!this.initialized) {
             this.prevProjectionMatrix.copy(camera.projectionMatrix);
@@ -70,6 +77,7 @@ export class MotionBlur {
 
         // Restore renderer settings
         scene.background = currentBackground;
+        renderer.setClearColor(this.currentClearColor, currentClearAlpha);
         renderer.setRenderTarget(currentRenderTarget);
     }
 

@@ -45,6 +45,12 @@ export class MotionBlur {
             return;
         }
 
+        if (!this.initialized) {
+            this.prevProjectionMatrix.copy(camera.projectionMatrix);
+            this.prevMatrixWorldInverse.copy(camera.matrixWorldInverse);
+            this.initialized = true;
+        }
+
         // Renderer state
         const currentRenderTarget = renderer.getRenderTarget();
         const currentBackground = scene.background;
@@ -54,12 +60,6 @@ export class MotionBlur {
         // Velocity pass
         scene.background = null;
         renderer.setClearColor(this.clearColor, 1);
-
-        if (!this.initialized) {
-            this.prevProjectionMatrix.copy(camera.projectionMatrix);
-            this.prevMatrixWorldInverse.copy(camera.matrixWorldInverse);
-            this.initialized = true;
-        }
 
         scene.traverseVisible(this.setVelocityMaterial);
         renderer.setRenderTarget(renderToScreen ? null : this.renderTarget);

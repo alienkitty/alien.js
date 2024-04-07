@@ -140,6 +140,7 @@ const program = new FXAAProgram(gl);
 [anamorphic light](https://alien.js.org/examples/three/shader_anamorphic_light.html) (fast anamorphic lens flares)  
 [lensflare](https://alien.js.org/examples/three/shader_lensflare.html)  
 [lensflare](https://alien.js.org/examples/three/shader_anamorphic_light_lensflare.html) (with anamorphic light)  
+[motion blur](https://alien.js.org/examples/three/shader_motion_blur.html) (per-object and camera, [debug](https://alien.js.org/examples/three/shader_motion_blur.html?debug), [orbit controls](https://alien.js.org/examples/three/shader_motion_blur.html?orbit))  
 [baked cube](https://alien.js.org/examples/three/shader_baked_cube.html)  
 [baked cube](https://alien.js.org/examples/three/shader_baked_cube_dudv.html) (DuDv)  
 [baked cube](https://alien.js.org/examples/three/shader_baked_cube_sss.html) (SSS, [debug](https://alien.js.org/examples/three/shader_baked_cube_sss.html?debug))  

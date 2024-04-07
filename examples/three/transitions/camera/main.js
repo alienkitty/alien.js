@@ -10,7 +10,7 @@ const layers = {
 };
 
 const params = {
-    speed: 20
+    speed: 1
 };
 
 class Page {
@@ -289,9 +289,8 @@ class AbstractCube extends Group {
         this.camera.updateProjectionMatrix();
     };
 
-    update = time => {
-        // this.mesh.rotation.y -= 0.005;
-        this.mesh.position.y = Math.sin(time * params.speed) * 2;
+    update = () => {
+        this.mesh.rotation.y -= 0.005 * params.speed;
     };
 }
 
@@ -400,9 +399,8 @@ class FloatingCrystal extends Group {
     };
 
     update = time => {
-        // this.mesh.position.y = (1 + Math.sin(time)) * 0.1;
-        // this.mesh.rotation.y += 0.01;
-        this.mesh.scale.set(0.5, 1, 0.5).multiplyScalar(0.25 + (1 + Math.sin(time * params.speed)) * 0.4);
+        this.mesh.position.y = (1 + Math.sin(time * params.speed)) * 0.1;
+        this.mesh.rotation.y += 0.01 * params.speed;
     };
 }
 
@@ -513,9 +511,7 @@ class DarkPlanet extends Group {
 
     update = () => {
         // Counter clockwise rotation
-        // this.mesh.rotation.y += 0.005;
-        // this.mesh.rotation.y += 0.005 * 20;
-        this.mesh.rotation.y += 0.01 * params.speed;
+        this.mesh.rotation.y += 0.005 * params.speed;
     };
 }
 

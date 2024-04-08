@@ -340,6 +340,8 @@
         class SceneController {
             static init(view) {
                 this.view = view;
+
+                this.animatedOneFramePast = false;
             }
 
             // Public methods
@@ -353,7 +355,11 @@
                     return;
                 }
 
-                this.view.update();
+                if (params.animate || !this.animatedOneFramePast) {
+                    this.view.update();
+
+                    this.animatedOneFramePast = !params.animate;
+                }
             };
 
             static animateIn = () => {
@@ -548,6 +554,7 @@
                         value: getKeyByValue(animateOptions, params.animate),
                         callback: value => {
                             params.animate = animateOptions[value];
+                            motionBlur.saveState = params.animate;
                         }
                     }
                 ];
@@ -733,10 +740,6 @@
                     renderer.setRenderTarget(null);
                     renderer.clear();
                     renderer.render(scene, camera);
-                    return;
-                }
-
-                if (!params.animate) {
                     return;
                 }
 

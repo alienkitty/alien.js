@@ -18,7 +18,7 @@ void main() {
     vNewPosition = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
     vPrevPosition = uPrevProjectionMatrix * uPrevModelViewMatrix * vec4(position, 1.0);
 
-    gl_Position = vPrevPosition;
+    gl_Position = vNewPosition;
 }
 `;
 

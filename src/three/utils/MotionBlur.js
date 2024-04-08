@@ -29,6 +29,7 @@ export class MotionBlur {
 
         this.initialized = false;
         this.enabled = true;
+        this.saveState = true;
 
         // Clear colors
         this.clearColor = new Color(0, 0, 0);
@@ -101,7 +102,9 @@ export class MotionBlur {
             object.material = object.velocityMaterial;
 
             // Current state for the next frame
-            object.prevMatrixWorld.copy(object.matrixWorld);
+            if (this.saveState) {
+                object.prevMatrixWorld.copy(object.matrixWorld);
+            }
         }
     };
 

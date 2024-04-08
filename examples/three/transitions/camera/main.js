@@ -10,6 +10,7 @@ const layers = {
 };
 
 const params = {
+    animate: true,
     speed: 1
 };
 
@@ -687,6 +688,8 @@ class SceneView extends Group {
 class SceneController {
     static init(view) {
         this.view = view;
+
+        this.animatedOneFramePast = false;
     }
 
     static addListeners() {
@@ -725,7 +728,11 @@ class SceneController {
             return;
         }
 
-        this.view.update(time);
+        if (params.animate || !this.animatedOneFramePast) {
+            this.view.update(time);
+
+            this.animatedOneFramePast = !params.animate;
+        }
     };
 
     static animateIn = () => {
@@ -810,6 +817,11 @@ class PanelController {
         const debugOptions = {
             Off: false,
             Debug: true
+        };
+
+        const animateOptions = {
+            Off: false,
+            Animate: true
         };
 
         const items = [
@@ -962,6 +974,15 @@ class PanelController {
                 value: params.speed,
                 callback: value => {
                     params.speed = value;
+                }
+            },
+            {
+                type: 'list',
+                list: animateOptions,
+                value: getKeyByValue(animateOptions, params.animate),
+                callback: value => {
+                    params.animate = animateOptions[value];
+                    motionBlur.saveState = params.animate;
                 }
             }
         ];

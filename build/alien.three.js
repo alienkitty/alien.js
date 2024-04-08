@@ -69555,12 +69555,15 @@ class PoissonDiscBlurMaterial extends RawShaderMaterial {
 
 const vertexShader$h = /* glsl */ `
 in vec3 position;
+in vec3 normal;
 
 uniform mat4 modelViewMatrix;
 uniform mat4 projectionMatrix;
+uniform mat3 normalMatrix;
 
 uniform mat4 uPrevModelViewMatrix;
 uniform mat4 uPrevProjectionMatrix;
+uniform float uInterpolateGeometry;
 
 out vec4 vPrevPosition;
 out vec4 vNewPosition;
@@ -69570,7 +69573,15 @@ void main() {
     vNewPosition = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
     vPrevPosition = uPrevProjectionMatrix * uPrevModelViewMatrix * vec4(position, 1.0);
 
-    gl_Position = vPrevPosition;
+    // The delta between frames
+    vec3 delta = vNewPosition.xyz - vPrevPosition.xyz;
+    vec3 direction = normalize(delta);
+
+    // Stretch along the velocity axes
+    vec3 transformedNormal = normalMatrix * normal;
+    float stretchDot = dot(direction, transformedNormal);
+
+    gl_Position = mix(vNewPosition, vPrevPosition, uInterpolateGeometry * (1.0 - step(0.0, stretchDot)));
 }
 `;
 
@@ -69606,6 +69617,7 @@ class MotionBlurVelocityMaterial extends RawShaderMaterial {
             uniforms: {
                 uPrevModelViewMatrix: { value: new Matrix4() },
                 uPrevProjectionMatrix: { value: new Matrix4() },
+                uInterpolateGeometry: { value: 1 },
                 uIntensity: { value: 1 }
             },
             vertexShader: vertexShader$h,
@@ -71958,20 +71970,28 @@ class Reflector extends Group {
 
 
 class MotionBlur {
-    constructor(channel, {
+    constructor(renderer, scene, camera, channel, {
         width = 256,
         height = 256,
-        smearIntensity = 1
+        interpolateGeometry = 1,
+        smearIntensity = 1,
+        cameraBlur = true
     } = {}) {
+        this.renderer = renderer;
+        this.scene = scene;
+        this.camera = camera;
         this.channel = channel;
 
+        this.interpolateGeometry = interpolateGeometry;
         this.smearIntensity = smearIntensity;
+        this.cameraBlur = cameraBlur;
 
         this.prevProjectionMatrix = new Matrix4();
         this.prevMatrixWorldInverse = new Matrix4();
 
         this.initialized = false;
         this.enabled = true;
+        this.saveState = true;
 
         // Clear colors
         this.clearColor = new Color$1(0, 0, 0);
@@ -71987,46 +72007,46 @@ class MotionBlur {
         this.renderTarget.setSize(width, height);
     }
 
-    update(renderer, scene, camera, renderToScreen) {
+    update(renderTarget = this.renderTarget) {
         if (!this.enabled) {
             this.initialized = false;
             return;
         }
 
         if (!this.initialized) {
-            this.prevProjectionMatrix.copy(camera.projectionMatrix);
-            this.prevMatrixWorldInverse.copy(camera.matrixWorldInverse);
+            this.prevProjectionMatrix.copy(this.camera.projectionMatrix);
+            this.prevMatrixWorldInverse.copy(this.camera.matrixWorldInverse);
             this.initialized = true;
         }
 
         // Renderer state
-        const currentRenderTarget = renderer.getRenderTarget();
-        const currentBackground = scene.background;
-        renderer.getClearColor(this.currentClearColor);
-        const currentClearAlpha = renderer.getClearAlpha();
+        const currentRenderTarget = this.renderer.getRenderTarget();
+        const currentBackground = this.scene.background;
+        this.renderer.getClearColor(this.currentClearColor);
+        const currentClearAlpha = this.renderer.getClearAlpha();
 
         // Velocity pass
-        scene.background = null;
-        renderer.setClearColor(this.clearColor, 1);
+        this.scene.background = null;
+        this.renderer.setClearColor(this.clearColor, 1);
 
-        scene.traverseVisible(this.setVelocityMaterial);
-        renderer.setRenderTarget(renderToScreen ? null : this.renderTarget);
+        this.scene.traverseVisible(this.setVelocityMaterial);
+        this.renderer.setRenderTarget(renderTarget);
 
-        if (renderer.autoClear === false) {
-            renderer.clear();
+        if (this.renderer.autoClear === false) {
+            this.renderer.clear();
         }
 
-        renderer.render(scene, camera);
-        scene.traverseVisible(this.restoreOriginalMaterial);
+        this.renderer.render(this.scene, this.camera);
+        this.scene.traverseVisible(this.restoreOriginalMaterial);
 
         // Camera state for the next frame
-        this.prevProjectionMatrix.copy(camera.projectionMatrix);
-        this.prevMatrixWorldInverse.copy(camera.matrixWorldInverse);
+        this.prevProjectionMatrix.copy(this.camera.projectionMatrix);
+        this.prevMatrixWorldInverse.copy(this.camera.matrixWorldInverse);
 
         // Restore renderer settings
-        scene.background = currentBackground;
-        renderer.setClearColor(this.currentClearColor, currentClearAlpha);
-        renderer.setRenderTarget(currentRenderTarget);
+        this.scene.background = currentBackground;
+        this.renderer.setClearColor(this.currentClearColor, currentClearAlpha);
+        this.renderer.setRenderTarget(currentRenderTarget);
     }
 
     setVelocityMaterial = object => {
@@ -72038,13 +72058,16 @@ class MotionBlur {
                 object.initialized = true;
             }
 
-            object.velocityMaterial.uniforms.uPrevProjectionMatrix.value.copy(this.prevProjectionMatrix);
-            object.velocityMaterial.uniforms.uPrevModelViewMatrix.value.multiplyMatrices(this.prevMatrixWorldInverse, object.prevMatrixWorld);
+            object.velocityMaterial.uniforms.uPrevProjectionMatrix.value.copy(this.cameraBlur ? this.prevProjectionMatrix : this.camera.projectionMatrix);
+            object.velocityMaterial.uniforms.uPrevModelViewMatrix.value.multiplyMatrices(this.cameraBlur ? this.prevMatrixWorldInverse : this.camera.matrixWorldInverse, object.prevMatrixWorld);
+            object.velocityMaterial.uniforms.uInterpolateGeometry.value = this.interpolateGeometry;
             object.velocityMaterial.uniforms.uIntensity.value = this.smearIntensity;
             object.material = object.velocityMaterial;
 
             // Current state for the next frame
-            object.prevMatrixWorld.copy(object.matrixWorld);
+            if (this.saveState) {
+                object.prevMatrixWorld.copy(object.matrixWorld);
+            }
         }
     };
 

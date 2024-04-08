@@ -10,6 +10,7 @@ const layers = {
 };
 
 const params = {
+    animate: true,
     speed: 1
 };
 
@@ -687,6 +688,8 @@ class SceneView extends Group {
 class SceneController {
     static init(view) {
         this.view = view;
+
+        this.animatedOneFramePast = false;
     }
 
     static addListeners() {
@@ -725,7 +728,11 @@ class SceneController {
             return;
         }
 
-        this.view.update(time);
+        if (params.animate || !this.animatedOneFramePast) {
+            this.view.update(time);
+
+            this.animatedOneFramePast = !params.animate;
+        }
     };
 
     static animateIn = () => {
@@ -812,6 +819,11 @@ class PanelController {
             Debug: true
         };
 
+        const animateOptions = {
+            Off: false,
+            Animate: true
+        };
+
         const items = [
             {
                 name: 'FPS'
@@ -829,6 +841,17 @@ class PanelController {
             },
             {
                 type: 'divider'
+            },
+            {
+                type: 'slider',
+                name: 'Interp',
+                min: 0,
+                max: 1,
+                step: 0.01,
+                value: motionBlur.interpolateGeometry,
+                callback: value => {
+                    motionBlur.interpolateGeometry = value;
+                }
             },
             {
                 type: 'slider',
@@ -963,6 +986,15 @@ class PanelController {
                 callback: value => {
                     params.speed = value;
                 }
+            },
+            {
+                type: 'list',
+                list: animateOptions,
+                value: getKeyByValue(animateOptions, params.animate),
+                callback: value => {
+                    params.animate = animateOptions[value];
+                    motionBlur.saveState = params.animate;
+                }
             }
         ];
 
@@ -1048,7 +1080,7 @@ class RenderManager {
         this.renderTargetA.depthBuffer = true;
 
         // Motion blur
-        this.motionBlur = new MotionBlur(layers.velocity);
+        this.motionBlur = new MotionBlur(this.renderer, this.scene, this.camera, layers.velocity);
 
         this.motionBlurCompositeMaterial = new MotionBlurCompositeMaterial(7);
         this.motionBlurCompositeMaterial.uniforms.tVelocity.value = this.motionBlur.renderTarget.texture;
@@ -1142,6 +1174,8 @@ class RenderManager {
         this.renderTargetB.setSize(width, height);
         this.renderTargetC.setSize(width, height);
 
+        this.motionBlur.setSize(width, height);
+
         this.hBlurMaterial.uniforms.uResolution.value.set(width, height);
         this.vBlurMaterial.uniforms.uResolution.value.set(width, height);
 
@@ -1230,11 +1264,11 @@ class RenderManager {
 
         if (this.display === DisplayOptions.Velocity) {
             // Debug pass (render to screen)
-            this.motionBlur.update(renderer, scene, camera, true);
+            this.motionBlur.update(null);
             this.restoreRendererState();
             return;
         } else {
-            this.motionBlur.update(renderer, scene, camera);
+            this.motionBlur.update();
         }
 
         this.motionBlurCompositeMaterial.uniforms.tMap.value = renderTargetA.texture;

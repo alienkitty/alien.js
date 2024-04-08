@@ -11,7 +11,7 @@
     <link rel="stylesheet" href="../assets/css/style.css">
 
     <script type="module">
-        import { AdditiveBlending, BloomCompositeMaterial, Color, ColorManagement, DepthMaterial, DisplayOptions, EnvironmentTextureLoader, Group, HemisphereLight, IcosahedronGeometry, ImageBitmapLoaderThread, LinearSRGBColorSpace, LuminosityMaterial, MathUtils, Mesh, MeshBasicMaterial, MeshMatcapMaterial, MeshStandardMaterial, MotionBlur, MotionBlurCompositeMaterial, NoBlending, NormalMaterial, OrbitControls, OrthographicCamera, PanelItem, PerspectiveCamera, RepeatWrapping, Scene, SceneCompositeDistortionMaterial, ShaderChunk, SphereGeometry, TextureLoader, Thread, UI, UnrealBloomBlurMaterial, Vector2, WebGLRenderTarget, WebGLRenderer, getFullscreenTriangle, getKeyByValue, ticker } from '../../build/alien.three.js';
+        import { AdditiveBlending, BloomCompositeMaterial, Color, ColorManagement, DepthMaterial, DisplayOptions, EnvironmentTextureLoader, Group, HemisphereLight, IcosahedronGeometry, ImageBitmapLoaderThread, LinearSRGBColorSpace, LuminosityMaterial, MathUtils, Mesh, MeshBasicMaterial, MeshMatcapMaterial, MeshStandardMaterial, MotionBlur, MotionBlurCompositeMaterial, NoBlending, NormalMaterial, OrbitControls, OrthographicCamera, PanelItem, PerspectiveCamera, RepeatWrapping, Scene, SceneCompositeDistortionMaterial, SphereGeometry, TextureLoader, Thread, UI, UnrealBloomBlurMaterial, Vector2, WebGLRenderTarget, WebGLRenderer, getFullscreenTriangle, getKeyByValue, ticker } from '../../build/alien.three.js';
 
         const isDebug = /[?&]debug/.test(location.search);
         const isOrbit = /[?&]orbit/.test(location.search);
@@ -23,12 +23,10 @@
 
         const params = {
             animate: true,
-            speed: 40
+            speed: 20
         };
 
-        // https://www.youtube.com/watch?v=uD4izuDMUQA&t=996s
-
-        class LighterBlackHole extends Group {
+        class Ball extends Group {
             constructor() {
                 super();
 
@@ -76,72 +74,42 @@
                 thicknessMap.wrapT = RepeatWrapping;
                 thicknessMap.repeat.set(2, 1);
 
-                const material = new MeshStandardMaterial({
-                    color: new Color().offsetHSL(0, 0, -0.65),
-                    metalness: 0.7,
-                    roughness: 2,
-                    map,
-                    metalnessMap: ormMap,
-                    roughnessMap: ormMap,
-                    aoMap: ormMap,
-                    aoMapIntensity: 1,
-                    normalMap,
-                    normalScale: new Vector2(3, 3),
-                    envMapIntensity: 1.2
-                });
+                let material;
+
+                if (isDebug) {
+                    material = new MeshStandardMaterial({
+                        color: new Color().offsetHSL(0, 0, -0.65),
+                        emissive: new Color(0xff0000),
+                        metalness: 1.7,
+                        roughness: 1.5,
+                        map,
+                        metalnessMap: ormMap,
+                        roughnessMap: ormMap,
+                        aoMap: ormMap,
+                        aoMapIntensity: 1,
+                        normalMap,
+                        normalScale: new Vector2(3, 3),
+                        envMapIntensity: 1.2
+                    });
+                } else {
+                    material = new MeshStandardMaterial({
+                        color: new Color().offsetHSL(0, 0, -0.65),
+                        metalness: 0.7,
+                        roughness: 2,
+                        map,
+                        metalnessMap: ormMap,
+                        roughnessMap: ormMap,
+                        aoMap: ormMap,
+                        aoMapIntensity: 1,
+                        normalMap,
+                        normalScale: new Vector2(3, 3),
+                        envMapIntensity: 1.2
+                    });
+                }
 
                 // Second channel for aoMap and lightMap
                 // https://threejs.org/docs/#api/en/materials/MeshStandardMaterial.aoMap
                 material.aoMap.channel = 1;
-
-                // Based on https://github.com/mrdoob/three.js/blob/dev/examples/jsm/shaders/SubsurfaceScatteringShader.js by daoshengmu
-                // Based on https://gist.github.com/mattdesl/2ee82157a86962347dedb6572142df7c
-
-                const uniforms = {
-                    thicknessMap: { value: thicknessMap },
-                    thicknessDistortion: { value: 0.185 },
-                    thicknessAmbient: { value: 0 },
-                    thicknessAttenuation: { value: 1 },
-                    thicknessPower: { value: 20 },
-                    thicknessScale: { value: 16 }
-                };
-
-                material.onBeforeCompile = shader => {
-                    shader.uniforms = Object.assign(shader.uniforms, uniforms);
-
-                    shader.fragmentShader = shader.fragmentShader.replace(
-                        'void main() {',
-                        /* glsl */ `
-                        uniform sampler2D thicknessMap;
-                        uniform float thicknessDistortion;
-                        uniform float thicknessAmbient;
-                        uniform float thicknessAttenuation;
-                        uniform float thicknessPower;
-                        uniform float thicknessScale;
-
-                        void RE_Direct_Scattering(IncidentLight directLight, vec2 uv, vec3 geometryPosition, vec3 geometryNormal, vec3 geometryViewDir, vec3 geometryClearcoatNormal, PhysicalMaterial material, inout ReflectedLight reflectedLight) {
-                            vec3 thickness = directLight.color * texture(thicknessMap, uv).r;
-                            vec3 scatteringHalf = normalize(directLight.direction + (geometryNormal * thicknessDistortion));
-                            float scatteringDot = pow(saturate(dot(geometryViewDir, -scatteringHalf)), thicknessPower) * thicknessScale;
-                            vec3 scatteringIllu = (scatteringDot + thicknessAmbient) * thickness;
-                            reflectedLight.directDiffuse += material.diffuseColor * directLight.color * scatteringIllu * thicknessAttenuation;
-                        }
-
-                        void main() {
-                        `
-                    );
-
-                    shader.fragmentShader = shader.fragmentShader.replace(
-                        '#include <lights_fragment_begin>',
-                        ShaderChunk.lights_fragment_begin.replaceAll(
-                            'RE_Direct( directLight, geometryPosition, geometryNormal, geometryViewDir, geometryClearcoatNormal, material, reflectedLight );',
-                            /* glsl */ `
-                            RE_Direct( directLight, geometryPosition, geometryNormal, geometryViewDir, geometryClearcoatNormal, material, reflectedLight );
-                            RE_Direct_Scattering(directLight, vAoMapUv, geometryPosition, geometryNormal, geometryViewDir, geometryClearcoatNormal, material, reflectedLight);
-                            `
-                        )
-                    );
-                };
 
                 const mesh = new Mesh(geometry, material);
 
@@ -149,8 +117,6 @@
                 mesh.layers.enable(layers.velocity);
 
                 this.add(mesh);
-
-                this.uniforms = uniforms;
             }
 
             // Public methods
@@ -164,7 +130,7 @@
             ready = () => this.initMesh();
         }
 
-        class VeryHeavyBlackHole extends Group {
+        class Sphere extends Group {
             constructor() {
                 super();
             }
@@ -243,10 +209,10 @@
             }
 
             initViews() {
-                this.sphere = new VeryHeavyBlackHole();
+                this.sphere = new Sphere();
                 this.add(this.sphere);
 
-                this.ball = new LighterBlackHole();
+                this.ball = new Ball();
                 this.add(this.ball);
             }
 
@@ -268,6 +234,8 @@
         class SceneController {
             static init(view) {
                 this.view = view;
+
+                this.animatedOneFramePast = false;
             }
 
             // Public methods
@@ -281,7 +249,11 @@
                     return;
                 }
 
-                this.view.update();
+                if (params.animate || !this.animatedOneFramePast) {
+                    this.view.update();
+
+                    this.animatedOneFramePast = !params.animate;
+                }
             };
 
             static animateIn = () => {
@@ -300,8 +272,6 @@
             }
 
             static initPanel() {
-                // const { sphere } = this.view;
-
                 const { motionBlur, luminosityMaterial, bloomCompositeMaterial, compositeMaterial } = RenderManager;
 
                 const animateOptions = {
@@ -329,6 +299,17 @@
                     },
                     {
                         type: 'slider',
+                        name: 'Interp',
+                        min: 0,
+                        max: 1,
+                        step: 0.01,
+                        value: motionBlur.interpolateGeometry,
+                        callback: value => {
+                            motionBlur.interpolateGeometry = value;
+                        }
+                    },
+                    {
+                        type: 'slider',
                         name: 'Smear',
                         min: 0,
                         max: 4,
@@ -338,64 +319,6 @@
                             motionBlur.smearIntensity = value;
                         }
                     },
-                    /* {
-                        type: 'divider'
-                    },
-                    {
-                        type: 'slider',
-                        name: 'Distort',
-                        min: 0,
-                        max: 1,
-                        step: 0.01,
-                        value: sphere.uniforms.thicknessDistortion.value,
-                        callback: value => {
-                            sphere.uniforms.thicknessDistortion.value = value;
-                        }
-                    },
-                    {
-                        type: 'slider',
-                        name: 'Ambient',
-                        min: 0,
-                        max: 5,
-                        step: 0.05,
-                        value: sphere.uniforms.thicknessAmbient.value,
-                        callback: value => {
-                            sphere.uniforms.thicknessAmbient.value = value;
-                        }
-                    },
-                    {
-                        type: 'slider',
-                        name: 'Atten',
-                        min: 0,
-                        max: 5,
-                        step: 0.05,
-                        value: sphere.uniforms.thicknessAttenuation.value,
-                        callback: value => {
-                            sphere.uniforms.thicknessAttenuation.value = value;
-                        }
-                    },
-                    {
-                        type: 'slider',
-                        name: 'Power',
-                        min: 1,
-                        max: 32,
-                        step: 0.1,
-                        value: sphere.uniforms.thicknessPower.value,
-                        callback: value => {
-                            sphere.uniforms.thicknessPower.value = value;
-                        }
-                    },
-                    {
-                        type: 'slider',
-                        name: 'Scale',
-                        min: 0,
-                        max: 64,
-                        step: 0.1,
-                        value: sphere.uniforms.thicknessScale.value,
-                        callback: value => {
-                            sphere.uniforms.thicknessScale.value = value;
-                        }
-                    }, */
                     {
                         type: 'divider'
                     },
@@ -476,6 +399,7 @@
                         value: getKeyByValue(animateOptions, params.animate),
                         callback: value => {
                             params.animate = animateOptions[value];
+                            motionBlur.saveState = params.animate;
                         }
                     }
                 ];
@@ -552,7 +476,7 @@
                 this.blackoutMaterial = new MeshBasicMaterial({ color: 0x000000 });
 
                 // Motion blur
-                this.motionBlur = new MotionBlur(layers.velocity);
+                this.motionBlur = new MotionBlur(this.renderer, this.scene, this.camera, layers.velocity);
 
                 this.motionBlurCompositeMaterial = new MotionBlurCompositeMaterial(7);
                 this.motionBlurCompositeMaterial.uniforms.tVelocity.value = this.motionBlur.renderTarget.texture;
@@ -627,6 +551,8 @@
                 this.renderTargetA.setSize(width, height);
                 this.renderTargetB.setSize(width, height);
 
+                this.motionBlur.setSize(width, height);
+
                 width = MathUtils.floorPowerOfTwo(width) / 2;
                 height = MathUtils.floorPowerOfTwo(height) / 2;
 
@@ -652,10 +578,6 @@
                     renderer.setRenderTarget(null);
                     renderer.clear();
                     renderer.render(scene, camera);
-                    return;
-                }
-
-                if (!params.animate) {
                     return;
                 }
 
@@ -715,11 +637,11 @@
 
                 if (this.display === DisplayOptions.Velocity) {
                     // Debug pass (render to screen)
-                    this.motionBlur.update(renderer, scene, camera, true);
+                    this.motionBlur.update(null);
                     this.restoreRendererState();
                     return;
                 } else {
-                    this.motionBlur.update(renderer, scene, camera);
+                    this.motionBlur.update();
                 }
 
                 this.motionBlurCompositeMaterial.uniforms.tMap.value = renderTargetA.texture;

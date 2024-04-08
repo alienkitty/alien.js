@@ -1163,6 +1163,8 @@ class RenderManager {
         this.renderTargetB.setSize(width, height);
         this.renderTargetC.setSize(width, height);
 
+        this.motionBlur.setSize(width, height);
+
         this.hBlurMaterial.uniforms.uResolution.value.set(width, height);
         this.vBlurMaterial.uniforms.uResolution.value.set(width, height);
 

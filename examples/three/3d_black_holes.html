@@ -937,7 +937,7 @@
                 this.camera = new PerspectiveCamera(30);
                 this.camera.near = 0.5;
                 this.camera.far = 40;
-                this.camera.position.z = 8;
+                this.camera.position.z = 10;
                 this.camera.lookAt(this.scene.position);
 
                 // Global geometries
@@ -994,9 +994,9 @@
                 this.camera.updateProjectionMatrix();
 
                 if (width < height) {
-                    this.camera.position.z = 10;
+                    this.camera.position.z = 14;
                 } else {
-                    this.camera.position.z = 8;
+                    this.camera.position.z = 10;
                 }
 
                 width = Math.round(width * dpr);

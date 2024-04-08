@@ -1048,7 +1048,7 @@ class RenderManager {
         this.renderTargetA.depthBuffer = true;
 
         // Motion blur
-        this.motionBlur = new MotionBlur(layers.velocity);
+        this.motionBlur = new MotionBlur(this.renderer, this.scene, this.camera, layers.velocity);
 
         this.motionBlurCompositeMaterial = new MotionBlurCompositeMaterial(7);
         this.motionBlurCompositeMaterial.uniforms.tVelocity.value = this.motionBlur.renderTarget.texture;
@@ -1230,11 +1230,11 @@ class RenderManager {
 
         if (this.display === DisplayOptions.Velocity) {
             // Debug pass (render to screen)
-            this.motionBlur.update(renderer, scene, camera, true);
+            this.motionBlur.update(true);
             this.restoreRendererState();
             return;
         } else {
-            this.motionBlur.update(renderer, scene, camera);
+            this.motionBlur.update();
         }
 
         this.motionBlurCompositeMaterial.uniforms.tMap.value = renderTargetA.texture;

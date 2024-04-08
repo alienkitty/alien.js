@@ -627,7 +627,9 @@
                 this.blackoutMaterial = new MeshBasicMaterial({ color: this.scene.background });
 
                 // Motion blur
-                this.motionBlur = new MotionBlur(layers.velocity);
+                this.motionBlur = new MotionBlur(this.renderer, this.scene, this.camera, layers.velocity, {
+                    cameraBlur: false
+                });
 
                 this.motionBlurCompositeMaterial = new MotionBlurCompositeMaterial(30);
                 this.motionBlurCompositeMaterial.uniforms.tVelocity.value = this.motionBlur.renderTarget.texture;
@@ -814,11 +816,11 @@
 
                 if (this.display === DisplayOptions.Velocity) {
                     // Debug pass (render to screen)
-                    this.motionBlur.update(renderer, scene, camera, true);
+                    this.motionBlur.update(true);
                     this.restoreRendererState();
                     return;
                 } else {
-                    this.motionBlur.update(renderer, scene, camera);
+                    this.motionBlur.update();
                 }
 
                 // Copy pass

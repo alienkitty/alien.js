@@ -1230,7 +1230,7 @@ class RenderManager {
 
         if (this.display === DisplayOptions.Velocity) {
             // Debug pass (render to screen)
-            this.motionBlur.update(true);
+            this.motionBlur.update(null);
             this.restoreRendererState();
             return;
         } else {

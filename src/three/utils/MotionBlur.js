@@ -44,7 +44,7 @@ export class MotionBlur {
         this.renderTarget.setSize(width, height);
     }
 
-    update(renderToScreen) {
+    update(renderTarget = this.renderTarget) {
         if (!this.enabled) {
             this.initialized = false;
             return;
@@ -67,7 +67,7 @@ export class MotionBlur {
         this.renderer.setClearColor(this.clearColor, 1);
 
         this.scene.traverseVisible(this.setVelocityMaterial);
-        this.renderer.setRenderTarget(renderToScreen ? null : this.renderTarget);
+        this.renderer.setRenderTarget(renderTarget);
 
         if (this.renderer.autoClear === false) {
             this.renderer.clear();

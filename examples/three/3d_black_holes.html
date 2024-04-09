@@ -11,7 +11,7 @@
     <link rel="stylesheet" href="../assets/css/style.css">
 
     <script type="module">
-        import { AdditiveBlending, BloomCompositeMaterial, Color, ColorManagement, CopyMaterial, DepthMaterial, DisplayOptions, EnvironmentTextureLoader, GLSL3, Group, IcosahedronGeometry, ImageBitmapLoaderThread, LinearSRGBColorSpace, LuminosityMaterial, MathUtils, Mesh, MeshBasicMaterial, MeshMatcapMaterial, MeshStandardMaterial, MotionBlur, NoBlending, NormalMaterial, OrbitControls, OrthographicCamera, PanelItem, PerspectiveCamera, RawShaderMaterial, RepeatWrapping, Scene, SceneCompositeDistortionMaterial, SphereGeometry, TextureLoader, Thread, UI, UnrealBloomBlurMaterial, Vector2, WebGLRenderTarget, WebGLRenderer, getFullscreenTriangle, getKeyByValue, ticker } from '../../build/alien.three.js';
+        import { AdditiveBlending, BloomCompositeMaterial, Color, ColorManagement, CopyMaterial, DepthMaterial, DisplayOptions, EnvironmentTextureLoader, GLSL3, Group, IcosahedronGeometry, ImageBitmapLoaderThread, LinearSRGBColorSpace, LuminosityMaterial, MathUtils, Mesh, MeshBasicMaterial, MeshMatcapMaterial, MeshStandardMaterial, MotionBlur, NearestFilter, NoBlending, NormalMaterial, OrbitControls, OrthographicCamera, PanelItem, PerspectiveCamera, RawShaderMaterial, RepeatWrapping, Scene, SceneCompositeDistortionMaterial, SphereGeometry, TextureLoader, Thread, UI, UnrealBloomBlurMaterial, Vector2, WebGLRenderTarget, WebGLRenderer, getFullscreenTriangle, getKeyByValue, ticker } from '../../build/alien.three.js';
 
         const isDebug = /[?&]debug/.test(location.search);
         const isOrbit = /[?&]orbit/.test(location.search);
@@ -29,6 +29,15 @@
 
         class MotionBlurCompositeMaterial extends RawShaderMaterial {
             constructor(samples) {
+                const { getTexture } = WorldController;
+
+                const texture = getTexture('../assets/textures/blue_noise.png');
+                texture.wrapS = RepeatWrapping;
+                texture.wrapT = RepeatWrapping;
+                texture.magFilter = NearestFilter;
+                texture.minFilter = NearestFilter;
+                texture.generateMipmaps = false;
+
                 super({
                     glslVersion: GLSL3,
                     defines: {
@@ -36,7 +45,10 @@
                     },
                     uniforms: {
                         tMap: { value: null },
-                        tVelocity: { value: null }
+                        tVelocity: { value: null },
+                        tBlueNoise: { value: texture },
+                        uBlueNoiseResolution: { value: new Vector2(256, 256) },
+                        uJitterIntensity: { value: 1 }
                     },
                     vertexShader: /* glsl */ `
                         in vec3 position;
@@ -55,6 +67,9 @@
 
                         uniform sampler2D tMap;
                         uniform sampler2D tVelocity;
+                        uniform sampler2D tBlueNoise;
+                        uniform vec2 uBlueNoiseResolution;
+                        uniform float uJitterIntensity;
 
                         in vec2 vUv;
 
@@ -67,10 +82,13 @@
                                 discard;
                             }
 
+                            float jitterValue = texture(tBlueNoise, gl_FragCoord.xy / uBlueNoiseResolution).r;
+                            vec2 jitterOffset = uJitterIntensity * vel * vec2(jitterValue) / float(SAMPLES);
+
                             vec4 result;
 
-                            vec2 startUv = clamp(vUv - vel * 0.5, 0.0, 1.0);
-                            vec2 endUv = clamp(vUv + vel * 0.5, 0.0, 1.0);
+                            vec2 startUv = clamp(vUv - vel * 0.5 + jitterOffset, 0.0, 1.0);
+                            vec2 endUv = clamp(vUv + vel * 0.5 + jitterOffset, 0.0, 1.0);
 
                             for (int i = 0; i < SAMPLES; i++) {
                                 vec2 sampleUv = mix(startUv, endUv, float(i) / float(SAMPLES));
@@ -556,7 +574,7 @@
                     cameraBlur: false
                 });
 
-                this.motionBlurCompositeMaterial = new MotionBlurCompositeMaterial(30);
+                this.motionBlurCompositeMaterial = new MotionBlurCompositeMaterial(7);
                 this.motionBlurCompositeMaterial.uniforms.tVelocity.value = this.motionBlur.renderTarget.texture;
 
                 // Luminosity high pass material

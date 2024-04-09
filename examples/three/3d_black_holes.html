@@ -28,7 +28,7 @@
         };
 
         class MotionBlurCompositeMaterial extends RawShaderMaterial {
-            constructor(samples) {
+            constructor() {
                 const { getTexture } = WorldController;
 
                 const texture = getTexture('../assets/textures/blue_noise.png');
@@ -41,7 +41,7 @@
                 super({
                     glslVersion: GLSL3,
                     defines: {
-                        SAMPLES: samples
+                        SAMPLES: 7
                     },
                     uniforms: {
                         tMap: { value: null },
@@ -574,7 +574,7 @@
                     cameraBlur: false
                 });
 
-                this.motionBlurCompositeMaterial = new MotionBlurCompositeMaterial(7);
+                this.motionBlurCompositeMaterial = new MotionBlurCompositeMaterial();
                 this.motionBlurCompositeMaterial.uniforms.tVelocity.value = this.motionBlur.renderTarget.texture;
 
                 // Luminosity high pass material

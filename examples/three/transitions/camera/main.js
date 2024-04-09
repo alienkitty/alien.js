@@ -185,7 +185,7 @@ class BlurMaterial extends RawShaderMaterial {
                     FragColor = blur(tMap, vUv, uResolution, 20.0 * uBluriness * t * rot2d(uDirection, rnd));
 
                     if (uDebug) {
-                        FragColor.rgb = mix(FragColor.rgb, mix(FragColor.rgb, vec3(1), 0.5), vec3(uBluriness * t));
+                        FragColor.rgb = mix(FragColor.rgb, mix(FragColor.rgb, vec3(1), 0.5), uBluriness * t);
                     }
                 }
             `,

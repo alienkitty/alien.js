@@ -438,7 +438,7 @@
             }
 
             static initRenderer() {
-                const { screenTriangle, getTexture } = WorldController;
+                const { screenTriangle, textureLoader, getTexture } = WorldController;
 
                 // Manually clear
                 this.renderer.autoClear = false;
@@ -478,7 +478,9 @@
                 // Motion blur
                 this.motionBlur = new MotionBlur(this.renderer, this.scene, this.camera, layers.velocity);
 
-                this.motionBlurCompositeMaterial = new MotionBlurCompositeMaterial(7);
+                this.motionBlurCompositeMaterial = new MotionBlurCompositeMaterial(textureLoader, {
+                    blueNoisePath: '../assets/textures/blue_noise.png'
+                });
                 this.motionBlurCompositeMaterial.uniforms.tVelocity.value = this.motionBlur.renderTarget.texture;
 
                 // Luminosity high pass material

@@ -185,7 +185,7 @@ class BlurMaterial extends RawShaderMaterial {
                     FragColor = blur(tMap, vUv, uResolution, 20.0 * uBluriness * t * rot2d(uDirection, rnd));
 
                     if (uDebug) {
-                        FragColor.rgb = mix(FragColor.rgb, mix(FragColor.rgb, vec3(1), 0.5), vec3(uBluriness * t));
+                        FragColor.rgb = mix(FragColor.rgb, mix(FragColor.rgb, vec3(1), 0.5), uBluriness * t);
                     }
                 }
             `,
@@ -1044,7 +1044,7 @@ class RenderManager {
     }
 
     static initRenderer() {
-        const { screenTriangle, time, getTexture } = WorldController;
+        const { screenTriangle, textureLoader, time, getTexture } = WorldController;
 
         // Manually clear
         this.renderer.autoClear = false;
@@ -1080,9 +1080,11 @@ class RenderManager {
         this.renderTargetA.depthBuffer = true;
 
         // Motion blur
-        this.motionBlur = new MotionBlur(this.renderer, this.scene, this.camera, layers.velocity);
+        this.motionBlur = new MotionBlur(this.renderer, this.scene, this.camera, layers.velocity, {
+            interpolateGeometry: 0
+        });
 
-        this.motionBlurCompositeMaterial = new MotionBlurCompositeMaterial(7);
+        this.motionBlurCompositeMaterial = new MotionBlurCompositeMaterial(textureLoader);
         this.motionBlurCompositeMaterial.uniforms.tVelocity.value = this.motionBlur.renderTarget.texture;
 
         // Gaussian blur materials
@@ -1603,9 +1605,11 @@ class WorldController {
 
     static initLoaders() {
         this.textureLoader = new TextureLoader();
+        this.textureLoader.cache = true;
         this.textureLoader.setPath('/examples/');
 
         this.environmentLoader = new EnvironmentTextureLoader(this.renderer);
+        this.environmentLoader.cache = true;
         this.environmentLoader.setPath('/examples/');
     }
 

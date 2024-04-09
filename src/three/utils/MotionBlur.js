@@ -13,7 +13,7 @@ export class MotionBlur {
     constructor(renderer, scene, camera, channel, {
         width = 256,
         height = 256,
-        interpolateGeometry = 0,
+        interpolateGeometry = 1,
         smearIntensity = 1,
         cameraBlur = true
     } = {}) {

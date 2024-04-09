@@ -3,9 +3,11 @@
 
 export const vertexShader = /* glsl */ `
 in vec3 position;
+in vec3 normal;
 
 uniform mat4 modelViewMatrix;
 uniform mat4 projectionMatrix;
+uniform mat3 normalMatrix;
 
 uniform mat4 uPrevModelViewMatrix;
 uniform mat4 uPrevProjectionMatrix;
@@ -19,7 +21,15 @@ void main() {
     vNewPosition = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
     vPrevPosition = uPrevProjectionMatrix * uPrevModelViewMatrix * vec4(position, 1.0);
 
-    gl_Position = mix(vNewPosition, vPrevPosition, uInterpolateGeometry);
+    // The delta between frames
+    vec3 delta = vNewPosition.xyz - vPrevPosition.xyz;
+    vec3 direction = normalize(delta);
+
+    // Stretch along the velocity axes
+    vec3 transformedNormal = normalMatrix * normal;
+    float stretchDot = dot(direction, transformedNormal);
+
+    gl_Position = mix(vNewPosition, vPrevPosition, uInterpolateGeometry * (1.0 - step(0.0, stretchDot)));
 }
 `;
 

@@ -9,6 +9,7 @@ uniform mat4 projectionMatrix;
 
 uniform mat4 uPrevModelViewMatrix;
 uniform mat4 uPrevProjectionMatrix;
+uniform float uInterpolateGeometry;
 
 out vec4 vPrevPosition;
 out vec4 vNewPosition;
@@ -18,7 +19,7 @@ void main() {
     vNewPosition = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
     vPrevPosition = uPrevProjectionMatrix * uPrevModelViewMatrix * vec4(position, 1.0);
 
-    gl_Position = vNewPosition;
+    gl_Position = mix(vNewPosition, vPrevPosition, uInterpolateGeometry);
 }
 `;
 

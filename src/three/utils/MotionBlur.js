@@ -13,6 +13,7 @@ export class MotionBlur {
     constructor(renderer, scene, camera, channel, {
         width = 256,
         height = 256,
+        interpolateGeometry = 0,
         smearIntensity = 1,
         cameraBlur = true
     } = {}) {
@@ -21,6 +22,7 @@ export class MotionBlur {
         this.camera = camera;
         this.channel = channel;
 
+        this.interpolateGeometry = interpolateGeometry;
         this.smearIntensity = smearIntensity;
         this.cameraBlur = cameraBlur;
 
@@ -98,6 +100,7 @@ export class MotionBlur {
 
             object.velocityMaterial.uniforms.uPrevProjectionMatrix.value.copy(this.cameraBlur ? this.prevProjectionMatrix : this.camera.projectionMatrix);
             object.velocityMaterial.uniforms.uPrevModelViewMatrix.value.multiplyMatrices(this.cameraBlur ? this.prevMatrixWorldInverse : this.camera.matrixWorldInverse, object.prevMatrixWorld);
+            object.velocityMaterial.uniforms.uInterpolateGeometry.value = this.interpolateGeometry;
             object.velocityMaterial.uniforms.uIntensity.value = this.smearIntensity;
             object.material = object.velocityMaterial;
 

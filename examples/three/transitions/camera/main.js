@@ -844,6 +844,17 @@ class PanelController {
             },
             {
                 type: 'slider',
+                name: 'Interp',
+                min: 0,
+                max: 1,
+                step: 0.01,
+                value: motionBlur.interpolateGeometry,
+                callback: value => {
+                    motionBlur.interpolateGeometry = value;
+                }
+            },
+            {
+                type: 'slider',
                 name: 'Smear',
                 min: 0,
                 max: 4,

@@ -24,8 +24,7 @@ export class MotionBlurCompositeMaterial extends RawShaderMaterial {
                 tMap: { value: null },
                 tVelocity: { value: null },
                 tBlueNoise: { value: texture },
-                uBlueNoiseResolution: { value: blueNoiseResolution },
-                uJitterIntensity: { value: 1 }
+                uBlueNoiseResolution: { value: blueNoiseResolution }
             },
             vertexShader,
             fragmentShader,

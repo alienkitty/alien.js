@@ -47,8 +47,7 @@
                         tMap: { value: null },
                         tVelocity: { value: null },
                         tBlueNoise: { value: texture },
-                        uBlueNoiseResolution: { value: new Vector2(256, 256) },
-                        uJitterIntensity: { value: 1 }
+                        uBlueNoiseResolution: { value: new Vector2(256, 256) }
                     },
                     vertexShader: /* glsl */ `
                         in vec3 position;
@@ -69,7 +68,6 @@
                         uniform sampler2D tVelocity;
                         uniform sampler2D tBlueNoise;
                         uniform vec2 uBlueNoiseResolution;
-                        uniform float uJitterIntensity;
 
                         in vec2 vUv;
 
@@ -83,7 +81,7 @@
                             }
 
                             float jitterValue = texture(tBlueNoise, gl_FragCoord.xy / uBlueNoiseResolution).r;
-                            vec2 jitterOffset = uJitterIntensity * vel * vec2(jitterValue) / float(SAMPLES);
+                            vec2 jitterOffset = vel * vec2(jitterValue) / float(SAMPLES);
 
                             vec4 result;
 

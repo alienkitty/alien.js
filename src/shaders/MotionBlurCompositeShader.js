@@ -21,7 +21,6 @@ uniform sampler2D tMap;
 uniform sampler2D tVelocity;
 uniform sampler2D tBlueNoise;
 uniform vec2 uBlueNoiseResolution;
-uniform float uJitterIntensity;
 
 in vec2 vUv;
 
@@ -31,7 +30,7 @@ void main() {
     vec2 vel = texture(tVelocity, vUv).xy;
 
     float jitterValue = texture(tBlueNoise, gl_FragCoord.xy / uBlueNoiseResolution).r;
-    vec2 jitterOffset = uJitterIntensity * vel * vec2(jitterValue) / float(SAMPLES);
+    vec2 jitterOffset = vel * vec2(jitterValue) / float(SAMPLES);
 
     vec4 result;
 

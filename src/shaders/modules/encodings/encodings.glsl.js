@@ -1,5 +1,5 @@
-// Based on https://github.com/mrdoob/three.js/blob/dev/examples/jsm/shaders/ACESFilmicToneMappingShader.js by WestLangley
-// Based on https://oframe.github.io/ogl/examples/?src=pbr.html by gordonnl
+// From https://github.com/mrdoob/three.js/blob/dev/examples/jsm/shaders/ACESFilmicToneMappingShader.js by WestLangley
+// From https://oframe.github.io/ogl/examples/?src=pbr.html by gordonnl
 
 export default /* glsl */ `
 vec3 RRTAndODTFit(vec3 v) {

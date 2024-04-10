@@ -702,7 +702,8 @@
 
                 // Fluid simulation
                 this.fluid = new Fluid(this.renderer, {
-                    curlStrength: 0
+                    iterations: 0,
+                    radius: 0.01
                 });
                 this.fluid.splatMaterial.uniforms.uAspect = aspect;
 

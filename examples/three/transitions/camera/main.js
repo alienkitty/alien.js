@@ -1229,8 +1229,8 @@ class RenderManager {
         scene.background = null;
         renderer.setClearColor(this.clearColor, 1);
 
+        // Debug override material passes (render to screen)
         if (this.display === DisplayOptions.Depth) {
-            // Debug pass (render to screen)
             scene.overrideMaterial = this.depthMaterial;
             renderer.setRenderTarget(null);
             renderer.clear();

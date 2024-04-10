@@ -269,6 +269,9 @@ export class Fluid {
         this.iterations = iterations;
         this.densityDissipation = densityDissipation;
         this.velocityDissipation = velocityDissipation;
+        this.pressureDissipation = pressureDissipation;
+        this.curlStrength = curlStrength;
+        this.radius = radius;
 
         this.splats = [];
 
@@ -337,7 +340,7 @@ export class Fluid {
                 uAspect: { value: 1 },
                 color: { value: new Color() },
                 point: { value: new Vector2() },
-                radius: { value: radius / 100 }
+                radius: { value: 1 }
             },
             vertexShader: baseVertexShader,
             fragmentShader: splatShader,
@@ -447,6 +450,9 @@ export class Fluid {
         const iterations = this.iterations;
         const densityDissipation = this.densityDissipation;
         const velocityDissipation = this.velocityDissipation;
+        const pressureDissipation = this.pressureDissipation;
+        const curlStrength = this.curlStrength;
+        const radius = this.radius;
 
         // Renderer state
         const currentRenderTarget = renderer.getRenderTarget();
@@ -460,6 +466,7 @@ export class Fluid {
             this.splatMaterial.uniforms.uTarget.value = this.velocity.read.texture;
             this.splatMaterial.uniforms.point.value.set(x, y);
             this.splatMaterial.uniforms.color.value.set(dx, dy, 1);
+            this.splatMaterial.uniforms.radius.value = radius / 100;
             this.screen.material = this.splatMaterial;
             renderer.setRenderTarget(this.velocity.write);
             renderer.render(this.screen, this.screenCamera);
@@ -480,6 +487,7 @@ export class Fluid {
 
         this.vorticityMaterial.uniforms.uVelocity.value = this.velocity.read.texture;
         this.vorticityMaterial.uniforms.uCurl.value = this.curl.texture;
+        this.vorticityMaterial.uniforms.curl.value = curlStrength;
         this.screen.material = this.vorticityMaterial;
         renderer.setRenderTarget(this.velocity.write);
         renderer.render(this.screen, this.screenCamera);
@@ -491,6 +499,7 @@ export class Fluid {
         renderer.render(this.screen, this.screenCamera);
 
         this.clearMaterial.uniforms.uTexture.value = this.pressure.read.texture;
+        this.clearMaterial.uniforms.value.value = pressureDissipation;
         this.screen.material = this.clearMaterial;
         renderer.setRenderTarget(this.pressure.write);
         renderer.render(this.screen, this.screenCamera);

@@ -11,7 +11,7 @@
     <link rel="stylesheet" href="../assets/css/style.css">
 
     <script type="module">
-        import { AdditiveBlending, BloomCompositeMaterial, Color, ColorManagement, CopyMaterial, DepthMaterial, DisplayOptions, EnvironmentTextureLoader, GLSL3, Group, IcosahedronGeometry, ImageBitmapLoaderThread, LinearSRGBColorSpace, LuminosityMaterial, MathUtils, Mesh, MeshBasicMaterial, MeshMatcapMaterial, MeshStandardMaterial, MotionBlur, NearestFilter, NoBlending, NormalMaterial, OrbitControls, OrthographicCamera, PanelItem, PerspectiveCamera, RawShaderMaterial, RepeatWrapping, Scene, SceneCompositeDistortionMaterial, SphereGeometry, TextureLoader, Thread, UI, UnrealBloomBlurMaterial, Vector2, WebGLRenderTarget, WebGLRenderer, getFullscreenTriangle, getKeyByValue, ticker } from '../../build/alien.three.js';
+        import { AdditiveBlending, BloomCompositeMaterial, Color, ColorManagement, CopyMaterial, DepthMaterial, DisplayOptions, EnvironmentTextureLoader, Fluid, GLSL3, Group, IcosahedronGeometry, ImageBitmapLoaderThread, LinearSRGBColorSpace, LuminosityMaterial, MathUtils, Mesh, MeshBasicMaterial, MeshMatcapMaterial, MeshStandardMaterial, MotionBlur, NearestFilter, NoBlending, NormalMaterial, OrbitControls, OrthographicCamera, PanelItem, PerspectiveCamera, RawShaderMaterial, RepeatWrapping, Scene, SphereGeometry, TextureLoader, Thread, UI, UnrealBloomBlurMaterial, Vector2, WebGLRenderTarget, WebGLRenderer, getFullscreenTriangle, getKeyByValue, ticker } from '../../build/alien.three.js';
 
         const isDebug = /[?&]debug/.test(location.search);
         const isOrbit = /[?&]orbit/.test(location.search);
@@ -26,6 +26,67 @@
             animate: true,
             speed: 40
         };
+
+        import rgbshift from '../../src/shaders/modules/rgbshift/rgbshift.glsl.js';
+
+        // Based on https://github.com/PavelDoGreat/WebGL-Fluid-Simulation
+        // Based on https://oframe.github.io/ogl/examples/?src=post-fluid-distortion.html by gordonnl
+
+        class CompositeMaterial extends RawShaderMaterial {
+            constructor() {
+                super({
+                    glslVersion: GLSL3,
+                    uniforms: {
+                        tScene: { value: null },
+                        tBloom: { value: null },
+                        tFluid: { value: null },
+                        uBloomDistortion: { value: 1.5 }
+                    },
+                    vertexShader: /* glsl */ `
+                        in vec3 position;
+                        in vec2 uv;
+
+                        out vec2 vUv;
+
+                        void main() {
+                            vUv = uv;
+
+                            gl_Position = vec4(position, 1.0);
+                        }
+                    `,
+                    fragmentShader: /* glsl */ `
+                        precision highp float;
+
+                        uniform sampler2D tScene;
+                        uniform sampler2D tBloom;
+                        uniform sampler2D tFluid;
+                        uniform float uBloomDistortion;
+
+                        in vec2 vUv;
+
+                        out vec4 FragColor;
+
+                        ${rgbshift}
+
+                        void main() {
+                            vec3 fluid = texture(tFluid, vUv).rgb;
+                            vec2 uv = vUv - fluid.rg * 0.0002;
+
+                            FragColor = texture(tScene, uv);
+
+                            vec2 dir = 0.5 - vUv;
+                            float angle = atan(dir.y, dir.x);
+                            float amount = 0.001 * uBloomDistortion;
+
+                            FragColor.rgb += getRGB(tBloom, uv, angle, amount).rgb;
+                        }
+                    `,
+                    blending: NoBlending,
+                    depthTest: false,
+                    depthWrite: false
+                });
+            }
+        }
 
         class MotionBlurCompositeMaterial extends RawShaderMaterial {
             constructor() {
@@ -47,8 +108,7 @@
                         tMap: { value: null },
                         tVelocity: { value: null },
                         tBlueNoise: { value: texture },
-                        uBlueNoiseResolution: { value: new Vector2(256, 256) },
-                        uJitterIntensity: { value: 1 }
+                        uBlueNoiseResolution: { value: new Vector2(256, 256) }
                     },
                     vertexShader: /* glsl */ `
                         in vec3 position;
@@ -69,7 +129,6 @@
                         uniform sampler2D tVelocity;
                         uniform sampler2D tBlueNoise;
                         uniform vec2 uBlueNoiseResolution;
-                        uniform float uJitterIntensity;
 
                         in vec2 vUv;
 
@@ -83,7 +142,7 @@
                             }
 
                             float jitterValue = texture(tBlueNoise, gl_FragCoord.xy / uBlueNoiseResolution).r;
-                            vec2 jitterOffset = uJitterIntensity * vel * vec2(jitterValue) / float(SAMPLES);
+                            vec2 jitterOffset = vel * vec2(jitterValue) / float(SAMPLES);
 
                             vec4 result;
 
@@ -170,7 +229,7 @@
                         color: new Color().offsetHSL(0, 0, -0.65),
                         emissive: new Color(0xff0000),
                         metalness: 1.7,
-                        roughness: 1.5,
+                        roughness: 1,
                         map,
                         metalnessMap: ormMap,
                         roughnessMap: ormMap,
@@ -184,7 +243,7 @@
                     material = new MeshStandardMaterial({
                         color: new Color(0x000000),
                         metalness: 1.7,
-                        roughness: 1.5,
+                        roughness: 1,
                         map,
                         metalnessMap: ormMap,
                         roughnessMap: ormMap,
@@ -362,7 +421,7 @@
             }
 
             static initPanel() {
-                const { motionBlur, luminosityMaterial, bloomCompositeMaterial, compositeMaterial } = RenderManager;
+                const { motionBlur, fluid, luminosityMaterial, bloomCompositeMaterial, compositeMaterial } = RenderManager;
 
                 const animateOptions = {
                     Off: false,
@@ -407,6 +466,75 @@
                         value: motionBlur.smearIntensity,
                         callback: value => {
                             motionBlur.smearIntensity = value;
+                        }
+                    },
+                    {
+                        type: 'divider'
+                    },
+                    {
+                        type: 'slider',
+                        name: 'Iterate',
+                        min: 0,
+                        max: 10,
+                        step: 1,
+                        value: fluid.iterations,
+                        callback: value => {
+                            fluid.iterations = value;
+                        }
+                    },
+                    {
+                        type: 'slider',
+                        name: 'Density',
+                        min: 0,
+                        max: 1,
+                        step: 0.01,
+                        value: fluid.densityDissipation,
+                        callback: value => {
+                            fluid.densityDissipation = value;
+                        }
+                    },
+                    {
+                        type: 'slider',
+                        name: 'Velocity',
+                        min: 0,
+                        max: 1,
+                        step: 0.01,
+                        value: fluid.velocityDissipation,
+                        callback: value => {
+                            fluid.velocityDissipation = value;
+                        }
+                    },
+                    {
+                        type: 'slider',
+                        name: 'Pressure',
+                        min: 0,
+                        max: 1,
+                        step: 0.01,
+                        value: fluid.pressureDissipation,
+                        callback: value => {
+                            fluid.pressureDissipation = value;
+                        }
+                    },
+                    {
+                        type: 'slider',
+                        name: 'Curl',
+                        min: 0,
+                        max: 50,
+                        step: 0.1,
+                        value: fluid.curlStrength,
+                        callback: value => {
+                            fluid.curlStrength = value;
+                        }
+                    },
+                    {
+                        type: 'slider',
+                        name: 'Radius',
+                        min: 0,
+                        max: 1,
+                        step: 0.01,
+                        value: fluid.radius,
+                        callback: value => {
+                            fluid.radius = value;
                         }
                     },
                     {
@@ -512,8 +640,11 @@
                 this.scene = scene;
                 this.camera = camera;
 
-                // Debug
-                this.display = DisplayOptions.Default;
+                this.width = 1;
+                this.height = 1;
+
+                // Fluid simulation
+                this.lastMouse = new Vector2();
 
                 // Bloom
                 this.luminosityThreshold = 0.1;
@@ -522,13 +653,18 @@
                 this.bloomRadius = 1;
                 this.bloomDistortion = 1.5;
 
+                // Debug
+                this.display = DisplayOptions.Default;
+
                 this.enabled = true;
 
                 this.initRenderer();
+
+                this.addListeners();
             }
 
             static initRenderer() {
-                const { screenTriangle, getTexture } = WorldController;
+                const { screenTriangle, aspect, getTexture } = WorldController;
 
                 // Manually clear
                 this.renderer.autoClear = false;
@@ -563,6 +699,13 @@
 
                 this.renderTargetA.depthBuffer = true;
                 this.renderTargetC.depthBuffer = true;
+
+                // Fluid simulation
+                this.fluid = new Fluid(this.renderer, {
+                    iterations: 0,
+                    radius: 0.01
+                });
+                this.fluid.splatMaterial.uniforms.uAspect = aspect;
 
                 // Occlusion material
                 // this.blackoutMaterial = new MeshBasicMaterial({ color: 0x000000 });
@@ -601,7 +744,8 @@
                 this.bloomCompositeMaterial.uniforms.uBloomFactors.value = this.bloomFactors();
 
                 // Composite material
-                this.compositeMaterial = new SceneCompositeDistortionMaterial({ dithering: true });
+                this.compositeMaterial = new CompositeMaterial();
+                this.compositeMaterial.uniforms.tFluid = this.fluid.uniform;
                 this.compositeMaterial.uniforms.uBloomDistortion.value = this.bloomDistortion;
 
                 // Debug materials
@@ -636,9 +780,62 @@
                 this.renderer.setClearColor(this.currentClearColor, this.currentClearAlpha);
             }
 
+            static addListeners() {
+                window.addEventListener('pointerdown', this.onPointerDown);
+                window.addEventListener('pointermove', this.onPointerMove);
+                window.addEventListener('pointerup', this.onPointerUp);
+            }
+
+            // Event handlers
+
+            static onPointerDown = e => {
+                this.onPointerMove(e);
+            };
+
+            static onPointerMove = ({ clientX, clientY }) => {
+                if (!this.enabled) {
+                    return;
+                }
+
+                const event = {
+                    x: clientX,
+                    y: clientY
+                };
+
+                // First input
+                if (!this.lastMouse.isInit) {
+                    this.lastMouse.isInit = true;
+                    this.lastMouse.copy(event);
+                }
+
+                const deltaX = event.x - this.lastMouse.x;
+                const deltaY = event.y - this.lastMouse.y;
+
+                this.lastMouse.copy(event);
+
+                // Add if the mouse is moving
+                if (Math.abs(deltaX) || Math.abs(deltaY)) {
+                    // Update fluid simulation inputs
+                    this.fluid.splats.push({
+                        // Get mouse value in 0 to 1 range, with Y flipped
+                        x: event.x / this.width,
+                        y: 1 - event.y / this.height,
+                        dx: deltaX * 5,
+                        dy: deltaY * -5
+                    });
+                }
+            };
+
+            static onPointerUp = e => {
+                this.onPointerMove(e);
+            };
+
             // Public methods
 
             static resize = (width, height, dpr) => {
+                this.width = width;
+                this.height = height;
+
                 this.renderer.setPixelRatio(dpr);
                 this.renderer.setSize(width, height);
 
@@ -689,6 +886,9 @@
                 // Renderer state
                 this.rendererState();
 
+                // Perform all of the fluid simulation renders
+                this.fluid.update();
+
                 // Scene layer
                 camera.layers.set(layers.default);
 
@@ -719,8 +919,8 @@
 
                 camera.layers.set(layers.default);
 
+                // Debug override material passes (render to screen)
                 if (this.display === DisplayOptions.Depth) {
-                    // Debug pass (render to screen)
                     scene.overrideMaterial = this.depthMaterial;
                     renderer.setRenderTarget(null);
                     renderer.clear();

@@ -67849,8 +67849,8 @@ class CopyMaterial extends RawShaderMaterial {
     }
 }
 
-// Based on https://github.com/mrdoob/three.js/blob/dev/examples/jsm/shaders/ACESFilmicToneMappingShader.js by WestLangley
-// Based on https://oframe.github.io/ogl/examples/?src=pbr.html by gordonnl
+// From https://github.com/mrdoob/three.js/blob/dev/examples/jsm/shaders/ACESFilmicToneMappingShader.js by WestLangley
+// From https://oframe.github.io/ogl/examples/?src=pbr.html by gordonnl
 
 var encodings = /* glsl */ `
 vec3 RRTAndODTFit(vec3 v) {
@@ -69649,7 +69649,6 @@ uniform sampler2D tMap;
 uniform sampler2D tVelocity;
 uniform sampler2D tBlueNoise;
 uniform vec2 uBlueNoiseResolution;
-uniform float uJitterIntensity;
 
 in vec2 vUv;
 
@@ -69659,7 +69658,7 @@ void main() {
     vec2 vel = texture(tVelocity, vUv).xy;
 
     float jitterValue = texture(tBlueNoise, gl_FragCoord.xy / uBlueNoiseResolution).r;
-    vec2 jitterOffset = uJitterIntensity * vel * vec2(jitterValue) / float(SAMPLES);
+    vec2 jitterOffset = vel * vec2(jitterValue) / float(SAMPLES);
 
     vec4 result;
 
@@ -69699,8 +69698,7 @@ class MotionBlurCompositeMaterial extends RawShaderMaterial {
                 tMap: { value: null },
                 tVelocity: { value: null },
                 tBlueNoise: { value: texture },
-                uBlueNoiseResolution: { value: blueNoiseResolution },
-                uJitterIntensity: { value: 1 }
+                uBlueNoiseResolution: { value: blueNoiseResolution }
             },
             vertexShader: vertexShader$g,
             fragmentShader: fragmentShader$g,
@@ -71469,6 +71467,9 @@ class Fluid {
         this.iterations = iterations;
         this.densityDissipation = densityDissipation;
         this.velocityDissipation = velocityDissipation;
+        this.pressureDissipation = pressureDissipation;
+        this.curlStrength = curlStrength;
+        this.radius = radius;
 
         this.splats = [];
 
@@ -71537,7 +71538,7 @@ class Fluid {
                 uAspect: { value: 1 },
                 color: { value: new Color$1() },
                 point: { value: new Vector2$1() },
-                radius: { value: radius / 100 }
+                radius: { value: 1 }
             },
             vertexShader: baseVertexShader,
             fragmentShader: splatShader,
@@ -71647,6 +71648,9 @@ class Fluid {
         const iterations = this.iterations;
         const densityDissipation = this.densityDissipation;
         const velocityDissipation = this.velocityDissipation;
+        const pressureDissipation = this.pressureDissipation;
+        const curlStrength = this.curlStrength;
+        const radius = this.radius;
 
         // Renderer state
         const currentRenderTarget = renderer.getRenderTarget();
@@ -71660,6 +71664,7 @@ class Fluid {
             this.splatMaterial.uniforms.uTarget.value = this.velocity.read.texture;
             this.splatMaterial.uniforms.point.value.set(x, y);
             this.splatMaterial.uniforms.color.value.set(dx, dy, 1);
+            this.splatMaterial.uniforms.radius.value = radius / 100;
             this.screen.material = this.splatMaterial;
             renderer.setRenderTarget(this.velocity.write);
             renderer.render(this.screen, this.screenCamera);
@@ -71680,6 +71685,7 @@ class Fluid {
 
         this.vorticityMaterial.uniforms.uVelocity.value = this.velocity.read.texture;
         this.vorticityMaterial.uniforms.uCurl.value = this.curl.texture;
+        this.vorticityMaterial.uniforms.curl.value = curlStrength;
         this.screen.material = this.vorticityMaterial;
         renderer.setRenderTarget(this.velocity.write);
         renderer.render(this.screen, this.screenCamera);
@@ -71691,6 +71697,7 @@ class Fluid {
         renderer.render(this.screen, this.screenCamera);
 
         this.clearMaterial.uniforms.uTexture.value = this.pressure.read.texture;
+        this.clearMaterial.uniforms.value.value = pressureDissipation;
         this.screen.material = this.clearMaterial;
         renderer.setRenderTarget(this.pressure.write);
         renderer.render(this.screen, this.screenCamera);

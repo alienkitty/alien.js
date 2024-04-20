@@ -97,7 +97,7 @@
             }
 
             async initMesh() {
-                const { anisotropy, loadTexture } = WorldController;
+                const { anisotropy, loadTexture, loadEnvironmentTexture } = WorldController;
 
                 const geometry = new SphereGeometry(1, 80, 80);
 
@@ -106,12 +106,13 @@
                 geometry.attributes.uv1 = geometry.attributes.uv;
 
                 // Textures
-                const [map, normalMap, ormMap] = await Promise.all([
+                const [map, normalMap, ormMap, envMap] = await Promise.all([
                     // loadTexture('../assets/textures/uv.jpg'),
                     loadTexture('../assets/textures/pbr/polished_concrete_basecolor.jpg'),
                     loadTexture('../assets/textures/pbr/polished_concrete_normal.jpg'),
                     // https://occlusion-roughness-metalness.glitch.me/
-                    loadTexture('../assets/textures/pbr/polished_concrete_orm.jpg')
+                    loadTexture('../assets/textures/pbr/polished_concrete_orm.jpg'),
+                    loadEnvironmentTexture('../assets/textures/env/jewelry_black_contrast.jpg')
                 ]);
 
                 map.anisotropy = anisotropy;
@@ -140,6 +141,7 @@
                     aoMapIntensity: 0.5,
                     normalMap,
                     normalScale: new Vector2(1, 1),
+                    envMap,
                     envMapIntensity: 0.1,
                     polygonOffset: true,
                     polygonOffsetFactor: 1,
@@ -283,8 +285,7 @@
                     aoMap: ormMap,
                     aoMapIntensity: 1,
                     normalMap,
-                    normalScale: new Vector2(1, 1),
-                    envMapIntensity: 0.5
+                    normalScale: new Vector2(1, 1)
                 });
 
                 // Second channel for aoMap and lightMap
@@ -347,7 +348,6 @@
                     aoMapIntensity: 1,
                     normalMap,
                     normalScale: new Vector2(1, 1),
-                    envMapIntensity: 0.5,
                     polygonOffset: true,
                     polygonOffsetFactor: 1,
                     polygonOffsetUnits: 1
@@ -1003,8 +1003,7 @@
             static initWorld() {
                 this.renderer = new WebGLRenderer({
                     powerPreference: 'high-performance',
-                    antialias: true,
-                    stencil: false
+                    antialias: true
                 });
 
                 // Disable color management
@@ -1063,6 +1062,7 @@
 
             static async initEnvironment() {
                 this.scene.environment = await this.loadEnvironmentTexture('../assets/textures/env/jewelry_black_contrast.jpg');
+                this.scene.environmentIntensity = 0.5;
             }
 
             static initControls() {

@@ -12,7 +12,6 @@ export class WorldController {
     static initWorld() {
         this.renderer = new WebGLRenderer({
             powerPreference: 'high-performance',
-            stencil: false,
             depth: false
         });
 

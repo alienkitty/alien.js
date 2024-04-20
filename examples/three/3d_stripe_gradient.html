@@ -29,7 +29,7 @@
     </style>
 
     <script type="module">
-        import { Color, ColorManagement, Group, LinearSRGBColorSpace, Mesh, OrthographicCamera, PlaneGeometry, RawShaderMaterial, Scene, Vector2, WebGLRenderer, ticker } from '../../build/alien.three.js';
+        import { Color, ColorManagement, GLSL3, Group, LinearSRGBColorSpace, Mesh, OrthographicCamera, PlaneGeometry, RawShaderMaterial, Scene, Vector2, WebGLRenderer, ticker } from '../../build/alien.three.js';
 
         import simplex3d from '../../src/shaders/modules/noise/simplex3d.glsl.js';
 
@@ -38,14 +38,15 @@
         class GradientMaterial extends RawShaderMaterial {
             constructor() {
                 super({
+                    glslVersion: GLSL3,
                     uniforms: {
                         uColor: { value: [new Color(), new Color(), new Color(), new Color()] },
                         uTime: { value: 0 }
                     },
                     vertexShader: /* glsl */ `
-                        attribute vec3 position;
-                        attribute vec3 normal;
-                        attribute vec2 uv;
+                        in vec3 position;
+                        in vec3 normal;
+                        in vec2 uv;
 
                         uniform mat4 modelViewMatrix;
                         uniform mat4 projectionMatrix;
@@ -53,7 +54,7 @@
                         uniform vec3 uColor[4];
                         uniform float uTime;
 
-                        varying vec3 vColor;
+                        out vec3 vColor;
 
                         ${simplex3d}
 
@@ -101,10 +102,12 @@
                     fragmentShader: /* glsl */ `
                         precision highp float;
 
-                        varying vec3 vColor;
+                        in vec3 vColor;
+
+                        out vec4 FragColor;
 
                         void main() {
-                            gl_FragColor = vec4(vColor, 1.0);
+                            FragColor = vec4(vColor, 1.0);
                         }
                     `,
                     // wireframe: true,

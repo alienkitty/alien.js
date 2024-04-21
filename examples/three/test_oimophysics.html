@@ -10,8 +10,18 @@
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto+Mono">
     <link rel="stylesheet" href="../assets/css/style.css">
 
+    <script type="importmap">
+        {
+            "imports": {
+                "three": "https://unpkg.com/three/build/three.module.js",
+                "oimophysics": "https://cdn.jsdelivr.net/gh/saharan/OimoPhysics@v1.2.3/bin/js_modules/OimoPhysics.js",
+                "@alienkitty/alien.js/three/oimophysics": "../../src/three.oimophysics.js"
+            }
+        }
+    </script>
+
     <script type="module">
-        import { OimoPhysics } from '../../build/alien.three.js';
+        import { OimoPhysics } from '@alienkitty/alien.js/three/oimophysics';
 
         const physics = new OimoPhysics();
         console.log(physics.world.getGravity());

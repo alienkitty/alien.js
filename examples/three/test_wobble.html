@@ -10,8 +10,20 @@
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto+Mono">
     <link rel="stylesheet" href="../assets/css/style.css">
 
+    <script type="importmap">
+        {
+            "imports": {
+                "three": "https://unpkg.com/three/build/three.module.js",
+                "three/addons/": "https://unpkg.com/three/examples/jsm/",
+                "@alienkitty/space.js/three": "https://unpkg.com/@alienkitty/space.js/src/three.js",
+                "@alienkitty/alien.js/three": "../../src/three.js"
+            }
+        }
+    </script>
+
     <script type="module">
-        import { Vector3, Wobble } from '../../build/alien.three.js';
+        import { Vector3 } from 'three';
+        import { Wobble } from '@alienkitty/alien.js/three';
 
         const position = new Vector3();
         const wobble = new Wobble(position);

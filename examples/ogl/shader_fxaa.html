@@ -14,7 +14,8 @@
         {
             "imports": {
                 "ogl": "https://unpkg.com/ogl",
-                "@alienkitty/space.js": "https://unpkg.com/@alienkitty/space.js/src/index.js"
+                "@alienkitty/space.js": "https://unpkg.com/@alienkitty/space.js/src/index.js",
+                "@alienkitty/alien.js/ogl": "../../src/ogl.js"
             }
         }
     </script>
@@ -22,7 +23,7 @@
     <script type="module">
         import { Camera, Color, Mesh, Program, RenderTarget, Renderer, Sphere, Transform, Triangle, Vec2 } from 'ogl';
         import { PanelItem, UI, getKeyByValue, ticker } from '@alienkitty/space.js';
-        import { FXAAProgram } from '../../src/ogl/programs/Programs.js';
+        import { FXAAProgram } from '@alienkitty/alien.js/ogl';
 
         const colors = {
             backgroundColor: new Color('#0e0e0e')

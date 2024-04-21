@@ -798,7 +798,8 @@
         }
 
         class PanelController {
-            static init(ui) {
+            static init(physics, ui) {
+                this.physics = physics;
                 this.ui = ui;
 
                 this.initPanel();
@@ -807,13 +808,15 @@
             static initPanel() {
                 const { luminosityMaterial, bloomCompositeMaterial, compositeMaterial } = RenderManager;
 
+                const physics = this.physics;
+
+                const vector3 = new Vector3();
+                const gravity = new Vector3(0, -9.81, 0);
+
                 const physicsOptions = {
                     Off: false,
                     Physics: true
                 };
-
-                const vector3 = new Vector3();
-                const gravity = new Vector3(0, -9.81, 0);
 
                 const items = [
                     {
@@ -834,14 +837,14 @@
                                 vector3.set(0, 0, 0);
                                 const array = vector3.toArray();
 
-                                SceneController.physics.setLinearVelocity('cube', array);
-                                SceneController.physics.setAngularVelocity('cube', array);
+                                physics.setLinearVelocity('cube', array);
+                                physics.setAngularVelocity('cube', array);
 
-                                SceneController.physics.setLinearVelocity('ball', array);
-                                SceneController.physics.setAngularVelocity('ball', array);
+                                physics.setLinearVelocity('ball', array);
+                                physics.setAngularVelocity('ball', array);
 
                                 // Flush the last frame
-                                SceneController.physics.update();
+                                physics.update();
                             }
                         }
                     },
@@ -854,7 +857,7 @@
                         value: -gravity.y,
                         callback: value => {
                             gravity.y = -value;
-                            SceneController.physics.setGravity(gravity.toArray());
+                            physics.setGravity(gravity.toArray());
                         }
                     },
                     {
@@ -1503,7 +1506,9 @@
             }
 
             static initPanel() {
-                PanelController.init(this.ui);
+                const { physics } = WorldController;
+
+                PanelController.init(physics, this.ui);
             }
 
             static addListeners() {

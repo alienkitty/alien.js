@@ -533,13 +533,15 @@
             static initPanel() {
                 const { luminosityMaterial, bloomCompositeMaterial, compositeMaterial } = RenderManager;
 
+                const physics = this.physics;
+
+                const vector3 = new Vector3();
+                const gravity = this.physics.world.getGravity();
+
                 const physicsOptions = {
                     Off: false,
                     Physics: true
                 };
-
-                const vector3 = new Vector3();
-                const gravity = this.physics.world.getGravity();
 
                 const items = [
                     {
@@ -558,9 +560,9 @@
                             // Reset
                             vector3.set(0, 0, 0);
 
-                            this.physics.objects.forEach(object => {
-                                this.physics.setLinearVelocity(object, vector3);
-                                this.physics.setAngularVelocity(object, vector3);
+                            physics.objects.forEach(object => {
+                                physics.setLinearVelocity(object, vector3);
+                                physics.setAngularVelocity(object, vector3);
                             });
                         }
                     },
@@ -573,7 +575,7 @@
                         value: -gravity.y,
                         callback: value => {
                             gravity.y = -value;
-                            this.physics.world.setGravity(gravity);
+                            physics.world.setGravity(gravity);
                         }
                     },
                     {

@@ -811,14 +811,14 @@ class PanelController {
     static initPanel() {
         const { motionBlur, hBlurMaterial, vBlurMaterial, luminosityMaterial, bloomCompositeMaterial, compositeMaterial } = RenderManager;
 
-        const debugOptions = {
-            Off: false,
-            Debug: true
-        };
-
         const animateOptions = {
             Off: false,
             Animate: true
+        };
+
+        const debugOptions = {
+            Off: false,
+            Debug: true
         };
 
         const items = [
@@ -834,6 +834,29 @@ class PanelController {
                 value: getKeyByValue(DisplayOptions, RenderManager.display),
                 callback: value => {
                     RenderManager.display = DisplayOptions[value];
+                }
+            },
+            {
+                type: 'divider'
+            },
+            {
+                type: 'slider',
+                name: 'Speed',
+                min: 0,
+                max: 50,
+                step: 0.1,
+                value: params.speed,
+                callback: value => {
+                    params.speed = value;
+                }
+            },
+            {
+                type: 'list',
+                list: animateOptions,
+                value: getKeyByValue(animateOptions, params.animate),
+                callback: value => {
+                    params.animate = animateOptions[value];
+                    motionBlur.saveState = params.animate;
                 }
             },
             {
@@ -968,29 +991,6 @@ class PanelController {
                 callback: value => {
                     RenderManager.bloomRadius = value;
                     bloomCompositeMaterial.uniforms.uBloomFactors.value = RenderManager.bloomFactors();
-                }
-            },
-            {
-                type: 'divider'
-            },
-            {
-                type: 'slider',
-                name: 'Speed',
-                min: 0,
-                max: 50,
-                step: 0.1,
-                value: params.speed,
-                callback: value => {
-                    params.speed = value;
-                }
-            },
-            {
-                type: 'list',
-                list: animateOptions,
-                value: getKeyByValue(animateOptions, params.animate),
-                callback: value => {
-                    params.animate = animateOptions[value];
-                    motionBlur.saveState = params.animate;
                 }
             }
         ];

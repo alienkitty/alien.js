@@ -296,6 +296,29 @@
                     },
                     {
                         type: 'slider',
+                        name: 'Speed',
+                        min: 0,
+                        max: 100,
+                        step: 0.2,
+                        value: params.speed,
+                        callback: value => {
+                            params.speed = value;
+                        }
+                    },
+                    {
+                        type: 'list',
+                        list: animateOptions,
+                        value: getKeyByValue(animateOptions, params.animate),
+                        callback: value => {
+                            params.animate = animateOptions[value];
+                            motionBlur.saveState = params.animate;
+                        }
+                    },
+                    {
+                        type: 'divider'
+                    },
+                    {
+                        type: 'slider',
                         name: 'Interp',
                         min: 0,
                         max: 1,
@@ -374,29 +397,6 @@
                         value: compositeMaterial.uniforms.uBloomDistortion.value,
                         callback: value => {
                             compositeMaterial.uniforms.uBloomDistortion.value = value;
-                        }
-                    },
-                    {
-                        type: 'divider'
-                    },
-                    {
-                        type: 'slider',
-                        name: 'Speed',
-                        min: 0,
-                        max: 100,
-                        step: 0.2,
-                        value: params.speed,
-                        callback: value => {
-                            params.speed = value;
-                        }
-                    },
-                    {
-                        type: 'list',
-                        list: animateOptions,
-                        value: getKeyByValue(animateOptions, params.animate),
-                        callback: value => {
-                            params.animate = animateOptions[value];
-                            motionBlur.saveState = params.animate;
                         }
                     }
                 ];

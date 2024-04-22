@@ -182,7 +182,7 @@
                 floor.geometry.setDrawRange(0, 0); // Avoid rendering geometry
                 this.add(floor);
 
-                physics.add(floor, { density: 0 });
+                physics.add(floor, { density: 0, autoSleep: false });
             }
 
             // Public methods
@@ -452,7 +452,7 @@
                 const view = this.view;
 
                 const vector3 = new Vector3();
-                const gravity = this.physics.world.getGravity();
+                const gravity = this.physics.getGravity();
 
                 const physicsOptions = {
                     Off: false,
@@ -496,7 +496,7 @@
                         value: -gravity.y,
                         callback: value => {
                             gravity.y = -value;
-                            physics.world.setGravity(gravity);
+                            physics.setGravity(gravity);
                         }
                     },
                     {

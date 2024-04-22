@@ -68,8 +68,8 @@ export class OimoPhysicsBuffer {
         this.map = new Map();
         this.array = new Float32Array();
 
-        this.vector3 = new Vec3();
-        this.quaternion = new Quat();
+        this.v = new Vec3();
+        this.q = new Quat();
     }
 
     getShape({
@@ -118,8 +118,8 @@ export class OimoPhysicsBuffer {
         } else if (type === 'convex') {
             const array = [];
 
-            for (let i = 0; i < size.length; i++) {
-                array.push(new Vec3(size[i * 3 + 0], size[i * 3 + 1], size[i * 3 + 2]));
+            for (let i = 0, l = size.length; i < l; i += 3) {
+                array.push(new Vec3(size[i], size[i + 1], size[i + 2]));
             }
 
             shapeConfig.geometry = new ConvexHullGeometry(array);
@@ -333,20 +333,24 @@ export class OimoPhysicsBuffer {
         return body;
     }
 
+    getGravity() {
+        return this.world.getGravity();
+    }
+
     setGravity(array) {
-        this.world.setGravity(this.vector3.init(array[0], array[1], array[2]));
+        this.world.setGravity(this.v.init(array[0], array[1], array[2]));
     }
 
     setPosition(name, array) {
         const body = this.map.get(name);
 
-        body.setPosition(this.vector3.init(array[0], array[1], array[2]));
+        body.setPosition(this.v.init(array[0], array[1], array[2]));
     }
 
     setOrientation(name, array) {
         const body = this.map.get(name);
 
-        body.setOrientation(this.quaternion.init(array[0], array[1], array[2], array[3]));
+        body.setOrientation(this.q.init(array[0], array[1], array[2], array[3]));
     }
 
     setGravityScale(name, gravityScale) {
@@ -358,25 +362,25 @@ export class OimoPhysicsBuffer {
     setLinearVelocity(name, array) {
         const body = this.map.get(name);
 
-        body.setLinearVelocity(this.vector3.init(array[0], array[1], array[2]));
+        body.setLinearVelocity(this.v.init(array[0], array[1], array[2]));
     }
 
     setAngularVelocity(name, array) {
         const body = this.map.get(name);
 
-        body.setAngularVelocity(this.vector3.init(array[0], array[1], array[2]));
+        body.setAngularVelocity(this.v.init(array[0], array[1], array[2]));
     }
 
     setLinearDamping(name, array) {
         const body = this.map.get(name);
 
-        body.setLinearDamping(this.vector3.init(array[0], array[1], array[2]));
+        body.setLinearDamping(this.v.init(array[0], array[1], array[2]));
     }
 
     setAngularDamping(name, array) {
         const body = this.map.get(name);
 
-        body.setAngularDamping(this.vector3.init(array[0], array[1], array[2]));
+        body.setAngularDamping(this.v.init(array[0], array[1], array[2]));
     }
 
     setContactCallback(name, callback) {

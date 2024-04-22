@@ -5,7 +5,7 @@
  * Based on https://github.com/lo-th/phy
  */
 
-import { Group, Matrix4, Vector3 } from 'three';
+import { Group, Matrix4, Quaternion, Vector3 } from 'three';
 
 import { oimo } from 'oimophysics';
 
@@ -79,6 +79,7 @@ export class OimoPhysics {
         this.map = new WeakMap();
 
         this.v = new Vector3();
+        this.q = new Quaternion();
         this.object = new Group();
         this.matrix = new Matrix4();
     }
@@ -383,6 +384,14 @@ export class OimoPhysics {
         return bodies;
     }
 
+    getGravity() {
+        return this.world.getGravity();
+    }
+
+    setGravity(gravity) {
+        this.world.setGravity(gravity);
+    }
+
     getPosition(object, index) {
         const body = this.getObjectBody(object, index);
 
@@ -398,7 +407,7 @@ export class OimoPhysics {
     getOrientation(object, index) {
         const body = this.getObjectBody(object, index);
 
-        return this.v.copy(body.getOrientation()).clone();
+        return this.q.copy(body.getOrientation()).clone();
     }
 
     setOrientation(object, position, index) {

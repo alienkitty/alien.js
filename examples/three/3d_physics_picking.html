@@ -92,9 +92,13 @@
                 const mesh = new Mesh(geometry, material);
                 mesh.castShadow = true;
                 mesh.receiveShadow = true;
+
+                // Layers
                 mesh.layers.enable(layers.picking);
+
                 this.add(mesh);
 
+                // Physics
                 physics.add(mesh, { autoSleep: false });
             }
 
@@ -107,6 +111,7 @@
             constructor() {
                 super();
 
+                // Physics
                 this.force = new Vector3();
                 this.contact = false;
             }
@@ -200,9 +205,13 @@
                 const mesh = new Mesh(geometry, material);
                 mesh.castShadow = true;
                 mesh.receiveShadow = true;
+
+                // Layers
                 mesh.layers.enable(layers.picking);
+
                 this.add(mesh);
 
+                // Physics
                 physics.add(mesh, {
                     autoSleep: false,
                     contactCallback: this.onContact
@@ -370,7 +379,7 @@
                 floor.geometry.setDrawRange(0, 0); // Avoid rendering geometry
                 this.add(floor);
 
-                physics.add(floor, { density: 0 });
+                physics.add(floor, { density: 0, autoSleep: false });
             }
 
             // Public methods
@@ -536,7 +545,7 @@
                 const physics = this.physics;
 
                 const vector3 = new Vector3();
-                const gravity = this.physics.world.getGravity();
+                const gravity = this.physics.getGravity();
 
                 const physicsOptions = {
                     Off: false,
@@ -561,6 +570,10 @@
                             vector3.set(0, 0, 0);
 
                             physics.objects.forEach(object => {
+                                const { position, quaternion } = object;
+
+                                physics.setPosition(object, position);
+                                physics.setOrientation(object, quaternion);
                                 physics.setLinearVelocity(object, vector3);
                                 physics.setAngularVelocity(object, vector3);
                             });
@@ -575,7 +588,7 @@
                         value: -gravity.y,
                         callback: value => {
                             gravity.y = -value;
-                            physics.world.setGravity(gravity);
+                            physics.setGravity(gravity);
                         }
                     },
                     {
@@ -856,7 +869,7 @@
 
                 this.dragPlane = new Mesh(quad, material);
                 this.dragPlane.scale.multiplyScalar(200);
-                this.dragPlane.layers.enable(layers.picking);
+                this.dragPlane.layers.set(layers.picking);
             }
 
             static addListeners() {

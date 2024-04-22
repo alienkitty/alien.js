@@ -49,7 +49,7 @@ npm i three saharan/OimoPhysics#v1.2.3 @alienkitty/alien.js
 import { OimoPhysics } from '@alienkitty/alien.js/three/oimophysics';
 
 const physics = new OimoPhysics();
-console.log(physics.world.getGravity());
+console.log(physics.getGravity());
 ```
 
 And the `@alienkitty/alien.js/ogl` entry point for [OGL](https://github.com/oframe/ogl) material programs.

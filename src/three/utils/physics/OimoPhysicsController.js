@@ -86,10 +86,12 @@ export class OimoPhysicsController {
                 const vertices = geometry.getAttribute('position');
                 const array = [];
 
-                for (let i = 0, j = 0; i < vertices.count; i++) {
-                    array[j] = vertices.array[j] * scale.x; j += 3;
-                    array[j] = vertices.array[j] * scale.y; j += 3;
-                    array[j] = vertices.array[j] * scale.z; j += 3;
+                for (let i = 0; i < vertices.count; i++) {
+                    array.push(
+                        vertices.array[i * 3 + 0] * scale.x,
+                        vertices.array[i * 3 + 1] * scale.y,
+                        vertices.array[i * 3 + 2] * scale.z
+                    );
                 }
 
                 object.type = 'convex';
@@ -151,7 +153,7 @@ export class OimoPhysicsController {
 
             for (let i = 0; i < shapes.length; i++) {
                 const { position, quaternion, scale, geometry } = shapes[i];
-                object.shapes.push(this.getObject(position, quaternion, scale, geometry, { name: `${name}_${i}` }));
+                object.shapes.push(this.getObject(position, quaternion, scale, geometry, { name: `${object.name}_${i}` }));
             }
         }
 

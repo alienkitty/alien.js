@@ -56,6 +56,10 @@
                 this.physics.setPosition(name, position);
             };
 
+            setOrientation = (name, orientation) => {
+                this.physics.setOrientation(name, orientation);
+            };
+
             setLinearVelocity = (name, linearVelocity) => {
                 this.physics.setLinearVelocity(name, linearVelocity);
             };
@@ -111,6 +115,10 @@
                 this.physics.setPosition(name, position);
             };
 
+            setOrientation = ({ name, orientation }) => {
+                this.physics.setOrientation(name, orientation);
+            };
+
             setLinearVelocity = ({ name, linearVelocity }) => {
                 this.physics.setLinearVelocity(name, linearVelocity);
             };
@@ -139,7 +147,7 @@
                         ['../../build/alien.three.js', 'EventEmitter', 'OimoPhysicsBuffer', 'Vector3', 'delayedCall', 'ticker']
                     ],
                     classes: [ScenePhysics],
-                    controller: [ScenePhysicsThread, 'init', 'update', 'setGravity', 'setPosition', 'setLinearVelocity', 'setAngularVelocity']
+                    controller: [ScenePhysicsThread, 'init', 'update', 'setGravity', 'setPosition', 'setOrientation', 'setLinearVelocity', 'setAngularVelocity']
                 });
 
                 this.thread.init({ shapes: this.shapes });
@@ -175,6 +183,12 @@
                 const { name } = this.getObjectBody(object, index);
 
                 this.thread.setPosition({ name, position });
+            };
+
+            setOrientation = (object, orientation, index) => {
+                const { name } = this.getObjectBody(object, index);
+
+                this.thread.setOrientation({ name, orientation });
             };
 
             setLinearVelocity = (object, linearVelocity, index) => {
@@ -233,6 +247,12 @@
 
                 this.position.y = -2.5;
 
+                // Physics
+                this.name = 'floor';
+                this.size = new Vector3(100, 5, 100);
+                this.density = 0;
+                this.autoSleep = false;
+
                 this.initReflector();
             }
 
@@ -247,7 +267,7 @@
             async initMesh() {
                 const { physics, loadTexture } = WorldController;
 
-                const geometry = new PlaneGeometry(100, 100);
+                const geometry = new PlaneGeometry(this.size.x, this.size.z);
 
                 const map = await loadTexture('../assets/textures/waterdudv.jpg');
                 map.wrapS = RepeatWrapping;
@@ -351,11 +371,11 @@
                 this.add(mesh);
 
                 // Physics mesh
-                const floor = new Mesh(new BoxGeometry(100, 5, 100));
+                const floor = new Mesh(new BoxGeometry(this.size.x, this.size.y, this.size.z));
                 floor.geometry.setDrawRange(0, 0); // Avoid rendering geometry
                 this.add(floor);
 
-                physics.add(floor, { density: 0 });
+                physics.add(floor);
             }
 
             // Public methods
@@ -649,24 +669,22 @@
                         callback: value => {
                             SceneController.enabled = physicsOptions[value];
 
-                            if (!SceneController.enabled) {
-                                // Reset
-                                vector3.set(0, 0, 0);
-                                const array = vector3.toArray();
+                            // Reset
+                            vector3.set(0, 0, 0);
+                            const array = vector3.toArray();
 
-                                for (let i = 0, l = view.boxes.count; i < l; i++) {
-                                    physics.setLinearVelocity(view.boxes, array, i);
-                                    physics.setAngularVelocity(view.boxes, array, i);
-                                }
-
-                                for (let i = 0, l = view.spheres.count; i < l; i++) {
-                                    physics.setLinearVelocity(view.spheres, array, i);
-                                    physics.setAngularVelocity(view.spheres, array, i);
-                                }
-
-                                // Flush the last frame
-                                physics.update();
+                            for (let i = 0, l = view.boxes.count; i < l; i++) {
+                                physics.setLinearVelocity(view.boxes, array, i);
+                                physics.setAngularVelocity(view.boxes, array, i);
                             }
+
+                            for (let i = 0, l = view.spheres.count; i < l; i++) {
+                                physics.setLinearVelocity(view.spheres, array, i);
+                                physics.setAngularVelocity(view.spheres, array, i);
+                            }
+
+                            // Flush the last frame
+                            physics.update();
                         }
                     },
                     {

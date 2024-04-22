@@ -6,9 +6,9 @@
 
 import { Group, Matrix4, Mesh, OrthographicCamera, PerspectiveCamera, Plane, Vector3, Vector4, WebGLRenderTarget } from 'three';
 
-import { ReflectorBlurMaterial } from '../materials/ReflectorBlurMaterial.js';
-
 import { getDoubleRenderTarget, getFullscreenTriangle } from '@alienkitty/space.js/three';
+
+import { ReflectorBlurMaterial } from '../materials/ReflectorBlurMaterial.js';
 
 export class Reflector extends Group {
     constructor({

@@ -43,15 +43,9 @@
             };
 
             update = array => {
-                if (array) {
-                    this.physics.array = array;
+                this.physics.array = array;
 
-                    this.step();
-                } else {
-                    this.physics.step();
-
-                    return this.physics.array;
-                }
+                this.step();
             };
 
             setGravity = gravity => {
@@ -140,27 +134,19 @@
             }
 
             initEngine() {
-                if (!/firefox/i.test(navigator.userAgent)) {
-                    this.thread = new Thread({
-                        imports: [
-                            ['../../build/alien.three.js', 'EventEmitter', 'OimoPhysicsBuffer', 'Vector3', 'delayedCall', 'ticker']
-                        ],
-                        classes: [ScenePhysics],
-                        controller: [ScenePhysicsThread, 'init', 'update', 'setGravity', 'setPosition', 'setLinearVelocity', 'setAngularVelocity']
-                    });
+                this.thread = new Thread({
+                    imports: [
+                        ['../../build/alien.three.js', 'EventEmitter', 'OimoPhysicsBuffer', 'Vector3', 'delayedCall', 'ticker']
+                    ],
+                    classes: [ScenePhysics],
+                    controller: [ScenePhysicsThread, 'init', 'update', 'setGravity', 'setPosition', 'setLinearVelocity', 'setAngularVelocity']
+                });
 
-                    this.thread.init({ shapes: this.shapes });
-                } else {
-                    this.physics = new ScenePhysics(this.shapes);
-                }
+                this.thread.init({ shapes: this.shapes });
             }
 
             addListeners() {
-                if (this.thread) {
-                    this.thread.on('buffer', this.onBuffer);
-                } else {
-                    this.physics.on('buffer', this.onBuffer);
-                }
+                this.thread.on('buffer', this.onBuffer);
             }
 
             // Event handlers
@@ -172,59 +158,35 @@
             // Public methods
 
             update = () => {
-                let array;
-
-                if (this.thread) {
-                    array = this.buffer.shift();
-                } else {
-                    array = this.physics.update();
-                }
+                const array = this.buffer.shift();
 
                 if (array) {
                     this.step(array);
 
-                    if (this.thread) {
-                        this.thread.update({ array, buffer: [array.buffer] });
-                    }
+                    this.thread.update({ array, buffer: [array.buffer] });
                 }
             };
 
             setGravity = gravity => {
-                if (this.thread) {
-                    this.thread.setGravity({ gravity });
-                } else {
-                    this.physics.setGravity(gravity);
-                }
+                this.thread.setGravity({ gravity });
             };
 
             setPosition = (object, position, index) => {
                 const { name } = this.getObjectBody(object, index);
 
-                if (this.thread) {
-                    this.thread.setPosition({ name, position });
-                } else {
-                    this.physics.setPosition(name, position);
-                }
+                this.thread.setPosition({ name, position });
             };
 
             setLinearVelocity = (object, linearVelocity, index) => {
                 const { name } = this.getObjectBody(object, index);
 
-                if (this.thread) {
-                    this.thread.setLinearVelocity({ name, linearVelocity });
-                } else {
-                    this.physics.setLinearVelocity(name, linearVelocity);
-                }
+                this.thread.setLinearVelocity({ name, linearVelocity });
             };
 
             setAngularVelocity = (object, angularVelocity, index) => {
                 const { name } = this.getObjectBody(object, index);
 
-                if (this.thread) {
-                    this.thread.setAngularVelocity({ name, angularVelocity });
-                } else {
-                    this.physics.setAngularVelocity(name, angularVelocity);
-                }
+                this.thread.setAngularVelocity({ name, angularVelocity });
             };
 
             ready = () => this.init();
@@ -1143,10 +1105,7 @@
 
         class App {
             static async init() {
-                if (!/firefox/i.test(navigator.userAgent)) {
-                    this.initThread();
-                }
-
+                this.initThread();
                 this.initWorld();
                 this.initViews();
                 this.initControllers();

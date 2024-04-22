@@ -1064,10 +1064,7 @@ class WorldController {
 
 class App {
     static async init() {
-        if (!/firefox/i.test(navigator.userAgent)) {
-            this.initThread();
-        }
-
+        this.initThread();
         this.initLoader();
         this.initStage();
         this.initWorld();

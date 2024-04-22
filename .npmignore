@@ -1,4 +1,4 @@
-.eslintrc.json
 build
 examples
 alien.js.png
+eslint.config.js

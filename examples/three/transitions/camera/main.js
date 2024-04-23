@@ -249,7 +249,6 @@ class AbstractCube extends Group {
             aoMapIntensity: 1,
             normalMap,
             normalScale: new Vector2(1, 1),
-            envMapIntensity: 1.2,
             flatShading: true,
             polygonOffset: true,
             polygonOffsetFactor: 1,
@@ -359,7 +358,6 @@ class FloatingCrystal extends Group {
             aoMapIntensity: 1,
             normalMap,
             normalScale: new Vector2(1, 1),
-            envMapIntensity: 1.2,
             flatShading: true,
             polygonOffset: true,
             polygonOffsetFactor: 1,
@@ -472,7 +470,6 @@ class DarkPlanet extends Group {
             aoMapIntensity: 1,
             normalMap,
             normalScale: new Vector2(3, 3),
-            envMapIntensity: 1.2,
             polygonOffset: true,
             polygonOffsetFactor: 1,
             polygonOffsetUnits: 1
@@ -814,14 +811,14 @@ class PanelController {
     static initPanel() {
         const { motionBlur, hBlurMaterial, vBlurMaterial, luminosityMaterial, bloomCompositeMaterial, compositeMaterial } = RenderManager;
 
-        const debugOptions = {
-            Off: false,
-            Debug: true
-        };
-
         const animateOptions = {
             Off: false,
             Animate: true
+        };
+
+        const debugOptions = {
+            Off: false,
+            Debug: true
         };
 
         const items = [
@@ -837,6 +834,29 @@ class PanelController {
                 value: getKeyByValue(DisplayOptions, RenderManager.display),
                 callback: value => {
                     RenderManager.display = DisplayOptions[value];
+                }
+            },
+            {
+                type: 'divider'
+            },
+            {
+                type: 'slider',
+                name: 'Speed',
+                min: 0,
+                max: 50,
+                step: 0.1,
+                value: params.speed,
+                callback: value => {
+                    params.speed = value;
+                }
+            },
+            {
+                type: 'list',
+                list: animateOptions,
+                value: getKeyByValue(animateOptions, params.animate),
+                callback: value => {
+                    params.animate = animateOptions[value];
+                    motionBlur.saveState = params.animate;
                 }
             },
             {
@@ -971,29 +991,6 @@ class PanelController {
                 callback: value => {
                     RenderManager.bloomRadius = value;
                     bloomCompositeMaterial.uniforms.uBloomFactors.value = RenderManager.bloomFactors();
-                }
-            },
-            {
-                type: 'divider'
-            },
-            {
-                type: 'slider',
-                name: 'Speed',
-                min: 0,
-                max: 50,
-                step: 0.1,
-                value: params.speed,
-                callback: value => {
-                    params.speed = value;
-                }
-            },
-            {
-                type: 'list',
-                list: animateOptions,
-                value: getKeyByValue(animateOptions, params.animate),
-                callback: value => {
-                    params.animate = animateOptions[value];
-                    motionBlur.saveState = params.animate;
                 }
             }
         ];
@@ -1553,8 +1550,7 @@ class WorldController {
     static initWorld() {
         this.renderer = new WebGLRenderer({
             powerPreference: 'high-performance',
-            antialias: true,
-            stencil: false
+            antialias: true
         });
 
         // Disable color management
@@ -1614,6 +1610,7 @@ class WorldController {
 
     static async initEnvironment() {
         this.scene.environment = await this.loadEnvironmentTexture('assets/textures/env/jewelry_black_contrast.jpg');
+        this.scene.environmentIntensity = 1.2;
     }
 
     static addListeners() {
@@ -1653,10 +1650,7 @@ class WorldController {
 
 class App {
     static async init() {
-        if (!/firefox/i.test(navigator.userAgent)) {
-            this.initThread();
-        }
-
+        this.initThread();
         this.initLoader();
         this.initStage();
         this.initWorld();

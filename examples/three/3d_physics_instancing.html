@@ -182,7 +182,7 @@
                 floor.geometry.setDrawRange(0, 0); // Avoid rendering geometry
                 this.add(floor);
 
-                physics.add(floor, { density: 0 });
+                physics.add(floor, { density: 0, autoSleep: false });
             }
 
             // Public methods
@@ -241,8 +241,7 @@
                     aoMap: ormMap,
                     aoMapIntensity: 1,
                     normalMap,
-                    normalScale: new Vector2(3, 3),
-                    envMapIntensity: 1.2
+                    normalScale: new Vector2(3, 3)
                 });
 
                 // Second channel for aoMap and lightMap
@@ -449,13 +448,16 @@
             static initPanel() {
                 const { luminosityMaterial, bloomCompositeMaterial, compositeMaterial } = RenderManager;
 
+                const physics = this.physics;
+                const view = this.view;
+
+                const vector3 = new Vector3();
+                const gravity = this.physics.getGravity();
+
                 const physicsOptions = {
                     Off: false,
                     Physics: true
                 };
-
-                const vector3 = new Vector3();
-                const gravity = this.physics.world.getGravity();
 
                 const items = [
                     {
@@ -474,14 +476,14 @@
                             // Reset
                             vector3.set(0, 0, 0);
 
-                            for (let i = 0, l = this.view.boxes.count; i < l; i++) {
-                                this.physics.setLinearVelocity(this.view.boxes, vector3, i);
-                                this.physics.setAngularVelocity(this.view.boxes, vector3, i);
+                            for (let i = 0, l = view.boxes.count; i < l; i++) {
+                                physics.setLinearVelocity(view.boxes, vector3, i);
+                                physics.setAngularVelocity(view.boxes, vector3, i);
                             }
 
-                            for (let i = 0, l = this.view.spheres.count; i < l; i++) {
-                                this.physics.setLinearVelocity(this.view.spheres, vector3, i);
-                                this.physics.setAngularVelocity(this.view.spheres, vector3, i);
+                            for (let i = 0, l = view.spheres.count; i < l; i++) {
+                                physics.setLinearVelocity(view.spheres, vector3, i);
+                                physics.setAngularVelocity(view.spheres, vector3, i);
                             }
                         }
                     },
@@ -494,7 +496,7 @@
                         value: -gravity.y,
                         callback: value => {
                             gravity.y = -value;
-                            this.physics.world.setGravity(gravity);
+                            physics.setGravity(gravity);
                         }
                     },
                     {
@@ -818,8 +820,7 @@
             static initWorld() {
                 this.renderer = new WebGLRenderer({
                     powerPreference: 'high-performance',
-                    antialias: true,
-                    stencil: false
+                    antialias: true
                 });
 
                 // Disable color management
@@ -876,6 +877,7 @@
 
             static async initEnvironment() {
                 this.scene.environment = await this.loadEnvironmentTexture('../assets/textures/env/jewelry_black_contrast.jpg');
+                this.scene.environmentIntensity = 1.2;
             }
 
             static initPhysics() {
@@ -921,10 +923,7 @@
 
         class App {
             static async init() {
-                if (!/firefox/i.test(navigator.userAgent)) {
-                    this.initThread();
-                }
-
+                this.initThread();
                 this.initWorld();
                 this.initViews();
                 this.initControllers();

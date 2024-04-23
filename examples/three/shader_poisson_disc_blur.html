@@ -11,7 +11,7 @@
     <link rel="stylesheet" href="../assets/css/style.css">
 
     <script type="module">
-        import { Color, ColorManagement, CopyMaterial, DirectionalLight, Group, HemisphereLight, LinearMipmapLinearFilter, LinearSRGBColorSpace, MathUtils, Mesh, MeshStandardMaterial, OrthographicCamera, PanelItem, PerspectiveCamera, PoissonDiscBlurMaterial, Scene, SphereGeometry, TextureLoader, UI, Vector2, WebGLRenderTarget, WebGLRenderer, getFullscreenTriangle, ticker } from '../../build/alien.three.js';
+        import { Color, ColorManagement, CopyMaterial, DirectionalLight, Group, HemisphereLight, LinearSRGBColorSpace, Mesh, MeshStandardMaterial, OrthographicCamera, PanelItem, PerspectiveCamera, PoissonDiscBlurMaterial, Scene, SphereGeometry, TextureLoader, UI, Vector2, WebGLRenderTarget, WebGLRenderer, getFullscreenTriangle, ticker } from '../../build/alien.three.js';
 
         import periodic3d from '../../src/shaders/modules/noise/periodic3d.glsl.js';
 
@@ -120,8 +120,6 @@
                 });
 
                 this.renderTargetB = this.renderTargetA.clone();
-                this.renderTargetB.texture.minFilter = LinearMipmapLinearFilter;
-                this.renderTargetB.texture.generateMipmaps = true;
 
                 this.renderTargetA.depthBuffer = true;
 
@@ -144,10 +142,6 @@
                 height = Math.round(height * dpr);
 
                 this.renderTargetA.setSize(width, height);
-
-                width = MathUtils.floorPowerOfTwo(width) / 2;
-                height = MathUtils.floorPowerOfTwo(height) / 2;
-
                 this.renderTargetB.setSize(width, height);
             };
 
@@ -195,8 +189,7 @@
             static initWorld() {
                 this.renderer = new WebGLRenderer({
                     powerPreference: 'high-performance',
-                    antialias: true,
-                    stencil: false
+                    antialias: true
                 });
 
                 // Disable color management

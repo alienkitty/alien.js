@@ -98,8 +98,7 @@
                     metalnessMap: ormMap,
                     roughnessMap: ormMap,
                     normalMap,
-                    normalScale: new Vector2(-3, -3),
-                    envMapIntensity: 1.2
+                    normalScale: new Vector2(-3, -3)
                 });
 
                 material.onBeforeCompile = shader => {
@@ -593,8 +592,7 @@
             static initWorld() {
                 this.renderer = new WebGLRenderer({
                     powerPreference: 'high-performance',
-                    antialias: true,
-                    stencil: false
+                    antialias: true
                 });
 
                 // Disable color management
@@ -645,6 +643,7 @@
 
             static async initEnvironment() {
                 this.scene.environment = await this.loadEnvironmentTexture('../assets/textures/env/arches_pinetree.jpg');
+                this.scene.environmentIntensity = 1.2;
             }
 
             static addListeners() {

@@ -128,34 +128,34 @@ class TransitionMaterial extends RawShaderMaterial {
             vertexShader: /* glsl */ `
                 in vec3 position;
                 in vec2 uv;
-            
+
                 out vec2 vUv;
-            
+
                 void main() {
                     vUv = uv;
-            
+
                     gl_Position = vec4(position, 1.0);
                 }
             `,
             fragmentShader: /* glsl */ `
                 precision highp float;
-            
+
                 uniform sampler2D tMap1;
                 uniform sampler2D tMap2;
                 uniform float uProgress;
                 uniform vec2 uResolution;
                 uniform float uTime;
-            
+
                 in vec2 vUv;
-            
+
                 out vec4 FragColor;
 
                 // Based on https://gl-transitions.com/editor/flyeye by gre
-            
+
                 uniform float uSize;
                 uniform float uZoom;
                 uniform float uColorSeparation;
-            
+
                 void main() {
                     if (uProgress == 0.0) {
                         FragColor = texture(tMap1, vUv);
@@ -164,10 +164,10 @@ class TransitionMaterial extends RawShaderMaterial {
                         FragColor = texture(tMap2, vUv);
                         return;
                     }
-            
+
                     float inv = 1.0 - uProgress;
                     vec2 disp = uSize * vec2(cos(uZoom * vUv.x), sin(uZoom * vUv.y));
-            
+
                     vec4 texTo = texture(tMap2, vUv + inv * disp);
                     vec4 texFrom = vec4(
                         texture(tMap1, vUv + uProgress * disp * (1.0 - uColorSeparation)).r,
@@ -175,7 +175,7 @@ class TransitionMaterial extends RawShaderMaterial {
                         texture(tMap1, vUv + uProgress * disp * (1.0 + uColorSeparation)).b,
                         1.0
                     );
-            
+
                     FragColor = texTo * uProgress + texFrom * inv;
                 }
             `,
@@ -219,6 +219,7 @@ class RenderScene {
         const { loadEnvironmentTexture } = WorldController;
 
         this.scene.environment = await loadEnvironmentTexture('assets/textures/env/jewelry_black_contrast.jpg');
+        this.scene.environmentIntensity = 1.2;
     }
 
     // Inheritable methods
@@ -281,7 +282,6 @@ class AbstractCube extends Group {
             aoMapIntensity: 1,
             normalMap,
             normalScale: new Vector2(1, 1),
-            envMapIntensity: 1.2,
             flatShading: true
         });
 
@@ -391,7 +391,6 @@ class FloatingCrystal extends Group {
             aoMapIntensity: 1,
             normalMap,
             normalScale: new Vector2(1, 1),
-            envMapIntensity: 1.2,
             flatShading: true
         });
 
@@ -503,8 +502,7 @@ class DarkPlanet extends Group {
             aoMap: ormMap,
             aoMapIntensity: 1,
             normalMap,
-            normalScale: new Vector2(3, 3),
-            envMapIntensity: 1.2
+            normalScale: new Vector2(3, 3)
         });
 
         // Second channel for aoMap and lightMap
@@ -969,8 +967,7 @@ class WorldController {
     static initWorld() {
         this.renderer = new WebGLRenderer({
             powerPreference: 'high-performance',
-            antialias: true,
-            stencil: false
+            antialias: true
         });
 
         // Disable color management
@@ -1059,10 +1056,7 @@ class WorldController {
 
 class App {
     static async init() {
-        if (!/firefox/i.test(navigator.userAgent)) {
-            this.initThread();
-        }
-
+        this.initThread();
         this.initLoader();
         this.initStage();
         this.initWorld();

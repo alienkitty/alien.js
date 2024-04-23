@@ -88,8 +88,7 @@
                         aoMap: ormMap,
                         aoMapIntensity: 1,
                         normalMap,
-                        normalScale: new Vector2(3, 3),
-                        envMapIntensity: 1.2
+                        normalScale: new Vector2(3, 3)
                     });
                 } else {
                     material = new MeshStandardMaterial({
@@ -102,8 +101,7 @@
                         aoMap: ormMap,
                         aoMapIntensity: 1,
                         normalMap,
-                        normalScale: new Vector2(3, 3),
-                        envMapIntensity: 1.2
+                        normalScale: new Vector2(3, 3)
                     });
                 }
 
@@ -178,8 +176,7 @@
                     aoMap: ormMap,
                     aoMapIntensity: 1,
                     normalMap,
-                    normalScale: new Vector2(1, 1),
-                    envMapIntensity: 0.5
+                    normalScale: new Vector2(1, 1)
                 });
 
                 // Second channel for aoMap and lightMap
@@ -299,6 +296,29 @@
                     },
                     {
                         type: 'slider',
+                        name: 'Speed',
+                        min: 0,
+                        max: 100,
+                        step: 0.2,
+                        value: params.speed,
+                        callback: value => {
+                            params.speed = value;
+                        }
+                    },
+                    {
+                        type: 'list',
+                        list: animateOptions,
+                        value: getKeyByValue(animateOptions, params.animate),
+                        callback: value => {
+                            params.animate = animateOptions[value];
+                            motionBlur.saveState = params.animate;
+                        }
+                    },
+                    {
+                        type: 'divider'
+                    },
+                    {
+                        type: 'slider',
                         name: 'Interp',
                         min: 0,
                         max: 1,
@@ -377,29 +397,6 @@
                         value: compositeMaterial.uniforms.uBloomDistortion.value,
                         callback: value => {
                             compositeMaterial.uniforms.uBloomDistortion.value = value;
-                        }
-                    },
-                    {
-                        type: 'divider'
-                    },
-                    {
-                        type: 'slider',
-                        name: 'Speed',
-                        min: 0,
-                        max: 100,
-                        step: 0.2,
-                        value: params.speed,
-                        callback: value => {
-                            params.speed = value;
-                        }
-                    },
-                    {
-                        type: 'list',
-                        list: animateOptions,
-                        value: getKeyByValue(animateOptions, params.animate),
-                        callback: value => {
-                            params.animate = animateOptions[value];
-                            motionBlur.saveState = params.animate;
                         }
                     }
                 ];
@@ -738,8 +735,7 @@
             static initWorld() {
                 this.renderer = new WebGLRenderer({
                     powerPreference: 'high-performance',
-                    antialias: true,
-                    stencil: false
+                    antialias: true
                 });
 
                 // Disable color management
@@ -783,6 +779,7 @@
 
             static async initEnvironment() {
                 this.scene.environment = await this.loadEnvironmentTexture('../assets/textures/env/jewelry_black_contrast.jpg');
+                this.scene.environmentIntensity = 0.5;
             }
 
             static initControls() {
@@ -844,10 +841,7 @@
 
         class App {
             static async init() {
-                if (!/firefox/i.test(navigator.userAgent)) {
-                    this.initThread();
-                }
-
+                this.initThread();
                 this.initWorld();
                 this.initViews();
                 this.initControllers();

@@ -236,8 +236,7 @@
                         aoMap: ormMap,
                         aoMapIntensity: 1,
                         normalMap,
-                        normalScale: new Vector2(3, 3),
-                        envMapIntensity: 1.2
+                        normalScale: new Vector2(3, 3)
                     });
                 } else {
                     material = new MeshStandardMaterial({
@@ -250,8 +249,7 @@
                         aoMap: ormMap,
                         aoMapIntensity: 1,
                         normalMap,
-                        normalScale: new Vector2(3, 3),
-                        envMapIntensity: 1.2
+                        normalScale: new Vector2(3, 3)
                     });
                 }
 
@@ -285,7 +283,7 @@
             }
 
             async initMesh() {
-                const { anisotropy, loadTexture } = WorldController;
+                const { scene, anisotropy, loadTexture, loadEnvironmentTexture } = WorldController;
 
                 const geometry = new SphereGeometry(1, 80, 80);
 
@@ -294,12 +292,13 @@
                 geometry.attributes.uv1 = geometry.attributes.uv;
 
                 // Textures
-                const [map, normalMap, ormMap] = await Promise.all([
+                const [map, normalMap, ormMap, envMap] = await Promise.all([
                     // loadTexture('../assets/textures/uv.jpg'),
                     loadTexture('../assets/textures/pbr/pitted_metal_basecolor.jpg'),
                     loadTexture('../assets/textures/pbr/pitted_metal_normal.jpg'),
                     // https://occlusion-roughness-metalness.glitch.me/
-                    loadTexture('../assets/textures/pbr/pitted_metal_orm.jpg')
+                    loadTexture('../assets/textures/pbr/pitted_metal_orm.jpg'),
+                    loadEnvironmentTexture('../assets/textures/env/jewelry_black_contrast.jpg')
                 ]);
 
                 map.anisotropy = anisotropy;
@@ -328,12 +327,17 @@
                     aoMapIntensity: 1,
                     normalMap,
                     normalScale: new Vector2(1, 1),
+                    envMap,
                     envMapIntensity: 9.6
                 });
 
                 // Second channel for aoMap and lightMap
                 // https://threejs.org/docs/#api/en/materials/MeshStandardMaterial.aoMap
                 material.aoMap.channel = 1;
+
+                // Match scene environment rotation
+                material.envMapRotation.x = scene.environmentRotation.x;
+                material.envMapRotation.y = scene.environmentRotation.y;
 
                 const mesh = new Mesh(geometry, material);
 
@@ -441,6 +445,29 @@
                         value: getKeyByValue(DisplayOptions, RenderManager.display),
                         callback: value => {
                             RenderManager.display = DisplayOptions[value];
+                        }
+                    },
+                    {
+                        type: 'divider'
+                    },
+                    {
+                        type: 'slider',
+                        name: 'Speed',
+                        min: 0,
+                        max: 100,
+                        step: 0.2,
+                        value: params.speed,
+                        callback: value => {
+                            params.speed = value;
+                        }
+                    },
+                    {
+                        type: 'list',
+                        list: animateOptions,
+                        value: getKeyByValue(animateOptions, params.animate),
+                        callback: value => {
+                            params.animate = animateOptions[value];
+                            motionBlur.saveState = params.animate;
                         }
                     },
                     {
@@ -595,29 +622,6 @@
                         value: compositeMaterial.uniforms.uBloomDistortion.value,
                         callback: value => {
                             compositeMaterial.uniforms.uBloomDistortion.value = value;
-                        }
-                    },
-                    {
-                        type: 'divider'
-                    },
-                    {
-                        type: 'slider',
-                        name: 'Speed',
-                        min: 0,
-                        max: 100,
-                        step: 0.2,
-                        value: params.speed,
-                        callback: value => {
-                            params.speed = value;
-                        }
-                    },
-                    {
-                        type: 'list',
-                        list: animateOptions,
-                        value: getKeyByValue(animateOptions, params.animate),
-                        callback: value => {
-                            params.animate = animateOptions[value];
-                            motionBlur.saveState = params.animate;
                         }
                     }
                 ];
@@ -1061,8 +1065,7 @@
             static initWorld() {
                 this.renderer = new WebGLRenderer({
                     powerPreference: 'high-performance',
-                    antialias: true,
-                    stencil: false
+                    antialias: true
                 });
 
                 // Disable color management
@@ -1105,6 +1108,7 @@
 
             static async initEnvironment() {
                 this.scene.environment = await this.loadEnvironmentTexture('../assets/textures/env/jewelry_black_contrast.jpg');
+                this.scene.environmentIntensity = 1.2;
                 this.scene.environmentRotation.x = MathUtils.degToRad(-45);
                 this.scene.environmentRotation.y = MathUtils.degToRad(-25);
             }
@@ -1168,10 +1172,7 @@
 
         class App {
             static async init() {
-                if (!/firefox/i.test(navigator.userAgent)) {
-                    this.initThread();
-                }
-
+                this.initThread();
                 this.initWorld();
                 this.initViews();
                 this.initControllers();

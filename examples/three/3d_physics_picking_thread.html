@@ -85,15 +85,9 @@
             };
 
             update = array => {
-                if (array) {
-                    this.physics.array = array;
+                this.physics.array = array;
 
-                    this.step();
-                } else {
-                    this.physics.step();
-
-                    return this.physics.array;
-                }
+                this.step();
             };
 
             add = object => {
@@ -110,6 +104,10 @@
 
             setPosition = (name, position) => {
                 this.physics.setPosition(name, position);
+            };
+
+            setOrientation = (name, orientation) => {
+                this.physics.setOrientation(name, orientation);
             };
 
             setLinearVelocity = (name, linearVelocity) => {
@@ -180,6 +178,10 @@
                 this.physics.setPosition(name, position);
             };
 
+            setOrientation = ({ name, orientation }) => {
+                this.physics.setOrientation(name, orientation);
+            };
+
             setLinearVelocity = ({ name, linearVelocity }) => {
                 this.physics.setLinearVelocity(name, linearVelocity);
             };
@@ -208,29 +210,20 @@
             }
 
             initEngine() {
-                if (!/firefox/i.test(navigator.userAgent)) {
-                    this.thread = new Thread({
-                        imports: [
-                            ['../../build/alien.three.js', 'EventEmitter', 'OimoPhysicsBuffer', 'Vector3', 'delayedCall', 'ticker']
-                        ],
-                        classes: [ScenePhysics],
-                        controller: [ScenePhysicsThread, 'init', 'update', 'add', 'remove', 'setGravity', 'setPosition', 'setLinearVelocity', 'setAngularVelocity']
-                    });
+                this.thread = new Thread({
+                    imports: [
+                        ['../../build/alien.three.js', 'EventEmitter', 'OimoPhysicsBuffer', 'Vector3', 'delayedCall', 'ticker']
+                    ],
+                    classes: [ScenePhysics],
+                    controller: [ScenePhysicsThread, 'init', 'update', 'add', 'remove', 'setGravity', 'setPosition', 'setOrientation', 'setLinearVelocity', 'setAngularVelocity']
+                });
 
-                    this.thread.init({ shapes: this.shapes });
-                } else {
-                    this.physics = new ScenePhysics(this.shapes);
-                }
+                this.thread.init({ shapes: this.shapes });
             }
 
             addListeners() {
-                if (this.thread) {
-                    this.thread.on('buffer', this.onBuffer);
-                    this.thread.on('contact', this.onContact);
-                } else {
-                    this.physics.on('buffer', this.onBuffer);
-                    this.physics.on('contact', this.onContact);
-                }
+                this.thread.on('buffer', this.onBuffer);
+                this.thread.on('contact', this.onContact);
             }
 
             // Event handlers
@@ -246,69 +239,41 @@
             // Public methods
 
             update = () => {
-                let array;
-
-                if (this.thread) {
-                    array = this.buffer.shift();
-                } else {
-                    array = this.physics.update();
-                }
+                const array = this.buffer.shift();
 
                 if (array) {
                     this.step(array);
 
-                    if (this.thread) {
-                        this.thread.update({ array, buffer: [array.buffer] });
-                    }
+                    this.thread.update({ array, buffer: [array.buffer] });
                 }
             };
 
             addJoint = object => {
-                if (this.thread) {
-                    this.thread.add({ object });
-                } else {
-                    this.physics.add(object);
-                }
+                this.thread.add({ object });
             };
 
             remove = name => {
-                if (this.thread) {
-                    this.thread.remove({ name });
-                } else {
-                    this.physics.remove(name);
-                }
+                this.thread.remove({ name });
             };
 
             setGravity = gravity => {
-                if (this.thread) {
-                    this.thread.setGravity({ gravity });
-                } else {
-                    this.physics.setGravity(gravity);
-                }
+                this.thread.setGravity({ gravity });
             };
 
             setPosition = (name, position) => {
-                if (this.thread) {
-                    this.thread.setPosition({ name, position });
-                } else {
-                    this.physics.setPosition(name, position);
-                }
+                this.thread.setPosition({ name, position });
+            };
+
+            setOrientation = (name, orientation) => {
+                this.thread.setOrientation({ name, orientation });
             };
 
             setLinearVelocity = (name, linearVelocity) => {
-                if (this.thread) {
-                    this.thread.setLinearVelocity({ name, linearVelocity });
-                } else {
-                    this.physics.setLinearVelocity(name, linearVelocity);
-                }
+                this.thread.setLinearVelocity({ name, linearVelocity });
             };
 
             setAngularVelocity = (name, angularVelocity) => {
-                if (this.thread) {
-                    this.thread.setAngularVelocity({ name, angularVelocity });
-                } else {
-                    this.physics.setAngularVelocity(name, angularVelocity);
-                }
+                this.thread.setAngularVelocity({ name, angularVelocity });
             };
 
             ready = () => this.init();
@@ -320,6 +285,7 @@
 
                 this.position.z = 1;
 
+                // Physics
                 this.name = 'ball';
                 this.radius = 0.075;
                 this.autoSleep = false;
@@ -386,9 +352,13 @@
                 const mesh = new Mesh(geometry, material);
                 mesh.castShadow = true;
                 mesh.receiveShadow = true;
+
+                // Layers
                 mesh.layers.enable(layers.picking);
+
                 this.add(mesh);
 
+                // Physics
                 physics.add(mesh);
             }
 
@@ -401,6 +371,7 @@
             constructor() {
                 super();
 
+                // Physics
                 this.name = 'cube';
                 this.size = new Vector3(0.5, 0.5, 0.5);
                 this.autoSleep = false;
@@ -440,8 +411,7 @@
                     aoMap: ormMap,
                     aoMapIntensity: 1,
                     normalMap,
-                    normalScale: new Vector2(3, 3),
-                    envMapIntensity: 1.2
+                    normalScale: new Vector2(3, 3)
                 });
 
                 // Second channel for aoMap and lightMap
@@ -496,9 +466,13 @@
                 const mesh = new Mesh(geometry, material);
                 mesh.castShadow = true;
                 mesh.receiveShadow = true;
+
+                // Layers
                 mesh.layers.enable(layers.picking);
+
                 this.add(mesh);
 
+                // Physics
                 physics.add(mesh);
             }
 
@@ -515,9 +489,11 @@
 
                 this.position.y = -3.04;
 
+                // Physics
                 this.name = 'floor';
                 this.size = new Vector3(100, 5, 100);
                 this.density = 0;
+                this.autoSleep = false;
 
                 this.initReflector();
             }
@@ -635,7 +611,7 @@
                 this.add(mesh);
 
                 // Physics mesh
-                const floor = new Mesh(new BoxGeometry(100, 5, 100));
+                const floor = new Mesh(new BoxGeometry(this.size.x, this.size.y, this.size.z));
                 floor.geometry.setDrawRange(0, 0); // Avoid rendering geometry
                 this.add(floor);
 
@@ -799,7 +775,8 @@
         }
 
         class PanelController {
-            static init(ui) {
+            static init(physics, ui) {
+                this.physics = physics;
                 this.ui = ui;
 
                 this.initPanel();
@@ -808,13 +785,15 @@
             static initPanel() {
                 const { luminosityMaterial, bloomCompositeMaterial, compositeMaterial } = RenderManager;
 
+                const physics = this.physics;
+
+                const vector3 = new Vector3();
+                const gravity = new Vector3(0, -9.81, 0);
+
                 const physicsOptions = {
                     Off: false,
                     Physics: true
                 };
-
-                const vector3 = new Vector3();
-                const gravity = new Vector3(0, -9.81, 0);
 
                 const items = [
                     {
@@ -830,20 +809,21 @@
                         callback: value => {
                             SceneController.enabled = physicsOptions[value];
 
-                            if (!SceneController.enabled) {
-                                // Reset
-                                vector3.set(0, 0, 0);
-                                const array = vector3.toArray();
+                            // Reset
+                            vector3.set(0, 0, 0);
+                            const array = vector3.toArray();
 
-                                SceneController.physics.setLinearVelocity('cube', array);
-                                SceneController.physics.setAngularVelocity('cube', array);
+                            physics.objects.forEach(object => {
+                                const { name, position, quaternion } = object;
 
-                                SceneController.physics.setLinearVelocity('ball', array);
-                                SceneController.physics.setAngularVelocity('ball', array);
+                                physics.setPosition(name, position.toArray());
+                                physics.setOrientation(name, quaternion.toArray());
+                                physics.setLinearVelocity(name, array);
+                                physics.setAngularVelocity(name, array);
+                            });
 
-                                // Flush the last frame
-                                SceneController.physics.update();
-                            }
+                            // Flush the last frame
+                            physics.update();
                         }
                     },
                     {
@@ -855,7 +835,7 @@
                         value: -gravity.y,
                         callback: value => {
                             gravity.y = -value;
-                            SceneController.physics.setGravity(gravity.toArray());
+                            physics.setGravity(gravity.toArray());
                         }
                     },
                     {
@@ -1133,7 +1113,7 @@
 
                 this.dragPlane = new Mesh(quad, material);
                 this.dragPlane.scale.multiplyScalar(200);
-                this.dragPlane.layers.enable(layers.picking);
+                this.dragPlane.layers.set(layers.picking);
             }
 
             static addListeners() {
@@ -1331,8 +1311,7 @@
             static initWorld() {
                 this.renderer = new WebGLRenderer({
                     powerPreference: 'high-performance',
-                    antialias: true,
-                    stencil: false
+                    antialias: true
                 });
 
                 // Disable color management
@@ -1390,6 +1369,7 @@
 
             static async initEnvironment() {
                 this.scene.environment = await this.loadEnvironmentTexture('../assets/textures/env/jewelry_black_contrast.jpg');
+                this.scene.environmentIntensity = 1.2;
             }
 
             static initPhysics() {
@@ -1433,10 +1413,7 @@
 
         class App {
             static async init() {
-                if (!/firefox/i.test(navigator.userAgent)) {
-                    this.initThread();
-                }
-
+                this.initThread();
                 this.initLoader();
                 this.initWorld();
                 this.initViews();
@@ -1504,7 +1481,9 @@
             }
 
             static initPanel() {
-                PanelController.init(this.ui);
+                const { physics } = WorldController;
+
+                PanelController.init(physics, this.ui);
             }
 
             static addListeners() {

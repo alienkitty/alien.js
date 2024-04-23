@@ -109,7 +109,6 @@
                     color: 0xefefef,
                     metalness: 0.6,
                     roughness: 0.9,
-                    envMapIntensity: 1.6,
                     dithering: true
                 });
 
@@ -163,7 +162,6 @@
                     color: 0xefefef,
                     metalness: 0.6,
                     roughness: 0.9,
-                    envMapIntensity: 1.6,
                     dithering: true
                 });
 
@@ -559,8 +557,7 @@
             static initWorld() {
                 this.renderer = new WebGLRenderer({
                     powerPreference: 'high-performance',
-                    antialias: true,
-                    stencil: false
+                    antialias: true
                 });
 
                 // Disable color management
@@ -637,6 +634,7 @@
 
             static async initEnvironment() {
                 this.scene.environment = await this.loadEnvironmentTexture('../assets/textures/env/jewelry_black_contrast.jpg');
+                this.scene.environmentIntensity = 1.6;
             }
 
             static initControls() {

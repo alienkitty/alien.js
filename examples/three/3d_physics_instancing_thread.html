@@ -43,15 +43,9 @@
             };
 
             update = array => {
-                if (array) {
-                    this.physics.array = array;
+                this.physics.array = array;
 
-                    this.step();
-                } else {
-                    this.physics.step();
-
-                    return this.physics.array;
-                }
+                this.step();
             };
 
             setGravity = gravity => {
@@ -60,6 +54,10 @@
 
             setPosition = (name, position) => {
                 this.physics.setPosition(name, position);
+            };
+
+            setOrientation = (name, orientation) => {
+                this.physics.setOrientation(name, orientation);
             };
 
             setLinearVelocity = (name, linearVelocity) => {
@@ -117,6 +115,10 @@
                 this.physics.setPosition(name, position);
             };
 
+            setOrientation = ({ name, orientation }) => {
+                this.physics.setOrientation(name, orientation);
+            };
+
             setLinearVelocity = ({ name, linearVelocity }) => {
                 this.physics.setLinearVelocity(name, linearVelocity);
             };
@@ -140,27 +142,19 @@
             }
 
             initEngine() {
-                if (!/firefox/i.test(navigator.userAgent)) {
-                    this.thread = new Thread({
-                        imports: [
-                            ['../../build/alien.three.js', 'EventEmitter', 'OimoPhysicsBuffer', 'Vector3', 'delayedCall', 'ticker']
-                        ],
-                        classes: [ScenePhysics],
-                        controller: [ScenePhysicsThread, 'init', 'update', 'setGravity', 'setPosition', 'setLinearVelocity', 'setAngularVelocity']
-                    });
+                this.thread = new Thread({
+                    imports: [
+                        ['../../build/alien.three.js', 'EventEmitter', 'OimoPhysicsBuffer', 'Vector3', 'delayedCall', 'ticker']
+                    ],
+                    classes: [ScenePhysics],
+                    controller: [ScenePhysicsThread, 'init', 'update', 'setGravity', 'setPosition', 'setOrientation', 'setLinearVelocity', 'setAngularVelocity']
+                });
 
-                    this.thread.init({ shapes: this.shapes });
-                } else {
-                    this.physics = new ScenePhysics(this.shapes);
-                }
+                this.thread.init({ shapes: this.shapes });
             }
 
             addListeners() {
-                if (this.thread) {
-                    this.thread.on('buffer', this.onBuffer);
-                } else {
-                    this.physics.on('buffer', this.onBuffer);
-                }
+                this.thread.on('buffer', this.onBuffer);
             }
 
             // Event handlers
@@ -172,59 +166,41 @@
             // Public methods
 
             update = () => {
-                let array;
-
-                if (this.thread) {
-                    array = this.buffer.shift();
-                } else {
-                    array = this.physics.update();
-                }
+                const array = this.buffer.shift();
 
                 if (array) {
                     this.step(array);
 
-                    if (this.thread) {
-                        this.thread.update({ array, buffer: [array.buffer] });
-                    }
+                    this.thread.update({ array, buffer: [array.buffer] });
                 }
             };
 
             setGravity = gravity => {
-                if (this.thread) {
-                    this.thread.setGravity({ gravity });
-                } else {
-                    this.physics.setGravity(gravity);
-                }
+                this.thread.setGravity({ gravity });
             };
 
             setPosition = (object, position, index) => {
                 const { name } = this.getObjectBody(object, index);
 
-                if (this.thread) {
-                    this.thread.setPosition({ name, position });
-                } else {
-                    this.physics.setPosition(name, position);
-                }
+                this.thread.setPosition({ name, position });
+            };
+
+            setOrientation = (object, orientation, index) => {
+                const { name } = this.getObjectBody(object, index);
+
+                this.thread.setOrientation({ name, orientation });
             };
 
             setLinearVelocity = (object, linearVelocity, index) => {
                 const { name } = this.getObjectBody(object, index);
 
-                if (this.thread) {
-                    this.thread.setLinearVelocity({ name, linearVelocity });
-                } else {
-                    this.physics.setLinearVelocity(name, linearVelocity);
-                }
+                this.thread.setLinearVelocity({ name, linearVelocity });
             };
 
             setAngularVelocity = (object, angularVelocity, index) => {
                 const { name } = this.getObjectBody(object, index);
 
-                if (this.thread) {
-                    this.thread.setAngularVelocity({ name, angularVelocity });
-                } else {
-                    this.physics.setAngularVelocity(name, angularVelocity);
-                }
+                this.thread.setAngularVelocity({ name, angularVelocity });
             };
 
             ready = () => this.init();
@@ -271,6 +247,12 @@
 
                 this.position.y = -2.5;
 
+                // Physics
+                this.name = 'floor';
+                this.size = new Vector3(100, 5, 100);
+                this.density = 0;
+                this.autoSleep = false;
+
                 this.initReflector();
             }
 
@@ -285,7 +267,7 @@
             async initMesh() {
                 const { physics, loadTexture } = WorldController;
 
-                const geometry = new PlaneGeometry(100, 100);
+                const geometry = new PlaneGeometry(this.size.x, this.size.z);
 
                 const map = await loadTexture('../assets/textures/waterdudv.jpg');
                 map.wrapS = RepeatWrapping;
@@ -389,11 +371,11 @@
                 this.add(mesh);
 
                 // Physics mesh
-                const floor = new Mesh(new BoxGeometry(100, 5, 100));
+                const floor = new Mesh(new BoxGeometry(this.size.x, this.size.y, this.size.z));
                 floor.geometry.setDrawRange(0, 0); // Avoid rendering geometry
                 this.add(floor);
 
-                physics.add(floor, { density: 0 });
+                physics.add(floor);
             }
 
             // Public methods
@@ -452,8 +434,7 @@
                     aoMap: ormMap,
                     aoMapIntensity: 1,
                     normalMap,
-                    normalScale: new Vector2(3, 3),
-                    envMapIntensity: 1.2
+                    normalScale: new Vector2(3, 3)
                 });
 
                 // Second channel for aoMap and lightMap
@@ -652,7 +633,8 @@
         }
 
         class PanelController {
-            static init(view, ui) {
+            static init(physics, view, ui) {
+                this.physics = physics;
                 this.view = view;
                 this.ui = ui;
 
@@ -662,13 +644,16 @@
             static initPanel() {
                 const { luminosityMaterial, bloomCompositeMaterial, compositeMaterial } = RenderManager;
 
+                const physics = this.physics;
+                const view = this.view;
+
+                const vector3 = new Vector3();
+                const gravity = new Vector3(0, -9.81, 0);
+
                 const physicsOptions = {
                     Off: false,
                     Physics: true
                 };
-
-                const vector3 = new Vector3();
-                const gravity = new Vector3(0, -9.81, 0);
 
                 const items = [
                     {
@@ -684,24 +669,22 @@
                         callback: value => {
                             SceneController.enabled = physicsOptions[value];
 
-                            if (!SceneController.enabled) {
-                                // Reset
-                                vector3.set(0, 0, 0);
-                                const array = vector3.toArray();
+                            // Reset
+                            vector3.set(0, 0, 0);
+                            const array = vector3.toArray();
 
-                                for (let i = 0, l = this.view.boxes.count; i < l; i++) {
-                                    SceneController.physics.setLinearVelocity(this.view.boxes, array, i);
-                                    SceneController.physics.setAngularVelocity(this.view.boxes, array, i);
-                                }
-
-                                for (let i = 0, l = this.view.spheres.count; i < l; i++) {
-                                    SceneController.physics.setLinearVelocity(this.view.spheres, array, i);
-                                    SceneController.physics.setAngularVelocity(this.view.spheres, array, i);
-                                }
-
-                                // Flush the last frame
-                                SceneController.physics.update();
+                            for (let i = 0, l = view.boxes.count; i < l; i++) {
+                                physics.setLinearVelocity(view.boxes, array, i);
+                                physics.setAngularVelocity(view.boxes, array, i);
                             }
+
+                            for (let i = 0, l = view.spheres.count; i < l; i++) {
+                                physics.setLinearVelocity(view.spheres, array, i);
+                                physics.setAngularVelocity(view.spheres, array, i);
+                            }
+
+                            // Flush the last frame
+                            physics.update();
                         }
                     },
                     {
@@ -713,7 +696,7 @@
                         value: -gravity.y,
                         callback: value => {
                             gravity.y = -value;
-                            SceneController.physics.setGravity(gravity.toArray());
+                            physics.setGravity(gravity.toArray());
                         }
                     },
                     {
@@ -1037,8 +1020,7 @@
             static initWorld() {
                 this.renderer = new WebGLRenderer({
                     powerPreference: 'high-performance',
-                    antialias: true,
-                    stencil: false
+                    antialias: true
                 });
 
                 // Disable color management
@@ -1095,6 +1077,7 @@
 
             static async initEnvironment() {
                 this.scene.environment = await this.loadEnvironmentTexture('../assets/textures/env/jewelry_black_contrast.jpg');
+                this.scene.environmentIntensity = 1.2;
             }
 
             static initPhysics() {
@@ -1140,10 +1123,7 @@
 
         class App {
             static async init() {
-                if (!/firefox/i.test(navigator.userAgent)) {
-                    this.initThread();
-                }
-
+                this.initThread();
                 this.initWorld();
                 this.initViews();
                 this.initControllers();
@@ -1193,7 +1173,9 @@
             }
 
             static initPanel() {
-                PanelController.init(this.view, this.ui);
+                const { physics } = WorldController;
+
+                PanelController.init(physics, this.view, this.ui);
             }
 
             static addListeners() {

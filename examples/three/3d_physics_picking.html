@@ -92,9 +92,13 @@
                 const mesh = new Mesh(geometry, material);
                 mesh.castShadow = true;
                 mesh.receiveShadow = true;
+
+                // Layers
                 mesh.layers.enable(layers.picking);
+
                 this.add(mesh);
 
+                // Physics
                 physics.add(mesh, { autoSleep: false });
             }
 
@@ -107,6 +111,7 @@
             constructor() {
                 super();
 
+                // Physics
                 this.force = new Vector3();
                 this.contact = false;
             }
@@ -145,8 +150,7 @@
                     aoMap: ormMap,
                     aoMapIntensity: 1,
                     normalMap,
-                    normalScale: new Vector2(3, 3),
-                    envMapIntensity: 1.2
+                    normalScale: new Vector2(3, 3)
                 });
 
                 // Second channel for aoMap and lightMap
@@ -201,9 +205,13 @@
                 const mesh = new Mesh(geometry, material);
                 mesh.castShadow = true;
                 mesh.receiveShadow = true;
+
+                // Layers
                 mesh.layers.enable(layers.picking);
+
                 this.add(mesh);
 
+                // Physics
                 physics.add(mesh, {
                     autoSleep: false,
                     contactCallback: this.onContact
@@ -371,7 +379,7 @@
                 floor.geometry.setDrawRange(0, 0); // Avoid rendering geometry
                 this.add(floor);
 
-                physics.add(floor, { density: 0 });
+                physics.add(floor, { density: 0, autoSleep: false });
             }
 
             // Public methods
@@ -534,13 +542,15 @@
             static initPanel() {
                 const { luminosityMaterial, bloomCompositeMaterial, compositeMaterial } = RenderManager;
 
+                const physics = this.physics;
+
+                const vector3 = new Vector3();
+                const gravity = this.physics.getGravity();
+
                 const physicsOptions = {
                     Off: false,
                     Physics: true
                 };
-
-                const vector3 = new Vector3();
-                const gravity = this.physics.world.getGravity();
 
                 const items = [
                     {
@@ -559,9 +569,13 @@
                             // Reset
                             vector3.set(0, 0, 0);
 
-                            this.physics.objects.forEach(object => {
-                                this.physics.setLinearVelocity(object, vector3);
-                                this.physics.setAngularVelocity(object, vector3);
+                            physics.objects.forEach(object => {
+                                const { position, quaternion } = object;
+
+                                physics.setPosition(object, position);
+                                physics.setOrientation(object, quaternion);
+                                physics.setLinearVelocity(object, vector3);
+                                physics.setAngularVelocity(object, vector3);
                             });
                         }
                     },
@@ -574,7 +588,7 @@
                         value: -gravity.y,
                         callback: value => {
                             gravity.y = -value;
-                            this.physics.world.setGravity(gravity);
+                            physics.setGravity(gravity);
                         }
                     },
                     {
@@ -855,7 +869,7 @@
 
                 this.dragPlane = new Mesh(quad, material);
                 this.dragPlane.scale.multiplyScalar(200);
-                this.dragPlane.layers.enable(layers.picking);
+                this.dragPlane.layers.set(layers.picking);
             }
 
             static addListeners() {
@@ -1056,8 +1070,7 @@
             static initWorld() {
                 this.renderer = new WebGLRenderer({
                     powerPreference: 'high-performance',
-                    antialias: true,
-                    stencil: false
+                    antialias: true
                 });
 
                 // Disable color management
@@ -1115,6 +1128,7 @@
 
             static async initEnvironment() {
                 this.scene.environment = await this.loadEnvironmentTexture('../assets/textures/env/jewelry_black_contrast.jpg');
+                this.scene.environmentIntensity = 1.2;
             }
 
             static initPhysics() {
@@ -1158,10 +1172,7 @@
 
         class App {
             static async init() {
-                if (!/firefox/i.test(navigator.userAgent)) {
-                    this.initThread();
-                }
-
+                this.initThread();
                 this.initLoader();
                 this.initWorld();
                 this.initViews();

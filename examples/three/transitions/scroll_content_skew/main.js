@@ -129,33 +129,33 @@ class CompositeMaterial extends RawShaderMaterial {
             vertexShader: /* glsl */ `
                 in vec3 position;
                 in vec2 uv;
-            
+
                 out vec2 vUv;
-            
+
                 void main() {
                     vUv = uv;
-            
+
                     gl_Position = vec4(position, 1.0);
                 }
             `,
             fragmentShader: /* glsl */ `
                 precision highp float;
-            
+
                 uniform sampler2D tScene;
                 uniform vec3 uColor;
                 uniform float uDistortion;
                 uniform float uOpacity;
-            
+
                 in vec2 vUv;
-            
+
                 out vec4 FragColor;
-            
+
                 ${rgbshift}
                 ${dither}
-            
+
                 void main() {
                     FragColor = getRGB(tScene, vUv, 0.1, 0.002 * uDistortion * (1.0 - uOpacity));
-            
+
                     FragColor.rgb = mix(uColor, FragColor.rgb, uOpacity);
 
                     FragColor.rgb = dither(FragColor.rgb);
@@ -207,7 +207,6 @@ class AbstractCube extends Group {
             aoMapIntensity: 1,
             normalMap,
             normalScale: new Vector2(1, 1),
-            envMapIntensity: 1.2,
             flatShading: true
         });
 
@@ -279,7 +278,6 @@ class FloatingCrystal extends Group {
             aoMapIntensity: 1,
             normalMap,
             normalScale: new Vector2(1, 1),
-            envMapIntensity: 1.2,
             flatShading: true
         });
 
@@ -353,8 +351,7 @@ class DarkPlanet extends Group {
             aoMap: ormMap,
             aoMapIntensity: 1,
             normalMap,
-            normalScale: new Vector2(3, 3),
-            envMapIntensity: 1.2
+            normalScale: new Vector2(3, 3)
         });
 
         // Second channel for aoMap and lightMap
@@ -878,8 +875,7 @@ class WorldController {
     static initWorld() {
         this.renderer = new WebGLRenderer({
             powerPreference: 'high-performance',
-            antialias: true,
-            stencil: false
+            antialias: true
         });
 
         // Disable color management
@@ -931,6 +927,7 @@ class WorldController {
 
     static async initEnvironment() {
         this.scene.environment = await this.loadEnvironmentTexture('assets/textures/env/jewelry_black_contrast.jpg');
+        this.scene.environmentIntensity = 1.2;
     }
 
     static addListeners() {
@@ -982,10 +979,7 @@ class WorldController {
 
 class App {
     static async init() {
-        if (!/firefox/i.test(navigator.userAgent)) {
-            this.initThread();
-        }
-
+        this.initThread();
         this.initLoader();
         this.initStage();
         this.initWorld();

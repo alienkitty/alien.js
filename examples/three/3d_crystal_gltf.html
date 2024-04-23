@@ -55,7 +55,6 @@
                 // Crystal mesh
                 const mesh = model.children[0].children[0].children[0].children[0];
                 mesh.position.x = 20; // Centre the axis
-                mesh.material.envMapIntensity = 1.2;
                 mesh.material.side = FrontSide;
 
                 this.add(gltf.scene);
@@ -544,8 +543,7 @@
             static initWorld() {
                 this.renderer = new WebGLRenderer({
                     powerPreference: 'high-performance',
-                    antialias: true,
-                    stencil: false
+                    antialias: true
                 });
 
                 // Disable color management
@@ -589,6 +587,7 @@
 
             static async initEnvironment() {
                 this.scene.environment = await this.loadEnvironmentTexture('../assets/textures/env/jewelry_black_contrast.jpg');
+                this.scene.environmentIntensity = 1.2;
             }
 
             static initControls() {

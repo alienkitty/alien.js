@@ -251,7 +251,7 @@
                     },
                     {
                         type: 'slider',
-                        label: 'Speed',
+                        name: 'Speed',
                         min: 0,
                         max: 10,
                         step: 0.1,
@@ -484,8 +484,7 @@
             static initWorld() {
                 this.renderer = new WebGLRenderer({
                     powerPreference: 'high-performance',
-                    antialias: true,
-                    stencil: false
+                    antialias: true
                 });
 
                 // Disable color management

@@ -88,6 +88,26 @@
                 );
                 this.add(this.mesh);
             }
+
+            // Public methods
+
+            resize = () => {
+                const { camera } = WorldController;
+
+                this.mesh.material.uniforms.uAperture.value = camera.position.z;
+            };
+        }
+
+        class SceneController {
+            static init(view) {
+                this.view = view;
+            }
+
+            // Public methods
+
+            static resize = () => {
+                this.view.resize();
+            };
         }
 
         class PanelController {
@@ -259,6 +279,7 @@
             static initControllers() {
                 const { renderer, scene, camera } = WorldController;
 
+                SceneController.init(this.view);
                 RenderManager.init(renderer, scene, camera);
             }
 
@@ -280,6 +301,7 @@
                 const dpr = window.devicePixelRatio;
 
                 WorldController.resize(width, height, dpr);
+                SceneController.resize();
                 RenderManager.resize(width, height, dpr);
             };
 

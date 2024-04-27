@@ -20,13 +20,13 @@
 
         class DepthMaterial extends RawShaderMaterial {
             constructor() {
-                const { camera } = WorldController;
+                const { camera, time } = WorldController;
 
                 super({
                     glslVersion: GLSL3,
                     uniforms: {
                         uAperture: { value: camera.position.z },
-                        uTime: WorldController.time
+                        uTime: time
                     },
                     vertexShader: /* glsl */ `
                         in vec3 position;

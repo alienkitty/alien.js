@@ -1,6 +1,6 @@
-// Based on https://www.shadertoy.com/view/MslGR8 by hornet
-
 import random from '../random/random.glsl.js';
+
+// Based on https://www.shadertoy.com/view/MslGR8 by hornet
 
 export default /* glsl */ `
 ${random}

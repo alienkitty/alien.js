@@ -11,7 +11,7 @@
     <link rel="stylesheet" href="../assets/css/style.css">
 
     <script type="module">
-        import { AssetLoader, Color, ColorManagement, DirectionalLight, Group, Interface, LinearFilter, LinearSRGBColorSpace, Mesh, MeshStandardMaterial, PerspectiveCamera, PlaneGeometry, Scene, Texture, Vector2, WebGLRenderer, clearTween, delayedCall, getFrustum, ticker } from '../../build/alien.three.js';
+        import { AssetLoader, Color, ColorManagement, DirectionalLight, Group, Interface, LinearFilter, LinearSRGBColorSpace, Mesh, MeshStandardMaterial, PerspectiveCamera, PlaneGeometry, Scene, Texture, UI, Vector2, WebGLRenderer, clearTween, delayedCall, getFrustum, ticker } from '../../build/alien.three.js';
 
         class GridCanvas extends Interface {
             constructor() {
@@ -474,6 +474,10 @@
             static initViews() {
                 this.view = new SceneView();
                 WorldController.scene.add(this.view);
+
+                this.ui = new UI({ fps: true });
+                this.ui.animateIn();
+                document.body.appendChild(this.ui.element);
             }
 
             static initControllers() {
@@ -505,6 +509,7 @@
                 WorldController.update(time, delta, frame);
                 SceneController.update();
                 RenderManager.update(time, delta, frame);
+                this.ui.update();
             };
         }
 

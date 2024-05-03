@@ -29,7 +29,7 @@
     </style>
 
     <script type="module">
-        import { Color, ColorManagement, GLSL3, Group, LinearSRGBColorSpace, Mesh, OrthographicCamera, PlaneGeometry, RawShaderMaterial, Scene, UI, Vector2, WebGLRenderer, ticker } from '../../build/alien.three.js';
+        import { Color, ColorManagement, GLSL3, Group, LinearSRGBColorSpace, Mesh, OrthographicCamera, PanelItem, PlaneGeometry, RawShaderMaterial, Scene, UI, Vector2, WebGLRenderer, WireframeOptions, getKeyByValue, ticker } from '../../build/alien.three.js';
 
         import simplex3d from '../../src/shaders/modules/noise/simplex3d.glsl.js';
 
@@ -183,6 +183,71 @@
             static ready = () => this.view.ready();
         }
 
+        class PanelController {
+            static init(view, ui) {
+                this.view = view;
+                this.ui = ui;
+
+                this.initPanel();
+            }
+
+            static initPanel() {
+                const { mesh } = this.view;
+
+                const items = [
+                    {
+                        name: 'FPS'
+                    },
+                    {
+                        type: 'divider'
+                    },
+                    {
+                        type: 'color',
+                        value: mesh.material.uniforms.uColor.value[0],
+                        callback: value => {
+                            mesh.material.uniforms.uColor.value[0].copy(value);
+                        }
+                    },
+                    {
+                        type: 'color',
+                        value: mesh.material.uniforms.uColor.value[1],
+                        callback: value => {
+                            mesh.material.uniforms.uColor.value[1].copy(value);
+                        }
+                    },
+                    {
+                        type: 'color',
+                        value: mesh.material.uniforms.uColor.value[2],
+                        callback: value => {
+                            mesh.material.uniforms.uColor.value[2].copy(value);
+                        }
+                    },
+                    {
+                        type: 'color',
+                        value: mesh.material.uniforms.uColor.value[3],
+                        callback: value => {
+                            mesh.material.uniforms.uColor.value[3].copy(value);
+                        }
+                    },
+                    {
+                        type: 'divider'
+                    },
+                    {
+                        type: 'list',
+                        list: WireframeOptions,
+                        value: getKeyByValue(WireframeOptions, mesh.material.wireframe),
+                        callback: value => {
+                            mesh.material.wireframe = WireframeOptions[value];
+                        }
+                    }
+                ];
+
+                items.forEach(data => {
+                    this.ui.addPanel(new PanelItem(data));
+                });
+            }
+        }
+
         class RenderManager {
             static init(renderer, scene, camera) {
                 this.renderer = renderer;
@@ -279,6 +344,8 @@
 
                 await SceneController.ready();
                 SceneController.animateIn();
+
+                this.initPanel();
             }
 
             static initWorld() {
@@ -300,6 +367,10 @@
 
                 SceneController.init(this.view);
                 RenderManager.init(renderer, scene, camera);
+            }
+
+            static initPanel() {
+                PanelController.init(this.view, this.ui);
             }
 
             static addListeners() {

@@ -11,7 +11,7 @@
     <link rel="stylesheet" href="../assets/css/style.css">
 
     <script type="module">
-        import { AssetLoader, Color, ColorManagement, DirectionalLight, Group, Interface, LinearFilter, LinearSRGBColorSpace, Mesh, MeshStandardMaterial, PerspectiveCamera, PlaneGeometry, Scene, Texture, UI, Vector2, WebGLRenderer, clearTween, delayedCall, getFrustum, ticker } from '../../build/alien.three.js';
+        import { AssetLoader, Color, ColorManagement, DirectionalLight, Group, Interface, LinearFilter, LinearSRGBColorSpace, Mesh, MeshStandardMaterial, PanelItem, PerspectiveCamera, PlaneGeometry, Scene, Texture, UI, Vector2, WebGLRenderer, WireframeOptions, clearTween, delayedCall, getFrustum, getKeyByValue, ticker } from '../../build/alien.three.js';
 
         class GridCanvas extends Interface {
             constructor() {
@@ -349,6 +349,50 @@
             static ready = () => this.view.initImages();
         }
 
+        class PanelController {
+            static init(view, ui) {
+                this.view = view;
+                this.ui = ui;
+
+                this.initPanel();
+            }
+
+            static initPanel() {
+                const { mesh } = this.view;
+
+                const currentMaterialMap = mesh.material.map;
+
+                const items = [
+                    {
+                        name: 'FPS'
+                    },
+                    {
+                        type: 'divider'
+                    },
+                    {
+                        type: 'list',
+                        list: WireframeOptions,
+                        value: getKeyByValue(WireframeOptions, mesh.material.wireframe),
+                        callback: value => {
+                            mesh.material.wireframe = WireframeOptions[value];
+
+                            if (mesh.material.wireframe) {
+                                mesh.material.map = null;
+                            } else {
+                                mesh.material.map = currentMaterialMap;
+                            }
+
+                            mesh.material.needsUpdate = true;
+                        }
+                    }
+                ];
+
+                items.forEach(data => {
+                    this.ui.addPanel(new PanelItem(data));
+                });
+            }
+        }
+
         class RenderManager {
             static init(renderer, scene, camera) {
                 this.renderer = renderer;
@@ -464,6 +508,8 @@
 
                 await SceneController.ready();
                 SceneController.animateIn();
+
+                this.initPanel();
             }
 
             static initWorld() {
@@ -485,6 +531,10 @@
 
                 SceneController.init(this.view);
                 RenderManager.init(renderer, scene, camera);
+            }
+
+            static initPanel() {
+                PanelController.init(this.view, this.ui);
             }
 
             static addListeners() {

@@ -28,7 +28,7 @@
 
 :root {
     --bg-color: #000;
-    --ui-panel-width: 108px;
+    --ui-panel-width: 100px;
     --ui-font-family: 'Roboto Mono', monospace;
     --ui-font-weight: 400;
     --ui-font-size: 10px;

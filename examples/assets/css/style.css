@@ -1,5 +1,6 @@
 :root {
     --bg-color: #0e0e0e;
+    --ui-panel-width: 108px;
     --ui-font-family: 'Roboto Mono', monospace;
     --ui-font-weight: 400;
     --ui-font-size: 10px;

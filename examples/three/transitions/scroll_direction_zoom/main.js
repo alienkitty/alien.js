@@ -149,11 +149,11 @@ class Section extends Interface {
 
         if (isDebug) {
             this.css({
-                backgroundColor: `rgba(
-                    ${Math.floor(Math.random() * 255)},
-                    ${Math.floor(Math.random() * 255)},
-                    ${Math.floor(Math.random() * 255)},
-                    0.5
+                backgroundColor: `rgb(
+                    ${Math.floor(Math.random() * 255)}
+                    ${Math.floor(Math.random() * 255)}
+                    ${Math.floor(Math.random() * 255)}
+                    / 0.5
                 )`
             });
         }

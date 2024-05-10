@@ -45,6 +45,7 @@ export const Transform = oimo.common.Transform;
 export const Setting = oimo.common.Setting;
 
 // Collision
+export const BroadPhaseType = oimo.collision.broadphase.BroadPhaseType;
 export const BoxGeometry = oimo.collision.geometry.BoxGeometry;
 export const SphereGeometry = oimo.collision.geometry.SphereGeometry;
 export const ConeGeometry = oimo.collision.geometry.ConeGeometry;
@@ -64,7 +65,7 @@ export class OimoPhysics {
     constructor({
         fps = 60,
         timestep = 1 / fps,
-        broadphase = 2,
+        broadphase = BroadPhaseType.BVH,
         gravity = new Vec3(0, -9.81, 0),
         velocityIterations = 10,
         positionIterations = 5

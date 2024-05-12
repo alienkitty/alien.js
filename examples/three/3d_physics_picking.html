@@ -927,7 +927,7 @@
                         const point = intersection[0].point;
 
                         const body = new RigidBodyConfig();
-                        body.type = RigidBodyType.STATIC;
+                        body.type = RigidBodyType.KINEMATIC;
                         body.position.copyFrom(point);
                         this.physics.add(body);
 

@@ -206,7 +206,10 @@
             }
 
             initShapes() {
-                this.add({ name: 'mouse' });
+                this.add({
+                    name: 'mouse',
+                    kinematic: true
+                });
             }
 
             initEngine() {

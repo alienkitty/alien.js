@@ -11,7 +11,9 @@
     <link rel="stylesheet" href="../assets/css/style.css">
 
     <script type="module">
-        import { BasicShadowMap, BloomCompositeMaterial, Color, ColorManagement, DirectionalLight, EnvironmentTextureLoader, EventEmitter, Group, HemisphereLight, IcosahedronGeometry, ImageBitmapLoaderThread, LinearSRGBColorSpace, LuminosityMaterial, MathUtils, Mesh, MeshStandardMaterial, OimoPhysicsBuffer, OimoPhysicsController, OrthographicCamera, PanelItem, PerspectiveCamera, PlaneGeometry, PointLight, RepeatWrapping, Scene, SceneCompositeDistortionMaterial, ShaderChunk, TextureLoader, Thread, UI, UnrealBloomBlurMaterial, Vector2, Vector3, WebGLRenderTarget, WebGLRenderer, getFullscreenTriangle, getKeyByValue, headsTails, ticker } from '../../build/alien.three.js';
+        import { BasicShadowMap, BloomCompositeMaterial, Color, ColorManagement, DirectionalLight, DynamicDrawUsage, EnvironmentTextureLoader, EventEmitter, Group, HemisphereLight, IcosahedronGeometry, ImageBitmapLoaderThread, InstancedMesh, LinearSRGBColorSpace, LuminosityMaterial, MathUtils, Matrix4, Mesh, MeshStandardMaterial, OimoPhysicsBuffer, OimoPhysicsController, OrthographicCamera, PanelItem, PerspectiveCamera, PlaneGeometry, PointLight, RepeatWrapping, Scene, SceneCompositeDistortionMaterial, ShaderChunk, TextureLoader, Thread, UI, UnrealBloomBlurMaterial, Vector2, Vector3, WebGLRenderTarget, WebGLRenderer, getFullscreenTriangle, getKeyByValue, headsTails, ticker } from '../../build/alien.three.js';
+
+        const count = parseInt(location.search.slice(1), 10) || 20;
 
         const colors = {
             lightColor: 0xf44336
@@ -216,43 +218,45 @@
                 this.thread.setGravity({ gravity });
             };
 
-            setPosition = (name, position) => {
+            setPosition = (object, position, index) => {
+                const { name } = this.getObjectBody(object, index);
+
                 this.thread.setPosition({ name, position });
             };
 
-            setOrientation = (name, orientation) => {
+            setOrientation = (object, orientation, index) => {
+                const { name } = this.getObjectBody(object, index);
+
                 this.thread.setOrientation({ name, orientation });
             };
 
-            setLinearVelocity = (name, linearVelocity) => {
+            setLinearVelocity = (object, linearVelocity, index) => {
+                const { name } = this.getObjectBody(object, index);
+
                 this.thread.setLinearVelocity({ name, linearVelocity });
             };
 
-            setAngularVelocity = (name, angularVelocity) => {
+            setAngularVelocity = (object, angularVelocity, index) => {
+                const { name } = this.getObjectBody(object, index);
+
                 this.thread.setAngularVelocity({ name, angularVelocity });
             };
 
-            applyImpulse = (name, impulse, positionInWorld) => {
+            applyImpulse = (object, impulse, positionInWorld, index) => {
+                const { name } = this.getObjectBody(object, index);
+
                 this.thread.applyImpulse({ name, impulse, positionInWorld });
             };
 
             ready = () => this.init();
         }
 
-        class Ball extends Group {
-            constructor(index) {
+        class Balls extends Group {
+            constructor() {
                 super();
 
-                this.position.x = MathUtils.randFloat(10, 100) * (headsTails() ? -1 : 1);
-                this.position.y = MathUtils.randFloat(10, 100) * (headsTails() ? -1 : 1);
-                this.position.z = MathUtils.randFloat(10, 100) * (headsTails() ? -1 : 1);
-
-                this.rotation.x = MathUtils.degToRad(MathUtils.randInt(0, 360));
-                this.rotation.y = MathUtils.degToRad(MathUtils.randInt(0, 360));
-                this.rotation.z = MathUtils.degToRad(MathUtils.randInt(0, 360));
-
                 // Physics
-                this.name = `ball_${index}`;
+                this.name = 'balls';
                 this.radius = 1;
                 this.autoSleep = false;
             }
@@ -362,15 +366,34 @@
                     );
                 };
 
-                const mesh = new Mesh(geometry, material);
+                const mesh = new InstancedMesh(geometry, material, count);
+                mesh.instanceMatrix.setUsage(DynamicDrawUsage); // Will be updated every frame
                 mesh.castShadow = true;
                 mesh.receiveShadow = true;
                 this.add(mesh);
+
+                const object = new Group();
+
+                for (let i = 0; i < mesh.count; i++) {
+                    object.position.x = MathUtils.randFloat(10, 100) * (headsTails() ? -1 : 1);
+                    object.position.y = MathUtils.randFloat(10, 100) * (headsTails() ? -1 : 1);
+                    object.position.z = MathUtils.randFloat(10, 100) * (headsTails() ? -1 : 1);
+
+                    object.rotation.x = MathUtils.degToRad(MathUtils.randInt(0, 360));
+                    object.rotation.y = MathUtils.degToRad(MathUtils.randInt(0, 360));
+                    object.rotation.z = MathUtils.degToRad(MathUtils.randInt(0, 360));
+
+                    object.updateMatrix();
+
+                    mesh.setMatrixAt(i, object.matrix);
+                    mesh.computeBoundingSphere();
+                }
 
                 // Physics
                 physics.add(mesh);
 
                 this.uniforms = uniforms;
+                this.mesh = mesh;
             }
 
             // Public methods
@@ -511,14 +534,10 @@
         }
 
         class SceneView extends Group {
-            constructor(numBalls) {
+            constructor() {
                 super();
 
-                this.numBalls = numBalls;
-
                 this.visible = false;
-
-                this.balls = [];
 
                 this.initViews();
             }
@@ -527,18 +546,15 @@
                 this.sphere = new Sphere();
                 this.add(this.sphere);
 
-                for (let i = 0; i < this.numBalls; i++) {
-                    const ball = new Ball(i);
-                    this.add(ball);
-                    this.balls.push(ball);
-                }
+                this.balls = new Balls();
+                this.add(this.balls);
             }
 
             // Public methods
 
             ready = () => Promise.all([
                 this.sphere.ready(),
-                ...this.balls.map(ball => ball.ready())
+                this.balls.ready()
             ]);
         }
 
@@ -547,11 +563,13 @@
                 this.physics = physics;
                 this.view = view;
 
+                this.enabled = true;
+
                 // Physics
                 this.force = new Vector3();
                 this.center = new Vector3(0, 0, 0);
-
-                this.enabled = true;
+                this.object = new Group();
+                this.matrix = new Matrix4();
             }
 
             // Public methods
@@ -564,12 +582,15 @@
                     return;
                 }
 
-                this.physics.objects.forEach(object => {
-                    const { name, position } = object;
+                for (let i = 0; i < this.view.balls.mesh.count; i++) {
+                    const { position, quaternion, scale } = this.object;
+
+                    this.view.balls.mesh.getMatrixAt(i, this.matrix);
+                    this.matrix.decompose(position, quaternion, scale);
 
                     this.force.copy(position).negate().normalize().multiplyScalar(0.1);
-                    this.physics.applyImpulse(name, this.force.toArray(), this.center.toArray());
-                });
+                    this.physics.applyImpulse(this.view.balls.mesh, this.force.toArray(), this.center.toArray(), i);
+                }
 
                 this.physics.update();
             };
@@ -595,7 +616,7 @@
 
             static initPanel() {
                 const { luminosityMaterial, bloomCompositeMaterial, compositeMaterial } = RenderManager;
-                
+
                 const physics = this.physics;
                 const { balls } = this.view;
 
@@ -625,14 +646,10 @@
                             vector3.set(0, 0, 0);
                             const array = vector3.toArray();
 
-                            physics.objects.forEach(object => {
-                                const { name, position, quaternion } = object;
-
-                                physics.setPosition(name, position.toArray());
-                                physics.setOrientation(name, quaternion.toArray());
-                                physics.setLinearVelocity(name, array);
-                                physics.setAngularVelocity(name, array);
-                            });
+                            for (let i = 0, l = balls.mesh.count; i < l; i++) {
+                                physics.setLinearVelocity(balls.mesh, array, i);
+                                physics.setAngularVelocity(balls.mesh, array, i);
+                            }
 
                             // Flush the last frame
                             physics.update();
@@ -659,11 +676,9 @@
                         min: 0,
                         max: 1,
                         step: 0.01,
-                        value: balls[0].uniforms.thicknessDistortion.value,
+                        value: balls.uniforms.thicknessDistortion.value,
                         callback: value => {
-                            balls.forEach(ball => {
-                                ball.uniforms.thicknessDistortion.value = value;
-                            });
+                            balls.uniforms.thicknessDistortion.value = value;
                         }
                     },
                     {
@@ -672,11 +687,9 @@
                         min: 0,
                         max: 5,
                         step: 0.05,
-                        value: balls[0].uniforms.thicknessAmbient.value,
+                        value: balls.uniforms.thicknessAmbient.value,
                         callback: value => {
-                            balls.forEach(ball => {
-                                ball.uniforms.thicknessAmbient.value = value;
-                            });
+                            balls.uniforms.thicknessAmbient.value = value;
                         }
                     },
                     {
@@ -685,11 +698,9 @@
                         min: 0,
                         max: 5,
                         step: 0.05,
-                        value: balls[0].uniforms.thicknessAttenuation.value,
+                        value: balls.uniforms.thicknessAttenuation.value,
                         callback: value => {
-                            balls.forEach(ball => {
-                                ball.uniforms.thicknessAttenuation.value = value;
-                            });
+                            balls.uniforms.thicknessAttenuation.value = value;
                         }
                     },
                     {
@@ -698,11 +709,9 @@
                         min: 1,
                         max: 32,
                         step: 0.1,
-                        value: balls[0].uniforms.thicknessPower.value,
+                        value: balls.uniforms.thicknessPower.value,
                         callback: value => {
-                            balls.forEach(ball => {
-                                ball.uniforms.thicknessPower.value = value;
-                            });
+                            balls.uniforms.thicknessPower.value = value;
                         }
                     },
                     {
@@ -711,11 +720,9 @@
                         min: 0,
                         max: 64,
                         step: 0.1,
-                        value: balls[0].uniforms.thicknessScale.value,
+                        value: balls.uniforms.thicknessScale.value,
                         callback: value => {
-                            balls.forEach(ball => {
-                                ball.uniforms.thicknessScale.value = value;
-                            });
+                            balls.uniforms.thicknessScale.value = value;
                         }
                     },
                     {
@@ -1180,7 +1187,7 @@
             }
 
             static initViews() {
-                this.view = new SceneView(20);
+                this.view = new SceneView();
                 WorldController.scene.add(this.view);
 
                 this.ui = new UI({ fps: true });

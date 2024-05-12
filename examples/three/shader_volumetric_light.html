@@ -323,6 +323,9 @@
 
             // Public methods
 
+            static resize = () => {
+            };
+
             static update = () => {
                 if (!this.view.visible) {
                     return;
@@ -347,9 +350,9 @@
             }
 
             static initPanel() {
-                const { sphere } = this.view;
-
                 const { vlMaterial, luminosityMaterial, bloomCompositeMaterial } = RenderManager;
+
+                const { sphere } = this.view;
 
                 const items = [
                     {
@@ -1043,6 +1046,7 @@
 
                 WorldController.resize(width, height, dpr);
                 CameraController.resize(width, height);
+                SceneController.resize();
                 RenderManager.resize(width, height, dpr);
             };
 

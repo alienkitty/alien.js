@@ -300,10 +300,6 @@
 
             // Public methods
 
-            update = () => {
-                this.ball.update();
-            };
-
             ready = () => Promise.all([
                 this.sphere.ready(),
                 this.ball.ready()
@@ -386,9 +382,9 @@
             }
 
             static initPanel() {
-                const { sphere } = this.view;
-
                 const { vlMaterial, luminosityMaterial, bloomCompositeMaterial } = RenderManager;
+
+                const { sphere } = this.view;
 
                 const items = [
                     {

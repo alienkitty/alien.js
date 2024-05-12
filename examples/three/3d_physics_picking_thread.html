@@ -655,10 +655,6 @@
                 this.floor.resize(width, height);
             };
 
-            update = () => {
-                this.ball.update();
-            };
-
             ready = () => Promise.all([
                 this.floor.ready(),
                 this.cube.ready(),

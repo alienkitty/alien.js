@@ -754,14 +754,14 @@ class ScenePanelController {
     static initPanel() {
         const { darkPlanet, floatingCrystal, abstractCube } = this.view;
 
-        const views = [darkPlanet, floatingCrystal, abstractCube];
+        const objects = [darkPlanet, floatingCrystal, abstractCube];
 
-        views.forEach(view => {
-            view.point = new Point3D(view.mesh, {
+        objects.forEach(object => {
+            object.point = new Point3D(object.mesh, {
                 type: '',
                 noTracker: true
             });
-            view.add(view.point);
+            object.add(object.point);
         });
 
         // Shrink tracker meshes a little bit

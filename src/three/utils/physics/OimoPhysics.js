@@ -411,10 +411,10 @@ export class OimoPhysics {
         return this.q.copy(body.getOrientation()).clone();
     }
 
-    setOrientation(object, position, index) {
+    setOrientation(object, orientation, index) {
         const body = this.getObjectBody(object, index);
 
-        body.setOrientation(position);
+        body.setOrientation(orientation);
     }
 
     getGravityScale(object, index) {
@@ -489,6 +489,12 @@ export class OimoPhysics {
             shape.setContactCallback(contactCallback);
             shape = shape.getNext();
         }
+    }
+
+    applyImpulse(object, impulse, positionInWorld, index) {
+        const body = this.getObjectBody(object, index);
+
+        body.applyImpulse(impulse, positionInWorld);
     }
 
     step() {

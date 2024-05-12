@@ -11,7 +11,7 @@
     <link rel="stylesheet" href="../assets/css/style.css">
 
     <script type="module">
-        import { BasicShadowMap, BloomCompositeMaterial, Color, ColorManagement, DirectionalLight, EnvironmentTextureLoader, EventEmitter, Group, HemisphereLight, IcosahedronGeometry, ImageBitmapLoaderThread, LinearSRGBColorSpace, LuminosityMaterial, MathUtils, Mesh, MeshStandardMaterial, OimoPhysicsBuffer, OimoPhysicsController, OrthographicCamera, PanelItem, PerspectiveCamera, PlaneGeometry, PointLight, RepeatWrapping, RigidBodyType, Scene, SceneCompositeDistortionMaterial, ShaderChunk, TextureLoader, Thread, UI, UnrealBloomBlurMaterial, Vector2, Vector3, WebGLRenderTarget, WebGLRenderer, getFullscreenTriangle, getKeyByValue, headsTails, ticker } from '../../build/alien.three.js';
+        import { BasicShadowMap, BloomCompositeMaterial, Color, ColorManagement, DirectionalLight, EnvironmentTextureLoader, EventEmitter, Group, HemisphereLight, IcosahedronGeometry, ImageBitmapLoaderThread, LinearSRGBColorSpace, LuminosityMaterial, MathUtils, Mesh, MeshStandardMaterial, OimoPhysicsBuffer, OimoPhysicsController, OrthographicCamera, PanelItem, PerspectiveCamera, PlaneGeometry, PointLight, RepeatWrapping, Scene, SceneCompositeDistortionMaterial, ShaderChunk, TextureLoader, Thread, UI, UnrealBloomBlurMaterial, Vector2, Vector3, WebGLRenderTarget, WebGLRenderer, getFullscreenTriangle, getKeyByValue, headsTails, ticker } from '../../build/alien.three.js';
 
         const colors = {
             lightColor: 0xf44336
@@ -25,9 +25,6 @@
                 super();
 
                 this.shapes = shapes;
-
-                this.force = new Vector3();
-                this.center = new Vector3(0, 0, 0);
 
                 this.initPhysics();
             }
@@ -45,15 +42,6 @@
             // Public methods
 
             step = () => {
-                for (let i = 0, l = this.physics.bodies.length; i < l; i++) {
-                    const body = this.physics.bodies[i];
-
-                    if (body.getType() === RigidBodyType.DYNAMIC) {
-                        this.force.copy(body.getPosition()).negate().normalize().multiplyScalar(0.1);
-                        body.applyImpulse(this.force, this.center);
-                    }
-                }
-
                 this.physics.step();
 
                 this.emit('buffer', { array: this.physics.array, buffer: [this.physics.array.buffer] });
@@ -91,6 +79,10 @@
 
             setAngularVelocity = (name, angularVelocity) => {
                 this.physics.setAngularVelocity(name, angularVelocity);
+            };
+
+            applyImpulse = (name, impulse, positionInWorld) => {
+                this.physics.applyImpulse(name, impulse, positionInWorld);
             };
         }
 
@@ -159,6 +151,10 @@
             setAngularVelocity = ({ name, angularVelocity }) => {
                 this.physics.setAngularVelocity(name, angularVelocity);
             };
+
+            applyImpulse = ({ name, impulse, positionInWorld }) => {
+                this.physics.applyImpulse(name, impulse, positionInWorld);
+            };
         }
 
         class ScenePhysicsController extends OimoPhysicsController {
@@ -180,7 +176,7 @@
                         ['../../build/alien.three.js', 'EventEmitter', 'OimoPhysicsBuffer', 'RigidBodyType', 'Vector3', 'delayedCall', 'ticker']
                     ],
                     classes: [ScenePhysics],
-                    controller: [ScenePhysicsThread, 'init', 'update', 'add', 'remove', 'setGravity', 'setPosition', 'setOrientation', 'setLinearVelocity', 'setAngularVelocity']
+                    controller: [ScenePhysicsThread, 'init', 'update', 'add', 'remove', 'setGravity', 'setPosition', 'setOrientation', 'setLinearVelocity', 'setAngularVelocity', 'applyImpulse']
                 });
 
                 this.thread.init({ shapes: this.shapes });
@@ -236,11 +232,15 @@
                 this.thread.setAngularVelocity({ name, angularVelocity });
             };
 
+            applyImpulse = (name, impulse, positionInWorld) => {
+                this.thread.applyImpulse({ name, impulse, positionInWorld });
+            };
+
             ready = () => this.init();
         }
 
         class Ball extends Group {
-            constructor() {
+            constructor(index) {
                 super();
 
                 this.position.x = MathUtils.randFloat(10, 100) * (headsTails() ? -1 : 1);
@@ -252,7 +252,7 @@
                 this.rotation.z = MathUtils.degToRad(MathUtils.randInt(0, 360));
 
                 // Physics
-                // this.name = 'ball';
+                this.name = `ball_${index}`;
                 this.radius = 1;
                 // this.radius = MathUtils.randFloat(0.3, 1);
                 this.autoSleep = false;
@@ -529,7 +529,7 @@
                 this.add(this.sphere);
 
                 for (let i = 0; i < this.numBalls; i++) {
-                    const ball = new Ball();
+                    const ball = new Ball(i);
                     this.add(ball);
                     this.balls.push(ball);
                 }
@@ -548,6 +548,10 @@
                 this.physics = physics;
                 this.view = view;
 
+                // Physics
+                this.force = new Vector3();
+                this.center = new Vector3(0, 0, 0);
+
                 this.enabled = true;
             }
 
@@ -560,6 +564,13 @@
                 if (!this.enabled || !this.view.visible) {
                     return;
                 }
+
+                this.physics.objects.forEach(object => {
+                    const { name, position } = object;
+
+                    this.force.copy(position).negate().normalize().multiplyScalar(0.1);
+                    this.physics.applyImpulse(name, this.force.toArray(), this.center.toArray());
+                });
 
                 this.physics.update();
             };

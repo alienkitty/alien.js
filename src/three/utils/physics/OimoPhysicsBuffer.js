@@ -69,7 +69,8 @@ export class OimoPhysicsBuffer {
         this.map = new Map();
         this.array = new Float32Array();
 
-        this.v = new Vec3();
+        this.v1 = new Vec3();
+        this.v2 = new Vec3();
         this.q = new Quat();
     }
 
@@ -334,24 +335,20 @@ export class OimoPhysicsBuffer {
         return body;
     }
 
-    getGravity() {
-        return this.world.getGravity();
+    setGravity(gravity) {
+        this.world.setGravity(this.v1.init(gravity[0], gravity[1], gravity[2]));
     }
 
-    setGravity(array) {
-        this.world.setGravity(this.v.init(array[0], array[1], array[2]));
-    }
-
-    setPosition(name, array) {
+    setPosition(name, position) {
         const body = this.map.get(name);
 
-        body.setPosition(this.v.init(array[0], array[1], array[2]));
+        body.setPosition(this.v1.init(position[0], position[1], position[2]));
     }
 
-    setOrientation(name, array) {
+    setOrientation(name, orientation) {
         const body = this.map.get(name);
 
-        body.setOrientation(this.q.init(array[0], array[1], array[2], array[3]));
+        body.setOrientation(this.q.init(orientation[0], orientation[1], orientation[2], orientation[3]));
     }
 
     setGravityScale(name, gravityScale) {
@@ -360,28 +357,28 @@ export class OimoPhysicsBuffer {
         body.setGravityScale(gravityScale);
     }
 
-    setLinearVelocity(name, array) {
+    setLinearVelocity(name, linearVelocity) {
         const body = this.map.get(name);
 
-        body.setLinearVelocity(this.v.init(array[0], array[1], array[2]));
+        body.setLinearVelocity(this.v1.init(linearVelocity[0], linearVelocity[1], linearVelocity[2]));
     }
 
-    setAngularVelocity(name, array) {
+    setAngularVelocity(name, angularVelocity) {
         const body = this.map.get(name);
 
-        body.setAngularVelocity(this.v.init(array[0], array[1], array[2]));
+        body.setAngularVelocity(this.v1.init(angularVelocity[0], angularVelocity[1], angularVelocity[2]));
     }
 
-    setLinearDamping(name, array) {
+    setLinearDamping(name, linearDamping) {
         const body = this.map.get(name);
 
-        body.setLinearDamping(this.v.init(array[0], array[1], array[2]));
+        body.setLinearDamping(this.v1.init(linearDamping[0], linearDamping[1], linearDamping[2]));
     }
 
-    setAngularDamping(name, array) {
+    setAngularDamping(name, angularDamping) {
         const body = this.map.get(name);
 
-        body.setAngularDamping(this.v.init(array[0], array[1], array[2]));
+        body.setAngularDamping(this.v1.init(angularDamping[0], angularDamping[1], angularDamping[2]));
     }
 
     setContactCallback(name, callback) {
@@ -396,6 +393,12 @@ export class OimoPhysicsBuffer {
             shape.setContactCallback(contactCallback);
             shape = shape.getNext();
         }
+    }
+
+    applyImpulse(name, impulse, positionInWorld) {
+        const body = this.map.get(name);
+
+        body.applyImpulse(this.v1.init(impulse[0], impulse[1], impulse[2]), this.v2.init(positionInWorld[0], positionInWorld[1], positionInWorld[2]));
     }
 
     step() {

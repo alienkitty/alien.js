@@ -549,14 +549,16 @@
                 this.physics = physics;
                 this.view = view;
 
+                // Mouse light
                 this.mouse = new Vector2();
                 this.target = new Vector2();
                 this.lightPosition = new Vector3();
                 this.lerpSpeed = 0.25;
-                this.enabled = true;
 
                 // Physics
                 this.position = new Vector3();
+
+                this.enabled = true;
 
                 this.addListeners();
             }

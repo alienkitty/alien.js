@@ -139,6 +139,7 @@
                 };
 
                 const mesh = new Mesh(geometry, material);
+                this.add(mesh);
 
                 // Occlusion
                 const occMesh = new Mesh(
@@ -151,7 +152,6 @@
                 // Layers
                 occMesh.layers.set(layers.occlusion);
 
-                this.add(mesh);
                 this.add(occMesh);
             }
 
@@ -541,11 +541,10 @@
                 this.camera = camera;
                 this.view = view;
 
-                this.lightPosition = new Vector3();
-
                 // Volumetric light
+                this.lightPosition = new Vector3();
                 this.vlExposure = 0.1;
-                this.vlDecay = 1.0;
+                this.vlDecay = 1;
                 this.vlDensity = 0.96;
                 this.vlWeight = 0.4;
                 this.vlClamp = 1;

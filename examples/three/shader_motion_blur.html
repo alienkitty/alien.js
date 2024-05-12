@@ -469,9 +469,6 @@
 
                 this.renderTargetA.depthBuffer = true;
 
-                // Occlusion material
-                this.blackoutMaterial = new MeshBasicMaterial({ color: 0x000000 });
-
                 // Motion blur
                 this.motionBlur = new MotionBlur(this.renderer, this.scene, this.camera, layers.velocity);
 
@@ -508,6 +505,7 @@
                 this.compositeMaterial.uniforms.uBloomDistortion.value = this.bloomDistortion;
 
                 // Debug materials
+                this.blackoutMaterial = new MeshBasicMaterial({ color: 0x000000 });
                 this.matcap1Material = new MeshMatcapMaterial({ matcap: getTexture('../assets/textures/matcaps/040full.jpg') });
                 this.matcap2Material = new MeshMatcapMaterial({ matcap: getTexture('../assets/textures/matcaps/defaultwax.jpg') });
                 this.normalMaterial = new NormalMaterial();

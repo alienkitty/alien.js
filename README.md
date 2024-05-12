@@ -162,6 +162,7 @@ const program = new FXAAProgram(gl);
 [instancing](https://alien.js.org/examples/three/3d_physics_instancing_thread.html) (physics thread, SSS, [debug](https://alien.js.org/examples/three/3d_physics_instancing_thread.html?debug))  
 [picking](https://alien.js.org/examples/three/3d_physics_picking.html) (contact audio, SSS, [debug](https://alien.js.org/examples/three/3d_physics_picking.html?debug))  
 [picking](https://alien.js.org/examples/three/3d_physics_picking_thread.html) (physics thread, contact audio, SSS, [debug](https://alien.js.org/examples/three/3d_physics_picking_thread.html?debug))  
+[gravity balls](https://alien.js.org/examples/three/3d_physics_gravity_balls.html) (SSS)  
 [gravity balls](https://alien.js.org/examples/three/3d_physics_gravity_balls_thread.html) (physics thread, SSS)  
 
 #### audio

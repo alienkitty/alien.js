@@ -11,7 +11,7 @@
     <link rel="stylesheet" href="../assets/css/style.css">
 
     <script type="module">
-        import { BasicShadowMap, BloomCompositeMaterial, Color, ColorManagement, DirectionalLight, EnvironmentTextureLoader, EventEmitter, Group, HemisphereLight, IcosahedronGeometry, ImageBitmapLoaderThread, LinearSRGBColorSpace, LuminosityMaterial, MathUtils, Mesh, MeshStandardMaterial, OimoPhysicsBuffer, OimoPhysicsController, OrthographicCamera, PanelItem, PerspectiveCamera, PlaneGeometry, PointLight, RepeatWrapping, Scene, SceneCompositeDistortionMaterial, ShaderChunk, TextureLoader, Thread, UI, UnrealBloomBlurMaterial, Vector2, Vector3, WebGLRenderTarget, WebGLRenderer, getFullscreenTriangle, getKeyByValue, headsTails, ticker } from '../../build/alien.three.js';
+        import { BasicShadowMap, BloomCompositeMaterial, Color, ColorManagement, DirectionalLight, EnvironmentTextureLoader, Group, HemisphereLight, IcosahedronGeometry, ImageBitmapLoaderThread, LinearSRGBColorSpace, LuminosityMaterial, MathUtils, Mesh, MeshStandardMaterial, OimoPhysics, OrthographicCamera, PanelItem, PerspectiveCamera, PlaneGeometry, PointLight, RepeatWrapping, Scene, SceneCompositeDistortionMaterial, ShaderChunk, TextureLoader, Thread, UI, UnrealBloomBlurMaterial, Vector2, Vector3, WebGLRenderTarget, WebGLRenderer, getFullscreenTriangle, getKeyByValue, headsTails, ticker } from '../../build/alien.three.js';
 
         const colors = {
             lightColor: 0xf44336
@@ -20,227 +20,8 @@
         // https://adinunz.io/translucentPearls/
         // Based on http://lo-th.github.io/Oimo.js/#planet
 
-        class ScenePhysics extends EventEmitter {
-            constructor(shapes) {
-                super();
-
-                this.shapes = shapes;
-
-                this.initPhysics();
-            }
-
-            initPhysics() {
-                this.physics = new OimoPhysicsBuffer({
-                    velocityIterations: 8,
-                    positionIterations: 8,
-                    gravity: new Vector3(0, 0, 0)
-                });
-
-                this.shapes.forEach(shape => this.physics.add(shape));
-            }
-
-            // Public methods
-
-            step = () => {
-                this.physics.step();
-
-                this.emit('buffer', { array: this.physics.array, buffer: [this.physics.array.buffer] });
-            };
-
-            update = array => {
-                this.physics.array = array;
-
-                this.step();
-            };
-
-            add = object => {
-                this.physics.add(object);
-            };
-
-            remove = name => {
-                this.physics.remove(name);
-            };
-
-            setGravity = gravity => {
-                this.physics.setGravity(gravity);
-            };
-
-            setPosition = (name, position) => {
-                this.physics.setPosition(name, position);
-            };
-
-            setOrientation = (name, orientation) => {
-                this.physics.setOrientation(name, orientation);
-            };
-
-            setLinearVelocity = (name, linearVelocity) => {
-                this.physics.setLinearVelocity(name, linearVelocity);
-            };
-
-            setAngularVelocity = (name, angularVelocity) => {
-                this.physics.setAngularVelocity(name, angularVelocity);
-            };
-
-            applyImpulse = (name, impulse, positionInWorld) => {
-                this.physics.applyImpulse(name, impulse, positionInWorld);
-            };
-        }
-
-        class ScenePhysicsThread {
-            constructor() {
-                this.startTime = performance.now();
-
-                this.addListeners();
-            }
-
-            addListeners() {
-                addEventListener('message', this.onMessage);
-            }
-
-            // Event handlers
-
-            onMessage = ({ data }) => {
-                this[data.message.fn].call(this, data.message);
-            };
-
-            onBuffer = ({ array, buffer }) => {
-                postMessage({ event: 'buffer', message: { array } }, buffer);
-            };
-
-            // Public methods
-
-            init = ({ shapes }) => {
-                this.physics = new ScenePhysics(shapes);
-                this.physics.on('buffer', this.onBuffer);
-
-                this.physics.step();
-
-                postMessage({ event: 'ready' });
-            };
-
-            update = ({ array }) => {
-                this.physics.update(array);
-
-                ticker.onTick(performance.now() - this.startTime);
-            };
-
-            add = ({ object }) => {
-                this.physics.add(object);
-            };
-
-            remove = ({ name }) => {
-                this.physics.remove(name);
-            };
-
-            setGravity = ({ gravity }) => {
-                this.physics.setGravity(gravity);
-            };
-
-            setPosition = ({ name, position }) => {
-                this.physics.setPosition(name, position);
-            };
-
-            setOrientation = ({ name, orientation }) => {
-                this.physics.setOrientation(name, orientation);
-            };
-
-            setLinearVelocity = ({ name, linearVelocity }) => {
-                this.physics.setLinearVelocity(name, linearVelocity);
-            };
-
-            setAngularVelocity = ({ name, angularVelocity }) => {
-                this.physics.setAngularVelocity(name, angularVelocity);
-            };
-
-            applyImpulse = ({ name, impulse, positionInWorld }) => {
-                this.physics.applyImpulse(name, impulse, positionInWorld);
-            };
-        }
-
-        class ScenePhysicsController extends OimoPhysicsController {
-            constructor() {
-                super();
-
-                this.buffer = [];
-            }
-
-            init() {
-                this.initEngine();
-
-                this.addListeners();
-            }
-
-            initEngine() {
-                this.thread = new Thread({
-                    imports: [
-                        ['../../build/alien.three.js', 'EventEmitter', 'OimoPhysicsBuffer', 'RigidBodyType', 'Vector3', 'delayedCall', 'ticker']
-                    ],
-                    classes: [ScenePhysics],
-                    controller: [ScenePhysicsThread, 'init', 'update', 'add', 'remove', 'setGravity', 'setPosition', 'setOrientation', 'setLinearVelocity', 'setAngularVelocity', 'applyImpulse']
-                });
-
-                this.thread.init({ shapes: this.shapes });
-            }
-
-            addListeners() {
-                this.thread.on('buffer', this.onBuffer);
-            }
-
-            // Event handlers
-
-            onBuffer = ({ array }) => {
-                this.buffer.push(array);
-            };
-
-            // Public methods
-
-            update = () => {
-                const array = this.buffer.shift();
-
-                if (array) {
-                    this.step(array);
-
-                    this.thread.update({ array, buffer: [array.buffer] });
-                }
-            };
-
-            addJoint = object => {
-                this.thread.add({ object });
-            };
-
-            remove = name => {
-                this.thread.remove({ name });
-            };
-
-            setGravity = gravity => {
-                this.thread.setGravity({ gravity });
-            };
-
-            setPosition = (name, position) => {
-                this.thread.setPosition({ name, position });
-            };
-
-            setOrientation = (name, orientation) => {
-                this.thread.setOrientation({ name, orientation });
-            };
-
-            setLinearVelocity = (name, linearVelocity) => {
-                this.thread.setLinearVelocity({ name, linearVelocity });
-            };
-
-            setAngularVelocity = (name, angularVelocity) => {
-                this.thread.setAngularVelocity({ name, angularVelocity });
-            };
-
-            applyImpulse = (name, impulse, positionInWorld) => {
-                this.thread.applyImpulse({ name, impulse, positionInWorld });
-            };
-
-            ready = () => this.init();
-        }
-
         class Ball extends Group {
-            constructor(index) {
+            constructor() {
                 super();
 
                 this.position.x = MathUtils.randFloat(10, 100) * (headsTails() ? -1 : 1);
@@ -252,7 +33,6 @@
                 this.rotation.z = MathUtils.degToRad(MathUtils.randInt(0, 360));
 
                 // Physics
-                this.name = `ball_${index}`;
                 this.radius = 1;
                 this.autoSleep = false;
             }
@@ -528,7 +308,7 @@
                 this.add(this.sphere);
 
                 for (let i = 0; i < this.numBalls; i++) {
-                    const ball = new Ball(i);
+                    const ball = new Ball();
                     this.add(ball);
                     this.balls.push(ball);
                 }
@@ -565,23 +345,20 @@
                 }
 
                 this.physics.objects.forEach(object => {
-                    const { name, position } = object;
+                    const { position } = object;
 
                     this.force.copy(position).negate().normalize().multiplyScalar(0.1);
-                    this.physics.applyImpulse(name, this.force.toArray(), this.center.toArray());
+                    this.physics.applyImpulse(object, this.force, this.center);
                 });
 
-                this.physics.update();
+                this.physics.step();
             };
 
             static animateIn = () => {
                 this.view.visible = true;
             };
 
-            static ready = async () => {
-                await this.view.ready();
-                this.physics.ready();
-            };
+            static ready = () => this.view.ready();
         }
 
         class PanelController {
@@ -600,7 +377,7 @@
                 const { balls } = this.view;
 
                 const vector3 = new Vector3();
-                const gravity = new Vector3(0, 0, 0);
+                const gravity = this.physics.getGravity();
 
                 const physicsOptions = {
                     Off: false,
@@ -623,19 +400,15 @@
 
                             // Reset
                             vector3.set(0, 0, 0);
-                            const array = vector3.toArray();
 
                             physics.objects.forEach(object => {
-                                const { name, position, quaternion } = object;
+                                const { position, quaternion } = object;
 
-                                physics.setPosition(name, position.toArray());
-                                physics.setOrientation(name, quaternion.toArray());
-                                physics.setLinearVelocity(name, array);
-                                physics.setAngularVelocity(name, array);
+                                physics.setPosition(object, position);
+                                physics.setOrientation(object, quaternion);
+                                physics.setLinearVelocity(object, vector3);
+                                physics.setAngularVelocity(object, vector3);
                             });
-
-                            // Flush the last frame
-                            physics.update();
                         }
                     },
                     {
@@ -647,7 +420,7 @@
                         value: -gravity.y,
                         callback: value => {
                             gravity.y = -value;
-                            physics.setGravity(gravity.toArray());
+                            physics.setGravity(gravity);
                         }
                     },
                     {
@@ -1107,7 +880,11 @@
             }
 
             static initPhysics() {
-                this.physics = new ScenePhysicsController();
+                this.physics = new OimoPhysics({
+                    velocityIterations: 8,
+                    positionIterations: 8,
+                    gravity: new Vector3(0, 0, 0)
+                });
             }
 
             static addListeners() {

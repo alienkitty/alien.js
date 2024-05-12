@@ -59,7 +59,7 @@ export const RayCastClosest = oimo.dynamics.callback.RayCastClosest;
 export const ContactCallback = oimo.dynamics.callback.ContactCallback;
 
 // Defaults
-Setting.defaultGJKMargin = 0.0001; // Default 0.05
+Setting.defaultGJKMargin = 0.0001;
 
 export class OimoPhysics {
     constructor({
@@ -67,8 +67,8 @@ export class OimoPhysics {
         timestep = 1 / fps,
         broadphase = BroadPhaseType.BVH,
         gravity = new Vec3(0, -9.81, 0),
-        velocityIterations = 10,
-        positionIterations = 5
+        velocityIterations = 8,
+        positionIterations = 8
     } = {}) {
         this.timestep = timestep;
 

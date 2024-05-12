@@ -11,7 +11,7 @@
     <link rel="stylesheet" href="../assets/css/style.css">
 
     <script type="module">
-        import { BasicShadowMap, BloomCompositeMaterial, BoxGeometry, Color, ColorManagement, DirectionalLight, EnvironmentTextureLoader, EventEmitter, Group, HemisphereLight, IcosahedronGeometry, ImageBitmapLoaderThread, LinearSRGBColorSpace, LuminosityMaterial, MathUtils, Mesh, MeshBasicMaterial, MeshPhongMaterial, MeshStandardMaterial, NoBlending, OimoPhysicsBuffer, OimoPhysicsController, OrthographicCamera, PanelItem, PerspectiveCamera, PlaneGeometry, PointLight, Raycaster, Reflector, RepeatWrapping, Scene, SceneCompositeDistortionMaterial, ShaderChunk, ShadowMaterial, Sound3D, SphereGeometry, TextureLoader, Thread, UI, UnrealBloomBlurMaterial, Vector2, Vector3, WebGLRenderTarget, WebGLRenderer, delayedCall, getFullscreenTriangle, getKeyByValue, headsTails, ticker } from '../../build/alien.three.js';
+        import { BasicShadowMap, BloomCompositeMaterial, Color, ColorManagement, DirectionalLight, EnvironmentTextureLoader, EventEmitter, Group, HemisphereLight, IcosahedronGeometry, ImageBitmapLoaderThread, LinearSRGBColorSpace, LuminosityMaterial, MathUtils, Mesh, MeshStandardMaterial, OimoPhysicsBuffer, OimoPhysicsController, OrthographicCamera, PanelItem, PerspectiveCamera, PlaneGeometry, PointLight, RepeatWrapping, RigidBodyType, Scene, SceneCompositeDistortionMaterial, ShaderChunk, TextureLoader, Thread, UI, UnrealBloomBlurMaterial, Vector2, Vector3, WebGLRenderTarget, WebGLRenderer, getFullscreenTriangle, getKeyByValue, headsTails, ticker } from '../../build/alien.three.js';
 
         const colors = {
             lightColor: 0xf44336
@@ -33,9 +33,9 @@
             }
 
             initPhysics() {
-                this.physics = new OimoPhysicsBuffer({ 
-                    velocityIterations: 8, 
-                    positionIterations: 8, 
+                this.physics = new OimoPhysicsBuffer({
+                    velocityIterations: 8,
+                    positionIterations: 8,
                     gravity: new Vector3(0, 0, 0)
                 });
 
@@ -45,8 +45,6 @@
             // Public methods
 
             step = () => {
-                this.physics.step();
-
                 for (let i = 0, l = this.physics.bodies.length; i < l; i++) {
                     const body = this.physics.bodies[i];
 
@@ -55,6 +53,8 @@
                         body.applyImpulse(this.force, this.center);
                     }
                 }
+
+                this.physics.step();
 
                 this.emit('buffer', { array: this.physics.array, buffer: [this.physics.array.buffer] });
             };
@@ -261,7 +261,7 @@
             async initMesh() {
                 const { anisotropy, loadTexture, physics } = WorldController;
 
-                const geometry = new SphereGeometry(this.radius, 32, 24);
+                const geometry = new IcosahedronGeometry(this.radius, 12);
 
                 // Second set of UVs for aoMap and lightMap
                 // https://threejs.org/docs/#api/en/materials/MeshStandardMaterial.aoMap
@@ -364,6 +364,8 @@
                 };
 
                 const mesh = new Mesh(geometry, material);
+                mesh.castShadow = true;
+                mesh.receiveShadow = true;
                 this.add(mesh);
 
                 // Physics
@@ -398,7 +400,7 @@
             async initMesh() {
                 const { anisotropy, loadTexture, physics } = WorldController;
 
-                const geometry = new SphereGeometry(this.radius, 32, 24);
+                const geometry = new IcosahedronGeometry(this.radius, 12);
 
                 // Second set of UVs for aoMap and lightMap
                 // https://threejs.org/docs/#api/en/materials/MeshStandardMaterial.aoMap
@@ -496,6 +498,8 @@
                 };
 
                 const mesh = new Mesh(geometry, material);
+                mesh.castShadow = true;
+                mesh.receiveShadow = true;
                 this.add(mesh);
 
                 // Physics
@@ -533,9 +537,6 @@
 
             // Public methods
 
-            resize = (width, height) => {
-            };
-
             ready = () => Promise.all([
                 this.sphere.ready(),
                 ...this.balls.map(ball => ball.ready())
@@ -552,8 +553,7 @@
 
             // Public methods
 
-            static resize = (width, height) => {
-                this.view.resize(width, height);
+            static resize = () => {
             };
 
             static update = () => {
@@ -1207,7 +1207,7 @@
 
                 WorldController.resize(width, height, dpr);
                 CameraController.resize(width, height);
-                SceneController.resize(width, height);
+                SceneController.resize();
                 RenderManager.resize(width, height, dpr);
             };
 

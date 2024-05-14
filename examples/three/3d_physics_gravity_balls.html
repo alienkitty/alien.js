@@ -11,7 +11,7 @@
     <link rel="stylesheet" href="../assets/css/style.css">
 
     <script type="module">
-        import { BasicShadowMap, BloomCompositeMaterial, Color, ColorManagement, DirectionalLight, DynamicDrawUsage, EnvironmentTextureLoader, Group, HemisphereLight, IcosahedronGeometry, ImageBitmapLoaderThread, InstancedMesh, LinearSRGBColorSpace, LuminosityMaterial, MathUtils, Matrix4, Mesh, MeshStandardMaterial, OimoPhysics, OrthographicCamera, PanelItem, PerspectiveCamera, PlaneGeometry, PointLight, RepeatWrapping, Scene, SceneCompositeDistortionMaterial, ShaderChunk, TextureLoader, Thread, UI, UnrealBloomBlurMaterial, Vector2, Vector3, WebGLRenderTarget, WebGLRenderer, getFullscreenTriangle, getKeyByValue, headsTails, ticker } from '../../build/alien.three.js';
+        import { BasicShadowMap, BloomCompositeMaterial, Color, ColorManagement, DirectionalLight, DynamicDrawUsage, EnvironmentTextureLoader, Group, HemisphereLight, IcosahedronGeometry, ImageBitmapLoaderThread, InstancedMesh, LinearSRGBColorSpace, LuminosityMaterial, MathUtils, Matrix4, Mesh, MeshStandardMaterial, OimoPhysics, OrthographicCamera, PanelItem, PerspectiveCamera, PlaneGeometry, PointLight, RepeatWrapping, RigidBodyConfig, RigidBodyType, Scene, SceneCompositeDistortionMaterial, ShaderChunk, TextureLoader, Thread, UI, UniversalJointConfig, UnrealBloomBlurMaterial, Vector2, Vector3, WebGLRenderTarget, WebGLRenderer, getFrustum, getFullscreenTriangle, getKeyByValue, headsTails, ticker } from '../../build/alien.three.js';
 
         const count = parseInt(location.search.slice(1), 10) || 20;
 
@@ -25,17 +25,12 @@
         class Balls extends Group {
             constructor() {
                 super();
-
-                // Physics
-                this.name = 'balls';
-                this.radius = 1;
-                this.autoSleep = false;
             }
 
             async initMesh() {
                 const { physics, anisotropy, loadTexture } = WorldController;
 
-                const geometry = new IcosahedronGeometry(this.radius, 12);
+                const geometry = new IcosahedronGeometry(1, 12);
 
                 // Second set of UVs for aoMap and lightMap
                 // https://threejs.org/docs/#api/en/materials/MeshStandardMaterial.aoMap
@@ -146,9 +141,9 @@
                 const object = new Group();
 
                 for (let i = 0; i < mesh.count; i++) {
-                    object.position.x = MathUtils.randFloat(10, 100) * (headsTails() ? -1 : 1);
-                    object.position.y = MathUtils.randFloat(10, 100) * (headsTails() ? -1 : 1);
-                    object.position.z = MathUtils.randFloat(10, 100) * (headsTails() ? -1 : 1);
+                    object.position.x = MathUtils.randFloat(0, 5) * (headsTails() ? -1 : 1);
+                    object.position.y = MathUtils.randFloat(0, 5) * (headsTails() ? -1 : 1);
+                    object.position.z = MathUtils.randFloat(0, 5) * (headsTails() ? -1 : 1);
 
                     object.rotation.x = MathUtils.degToRad(MathUtils.randInt(0, 360));
                     object.rotation.y = MathUtils.degToRad(MathUtils.randInt(0, 360));
@@ -161,7 +156,7 @@
                 }
 
                 // Physics
-                physics.add(mesh);
+                physics.add(mesh, { autoSleep: false });
 
                 this.uniforms = uniforms;
                 this.mesh = mesh;
@@ -178,8 +173,6 @@
 
                 // Physics
                 this.name = 'mouse';
-                this.radius = 1;
-                this.density = 0;
                 this.autoSleep = false;
 
                 this.initLight();
@@ -193,7 +186,7 @@
             async initMesh() {
                 const { physics, anisotropy, loadTexture } = WorldController;
 
-                const geometry = new IcosahedronGeometry(this.radius, 12);
+                const geometry = new IcosahedronGeometry(1, 12);
 
                 // Second set of UVs for aoMap and lightMap
                 // https://threejs.org/docs/#api/en/materials/MeshStandardMaterial.aoMap
@@ -297,6 +290,17 @@
 
                 // Physics
                 physics.add(mesh);
+
+                const body = new RigidBodyConfig();
+                body.type = RigidBodyType.KINEMATIC;
+                physics.add(body);
+
+                const joint = new UniversalJointConfig();
+                joint.rigidBody1 = physics.get(this);
+                joint.rigidBody2 = physics.get(body);
+                physics.add(joint);
+
+                this.body = body;
             }
 
             // Public methods
@@ -334,18 +338,55 @@
                 this.physics = physics;
                 this.view = view;
 
-                this.enabled = true;
+                // Mouse light
+                this.mouse = new Vector2();
+                this.target = new Vector2();
+                this.lightPosition = new Vector3();
+                this.lerpSpeed = 1;
 
                 // Physics
                 this.force = new Vector3();
                 this.center = new Vector3(0, 0, 0);
                 this.object = new Group();
                 this.matrix = new Matrix4();
+
+                this.enabled = true;
+
+                this.addListeners();
             }
+
+            static addListeners() {
+                window.addEventListener('pointerdown', this.onPointerDown);
+                window.addEventListener('pointermove', this.onPointerMove);
+                window.addEventListener('pointerup', this.onPointerUp);
+            }
+
+            // Event handlers
+
+            static onPointerDown = e => {
+                this.onPointerMove(e);
+            };
+
+            static onPointerMove = ({ clientX, clientY }) => {
+                if (!this.view.visible) {
+                    return;
+                }
+
+                this.target.x = (clientX / document.documentElement.clientWidth) * 2 - 1;
+                this.target.y = 1 - (clientY / document.documentElement.clientHeight) * 2;
+            };
+
+            static onPointerUp = e => {
+                this.onPointerMove(e);
+            };
 
             // Public methods
 
             static resize = () => {
+                const { width, height } = WorldController.getFrustum(this.view.sphere.position.z);
+
+                this.halfWidth = width / 2;
+                this.halfHeight = height / 2;
             };
 
             static update = () => {
@@ -353,6 +394,16 @@
                     return;
                 }
 
+                // Mouse light
+                this.mouse.lerp(this.target, this.lerpSpeed);
+
+                this.lightPosition.x = this.mouse.x * this.halfWidth;
+                this.lightPosition.y = this.mouse.y * this.halfHeight;
+                this.lightPosition.z = this.view.sphere.position.z;
+
+                this.physics.setPosition(this.view.sphere.body, this.lightPosition);
+
+                // Physics
                 for (let i = 0; i < this.view.balls.mesh.count; i++) {
                     const { position, quaternion, scale } = this.object;
 
@@ -879,8 +930,6 @@
 
             static initPhysics() {
                 this.physics = new OimoPhysics({
-                    velocityIterations: 8,
-                    positionIterations: 8,
                     gravity: new Vector3(0, 0, 0)
                 });
             }
@@ -918,6 +967,8 @@
             static loadTexture = path => this.textureLoader.loadAsync(path);
 
             static loadEnvironmentTexture = path => this.environmentLoader.loadAsync(path);
+
+            static getFrustum = offsetZ => getFrustum(this.camera, offsetZ);
         }
 
         class App {

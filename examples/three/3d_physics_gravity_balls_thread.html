@@ -33,8 +33,6 @@
 
             initPhysics() {
                 this.physics = new OimoPhysicsBuffer({
-                    velocityIterations: 8,
-                    positionIterations: 8,
                     gravity: new Vector3(0, 0, 0)
                 });
 
@@ -563,13 +561,13 @@
                 this.physics = physics;
                 this.view = view;
 
-                this.enabled = true;
-
                 // Physics
                 this.force = new Vector3();
                 this.center = new Vector3(0, 0, 0);
                 this.object = new Group();
                 this.matrix = new Matrix4();
+
+                this.enabled = true;
             }
 
             // Public methods

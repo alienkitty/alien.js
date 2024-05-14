@@ -74,14 +74,14 @@ const program = new FXAAProgram(gl);
 [shader](https://alien.js.org/examples/three/transitions/shader/) (mask)  
 [shader](https://alien.js.org/examples/three/transitions/shader_fade/) (fade with RGB shift)  
 [scene](https://alien.js.org/examples/three/transitions/scene/)  
-[scene](https://alien.js.org/examples/three/transitions/scene_direction/) (page direction and camera parallax)  
+[scene](https://alien.js.org/examples/three/transitions/scene_direction/) (page direction, camera parallax)  
 [scroll](https://alien.js.org/examples/three/transitions/scroll/) ([debug](https://alien.js.org/examples/three/transitions/scroll/?debug))  
-[scroll](https://alien.js.org/examples/three/transitions/scroll_direction/) (scroll direction and camera parallax, [debug](https://alien.js.org/examples/three/transitions/scroll_direction/?debug))  
-[scroll](https://alien.js.org/examples/three/transitions/scroll_direction_zoom/) (scroll direction and camera zoom, [debug](https://alien.js.org/examples/three/transitions/scroll_direction_zoom/?debug))  
+[scroll](https://alien.js.org/examples/three/transitions/scroll_direction/) (scroll direction, camera parallax, [debug](https://alien.js.org/examples/three/transitions/scroll_direction/?debug))  
+[scroll](https://alien.js.org/examples/three/transitions/scroll_direction_zoom/) (scroll direction, camera zoom, [debug](https://alien.js.org/examples/three/transitions/scroll_direction_zoom/?debug))  
 [scroll](https://alien.js.org/examples/three/transitions/scroll_content/) (smooth scroll, [debug](https://alien.js.org/examples/three/transitions/scroll_content/?debug))  
-[scroll](https://alien.js.org/examples/three/transitions/scroll_content_skew/) (smooth scroll with skew effect, [debug](https://alien.js.org/examples/three/transitions/scroll_content_skew/?debug))  
-[scroll](https://alien.js.org/examples/three/transitions/scroll_content_views/) (smooth scroll with scroll direction and camera parallax, [debug](https://alien.js.org/examples/three/transitions/scroll_content_views/?debug))  
-[camera](https://alien.js.org/examples/three/transitions/camera/) (with motion blur and tilt shift effect, [debug](https://alien.js.org/examples/three/transitions/camera/?debug))  
+[scroll](https://alien.js.org/examples/three/transitions/scroll_content_skew/) (smooth scroll with skew, [debug](https://alien.js.org/examples/three/transitions/scroll_content_skew/?debug))  
+[scroll](https://alien.js.org/examples/three/transitions/scroll_content_views/) (smooth scroll with scroll direction, camera parallax, [debug](https://alien.js.org/examples/three/transitions/scroll_content_views/?debug))  
+[camera](https://alien.js.org/examples/three/transitions/camera/) (motion blur, tilt shift, [debug](https://alien.js.org/examples/three/transitions/camera/?debug))  
 
 #### 3d
 
@@ -98,7 +98,7 @@ const program = new FXAAProgram(gl);
 [panel tracking](https://alien.js.org/examples/three/3d_panel_tracking.html) ([debug](https://alien.js.org/examples/three/3d_panel_tracking.html?debug))  
 [backdrop](https://alien.js.org/examples/three/3d_backdrop.html)  
 [infinite stars](https://alien.js.org/examples/three/3d_infinite_stars_rgbshift.html) (RGB shift, [debug](https://alien.js.org/examples/three/3d_infinite_stars_rgbshift.html?debug))  
-[black holes](https://alien.js.org/examples/three/3d_black_holes.html) (with per-object motion blur, [debug](https://alien.js.org/examples/three/3d_black_holes.html?debug), [orbit controls](https://alien.js.org/examples/three/3d_black_holes.html?orbit))  
+[black holes](https://alien.js.org/examples/three/3d_black_holes.html) (per-object motion blur, [debug](https://alien.js.org/examples/three/3d_black_holes.html?debug), [orbit controls](https://alien.js.org/examples/three/3d_black_holes.html?orbit))  
 [stripe gradient](https://alien.js.org/examples/three/3d_stripe_gradient.html) ([akella version](https://www.youtube.com/watch?v=LW9d2cqIHb4))  
 
 #### shader
@@ -116,13 +116,13 @@ const program = new FXAAProgram(gl);
 [bloom](https://alien.js.org/examples/three/shader_bloom_hdr.html) (Unreal bloom with HDR)  
 [matcap](https://alien.js.org/examples/three/shader_matcap.html)  
 [soft particles](https://alien.js.org/examples/three/shader_soft_particles.html)  
-[tilt shift](https://alien.js.org/examples/three/shader_tilt_shift.html) (with Gaussian blur)  
+[tilt shift](https://alien.js.org/examples/three/shader_tilt_shift.html) (Gaussian blur)  
 [dof](https://alien.js.org/examples/three/shader_dof_fake.html) (fake with Bokeh blur, [debug](https://alien.js.org/examples/three/shader_dof_fake.html?debug))  
 [chromatic aberration](https://alien.js.org/examples/three/shader_chromatic_aberration.html)  
 [barrel distortion](https://alien.js.org/examples/three/shader_barrel_distortion.html) (RGB shift)  
 [radial blur](https://alien.js.org/examples/three/shader_radial_blur_rgbshift.html) (RGB shift)  
 [film grain](https://alien.js.org/examples/three/shader_film_grain.html)  
-[reflection](https://alien.js.org/examples/three/shader_reflection.html) (with fast Gaussian blur)  
+[reflection](https://alien.js.org/examples/three/shader_reflection.html) (fast Gaussian blur)  
 [reflection](https://alien.js.org/examples/three/shader_reflection_diffuse.html) (diffuse)  
 [reflection](https://alien.js.org/examples/three/shader_reflection_metalness.html) (metalness)  
 [reflection](https://alien.js.org/examples/three/shader_reflection_normalmap.html) (normalmap)  
@@ -162,12 +162,12 @@ const program = new FXAAProgram(gl);
 [instancing](https://alien.js.org/examples/three/3d_physics_instancing_thread.html) (physics thread, SSS, [debug](https://alien.js.org/examples/three/3d_physics_instancing_thread.html?debug))  
 [picking](https://alien.js.org/examples/three/3d_physics_picking.html) (contact audio, SSS, [debug](https://alien.js.org/examples/three/3d_physics_picking.html?debug))  
 [picking](https://alien.js.org/examples/three/3d_physics_picking_thread.html) (physics thread, contact audio, SSS, [debug](https://alien.js.org/examples/three/3d_physics_picking_thread.html?debug))  
-[gravity balls](https://alien.js.org/examples/three/3d_physics_gravity_balls.html) (SSS)  
-[gravity balls](https://alien.js.org/examples/three/3d_physics_gravity_balls_thread.html) (physics thread, SSS)  
+[gravity balls](https://alien.js.org/examples/three/3d_physics_gravity_balls.html) (motion blur, SSS, [debug](https://alien.js.org/examples/three/3d_physics_gravity_balls.html?200&debug))  
+[gravity balls](https://alien.js.org/examples/three/3d_physics_gravity_balls_thread.html) (physics thread, motion blur, SSS, [debug](https://alien.js.org/examples/three/3d_physics_gravity_balls_thread.html?200&debug))  
 
 #### audio
 
-[picking](https://alien.js.org/examples/three/3d_physics_picking.html) (with fast 3d audio, [debug](https://alien.js.org/examples/three/3d_physics_picking.html?debug))  
+[picking](https://alien.js.org/examples/three/3d_physics_picking.html) (fast 3d audio, [debug](https://alien.js.org/examples/three/3d_physics_picking.html?debug))  
 
 #### thread
 

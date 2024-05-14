@@ -9,7 +9,7 @@ uniform mat3 normalMatrix;
 out vec3 vNormal;
 
 void main() {
-    vNormal = normalMatrix * normal;
+    vNormal = normalize(normalMatrix * normal);
 
     gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
 }
@@ -23,6 +23,7 @@ in vec3 vNormal;
 out vec4 FragColor;
 
 void main() {
-    FragColor = vec4(vNormal, 1.0);
+    FragColor.rgb = normalize(vNormal);
+    FragColor.a = 1.0;
 }
 `;

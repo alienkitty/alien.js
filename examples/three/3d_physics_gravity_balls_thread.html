@@ -11,7 +11,7 @@
     <link rel="stylesheet" href="../assets/css/style.css">
 
     <script type="module">
-        import { BasicShadowMap, BloomCompositeMaterial, Color, ColorManagement, DirectionalLight, DynamicDrawUsage, EnvironmentTextureLoader, EventEmitter, Group, HemisphereLight, IcosahedronGeometry, ImageBitmapLoaderThread, InstancedMesh, LinearSRGBColorSpace, LuminosityMaterial, MathUtils, Matrix4, Mesh, MeshStandardMaterial, OimoPhysicsBuffer, OimoPhysicsController, OrthographicCamera, PanelItem, PerspectiveCamera, PlaneGeometry, PointLight, RepeatWrapping, Scene, SceneCompositeDistortionMaterial, ShaderChunk, TextureLoader, Thread, UI, UnrealBloomBlurMaterial, Vector2, Vector3, WebGLRenderTarget, WebGLRenderer, getFullscreenTriangle, getKeyByValue, headsTails, ticker } from '../../build/alien.three.js';
+        import { BasicShadowMap, BloomCompositeMaterial, Color, ColorManagement, DirectionalLight, DynamicDrawUsage, EnvironmentTextureLoader, EventEmitter, Group, HemisphereLight, IcosahedronGeometry, ImageBitmapLoaderThread, InstancedMesh, LinearSRGBColorSpace, LuminosityMaterial, MathUtils, Matrix4, Mesh, MeshStandardMaterial, OimoPhysicsBuffer, OimoPhysicsController, OrthographicCamera, PanelItem, PerspectiveCamera, PlaneGeometry, PointLight, RepeatWrapping, Scene, SceneCompositeDistortionMaterial, ShaderChunk, TextureLoader, Thread, UI, UnrealBloomBlurMaterial, Vector2, Vector3, WebGLRenderTarget, WebGLRenderer, getFrustum, getFullscreenTriangle, getKeyByValue, headsTails, ticker } from '../../build/alien.three.js';
 
         const count = parseInt(location.search.slice(1), 10) || 20;
 
@@ -37,6 +37,19 @@
                 });
 
                 this.shapes.forEach(shape => this.physics.add(shape));
+
+                this.physics.add({
+                    name: 'mouse',
+                    kinematic: true
+                });
+
+                this.physics.add({
+                    name: 'mouseJoint',
+                    type: 'joint',
+                    mode: 'universal',
+                    body1: 'sphere',
+                    body2: 'mouse'
+                });
             }
 
             // Public methods
@@ -216,15 +229,11 @@
                 this.thread.setGravity({ gravity });
             };
 
-            setPosition = (object, position, index) => {
-                const { name } = this.getObjectBody(object, index);
-
+            setPosition = (name, position) => {
                 this.thread.setPosition({ name, position });
             };
 
-            setOrientation = (object, orientation, index) => {
-                const { name } = this.getObjectBody(object, index);
-
+            setOrientation = (name, orientation) => {
                 this.thread.setOrientation({ name, orientation });
             };
 
@@ -255,14 +264,13 @@
 
                 // Physics
                 this.name = 'balls';
-                this.radius = 1;
                 this.autoSleep = false;
             }
 
             async initMesh() {
                 const { physics, anisotropy, loadTexture } = WorldController;
 
-                const geometry = new IcosahedronGeometry(this.radius, 12);
+                const geometry = new IcosahedronGeometry(1, 12);
 
                 // Second set of UVs for aoMap and lightMap
                 // https://threejs.org/docs/#api/en/materials/MeshStandardMaterial.aoMap
@@ -404,9 +412,7 @@
                 super();
 
                 // Physics
-                this.name = 'mouse';
-                this.radius = 1;
-                this.density = 0;
+                this.name = 'sphere';
                 this.autoSleep = false;
 
                 this.initLight();
@@ -420,7 +426,7 @@
             async initMesh() {
                 const { physics, anisotropy, loadTexture } = WorldController;
 
-                const geometry = new IcosahedronGeometry(this.radius, 12);
+                const geometry = new IcosahedronGeometry(1, 12);
 
                 // Second set of UVs for aoMap and lightMap
                 // https://threejs.org/docs/#api/en/materials/MeshStandardMaterial.aoMap
@@ -561,6 +567,10 @@
                 this.physics = physics;
                 this.view = view;
 
+                // Mouse light
+                this.mouse = new Vector2();
+                this.lightPosition = new Vector3();
+
                 // Physics
                 this.force = new Vector3();
                 this.center = new Vector3(0, 0, 0);
@@ -568,11 +578,42 @@
                 this.matrix = new Matrix4();
 
                 this.enabled = true;
+
+                this.addListeners();
             }
+
+            static addListeners() {
+                window.addEventListener('pointerdown', this.onPointerDown);
+                window.addEventListener('pointermove', this.onPointerMove);
+                window.addEventListener('pointerup', this.onPointerUp);
+            }
+
+            // Event handlers
+
+            static onPointerDown = e => {
+                this.onPointerMove(e);
+            };
+
+            static onPointerMove = ({ clientX, clientY }) => {
+                if (!this.view.visible) {
+                    return;
+                }
+
+                this.mouse.x = (clientX / document.documentElement.clientWidth) * 2 - 1;
+                this.mouse.y = 1 - (clientY / document.documentElement.clientHeight) * 2;
+            };
+
+            static onPointerUp = e => {
+                this.onPointerMove(e);
+            };
 
             // Public methods
 
             static resize = () => {
+                const { width, height } = WorldController.getFrustum(this.view.sphere.position.z);
+
+                this.halfWidth = width / 2;
+                this.halfHeight = height / 2;
             };
 
             static update = () => {
@@ -580,6 +621,14 @@
                     return;
                 }
 
+                // Mouse light
+                this.lightPosition.x = this.mouse.x * this.halfWidth;
+                this.lightPosition.y = this.mouse.y * this.halfHeight;
+                this.lightPosition.z = this.view.sphere.position.z;
+
+                this.physics.setPosition('mouse', this.lightPosition.toArray());
+
+                // Physics
                 for (let i = 0; i < this.view.balls.mesh.count; i++) {
                     const { position, quaternion, scale } = this.object;
 
@@ -1148,6 +1197,8 @@
             static loadTexture = path => this.textureLoader.loadAsync(path);
 
             static loadEnvironmentTexture = path => this.environmentLoader.loadAsync(path);
+
+            static getFrustum = offsetZ => getFrustum(this.camera, offsetZ);
         }
 
         class App {

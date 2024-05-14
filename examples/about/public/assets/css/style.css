@@ -51,13 +51,14 @@
     --ui-info-opacity: 0.7;
     --ui-color: rgb(255 255 255 / 0.94);
     --ui-color-triplet: 255 255 255;
-    --ui-color-line: rgb(255 255 255 / 0.5);
+    --ui-color-line-opacity: 0.5;
+    --ui-color-divider-line-opacity: 0.25;
     --ui-invert-light-color: #000;
     --ui-invert-light-color-triplet: 0 0 0;
-    --ui-invert-light-color-line: rgb(0 0 0 / 0.5);
     --ui-invert-dark-color: rgb(255 255 255 / 0.94);
     --ui-invert-dark-color-triplet: 255 255 255;
-    --ui-invert-dark-color-line: rgb(255 255 255 / 0.5);
+    --ui-color-line: rgb(var(--ui-color-triplet) / var(--ui-color-line-opacity));
+    --ui-color-divider-line: rgb(var(--ui-color-triplet) / var(--ui-color-divider-line-opacity));
 }
 
 *, :after, :before {

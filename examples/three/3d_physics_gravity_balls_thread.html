@@ -11,7 +11,7 @@
     <link rel="stylesheet" href="../assets/css/style.css">
 
     <script type="module">
-        import { BasicShadowMap, BloomCompositeMaterial, Color, ColorManagement, DirectionalLight, DynamicDrawUsage, EnvironmentTextureLoader, EventEmitter, Group, HemisphereLight, IcosahedronGeometry, ImageBitmapLoaderThread, InstancedMesh, LinearSRGBColorSpace, LuminosityMaterial, MathUtils, Matrix4, Mesh, MeshStandardMaterial, OimoPhysicsBuffer, OimoPhysicsController, OrthographicCamera, PanelItem, PerspectiveCamera, PlaneGeometry, PointLight, RepeatWrapping, Scene, SceneCompositeDistortionMaterial, ShaderChunk, TextureLoader, Thread, UI, UnrealBloomBlurMaterial, Vector2, Vector3, WebGLRenderTarget, WebGLRenderer, getFrustum, getFullscreenTriangle, getKeyByValue, headsTails, ticker } from '../../build/alien.three.js';
+        import { BloomCompositeMaterial, Color, ColorManagement, DirectionalLight, DynamicDrawUsage, EnvironmentTextureLoader, EventEmitter, Group, HemisphereLight, IcosahedronGeometry, ImageBitmapLoaderThread, InstancedMesh, LinearSRGBColorSpace, LuminosityMaterial, MathUtils, Matrix4, Mesh, MeshStandardMaterial, OimoPhysicsBuffer, OimoPhysicsController, OrthographicCamera, PanelItem, PerspectiveCamera, PlaneGeometry, PointLight, RepeatWrapping, Scene, SceneCompositeDistortionMaterial, ShaderChunk, TextureLoader, Thread, UI, UnrealBloomBlurMaterial, Vector2, Vector3, WebGLRenderTarget, WebGLRenderer, getFrustum, getFullscreenTriangle, getKeyByValue, headsTails, ticker } from '../../build/alien.three.js';
 
         const count = parseInt(location.search.slice(1), 10) || 20;
 
@@ -374,8 +374,6 @@
 
                 const mesh = new InstancedMesh(geometry, material, count);
                 mesh.instanceMatrix.setUsage(DynamicDrawUsage); // Will be updated every frame
-                mesh.castShadow = true;
-                mesh.receiveShadow = true;
                 this.add(mesh);
 
                 const object = new Group();
@@ -524,8 +522,6 @@
                 };
 
                 const mesh = new Mesh(geometry, material);
-                mesh.castShadow = true;
-                mesh.receiveShadow = true;
                 this.add(mesh);
 
                 // Physics
@@ -1109,10 +1105,6 @@
                 // Output canvas
                 this.element = this.renderer.domElement;
 
-                // Shadows
-                this.renderer.shadowMap.enabled = true;
-                this.renderer.shadowMap.type = BasicShadowMap;
-
                 // 3D scene
                 this.scene = new Scene();
                 this.scene.background = new Color(0x0e0e0e);
@@ -1142,9 +1134,6 @@
 
                 const light = new DirectionalLight(0xffffff, 2);
                 light.position.set(5, 5, 5);
-                light.castShadow = true;
-                light.shadow.mapSize.width = 2048;
-                light.shadow.mapSize.height = 2048;
                 this.scene.add(light);
 
                 this.light = light;

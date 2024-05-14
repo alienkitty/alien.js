@@ -141,9 +141,9 @@
                 const object = new Group();
 
                 for (let i = 0; i < mesh.count; i++) {
-                    object.position.x = MathUtils.randFloat(0, 5) * (headsTails() ? -1 : 1);
-                    object.position.y = MathUtils.randFloat(0, 5) * (headsTails() ? -1 : 1);
-                    object.position.z = MathUtils.randFloat(0, 5) * (headsTails() ? -1 : 1);
+                    object.position.x = MathUtils.randFloat(10, 100) * (headsTails() ? -1 : 1);
+                    object.position.y = MathUtils.randFloat(10, 100) * (headsTails() ? -1 : 1);
+                    object.position.z = MathUtils.randFloat(10, 100) * (headsTails() ? -1 : 1);
 
                     object.rotation.x = MathUtils.degToRad(MathUtils.randInt(0, 360));
                     object.rotation.y = MathUtils.degToRad(MathUtils.randInt(0, 360));
@@ -340,9 +340,7 @@
 
                 // Mouse light
                 this.mouse = new Vector2();
-                this.target = new Vector2();
                 this.lightPosition = new Vector3();
-                this.lerpSpeed = 1;
 
                 // Physics
                 this.force = new Vector3();
@@ -372,8 +370,8 @@
                     return;
                 }
 
-                this.target.x = (clientX / document.documentElement.clientWidth) * 2 - 1;
-                this.target.y = 1 - (clientY / document.documentElement.clientHeight) * 2;
+                this.mouse.x = (clientX / document.documentElement.clientWidth) * 2 - 1;
+                this.mouse.y = 1 - (clientY / document.documentElement.clientHeight) * 2;
             };
 
             static onPointerUp = e => {
@@ -395,8 +393,6 @@
                 }
 
                 // Mouse light
-                this.mouse.lerp(this.target, this.lerpSpeed);
-
                 this.lightPosition.x = this.mouse.x * this.halfWidth;
                 this.lightPosition.y = this.mouse.y * this.halfHeight;
                 this.lightPosition.z = this.view.sphere.position.z;

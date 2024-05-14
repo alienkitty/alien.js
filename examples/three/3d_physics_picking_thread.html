@@ -42,6 +42,11 @@
                 this.physics = new OimoPhysicsBuffer();
 
                 this.shapes.forEach(shape => this.physics.add(shape));
+
+                this.physics.add({
+                    name: 'mouse',
+                    kinematic: true
+                });
             }
 
             addListeners() {
@@ -199,17 +204,9 @@
             }
 
             init() {
-                this.initShapes();
                 this.initEngine();
 
                 this.addListeners();
-            }
-
-            initShapes() {
-                this.add({
-                    name: 'mouse',
-                    kinematic: true
-                });
             }
 
             initEngine() {

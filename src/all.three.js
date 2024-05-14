@@ -99,7 +99,7 @@ export { SoftShadows } from './three/utils/SoftShadows.js';
 export { Text } from './three/utils/Text.js';
 
 // Physics
-export { OimoPhysics, RigidBodyConfig, RigidBodyType, SphericalJointConfig } from './three/utils/physics/OimoPhysics.js';
+export { OimoPhysics, RigidBodyConfig, RigidBodyType, SphericalJointConfig, UniversalJointConfig } from './three/utils/physics/OimoPhysics.js';
 export { OimoPhysicsBuffer } from './three/utils/physics/OimoPhysicsBuffer.js';
 export { OimoPhysicsController } from './three/utils/physics/OimoPhysicsController.js';
 

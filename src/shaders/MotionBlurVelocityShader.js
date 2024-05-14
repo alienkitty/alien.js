@@ -5,6 +5,11 @@ export const vertexShader = /* glsl */ `
 in vec3 position;
 in vec3 normal;
 
+#ifdef USE_INSTANCING
+    in mat4 instanceMatrix;
+    in mat4 instancePrevMatrix;
+#endif
+
 uniform mat4 modelViewMatrix;
 uniform mat4 projectionMatrix;
 uniform mat3 normalMatrix;
@@ -18,8 +23,16 @@ out vec4 vNewPosition;
 
 void main() {
     // Outputs the position of the current and last frame positions
-    vNewPosition = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
-    vPrevPosition = uPrevProjectionMatrix * uPrevModelViewMatrix * vec4(position, 1.0);
+    vNewPosition = vec4(position, 1.0);
+    vPrevPosition = vec4(position, 1.0);
+
+    #ifdef USE_INSTANCING
+        vNewPosition = instanceMatrix * vNewPosition;
+        vPrevPosition = instancePrevMatrix * vPrevPosition;
+    #endif
+
+    vNewPosition = projectionMatrix * modelViewMatrix * vNewPosition;
+    vPrevPosition = uPrevProjectionMatrix * uPrevModelViewMatrix * vPrevPosition;
 
     // The delta between frames
     vec3 delta = vNewPosition.xyz - vPrevPosition.xyz;

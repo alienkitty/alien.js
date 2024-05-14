@@ -5,7 +5,7 @@
  * Based on https://github.com/gkjohnson/threejs-sandbox/tree/master/shader-replacement
  */
 
-import { Color, HalfFloatType, Matrix4, WebGLRenderTarget } from 'three';
+import { Color, HalfFloatType, InstancedBufferAttribute, Matrix4, WebGLRenderTarget } from 'three';
 
 import { MotionBlurVelocityMaterial } from '../materials/MotionBlurVelocityMaterial.js';
 
@@ -94,7 +94,15 @@ export class MotionBlur {
             if (!object.initialized) {
                 object.prevMatrixWorld = object.matrixWorld.clone();
                 object.originalMaterial = object.material;
-                object.velocityMaterial = new MotionBlurVelocityMaterial();
+
+                if (object.isInstancedMesh) {
+                    object.prevInstanceMatrix = new InstancedBufferAttribute(new Float32Array(object.instanceMatrix.array), 16);
+                    object.geometry.setAttribute('instancePrevMatrix', object.prevInstanceMatrix);
+                    object.velocityMaterial = new MotionBlurVelocityMaterial({ instancing: true });
+                } else {
+                    object.velocityMaterial = new MotionBlurVelocityMaterial();
+                }
+
                 object.initialized = true;
             }
 
@@ -103,17 +111,22 @@ export class MotionBlur {
             object.velocityMaterial.uniforms.uInterpolateGeometry.value = this.interpolateGeometry;
             object.velocityMaterial.uniforms.uIntensity.value = this.smearIntensity;
             object.material = object.velocityMaterial;
-
-            // Current state for the next frame
-            if (this.saveState) {
-                object.prevMatrixWorld.copy(object.matrixWorld);
-            }
         }
     };
 
     restoreOriginalMaterial = object => {
         if (object.layers.isEnabled(this.channel)) {
             object.material = object.originalMaterial;
+
+            // Current state for the next frame
+            if (this.saveState) {
+                object.prevMatrixWorld.copy(object.matrixWorld);
+
+                if (object.isInstancedMesh) {
+                    object.prevInstanceMatrix.copyArray(object.instanceMatrix.array);
+                    object.prevInstanceMatrix.needsUpdate = true;
+                }
+            }
         }
     };
 

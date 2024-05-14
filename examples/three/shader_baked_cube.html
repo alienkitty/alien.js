@@ -45,7 +45,7 @@
                 const map = await loadTexture('../assets/textures/cube/cube_basecolor.jpg');
                 map.anisotropy = anisotropy;
 
-                this.material = new BasicMaterial(map);
+                this.material = new BasicMaterial({ map });
             }
 
             initMesh() {
@@ -85,7 +85,7 @@
                 const map = await loadTexture('../assets/textures/cube/cube_shadow.jpg');
                 map.anisotropy = anisotropy;
 
-                this.material = new ShadowTextureMaterial(map);
+                this.material = new ShadowTextureMaterial({ map });
                 this.material.side = DoubleSide;
             }
 

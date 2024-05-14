@@ -6,10 +6,13 @@ export class FresnelMaterial extends RawShaderMaterial {
     constructor({
         baseColor,
         fresnelColor,
-        fresnelPower = 1.5
+        fresnelPower = 1.5,
+        instancing = false
     } = {}) {
-        super({
+        const parameters = {
             glslVersion: GLSL3,
+            defines: {
+            },
             uniforms: {
                 uBaseColor: { value: baseColor instanceof Color ? baseColor : new Color(baseColor) },
                 uFresnelColor: { value: fresnelColor instanceof Color ? fresnelColor : new Color(fresnelColor) },
@@ -17,6 +20,14 @@ export class FresnelMaterial extends RawShaderMaterial {
             },
             vertexShader,
             fragmentShader
-        });
+        };
+
+        if (instancing) {
+            parameters.defines = Object.assign(parameters.defines, {
+                USE_INSTANCING: ''
+            });
+        }
+
+        super(parameters);
     }
 }

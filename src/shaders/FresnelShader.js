@@ -2,6 +2,10 @@ export const vertexShader = /* glsl */ `
 in vec3 position;
 in vec3 normal;
 
+#ifdef USE_INSTANCING
+    in mat4 instanceMatrix;
+#endif
+
 uniform mat4 modelMatrix;
 uniform mat4 modelViewMatrix;
 uniform mat4 projectionMatrix;
@@ -15,7 +19,13 @@ void main() {
     vWorldNormal = normalize(modelMatrix * vec4(normal, 0.0)).xyz;
     vViewDirection = normalize(cameraPosition - worldPosition.xyz);
 
-    gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+    vec4 mvPosition = vec4(position, 1.0);
+
+    #ifdef USE_INSTANCING
+        mvPosition = instanceMatrix * mvPosition;
+    #endif
+
+    gl_Position = projectionMatrix * modelViewMatrix * mvPosition;
 }
 `;
 

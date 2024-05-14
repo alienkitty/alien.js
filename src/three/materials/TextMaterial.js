@@ -4,7 +4,7 @@ import { vertexShader, fragmentShader } from '../../shaders/TextShader.js';
 
 export class TextMaterial extends RawShaderMaterial {
     constructor({
-        map,
+        map = null,
         color
     } = {}) {
         super({

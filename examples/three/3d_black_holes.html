@@ -780,7 +780,6 @@
 
                 this.renderTargetB = this.renderTargetA.clone();
                 this.renderTargetC = this.renderTargetA.clone();
-                this.renderTargetD = this.renderTargetA.clone();
 
                 this.renderTargetBlurA = this.renderTargetA.clone();
                 this.renderTargetBlurB = this.renderTargetA.clone();
@@ -798,7 +797,6 @@
 
                 this.renderTargetA.depthBuffer = true;
                 this.renderTargetC.depthBuffer = true;
-                this.renderTargetD.depthBuffer = true;
                 this.renderTargetBlurA.depthBuffer = true;
 
                 // Fluid simulation
@@ -972,7 +970,6 @@
                 this.renderTargetA.setSize(width, height);
                 this.renderTargetB.setSize(width, height);
                 this.renderTargetC.setSize(width, height);
-                this.renderTargetD.setSize(width, height);
 
                 this.motionBlur.setSize(width, height);
 
@@ -1016,7 +1013,6 @@
                 const renderTargetA = this.renderTargetA;
                 const renderTargetB = this.renderTargetB;
                 const renderTargetC = this.renderTargetC;
-                const renderTargetD = this.renderTargetD;
                 const renderTargetBlurA = this.renderTargetBlurA;
                 const renderTargetBlurB = this.renderTargetBlurB;
                 const renderTargetBright = this.renderTargetBright;

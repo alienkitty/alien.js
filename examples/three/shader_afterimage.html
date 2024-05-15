@@ -490,8 +490,10 @@
                 height = Math.round(height * dpr);
 
                 this.renderTarget.setSize(width, height);
+
                 this.afterimage.setSize(width, height);
 
+                // Unreal bloom
                 width = MathUtils.floorPowerOfTwo(width) / 2;
                 height = MathUtils.floorPowerOfTwo(height) / 2;
 
@@ -666,7 +668,7 @@
 
                 // 3D scene
                 this.scene = new Scene();
-                this.scene.background = new Color(0x0e0e0e);
+                this.scene.background = new Color(0x060606);
                 this.scene.fog = new Fog(this.scene.background, 1, 100);
                 this.camera = new PerspectiveCamera(30);
                 this.camera.near = 0.5;

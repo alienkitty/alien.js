@@ -92,10 +92,7 @@
                 const mesh = new Mesh(geometry, material);
                 mesh.castShadow = true;
                 mesh.receiveShadow = true;
-
-                // Layers
                 mesh.layers.enable(layers.picking);
-
                 this.add(mesh);
 
                 // Physics
@@ -205,10 +202,7 @@
                 const mesh = new Mesh(geometry, material);
                 mesh.castShadow = true;
                 mesh.receiveShadow = true;
-
-                // Layers
                 mesh.layers.enable(layers.picking);
-
                 this.add(mesh);
 
                 // Physics
@@ -756,6 +750,7 @@
 
                 this.renderTarget.setSize(width, height);
 
+                // Unreal bloom
                 width = MathUtils.floorPowerOfTwo(width) / 2;
                 height = MathUtils.floorPowerOfTwo(height) / 2;
 
@@ -927,7 +922,7 @@
                         const point = intersection[0].point;
 
                         const body = new RigidBodyConfig();
-                        body.type = RigidBodyType.STATIC;
+                        body.type = RigidBodyType.KINEMATIC;
                         body.position.copyFrom(point);
                         this.physics.add(body);
 
@@ -1086,7 +1081,7 @@
 
                 // 3D scene
                 this.scene = new Scene();
-                this.scene.background = new Color(0x0e0e0e);
+                this.scene.background = new Color(0x060606);
                 this.camera = new PerspectiveCamera(30);
                 this.camera.near = 0.5;
                 this.camera.far = 40;

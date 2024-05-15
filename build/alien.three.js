@@ -55591,6 +55591,11 @@ function getFrustumFromHeight(camera, height, offsetZ = 0) {
     return fov;
 }
 
+// Based on https://github.com/mrdoob/three.js/pull/21190#issuecomment-774738902 by WestLangley
+function getHorizontalFOV(camera, fov) {
+    return Math.atan(Math.tan(fov * MathUtils.DEG2RAD * 0.5) / camera.aspect) * MathUtils.RAD2DEG * 2; // degrees
+}
+
 function lerpCameras(camera1, camera2, alpha) {
     if (camera1.fov !== camera2.fov || camera1.zoom !== camera2.zoom) {
         if (camera1.fov !== camera2.fov) {
@@ -56196,6 +56201,7 @@ class Panel extends Interface {
     init() {
         this.hide();
         this.css({
+            width: 'var(--ui-panel-width)',
             pointerEvents: 'auto',
             webkitUserSelect: 'none',
             userSelect: 'none'
@@ -56473,7 +56479,7 @@ class ListToggle extends Interface {
         this.css({
             position: 'relative',
             cssFloat: 'left',
-            width: 54,
+            width: 'calc(var(--ui-panel-width) / 2)',
             height: 20,
             lineHeight: 20,
             textTransform: 'uppercase',
@@ -57580,7 +57586,7 @@ class ColorPicker extends Interface {
         this.noText = noText;
         this.callback = callback;
 
-        this.width = 108;
+        this.width = parseFloat(Stage.rootStyle.getPropertyValue('--ui-panel-width').trim());
         this.height = 19;
         this.middle = this.width / 2;
         this.top = this.height + 9;
@@ -57633,7 +57639,7 @@ class ColorPicker extends Interface {
             width: this.height,
             height: this.height,
             backgroundColor: 'var(--ui-bg-color)',
-            border: '1px solid rgba(var(--ui-color-triplet), 0.25)',
+            border: '1px solid var(--ui-color-divider-line)',
             cursor: 'pointer'
         });
         this.container.add(this.swatch);
@@ -58145,10 +58151,6 @@ class PanelItem extends Interface {
     }
 
     init() {
-        this.css({
-            width: 108
-        });
-
         this.container = new Interface('.container');
         this.container.css({
             boxSizing: 'border-box'
@@ -58179,8 +58181,7 @@ class PanelItem extends Interface {
             this.line = new Interface('.line');
             this.line.css({
                 height: 1,
-                backgroundColor: 'rgba(var(--ui-color-triplet), 0.25)',
-                transformOrigin: 'left center'
+                backgroundColor: 'var(--ui-color-divider-line)'
             });
             this.container.add(this.line);
         } else if (this.data.type === 'link') {
@@ -58586,7 +58587,7 @@ class ReticleInfo extends Interface {
             fontSize: 'var(--ui-secondary-font-size)',
             letterSpacing: 'var(--ui-secondary-letter-spacing)',
             paddingBottom: 3,
-            opacity: 0.7
+            opacity: 'var(--ui-secondary-opacity)'
         });
         this.add(this.secondary);
     }
@@ -58947,7 +58948,6 @@ class PointInfo extends Interface {
         this.locked = false;
 
         this.init();
-        this.initViews();
     }
 
     init() {
@@ -58978,28 +58978,9 @@ class PointInfo extends Interface {
             fontSize: 'var(--ui-secondary-font-size)',
             letterSpacing: 'var(--ui-secondary-letter-spacing)',
             paddingBottom: 3,
-            opacity: 0.7
+            opacity: 'var(--ui-secondary-opacity)'
         });
         this.container.add(this.type);
-
-        this.targetNumbers = new Interface('.numbers');
-        this.targetNumbers.css({
-            position: 'absolute',
-            left: -28,
-            top: 0,
-            minHeight: '100%',
-            display: 'flex',
-            flexDirection: 'column',
-            justifyContent: 'center',
-            gap: 4,
-            paddingTop: 3
-        });
-        this.container.add(this.targetNumbers);
-    }
-
-    initViews() {
-        this.panel = new Panel();
-        this.add(this.panel);
     }
 
     // Public methods
@@ -59019,6 +59000,22 @@ class PointInfo extends Interface {
     }
 
     setTargetNumbers(targetNumbers) {
+        if (!this.targetNumbers) {
+            this.targetNumbers = new Interface('.numbers');
+            this.targetNumbers.css({
+                position: 'absolute',
+                left: -28,
+                top: 0,
+                minHeight: '100%',
+                display: 'flex',
+                flexDirection: 'column',
+                justifyContent: 'center',
+                gap: 4,
+                paddingTop: 3
+            });
+            this.container.add(this.targetNumbers);
+        }
+
         this.targetNumbers.empty();
         this.numbers.length = 0;
 
@@ -59044,6 +59041,15 @@ class PointInfo extends Interface {
         this.locked = false;
     }
 
+    addPanel(item) {
+        if (!this.panel) {
+            this.panel = new Panel();
+            this.add(this.panel);
+        }
+
+        this.panel.add(item);
+    }
+
     open() {
         this.css({ pointerEvents: 'auto' });
 
@@ -59053,8 +59059,10 @@ class PointInfo extends Interface {
             this.numbers.forEach(number => number.animateIn(100));
         }
 
-        this.panel.animateIn();
-        this.panel.activate();
+        if (this.panel) {
+            this.panel.animateIn();
+            this.panel.activate();
+        }
     }
 
     close() {
@@ -59064,8 +59072,10 @@ class PointInfo extends Interface {
 
         this.numbers.forEach(number => number.animateOut());
 
-        this.panel.animateOut();
-        this.panel.deactivate();
+        if (this.panel) {
+            this.panel.animateOut();
+            this.panel.deactivate();
+        }
     }
 
     animateIn() {
@@ -59697,8 +59707,6 @@ class Point3D extends Group {
         this.initElement();
         this.initViews();
 
-        this.addListeners();
-
         Point3D.add(this);
     }
 
@@ -59750,8 +59758,6 @@ class Point3D extends Group {
             type: this.type
         });
         this.element.add(this.point);
-
-        this.panel = this.point.info.panel;
     }
 
     createMesh() {
@@ -59908,7 +59914,13 @@ class Point3D extends Group {
     }
 
     addPanel(item) {
-        this.panel.add(item);
+        this.point.info.addPanel(item);
+
+        if (!this.panel) {
+            this.panel = this.point.info.panel;
+
+            this.addListeners();
+        }
     }
 
     setPanelValue(name, value) {
@@ -62570,7 +62582,7 @@ class PhongMaterialSubsurfacePanel extends Panel {
             mesh.userData.subsurfaceUniforms = {
                 thicknessDistortion: { value: 0.1 },
                 thicknessAmbient: { value: 0 },
-                thicknessAttenuation: { value: 0.1 },
+                thicknessAttenuation: { value: 0.8 },
                 thicknessPower: { value: 2 },
                 thicknessScale: { value: 10 }
             };
@@ -63115,7 +63127,7 @@ class StandardMaterialSubsurfacePanel extends Panel {
             mesh.userData.subsurfaceUniforms = {
                 thicknessDistortion: { value: 0.1 },
                 thicknessAmbient: { value: 0 },
-                thicknessAttenuation: { value: 0.1 },
+                thicknessAttenuation: { value: 0.8 },
                 thicknessPower: { value: 2 },
                 thicknessScale: { value: 10 }
             };
@@ -63758,7 +63770,7 @@ class PhysicalMaterialSubsurfacePanel extends Panel {
             mesh.userData.subsurfaceUniforms = {
                 thicknessDistortion: { value: 0.1 },
                 thicknessAmbient: { value: 0 },
-                thicknessAttenuation: { value: 0.1 },
+                thicknessAttenuation: { value: 0.8 },
                 thicknessPower: { value: 2 },
                 thicknessScale: { value: 10 }
             };
@@ -64547,6 +64559,7 @@ class DetailsTitle extends Interface {
         super('.title', 'h1');
 
         this.title = title;
+
         this.letters = [];
 
         this.init();
@@ -64814,7 +64827,7 @@ class Details extends Interface {
         }
 
         this.container.children.forEach((child, i) => {
-            const delay = i === 0 ? 0 : duration;
+            const delay = i === 0 ? 0 : 200;
 
             child.clearTween().css({ opacity: 0 }).tween({ opacity: 1 }, duration, 'easeOutCubic', delay + i * stagger);
         });
@@ -64856,8 +64869,6 @@ class DetailsInfo extends Interface {
 
         this.data = data;
 
-        this.animatedIn = false;
-
         this.init();
         this.initViews();
     }
@@ -64873,6 +64884,7 @@ class DetailsInfo extends Interface {
             display: 'flex',
             alignItems: 'flex-end',
             pointerEvents: 'none',
+            x: -10,
             opacity: 0
         });
 
@@ -64919,7 +64931,6 @@ class DetailsInfo extends Interface {
     }
 
     animateIn() {
-        this.clearTween();
         this.visible();
         this.css({
             pointerEvents: 'auto',
@@ -64930,23 +64941,25 @@ class DetailsInfo extends Interface {
         const stagger = 175;
 
         this.container.children.forEach((child, i) => {
-            const delay = i === 0 ? 0 : duration;
+            const delay = i === 0 ? 0 : 200;
 
             child.clearTween().css({ opacity: 0 }).tween({ opacity: 1 }, duration, 'easeOutCubic', delay + i * stagger);
         });
 
         this.title.animateIn();
 
-        this.animatedIn = true;
+        this.clearTween().css({ x: -10, opacity: 0 }).tween({ x: 0, opacity: 1 }, duration, 'easeOutCubic');
     }
 
-    animateOut() {
+    animateOut(callback) {
         this.css({ pointerEvents: 'none' });
 
-        this.clearTween().tween({ opacity: 0 }, 1800, 'easeOutExpo', () => {
+        this.clearTween().tween({ opacity: 0 }, 300, 'easeInSine', () => {
             this.invisible();
 
-            this.animatedIn = false;
+            if (callback) {
+                callback();
+            }
         });
     }
 }
@@ -64962,6 +64975,7 @@ class NavLink extends Interface {
 
         this.title = title;
         this.link = link;
+
         this.letters = [];
 
         this.init();
@@ -65081,9 +65095,6 @@ class HeaderInfo extends Interface {
         this.isOpen = false;
 
         this.init();
-        this.initViews();
-
-        this.addListeners();
     }
 
     init() {
@@ -65101,16 +65112,6 @@ class HeaderInfo extends Interface {
         });
         this.number.text(this.fps);
         this.add(this.number);
-    }
-
-    initViews() {
-        this.panel = new Panel();
-        this.panel.css({
-            position: 'absolute',
-            top: 0,
-            right: 10
-        });
-        this.add(this.panel);
     }
 
     addListeners() {
@@ -65206,6 +65207,22 @@ class HeaderInfo extends Interface {
     };
 
     // Public methods
+
+    addPanel(item) {
+        if (!this.panel) {
+            this.panel = new Panel();
+            this.panel.css({
+                position: 'absolute',
+                top: 0,
+                right: 10
+            });
+            this.add(this.panel);
+
+            this.addListeners();
+        }
+
+        this.panel.add(item);
+    }
 
     update() {
         this.time = performance.now();
@@ -65421,7 +65438,7 @@ class MenuItem extends Interface {
     activate(direction) {
         this.active = true;
 
-        this.line.css({ transformOrigin: direction < 0 ? 'left center' : 'right center', scaleX: 0 }).tween({ scaleX: 1 }, 800, 'easeOutQuint');
+        this.line.css({ transformOrigin: direction < 0 ? 'left center' : 'right center', scaleX: 0 }).tween({ scaleX: 1 }, 500, 'easeOutQuint');
 
         this.tween({ opacity: 1 }, 300, 'easeOutSine');
     }
@@ -65429,7 +65446,7 @@ class MenuItem extends Interface {
     deactivate(direction) {
         this.active = false;
 
-        this.line.css({ transformOrigin: direction < 0 ? 'left center' : 'right center' }).tween({ scaleX: 0 }, 500, 'easeOutQuint');
+        this.line.css({ transformOrigin: direction > 0 ? 'left center' : 'right center' }).tween({ scaleX: 0 }, 500, 'easeOutQuint');
 
         this.tween({ opacity: 0.5 }, 500, 'easeOutSine');
     }
@@ -65611,7 +65628,7 @@ class Info extends Interface {
         this.content.css({
             textAlign: 'center',
             textTransform: 'uppercase',
-            opacity: 0.7
+            opacity: 'var(--ui-secondary-opacity)'
         });
         this.content.html(this.data.content);
         this.add(this.content);
@@ -66276,7 +66293,7 @@ class UI extends Interface {
     // Public methods
 
     addPanel(item) {
-        this.header.info.panel.add(item);
+        this.header.info.addPanel(item);
     }
 
     setPanelValue(label, value) {
@@ -66396,6 +66413,7 @@ class Title extends Interface {
         super('.title', 'h1');
 
         this.title = title;
+
         this.letters = [];
 
         this.init();
@@ -67073,6 +67091,10 @@ const vertexShader$H = /* glsl */ `
 in vec3 position;
 in vec3 normal;
 
+#ifdef USE_INSTANCING
+    in mat4 instanceMatrix;
+#endif
+
 uniform mat4 modelViewMatrix;
 uniform mat4 projectionMatrix;
 uniform mat3 normalMatrix;
@@ -67080,9 +67102,15 @@ uniform mat3 normalMatrix;
 out vec3 vNormal;
 
 void main() {
-    vNormal = normalMatrix * normal;
+    vNormal = normalize(normalMatrix * normal);
 
-    gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+    vec4 mvPosition = vec4(position, 1.0);
+
+    #ifdef USE_INSTANCING
+        mvPosition = instanceMatrix * mvPosition;
+    #endif
+
+    gl_Position = projectionMatrix * modelViewMatrix * mvPosition;
 }
 `;
 
@@ -67094,28 +67122,51 @@ in vec3 vNormal;
 out vec4 FragColor;
 
 void main() {
-    FragColor = vec4(vNormal, 1.0);
+    FragColor.rgb = normalize(vNormal);
+    FragColor.a = 1.0;
 }
 `;
 
 class NormalMaterial extends RawShaderMaterial {
-    constructor() {
-        super({
+    constructor({
+        instancing = false
+    } = {}) {
+        const parameters = {
             glslVersion: GLSL3,
+            defines: {
+            },
             vertexShader: vertexShader$H,
             fragmentShader: fragmentShader$H
-        });
+        };
+
+        if (instancing) {
+            parameters.defines = Object.assign(parameters.defines, {
+                USE_INSTANCING: ''
+            });
+        }
+
+        super(parameters);
     }
 }
 
 const vertexShader$G = /* glsl */ `
 in vec3 position;
 
+#ifdef USE_INSTANCING
+    in mat4 instanceMatrix;
+#endif
+
 uniform mat4 modelViewMatrix;
 uniform mat4 projectionMatrix;
 
 void main() {
-    gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+    vec4 mvPosition = vec4(position, 1.0);
+
+    #ifdef USE_INSTANCING
+        mvPosition = instanceMatrix * mvPosition;
+    #endif
+
+    gl_Position = projectionMatrix * modelViewMatrix * mvPosition;
 }
 `;
 
@@ -67133,22 +67184,39 @@ void main() {
 `;
 
 class ColorMaterial extends RawShaderMaterial {
-    constructor(color) {
-        super({
+    constructor({
+        color,
+        instancing = false
+    } = {}) {
+        const parameters = {
             glslVersion: GLSL3,
+            defines: {
+            },
             uniforms: {
                 uColor: { value: color instanceof Color$1 ? color : new Color$1(color) },
                 uAlpha: { value: 1 }
             },
             vertexShader: vertexShader$G,
             fragmentShader: fragmentShader$G
-        });
+        };
+
+        if (instancing) {
+            parameters.defines = Object.assign(parameters.defines, {
+                USE_INSTANCING: ''
+            });
+        }
+
+        super(parameters);
     }
 }
 
 const vertexShader$F = /* glsl */ `
 in vec3 position;
 in vec2 uv;
+
+#ifdef USE_INSTANCING
+    in mat4 instanceMatrix;
+#endif
 
 uniform mat4 modelViewMatrix;
 uniform mat4 projectionMatrix;
@@ -67158,7 +67226,13 @@ out vec2 vUv;
 void main() {
     vUv = uv;
 
-    gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+    vec4 mvPosition = vec4(position, 1.0);
+
+    #ifdef USE_INSTANCING
+        mvPosition = instanceMatrix * mvPosition;
+    #endif
+
+    gl_Position = projectionMatrix * modelViewMatrix * mvPosition;
 }
 `;
 
@@ -67179,9 +67253,14 @@ void main() {
 `;
 
 class BasicMaterial extends RawShaderMaterial {
-    constructor(map) {
-        super({
+    constructor({
+        map = null,
+        instancing = false
+    } = {}) {
+        const parameters = {
             glslVersion: GLSL3,
+            defines: {
+            },
             uniforms: {
                 tMap: { value: map },
                 uAlpha: { value: 1 }
@@ -67189,7 +67268,15 @@ class BasicMaterial extends RawShaderMaterial {
             vertexShader: vertexShader$F,
             fragmentShader: fragmentShader$F,
             transparent: true
-        });
+        };
+
+        if (instancing) {
+            parameters.defines = Object.assign(parameters.defines, {
+                USE_INSTANCING: ''
+            });
+        }
+
+        super(parameters);
     }
 }
 
@@ -67228,7 +67315,9 @@ void main() {
 `;
 
 class ShadowTextureMaterial extends RawShaderMaterial {
-    constructor(map) {
+    constructor({
+        map = null
+    } = {}) {
         super({
             glslVersion: GLSL3,
             uniforms: {
@@ -67306,7 +67395,6 @@ float random(vec2 co) {
 
 // Based on https://www.shadertoy.com/view/MslGR8 by hornet
 
-
 var dither = /* glsl */ `
 ${random}
 
@@ -67328,11 +67416,21 @@ vec3 dither(vec3 color) {
 const vertexShader$C = /* glsl */ `
 in vec3 position;
 
+#ifdef USE_INSTANCING
+    in mat4 instanceMatrix;
+#endif
+
 uniform mat4 modelViewMatrix;
 uniform mat4 projectionMatrix;
 
 void main() {
-    gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+    vec4 mvPosition = vec4(position, 1.0);
+
+    #ifdef USE_INSTANCING
+        mvPosition = instanceMatrix * mvPosition;
+    #endif
+
+    gl_Position = projectionMatrix * modelViewMatrix * mvPosition;
 }
 `;
 
@@ -67352,18 +67450,34 @@ void main() {
 `;
 
 class DepthMaterial extends RawShaderMaterial {
-    constructor() {
-        super({
+    constructor({
+        instancing = false
+    } = {}) {
+        const parameters = {
             glslVersion: GLSL3,
+            defines: {
+            },
             vertexShader: vertexShader$C,
             fragmentShader: fragmentShader$C
-        });
+        };
+
+        if (instancing) {
+            parameters.defines = Object.assign(parameters.defines, {
+                USE_INSTANCING: ''
+            });
+        }
+
+        super(parameters);
     }
 }
 
 const vertexShader$B = /* glsl */ `
 in vec3 position;
 in vec3 normal;
+
+#ifdef USE_INSTANCING
+    in mat4 instanceMatrix;
+#endif
 
 uniform mat4 modelMatrix;
 uniform mat4 modelViewMatrix;
@@ -67378,7 +67492,13 @@ void main() {
     vWorldNormal = normalize(modelMatrix * vec4(normal, 0.0)).xyz;
     vViewDirection = normalize(cameraPosition - worldPosition.xyz);
 
-    gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+    vec4 mvPosition = vec4(position, 1.0);
+
+    #ifdef USE_INSTANCING
+        mvPosition = instanceMatrix * mvPosition;
+    #endif
+
+    gl_Position = projectionMatrix * modelViewMatrix * mvPosition;
 }
 `;
 
@@ -67410,10 +67530,13 @@ class FresnelMaterial extends RawShaderMaterial {
     constructor({
         baseColor,
         fresnelColor,
-        fresnelPower = 1.5
+        fresnelPower = 1.5,
+        instancing = false
     } = {}) {
-        super({
+        const parameters = {
             glslVersion: GLSL3,
+            defines: {
+            },
             uniforms: {
                 uBaseColor: { value: baseColor instanceof Color$1 ? baseColor : new Color$1(baseColor) },
                 uFresnelColor: { value: fresnelColor instanceof Color$1 ? fresnelColor : new Color$1(fresnelColor) },
@@ -67421,7 +67544,15 @@ class FresnelMaterial extends RawShaderMaterial {
             },
             vertexShader: vertexShader$B,
             fragmentShader: fragmentShader$B
-        });
+        };
+
+        if (instancing) {
+            parameters.defines = Object.assign(parameters.defines, {
+                USE_INSTANCING: ''
+            });
+        }
+
+        super(parameters);
     }
 }
 
@@ -67453,11 +67584,11 @@ void main() {
 `;
 
 class CopyMaterial extends RawShaderMaterial {
-    constructor(map) {
+    constructor() {
         super({
             glslVersion: GLSL3,
             uniforms: {
-                tMap: { value: map }
+                tMap: { value: null }
             },
             vertexShader: vertexShader$A,
             fragmentShader: fragmentShader$A,
@@ -67608,11 +67739,11 @@ void main() {
 `;
 
 class GammaCorrectionMaterial extends RawShaderMaterial {
-    constructor(map) {
+    constructor() {
         super({
             glslVersion: GLSL3,
             uniforms: {
-                tMap: { value: map }
+                tMap: { value: null }
             },
             vertexShader: vertexShader$y,
             fragmentShader: fragmentShader$y,
@@ -68295,7 +68426,6 @@ float snoise(vec2 v)
 `;
 
 // Based on https://github.com/felixturner/bad-tv-shader
-
 
 var badtv = /* glsl */ `
 ${simplex2d}
@@ -69176,6 +69306,11 @@ const vertexShader$h = /* glsl */ `
 in vec3 position;
 in vec3 normal;
 
+#ifdef USE_INSTANCING
+    in mat4 instanceMatrix;
+    in mat4 instancePrevMatrix;
+#endif
+
 uniform mat4 modelViewMatrix;
 uniform mat4 projectionMatrix;
 uniform mat3 normalMatrix;
@@ -69189,8 +69324,16 @@ out vec4 vNewPosition;
 
 void main() {
     // Outputs the position of the current and last frame positions
-    vNewPosition = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
-    vPrevPosition = uPrevProjectionMatrix * uPrevModelViewMatrix * vec4(position, 1.0);
+    vNewPosition = vec4(position, 1.0);
+    vPrevPosition = vec4(position, 1.0);
+
+    #ifdef USE_INSTANCING
+        vNewPosition = instanceMatrix * vNewPosition;
+        vPrevPosition = instancePrevMatrix * vPrevPosition;
+    #endif
+
+    vNewPosition = projectionMatrix * modelViewMatrix * vNewPosition;
+    vPrevPosition = uPrevProjectionMatrix * uPrevModelViewMatrix * vPrevPosition;
 
     // The delta between frames
     vec3 delta = vNewPosition.xyz - vPrevPosition.xyz;
@@ -69230,9 +69373,13 @@ void main() {
 `;
 
 class MotionBlurVelocityMaterial extends RawShaderMaterial {
-    constructor() {
-        super({
+    constructor({
+        instancing = false
+    } = {}) {
+        const parameters = {
             glslVersion: GLSL3,
+            defines: {
+            },
             uniforms: {
                 uPrevModelViewMatrix: { value: new Matrix4() },
                 uPrevProjectionMatrix: { value: new Matrix4() },
@@ -69241,7 +69388,15 @@ class MotionBlurVelocityMaterial extends RawShaderMaterial {
             },
             vertexShader: vertexShader$h,
             fragmentShader: fragmentShader$h
-        });
+        };
+
+        if (instancing) {
+            parameters.defines = Object.assign(parameters.defines, {
+                USE_INSTANCING: ''
+            });
+        }
+
+        super(parameters);
     }
 }
 
@@ -70497,11 +70652,21 @@ class DepthMaskMaterial extends RawShaderMaterial {
 const vertexShader$2 = /* glsl */ `
 in vec3 position;
 
+#ifdef USE_INSTANCING
+    in mat4 instanceMatrix;
+#endif
+
 uniform mat4 modelViewMatrix;
 uniform mat4 projectionMatrix;
 
 void main() {
-    gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+    vec4 mvPosition = vec4(position, 1.0);
+
+    #ifdef USE_INSTANCING
+        mvPosition = instanceMatrix * mvPosition;
+    #endif
+
+    gl_Position = projectionMatrix * modelViewMatrix * mvPosition;
 }
 `;
 
@@ -70517,15 +70682,27 @@ void main() {
 `;
 
 class DiscardMaterial extends RawShaderMaterial {
-    constructor() {
-        super({
+    constructor({
+        instancing = false
+    } = {}) {
+        const parameters = {
             glslVersion: GLSL3,
+            defines: {
+            },
             vertexShader: vertexShader$2,
             fragmentShader: fragmentShader$2,
             blending: NoBlending,
             depthTest: false,
             depthWrite: false
-        });
+        };
+
+        if (instancing) {
+            parameters.defines = Object.assign(parameters.defines, {
+                USE_INSTANCING: ''
+            });
+        }
+
+        super(parameters);
     }
 }
 
@@ -70577,7 +70754,7 @@ void main() {
 
 class TextMaterial extends RawShaderMaterial {
     constructor({
-        map,
+        map = null,
         color
     } = {}) {
         super({
@@ -71700,7 +71877,15 @@ class MotionBlur {
             if (!object.initialized) {
                 object.prevMatrixWorld = object.matrixWorld.clone();
                 object.originalMaterial = object.material;
-                object.velocityMaterial = new MotionBlurVelocityMaterial();
+
+                if (object.isInstancedMesh) {
+                    object.prevInstanceMatrix = new InstancedBufferAttribute(new Float32Array(object.instanceMatrix.array), 16);
+                    object.geometry.setAttribute('instancePrevMatrix', object.prevInstanceMatrix);
+                    object.velocityMaterial = new MotionBlurVelocityMaterial({ instancing: true });
+                } else {
+                    object.velocityMaterial = new MotionBlurVelocityMaterial();
+                }
+
                 object.initialized = true;
             }
 
@@ -71709,17 +71894,22 @@ class MotionBlur {
             object.velocityMaterial.uniforms.uInterpolateGeometry.value = this.interpolateGeometry;
             object.velocityMaterial.uniforms.uIntensity.value = this.smearIntensity;
             object.material = object.velocityMaterial;
-
-            // Current state for the next frame
-            if (this.saveState) {
-                object.prevMatrixWorld.copy(object.matrixWorld);
-            }
         }
     };
 
     restoreOriginalMaterial = object => {
         if (object.layers.isEnabled(this.channel)) {
             object.material = object.originalMaterial;
+
+            // Current state for the next frame
+            if (this.saveState) {
+                object.prevMatrixWorld.copy(object.matrixWorld);
+
+                if (object.isInstancedMesh) {
+                    object.prevInstanceMatrix.copyArray(object.instanceMatrix.array);
+                    object.prevInstanceMatrix.needsUpdate = true;
+                }
+            }
         }
     };
 
@@ -109238,6 +109428,7 @@ oimo.common.Transform;
 const Setting$1 = oimo.common.Setting;
 
 // Collision
+const BroadPhaseType$1 = oimo.collision.broadphase.BroadPhaseType;
 const BoxGeometry$1 = oimo.collision.geometry.BoxGeometry;
 const SphereGeometry$1 = oimo.collision.geometry.SphereGeometry;
 const ConeGeometry$1 = oimo.collision.geometry.ConeGeometry;
@@ -109251,16 +109442,16 @@ oimo.dynamics.callback.RayCastClosest;
 const ContactCallback$1 = oimo.dynamics.callback.ContactCallback;
 
 // Defaults
-Setting$1.defaultGJKMargin = 0.0001; // Default 0.05
+Setting$1.defaultGJKMargin = 0.0001;
 
 class OimoPhysics {
     constructor({
         fps = 60,
         timestep = 1 / fps,
-        broadphase = 2,
+        broadphase = BroadPhaseType$1.BVH,
         gravity = new Vec3$1(0, -9.81, 0),
-        velocityIterations = 10,
-        positionIterations = 5
+        velocityIterations = 8,
+        positionIterations = 8
     } = {}) {
         this.timestep = timestep;
 
@@ -109603,10 +109794,10 @@ class OimoPhysics {
         return this.q.copy(body.getOrientation()).clone();
     }
 
-    setOrientation(object, position, index) {
+    setOrientation(object, orientation, index) {
         const body = this.getObjectBody(object, index);
 
-        body.setOrientation(position);
+        body.setOrientation(orientation);
     }
 
     getGravityScale(object, index) {
@@ -109683,6 +109874,12 @@ class OimoPhysics {
         }
     }
 
+    applyImpulse(object, impulse, positionInWorld, index) {
+        const body = this.getObjectBody(object, index);
+
+        body.applyImpulse(impulse, positionInWorld);
+    }
+
     step() {
         this.world.step(this.timestep);
 
@@ -109751,6 +109948,7 @@ const Quat = oimo.common.Quat;
 const Setting = oimo.common.Setting;
 
 // Collision
+const BroadPhaseType = oimo.collision.broadphase.BroadPhaseType;
 const BoxGeometry = oimo.collision.geometry.BoxGeometry;
 const SphereGeometry = oimo.collision.geometry.SphereGeometry;
 const ConeGeometry = oimo.collision.geometry.ConeGeometry;
@@ -109762,16 +109960,16 @@ const ConvexHullGeometry = oimo.collision.geometry.ConvexHullGeometry;
 const ContactCallback = oimo.dynamics.callback.ContactCallback;
 
 // Defaults
-Setting.defaultGJKMargin = 0.0001; // Default 0.05
+Setting.defaultGJKMargin = 0.0001;
 
 class OimoPhysicsBuffer {
     constructor({
         fps = 60,
         timestep = 1 / fps,
-        broadphase = 2,
+        broadphase = BroadPhaseType.BVH,
         gravity = new Vec3(0, -9.81, 0),
-        velocityIterations = 10,
-        positionIterations = 5
+        velocityIterations = 8,
+        positionIterations = 8
     } = {}) {
         this.timestep = timestep;
 
@@ -109783,7 +109981,8 @@ class OimoPhysicsBuffer {
         this.map = new Map();
         this.array = new Float32Array();
 
-        this.v = new Vec3();
+        this.v1 = new Vec3();
+        this.v2 = new Vec3();
         this.q = new Quat();
     }
 
@@ -110048,24 +110247,20 @@ class OimoPhysicsBuffer {
         return body;
     }
 
-    getGravity() {
-        return this.world.getGravity();
+    setGravity(gravity) {
+        this.world.setGravity(this.v1.init(gravity[0], gravity[1], gravity[2]));
     }
 
-    setGravity(array) {
-        this.world.setGravity(this.v.init(array[0], array[1], array[2]));
-    }
-
-    setPosition(name, array) {
+    setPosition(name, position) {
         const body = this.map.get(name);
 
-        body.setPosition(this.v.init(array[0], array[1], array[2]));
+        body.setPosition(this.v1.init(position[0], position[1], position[2]));
     }
 
-    setOrientation(name, array) {
+    setOrientation(name, orientation) {
         const body = this.map.get(name);
 
-        body.setOrientation(this.q.init(array[0], array[1], array[2], array[3]));
+        body.setOrientation(this.q.init(orientation[0], orientation[1], orientation[2], orientation[3]));
     }
 
     setGravityScale(name, gravityScale) {
@@ -110074,28 +110269,28 @@ class OimoPhysicsBuffer {
         body.setGravityScale(gravityScale);
     }
 
-    setLinearVelocity(name, array) {
+    setLinearVelocity(name, linearVelocity) {
         const body = this.map.get(name);
 
-        body.setLinearVelocity(this.v.init(array[0], array[1], array[2]));
+        body.setLinearVelocity(this.v1.init(linearVelocity[0], linearVelocity[1], linearVelocity[2]));
     }
 
-    setAngularVelocity(name, array) {
+    setAngularVelocity(name, angularVelocity) {
         const body = this.map.get(name);
 
-        body.setAngularVelocity(this.v.init(array[0], array[1], array[2]));
+        body.setAngularVelocity(this.v1.init(angularVelocity[0], angularVelocity[1], angularVelocity[2]));
     }
 
-    setLinearDamping(name, array) {
+    setLinearDamping(name, linearDamping) {
         const body = this.map.get(name);
 
-        body.setLinearDamping(this.v.init(array[0], array[1], array[2]));
+        body.setLinearDamping(this.v1.init(linearDamping[0], linearDamping[1], linearDamping[2]));
     }
 
-    setAngularDamping(name, array) {
+    setAngularDamping(name, angularDamping) {
         const body = this.map.get(name);
 
-        body.setAngularDamping(this.v.init(array[0], array[1], array[2]));
+        body.setAngularDamping(this.v1.init(angularDamping[0], angularDamping[1], angularDamping[2]));
     }
 
     setContactCallback(name, callback) {
@@ -110110,6 +110305,12 @@ class OimoPhysicsBuffer {
             shape.setContactCallback(contactCallback);
             shape = shape.getNext();
         }
+    }
+
+    applyImpulse(name, impulse, positionInWorld) {
+        const body = this.map.get(name);
+
+        body.applyImpulse(this.v1.init(impulse[0], impulse[1], impulse[2]), this.v2.init(positionInWorld[0], positionInWorld[1], positionInWorld[2]));
     }
 
     step() {
@@ -119861,4 +120062,4 @@ class OrbitControls extends EventDispatcher {
 
 }
 
-export { ACESFilmicToneMapping, ACESFilmicToneMappingMaterial, AddEquation, AddOperation, AdditiveAnimationBlendMode, AdditiveBlending, AfterimageMaterial, AgXToneMapping, AlphaFormat, AlwaysCompare, AlwaysDepth, AlwaysStencilFunc, AmbientLight, AmbientLightPanel, AnimationAction, AnimationClip, AnimationLoader, AnimationMixer, AnimationObjectGroup, AnimationUtils, ArcCurve, ArrayCamera, ArrowHelper, AssetLoader, AttachedBindMode, Audio$1 as Audio, AudioAnalyser, AudioContext$1 as AudioContext, AudioListener, AudioLoader, AxesHelper, BackSide, BadTVMaterial, BasicDepthPacking, BasicMaterial, BasicMaterialCommonPanel, BasicMaterialEnvPanel, BasicMaterialOptions, BasicMaterialPanel, BasicShadowMap, BatchedMesh, BloomCompositeMaterial, BlurMaterial, BokehBlurMaterial1, BokehBlurMaterial2, Bone, BooleanKeyframeTrack, Box2, Box3, Box3Helper, BoxGeometry$2 as BoxGeometry, BoxHelper, BufferAttribute, BufferGeometry, BufferGeometryLoader, BufferGeometryLoaderThread, BufferLoader, ByteType, Cache, Camera, CameraHelper, CanvasTexture, CapsuleGeometry$2 as CapsuleGeometry, CatmullRomCurve3, ChromaticAberrationMaterial, CineonToneMapping, CircleGeometry, ClampToEdgeWrapping, Clock, Cluster, Color$1 as Color, ColorKeyframeTrack, ColorManagement, ColorMaterial, ColorPicker, CombineOptions, Component, CompressedArrayTexture, CompressedCubeTexture, CompressedTexture, CompressedTextureLoader, ConeGeometry$2 as ConeGeometry, ConstantAlphaFactor, ConstantColorFactor, Content, CopyMaterial, CubeCamera, CubeReflectionMapping, CubeRefractionMapping, CubeTexture, CubeTextureLoader, CubeUVReflectionMapping, CubicBezierCurve, CubicBezierCurve3, CubicInterpolant, CullFaceBack, CullFaceFront, CullFaceFrontBack, CullFaceNone, Curve, CurvePath, CustomBlending, CustomToneMapping, CylinderGeometry$2 as CylinderGeometry, Cylindrical, DEG2RAD$1 as DEG2RAD, Data3DTexture, DataArrayTexture, DataTexture, DataTextureLoader, DataUtils, DecrementStencilOp, DecrementWrapStencilOp, DefaultLoadingManager, DepthFormat, DepthMaskMaterial, DepthMaterial, DepthStencilFormat, DepthTexture, DetachedBindMode, Details, DetailsButton, DetailsInfo, DetailsLink, DetailsTitle, DirectionalLight, DirectionalLightHelper, DirectionalLightPanel, DiscardMaterial, DiscreteInterpolant, DisplayOptions, DisplayP3ColorSpace, DodecahedronGeometry, DoubleSide, DstAlphaFactor, DstColorFactor, DynamicCopyUsage, DynamicDrawUsage, DynamicReadUsage, Easing, EdgesGeometry, EllipseCurve, EnvironmentTextureLoader, EqualCompare, EqualDepth, EqualStencilFunc, EquirectangularReflectionMapping, EquirectangularRefractionMapping, Euler, EventDispatcher, EventEmitter, ExtrudeGeometry, FXAAMaterial, FastGaussianBlurMaterial, FileLoader, FlatShadingOptions, Float16BufferAttribute, Float32BufferAttribute, FloatType, Flowmap, Fluid, Fog, FogExp2, FramebufferTexture, FresnelMaterial, FrontSide, Frustum, GLBufferAttribute, GLSL1, GLSL3, GLTFLoader, GammaCorrectionMaterial, GreaterCompare, GreaterDepth, GreaterEqualCompare, GreaterEqualDepth, GreaterEqualStencilFunc, GreaterStencilFunc, GridHelper, Group, HalfFloatType, Header, HeaderInfo, HelperOptions, HemisphereLight, HemisphereLightHelper, HemisphereLightPanel, IcosahedronGeometry, ImageBitmapLoader$1 as ImageBitmapLoader, ImageBitmapLoaderThread, ImageLoader, ImageUtils, IncrementStencilOp, IncrementWrapStencilOp, Info, InstanceOptions, InstancedBufferAttribute, InstancedBufferGeometry, InstancedInterleavedBuffer, InstancedMesh, InstancedMeshPanel, Int16BufferAttribute, Int32BufferAttribute, Int8BufferAttribute, IntType, Interface, InterleavedBuffer, InterleavedBufferAttribute, Interpolant, InterpolateDiscrete, InterpolateLinear, InterpolateSmooth, InvertStencilOp, KeepStencilOp, KeyframeTrack, LOD, LambertMaterialCommonPanel, LambertMaterialEnvPanel, LambertMaterialOptions, LambertMaterialPanel, LatheGeometry, Layers, LensflareMaterial, LessCompare, LessDepth, LessEqualCompare, LessEqualDepth, LessEqualStencilFunc, LessStencilFunc, Light, LightOptions, LightPanelController, LightProbe, Line, Line3, LineBasicMaterial, LineCurve, LineCurve3, LineDashedMaterial, LineLoop, LineSegments, LinearDisplayP3ColorSpace, LinearFilter, LinearInterpolant, LinearMipMapLinearFilter, LinearMipMapNearestFilter, LinearMipmapLinearFilter, LinearMipmapNearestFilter, LinearSRGBColorSpace, LinearToneMapping, LinearTransfer, Link, LinkedList, List, ListSelect, ListToggle, Loader$1 as Loader, LoaderUtils, LoadingManager, LoopOnce, LoopPingPong, LoopRepeat, LuminanceAlphaFormat, LuminanceFormat, LuminosityMaterial, MOUSE, Magnetic, MapPanel, MaskMaterial, MatcapMaterialCommonPanel, MatcapMaterialOptions, MatcapMaterialPanel, Material, MaterialLoader, MaterialOptions, MaterialPanelController, MaterialPanels, MaterialPatches, MathUtils, Matrix3, Matrix4, MaxEquation, Menu, MenuItem, Mesh, MeshBasicMaterial, MeshDepthMaterial, MeshDistanceMaterial, MeshHelperPanel, MeshLambertMaterial, MeshMatcapMaterial, MeshNormalMaterial, MeshPhongMaterial, MeshPhysicalMaterial, MeshStandardMaterial, MeshToonMaterial, MinEquation, MirroredRepeatWrapping, MixOperation, MotionBlur, MotionBlurCompositeMaterial, MotionBlurVelocityMaterial, MultiLoader, MultiplyBlending, MultiplyOperation, MuteButton, NavLink, NearestFilter, NearestMipMapLinearFilter, NearestMipMapNearestFilter, NearestMipmapLinearFilter, NearestMipmapNearestFilter, NeutralToneMapping, NeverCompare, NeverDepth, NeverStencilFunc, NoBlending, NoColorSpace, NoToneMapping, NormalAnimationBlendMode, NormalBlending, NormalMaterial, NormalMaterialCommonPanel, NormalMaterialOptions, NormalMaterialPanel, NormalsHelperOptions, NotEqualCompare, NotEqualDepth, NotEqualStencilFunc, NumberKeyframeTrack, Object3D, ObjectLoader, ObjectPool, ObjectSpaceNormalMap, OctahedronGeometry, OimoPhysics, OimoPhysicsBuffer, OimoPhysicsController, OimoPhysicsPanel, OneFactor, OneMinusConstantAlphaFactor, OneMinusConstantColorFactor, OneMinusDstAlphaFactor, OneMinusDstColorFactor, OneMinusSrcAlphaFactor, OneMinusSrcColorFactor, OrbitControls, OrthographicCamera, P3Primaries, PCFShadowMap, PCFSoftShadowMap, PMREMGenerator, Panel, PanelItem, PanelLink, Path, PerspectiveCamera, PhongMaterialCommonPanel, PhongMaterialEnvPanel, PhongMaterialOptions, PhongMaterialPanel, PhongMaterialPatches, PhysicalMaterialAnisotropyPanel, PhysicalMaterialClearcoatPanel, PhysicalMaterialCommonPanel, PhysicalMaterialEnvPanel, PhysicalMaterialIridescencePanel, PhysicalMaterialOptions, PhysicalMaterialPanel, PhysicalMaterialSheenPanel, PhysicalMaterialTransmissionPanel, Plane, PlaneGeometry, PlaneHelper, Point, Point3D, PointInfo, PointLight, PointLightHelper, PointLightPanel, Points, PointsMaterial, PoissonDiscBlurMaterial, PolarGridHelper, PolyhedronGeometry, PositionalAudio, PropertyBinding, PropertyMixer, QuadraticBezierCurve, QuadraticBezierCurve3, Quaternion, QuaternionKeyframeTrack, QuaternionLinearInterpolant, RAD2DEG$1 as RAD2DEG, RED_GREEN_RGTC2_Format, RED_RGTC1_Format, REVISION, RGBADepthPacking, RGBAFormat, RGBAIntegerFormat, RGBA_ASTC_10x10_Format, RGBA_ASTC_10x5_Format, RGBA_ASTC_10x6_Format, RGBA_ASTC_10x8_Format, RGBA_ASTC_12x10_Format, RGBA_ASTC_12x12_Format, RGBA_ASTC_4x4_Format, RGBA_ASTC_5x4_Format, RGBA_ASTC_5x5_Format, RGBA_ASTC_6x5_Format, RGBA_ASTC_6x6_Format, RGBA_ASTC_8x5_Format, RGBA_ASTC_8x6_Format, RGBA_ASTC_8x8_Format, RGBA_BPTC_Format, RGBA_ETC2_EAC_Format, RGBA_PVRTC_2BPPV1_Format, RGBA_PVRTC_4BPPV1_Format, RGBA_S3TC_DXT1_Format, RGBA_S3TC_DXT3_Format, RGBA_S3TC_DXT5_Format, RGBFormat, RGBMaterial, RGB_BPTC_SIGNED_Format, RGB_BPTC_UNSIGNED_Format, RGB_ETC1_Format, RGB_ETC2_Format, RGB_PVRTC_2BPPV1_Format, RGB_PVRTC_4BPPV1_Format, RGB_S3TC_DXT1_Format, RGFormat, RGIntegerFormat, RawShaderMaterial, Ray, Raycaster, Rec709Primaries, RectAreaLight, RectAreaLightPanel, RedFormat, RedIntegerFormat, Reflector, ReflectorBlurMaterial, ReflectorDudvMaterial, ReflectorMaterial, ReinhardToneMapping, RenderTarget, RepeatWrapping, ReplaceStencilOp, Reticle, ReticleInfo, ReverseSubtractEquation, RigidBodyConfig$1 as RigidBodyConfig, RigidBodyType$1 as RigidBodyType, RingGeometry, Router, SIGNED_RED_GREEN_RGTC2_Format, SIGNED_RED_RGTC1_Format, SMAABlendMaterial, SMAAEdgesMaterial, SMAAWeightsMaterial, SRGBColorSpace, SRGBTransfer, SVGLoader, Scene, SceneCompositeAddMaterial, SceneCompositeDistortionMaterial, SceneCompositeMaterial, ShaderChunk, ShaderLib, ShaderMaterial, ShadowMaterial, ShadowTextureMaterial, Shape$2 as Shape, ShapeGeometry, ShapePath, ShapeUtils, ShortType, SideOptions, Skeleton, SkeletonHelper, SkinnedMesh, Slider, Smooth, SmoothSkew, SmoothViews, SoftShadows, Sound, Sound3D, Source, Sphere, SphereGeometry$2 as SphereGeometry, Spherical, SphericalHarmonics3, SphericalJointConfig$1 as SphericalJointConfig, SplineCurve, SpotLight, SpotLightHelper, SpotLightPanel, Sprite, SpriteMaterial, SrcAlphaFactor, SrcAlphaSaturateFactor, SrcColorFactor, Stage, StandardMaterialCommonPanel, StandardMaterialEnvPanel, StandardMaterialOptions, StandardMaterialPanel, StandardMaterialPatches, StaticCopyUsage, StaticDrawUsage, StaticReadUsage, StereoCamera, StreamCopyUsage, StreamDrawUsage, StreamReadUsage, StringKeyframeTrack, SubtractEquation, SubtractiveBlending, TOUCH, TangentSpaceNormalMap, TangentsHelperOptions, TargetNumber, TetrahedronGeometry, Text, TextMaterial, Texture, TextureLoader, Thread, Ticker, TiltShiftMaterial, Title, ToneMappedOptions, ToonMaterialCommonPanel, ToonMaterialOptions, ToonMaterialPanel, TorusGeometry, TorusKnotGeometry, Tracker, Triangle, TriangleFanDrawMode, TriangleStripDrawMode, TrianglesDrawMode, TubeGeometry, Tween, UI, UVHelperOptions, UVMapping, Uint16BufferAttribute, Uint32BufferAttribute, Uint8BufferAttribute, Uint8ClampedBufferAttribute, Uniform, UniformsGroup, UniformsLib, UniformsUtils, UnrealBloomBlurMaterial, UnrealBloomCompositeMaterial, UnsignedByteType, UnsignedInt248Type, UnsignedInt5999Type, UnsignedIntType, UnsignedShort4444Type, UnsignedShort5551Type, UnsignedShortType, VSMShadowMap, Vector2$1 as Vector2, Vector3, Vector4, VectorKeyframeTrack, VideoGlitchMaterial, VideoTexture, VisibleOptions, VolumetricLightLensflareMaterial, VolumetricLightMaterial, WebAudio, WebAudio3D, WebAudioParam, WebGL3DRenderTarget, WebGLArrayRenderTarget, WebGLCoordinateSystem, WebGLCubeRenderTarget, WebGLMultipleRenderTargets, WebGLRenderTarget, WebGLRenderer, WebGLUtils, WebGPUCoordinateSystem, WireframeGeometry, WireframeOptions, Wobble, WrapAroundEnding, WrapOptions, ZeroCurvatureEnding, ZeroFactor, ZeroSlopeEnding, ZeroStencilOp, absolute, basename, brightness, ceilPowerOfTwo$1 as ceilPowerOfTwo, clamp$1 as clamp, clearTween, createCanvasElement, defer, degToRad$1 as degToRad, delayedCall, euclideanModulo$1 as euclideanModulo, extension, floorPowerOfTwo$1 as floorPowerOfTwo, fract, getConstructor, getDoubleRenderTarget, getFrustum, getFrustumFromHeight, getFullscreenTriangle, getKeyByLight, getKeyByMaterial, getKeyByValue, getScreenSpaceBox, getSphericalCube, guid, headsTails, inverseLerp$1 as inverseLerp, isPowerOfTwo$1 as isPowerOfTwo, lerp$2 as lerp, lerpCameras, mapLinear$1 as mapLinear, parabola, pcurve, radToDeg$1 as radToDeg, randFloat$1 as randFloat, randFloatSpread$1 as randFloatSpread, randInt$1 as randInt, shuffle, smootherstep$2 as smootherstep, smoothstep$1 as smoothstep, step, ticker, tween, wait };
+export { ACESFilmicToneMapping, ACESFilmicToneMappingMaterial, AddEquation, AddOperation, AdditiveAnimationBlendMode, AdditiveBlending, AfterimageMaterial, AgXToneMapping, AlphaFormat, AlwaysCompare, AlwaysDepth, AlwaysStencilFunc, AmbientLight, AmbientLightPanel, AnimationAction, AnimationClip, AnimationLoader, AnimationMixer, AnimationObjectGroup, AnimationUtils, ArcCurve, ArrayCamera, ArrowHelper, AssetLoader, AttachedBindMode, Audio$1 as Audio, AudioAnalyser, AudioContext$1 as AudioContext, AudioListener, AudioLoader, AxesHelper, BackSide, BadTVMaterial, BasicDepthPacking, BasicMaterial, BasicMaterialCommonPanel, BasicMaterialEnvPanel, BasicMaterialOptions, BasicMaterialPanel, BasicShadowMap, BatchedMesh, BloomCompositeMaterial, BlurMaterial, BokehBlurMaterial1, BokehBlurMaterial2, Bone, BooleanKeyframeTrack, Box2, Box3, Box3Helper, BoxGeometry$2 as BoxGeometry, BoxHelper, BufferAttribute, BufferGeometry, BufferGeometryLoader, BufferGeometryLoaderThread, BufferLoader, ByteType, Cache, Camera, CameraHelper, CanvasTexture, CapsuleGeometry$2 as CapsuleGeometry, CatmullRomCurve3, ChromaticAberrationMaterial, CineonToneMapping, CircleGeometry, ClampToEdgeWrapping, Clock, Cluster, Color$1 as Color, ColorKeyframeTrack, ColorManagement, ColorMaterial, ColorPicker, CombineOptions, Component, CompressedArrayTexture, CompressedCubeTexture, CompressedTexture, CompressedTextureLoader, ConeGeometry$2 as ConeGeometry, ConstantAlphaFactor, ConstantColorFactor, Content, CopyMaterial, CubeCamera, CubeReflectionMapping, CubeRefractionMapping, CubeTexture, CubeTextureLoader, CubeUVReflectionMapping, CubicBezierCurve, CubicBezierCurve3, CubicInterpolant, CullFaceBack, CullFaceFront, CullFaceFrontBack, CullFaceNone, Curve, CurvePath, CustomBlending, CustomToneMapping, CylinderGeometry$2 as CylinderGeometry, Cylindrical, DEG2RAD$1 as DEG2RAD, Data3DTexture, DataArrayTexture, DataTexture, DataTextureLoader, DataUtils, DecrementStencilOp, DecrementWrapStencilOp, DefaultLoadingManager, DepthFormat, DepthMaskMaterial, DepthMaterial, DepthStencilFormat, DepthTexture, DetachedBindMode, Details, DetailsButton, DetailsInfo, DetailsLink, DetailsTitle, DirectionalLight, DirectionalLightHelper, DirectionalLightPanel, DiscardMaterial, DiscreteInterpolant, DisplayOptions, DisplayP3ColorSpace, DodecahedronGeometry, DoubleSide, DstAlphaFactor, DstColorFactor, DynamicCopyUsage, DynamicDrawUsage, DynamicReadUsage, Easing, EdgesGeometry, EllipseCurve, EnvironmentTextureLoader, EqualCompare, EqualDepth, EqualStencilFunc, EquirectangularReflectionMapping, EquirectangularRefractionMapping, Euler, EventDispatcher, EventEmitter, ExtrudeGeometry, FXAAMaterial, FastGaussianBlurMaterial, FileLoader, FlatShadingOptions, Float16BufferAttribute, Float32BufferAttribute, FloatType, Flowmap, Fluid, Fog, FogExp2, FramebufferTexture, FresnelMaterial, FrontSide, Frustum, GLBufferAttribute, GLSL1, GLSL3, GLTFLoader, GammaCorrectionMaterial, GreaterCompare, GreaterDepth, GreaterEqualCompare, GreaterEqualDepth, GreaterEqualStencilFunc, GreaterStencilFunc, GridHelper, Group, HalfFloatType, Header, HeaderInfo, HelperOptions, HemisphereLight, HemisphereLightHelper, HemisphereLightPanel, IcosahedronGeometry, ImageBitmapLoader$1 as ImageBitmapLoader, ImageBitmapLoaderThread, ImageLoader, ImageUtils, IncrementStencilOp, IncrementWrapStencilOp, Info, InstanceOptions, InstancedBufferAttribute, InstancedBufferGeometry, InstancedInterleavedBuffer, InstancedMesh, InstancedMeshPanel, Int16BufferAttribute, Int32BufferAttribute, Int8BufferAttribute, IntType, Interface, InterleavedBuffer, InterleavedBufferAttribute, Interpolant, InterpolateDiscrete, InterpolateLinear, InterpolateSmooth, InvertStencilOp, KeepStencilOp, KeyframeTrack, LOD, LambertMaterialCommonPanel, LambertMaterialEnvPanel, LambertMaterialOptions, LambertMaterialPanel, LatheGeometry, Layers, LensflareMaterial, LessCompare, LessDepth, LessEqualCompare, LessEqualDepth, LessEqualStencilFunc, LessStencilFunc, Light, LightOptions, LightPanelController, LightProbe, Line, Line3, LineBasicMaterial, LineCurve, LineCurve3, LineDashedMaterial, LineLoop, LineSegments, LinearDisplayP3ColorSpace, LinearFilter, LinearInterpolant, LinearMipMapLinearFilter, LinearMipMapNearestFilter, LinearMipmapLinearFilter, LinearMipmapNearestFilter, LinearSRGBColorSpace, LinearToneMapping, LinearTransfer, Link, LinkedList, List, ListSelect, ListToggle, Loader$1 as Loader, LoaderUtils, LoadingManager, LoopOnce, LoopPingPong, LoopRepeat, LuminanceAlphaFormat, LuminanceFormat, LuminosityMaterial, MOUSE, Magnetic, MapPanel, MaskMaterial, MatcapMaterialCommonPanel, MatcapMaterialOptions, MatcapMaterialPanel, Material, MaterialLoader, MaterialOptions, MaterialPanelController, MaterialPanels, MaterialPatches, MathUtils, Matrix3, Matrix4, MaxEquation, Menu, MenuItem, Mesh, MeshBasicMaterial, MeshDepthMaterial, MeshDistanceMaterial, MeshHelperPanel, MeshLambertMaterial, MeshMatcapMaterial, MeshNormalMaterial, MeshPhongMaterial, MeshPhysicalMaterial, MeshStandardMaterial, MeshToonMaterial, MinEquation, MirroredRepeatWrapping, MixOperation, MotionBlur, MotionBlurCompositeMaterial, MotionBlurVelocityMaterial, MultiLoader, MultiplyBlending, MultiplyOperation, MuteButton, NavLink, NearestFilter, NearestMipMapLinearFilter, NearestMipMapNearestFilter, NearestMipmapLinearFilter, NearestMipmapNearestFilter, NeutralToneMapping, NeverCompare, NeverDepth, NeverStencilFunc, NoBlending, NoColorSpace, NoToneMapping, NormalAnimationBlendMode, NormalBlending, NormalMaterial, NormalMaterialCommonPanel, NormalMaterialOptions, NormalMaterialPanel, NormalsHelperOptions, NotEqualCompare, NotEqualDepth, NotEqualStencilFunc, NumberKeyframeTrack, Object3D, ObjectLoader, ObjectPool, ObjectSpaceNormalMap, OctahedronGeometry, OimoPhysics, OimoPhysicsBuffer, OimoPhysicsController, OimoPhysicsPanel, OneFactor, OneMinusConstantAlphaFactor, OneMinusConstantColorFactor, OneMinusDstAlphaFactor, OneMinusDstColorFactor, OneMinusSrcAlphaFactor, OneMinusSrcColorFactor, OrbitControls, OrthographicCamera, P3Primaries, PCFShadowMap, PCFSoftShadowMap, PMREMGenerator, Panel, PanelItem, PanelLink, Path, PerspectiveCamera, PhongMaterialCommonPanel, PhongMaterialEnvPanel, PhongMaterialOptions, PhongMaterialPanel, PhongMaterialPatches, PhysicalMaterialAnisotropyPanel, PhysicalMaterialClearcoatPanel, PhysicalMaterialCommonPanel, PhysicalMaterialEnvPanel, PhysicalMaterialIridescencePanel, PhysicalMaterialOptions, PhysicalMaterialPanel, PhysicalMaterialSheenPanel, PhysicalMaterialTransmissionPanel, Plane, PlaneGeometry, PlaneHelper, Point, Point3D, PointInfo, PointLight, PointLightHelper, PointLightPanel, Points, PointsMaterial, PoissonDiscBlurMaterial, PolarGridHelper, PolyhedronGeometry, PositionalAudio, PropertyBinding, PropertyMixer, QuadraticBezierCurve, QuadraticBezierCurve3, Quaternion, QuaternionKeyframeTrack, QuaternionLinearInterpolant, RAD2DEG$1 as RAD2DEG, RED_GREEN_RGTC2_Format, RED_RGTC1_Format, REVISION, RGBADepthPacking, RGBAFormat, RGBAIntegerFormat, RGBA_ASTC_10x10_Format, RGBA_ASTC_10x5_Format, RGBA_ASTC_10x6_Format, RGBA_ASTC_10x8_Format, RGBA_ASTC_12x10_Format, RGBA_ASTC_12x12_Format, RGBA_ASTC_4x4_Format, RGBA_ASTC_5x4_Format, RGBA_ASTC_5x5_Format, RGBA_ASTC_6x5_Format, RGBA_ASTC_6x6_Format, RGBA_ASTC_8x5_Format, RGBA_ASTC_8x6_Format, RGBA_ASTC_8x8_Format, RGBA_BPTC_Format, RGBA_ETC2_EAC_Format, RGBA_PVRTC_2BPPV1_Format, RGBA_PVRTC_4BPPV1_Format, RGBA_S3TC_DXT1_Format, RGBA_S3TC_DXT3_Format, RGBA_S3TC_DXT5_Format, RGBFormat, RGBMaterial, RGB_BPTC_SIGNED_Format, RGB_BPTC_UNSIGNED_Format, RGB_ETC1_Format, RGB_ETC2_Format, RGB_PVRTC_2BPPV1_Format, RGB_PVRTC_4BPPV1_Format, RGB_S3TC_DXT1_Format, RGFormat, RGIntegerFormat, RawShaderMaterial, Ray, Raycaster, Rec709Primaries, RectAreaLight, RectAreaLightPanel, RedFormat, RedIntegerFormat, Reflector, ReflectorBlurMaterial, ReflectorDudvMaterial, ReflectorMaterial, ReinhardToneMapping, RenderTarget, RepeatWrapping, ReplaceStencilOp, Reticle, ReticleInfo, ReverseSubtractEquation, RigidBodyConfig$1 as RigidBodyConfig, RigidBodyType$1 as RigidBodyType, RingGeometry, Router, SIGNED_RED_GREEN_RGTC2_Format, SIGNED_RED_RGTC1_Format, SMAABlendMaterial, SMAAEdgesMaterial, SMAAWeightsMaterial, SRGBColorSpace, SRGBTransfer, SVGLoader, Scene, SceneCompositeAddMaterial, SceneCompositeDistortionMaterial, SceneCompositeMaterial, ShaderChunk, ShaderLib, ShaderMaterial, ShadowMaterial, ShadowTextureMaterial, Shape$2 as Shape, ShapeGeometry, ShapePath, ShapeUtils, ShortType, SideOptions, Skeleton, SkeletonHelper, SkinnedMesh, Slider, Smooth, SmoothSkew, SmoothViews, SoftShadows, Sound, Sound3D, Source, Sphere, SphereGeometry$2 as SphereGeometry, Spherical, SphericalHarmonics3, SphericalJointConfig$1 as SphericalJointConfig, SplineCurve, SpotLight, SpotLightHelper, SpotLightPanel, Sprite, SpriteMaterial, SrcAlphaFactor, SrcAlphaSaturateFactor, SrcColorFactor, Stage, StandardMaterialCommonPanel, StandardMaterialEnvPanel, StandardMaterialOptions, StandardMaterialPanel, StandardMaterialPatches, StaticCopyUsage, StaticDrawUsage, StaticReadUsage, StereoCamera, StreamCopyUsage, StreamDrawUsage, StreamReadUsage, StringKeyframeTrack, SubtractEquation, SubtractiveBlending, TOUCH, TangentSpaceNormalMap, TangentsHelperOptions, TargetNumber, TetrahedronGeometry, Text, TextMaterial, Texture, TextureLoader, Thread, Ticker, TiltShiftMaterial, Title, ToneMappedOptions, ToonMaterialCommonPanel, ToonMaterialOptions, ToonMaterialPanel, TorusGeometry, TorusKnotGeometry, Tracker, Triangle, TriangleFanDrawMode, TriangleStripDrawMode, TrianglesDrawMode, TubeGeometry, Tween, UI, UVHelperOptions, UVMapping, Uint16BufferAttribute, Uint32BufferAttribute, Uint8BufferAttribute, Uint8ClampedBufferAttribute, Uniform, UniformsGroup, UniformsLib, UniformsUtils, UniversalJointConfig$1 as UniversalJointConfig, UnrealBloomBlurMaterial, UnrealBloomCompositeMaterial, UnsignedByteType, UnsignedInt248Type, UnsignedInt5999Type, UnsignedIntType, UnsignedShort4444Type, UnsignedShort5551Type, UnsignedShortType, VSMShadowMap, Vector2$1 as Vector2, Vector3, Vector4, VectorKeyframeTrack, VideoGlitchMaterial, VideoTexture, VisibleOptions, VolumetricLightLensflareMaterial, VolumetricLightMaterial, WebAudio, WebAudio3D, WebAudioParam, WebGL3DRenderTarget, WebGLArrayRenderTarget, WebGLCoordinateSystem, WebGLCubeRenderTarget, WebGLMultipleRenderTargets, WebGLRenderTarget, WebGLRenderer, WebGLUtils, WebGPUCoordinateSystem, WireframeGeometry, WireframeOptions, Wobble, WrapAroundEnding, WrapOptions, ZeroCurvatureEnding, ZeroFactor, ZeroSlopeEnding, ZeroStencilOp, absolute, basename, brightness, ceilPowerOfTwo$1 as ceilPowerOfTwo, clamp$1 as clamp, clearTween, createCanvasElement, defer, degToRad$1 as degToRad, delayedCall, euclideanModulo$1 as euclideanModulo, extension, floorPowerOfTwo$1 as floorPowerOfTwo, fract, getConstructor, getDoubleRenderTarget, getFrustum, getFrustumFromHeight, getFullscreenTriangle, getHorizontalFOV, getKeyByLight, getKeyByMaterial, getKeyByValue, getScreenSpaceBox, getSphericalCube, guid, headsTails, inverseLerp$1 as inverseLerp, isPowerOfTwo$1 as isPowerOfTwo, lerp$2 as lerp, lerpCameras, mapLinear$1 as mapLinear, parabola, pcurve, radToDeg$1 as radToDeg, randFloat$1 as randFloat, randFloatSpread$1 as randFloatSpread, randInt$1 as randInt, shuffle, smootherstep$2 as smootherstep, smoothstep$1 as smoothstep, step, ticker, tween, wait };

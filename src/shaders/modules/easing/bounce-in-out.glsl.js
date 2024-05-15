@@ -1,6 +1,6 @@
-// From https://github.com/glslify/glsl-easings
-
 import bounceOut from './bounce-out.glsl.js';
+
+// From https://github.com/glslify/glsl-easings
 
 export default /* glsl */ `
 ${bounceOut}

@@ -1,6 +1,6 @@
-// From https://www.shadertoy.com/view/4dS3Wd by morgan3d
-
 import noise from '../noise/noise2d.glsl.js';
+
+// From https://www.shadertoy.com/view/4dS3Wd by morgan3d
 
 export default /* glsl */ `
 #define NUM_OCTAVES 5

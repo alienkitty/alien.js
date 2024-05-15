@@ -14,7 +14,7 @@
         :root {
             --bg-color: #efefef;
             --ui-color: #000;
-            --ui-color-triplet: 0, 0, 0;
+            --ui-color-triplet: 0 0 0;
         }
     </style>
 
@@ -467,6 +467,7 @@
 
                 this.renderTarget.setSize(width, height);
 
+                // Unreal bloom
                 width = MathUtils.floorPowerOfTwo(width) / 2;
                 height = MathUtils.floorPowerOfTwo(height) / 2;
 

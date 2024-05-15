@@ -264,10 +264,7 @@ class AbstractCube extends Group {
         mesh.rotation.z = MathUtils.degToRad(-45);
         mesh.castShadow = true;
         mesh.receiveShadow = true;
-
-        // Layers
         mesh.layers.enable(layers.velocity);
-
         this.add(mesh);
 
         this.mesh = mesh;
@@ -372,10 +369,7 @@ class FloatingCrystal extends Group {
         mesh.scale.set(0.5, 1, 0.5);
         mesh.castShadow = true;
         mesh.receiveShadow = true;
-
-        // Layers
         mesh.layers.enable(layers.velocity);
-
         this.add(mesh);
 
         this.mesh = mesh;
@@ -482,10 +476,7 @@ class DarkPlanet extends Group {
         const mesh = new Mesh(geometry, material);
         mesh.castShadow = true;
         mesh.receiveShadow = true;
-
-        // Layers
         mesh.layers.enable(layers.velocity);
-
         this.add(mesh);
 
         this.mesh = mesh;
@@ -754,14 +745,14 @@ class ScenePanelController {
     static initPanel() {
         const { darkPlanet, floatingCrystal, abstractCube } = this.view;
 
-        const views = [darkPlanet, floatingCrystal, abstractCube];
+        const objects = [darkPlanet, floatingCrystal, abstractCube];
 
-        views.forEach(view => {
-            view.point = new Point3D(view.mesh, {
+        objects.forEach(object => {
+            object.point = new Point3D(object.mesh, {
                 type: '',
                 noTracker: true
             });
-            view.add(view.point);
+            object.add(object.point);
         });
 
         // Shrink tracker meshes a little bit
@@ -1174,9 +1165,11 @@ class RenderManager {
 
         this.motionBlur.setSize(width, height);
 
+        // Gaussian blur
         this.hBlurMaterial.uniforms.uResolution.value.set(width, height);
         this.vBlurMaterial.uniforms.uResolution.value.set(width, height);
 
+        // Unreal bloom
         width = MathUtils.floorPowerOfTwo(width) / 2;
         height = MathUtils.floorPowerOfTwo(height) / 2;
 
@@ -1566,7 +1559,7 @@ class WorldController {
 
         // 3D scene
         this.scene = new Scene();
-        this.scene.background = new Color(0x0e0e0e);
+        this.scene.background = new Color(0x060606);
         this.camera = new PerspectiveCamera(30);
         this.camera.near = 0.5;
         this.camera.far = 40;

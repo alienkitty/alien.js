@@ -39,11 +39,11 @@ class Section extends Interface {
 
         if (isDebug) {
             this.css({
-                backgroundColor: `rgba(
-                    ${Math.floor(Math.random() * 255)},
-                    ${Math.floor(Math.random() * 255)},
-                    ${Math.floor(Math.random() * 255)},
-                    0.5
+                backgroundColor: `rgb(
+                    ${Math.floor(Math.random() * 255)}
+                    ${Math.floor(Math.random() * 255)}
+                    ${Math.floor(Math.random() * 255)}
+                    / 0.5
                 )`
             });
         }
@@ -122,7 +122,7 @@ class CompositeMaterial extends RawShaderMaterial {
             glslVersion: GLSL3,
             uniforms: {
                 tScene: { value: null },
-                uColor: { value: new Color(0x0e0e0e) },
+                uColor: { value: new Color(0x060606) },
                 uDistortion: { value: 1.5 },
                 uOpacity: { value: 0 }
             },
@@ -736,9 +736,11 @@ class RenderManager {
         this.renderTargetA.setSize(width, height);
         this.renderTargetB.setSize(width, height);
 
+        // Gaussian blur
         this.hBlurMaterial.uniforms.uResolution.value.set(width, height);
         this.vBlurMaterial.uniforms.uResolution.value.set(width, height);
 
+        // Unreal bloom
         width = MathUtils.floorPowerOfTwo(width) / 2;
         height = MathUtils.floorPowerOfTwo(height) / 2;
 
@@ -875,7 +877,7 @@ class WorldController {
 
         // 3D scene
         this.scene = new Scene();
-        this.scene.background = new Color(0x0e0e0e);
+        this.scene.background = new Color(0x060606);
         this.camera = new PerspectiveCamera(30);
         this.camera.near = 0.5;
         this.camera.far = 40;

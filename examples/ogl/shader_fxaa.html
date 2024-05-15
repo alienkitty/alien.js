@@ -26,7 +26,7 @@
         import { FXAAProgram } from '@alienkitty/alien.js/ogl';
 
         const colors = {
-            backgroundColor: new Color('#0e0e0e')
+            backgroundColor: new Color('#060606')
         };
 
         import periodic3d from '../../src/shaders/modules/noise/periodic3d.glsl.js';
@@ -80,7 +80,8 @@
                         out vec4 FragColor;
 
                         void main() {
-                            float lighting = dot(vNormal, vec3(1.0, 1.0, 1.0));
+                            vec3 normal = normalize(vNormal);
+                            float lighting = dot(normal, normalize(vec3(1.0, 1.0, 1.0)));
 
                             FragColor.rgb = vec3(0.75) + lighting * 0.25;
                             FragColor.a = 1.0;

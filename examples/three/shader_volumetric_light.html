@@ -139,19 +139,16 @@
                 };
 
                 const mesh = new Mesh(geometry, material);
+                this.add(mesh);
 
-                // Occlusion
+                // Occlusion mesh
                 const occMesh = new Mesh(
                     geometry,
                     new MeshBasicMaterial({ color: colors.lightColor })
                 );
                 occMesh.position.copy(mesh.position);
                 occMesh.scale.copy(mesh.scale);
-
-                // Layers
                 occMesh.layers.set(layers.occlusion);
-
-                this.add(mesh);
                 this.add(occMesh);
             }
 
@@ -323,6 +320,9 @@
 
             // Public methods
 
+            static resize = () => {
+            };
+
             static update = () => {
                 if (!this.view.visible) {
                     return;
@@ -347,9 +347,9 @@
             }
 
             static initPanel() {
-                const { sphere } = this.view;
-
                 const { vlMaterial, luminosityMaterial, bloomCompositeMaterial } = RenderManager;
+
+                const { sphere } = this.view;
 
                 const items = [
                     {
@@ -538,12 +538,11 @@
                 this.camera = camera;
                 this.view = view;
 
-                this.lightPosition = new Vector3();
-
                 // Volumetric light
+                this.lightPosition = new Vector3();
                 this.vlExposure = 0.1;
-                this.vlDecay = 1.0;
-                this.vlDensity = 0.96;
+                this.vlDecay = 1;
+                this.vlDensity = 1;
                 this.vlWeight = 0.4;
                 this.vlClamp = 1;
                 this.blurResolutionScale = 0.25;
@@ -673,6 +672,7 @@
 
                 this.renderTarget.setSize(width, height);
 
+                // Gaussian blur
                 const blurWidth = Math.round(width * this.blurResolutionScale);
                 const blurHeight = Math.round(height * this.blurResolutionScale);
 
@@ -682,6 +682,7 @@
                 this.hBlurMaterial.uniforms.uResolution.value.set(blurWidth, blurHeight);
                 this.vBlurMaterial.uniforms.uResolution.value.set(blurWidth, blurHeight);
 
+                // Unreal bloom
                 width = MathUtils.floorPowerOfTwo(width) / 2;
                 height = MathUtils.floorPowerOfTwo(height) / 2;
 
@@ -904,7 +905,7 @@
 
                 // 3D scene
                 this.scene = new Scene();
-                this.scene.background = new Color(0x0e0e0e);
+                this.scene.background = new Color(0x060606);
                 this.camera = new PerspectiveCamera(30);
                 this.camera.near = 0.5;
                 this.camera.far = 40;
@@ -1043,6 +1044,7 @@
 
                 WorldController.resize(width, height, dpr);
                 CameraController.resize(width, height);
+                SceneController.resize();
                 RenderManager.resize(width, height, dpr);
             };
 

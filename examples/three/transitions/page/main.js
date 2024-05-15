@@ -591,6 +591,7 @@ class RenderManager {
 
         this.renderTarget.setSize(width, height);
 
+        // Unreal bloom
         width = MathUtils.floorPowerOfTwo(width) / 2;
         height = MathUtils.floorPowerOfTwo(height) / 2;
 
@@ -691,7 +692,7 @@ class WorldController {
 
         // 3D scene
         this.scene = new Scene();
-        this.scene.background = new Color(0x0e0e0e);
+        this.scene.background = new Color(0x060606);
         this.camera = new PerspectiveCamera(30);
         this.camera.near = 0.5;
         this.camera.far = 40;

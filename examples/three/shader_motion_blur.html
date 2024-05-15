@@ -110,10 +110,7 @@
                 material.aoMap.channel = 1;
 
                 const mesh = new Mesh(geometry, material);
-
-                // Layers
                 mesh.layers.enable(layers.velocity);
-
                 this.add(mesh);
             }
 
@@ -167,7 +164,7 @@
                 ormMap.repeat.set(2, 1);
 
                 const material = new MeshStandardMaterial({
-                    color: new Color(0x0e0e0e),
+                    color: new Color(0x060606),
                     metalness: 1,
                     roughness: 1,
                     map,
@@ -184,10 +181,7 @@
                 material.aoMap.channel = 1;
 
                 const mesh = new Mesh(geometry, material);
-
-                // Layers
                 mesh.layers.enable(layers.velocity);
-
                 this.add(mesh);
             }
 
@@ -469,9 +463,6 @@
 
                 this.renderTargetA.depthBuffer = true;
 
-                // Occlusion material
-                this.blackoutMaterial = new MeshBasicMaterial({ color: 0x000000 });
-
                 // Motion blur
                 this.motionBlur = new MotionBlur(this.renderer, this.scene, this.camera, layers.velocity);
 
@@ -508,6 +499,7 @@
                 this.compositeMaterial.uniforms.uBloomDistortion.value = this.bloomDistortion;
 
                 // Debug materials
+                this.blackoutMaterial = new MeshBasicMaterial({ color: 0x000000 });
                 this.matcap1Material = new MeshMatcapMaterial({ matcap: getTexture('../assets/textures/matcaps/040full.jpg') });
                 this.matcap2Material = new MeshMatcapMaterial({ matcap: getTexture('../assets/textures/matcaps/defaultwax.jpg') });
                 this.normalMaterial = new NormalMaterial();
@@ -552,6 +544,7 @@
 
                 this.motionBlur.setSize(width, height);
 
+                // Unreal bloom
                 width = MathUtils.floorPowerOfTwo(width) / 2;
                 height = MathUtils.floorPowerOfTwo(height) / 2;
 
@@ -747,7 +740,7 @@
 
                 // 3D scene
                 this.scene = new Scene();
-                this.scene.background = new Color(0x0e0e0e);
+                this.scene.background = new Color(0x060606);
                 this.camera = new PerspectiveCamera(30);
                 this.camera.near = 0.5;
                 this.camera.far = 40;

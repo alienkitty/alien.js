@@ -153,6 +153,8 @@
                 material.aoMap.channel = 1;
 
                 const mesh = new Mesh(geometry, material);
+                mesh.layers.set(layers.hologram);
+                this.add(mesh);
 
                 // Hologram
                 const glowMaterial = material.clone();
@@ -217,21 +219,16 @@
                 const glowMesh = new Mesh(geometry, glowMaterial);
                 glowMesh.position.copy(mesh.position);
                 glowMesh.scale.copy(mesh.scale);
+                glowMesh.layers.set(layers.glow);
+                this.add(glowMesh);
 
                 // Wireframe
                 const wireframe = new LineSegments(
                     new EdgesGeometry(mesh.geometry),
                     new LineBasicMaterial({ color: new Color(colors.errorColor).offsetHSL(0, 0, 0.25) })
                 );
-                glowMesh.add(wireframe);
-
-                // Layers
-                mesh.layers.set(layers.hologram);
-                glowMesh.layers.set(layers.glow);
                 wireframe.layers.set(layers.hologram);
-
-                this.add(mesh);
-                this.add(glowMesh);
+                glowMesh.add(wireframe);
 
                 this.uniforms = uniforms;
             }
@@ -276,7 +273,7 @@
                 ormMap.repeat.set(2, 1);
 
                 const material = new MeshStandardMaterial({
-                    color: new Color(0x0e0e0e),
+                    color: new Color(0x060606),
                     metalness: 1,
                     roughness: 1,
                     map,
@@ -358,6 +355,8 @@
                 material.aoMap.channel = 1;
 
                 const mesh = new Mesh(geometry, material);
+                mesh.layers.set(layers.hologram);
+                this.add(mesh);
 
                 // Hologram
                 const glowMaterial = material.clone();
@@ -422,21 +421,16 @@
                 const glowMesh = new Mesh(geometry, glowMaterial);
                 glowMesh.position.copy(mesh.position);
                 glowMesh.scale.copy(mesh.scale);
+                glowMesh.layers.set(layers.glow);
+                this.add(glowMesh);
 
                 // Wireframe
                 const wireframe = new LineSegments(
                     new EdgesGeometry(mesh.geometry),
                     new LineBasicMaterial({ color: new Color(colors.lightColor).offsetHSL(0, 0, 0.25) })
                 );
-                glowMesh.add(wireframe);
-
-                // Layers
-                mesh.layers.set(layers.hologram);
-                glowMesh.layers.set(layers.glow);
                 wireframe.layers.set(layers.hologram);
-
-                this.add(mesh);
-                this.add(glowMesh);
+                glowMesh.add(wireframe);
 
                 this.uniforms = uniforms;
             }
@@ -494,9 +488,9 @@
             }
 
             static initPanel() {
-                const { pittedMetalSphere, polishedConcreteSphere } = this.view;
-
                 const { hBlurMaterial, vBlurMaterial, videoGlitchMaterial, luminosityMaterial, bloomCompositeMaterial, caMaterial } = RenderManager;
+
+                const { pittedMetalSphere, polishedConcreteSphere } = this.view;
 
                 const items = [
                     {
@@ -823,6 +817,7 @@
                 this.renderTargetC.setSize(width, height);
                 this.renderTargetHologram.setSize(width, height);
 
+                // Gaussian blur
                 const blurWidth = Math.round(width * this.blurResolutionScale);
                 const blurHeight = Math.round(height * this.blurResolutionScale);
 
@@ -832,6 +827,7 @@
                 this.hBlurMaterial.uniforms.uResolution.value.set(blurWidth, blurHeight);
                 this.vBlurMaterial.uniforms.uResolution.value.set(blurWidth, blurHeight);
 
+                // Unreal bloom
                 width = MathUtils.floorPowerOfTwo(width) / 2;
                 height = MathUtils.floorPowerOfTwo(height) / 2;
 
@@ -1015,7 +1011,7 @@
 
                 // 3D scene
                 this.scene = new Scene();
-                this.scene.background = new Color(0x0e0e0e);
+                this.scene.background = new Color(0x060606);
                 this.camera = new PerspectiveCamera(30);
                 this.camera.near = 0.5;
                 this.camera.far = 40;

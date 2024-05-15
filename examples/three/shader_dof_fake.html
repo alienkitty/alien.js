@@ -373,7 +373,7 @@
                 ormMap.repeat.set(2, 1);
 
                 const material = new MeshStandardMaterial({
-                    color: new Color(0x0e0e0e),
+                    color: new Color(0x060606),
                     metalness: 1,
                     roughness: 1,
                     map,
@@ -624,6 +624,7 @@
                 this.renderTargetA.setSize(width, height);
                 this.renderTargetB.setSize(width, height);
 
+                // Unreal bloom
                 width = MathUtils.floorPowerOfTwo(width) / 2;
                 height = MathUtils.floorPowerOfTwo(height) / 2;
 
@@ -755,7 +756,7 @@
 
                 // 3D scene
                 this.scene = new Scene();
-                this.scene.background = new Color(0x0e0e0e);
+                this.scene.background = new Color(0x060606);
                 this.camera = new PerspectiveCamera(30);
                 this.camera.near = 0.5;
                 this.camera.far = 40;

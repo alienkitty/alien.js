@@ -122,7 +122,7 @@ class CompositeMaterial extends RawShaderMaterial {
             glslVersion: GLSL3,
             uniforms: {
                 tScene: { value: null },
-                uColor: { value: new Color(0x0e0e0e) },
+                uColor: { value: new Color(0x060606) },
                 uDistortion: { value: 1.5 },
                 uOpacity: { value: 0 }
             },
@@ -889,7 +889,7 @@ class WorldController {
 
         // 3D scene
         this.scene = new Scene();
-        this.scene.background = new Color(0x0e0e0e);
+        this.scene.background = new Color(0x060606);
         this.camera = new PerspectiveCamera(30);
         this.camera.near = 0.5;
         this.camera.far = 40;

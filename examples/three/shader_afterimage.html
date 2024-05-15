@@ -490,8 +490,10 @@
                 height = Math.round(height * dpr);
 
                 this.renderTarget.setSize(width, height);
+
                 this.afterimage.setSize(width, height);
 
+                // Unreal bloom
                 width = MathUtils.floorPowerOfTwo(width) / 2;
                 height = MathUtils.floorPowerOfTwo(height) / 2;
 

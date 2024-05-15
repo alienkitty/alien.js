@@ -382,10 +382,7 @@
 
                 const mesh = new InstancedMesh(geometry, material, count);
                 mesh.instanceMatrix.setUsage(DynamicDrawUsage); // Will be updated every frame
-
-                // Layers
                 mesh.layers.enable(layers.velocity);
-
                 this.add(mesh);
 
                 const object = new Group();
@@ -534,10 +531,7 @@
                 };
 
                 const mesh = new Mesh(geometry, material);
-
-                // Layers
                 mesh.layers.enable(layers.velocity);
-
                 this.add(mesh);
 
                 // Occlusion mesh
@@ -1185,6 +1179,7 @@
 
                 this.motionBlur.setSize(width, height);
 
+                // Gaussian blur
                 const blurWidth = Math.round(width * this.blurResolutionScale);
                 const blurHeight = Math.round(height * this.blurResolutionScale);
 
@@ -1194,6 +1189,7 @@
                 this.hBlurMaterial.uniforms.uResolution.value.set(blurWidth, blurHeight);
                 this.vBlurMaterial.uniforms.uResolution.value.set(blurWidth, blurHeight);
 
+                // Unreal bloom
                 width = MathUtils.floorPowerOfTwo(width) / 2;
                 height = MathUtils.floorPowerOfTwo(height) / 2;
 

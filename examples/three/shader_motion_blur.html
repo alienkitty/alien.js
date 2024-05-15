@@ -110,10 +110,7 @@
                 material.aoMap.channel = 1;
 
                 const mesh = new Mesh(geometry, material);
-
-                // Layers
                 mesh.layers.enable(layers.velocity);
-
                 this.add(mesh);
             }
 
@@ -184,10 +181,7 @@
                 material.aoMap.channel = 1;
 
                 const mesh = new Mesh(geometry, material);
-
-                // Layers
                 mesh.layers.enable(layers.velocity);
-
                 this.add(mesh);
             }
 
@@ -550,6 +544,7 @@
 
                 this.motionBlur.setSize(width, height);
 
+                // Unreal bloom
                 width = MathUtils.floorPowerOfTwo(width) / 2;
                 height = MathUtils.floorPowerOfTwo(height) / 2;
 

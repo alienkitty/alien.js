@@ -139,7 +139,7 @@
                 const mesh = new Mesh(geometry, material);
                 this.add(mesh);
 
-                // Occlusion
+                // Occlusion mesh
                 const occMesh = new Mesh(
                     geometry,
                     new MeshBasicMaterial({
@@ -148,10 +148,7 @@
                 );
                 occMesh.position.copy(mesh.position);
                 occMesh.scale.copy(mesh.scale);
-
-                // Layers
                 occMesh.layers.set(layers.occlusion);
-
                 this.add(occMesh);
             }
 
@@ -694,6 +691,7 @@
 
                 this.renderTarget.setSize(width, height);
 
+                // Gaussian blur
                 const blurWidth = Math.round(width * this.blurResolutionScale);
                 const blurHeight = Math.round(height * this.blurResolutionScale);
 
@@ -703,6 +701,7 @@
                 this.hBlurMaterial.uniforms.uResolution.value.set(blurWidth, blurHeight);
                 this.vBlurMaterial.uniforms.uResolution.value.set(blurWidth, blurHeight);
 
+                // Unreal bloom
                 width = MathUtils.floorPowerOfTwo(width) / 2;
                 height = MathUtils.floorPowerOfTwo(height) / 2;
 

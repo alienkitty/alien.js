@@ -92,10 +92,7 @@
                 const mesh = new Mesh(geometry, material);
                 mesh.castShadow = true;
                 mesh.receiveShadow = true;
-
-                // Layers
                 mesh.layers.enable(layers.picking);
-
                 this.add(mesh);
 
                 // Physics
@@ -205,10 +202,7 @@
                 const mesh = new Mesh(geometry, material);
                 mesh.castShadow = true;
                 mesh.receiveShadow = true;
-
-                // Layers
                 mesh.layers.enable(layers.picking);
-
                 this.add(mesh);
 
                 // Physics
@@ -756,6 +750,7 @@
 
                 this.renderTarget.setSize(width, height);
 
+                // Unreal bloom
                 width = MathUtils.floorPowerOfTwo(width) / 2;
                 height = MathUtils.floorPowerOfTwo(height) / 2;
 

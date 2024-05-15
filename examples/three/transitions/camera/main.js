@@ -264,10 +264,7 @@ class AbstractCube extends Group {
         mesh.rotation.z = MathUtils.degToRad(-45);
         mesh.castShadow = true;
         mesh.receiveShadow = true;
-
-        // Layers
         mesh.layers.enable(layers.velocity);
-
         this.add(mesh);
 
         this.mesh = mesh;
@@ -372,10 +369,7 @@ class FloatingCrystal extends Group {
         mesh.scale.set(0.5, 1, 0.5);
         mesh.castShadow = true;
         mesh.receiveShadow = true;
-
-        // Layers
         mesh.layers.enable(layers.velocity);
-
         this.add(mesh);
 
         this.mesh = mesh;
@@ -482,10 +476,7 @@ class DarkPlanet extends Group {
         const mesh = new Mesh(geometry, material);
         mesh.castShadow = true;
         mesh.receiveShadow = true;
-
-        // Layers
         mesh.layers.enable(layers.velocity);
-
         this.add(mesh);
 
         this.mesh = mesh;
@@ -1174,9 +1165,11 @@ class RenderManager {
 
         this.motionBlur.setSize(width, height);
 
+        // Gaussian blur
         this.hBlurMaterial.uniforms.uResolution.value.set(width, height);
         this.vBlurMaterial.uniforms.uResolution.value.set(width, height);
 
+        // Unreal bloom
         width = MathUtils.floorPowerOfTwo(width) / 2;
         height = MathUtils.floorPowerOfTwo(height) / 2;
 

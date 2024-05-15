@@ -273,11 +273,8 @@
                 material.aoMap.channel = 1;
 
                 const mesh = new Mesh(geometry, material);
-
-                // Layers
                 mesh.layers.enable(layers.velocity);
                 mesh.layers.enable(layers.motion);
-
                 this.add(mesh);
             }
 
@@ -355,11 +352,8 @@
                 material.envMapRotation.y = scene.environmentRotation.y;
 
                 const mesh = new Mesh(geometry, material);
-
-                // Layers
                 mesh.layers.enable(layers.velocity);
                 mesh.layers.enable(layers.light);
-
                 this.add(mesh);
 
                 this.material = material;
@@ -974,6 +968,7 @@
 
                 this.motionBlur.setSize(width, height);
 
+                // Gaussian blur
                 const blurWidth = Math.round(width * this.blurResolutionScale);
                 const blurHeight = Math.round(height * this.blurResolutionScale);
 
@@ -983,6 +978,7 @@
                 this.hBlurMaterial.uniforms.uResolution.value.set(blurWidth, blurHeight);
                 this.vBlurMaterial.uniforms.uResolution.value.set(blurWidth, blurHeight);
 
+                // Unreal bloom
                 width = MathUtils.floorPowerOfTwo(width) / 2;
                 height = MathUtils.floorPowerOfTwo(height) / 2;
 

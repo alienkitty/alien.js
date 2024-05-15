@@ -749,6 +749,7 @@
                 this.bloomDistortion = 1.5;
 
                 // Debug
+                DisplayOptions.Light = 8;
                 this.display = DisplayOptions.Default;
 
                 this.enabled = true;
@@ -1112,11 +1113,19 @@
                 this.vlMaterial.uniforms.tMap.value = renderTargetBlurB.texture;
                 this.setLightPosition();
                 this.screen.material = this.vlMaterial;
-                renderer.setRenderTarget(renderTargetBlurA);
-                renderer.clear();
-                renderer.render(this.screen, this.screenCamera);
-                // this.restoreRendererState();
-                // return;
+
+                if (this.display === DisplayOptions.Light) {
+                    // Debug pass (render to screen)
+                    renderer.setRenderTarget(null);
+                    renderer.clear();
+                    renderer.render(this.screen, this.screenCamera);
+                    this.restoreRendererState();
+                    return;
+                } else {
+                    renderer.setRenderTarget(renderTargetBlurA);
+                    renderer.clear();
+                    renderer.render(this.screen, this.screenCamera);
+                }
 
                 // Post-processing
                 scene.background = null;

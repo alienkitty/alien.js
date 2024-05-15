@@ -11,7 +11,7 @@
     <link rel="stylesheet" href="../assets/css/style.css">
 
     <script type="module">
-        import { AdditiveBlending, BloomCompositeMaterial, Color, ColorManagement, CopyMaterial, DepthMaterial, DisplayOptions, EnvironmentTextureLoader, Fluid, GLSL3, Group, IcosahedronGeometry, ImageBitmapLoaderThread, LinearSRGBColorSpace, LuminosityMaterial, MathUtils, Mesh, MeshBasicMaterial, MeshMatcapMaterial, MeshStandardMaterial, MotionBlur, NearestFilter, NoBlending, NormalMaterial, OrbitControls, OrthographicCamera, PanelItem, PerspectiveCamera, RawShaderMaterial, RepeatWrapping, Scene, SphereGeometry, TextureLoader, Thread, UI, UnrealBloomBlurMaterial, Vector2, WebGLRenderTarget, WebGLRenderer, getFullscreenTriangle, getKeyByValue, ticker } from '../../build/alien.three.js';
+        import { AdditiveBlending, BloomCompositeMaterial, BlurMaterial, Color, ColorManagement, CopyMaterial, DepthMaterial, DisplayOptions, EnvironmentTextureLoader, Fluid, GLSL3, Group, IcosahedronGeometry, ImageBitmapLoaderThread, LinearSRGBColorSpace, LuminosityMaterial, MathUtils, Mesh, MeshBasicMaterial, MeshMatcapMaterial, MeshStandardMaterial, MotionBlur, NearestFilter, NoBlending, NormalMaterial, OrbitControls, OrthographicCamera, PanelItem, PerspectiveCamera, RawShaderMaterial, RepeatWrapping, Scene, SphereGeometry, TextureLoader, Thread, UI, UnrealBloomBlurMaterial, Vector2, Vector3, VolumetricLightMaterial, WebGLRenderTarget, WebGLRenderer, getFullscreenTriangle, getKeyByValue, ticker } from '../../build/alien.three.js';
 
         const isDebug = /[?&]debug/.test(location.search);
         const isOrbit = /[?&]orbit/.test(location.search);
@@ -19,7 +19,8 @@
         const layers = {
             default: 0,
             velocity: 1,
-            occlusion: 2
+            motion: 2,
+            light: 3
         };
 
         const params = {
@@ -28,6 +29,7 @@
         };
 
         import rgbshift from '../../src/shaders/modules/rgbshift/rgbshift.glsl.js';
+        import dither from '../../src/shaders/modules/dither/dither.glsl.js';
 
         // Based on https://github.com/PavelDoGreat/WebGL-Fluid-Simulation
         // Based on https://oframe.github.io/ogl/examples/?src=post-fluid-distortion.html by gordonnl
@@ -39,6 +41,7 @@
                     uniforms: {
                         tScene: { value: null },
                         tBloom: { value: null },
+                        tAdd: { value: null },
                         tFluid: { value: null },
                         uBloomDistortion: { value: 1.5 }
                     },
@@ -59,6 +62,7 @@
 
                         uniform sampler2D tScene;
                         uniform sampler2D tBloom;
+                        uniform sampler2D tAdd;
                         uniform sampler2D tFluid;
                         uniform float uBloomDistortion;
 
@@ -67,6 +71,7 @@
                         out vec4 FragColor;
 
                         ${rgbshift}
+                        ${dither}
 
                         void main() {
                             vec3 fluid = texture(tFluid, vUv).rgb;
@@ -79,6 +84,11 @@
                             float amount = 0.001 * uBloomDistortion;
 
                             FragColor.rgb += getRGB(tBloom, uv, angle, amount).rgb;
+
+                            FragColor.rgb += texture(tAdd, uv).rgb;
+
+                            FragColor.rgb = dither(FragColor.rgb);
+                            FragColor.a = 1.0;
                         }
                     `,
                     blending: NoBlending,
@@ -261,7 +271,7 @@
 
                 // Layers
                 mesh.layers.enable(layers.velocity);
-                mesh.layers.enable(layers.occlusion);
+                mesh.layers.enable(layers.motion);
 
                 this.add(mesh);
             }
@@ -343,6 +353,7 @@
 
                 // Layers
                 mesh.layers.enable(layers.velocity);
+                mesh.layers.enable(layers.light);
 
                 this.add(mesh);
             }
@@ -425,7 +436,7 @@
             }
 
             static initPanel() {
-                const { motionBlur, fluid, luminosityMaterial, bloomCompositeMaterial, compositeMaterial } = RenderManager;
+                const { motionBlur, fluid, vlMaterial, luminosityMaterial, bloomCompositeMaterial, compositeMaterial } = RenderManager;
 
                 const animateOptions = {
                     Off: false,
@@ -569,6 +580,64 @@
                     },
                     {
                         type: 'slider',
+                        name: 'Exp',
+                        min: 0,
+                        max: 1,
+                        step: 0.01,
+                        value: vlMaterial.uniforms.uExposure.value,
+                        callback: value => {
+                            vlMaterial.uniforms.uExposure.value = value;
+                        }
+                    },
+                    {
+                        type: 'slider',
+                        name: 'Decay',
+                        min: 0.6,
+                        max: 1,
+                        step: 0.01,
+                        value: vlMaterial.uniforms.uDecay.value,
+                        callback: value => {
+                            vlMaterial.uniforms.uDecay.value = value;
+                        }
+                    },
+                    {
+                        type: 'slider',
+                        name: 'Density',
+                        min: 0,
+                        max: 1,
+                        step: 0.01,
+                        value: vlMaterial.uniforms.uDensity.value,
+                        callback: value => {
+                            vlMaterial.uniforms.uDensity.value = value;
+                        }
+                    },
+                    {
+                        type: 'slider',
+                        name: 'Weight',
+                        min: 0,
+                        max: 1,
+                        step: 0.01,
+                        value: vlMaterial.uniforms.uWeight.value,
+                        callback: value => {
+                            vlMaterial.uniforms.uWeight.value = value;
+                        }
+                    },
+                    {
+                        type: 'slider',
+                        name: 'Clamp',
+                        min: 0,
+                        max: 1,
+                        step: 0.01,
+                        value: vlMaterial.uniforms.uClamp.value,
+                        callback: value => {
+                            vlMaterial.uniforms.uClamp.value = value;
+                        }
+                    },
+                    {
+                        type: 'divider'
+                    },
+                    {
+                        type: 'slider',
                         name: 'Thresh',
                         min: 0,
                         max: 1,
@@ -647,14 +716,24 @@
                 this.width = 1;
                 this.height = 1;
 
+                // Volumetric light
+                this.lightPosition = new Vector3();
+                this.vlExposure = 0.1;
+                this.vlDecay = 1;
+                this.vlDensity = 0.96;
+                this.vlWeight = 1;
+                this.vlClamp = 1;
+                this.blurResolutionScale = 0.25;
+                this.blurFactor = 2.5;
+
                 // Fluid simulation
                 this.lastMouse = new Vector2();
 
                 // Bloom
                 this.luminosityThreshold = 0.1;
                 this.luminositySmoothing = 1;
-                this.bloomStrength = 1;
-                this.bloomRadius = 1;
+                this.bloomStrength = 0.3;
+                this.bloomRadius = 0.2;
                 this.bloomDistortion = 1.5;
 
                 // Debug
@@ -689,6 +768,10 @@
 
                 this.renderTargetB = this.renderTargetA.clone();
                 this.renderTargetC = this.renderTargetA.clone();
+                this.renderTargetD = this.renderTargetA.clone();
+
+                this.renderTargetBlurA = this.renderTargetA.clone();
+                this.renderTargetBlurB = this.renderTargetA.clone();
 
                 this.renderTargetsHorizontal = [];
                 this.renderTargetsVertical = [];
@@ -703,6 +786,8 @@
 
                 this.renderTargetA.depthBuffer = true;
                 this.renderTargetC.depthBuffer = true;
+                this.renderTargetD.depthBuffer = true;
+                this.renderTargetBlurA.depthBuffer = true;
 
                 // Fluid simulation
                 this.fluid = new Fluid(this.renderer, {
@@ -710,10 +795,6 @@
                     radius: 0.01
                 });
                 this.fluid.splatMaterial.uniforms.uAspect = aspect;
-
-                // Occlusion material
-                // this.blackoutMaterial = new MeshBasicMaterial({ color: 0x000000 });
-                this.blackoutMaterial = new MeshBasicMaterial({ color: this.scene.background });
 
                 // Motion blur
                 this.motionBlur = new MotionBlur(this.renderer, this.scene, this.camera, layers.velocity, {
@@ -723,6 +804,25 @@
 
                 this.motionBlurCompositeMaterial = new MotionBlurCompositeMaterial();
                 this.motionBlurCompositeMaterial.uniforms.tVelocity.value = this.motionBlur.renderTarget.texture;
+
+                // Occlusion materials
+                this.blackoutMaterial = new MeshBasicMaterial({ color: 0x000000 });
+                this.backgroundMaterial = new MeshBasicMaterial({ color: this.scene.background });
+
+                // Volumetric light material
+                this.vlMaterial = new VolumetricLightMaterial();
+                this.vlMaterial.uniforms.uExposure.value = this.vlExposure;
+                this.vlMaterial.uniforms.uDecay.value = this.vlDecay;
+                this.vlMaterial.uniforms.uDensity.value = this.vlDensity;
+                this.vlMaterial.uniforms.uWeight.value = this.vlWeight;
+                this.vlMaterial.uniforms.uClamp.value = this.vlClamp;
+
+                // Gaussian blur materials
+                this.hBlurMaterial = new BlurMaterial(BlurDirectionX);
+                this.hBlurMaterial.uniforms.uBluriness.value = this.blurFactor;
+
+                this.vBlurMaterial = new BlurMaterial(BlurDirectionY);
+                this.vBlurMaterial.uniforms.uBluriness.value = this.blurFactor;
 
                 // Luminosity high pass material
                 this.luminosityMaterial = new LuminosityMaterial();
@@ -769,6 +869,15 @@
                 }
 
                 return bloomFactors;
+            }
+
+            static setLightPosition() {
+                this.lightPosition.project(this.camera);
+
+                const x = (this.lightPosition.x + 1) / 2;
+                const y = (this.lightPosition.y + 1) / 2;
+
+                this.vlMaterial.uniforms.uLightPosition.value.set(x, y);
             }
 
             static rendererState() {
@@ -849,8 +958,18 @@
                 this.renderTargetA.setSize(width, height);
                 this.renderTargetB.setSize(width, height);
                 this.renderTargetC.setSize(width, height);
+                this.renderTargetD.setSize(width, height);
 
                 this.motionBlur.setSize(width, height);
+
+                const blurWidth = Math.round(width * this.blurResolutionScale);
+                const blurHeight = Math.round(height * this.blurResolutionScale);
+
+                this.renderTargetBlurA.setSize(blurWidth, blurHeight);
+                this.renderTargetBlurB.setSize(blurWidth, blurHeight);
+
+                this.hBlurMaterial.uniforms.uResolution.value.set(blurWidth, blurHeight);
+                this.vBlurMaterial.uniforms.uResolution.value.set(blurWidth, blurHeight);
 
                 width = MathUtils.floorPowerOfTwo(width) / 2;
                 height = MathUtils.floorPowerOfTwo(height) / 2;
@@ -883,6 +1002,9 @@
                 const renderTargetA = this.renderTargetA;
                 const renderTargetB = this.renderTargetB;
                 const renderTargetC = this.renderTargetC;
+                const renderTargetD = this.renderTargetD;
+                const renderTargetBlurA = this.renderTargetBlurA;
+                const renderTargetBlurB = this.renderTargetBlurB;
                 const renderTargetBright = this.renderTargetBright;
                 const renderTargetsHorizontal = this.renderTargetsHorizontal;
                 const renderTargetsVertical = this.renderTargetsVertical;
@@ -902,18 +1024,66 @@
                 // this.restoreRendererState();
                 // return;
 
-                // Occlusion layer
+                // Motion layer
                 scene.background = null;
 
-                scene.overrideMaterial = this.blackoutMaterial;
+                scene.overrideMaterial = this.backgroundMaterial;
                 renderer.setRenderTarget(renderTargetC);
                 renderer.clear();
                 renderer.render(scene, camera);
                 scene.overrideMaterial = this.currentOverrideMaterial;
 
-                camera.layers.set(layers.occlusion);
+                camera.layers.set(layers.motion);
 
                 renderer.render(scene, camera);
+                // this.restoreRendererState();
+                // return;
+
+                // Light layer
+                camera.layers.set(layers.default);
+
+                scene.overrideMaterial = this.blackoutMaterial;
+                renderer.setRenderTarget(renderTargetBlurA);
+                renderer.clear();
+                renderer.render(scene, camera);
+                scene.overrideMaterial = this.currentOverrideMaterial;
+
+                camera.layers.set(layers.light);
+
+                renderer.render(scene, camera);
+                // this.restoreRendererState();
+                // return;
+
+                this.hBlurMaterial.uniforms.tMap.value = renderTargetBlurA.texture;
+                this.screen.material = this.hBlurMaterial;
+                renderer.setRenderTarget(renderTargetBlurB);
+                renderer.clear();
+                renderer.render(this.screen, this.screenCamera);
+
+                this.vBlurMaterial.uniforms.tMap.value = renderTargetBlurB.texture;
+                this.screen.material = this.vBlurMaterial;
+                renderer.setRenderTarget(renderTargetBlurA);
+                renderer.clear();
+                renderer.render(this.screen, this.screenCamera);
+
+                this.hBlurMaterial.uniforms.tMap.value = renderTargetBlurA.texture;
+                this.screen.material = this.hBlurMaterial;
+                renderer.setRenderTarget(renderTargetBlurB);
+                renderer.clear();
+                renderer.render(this.screen, this.screenCamera);
+
+                this.vBlurMaterial.uniforms.tMap.value = renderTargetBlurB.texture;
+                this.screen.material = this.vBlurMaterial;
+                renderer.setRenderTarget(renderTargetBlurA);
+                renderer.clear();
+                renderer.render(this.screen, this.screenCamera);
+
+                this.vlMaterial.uniforms.tMap.value = renderTargetBlurA.texture;
+                this.setLightPosition();
+                this.screen.material = this.vlMaterial;
+                renderer.setRenderTarget(renderTargetBlurB);
+                renderer.clear();
+                renderer.render(this.screen, this.screenCamera);
                 // this.restoreRendererState();
                 // return;
 
@@ -1041,6 +1211,7 @@
                 // Composite pass (render to screen)
                 this.compositeMaterial.uniforms.tScene.value = renderTargetB.texture;
                 this.compositeMaterial.uniforms.tBloom.value = renderTargetsHorizontal[0].texture;
+                this.compositeMaterial.uniforms.tAdd.value = renderTargetBlurB.texture;
                 this.screen.material = this.compositeMaterial;
                 renderer.setRenderTarget(null);
                 renderer.clear();
@@ -1077,7 +1248,13 @@
 
                 // 3D scene
                 this.scene = new Scene();
-                this.scene.background = new Color(0x0e0e0e);
+                // this.scene.background = new Color(0x0e0e0e);
+                // this.scene.background = new Color(0x000000);
+                // this.scene.background = new Color(0x010101);
+                // this.scene.background = new Color(0x020202);
+                this.scene.background = new Color(0x030303);
+                // this.scene.background = new Color(0x040404);
+                // this.scene.background = new Color(0x050505);
                 this.camera = new PerspectiveCamera(30);
                 this.camera.near = 0.5;
                 this.camera.far = 40;

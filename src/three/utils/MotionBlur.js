@@ -93,7 +93,6 @@ export class MotionBlur {
         if (object.layers.isEnabled(this.channel)) {
             if (!object.initialized) {
                 object.prevMatrixWorld = object.matrixWorld.clone();
-                object.originalMaterial = object.material;
 
                 if (object.isInstancedMesh) {
                     object.prevInstanceMatrix = new InstancedBufferAttribute(new Float32Array(object.instanceMatrix.array), 16);
@@ -106,6 +105,7 @@ export class MotionBlur {
                 object.initialized = true;
             }
 
+            object.originalMaterial = object.material;
             object.velocityMaterial.uniforms.uPrevProjectionMatrix.value.copy(this.cameraBlur ? this.prevProjectionMatrix : this.camera.projectionMatrix);
             object.velocityMaterial.uniforms.uPrevModelViewMatrix.value.multiplyMatrices(this.cameraBlur ? this.prevMatrixWorldInverse : this.camera.matrixWorldInverse, object.prevMatrixWorld);
             object.velocityMaterial.uniforms.uInterpolateGeometry.value = this.interpolateGeometry;

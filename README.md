@@ -42,7 +42,7 @@ requestAnimationFrame(animate);
 The `@alienkitty/alien.js/three/oimophysics` entry point for [OimoPhysics](https://github.com/saharan/OimoPhysics) utilities.
 
 ```sh
-npm i three saharan/OimoPhysics#v1.2.3 @alienkitty/alien.js
+npm i three saharan/OimoPhysics @alienkitty/alien.js
 ```
 
 ```js
@@ -190,7 +190,7 @@ Clone this repository and install its dependencies:
 ```sh
 git clone https://github.com/alienkitty/alien.js
 cd alien.js
-npm i three saharan/OimoPhysics#v1.2.3
+npm i three saharan/OimoPhysics
 cd examples
 npm i
 npm run build

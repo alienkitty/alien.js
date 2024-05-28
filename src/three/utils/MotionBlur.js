@@ -43,6 +43,10 @@ export class MotionBlur {
         });
     }
 
+    setCamera(camera) {
+        this.camera = camera;
+    }
+
     setSize(width, height) {
         this.renderTarget.setSize(width, height);
     }

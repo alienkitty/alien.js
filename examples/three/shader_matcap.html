@@ -11,7 +11,7 @@
     <link rel="stylesheet" href="../assets/css/style.css">
 
     <script type="module">
-        import { Color, ColorManagement, Group, LinearSRGBColorSpace, Mesh, MeshMatcapMaterial, PerspectiveCamera, Scene, SphereGeometry, TextureLoader, Vector2, WebGLRenderer, getFullscreenTriangle, ticker } from '../../build/alien.three.js';
+        import { AssetLoader, Color, ColorManagement, Group, LinearSRGBColorSpace, Mesh, MeshMatcapMaterial, PerspectiveCamera, Scene, SphereGeometry, Texture, TextureLoader, Vector2, WebGLRenderer, getFullscreenTriangle, ticker } from '../../build/alien.three.js';
 
         import periodic3d from '../../src/shaders/modules/noise/periodic3d.glsl.js';
 
@@ -59,6 +59,19 @@
 
                 const mesh = new Mesh(geometry, material);
                 this.add(mesh);
+
+                this.mesh = mesh;
+            }
+
+            // Public methods
+
+            updateMatcap(texture) {
+                if (this.mesh.material.matcap) {
+                    this.mesh.material.matcap.dispose();
+                }
+
+                this.mesh.material.matcap = texture;
+                this.mesh.material.needsUpdate = true;
             }
         }
 
@@ -123,6 +136,7 @@
             }
 
             static initLoaders() {
+                this.assetLoader = new AssetLoader();
                 this.textureLoader = new TextureLoader();
             }
 
@@ -163,6 +177,8 @@
 
             // Global handlers
 
+            static loadImage = path => this.assetLoader.loadImage(path);
+
             static getTexture = (path, callback) => this.textureLoader.load(path, callback);
 
             static loadTexture = path => this.textureLoader.loadAsync(path);
@@ -173,6 +189,7 @@
                 this.initWorld();
                 this.initViews();
                 this.initControllers();
+                this.initDragAndDrop();
 
                 this.addListeners();
                 this.onResize();
@@ -194,7 +211,14 @@
                 RenderManager.init(renderer, scene, camera);
             }
 
+            static initDragAndDrop() {
+                this.reader = new FileReader();
+            }
+
             static addListeners() {
+                document.addEventListener('dragover', this.onDragOver);
+                document.addEventListener('drop', this.onDrop);
+                this.reader.addEventListener('load', this.onLoad);
                 window.addEventListener('resize', this.onResize);
                 ticker.add(this.onUpdate);
                 ticker.start();
@@ -214,6 +238,26 @@
             static onUpdate = (time, delta, frame) => {
                 WorldController.update(time, delta, frame);
                 RenderManager.update(time, delta, frame);
+            };
+
+            static onDragOver = e => {
+                e.preventDefault();
+                e.dataTransfer.dropEffect = 'copy';
+            };
+
+            static onDrop = e => {
+                e.preventDefault();
+
+                this.reader.readAsDataURL(e.dataTransfer.files[0]);
+            };
+
+            static onLoad = async e => {
+                const image = await WorldController.loadImage(e.target.result);
+
+                const texture = new Texture(image);
+                texture.needsUpdate = true;
+
+                this.view.updateMatcap(texture);
             };
         }
 

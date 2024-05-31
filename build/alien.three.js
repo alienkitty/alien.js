@@ -717,6 +717,8 @@ class ImageBitmapLoaderThread {
 
 /**
  * @author pschroen / https://ufo.ai/
+ *
+ * Based on https://github.com/mrdoob/three.js/blob/dev/src/loaders/ImageBitmapLoader.js
  */
 
 
@@ -725,7 +727,9 @@ let ImageBitmapLoader$1 = class ImageBitmapLoader extends Loader$1 {
         super();
 
         this.defaultOptions = {
-            imageOrientation: 'none'
+            imageOrientation: 'none',
+            premultiplyAlpha: 'none',
+            colorSpaceConversion: 'none'
         };
 
         this.options = this.defaultOptions;
@@ -785,7 +789,7 @@ let ImageBitmapLoader$1 = class ImageBitmapLoader extends Loader$1 {
  * Copyright 2010-2024 Three.js Authors
  * SPDX-License-Identifier: MIT
  */
-const REVISION = '164';
+const REVISION = '165';
 
 const MOUSE = { LEFT: 0, MIDDLE: 1, RIGHT: 2, ROTATE: 0, DOLLY: 1, PAN: 2 };
 const TOUCH = { ROTATE: 0, PAN: 1, DOLLY_PAN: 2, DOLLY_ROTATE: 3 };
@@ -2342,6 +2346,35 @@ function warnOnce( message ) {
 
 }
 
+function probeAsync( gl, sync, interval ) {
+
+	return new Promise( function ( resolve, reject ) {
+
+		function probe() {
+
+			switch ( gl.clientWaitSync( sync, gl.SYNC_FLUSH_COMMANDS_BIT, 0 ) ) {
+
+				case gl.WAIT_FAILED:
+					reject();
+					break;
+
+				case gl.TIMEOUT_EXPIRED:
+					setTimeout( probe, interval );
+					break;
+
+				default:
+					resolve();
+
+			}
+
+		}
+
+		setTimeout( probe, interval );
+
+	} );
+
+}
+
 /**
  * Matrices converting P3 <-> Rec. 709 primaries, without gamut mapping
  * or clipping. Based on W3C specifications for sRGB and Display P3,
@@ -3858,6 +3891,20 @@ class DataArrayTexture extends Texture {
 		this.generateMipmaps = false;
 		this.flipY = false;
 		this.unpackAlignment = 1;
+
+		this.layerUpdates = new Set();
+
+	}
+
+	addLayerUpdate( layerIndex ) {
+
+		this.layerUpdates.add( layerIndex );
+
+	}
+
+	clearLayerUpdates() {
+
+		this.layerUpdates.clear();
 
 	}
 
@@ -8627,6 +8674,8 @@ class Object3D extends EventDispatcher {
 			object.geometryCount = this._geometryCount;
 
 			object.matricesTexture = this._matricesTexture.toJSON( meta );
+
+			if ( this._colorsTexture !== null ) object.colorsTexture = this._colorsTexture.toJSON( meta );
 
 			if ( this.boundingSphere !== null ) {
 
@@ -14540,7 +14589,7 @@ var aomap_fragment = "#ifdef USE_AOMAP\n\tfloat ambientOcclusion = ( texture2D( 
 
 var aomap_pars_fragment = "#ifdef USE_AOMAP\n\tuniform sampler2D aoMap;\n\tuniform float aoMapIntensity;\n#endif";
 
-var batching_pars_vertex = "#ifdef USE_BATCHING\n\tattribute float batchId;\n\tuniform highp sampler2D batchingTexture;\n\tmat4 getBatchingMatrix( const in float i ) {\n\t\tint size = textureSize( batchingTexture, 0 ).x;\n\t\tint j = int( i ) * 4;\n\t\tint x = j % size;\n\t\tint y = j / size;\n\t\tvec4 v1 = texelFetch( batchingTexture, ivec2( x, y ), 0 );\n\t\tvec4 v2 = texelFetch( batchingTexture, ivec2( x + 1, y ), 0 );\n\t\tvec4 v3 = texelFetch( batchingTexture, ivec2( x + 2, y ), 0 );\n\t\tvec4 v4 = texelFetch( batchingTexture, ivec2( x + 3, y ), 0 );\n\t\treturn mat4( v1, v2, v3, v4 );\n\t}\n#endif";
+var batching_pars_vertex = "#ifdef USE_BATCHING\n\tattribute float batchId;\n\tuniform highp sampler2D batchingTexture;\n\tmat4 getBatchingMatrix( const in float i ) {\n\t\tint size = textureSize( batchingTexture, 0 ).x;\n\t\tint j = int( i ) * 4;\n\t\tint x = j % size;\n\t\tint y = j / size;\n\t\tvec4 v1 = texelFetch( batchingTexture, ivec2( x, y ), 0 );\n\t\tvec4 v2 = texelFetch( batchingTexture, ivec2( x + 1, y ), 0 );\n\t\tvec4 v3 = texelFetch( batchingTexture, ivec2( x + 2, y ), 0 );\n\t\tvec4 v4 = texelFetch( batchingTexture, ivec2( x + 3, y ), 0 );\n\t\treturn mat4( v1, v2, v3, v4 );\n\t}\n#endif\n#ifdef USE_BATCHING_COLOR\n\tuniform sampler2D batchingColorTexture;\n\tvec3 getBatchingColor( const in float i ) {\n\t\tint size = textureSize( batchingColorTexture, 0 ).x;\n\t\tint j = int( i );\n\t\tint x = j % size;\n\t\tint y = j / size;\n\t\treturn texelFetch( batchingColorTexture, ivec2( x, y ), 0 ).rgb;\n\t}\n#endif";
 
 var batching_vertex = "#ifdef USE_BATCHING\n\tmat4 batchingMatrix = getBatchingMatrix( batchId );\n#endif";
 
@@ -14566,9 +14615,9 @@ var color_fragment = "#if defined( USE_COLOR_ALPHA )\n\tdiffuseColor *= vColor;\
 
 var color_pars_fragment = "#if defined( USE_COLOR_ALPHA )\n\tvarying vec4 vColor;\n#elif defined( USE_COLOR )\n\tvarying vec3 vColor;\n#endif";
 
-var color_pars_vertex = "#if defined( USE_COLOR_ALPHA )\n\tvarying vec4 vColor;\n#elif defined( USE_COLOR ) || defined( USE_INSTANCING_COLOR )\n\tvarying vec3 vColor;\n#endif";
+var color_pars_vertex = "#if defined( USE_COLOR_ALPHA )\n\tvarying vec4 vColor;\n#elif defined( USE_COLOR ) || defined( USE_INSTANCING_COLOR ) || defined( USE_BATCHING_COLOR )\n\tvarying vec3 vColor;\n#endif";
 
-var color_vertex = "#if defined( USE_COLOR_ALPHA )\n\tvColor = vec4( 1.0 );\n#elif defined( USE_COLOR ) || defined( USE_INSTANCING_COLOR )\n\tvColor = vec3( 1.0 );\n#endif\n#ifdef USE_COLOR\n\tvColor *= color;\n#endif\n#ifdef USE_INSTANCING_COLOR\n\tvColor.xyz *= instanceColor.xyz;\n#endif";
+var color_vertex = "#if defined( USE_COLOR_ALPHA )\n\tvColor = vec4( 1.0 );\n#elif defined( USE_COLOR ) || defined( USE_INSTANCING_COLOR ) || defined( USE_BATCHING_COLOR )\n\tvColor = vec3( 1.0 );\n#endif\n#ifdef USE_COLOR\n\tvColor *= color;\n#endif\n#ifdef USE_INSTANCING_COLOR\n\tvColor.xyz *= instanceColor.xyz;\n#endif\n#ifdef USE_BATCHING_COLOR\n\tvec3 batchingColor = getBatchingColor( batchId );\n\tvColor.xyz *= batchingColor.xyz;\n#endif";
 
 var common = "#define PI 3.141592653589793\n#define PI2 6.283185307179586\n#define PI_HALF 1.5707963267948966\n#define RECIPROCAL_PI 0.3183098861837907\n#define RECIPROCAL_PI2 0.15915494309189535\n#define EPSILON 1e-6\n#ifndef saturate\n#define saturate( a ) clamp( a, 0.0, 1.0 )\n#endif\n#define whiteComplement( a ) ( 1.0 - saturate( a ) )\nfloat pow2( const in float x ) { return x*x; }\nvec3 pow2( const in vec3 x ) { return x*x; }\nfloat pow3( const in float x ) { return x*x*x; }\nfloat pow4( const in float x ) { float x2 = x*x; return x2*x2; }\nfloat max3( const in vec3 v ) { return max( max( v.x, v.y ), v.z ); }\nfloat average( const in vec3 v ) { return dot( v, vec3( 0.3333333 ) ); }\nhighp float rand( const in vec2 uv ) {\n\tconst highp float a = 12.9898, b = 78.233, c = 43758.5453;\n\thighp float dt = dot( uv.xy, vec2( a,b ) ), sn = mod( dt, PI );\n\treturn fract( sin( sn ) * c );\n}\n#ifdef HIGH_PRECISION\n\tfloat precisionSafeLength( vec3 v ) { return length( v ); }\n#else\n\tfloat precisionSafeLength( vec3 v ) {\n\t\tfloat maxComponent = max3( abs( v ) );\n\t\treturn length( v / maxComponent ) * maxComponent;\n\t}\n#endif\nstruct IncidentLight {\n\tvec3 color;\n\tvec3 direction;\n\tbool visible;\n};\nstruct ReflectedLight {\n\tvec3 directDiffuse;\n\tvec3 directSpecular;\n\tvec3 indirectDiffuse;\n\tvec3 indirectSpecular;\n};\n#ifdef USE_ALPHAHASH\n\tvarying vec3 vPosition;\n#endif\nvec3 transformDirection( in vec3 dir, in mat4 matrix ) {\n\treturn normalize( ( matrix * vec4( dir, 0.0 ) ).xyz );\n}\nvec3 inverseTransformDirection( in vec3 dir, in mat4 matrix ) {\n\treturn normalize( ( vec4( dir, 0.0 ) * matrix ).xyz );\n}\nmat3 transposeMat3( const in mat3 m ) {\n\tmat3 tmp;\n\ttmp[ 0 ] = vec3( m[ 0 ].x, m[ 1 ].x, m[ 2 ].x );\n\ttmp[ 1 ] = vec3( m[ 0 ].y, m[ 1 ].y, m[ 2 ].y );\n\ttmp[ 2 ] = vec3( m[ 0 ].z, m[ 1 ].z, m[ 2 ].z );\n\treturn tmp;\n}\nfloat luminance( const in vec3 rgb ) {\n\tconst vec3 weights = vec3( 0.2126729, 0.7151522, 0.0721750 );\n\treturn dot( weights, rgb );\n}\nbool isPerspectiveMatrix( mat4 m ) {\n\treturn m[ 2 ][ 3 ] == - 1.0;\n}\nvec2 equirectUv( in vec3 dir ) {\n\tfloat u = atan( dir.z, dir.x ) * RECIPROCAL_PI2 + 0.5;\n\tfloat v = asin( clamp( dir.y, - 1.0, 1.0 ) ) * RECIPROCAL_PI + 0.5;\n\treturn vec2( u, v );\n}\nvec3 BRDF_Lambert( const in vec3 diffuseColor ) {\n\treturn RECIPROCAL_PI * diffuseColor;\n}\nvec3 F_Schlick( const in vec3 f0, const in float f90, const in float dotVH ) {\n\tfloat fresnel = exp2( ( - 5.55473 * dotVH - 6.98316 ) * dotVH );\n\treturn f0 * ( 1.0 - fresnel ) + ( f90 * fresnel );\n}\nfloat F_Schlick( const in float f0, const in float f90, const in float dotVH ) {\n\tfloat fresnel = exp2( ( - 5.55473 * dotVH - 6.98316 ) * dotVH );\n\treturn f0 * ( 1.0 - fresnel ) + ( f90 * fresnel );\n} // validated";
 
@@ -14614,7 +14663,7 @@ var lights_lambert_fragment = "LambertMaterial material;\nmaterial.diffuseColor 
 
 var lights_lambert_pars_fragment = "varying vec3 vViewPosition;\nstruct LambertMaterial {\n\tvec3 diffuseColor;\n\tfloat specularStrength;\n};\nvoid RE_Direct_Lambert( const in IncidentLight directLight, const in vec3 geometryPosition, const in vec3 geometryNormal, const in vec3 geometryViewDir, const in vec3 geometryClearcoatNormal, const in LambertMaterial material, inout ReflectedLight reflectedLight ) {\n\tfloat dotNL = saturate( dot( geometryNormal, directLight.direction ) );\n\tvec3 irradiance = dotNL * directLight.color;\n\treflectedLight.directDiffuse += irradiance * BRDF_Lambert( material.diffuseColor );\n}\nvoid RE_IndirectDiffuse_Lambert( const in vec3 irradiance, const in vec3 geometryPosition, const in vec3 geometryNormal, const in vec3 geometryViewDir, const in vec3 geometryClearcoatNormal, const in LambertMaterial material, inout ReflectedLight reflectedLight ) {\n\treflectedLight.indirectDiffuse += irradiance * BRDF_Lambert( material.diffuseColor );\n}\n#define RE_Direct\t\t\t\tRE_Direct_Lambert\n#define RE_IndirectDiffuse\t\tRE_IndirectDiffuse_Lambert";
 
-var lights_pars_begin = "uniform bool receiveShadow;\nuniform vec3 ambientLightColor;\n#if defined( USE_LIGHT_PROBES )\n\tuniform vec3 lightProbe[ 9 ];\n#endif\nvec3 shGetIrradianceAt( in vec3 normal, in vec3 shCoefficients[ 9 ] ) {\n\tfloat x = normal.x, y = normal.y, z = normal.z;\n\tvec3 result = shCoefficients[ 0 ] * 0.886227;\n\tresult += shCoefficients[ 1 ] * 2.0 * 0.511664 * y;\n\tresult += shCoefficients[ 2 ] * 2.0 * 0.511664 * z;\n\tresult += shCoefficients[ 3 ] * 2.0 * 0.511664 * x;\n\tresult += shCoefficients[ 4 ] * 2.0 * 0.429043 * x * y;\n\tresult += shCoefficients[ 5 ] * 2.0 * 0.429043 * y * z;\n\tresult += shCoefficients[ 6 ] * ( 0.743125 * z * z - 0.247708 );\n\tresult += shCoefficients[ 7 ] * 2.0 * 0.429043 * x * z;\n\tresult += shCoefficients[ 8 ] * 0.429043 * ( x * x - y * y );\n\treturn result;\n}\nvec3 getLightProbeIrradiance( const in vec3 lightProbe[ 9 ], const in vec3 normal ) {\n\tvec3 worldNormal = inverseTransformDirection( normal, viewMatrix );\n\tvec3 irradiance = shGetIrradianceAt( worldNormal, lightProbe );\n\treturn irradiance;\n}\nvec3 getAmbientLightIrradiance( const in vec3 ambientLightColor ) {\n\tvec3 irradiance = ambientLightColor;\n\treturn irradiance;\n}\nfloat getDistanceAttenuation( const in float lightDistance, const in float cutoffDistance, const in float decayExponent ) {\n\t#if defined ( LEGACY_LIGHTS )\n\t\tif ( cutoffDistance > 0.0 && decayExponent > 0.0 ) {\n\t\t\treturn pow( saturate( - lightDistance / cutoffDistance + 1.0 ), decayExponent );\n\t\t}\n\t\treturn 1.0;\n\t#else\n\t\tfloat distanceFalloff = 1.0 / max( pow( lightDistance, decayExponent ), 0.01 );\n\t\tif ( cutoffDistance > 0.0 ) {\n\t\t\tdistanceFalloff *= pow2( saturate( 1.0 - pow4( lightDistance / cutoffDistance ) ) );\n\t\t}\n\t\treturn distanceFalloff;\n\t#endif\n}\nfloat getSpotAttenuation( const in float coneCosine, const in float penumbraCosine, const in float angleCosine ) {\n\treturn smoothstep( coneCosine, penumbraCosine, angleCosine );\n}\n#if NUM_DIR_LIGHTS > 0\n\tstruct DirectionalLight {\n\t\tvec3 direction;\n\t\tvec3 color;\n\t};\n\tuniform DirectionalLight directionalLights[ NUM_DIR_LIGHTS ];\n\tvoid getDirectionalLightInfo( const in DirectionalLight directionalLight, out IncidentLight light ) {\n\t\tlight.color = directionalLight.color;\n\t\tlight.direction = directionalLight.direction;\n\t\tlight.visible = true;\n\t}\n#endif\n#if NUM_POINT_LIGHTS > 0\n\tstruct PointLight {\n\t\tvec3 position;\n\t\tvec3 color;\n\t\tfloat distance;\n\t\tfloat decay;\n\t};\n\tuniform PointLight pointLights[ NUM_POINT_LIGHTS ];\n\tvoid getPointLightInfo( const in PointLight pointLight, const in vec3 geometryPosition, out IncidentLight light ) {\n\t\tvec3 lVector = pointLight.position - geometryPosition;\n\t\tlight.direction = normalize( lVector );\n\t\tfloat lightDistance = length( lVector );\n\t\tlight.color = pointLight.color;\n\t\tlight.color *= getDistanceAttenuation( lightDistance, pointLight.distance, pointLight.decay );\n\t\tlight.visible = ( light.color != vec3( 0.0 ) );\n\t}\n#endif\n#if NUM_SPOT_LIGHTS > 0\n\tstruct SpotLight {\n\t\tvec3 position;\n\t\tvec3 direction;\n\t\tvec3 color;\n\t\tfloat distance;\n\t\tfloat decay;\n\t\tfloat coneCos;\n\t\tfloat penumbraCos;\n\t};\n\tuniform SpotLight spotLights[ NUM_SPOT_LIGHTS ];\n\tvoid getSpotLightInfo( const in SpotLight spotLight, const in vec3 geometryPosition, out IncidentLight light ) {\n\t\tvec3 lVector = spotLight.position - geometryPosition;\n\t\tlight.direction = normalize( lVector );\n\t\tfloat angleCos = dot( light.direction, spotLight.direction );\n\t\tfloat spotAttenuation = getSpotAttenuation( spotLight.coneCos, spotLight.penumbraCos, angleCos );\n\t\tif ( spotAttenuation > 0.0 ) {\n\t\t\tfloat lightDistance = length( lVector );\n\t\t\tlight.color = spotLight.color * spotAttenuation;\n\t\t\tlight.color *= getDistanceAttenuation( lightDistance, spotLight.distance, spotLight.decay );\n\t\t\tlight.visible = ( light.color != vec3( 0.0 ) );\n\t\t} else {\n\t\t\tlight.color = vec3( 0.0 );\n\t\t\tlight.visible = false;\n\t\t}\n\t}\n#endif\n#if NUM_RECT_AREA_LIGHTS > 0\n\tstruct RectAreaLight {\n\t\tvec3 color;\n\t\tvec3 position;\n\t\tvec3 halfWidth;\n\t\tvec3 halfHeight;\n\t};\n\tuniform sampler2D ltc_1;\tuniform sampler2D ltc_2;\n\tuniform RectAreaLight rectAreaLights[ NUM_RECT_AREA_LIGHTS ];\n#endif\n#if NUM_HEMI_LIGHTS > 0\n\tstruct HemisphereLight {\n\t\tvec3 direction;\n\t\tvec3 skyColor;\n\t\tvec3 groundColor;\n\t};\n\tuniform HemisphereLight hemisphereLights[ NUM_HEMI_LIGHTS ];\n\tvec3 getHemisphereLightIrradiance( const in HemisphereLight hemiLight, const in vec3 normal ) {\n\t\tfloat dotNL = dot( normal, hemiLight.direction );\n\t\tfloat hemiDiffuseWeight = 0.5 * dotNL + 0.5;\n\t\tvec3 irradiance = mix( hemiLight.groundColor, hemiLight.skyColor, hemiDiffuseWeight );\n\t\treturn irradiance;\n\t}\n#endif";
+var lights_pars_begin = "uniform bool receiveShadow;\nuniform vec3 ambientLightColor;\n#if defined( USE_LIGHT_PROBES )\n\tuniform vec3 lightProbe[ 9 ];\n#endif\nvec3 shGetIrradianceAt( in vec3 normal, in vec3 shCoefficients[ 9 ] ) {\n\tfloat x = normal.x, y = normal.y, z = normal.z;\n\tvec3 result = shCoefficients[ 0 ] * 0.886227;\n\tresult += shCoefficients[ 1 ] * 2.0 * 0.511664 * y;\n\tresult += shCoefficients[ 2 ] * 2.0 * 0.511664 * z;\n\tresult += shCoefficients[ 3 ] * 2.0 * 0.511664 * x;\n\tresult += shCoefficients[ 4 ] * 2.0 * 0.429043 * x * y;\n\tresult += shCoefficients[ 5 ] * 2.0 * 0.429043 * y * z;\n\tresult += shCoefficients[ 6 ] * ( 0.743125 * z * z - 0.247708 );\n\tresult += shCoefficients[ 7 ] * 2.0 * 0.429043 * x * z;\n\tresult += shCoefficients[ 8 ] * 0.429043 * ( x * x - y * y );\n\treturn result;\n}\nvec3 getLightProbeIrradiance( const in vec3 lightProbe[ 9 ], const in vec3 normal ) {\n\tvec3 worldNormal = inverseTransformDirection( normal, viewMatrix );\n\tvec3 irradiance = shGetIrradianceAt( worldNormal, lightProbe );\n\treturn irradiance;\n}\nvec3 getAmbientLightIrradiance( const in vec3 ambientLightColor ) {\n\tvec3 irradiance = ambientLightColor;\n\treturn irradiance;\n}\nfloat getDistanceAttenuation( const in float lightDistance, const in float cutoffDistance, const in float decayExponent ) {\n\tfloat distanceFalloff = 1.0 / max( pow( lightDistance, decayExponent ), 0.01 );\n\tif ( cutoffDistance > 0.0 ) {\n\t\tdistanceFalloff *= pow2( saturate( 1.0 - pow4( lightDistance / cutoffDistance ) ) );\n\t}\n\treturn distanceFalloff;\n}\nfloat getSpotAttenuation( const in float coneCosine, const in float penumbraCosine, const in float angleCosine ) {\n\treturn smoothstep( coneCosine, penumbraCosine, angleCosine );\n}\n#if NUM_DIR_LIGHTS > 0\n\tstruct DirectionalLight {\n\t\tvec3 direction;\n\t\tvec3 color;\n\t};\n\tuniform DirectionalLight directionalLights[ NUM_DIR_LIGHTS ];\n\tvoid getDirectionalLightInfo( const in DirectionalLight directionalLight, out IncidentLight light ) {\n\t\tlight.color = directionalLight.color;\n\t\tlight.direction = directionalLight.direction;\n\t\tlight.visible = true;\n\t}\n#endif\n#if NUM_POINT_LIGHTS > 0\n\tstruct PointLight {\n\t\tvec3 position;\n\t\tvec3 color;\n\t\tfloat distance;\n\t\tfloat decay;\n\t};\n\tuniform PointLight pointLights[ NUM_POINT_LIGHTS ];\n\tvoid getPointLightInfo( const in PointLight pointLight, const in vec3 geometryPosition, out IncidentLight light ) {\n\t\tvec3 lVector = pointLight.position - geometryPosition;\n\t\tlight.direction = normalize( lVector );\n\t\tfloat lightDistance = length( lVector );\n\t\tlight.color = pointLight.color;\n\t\tlight.color *= getDistanceAttenuation( lightDistance, pointLight.distance, pointLight.decay );\n\t\tlight.visible = ( light.color != vec3( 0.0 ) );\n\t}\n#endif\n#if NUM_SPOT_LIGHTS > 0\n\tstruct SpotLight {\n\t\tvec3 position;\n\t\tvec3 direction;\n\t\tvec3 color;\n\t\tfloat distance;\n\t\tfloat decay;\n\t\tfloat coneCos;\n\t\tfloat penumbraCos;\n\t};\n\tuniform SpotLight spotLights[ NUM_SPOT_LIGHTS ];\n\tvoid getSpotLightInfo( const in SpotLight spotLight, const in vec3 geometryPosition, out IncidentLight light ) {\n\t\tvec3 lVector = spotLight.position - geometryPosition;\n\t\tlight.direction = normalize( lVector );\n\t\tfloat angleCos = dot( light.direction, spotLight.direction );\n\t\tfloat spotAttenuation = getSpotAttenuation( spotLight.coneCos, spotLight.penumbraCos, angleCos );\n\t\tif ( spotAttenuation > 0.0 ) {\n\t\t\tfloat lightDistance = length( lVector );\n\t\t\tlight.color = spotLight.color * spotAttenuation;\n\t\t\tlight.color *= getDistanceAttenuation( lightDistance, spotLight.distance, spotLight.decay );\n\t\t\tlight.visible = ( light.color != vec3( 0.0 ) );\n\t\t} else {\n\t\t\tlight.color = vec3( 0.0 );\n\t\t\tlight.visible = false;\n\t\t}\n\t}\n#endif\n#if NUM_RECT_AREA_LIGHTS > 0\n\tstruct RectAreaLight {\n\t\tvec3 color;\n\t\tvec3 position;\n\t\tvec3 halfWidth;\n\t\tvec3 halfHeight;\n\t};\n\tuniform sampler2D ltc_1;\tuniform sampler2D ltc_2;\n\tuniform RectAreaLight rectAreaLights[ NUM_RECT_AREA_LIGHTS ];\n#endif\n#if NUM_HEMI_LIGHTS > 0\n\tstruct HemisphereLight {\n\t\tvec3 direction;\n\t\tvec3 skyColor;\n\t\tvec3 groundColor;\n\t};\n\tuniform HemisphereLight hemisphereLights[ NUM_HEMI_LIGHTS ];\n\tvec3 getHemisphereLightIrradiance( const in HemisphereLight hemiLight, const in vec3 normal ) {\n\t\tfloat dotNL = dot( normal, hemiLight.direction );\n\t\tfloat hemiDiffuseWeight = 0.5 * dotNL + 0.5;\n\t\tvec3 irradiance = mix( hemiLight.groundColor, hemiLight.skyColor, hemiDiffuseWeight );\n\t\treturn irradiance;\n\t}\n#endif";
 
 var envmap_physical_pars_fragment = "#ifdef USE_ENVMAP\n\tvec3 getIBLIrradiance( const in vec3 normal ) {\n\t\t#ifdef ENVMAP_TYPE_CUBE_UV\n\t\t\tvec3 worldNormal = inverseTransformDirection( normal, viewMatrix );\n\t\t\tvec4 envMapColor = textureCubeUV( envMap, envMapRotation * worldNormal, 1.0 );\n\t\t\treturn PI * envMapColor.rgb * envMapIntensity;\n\t\t#else\n\t\t\treturn vec3( 0.0 );\n\t\t#endif\n\t}\n\tvec3 getIBLRadiance( const in vec3 viewDir, const in vec3 normal, const in float roughness ) {\n\t\t#ifdef ENVMAP_TYPE_CUBE_UV\n\t\t\tvec3 reflectVec = reflect( - viewDir, normal );\n\t\t\treflectVec = normalize( mix( reflectVec, normal, roughness * roughness) );\n\t\t\treflectVec = inverseTransformDirection( reflectVec, viewMatrix );\n\t\t\tvec4 envMapColor = textureCubeUV( envMap, envMapRotation * reflectVec, roughness );\n\t\t\treturn envMapColor.rgb * envMapIntensity;\n\t\t#else\n\t\t\treturn vec3( 0.0 );\n\t\t#endif\n\t}\n\t#ifdef USE_ANISOTROPY\n\t\tvec3 getIBLAnisotropyRadiance( const in vec3 viewDir, const in vec3 normal, const in float roughness, const in vec3 bitangent, const in float anisotropy ) {\n\t\t\t#ifdef ENVMAP_TYPE_CUBE_UV\n\t\t\t\tvec3 bentNormal = cross( bitangent, viewDir );\n\t\t\t\tbentNormal = normalize( cross( bentNormal, bitangent ) );\n\t\t\t\tbentNormal = normalize( mix( bentNormal, normal, pow2( pow2( 1.0 - anisotropy * ( 1.0 - roughness ) ) ) ) );\n\t\t\t\treturn getIBLRadiance( viewDir, bentNormal, roughness );\n\t\t\t#else\n\t\t\t\treturn vec3( 0.0 );\n\t\t\t#endif\n\t\t}\n\t#endif\n#endif";
 
@@ -14656,15 +14705,15 @@ var metalnessmap_fragment = "float metalnessFactor = metalness;\n#ifdef USE_META
 
 var metalnessmap_pars_fragment = "#ifdef USE_METALNESSMAP\n\tuniform sampler2D metalnessMap;\n#endif";
 
-var morphinstance_vertex = "#ifdef USE_INSTANCING_MORPH\n\tfloat morphTargetInfluences[MORPHTARGETS_COUNT];\n\tfloat morphTargetBaseInfluence = texelFetch( morphTexture, ivec2( 0, gl_InstanceID ), 0 ).r;\n\tfor ( int i = 0; i < MORPHTARGETS_COUNT; i ++ ) {\n\t\tmorphTargetInfluences[i] =  texelFetch( morphTexture, ivec2( i + 1, gl_InstanceID ), 0 ).r;\n\t}\n#endif";
+var morphinstance_vertex = "#ifdef USE_INSTANCING_MORPH\n\tfloat morphTargetInfluences[ MORPHTARGETS_COUNT ];\n\tfloat morphTargetBaseInfluence = texelFetch( morphTexture, ivec2( 0, gl_InstanceID ), 0 ).r;\n\tfor ( int i = 0; i < MORPHTARGETS_COUNT; i ++ ) {\n\t\tmorphTargetInfluences[i] =  texelFetch( morphTexture, ivec2( i + 1, gl_InstanceID ), 0 ).r;\n\t}\n#endif";
 
-var morphcolor_vertex = "#if defined( USE_MORPHCOLORS ) && defined( MORPHTARGETS_TEXTURE )\n\tvColor *= morphTargetBaseInfluence;\n\tfor ( int i = 0; i < MORPHTARGETS_COUNT; i ++ ) {\n\t\t#if defined( USE_COLOR_ALPHA )\n\t\t\tif ( morphTargetInfluences[ i ] != 0.0 ) vColor += getMorph( gl_VertexID, i, 2 ) * morphTargetInfluences[ i ];\n\t\t#elif defined( USE_COLOR )\n\t\t\tif ( morphTargetInfluences[ i ] != 0.0 ) vColor += getMorph( gl_VertexID, i, 2 ).rgb * morphTargetInfluences[ i ];\n\t\t#endif\n\t}\n#endif";
+var morphcolor_vertex = "#if defined( USE_MORPHCOLORS )\n\tvColor *= morphTargetBaseInfluence;\n\tfor ( int i = 0; i < MORPHTARGETS_COUNT; i ++ ) {\n\t\t#if defined( USE_COLOR_ALPHA )\n\t\t\tif ( morphTargetInfluences[ i ] != 0.0 ) vColor += getMorph( gl_VertexID, i, 2 ) * morphTargetInfluences[ i ];\n\t\t#elif defined( USE_COLOR )\n\t\t\tif ( morphTargetInfluences[ i ] != 0.0 ) vColor += getMorph( gl_VertexID, i, 2 ).rgb * morphTargetInfluences[ i ];\n\t\t#endif\n\t}\n#endif";
 
-var morphnormal_vertex = "#ifdef USE_MORPHNORMALS\n\tobjectNormal *= morphTargetBaseInfluence;\n\t#ifdef MORPHTARGETS_TEXTURE\n\t\tfor ( int i = 0; i < MORPHTARGETS_COUNT; i ++ ) {\n\t\t\tif ( morphTargetInfluences[ i ] != 0.0 ) objectNormal += getMorph( gl_VertexID, i, 1 ).xyz * morphTargetInfluences[ i ];\n\t\t}\n\t#else\n\t\tobjectNormal += morphNormal0 * morphTargetInfluences[ 0 ];\n\t\tobjectNormal += morphNormal1 * morphTargetInfluences[ 1 ];\n\t\tobjectNormal += morphNormal2 * morphTargetInfluences[ 2 ];\n\t\tobjectNormal += morphNormal3 * morphTargetInfluences[ 3 ];\n\t#endif\n#endif";
+var morphnormal_vertex = "#ifdef USE_MORPHNORMALS\n\tobjectNormal *= morphTargetBaseInfluence;\n\tfor ( int i = 0; i < MORPHTARGETS_COUNT; i ++ ) {\n\t\tif ( morphTargetInfluences[ i ] != 0.0 ) objectNormal += getMorph( gl_VertexID, i, 1 ).xyz * morphTargetInfluences[ i ];\n\t}\n#endif";
 
-var morphtarget_pars_vertex = "#ifdef USE_MORPHTARGETS\n\t#ifndef USE_INSTANCING_MORPH\n\t\tuniform float morphTargetBaseInfluence;\n\t#endif\n\t#ifdef MORPHTARGETS_TEXTURE\n\t\t#ifndef USE_INSTANCING_MORPH\n\t\t\tuniform float morphTargetInfluences[ MORPHTARGETS_COUNT ];\n\t\t#endif\n\t\tuniform sampler2DArray morphTargetsTexture;\n\t\tuniform ivec2 morphTargetsTextureSize;\n\t\tvec4 getMorph( const in int vertexIndex, const in int morphTargetIndex, const in int offset ) {\n\t\t\tint texelIndex = vertexIndex * MORPHTARGETS_TEXTURE_STRIDE + offset;\n\t\t\tint y = texelIndex / morphTargetsTextureSize.x;\n\t\t\tint x = texelIndex - y * morphTargetsTextureSize.x;\n\t\t\tivec3 morphUV = ivec3( x, y, morphTargetIndex );\n\t\t\treturn texelFetch( morphTargetsTexture, morphUV, 0 );\n\t\t}\n\t#else\n\t\t#ifndef USE_MORPHNORMALS\n\t\t\tuniform float morphTargetInfluences[ 8 ];\n\t\t#else\n\t\t\tuniform float morphTargetInfluences[ 4 ];\n\t\t#endif\n\t#endif\n#endif";
+var morphtarget_pars_vertex = "#ifdef USE_MORPHTARGETS\n\t#ifndef USE_INSTANCING_MORPH\n\t\tuniform float morphTargetBaseInfluence;\n\t\tuniform float morphTargetInfluences[ MORPHTARGETS_COUNT ];\n\t#endif\n\tuniform sampler2DArray morphTargetsTexture;\n\tuniform ivec2 morphTargetsTextureSize;\n\tvec4 getMorph( const in int vertexIndex, const in int morphTargetIndex, const in int offset ) {\n\t\tint texelIndex = vertexIndex * MORPHTARGETS_TEXTURE_STRIDE + offset;\n\t\tint y = texelIndex / morphTargetsTextureSize.x;\n\t\tint x = texelIndex - y * morphTargetsTextureSize.x;\n\t\tivec3 morphUV = ivec3( x, y, morphTargetIndex );\n\t\treturn texelFetch( morphTargetsTexture, morphUV, 0 );\n\t}\n#endif";
 
-var morphtarget_vertex = "#ifdef USE_MORPHTARGETS\n\ttransformed *= morphTargetBaseInfluence;\n\t#ifdef MORPHTARGETS_TEXTURE\n\t\tfor ( int i = 0; i < MORPHTARGETS_COUNT; i ++ ) {\n\t\t\tif ( morphTargetInfluences[ i ] != 0.0 ) transformed += getMorph( gl_VertexID, i, 0 ).xyz * morphTargetInfluences[ i ];\n\t\t}\n\t#else\n\t\ttransformed += morphTarget0 * morphTargetInfluences[ 0 ];\n\t\ttransformed += morphTarget1 * morphTargetInfluences[ 1 ];\n\t\ttransformed += morphTarget2 * morphTargetInfluences[ 2 ];\n\t\ttransformed += morphTarget3 * morphTargetInfluences[ 3 ];\n\t\t#ifndef USE_MORPHNORMALS\n\t\t\ttransformed += morphTarget4 * morphTargetInfluences[ 4 ];\n\t\t\ttransformed += morphTarget5 * morphTargetInfluences[ 5 ];\n\t\t\ttransformed += morphTarget6 * morphTargetInfluences[ 6 ];\n\t\t\ttransformed += morphTarget7 * morphTargetInfluences[ 7 ];\n\t\t#endif\n\t#endif\n#endif";
+var morphtarget_vertex = "#ifdef USE_MORPHTARGETS\n\ttransformed *= morphTargetBaseInfluence;\n\tfor ( int i = 0; i < MORPHTARGETS_COUNT; i ++ ) {\n\t\tif ( morphTargetInfluences[ i ] != 0.0 ) transformed += getMorph( gl_VertexID, i, 0 ).xyz * morphTargetInfluences[ i ];\n\t}\n#endif";
 
 var normal_fragment_begin = "float faceDirection = gl_FrontFacing ? 1.0 : - 1.0;\n#ifdef FLAT_SHADED\n\tvec3 fdx = dFdx( vViewPosition );\n\tvec3 fdy = dFdy( vViewPosition );\n\tvec3 normal = normalize( cross( fdx, fdy ) );\n#else\n\tvec3 normal = normalize( vNormal );\n\t#ifdef DOUBLE_SIDED\n\t\tnormal *= faceDirection;\n\t#endif\n#endif\n#if defined( USE_NORMALMAP_TANGENTSPACE ) || defined( USE_CLEARCOAT_NORMALMAP ) || defined( USE_ANISOTROPY )\n\t#ifdef USE_TANGENT\n\t\tmat3 tbn = mat3( normalize( vTangent ), normalize( vBitangent ), normal );\n\t#else\n\t\tmat3 tbn = getTangentFrame( - vViewPosition, normal,\n\t\t#if defined( USE_NORMALMAP )\n\t\t\tvNormalMapUv\n\t\t#elif defined( USE_CLEARCOAT_NORMALMAP )\n\t\t\tvClearcoatNormalMapUv\n\t\t#else\n\t\t\tvUv\n\t\t#endif\n\t\t);\n\t#endif\n\t#if defined( DOUBLE_SIDED ) && ! defined( FLAT_SHADED )\n\t\ttbn[0] *= faceDirection;\n\t\ttbn[1] *= faceDirection;\n\t#endif\n#endif\n#ifdef USE_CLEARCOAT_NORMALMAP\n\t#ifdef USE_TANGENT\n\t\tmat3 tbn2 = mat3( normalize( vTangent ), normalize( vBitangent ), normal );\n\t#else\n\t\tmat3 tbn2 = getTangentFrame( - vViewPosition, normal, vClearcoatNormalMapUv );\n\t#endif\n\t#if defined( DOUBLE_SIDED ) && ! defined( FLAT_SHADED )\n\t\ttbn2[0] *= faceDirection;\n\t\ttbn2[1] *= faceDirection;\n\t#endif\n#endif\nvec3 nonPerturbedNormal = normal;";
 
@@ -15588,6 +15637,12 @@ function WebGLBackground( renderer, cubemaps, cubeuvmaps, state, objects, alpha,
 		}
 
 		if ( renderer.autoClear || forceClear ) {
+
+			// buffers might not be writable which is required to ensure a correct clear
+
+			state.buffers.depth.setTest( true );
+			state.buffers.depth.setMask( true );
+			state.buffers.color.setMask( true );
 
 			renderer.clear( renderer.autoClearColor, renderer.autoClearDepth, renderer.autoClearStencil );
 
@@ -18102,7 +18157,7 @@ function WebGLExtensions( gl ) {
 
 			if ( extension === null ) {
 
-				console.warn( 'THREE.WebGLRenderer: ' + name + ' extension not supported.' );
+				warnOnce( 'THREE.WebGLRenderer: ' + name + ' extension not supported.' );
 
 			}
 
@@ -18512,8 +18567,7 @@ function WebGLMorphtargets( gl, capabilities, textures ) {
 
 		const objectInfluences = object.morphTargetInfluences;
 
-		// instead of using attributes, the WebGL 2 code path encodes morph targets
-		// into an array of data textures. Each layer represents a single morph target.
+		// the following encodes morph targets into an array of data textures. Each layer represents a single morph target.
 
 		const morphAttribute = geometry.morphAttributes.position || geometry.morphAttributes.normal || geometry.morphAttributes.color;
 		const morphTargetsCount = ( morphAttribute !== undefined ) ? morphAttribute.length : 0;
@@ -18757,9 +18811,7 @@ function WebGLObjects( gl, geometries, attributes, info ) {
 
 class DepthTexture extends Texture {
 
-	constructor( width, height, type, mapping, wrapS, wrapT, magFilter, minFilter, anisotropy, format ) {
-
-		format = format !== undefined ? format : DepthFormat;
+	constructor( width, height, type, mapping, wrapS, wrapT, magFilter, minFilter, anisotropy, format = DepthFormat ) {
 
 		if ( format !== DepthFormat && format !== DepthStencilFormat ) {
 
@@ -20487,6 +20539,7 @@ function WebGLProgram( renderer, cacheKey, parameters, bindingStates ) {
 
 			parameters.extensionClipCullDistance ? '#define USE_CLIP_DISTANCE' : '',
 			parameters.batching ? '#define USE_BATCHING' : '',
+			parameters.batchingColor ? '#define USE_BATCHING_COLOR' : '',
 			parameters.instancing ? '#define USE_INSTANCING' : '',
 			parameters.instancingColor ? '#define USE_INSTANCING_COLOR' : '',
 			parameters.instancingMorph ? '#define USE_INSTANCING_MORPH' : '',
@@ -20583,7 +20636,6 @@ function WebGLProgram( renderer, cacheKey, parameters, bindingStates ) {
 			parameters.morphTargets ? '#define USE_MORPHTARGETS' : '',
 			parameters.morphNormals && parameters.flatShading === false ? '#define USE_MORPHNORMALS' : '',
 			( parameters.morphColors ) ? '#define USE_MORPHCOLORS' : '',
-			( parameters.morphTargetsCount > 0 ) ? '#define MORPHTARGETS_TEXTURE' : '',
 			( parameters.morphTargetsCount > 0 ) ? '#define MORPHTARGETS_TEXTURE_STRIDE ' + parameters.morphTextureStride : '',
 			( parameters.morphTargetsCount > 0 ) ? '#define MORPHTARGETS_COUNT ' + parameters.morphTargetsCount : '',
 			parameters.doubleSided ? '#define DOUBLE_SIDED' : '',
@@ -20595,8 +20647,6 @@ function WebGLProgram( renderer, cacheKey, parameters, bindingStates ) {
 			parameters.sizeAttenuation ? '#define USE_SIZEATTENUATION' : '',
 
 			parameters.numLightProbes > 0 ? '#define USE_LIGHT_PROBES' : '',
-
-			parameters.useLegacyLights ? '#define LEGACY_LIGHTS' : '',
 
 			parameters.logarithmicDepthBuffer ? '#define USE_LOGDEPTHBUF' : '',
 
@@ -20661,31 +20711,6 @@ function WebGLProgram( renderer, cacheKey, parameters, bindingStates ) {
 			'#elif defined( USE_COLOR )',
 
 			'	attribute vec3 color;',
-
-			'#endif',
-
-			'#if ( defined( USE_MORPHTARGETS ) && ! defined( MORPHTARGETS_TEXTURE ) )',
-
-			'	attribute vec3 morphTarget0;',
-			'	attribute vec3 morphTarget1;',
-			'	attribute vec3 morphTarget2;',
-			'	attribute vec3 morphTarget3;',
-
-			'	#ifdef USE_MORPHNORMALS',
-
-			'		attribute vec3 morphNormal0;',
-			'		attribute vec3 morphNormal1;',
-			'		attribute vec3 morphNormal2;',
-			'		attribute vec3 morphNormal3;',
-
-			'	#else',
-
-			'		attribute vec3 morphTarget4;',
-			'		attribute vec3 morphTarget5;',
-			'		attribute vec3 morphTarget6;',
-			'		attribute vec3 morphTarget7;',
-
-			'	#endif',
 
 			'#endif',
 
@@ -20764,7 +20789,7 @@ function WebGLProgram( renderer, cacheKey, parameters, bindingStates ) {
 			parameters.thicknessMap ? '#define USE_THICKNESSMAP' : '',
 
 			parameters.vertexTangents && parameters.flatShading === false ? '#define USE_TANGENT' : '',
-			parameters.vertexColors || parameters.instancingColor ? '#define USE_COLOR' : '',
+			parameters.vertexColors || parameters.instancingColor || parameters.batchingColor ? '#define USE_COLOR' : '',
 			parameters.vertexAlphas ? '#define USE_COLOR_ALPHA' : '',
 			parameters.vertexUv1s ? '#define USE_UV1' : '',
 			parameters.vertexUv2s ? '#define USE_UV2' : '',
@@ -20785,8 +20810,6 @@ function WebGLProgram( renderer, cacheKey, parameters, bindingStates ) {
 			parameters.premultipliedAlpha ? '#define PREMULTIPLIED_ALPHA' : '',
 
 			parameters.numLightProbes > 0 ? '#define USE_LIGHT_PROBES' : '',
-
-			parameters.useLegacyLights ? '#define LEGACY_LIGHTS' : '',
 
 			parameters.decodeVideoTexture ? '#define DECODE_VIDEO_TEXTURE' : '',
 
@@ -21360,6 +21383,7 @@ function WebGLPrograms( renderer, cubemaps, cubeuvmaps, extensions, capabilities
 			precision: precision,
 
 			batching: IS_BATCHEDMESH,
+			batchingColor: IS_BATCHEDMESH && object._colorsTexture !== null,
 			instancing: IS_INSTANCEDMESH,
 			instancingColor: IS_INSTANCEDMESH && object.instanceColor !== null,
 			instancingMorph: IS_INSTANCEDMESH && object.morphTexture !== null,
@@ -21504,7 +21528,6 @@ function WebGLPrograms( renderer, cubemaps, cubeuvmaps, extensions, capabilities
 			shadowMapType: renderer.shadowMap.type,
 
 			toneMapping: toneMapping,
-			useLegacyLights: renderer._useLegacyLights,
 
 			decodeVideoTexture: HAS_MAP && ( material.map.isVideoTexture === true ) && ( ColorManagement.getTransfer( material.map.colorSpace ) === SRGBTransfer ),
 
@@ -21678,6 +21701,8 @@ function WebGLPrograms( renderer, cubemaps, cubeuvmaps, extensions, capabilities
 			_programLayers.enable( 19 );
 		if ( parameters.dispersion )
 			_programLayers.enable( 20 );
+		if ( parameters.batchingColor )
+			_programLayers.enable( 21 );
 
 		array.push( _programLayers.mask );
 		_programLayers.disableAll();
@@ -21702,28 +21727,26 @@ function WebGLPrograms( renderer, cubemaps, cubeuvmaps, extensions, capabilities
 			_programLayers.enable( 8 );
 		if ( parameters.shadowMapEnabled )
 			_programLayers.enable( 9 );
-		if ( parameters.useLegacyLights )
-			_programLayers.enable( 10 );
 		if ( parameters.doubleSided )
-			_programLayers.enable( 11 );
+			_programLayers.enable( 10 );
 		if ( parameters.flipSided )
-			_programLayers.enable( 12 );
+			_programLayers.enable( 11 );
 		if ( parameters.useDepthPacking )
-			_programLayers.enable( 13 );
+			_programLayers.enable( 12 );
 		if ( parameters.dithering )
-			_programLayers.enable( 14 );
+			_programLayers.enable( 13 );
 		if ( parameters.transmission )
-			_programLayers.enable( 15 );
+			_programLayers.enable( 14 );
 		if ( parameters.sheen )
-			_programLayers.enable( 16 );
+			_programLayers.enable( 15 );
 		if ( parameters.opaque )
-			_programLayers.enable( 17 );
+			_programLayers.enable( 16 );
 		if ( parameters.pointsUvs )
-			_programLayers.enable( 18 );
+			_programLayers.enable( 17 );
 		if ( parameters.decodeVideoTexture )
-			_programLayers.enable( 19 );
+			_programLayers.enable( 18 );
 		if ( parameters.alphaToCoverage )
-			_programLayers.enable( 20 );
+			_programLayers.enable( 19 );
 
 		array.push( _programLayers.mask );
 
@@ -22305,7 +22328,7 @@ function WebGLLights( extensions ) {
 	const matrix4 = new Matrix4();
 	const matrix42 = new Matrix4();
 
-	function setup( lights, useLegacyLights ) {
+	function setup( lights ) {
 
 		let r = 0, g = 0, b = 0;
 
@@ -22328,9 +22351,6 @@ function WebGLLights( extensions ) {
 		// ordering : [shadow casting + map texturing, map texturing, shadow casting, none ]
 		lights.sort( shadowCastingAndTexturingLightsFirst );
 
-		// artist-friendly light intensity scaling factor
-		const scaleFactor = ( useLegacyLights === true ) ? Math.PI : 1;
-
 		for ( let i = 0, l = lights.length; i < l; i ++ ) {
 
 			const light = lights[ i ];
@@ -22343,9 +22363,9 @@ function WebGLLights( extensions ) {
 
 			if ( light.isAmbientLight ) {
 
-				r += color.r * intensity * scaleFactor;
-				g += color.g * intensity * scaleFactor;
-				b += color.b * intensity * scaleFactor;
+				r += color.r * intensity;
+				g += color.g * intensity;
+				b += color.b * intensity;
 
 			} else if ( light.isLightProbe ) {
 
@@ -22361,7 +22381,7 @@ function WebGLLights( extensions ) {
 
 				const uniforms = cache.get( light );
 
-				uniforms.color.copy( light.color ).multiplyScalar( light.intensity * scaleFactor );
+				uniforms.color.copy( light.color ).multiplyScalar( light.intensity );
 
 				if ( light.castShadow ) {
 
@@ -22392,7 +22412,7 @@ function WebGLLights( extensions ) {
 
 				uniforms.position.setFromMatrixPosition( light.matrixWorld );
 
-				uniforms.color.copy( color ).multiplyScalar( intensity * scaleFactor );
+				uniforms.color.copy( color ).multiplyScalar( intensity );
 				uniforms.distance = distance;
 
 				uniforms.coneCos = Math.cos( light.angle );
@@ -22453,7 +22473,7 @@ function WebGLLights( extensions ) {
 
 				const uniforms = cache.get( light );
 
-				uniforms.color.copy( light.color ).multiplyScalar( light.intensity * scaleFactor );
+				uniforms.color.copy( light.color ).multiplyScalar( light.intensity );
 				uniforms.distance = light.distance;
 				uniforms.decay = light.decay;
 
@@ -22486,8 +22506,8 @@ function WebGLLights( extensions ) {
 
 				const uniforms = cache.get( light );
 
-				uniforms.skyColor.copy( light.color ).multiplyScalar( intensity * scaleFactor );
-				uniforms.groundColor.copy( light.groundColor ).multiplyScalar( intensity * scaleFactor );
+				uniforms.skyColor.copy( light.color ).multiplyScalar( intensity );
+				uniforms.groundColor.copy( light.groundColor ).multiplyScalar( intensity );
 
 				state.hemi[ hemiLength ] = uniforms;
 
@@ -22688,9 +22708,9 @@ function WebGLRenderState( extensions ) {
 
 	}
 
-	function setupLights( useLegacyLights ) {
+	function setupLights() {
 
-		lights.setup( lightsArray, useLegacyLights );
+		lights.setup( lightsArray );
 
 	}
 
@@ -24733,6 +24753,48 @@ function WebGLTextures( _gl, extensions, state, properties, capabilities, utils,
 
 	}
 
+	function getInternalDepthFormat( useStencil, depthType ) {
+
+		let glInternalFormat;
+		if ( useStencil ) {
+
+			if ( depthType === null || depthType === UnsignedIntType || depthType === UnsignedInt248Type ) {
+
+				glInternalFormat = _gl.DEPTH24_STENCIL8;
+
+			} else if ( depthType === FloatType ) {
+
+				glInternalFormat = _gl.DEPTH32F_STENCIL8;
+
+			} else if ( depthType === UnsignedShortType ) {
+
+				glInternalFormat = _gl.DEPTH24_STENCIL8;
+				console.warn( 'DepthTexture: 16 bit depth attachment is not supported with stencil. Using 24-bit attachment.' );
+
+			}
+
+		} else {
+
+			if ( depthType === null || depthType === UnsignedIntType || depthType === UnsignedInt248Type ) {
+
+				glInternalFormat = _gl.DEPTH_COMPONENT24;
+
+			} else if ( depthType === FloatType ) {
+
+				glInternalFormat = _gl.DEPTH_COMPONENT32F;
+
+			} else if ( depthType === UnsignedShortType ) {
+
+				glInternalFormat = _gl.DEPTH_COMPONENT16;
+
+			}
+
+		}
+
+		return glInternalFormat;
+
+	}
+
 	function getMipLevels( texture, image ) {
 
 		if ( textureNeedsGenerateMipmaps( texture ) === true || ( texture.isFramebufferTexture && texture.minFilter !== NearestFilter && texture.minFilter !== LinearFilter ) ) {
@@ -25247,23 +25309,7 @@ function WebGLTextures( _gl, extensions, state, properties, capabilities, utils,
 
 			if ( texture.isDepthTexture ) {
 
-				// populate depth texture with dummy data
-
-				glInternalFormat = _gl.DEPTH_COMPONENT16;
-
-				if ( texture.type === FloatType ) {
-
-					glInternalFormat = _gl.DEPTH_COMPONENT32F;
-
-				} else if ( texture.type === UnsignedIntType ) {
-
-					glInternalFormat = _gl.DEPTH_COMPONENT24;
-
-				} else if ( texture.type === UnsignedInt248Type ) {
-
-					glInternalFormat = _gl.DEPTH24_STENCIL8;
-
-				}
+				glInternalFormat = getInternalDepthFormat( texture.format === DepthStencilFormat, texture.type );
 
 				//
 
@@ -25363,7 +25409,22 @@ function WebGLTextures( _gl, extensions, state, properties, capabilities, utils,
 
 									if ( dataReady ) {
 
-										state.compressedTexSubImage3D( _gl.TEXTURE_2D_ARRAY, i, 0, 0, 0, mipmap.width, mipmap.height, image.depth, glFormat, mipmap.data, 0, 0 );
+										if ( texture.layerUpdates.size > 0 ) {
+
+											for ( const layerIndex of texture.layerUpdates ) {
+
+												const layerSize = mipmap.width * mipmap.height;
+												state.compressedTexSubImage3D( _gl.TEXTURE_2D_ARRAY, i, 0, 0, layerIndex, mipmap.width, mipmap.height, 1, glFormat, mipmap.data.slice( layerSize * layerIndex, layerSize * ( layerIndex + 1 ) ), 0, 0 );
+
+											}
+
+											texture.clearLayerUpdates();
+
+										} else {
+
+											state.compressedTexSubImage3D( _gl.TEXTURE_2D_ARRAY, i, 0, 0, 0, mipmap.width, mipmap.height, image.depth, glFormat, mipmap.data, 0, 0 );
+
+										}
 
 									}
 
@@ -25469,7 +25530,72 @@ function WebGLTextures( _gl, extensions, state, properties, capabilities, utils,
 
 					if ( dataReady ) {
 
-						state.texSubImage3D( _gl.TEXTURE_2D_ARRAY, 0, 0, 0, 0, image.width, image.height, image.depth, glFormat, glType, image.data );
+						if ( texture.layerUpdates.size > 0 ) {
+
+							// When type is GL_UNSIGNED_BYTE, each of these bytes is
+							// interpreted as one color component, depending on format. When
+							// type is one of GL_UNSIGNED_SHORT_5_6_5,
+							// GL_UNSIGNED_SHORT_4_4_4_4, GL_UNSIGNED_SHORT_5_5_5_1, each
+							// unsigned value is interpreted as containing all the components
+							// for a single pixel, with the color components arranged
+							// according to format.
+							//
+							// See https://registry.khronos.org/OpenGL-Refpages/es1.1/xhtml/glTexImage2D.xml
+							let texelSize;
+							switch ( glType ) {
+
+								case _gl.UNSIGNED_BYTE:
+									switch ( glFormat ) {
+
+										case _gl.ALPHA:
+											texelSize = 1;
+											break;
+										case _gl.LUMINANCE:
+											texelSize = 1;
+											break;
+										case _gl.LUMINANCE_ALPHA:
+											texelSize = 2;
+											break;
+										case _gl.RGB:
+											texelSize = 3;
+											break;
+										case _gl.RGBA:
+											texelSize = 4;
+											break;
+
+										default:
+											throw new Error( `Unknown texel size for format ${glFormat}.` );
+
+									}
+
+									break;
+
+								case _gl.UNSIGNED_SHORT_4_4_4_4:
+								case _gl.UNSIGNED_SHORT_5_5_5_1:
+								case _gl.UNSIGNED_SHORT_5_6_5:
+									texelSize = 1;
+									break;
+
+								default:
+									throw new Error( `Unknown texel size for type ${glType}.` );
+
+							}
+
+							const layerSize = image.width * image.height * texelSize;
+
+							for ( const layerIndex of texture.layerUpdates ) {
+
+								state.texSubImage3D( _gl.TEXTURE_2D_ARRAY, 0, 0, 0, layerIndex, image.width, image.height, 1, glFormat, glType, image.data.slice( layerSize * layerIndex, layerSize * ( layerIndex + 1 ) ) );
+
+							}
+
+							texture.clearLayerUpdates();
+
+						} else {
+
+							state.texSubImage3D( _gl.TEXTURE_2D_ARRAY, 0, 0, 0, 0, image.width, image.height, image.depth, glFormat, glType, image.data );
+
+						}
 
 					}
 
@@ -25890,45 +26016,29 @@ function WebGLTextures( _gl, extensions, state, properties, capabilities, utils,
 
 	}
 
-
 	// Setup storage for internal depth/stencil buffers and bind to correct framebuffer
 	function setupRenderBufferStorage( renderbuffer, renderTarget, isMultisample ) {
 
 		_gl.bindRenderbuffer( _gl.RENDERBUFFER, renderbuffer );
 
-		if ( renderTarget.depthBuffer && ! renderTarget.stencilBuffer ) {
+		if ( renderTarget.depthBuffer ) {
 
-			let glInternalFormat = _gl.DEPTH_COMPONENT24;
+			// retrieve the depth attachment types
+			const depthTexture = renderTarget.depthTexture;
+			const depthType = depthTexture && depthTexture.isDepthTexture ? depthTexture.type : null;
+			const glInternalFormat = getInternalDepthFormat( renderTarget.stencilBuffer, depthType );
+			const glAttachmentType = renderTarget.stencilBuffer ? _gl.DEPTH_STENCIL_ATTACHMENT : _gl.DEPTH_ATTACHMENT;
 
-			if ( isMultisample || useMultisampledRTT( renderTarget ) ) {
+			// set up the attachment
+			const samples = getRenderTargetSamples( renderTarget );
+			const isUseMultisampledRTT = useMultisampledRTT( renderTarget );
+			if ( isUseMultisampledRTT ) {
 
-				const depthTexture = renderTarget.depthTexture;
+				multisampledRTTExt.renderbufferStorageMultisampleEXT( _gl.RENDERBUFFER, samples, glInternalFormat, renderTarget.width, renderTarget.height );
 
-				if ( depthTexture && depthTexture.isDepthTexture ) {
+			} else if ( isMultisample ) {
 
-					if ( depthTexture.type === FloatType ) {
-
-						glInternalFormat = _gl.DEPTH_COMPONENT32F;
-
-					} else if ( depthTexture.type === UnsignedIntType ) {
-
-						glInternalFormat = _gl.DEPTH_COMPONENT24;
-
-					}
-
-				}
-
-				const samples = getRenderTargetSamples( renderTarget );
-
-				if ( useMultisampledRTT( renderTarget ) ) {
-
-					multisampledRTTExt.renderbufferStorageMultisampleEXT( _gl.RENDERBUFFER, samples, glInternalFormat, renderTarget.width, renderTarget.height );
-
-				} else {
-
-					_gl.renderbufferStorageMultisample( _gl.RENDERBUFFER, samples, glInternalFormat, renderTarget.width, renderTarget.height );
-
-				}
+				_gl.renderbufferStorageMultisample( _gl.RENDERBUFFER, samples, glInternalFormat, renderTarget.width, renderTarget.height );
 
 			} else {
 
@@ -25936,28 +26046,7 @@ function WebGLTextures( _gl, extensions, state, properties, capabilities, utils,
 
 			}
 
-			_gl.framebufferRenderbuffer( _gl.FRAMEBUFFER, _gl.DEPTH_ATTACHMENT, _gl.RENDERBUFFER, renderbuffer );
-
-		} else if ( renderTarget.depthBuffer && renderTarget.stencilBuffer ) {
-
-			const samples = getRenderTargetSamples( renderTarget );
-
-			if ( isMultisample && useMultisampledRTT( renderTarget ) === false ) {
-
-				_gl.renderbufferStorageMultisample( _gl.RENDERBUFFER, samples, _gl.DEPTH24_STENCIL8, renderTarget.width, renderTarget.height );
-
-			} else if ( useMultisampledRTT( renderTarget ) ) {
-
-				multisampledRTTExt.renderbufferStorageMultisampleEXT( _gl.RENDERBUFFER, samples, _gl.DEPTH24_STENCIL8, renderTarget.width, renderTarget.height );
-
-			} else {
-
-				_gl.renderbufferStorage( _gl.RENDERBUFFER, _gl.DEPTH_STENCIL, renderTarget.width, renderTarget.height );
-
-			}
-
-
-			_gl.framebufferRenderbuffer( _gl.FRAMEBUFFER, _gl.DEPTH_STENCIL_ATTACHMENT, _gl.RENDERBUFFER, renderbuffer );
+			_gl.framebufferRenderbuffer( _gl.FRAMEBUFFER, glAttachmentType, _gl.RENDERBUFFER, renderbuffer );
 
 		} else {
 
@@ -27230,7 +27319,7 @@ class WebXRDepthSensing {
 
 	}
 
-	render( renderer, cameraXR ) {
+	getMesh( cameraXR ) {
 
 		if ( this.texture !== null ) {
 
@@ -27251,9 +27340,9 @@ class WebXRDepthSensing {
 
 			}
 
-			renderer.render( this.mesh, cameraXR );
-
 		}
+
+		return this.mesh;
 
 	}
 
@@ -27918,6 +28007,12 @@ class WebXRManager extends EventDispatcher {
 
 		};
 
+		this.getDepthSensingMesh = function () {
+
+			return depthSensing.getMesh( cameraXR );
+
+		};
+
 		// Animation Loop
 
 		let onAnimationFrameCallback = null;
@@ -28042,8 +28137,6 @@ class WebXRManager extends EventDispatcher {
 				}
 
 			}
-
-			depthSensing.render( renderer, cameraXR );
 
 			if ( onAnimationFrameCallback ) onAnimationFrameCallback( time, frame );
 
@@ -28319,11 +28412,7 @@ function WebGLMaterials( renderer, properties ) {
 		if ( material.lightMap ) {
 
 			uniforms.lightMap.value = material.lightMap;
-
-			// artist-friendly light intensity scaling factor
-			const scaleFactor = ( renderer._useLegacyLights === true ) ? Math.PI : 1;
-
-			uniforms.lightMapIntensity.value = material.lightMapIntensity * scaleFactor;
+			uniforms.lightMapIntensity.value = material.lightMapIntensity;
 
 			refreshTransformUniform( material.lightMap, uniforms.lightMapTransform );
 
@@ -29140,10 +29229,6 @@ class WebGLRenderer {
 
 		this._outputColorSpace = SRGBColorSpace;
 
-		// physical lights
-
-		this._useLegacyLights = false;
-
 		// tone mapping
 
 		this.toneMapping = NoToneMapping;
@@ -29200,6 +29285,8 @@ class WebGLRenderer {
 		const _vector3 = new Vector3();
 
 		const _emptyScene = { background: null, fog: null, environment: null, overrideMaterial: null, isScene: true };
+
+		let _renderBackground = false;
 
 		function getTargetPixelRatio() {
 
@@ -29948,7 +30035,7 @@ class WebGLRenderer {
 
 			}
 
-			currentRenderState.setupLights( _this._useLegacyLights );
+			currentRenderState.setupLights();
 
 			// Only initialize materials in the new scene, not the targetScene.
 
@@ -30138,6 +30225,18 @@ class WebGLRenderer {
 
 			renderListStack.push( currentRenderList );
 
+			if ( xr.enabled === true && xr.isPresenting === true ) {
+
+				const depthSensingMesh = _this.xr.getDepthSensingMesh();
+
+				if ( depthSensingMesh !== null ) {
+
+					projectObject( depthSensingMesh, camera, - Infinity, _this.sortObjects );
+
+				}
+
+			}
+
 			projectObject( scene, camera, 0, _this.sortObjects );
 
 			currentRenderList.finish();
@@ -30148,8 +30247,8 @@ class WebGLRenderer {
 
 			}
 
-			const renderBackground = xr.enabled === false || xr.isPresenting === false || xr.hasDepthSensing() === false;
-			if ( renderBackground ) {
+			_renderBackground = xr.enabled === false || xr.isPresenting === false || xr.hasDepthSensing() === false;
+			if ( _renderBackground ) {
 
 				background.addToRenderList( currentRenderList, scene );
 
@@ -30176,7 +30275,7 @@ class WebGLRenderer {
 			const opaqueObjects = currentRenderList.opaque;
 			const transmissiveObjects = currentRenderList.transmissive;
 
-			currentRenderState.setupLights( _this._useLegacyLights );
+			currentRenderState.setupLights();
 
 			if ( camera.isArrayCamera ) {
 
@@ -30194,7 +30293,7 @@ class WebGLRenderer {
 
 				}
 
-				if ( renderBackground ) background.render( scene );
+				if ( _renderBackground ) background.render( scene );
 
 				for ( let i = 0, l = cameras.length; i < l; i ++ ) {
 
@@ -30208,7 +30307,7 @@ class WebGLRenderer {
 
 				if ( transmissiveObjects.length > 0 ) renderTransmissionPass( opaqueObjects, transmissiveObjects, scene, camera );
 
-				if ( renderBackground ) background.render( scene );
+				if ( _renderBackground ) background.render( scene );
 
 				renderScene( currentRenderList, scene, camera );
 
@@ -30425,7 +30524,8 @@ class WebGLRenderer {
 					samples: 4,
 					stencilBuffer: stencil,
 					resolveDepthBuffer: false,
-					resolveStencilBuffer: false
+					resolveStencilBuffer: false,
+					colorSpace: ColorManagement.workingColorSpace,
 				} );
 
 				// debug
@@ -30454,7 +30554,15 @@ class WebGLRenderer {
 			_currentClearAlpha = _this.getClearAlpha();
 			if ( _currentClearAlpha < 1 ) _this.setClearColor( 0xffffff, 0.5 );
 
-			_this.clear();
+			if ( _renderBackground ) {
+
+				background.render( scene );
+
+			} else {
+
+				_this.clear();
+
+			}
 
 			// Turn off the features which can affect the frag color for opaque objects pass.
 			// Otherwise they are applied twice in opaque objects pass and transmission objects pass.
@@ -30711,6 +30819,7 @@ class WebGLRenderer {
 
 			materialProperties.outputColorSpace = parameters.outputColorSpace;
 			materialProperties.batching = parameters.batching;
+			materialProperties.batchingColor = parameters.batchingColor;
 			materialProperties.instancing = parameters.instancing;
 			materialProperties.instancingColor = parameters.instancingColor;
 			materialProperties.instancingMorph = parameters.instancingMorph;
@@ -30797,6 +30906,14 @@ class WebGLRenderer {
 					needsProgramChange = true;
 
 				} else if ( ! object.isBatchedMesh && materialProperties.batching === true ) {
+
+					needsProgramChange = true;
+
+				} else if ( object.isBatchedMesh && materialProperties.batchingColor === true && object.colorTexture === null ) {
+
+					needsProgramChange = true;
+
+				} else if ( object.isBatchedMesh && materialProperties.batchingColor === false && object.colorTexture !== null ) {
 
 					needsProgramChange = true;
 
@@ -30991,6 +31108,13 @@ class WebGLRenderer {
 
 				p_uniforms.setOptional( _gl, object, 'batchingTexture' );
 				p_uniforms.setValue( _gl, 'batchingTexture', object._matricesTexture, textures );
+
+				p_uniforms.setOptional( _gl, object, 'batchingColorTexture' );
+				if ( object._colorsTexture !== null ) {
+
+					p_uniforms.setValue( _gl, 'batchingColorTexture', object._colorsTexture, textures );
+
+				}
 
 			}
 
@@ -31352,24 +31476,159 @@ class WebGLRenderer {
 
 		};
 
-		this.copyFramebufferToTexture = function ( position, texture, level = 0 ) {
+		this.readRenderTargetPixelsAsync = async function ( renderTarget, x, y, width, height, buffer, activeCubeFaceIndex ) {
+
+			if ( ! ( renderTarget && renderTarget.isWebGLRenderTarget ) ) {
+
+				throw new Error( 'THREE.WebGLRenderer.readRenderTargetPixels: renderTarget is not THREE.WebGLRenderTarget.' );
+
+			}
+
+			let framebuffer = properties.get( renderTarget ).__webglFramebuffer;
+			if ( renderTarget.isWebGLCubeRenderTarget && activeCubeFaceIndex !== undefined ) {
+
+				framebuffer = framebuffer[ activeCubeFaceIndex ];
+
+			}
+
+			if ( framebuffer ) {
+
+				state.bindFramebuffer( _gl.FRAMEBUFFER, framebuffer );
+
+				try {
+
+					const texture = renderTarget.texture;
+					const textureFormat = texture.format;
+					const textureType = texture.type;
+
+					if ( ! capabilities.textureFormatReadable( textureFormat ) ) {
+
+						throw new Error( 'THREE.WebGLRenderer.readRenderTargetPixelsAsync: renderTarget is not in RGBA or implementation defined format.' );
+
+					}
+
+					if ( ! capabilities.textureTypeReadable( textureType ) ) {
+
+						throw new Error( 'THREE.WebGLRenderer.readRenderTargetPixelsAsync: renderTarget is not in UnsignedByteType or implementation defined type.' );
+
+					}
+
+					// the following if statement ensures valid read requests (no out-of-bounds pixels, see #8604)
+					if ( ( x >= 0 && x <= ( renderTarget.width - width ) ) && ( y >= 0 && y <= ( renderTarget.height - height ) ) ) {
+
+						const glBuffer = _gl.createBuffer();
+						_gl.bindBuffer( _gl.PIXEL_PACK_BUFFER, glBuffer );
+						_gl.bufferData( _gl.PIXEL_PACK_BUFFER, buffer.byteLength, _gl.STREAM_READ );
+						_gl.readPixels( x, y, width, height, utils.convert( textureFormat ), utils.convert( textureType ), 0 );
+						_gl.flush();
+
+						// check if the commands have finished every 8 ms
+						const sync = _gl.fenceSync( _gl.SYNC_GPU_COMMANDS_COMPLETE, 0 );
+						await probeAsync( _gl, sync, 4 );
+
+						try {
+
+							_gl.bindBuffer( _gl.PIXEL_PACK_BUFFER, glBuffer );
+							_gl.getBufferSubData( _gl.PIXEL_PACK_BUFFER, 0, buffer );
+
+						} finally {
+
+							_gl.deleteBuffer( glBuffer );
+							_gl.deleteSync( sync );
+
+						}
+
+						return buffer;
+
+					}
+
+				} finally {
+
+					// restore framebuffer of current render target if necessary
+
+					const framebuffer = ( _currentRenderTarget !== null ) ? properties.get( _currentRenderTarget ).__webglFramebuffer : null;
+					state.bindFramebuffer( _gl.FRAMEBUFFER, framebuffer );
+
+				}
+
+			}
+
+		};
+
+		this.copyFramebufferToTexture = function ( texture, position = null, level = 0 ) {
+
+			// support previous signature with position first
+			if ( texture.isTexture !== true ) {
+
+				// @deprecated, r165
+				console.warn( 'WebGLRenderer: copyFramebufferToTexture function signature has changed.' );
+
+				position = arguments[ 0 ] || null;
+				texture = arguments[ 1 ];
+
+			}
 
 			const levelScale = Math.pow( 2, - level );
 			const width = Math.floor( texture.image.width * levelScale );
 			const height = Math.floor( texture.image.height * levelScale );
 
+			const x = position !== null ? position.x : 0;
+			const y = position !== null ? position.y : 0;
+
 			textures.setTexture2D( texture, 0 );
 
-			_gl.copyTexSubImage2D( _gl.TEXTURE_2D, level, 0, 0, position.x, position.y, width, height );
+			_gl.copyTexSubImage2D( _gl.TEXTURE_2D, level, 0, 0, x, y, width, height );
 
 			state.unbindTexture();
 
 		};
 
-		this.copyTextureToTexture = function ( position, srcTexture, dstTexture, level = 0 ) {
+		this.copyTextureToTexture = function ( srcTexture, dstTexture, srcRegion = null, dstPosition = null, level = 0 ) {
 
-			const width = srcTexture.image.width;
-			const height = srcTexture.image.height;
+			// support previous signature with dstPosition first
+			if ( srcTexture.isTexture !== true ) {
+
+				// @deprecated, r165
+				console.warn( 'WebGLRenderer: copyTextureToTexture function signature has changed.' );
+
+				dstPosition = arguments[ 0 ] || null;
+				srcTexture = arguments[ 1 ];
+				dstTexture = arguments[ 2 ];
+				level = arguments[ 3 ] || 0;
+				srcRegion = null;
+
+			}
+
+			let width, height, minX, minY;
+			let dstX, dstY;
+			if ( srcRegion !== null ) {
+
+				width = srcRegion.max.x - srcRegion.min.x;
+				height = srcRegion.max.y - srcRegion.min.y;
+				minX = srcRegion.min.x;
+				minY = srcRegion.min.y;
+
+			} else {
+
+				width = srcTexture.image.width;
+				height = srcTexture.image.height;
+				minX = 0;
+				minY = 0;
+
+			}
+
+			if ( dstPosition !== null ) {
+
+				dstX = dstPosition.x;
+				dstY = dstPosition.y;
+
+			} else {
+
+				dstX = 0;
+				dstY = 0;
+
+			}
+
 			const glFormat = utils.convert( dstTexture.format );
 			const glType = utils.convert( dstTexture.type );
 
@@ -31381,23 +31640,42 @@ class WebGLRenderer {
 			_gl.pixelStorei( _gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, dstTexture.premultiplyAlpha );
 			_gl.pixelStorei( _gl.UNPACK_ALIGNMENT, dstTexture.unpackAlignment );
 
+			const currentUnpackRowLen = _gl.getParameter( _gl.UNPACK_ROW_LENGTH );
+			const currentUnpackImageHeight = _gl.getParameter( _gl.UNPACK_IMAGE_HEIGHT );
+			const currentUnpackSkipPixels = _gl.getParameter( _gl.UNPACK_SKIP_PIXELS );
+			const currentUnpackSkipRows = _gl.getParameter( _gl.UNPACK_SKIP_ROWS );
+			const currentUnpackSkipImages = _gl.getParameter( _gl.UNPACK_SKIP_IMAGES );
+
+			const image = srcTexture.isCompressedTexture ? srcTexture.mipmaps[ level ] : srcTexture.image;
+
+			_gl.pixelStorei( _gl.UNPACK_ROW_LENGTH, image.width );
+			_gl.pixelStorei( _gl.UNPACK_IMAGE_HEIGHT, image.height );
+			_gl.pixelStorei( _gl.UNPACK_SKIP_PIXELS, minX );
+			_gl.pixelStorei( _gl.UNPACK_SKIP_ROWS, minY );
+
 			if ( srcTexture.isDataTexture ) {
 
-				_gl.texSubImage2D( _gl.TEXTURE_2D, level, position.x, position.y, width, height, glFormat, glType, srcTexture.image.data );
+				_gl.texSubImage2D( _gl.TEXTURE_2D, level, dstX, dstY, width, height, glFormat, glType, image.data );
 
 			} else {
 
 				if ( srcTexture.isCompressedTexture ) {
 
-					_gl.compressedTexSubImage2D( _gl.TEXTURE_2D, level, position.x, position.y, srcTexture.mipmaps[ 0 ].width, srcTexture.mipmaps[ 0 ].height, glFormat, srcTexture.mipmaps[ 0 ].data );
+					_gl.compressedTexSubImage2D( _gl.TEXTURE_2D, level, dstX, dstY, image.width, image.height, glFormat, image.data );
 
 				} else {
 
-					_gl.texSubImage2D( _gl.TEXTURE_2D, level, position.x, position.y, glFormat, glType, srcTexture.image );
+					_gl.texSubImage2D( _gl.TEXTURE_2D, level, dstX, dstY, glFormat, glType, image );
 
 				}
 
 			}
+
+			_gl.pixelStorei( _gl.UNPACK_ROW_LENGTH, currentUnpackRowLen );
+			_gl.pixelStorei( _gl.UNPACK_IMAGE_HEIGHT, currentUnpackImageHeight );
+			_gl.pixelStorei( _gl.UNPACK_SKIP_PIXELS, currentUnpackSkipPixels );
+			_gl.pixelStorei( _gl.UNPACK_SKIP_ROWS, currentUnpackSkipRows );
+			_gl.pixelStorei( _gl.UNPACK_SKIP_IMAGES, currentUnpackSkipImages );
 
 			// Generate mipmaps only when copying level 0
 			if ( level === 0 && dstTexture.generateMipmaps ) _gl.generateMipmap( _gl.TEXTURE_2D );
@@ -31406,11 +31684,59 @@ class WebGLRenderer {
 
 		};
 
-		this.copyTextureToTexture3D = function ( sourceBox, position, srcTexture, dstTexture, level = 0 ) {
+		this.copyTextureToTexture3D = function ( srcTexture, dstTexture, srcRegion = null, dstPosition = null, level = 0 ) {
 
-			const width = sourceBox.max.x - sourceBox.min.x;
-			const height = sourceBox.max.y - sourceBox.min.y;
-			const depth = sourceBox.max.z - sourceBox.min.z;
+			// support previous signature with source box first
+			if ( srcTexture.isTexture !== true ) {
+
+				// @deprecated, r165
+				console.warn( 'WebGLRenderer: copyTextureToTexture3D function signature has changed.' );
+
+				srcRegion = arguments[ 0 ] || null;
+				dstPosition = arguments[ 1 ] || null;
+				srcTexture = arguments[ 2 ];
+				dstTexture = arguments[ 3 ];
+				level = arguments[ 4 ] || 0;
+
+			}
+
+			let width, height, depth, minX, minY, minZ;
+			let dstX, dstY, dstZ;
+			const image = srcTexture.isCompressedTexture ? srcTexture.mipmaps[ level ] : srcTexture.image;
+			if ( srcRegion !== null ) {
+
+				width = srcRegion.max.x - srcRegion.min.x;
+				height = srcRegion.max.y - srcRegion.min.y;
+				depth = srcRegion.max.z - srcRegion.min.z;
+				minX = srcRegion.min.x;
+				minY = srcRegion.min.y;
+				minZ = srcRegion.min.z;
+
+			} else {
+
+				width = image.width;
+				height = image.height;
+				depth = image.depth;
+				minX = 0;
+				minY = 0;
+				minZ = 0;
+
+			}
+
+			if ( dstPosition !== null ) {
+
+				dstX = dstPosition.x;
+				dstY = dstPosition.y;
+				dstZ = dstPosition.z;
+
+			} else {
+
+				dstX = 0;
+				dstY = 0;
+				dstZ = 0;
+
+			}
+
 			const glFormat = utils.convert( dstTexture.format );
 			const glType = utils.convert( dstTexture.type );
 			let glTarget;
@@ -31436,48 +31762,56 @@ class WebGLRenderer {
 			_gl.pixelStorei( _gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, dstTexture.premultiplyAlpha );
 			_gl.pixelStorei( _gl.UNPACK_ALIGNMENT, dstTexture.unpackAlignment );
 
-			const unpackRowLen = _gl.getParameter( _gl.UNPACK_ROW_LENGTH );
-			const unpackImageHeight = _gl.getParameter( _gl.UNPACK_IMAGE_HEIGHT );
-			const unpackSkipPixels = _gl.getParameter( _gl.UNPACK_SKIP_PIXELS );
-			const unpackSkipRows = _gl.getParameter( _gl.UNPACK_SKIP_ROWS );
-			const unpackSkipImages = _gl.getParameter( _gl.UNPACK_SKIP_IMAGES );
-
-			const image = srcTexture.isCompressedTexture ? srcTexture.mipmaps[ level ] : srcTexture.image;
+			const currentUnpackRowLen = _gl.getParameter( _gl.UNPACK_ROW_LENGTH );
+			const currentUnpackImageHeight = _gl.getParameter( _gl.UNPACK_IMAGE_HEIGHT );
+			const currentUnpackSkipPixels = _gl.getParameter( _gl.UNPACK_SKIP_PIXELS );
+			const currentUnpackSkipRows = _gl.getParameter( _gl.UNPACK_SKIP_ROWS );
+			const currentUnpackSkipImages = _gl.getParameter( _gl.UNPACK_SKIP_IMAGES );
 
 			_gl.pixelStorei( _gl.UNPACK_ROW_LENGTH, image.width );
 			_gl.pixelStorei( _gl.UNPACK_IMAGE_HEIGHT, image.height );
-			_gl.pixelStorei( _gl.UNPACK_SKIP_PIXELS, sourceBox.min.x );
-			_gl.pixelStorei( _gl.UNPACK_SKIP_ROWS, sourceBox.min.y );
-			_gl.pixelStorei( _gl.UNPACK_SKIP_IMAGES, sourceBox.min.z );
+			_gl.pixelStorei( _gl.UNPACK_SKIP_PIXELS, minX );
+			_gl.pixelStorei( _gl.UNPACK_SKIP_ROWS, minY );
+			_gl.pixelStorei( _gl.UNPACK_SKIP_IMAGES, minZ );
 
 			if ( srcTexture.isDataTexture || srcTexture.isData3DTexture ) {
 
-				_gl.texSubImage3D( glTarget, level, position.x, position.y, position.z, width, height, depth, glFormat, glType, image.data );
+				_gl.texSubImage3D( glTarget, level, dstX, dstY, dstZ, width, height, depth, glFormat, glType, image.data );
 
 			} else {
 
 				if ( dstTexture.isCompressedArrayTexture ) {
 
-					_gl.compressedTexSubImage3D( glTarget, level, position.x, position.y, position.z, width, height, depth, glFormat, image.data );
+					_gl.compressedTexSubImage3D( glTarget, level, dstX, dstY, dstZ, width, height, depth, glFormat, image.data );
 
 				} else {
 
-					_gl.texSubImage3D( glTarget, level, position.x, position.y, position.z, width, height, depth, glFormat, glType, image );
+					_gl.texSubImage3D( glTarget, level, dstX, dstY, dstZ, width, height, depth, glFormat, glType, image );
 
 				}
 
 			}
 
-			_gl.pixelStorei( _gl.UNPACK_ROW_LENGTH, unpackRowLen );
-			_gl.pixelStorei( _gl.UNPACK_IMAGE_HEIGHT, unpackImageHeight );
-			_gl.pixelStorei( _gl.UNPACK_SKIP_PIXELS, unpackSkipPixels );
-			_gl.pixelStorei( _gl.UNPACK_SKIP_ROWS, unpackSkipRows );
-			_gl.pixelStorei( _gl.UNPACK_SKIP_IMAGES, unpackSkipImages );
+			_gl.pixelStorei( _gl.UNPACK_ROW_LENGTH, currentUnpackRowLen );
+			_gl.pixelStorei( _gl.UNPACK_IMAGE_HEIGHT, currentUnpackImageHeight );
+			_gl.pixelStorei( _gl.UNPACK_SKIP_PIXELS, currentUnpackSkipPixels );
+			_gl.pixelStorei( _gl.UNPACK_SKIP_ROWS, currentUnpackSkipRows );
+			_gl.pixelStorei( _gl.UNPACK_SKIP_IMAGES, currentUnpackSkipImages );
 
 			// Generate mipmaps only when copying level 0
 			if ( level === 0 && dstTexture.generateMipmaps ) _gl.generateMipmap( glTarget );
 
 			state.unbindTexture();
+
+		};
+
+		this.initRenderTarget = function ( target ) {
+
+			if ( properties.get( target ).__webglFramebuffer === undefined ) {
+
+				textures.setupRenderTarget( target );
+
+			}
 
 		};
 
@@ -31543,20 +31877,6 @@ class WebGLRenderer {
 		const gl = this.getContext();
 		gl.drawingBufferColorSpace = colorSpace === DisplayP3ColorSpace ? 'display-p3' : 'srgb';
 		gl.unpackColorSpace = ColorManagement.workingColorSpace === LinearDisplayP3ColorSpace ? 'display-p3' : 'srgb';
-
-	}
-
-	get useLegacyLights() { // @deprecated, r155
-
-		console.warn( 'THREE.WebGLRenderer: The property .useLegacyLights has been deprecated. Migrate your lighting according to the following guide: https://discourse.threejs.org/t/updates-to-lighting-in-three-js-r155/53733.' );
-		return this._useLegacyLights;
-
-	}
-
-	set useLegacyLights( value ) { // @deprecated, r155
-
-		console.warn( 'THREE.WebGLRenderer: The property .useLegacyLights has been deprecated. Migrate your lighting according to the following guide: https://discourse.threejs.org/t/updates-to-lighting-in-three-js-r155/53733.' );
-		this._useLegacyLights = value;
 
 	}
 
@@ -33548,11 +33868,14 @@ const ID_ATTR_NAME = 'batchId';
 const _matrix$1 = /*@__PURE__*/ new Matrix4();
 const _invMatrixWorld = /*@__PURE__*/ new Matrix4();
 const _identityMatrix$2 = /*@__PURE__*/ new Matrix4();
+const _whiteColor = /*@__PURE__*/ new Color$1( 1, 1, 1 );
 const _projScreenMatrix$2 = /*@__PURE__*/ new Matrix4();
 const _frustum = /*@__PURE__*/ new Frustum();
 const _box$1 = /*@__PURE__*/ new Box3();
 const _sphere$2 = /*@__PURE__*/ new Sphere();
 const _vector$5 = /*@__PURE__*/ new Vector3();
+const _forward = /*@__PURE__*/ new Vector3();
+const _temp = /*@__PURE__*/ new Vector3();
 const _renderList = /*@__PURE__*/ new MultiDrawRenderList();
 const _mesh = /*@__PURE__*/ new Mesh();
 const _batchIntersects = [];
@@ -33637,6 +33960,9 @@ class BatchedMesh extends Mesh {
 
 		this._initMatricesTexture();
 
+		// Local color per geometry by using data texture
+		this._colorsTexture = null;
+
 	}
 
 	_initMatricesTexture() {
@@ -33656,6 +33982,20 @@ class BatchedMesh extends Mesh {
 		const matricesTexture = new DataTexture( matricesArray, size, size, RGBAFormat, FloatType );
 
 		this._matricesTexture = matricesTexture;
+
+	}
+
+	_initColorsTexture() {
+
+		let size = Math.sqrt( this._maxGeometryCount );
+		size = Math.ceil( size );
+
+		// 4 floats per RGBA pixel initialized to white
+		const colorsArray = new Float32Array( size * size * 4 ).fill( 1 );
+		const colorsTexture = new DataTexture( colorsArray, size, size, RGBAFormat, FloatType );
+		colorsTexture.colorSpace = ColorManagement.workingColorSpace;
+
+		this._colorsTexture = colorsTexture;
 
 	}
 
@@ -33892,6 +34232,7 @@ class BatchedMesh extends Mesh {
 		const active = this._active;
 		const matricesTexture = this._matricesTexture;
 		const matricesArray = this._matricesTexture.image.data;
+		const colorsTexture = this._colorsTexture;
 
 		// push new visibility states
 		visibility.push( true );
@@ -33904,6 +34245,14 @@ class BatchedMesh extends Mesh {
 		// initialize matrix information
 		_identityMatrix$2.toArray( matricesArray, geometryId * 16 );
 		matricesTexture.needsUpdate = true;
+
+		// initialize the color to white
+		if ( colorsTexture !== null ) {
+
+			_whiteColor.toArray( colorsTexture.image.data, geometryId * 4 );
+			colorsTexture.needsUpdate = true;
+
+		}
 
 		// add the reserved range and draw range objects
 		reservedRanges.push( reservedRange );
@@ -34223,6 +34572,49 @@ class BatchedMesh extends Mesh {
 
 	}
 
+	setColorAt( geometryId, color ) {
+
+		if ( this._colorsTexture === null ) {
+
+			this._initColorsTexture();
+
+		}
+
+		// @TODO: Map geometryId to index of the arrays because
+		//        optimize() can make geometryId mismatch the index
+
+		const active = this._active;
+		const colorsTexture = this._colorsTexture;
+		const colorsArray = this._colorsTexture.image.data;
+		const geometryCount = this._geometryCount;
+		if ( geometryId >= geometryCount || active[ geometryId ] === false ) {
+
+			return this;
+
+		}
+
+		color.toArray( colorsArray, geometryId * 4 );
+		colorsTexture.needsUpdate = true;
+
+		return this;
+
+	}
+
+	getColorAt( geometryId, color ) {
+
+		const active = this._active;
+		const colorsArray = this._colorsTexture.image.data;
+		const geometryCount = this._geometryCount;
+		if ( geometryId >= geometryCount || active[ geometryId ] === false ) {
+
+			return null;
+
+		}
+
+		return color.fromArray( colorsArray, geometryId * 4 );
+
+	}
+
 	setVisibleAt( geometryId, value ) {
 
 		const visibility = this._visibility;
@@ -34363,6 +34755,13 @@ class BatchedMesh extends Mesh {
 		this._matricesTexture = source._matricesTexture.clone();
 		this._matricesTexture.image.data = this._matricesTexture.image.slice();
 
+		if ( this._colorsTexture !== null ) {
+
+			this._colorsTexture = source._colorsTexture.clone();
+			this._colorsTexture.image.data = this._colorsTexture.image.slice();
+
+		}
+
 		return this;
 
 	}
@@ -34374,6 +34773,14 @@ class BatchedMesh extends Mesh {
 
 		this._matricesTexture.dispose();
 		this._matricesTexture = null;
+
+		if ( this._colorsTexture !== null ) {
+
+			this._colorsTexture.dispose();
+			this._colorsTexture = null;
+
+		}
+
 		return this;
 
 	}
@@ -34419,6 +34826,7 @@ class BatchedMesh extends Mesh {
 			// get the camera position in the local frame
 			_invMatrixWorld.copy( this.matrixWorld ).invert();
 			_vector$5.setFromMatrixPosition( camera.matrixWorld ).applyMatrix4( _invMatrixWorld );
+			_forward.set( 0, 0, - 1 ).transformDirection( camera.matrixWorld ).transformDirection( _invMatrixWorld );
 
 			for ( let i = 0, l = visibility.length; i < l; i ++ ) {
 
@@ -34439,7 +34847,7 @@ class BatchedMesh extends Mesh {
 					if ( ! culled ) {
 
 						// get the distance from camera used for sorting
-						const z = _vector$5.distanceTo( _sphere$2.center );
+						const z = _temp.subVectors( _sphere$2.center, _vector$5 ).dot( _forward );
 						_renderList.push( drawRanges[ i ], z );
 
 					}
@@ -35168,6 +35576,20 @@ class CompressedArrayTexture extends CompressedTexture {
 		this.isCompressedArrayTexture = true;
 		this.image.depth = depth;
 		this.wrapR = ClampToEdgeWrapping;
+
+		this.layerUpdates = new Set();
+
+	}
+
+	addLayerUpdates( layerIndex ) {
+
+		this.layerUpdates.add( layerIndex );
+
+	}
+
+	clearLayerUpdates() {
+
+		this.layerUpdates.clear();
 
 	}
 
@@ -43333,7 +43755,16 @@ KeyframeTrack.prototype.DefaultInterpolation = InterpolateLinear;
 /**
  * A Track of Boolean keyframe values.
  */
-class BooleanKeyframeTrack extends KeyframeTrack {}
+class BooleanKeyframeTrack extends KeyframeTrack {
+
+	// No interpolation parameter because only InterpolateDiscrete is valid.
+	constructor( name, times, values ) {
+
+		super( name, times, values );
+
+	}
+
+}
 
 BooleanKeyframeTrack.prototype.ValueTypeName = 'bool';
 BooleanKeyframeTrack.prototype.ValueBufferType = Array;
@@ -43404,13 +43835,22 @@ class QuaternionKeyframeTrack extends KeyframeTrack {
 
 QuaternionKeyframeTrack.prototype.ValueTypeName = 'quaternion';
 // ValueBufferType is inherited
-QuaternionKeyframeTrack.prototype.DefaultInterpolation = InterpolateLinear;
+// DefaultInterpolation is inherited;
 QuaternionKeyframeTrack.prototype.InterpolantFactoryMethodSmooth = undefined;
 
 /**
  * A Track that interpolates Strings
  */
-class StringKeyframeTrack extends KeyframeTrack {}
+class StringKeyframeTrack extends KeyframeTrack {
+
+	// No interpolation parameter because only InterpolateDiscrete is valid.
+	constructor( name, times, values ) {
+
+		super( name, times, values );
+
+	}
+
+}
 
 StringKeyframeTrack.prototype.ValueTypeName = 'string';
 StringKeyframeTrack.prototype.ValueBufferType = Array;
@@ -44282,6 +44722,10 @@ class FileLoader extends Loader {
 										readData();
 
 									}
+
+								}, ( e ) => {
+
+									controller.error( e );
 
 								} );
 
@@ -46118,7 +46562,9 @@ class MaterialLoader extends Loader {
 
 class LoaderUtils {
 
-	static decodeText( array ) {
+	static decodeText( array ) { // @deprecated, r165
+
+		console.warn( 'THREE.LoaderUtils: decodeText() has been deprecated with r165 and will be removed with r175. Use TextDecoder instead.' );
 
 		if ( typeof TextDecoder !== 'undefined' ) {
 
@@ -47314,6 +47760,7 @@ class ObjectLoader extends Loader {
 				object._geometryCount = data.geometryCount;
 
 				object._matricesTexture = getTexture( data.matricesTexture.uuid );
+				if ( data.colorsTexture !== undefined ) object._colorsTexture = getTexture( data.colorsTexture.uuid );
 
 				break;
 
@@ -51776,13 +52223,17 @@ function ascSort( a, b ) {
 
 function intersect( object, raycaster, intersects, recursive ) {
 
+	let propagate = true;
+
 	if ( object.layers.test( raycaster.layers ) ) {
 
-		object.raycast( raycaster, intersects );
+		const result = object.raycast( raycaster, intersects );
+
+		if ( result === false ) propagate = false;
 
 	}
 
-	if ( recursive === true ) {
+	if ( propagate === true && recursive === true ) {
 
 		const children = object.children;
 
@@ -53813,6 +54264,9 @@ if ( typeof window !== 'undefined' ) {
 
 /**
  * @author pschroen / https://ufo.ai/
+ *
+ * Based on https://github.com/mrdoob/three.js/blob/dev/src/loaders/ImageBitmapLoader.js
+ * Based on https://github.com/mrdoob/three.js/blob/dev/src/loaders/TextureLoader.js
  */
 
 
@@ -53823,6 +54277,7 @@ class TextureLoader extends Loader$1 {
         this.defaultOptions = {
             imageOrientation: 'flipY',
             premultiplyAlpha: 'none',
+            colorSpaceConversion: 'none',
             preserveData: false
         };
 
@@ -53871,6 +54326,11 @@ class TextureLoader extends Loader$1 {
                 }
 
                 texture.image = image;
+
+                if (ColorManagement.enabled) {
+                    texture.colorSpace = SRGBColorSpace;
+                }
+
                 texture.needsUpdate = true;
 
                 texture.onUpdate = () => {
@@ -54820,6 +55280,32 @@ class Interface {
         return child;
     }
 
+    addBefore(child, object) {
+        if (!this.children) {
+            return;
+        }
+
+        this.children.push(child);
+
+        child.parent = this;
+
+        if (child.element) {
+            if (object.element) {
+                this.element.insertBefore(child.element, object.element);
+            } else if (object.nodeName) {
+                this.element.insertBefore(child.element, object);
+            }
+        } else if (child.nodeName) {
+            if (object.element) {
+                this.element.insertBefore(child, object.element);
+            } else if (object.nodeName) {
+                this.element.insertBefore(child, object);
+            }
+        }
+
+        return child;
+    }
+
     remove(child) {
         if (!this.children) {
             return;
@@ -54924,16 +55410,16 @@ class Interface {
                 continue;
             }
 
-            let val;
-
             if (~Numeric.indexOf(key)) {
-                val = props[key];
-                style[key] = val;
+                style[key] = props[key];
+                this.element.style[key] = props[key];
             } else {
-                val = typeof props[key] !== 'string' ? props[key] + 'px' : props[key];
-            }
+                if (typeof props[key] === 'number') {
+                    style[key] = props[key];
+                }
 
-            this.element.style[key] = val;
+                this.element.style[key] = typeof props[key] !== 'string' ? `${props[key]}px` : props[key];
+            }
         }
 
         if (this.isTransform) {
@@ -55075,7 +55561,38 @@ class Interface {
         return this.css({ visibility: '' });
     }
 
+    atPoint(p) {
+        if (!this.element) {
+            return;
+        }
+
+        const b = this.element.getBoundingClientRect();
+
+        return p.y > b.top && p.x > b.left && p.y < b.bottom && p.x < b.right;
+    }
+
+    intersects(object) {
+        if (!this.element) {
+            return;
+        }
+
+        const a = this.element.getBoundingClientRect();
+        let b;
+
+        if (object.element) {
+            b = object.element.getBoundingClientRect();
+        } else if (object.nodeName) {
+            b = object.getBoundingClientRect();
+        }
+
+        return a.bottom > b.top && a.right > b.left && a.top < b.bottom && a.left < b.right;
+    }
+
     drawLine(progress = this.progress || 0) {
+        if (!this.element) {
+            return;
+        }
+
         const start = this.start || 0;
         const offset = this.offset || 0;
 
@@ -55105,18 +55622,16 @@ class Interface {
         const style = getComputedStyle(this.element);
 
         for (const key in props) {
-            let val;
-
-            if (this.style[key] !== undefined) {
-                val = this.style[key];
-            } else if (~Transforms.indexOf(key) || ~Filters.indexOf(key) || ~Numeric.indexOf(key)) {
-                val = ~Lacuna1.indexOf(key) ? 1 : 0;
-            } else if (typeof style[key] === 'string') {
-                val = parseFloat(style[key]);
+            if (this.style[key] === undefined) {
+                if (~Transforms.indexOf(key) || ~Filters.indexOf(key) || ~Numeric.indexOf(key)) {
+                    this.style[key] = ~Lacuna1.indexOf(key) ? 1 : 0;
+                } else if (typeof style[key] === 'string') {
+                    this.style[key] = parseFloat(style[key]);
+                }
             }
 
-            if (!isNaN(val)) {
-                this.style[key] = val;
+            if (isNaN(this.style[key])) {
+                delete this.style[key];
             }
         }
 
@@ -56252,36 +56767,60 @@ class Panel extends Interface {
         this.items.push(item);
     }
 
-    setPanelValue(name, value) {
-        this.items.forEach(item => {
-            if (!item.view) {
+    setPanelIndex(name, index, path = []) {
+        this.items.forEach(({ view }) => {
+            if (!view) {
                 return;
             }
 
-            if (item.data.name === name && item.view.setValue) {
-                item.view.setValue(value, true);
+            if (view.name === name && view.setIndex) {
+                view.setIndex(index);
                 return;
             }
 
-            if (item.view.group && item.view.group.children[0] && item.view.group.children[0].setPanelValue) {
-                item.view.group.children[0].setPanelValue(name, value);
+            if (path.length) {
+                const [pathName, pathIndex] = path[0];
+
+                if (view.name === pathName) {
+                    if (view.index !== pathIndex) {
+                        view.setIndex(pathIndex);
+                    }
+
+                    path.shift();
+                }
+            }
+
+            if (view.group && view.group.children[0] && view.group.children[0].setPanelIndex) {
+                view.group.children[0].setPanelIndex(name, index, path);
             }
         });
     }
 
-    setPanelIndex(name, index) {
-        this.items.forEach(item => {
-            if (!item.view) {
+    setPanelValue(name, value, path = []) {
+        this.items.forEach(({ view }) => {
+            if (!view) {
                 return;
             }
 
-            if (item.data.name === name && item.view.setIndex) {
-                item.view.setIndex(index);
+            if (view.name === name && view.setValue) {
+                view.setValue(value);
                 return;
             }
 
-            if (item.view.group && item.view.group.children[0] && item.view.group.children[0].setPanelIndex) {
-                item.view.group.children[0].setPanelIndex(name, index);
+            if (path.length) {
+                const [pathName, pathIndex] = path[0];
+
+                if (view.name === pathName) {
+                    if (view.index !== pathIndex) {
+                        view.setIndex(pathIndex);
+                    }
+
+                    path.shift();
+                }
+            }
+
+            if (view.group && view.group.children[0] && view.group.children[0].setPanelValue) {
+                view.group.children[0].setPanelValue(name, value, path);
             }
         });
     }
@@ -56439,10 +56978,661 @@ class PanelLink extends Interface {
     }
 
     update() {
-        this.events.emit('update', { value: this.value, target: this });
+        this.events.emit('update', { path: [], value: this.value, target: this });
 
         if (this.callback) {
             this.callback(this.value, this);
+        }
+    }
+
+    destroy() {
+        this.removeListeners();
+
+        return super.destroy();
+    }
+}
+
+/**
+ * @author pschroen / https://ufo.ai/
+ *
+ * Based on https://github.com/mrdoob/three.js/blob/dev/src/math/Vector2.js
+ */
+
+class Vector2 {
+    constructor(x = 0, y = 0) {
+        this.x = x;
+        this.y = y;
+
+        this.isVector2 = true;
+    }
+
+    set(x, y) {
+        this.x = x;
+        this.y = y;
+
+        return this;
+    }
+
+    setScalar(scalar) {
+        this.x = scalar;
+        this.y = scalar;
+
+        return this;
+    }
+
+    setX(x) {
+        this.x = x;
+
+        return this;
+    }
+
+    setY(y) {
+        this.y = y;
+
+        return this;
+    }
+
+    clone() {
+        return new Vector2(this.x, this.y);
+    }
+
+    copy(v) {
+        this.x = v.x;
+        this.y = v.y;
+
+        return this;
+    }
+
+    add(v) {
+        this.x += v.x;
+        this.y += v.y;
+
+        return this;
+    }
+
+    addScalar(scalar) {
+        this.x += scalar;
+        this.y += scalar;
+
+        return this;
+    }
+
+    addVectors(a, b) {
+        this.x = a.x + b.x;
+        this.y = a.y + b.y;
+
+        return this;
+    }
+
+    addScaledVector(v, scalar) {
+        this.x += v.x * scalar;
+        this.y += v.y * scalar;
+
+        return this;
+    }
+
+    sub(v) {
+        this.x -= v.x;
+        this.y -= v.y;
+
+        return this;
+    }
+
+    subScalar(scalar) {
+        this.x -= scalar;
+        this.y -= scalar;
+
+        return this;
+    }
+
+    subVectors(a, b) {
+        this.x = a.x - b.x;
+        this.y = a.y - b.y;
+
+        return this;
+    }
+
+    multiply(v) {
+        this.x *= v.x;
+        this.y *= v.y;
+
+        return this;
+    }
+
+    multiplyScalar(scalar) {
+        this.x *= scalar;
+        this.y *= scalar;
+
+        return this;
+    }
+
+    divide(v) {
+        this.x /= v.x;
+        this.y /= v.y;
+
+        return this;
+    }
+
+    divideScalar(scalar) {
+        return this.multiplyScalar(1 / scalar);
+    }
+
+    negate() {
+        this.x = -this.x;
+        this.y = -this.y;
+
+        return this;
+    }
+
+    dot(v) {
+        return this.x * v.x + this.y * v.y;
+    }
+
+    cross(v) {
+        return this.x * v.y - this.y * v.x;
+    }
+
+    lengthSq() {
+        return this.x * this.x + this.y * this.y;
+    }
+
+    length() {
+        return Math.sqrt(this.x * this.x + this.y * this.y);
+    }
+
+    normalize() {
+        return this.divideScalar(this.length() || 1);
+    }
+
+    angle() {
+        return Math.atan2(-this.y, -this.x) + Math.PI;
+    }
+
+    distanceTo(v) {
+        return Math.sqrt(this.distanceToSquared(v));
+    }
+
+    distanceToSquared(v) {
+        const dx = this.x - v.x;
+        const dy = this.y - v.y;
+
+        return dx * dx + dy * dy;
+    }
+
+    setLength(length) {
+        return this.normalize().multiplyScalar(length);
+    }
+
+    lerp(v, alpha) {
+        this.x += (v.x - this.x) * alpha;
+        this.y += (v.y - this.y) * alpha;
+
+        return this;
+    }
+
+    lerpVectors(v1, v2, alpha) {
+        this.x = v1.x + (v2.x - v1.x) * alpha;
+        this.y = v1.y + (v2.y - v1.y) * alpha;
+
+        return this;
+    }
+
+    equals(v) {
+        return v.x === this.x && v.y === this.y;
+    }
+
+    fromArray(array, offset = 0) {
+        this.x = array[offset];
+        this.y = array[offset + 1];
+
+        return this;
+    }
+
+    toArray(array = [], offset = 0) {
+        array[offset] = this.x;
+        array[offset + 1] = this.y;
+
+        return array;
+    }
+}
+
+/**
+ * @author pschroen / https://ufo.ai/
+ */
+
+
+class PanelThumbnail extends Interface {
+    constructor({
+        name,
+        flipY = false,
+        data = {},
+        value,
+        callback
+    }) {
+        super('.panel-thumbnail');
+
+        this.name = name;
+        this.flipY = flipY;
+        this.data = data;
+        this.value = value;
+        this.callback = callback;
+
+        this.width = parseFloat(Stage.rootStyle.getPropertyValue('--ui-panel-width').trim());
+        this.diagonal = this.width * 1.414;
+        this.lineOffset = -(this.diagonal - this.width) / 2 + 1;
+
+        this.origin = new Vector2();
+        this.mouse = new Vector2();
+        this.delta = new Vector2();
+        this.bounds = null;
+        this.thumbnails = [];
+        this.lastTime = null;
+        this.lastMouse = new Vector2();
+        this.lastOrigin = new Vector2();
+        this.isDragging = false;
+        this.snapPosition = new Vector2();
+        this.snapTarget = new Vector2();
+        this.snapped = null;
+        this.duplicate = null;
+
+        this.init();
+        this.initDragAndDrop();
+        this.setValue(this.value);
+
+        this.addListeners();
+    }
+
+    init() {
+        this.css({
+            position: 'relative'
+        });
+
+        this.container = new Interface('.container');
+        this.container.css({
+            position: 'relative',
+            boxSizing: 'border-box',
+            width: this.width,
+            height: this.width,
+            border: '1px solid var(--ui-color-divider-line)',
+            cursor: 'pointer'
+        });
+        this.add(this.container);
+
+        this.line = new Interface('.line');
+        this.line.css({
+            position: 'absolute',
+            left: this.lineOffset,
+            right: this.lineOffset,
+            boxSizing: 'border-box',
+            height: this.width / 2 - 0.5,
+            borderBottom: '1px solid var(--ui-color-divider-line)',
+            transformOrigin: 'center bottom',
+            rotation: -45,
+            pointerEvents: 'none'
+        });
+        this.container.add(this.line);
+
+        // Not added to DOM
+        this.input = new Interface(null, 'input');
+        this.input.attr({
+            type: 'file',
+            accept: 'image/*'
+        });
+    }
+
+    initDragAndDrop() {
+        this.reader = new FileReader();
+    }
+
+    addListeners() {
+        Stage.events.on('thumbnail_drop', this.onThumbnailDrop);
+        this.container.element.addEventListener('click', this.onClick);
+        this.input.element.addEventListener('change', this.onChange);
+        this.element.addEventListener('dragover', this.onDragOver);
+        this.element.addEventListener('drop', this.onDrop);
+        this.reader.addEventListener('load', this.onLoad);
+        window.addEventListener('keyup', this.onKeyUp);
+    }
+
+    removeListeners() {
+        Stage.events.off('thumbnail_drop', this.onThumbnailDrop);
+        this.container.element.removeEventListener('click', this.onClick);
+        this.input.element.removeEventListener('change', this.onChange);
+        this.element.removeEventListener('dragover', this.onDragOver);
+        this.element.removeEventListener('drop', this.onDrop);
+        this.reader.removeEventListener('load', this.onLoad);
+        window.removeEventListener('keyup', this.onKeyUp);
+    }
+
+    imageToCanvas(image) {
+        const canvas = document.createElement('canvas');
+        canvas.width = image.width;
+        canvas.height = image.height;
+
+        const context = canvas.getContext('2d');
+
+        if (this.flipY) {
+            context.translate(0, canvas.height);
+            context.scale(1, -1);
+        }
+
+        context.drawImage(image, 0, 0, canvas.width, canvas.height);
+
+        return canvas;
+    }
+
+    loadImage(path) {
+        const image = new Image();
+
+        image.onload = () => {
+            this.setValue(image);
+
+            image.onload = null;
+        };
+
+        image.src = path;
+    }
+
+    // Event handlers
+
+    onThumbnailDrop = ({ element, data, value }) => {
+        if (element === this.element) {
+            this.setData(data);
+            this.setValue(value);
+        }
+    };
+
+    onClick = e => {
+        e.preventDefault();
+
+        this.input.element.click();
+    };
+
+    onPointerDown = e => {
+        this.lastTime = performance.now();
+        this.lastMouse.set(e.clientX, e.clientY);
+        this.lastOrigin.set(0, 0);
+
+        this.onPointerMove(e);
+
+        window.addEventListener('pointermove', this.onPointerMove);
+        window.addEventListener('pointerup', this.onPointerUp);
+    };
+
+    onPointerMove = e => {
+        const event = {
+            x: e.clientX,
+            y: e.clientY
+        };
+
+        this.mouse.copy(event);
+        this.delta.subVectors(this.mouse, this.lastMouse);
+
+        if (this.delta.length()) {
+            if (!this.isDragging) {
+                this.isDragging = true;
+
+                Stage.events.emit('thumbnail_dragging', { dragging: this.isDragging, target: this });
+
+                if (e.altKey) {
+                    this.duplicate = this.wrapper.clone(true);
+                    this.addBefore(this.duplicate, this.wrapper);
+
+                    const canvas = this.duplicate.element.querySelector('canvas');
+
+                    if (canvas) {
+                        canvas.getContext('2d').drawImage(this.wrapper.children[0].element, 0, 0, canvas.width, canvas.height);
+                    }
+                }
+            }
+
+            this.origin.addVectors(this.lastOrigin, this.delta);
+
+            this.bounds = this.element.getBoundingClientRect();
+            this.thumbnails = [...document.querySelectorAll('.panel-thumbnail')];
+            this.thumbnails = this.thumbnails.filter(element => element !== this.element).map(element => {
+                return {
+                    element,
+                    bounds: element.getBoundingClientRect()
+                };
+            });
+
+            this.snap();
+        }
+    };
+
+    onPointerUp = e => {
+        window.removeEventListener('pointerup', this.onPointerUp);
+        window.removeEventListener('pointermove', this.onPointerMove);
+
+        this.onPointerMove(e);
+
+        let intersects = false;
+
+        this.thumbnails.forEach(({ element }) => {
+            if (this.wrapper.intersects(element)) {
+                Stage.events.emit('thumbnail_drop', { element, data: this.data, value: this.value, target: this });
+
+                if (!e.altKey) {
+                    this.setValue(null);
+                }
+
+                intersects = true;
+            }
+        });
+
+        if (!intersects && !this.wrapper.intersects(this.element) && !e.altKey) {
+            this.setValue(null);
+        }
+
+        this.wrapper.css({ left: 0, top: 0 });
+        this.isDragging = false;
+
+        Stage.events.emit('thumbnail_dragging', { dragging: this.isDragging, target: this });
+
+        if (this.duplicate) {
+            this.duplicate = this.duplicate.destroy();
+        }
+
+        if (performance.now() - this.lastTime > 250 || this.delta.length() > 50) {
+            return;
+        }
+
+        this.input.element.click();
+    };
+
+    onKeyUp = e => {
+        if (e.keyCode === 27) { // Esc
+            if (this.isDragging) {
+                window.removeEventListener('pointerup', this.onPointerUp);
+                window.removeEventListener('pointermove', this.onPointerMove);
+
+                this.wrapper.css({ left: 0, top: 0 });
+                this.isDragging = false;
+
+                Stage.events.emit('thumbnail_dragging', { dragging: this.isDragging, target: this });
+
+                if (this.duplicate) {
+                    this.duplicate = this.duplicate.destroy();
+                }
+            }
+        }
+    };
+
+    onDragOver = e => {
+        e.preventDefault();
+        e.dataTransfer.dropEffect = 'copy';
+    };
+
+    onDrop = e => {
+        e.preventDefault();
+
+        this.reader.readAsDataURL(e.dataTransfer.files[0]);
+    };
+
+    onChange = e => {
+        e.preventDefault();
+
+        if (e.target.files.length) {
+            this.reader.readAsDataURL(e.target.files[0]);
+        }
+    };
+
+    onLoad = e => {
+        this.loadImage(e.target.result);
+    };
+
+    onUpdate = e => {
+        this.events.emit('update', e);
+    };
+
+    // Public methods
+
+    setContent(content) {
+        content.events.on('update', this.onUpdate);
+
+        if (!this.group) {
+            this.group = new Interface('.group');
+            this.group.css({
+                position: 'relative'
+            });
+            this.add(this.group);
+        }
+
+        const oldGroup = this.group;
+
+        const newGroup = this.group.clone();
+        newGroup.add(content);
+
+        this.replace(oldGroup, newGroup);
+        this.group = newGroup;
+
+        oldGroup.destroy();
+    }
+
+    setData(data) {
+        if (!data) {
+            return;
+        }
+
+        this.data = data;
+    }
+
+    setValue(value) {
+        if (value instanceof ImageBitmap) {
+            this.value = this.imageToCanvas(value);
+        } else if (value && value.nodeName) {
+            this.value = value.cloneNode();
+
+            if (this.value instanceof HTMLCanvasElement) {
+                this.value.getContext('2d').drawImage(value, 0, 0, this.value.width, this.value.height);
+            }
+        } else {
+            this.value = value;
+        }
+
+        if (!this.wrapper) {
+            this.wrapper = new Interface('.wrapper');
+            this.wrapper.css({
+                position: 'absolute',
+                left: 0,
+                top: 0,
+                width: this.width,
+                height: this.width,
+                cursor: 'move',
+                zIndex: 1
+            });
+            this.add(this.wrapper);
+        }
+
+        const content = new Interface(this.value);
+        content.css({
+            position: 'absolute',
+            left: 0,
+            top: 0,
+            width: '100%',
+            height: '100%',
+            objectFit: 'cover',
+            pointerEvents: 'none'
+        });
+
+        const oldWrapper = this.wrapper;
+
+        const newWrapper = this.wrapper.clone();
+        newWrapper.element.addEventListener('pointerdown', this.onPointerDown);
+        newWrapper.add(content);
+
+        this.replace(oldWrapper, newWrapper);
+        this.wrapper = newWrapper;
+
+        oldWrapper.element.removeEventListener('pointerdown', this.onPointerDown);
+        oldWrapper.destroy();
+
+        if (this.value) {
+            this.wrapper.show();
+        } else {
+            this.wrapper.hide();
+            this.input.element.value = '';
+        }
+
+        this.update();
+    }
+
+    update() {
+        this.events.emit('update', { path: [], value: this.value, target: this });
+
+        if (this.callback) {
+            this.callback(this.value, this);
+        }
+    }
+
+    topLeftSnap(target, bounds) {
+        let snapped = false;
+
+        if (target.distanceTo(bounds) < bounds.width + 10) {
+            // Top
+            if (target.y > bounds.y - 10 && target.y < bounds.y + 10) {
+                target.y = bounds.y;
+                snapped = true;
+            }
+
+            // Left
+            if (target.x > bounds.x - 10 && target.x < bounds.x + 10) {
+                target.x = bounds.x;
+                snapped = true;
+            }
+        }
+
+        return snapped;
+    }
+
+    snap() {
+        const currentSnapped = this.snapped;
+
+        let snapped = null;
+
+        this.snapPosition.addVectors(this.bounds, this.origin);
+        this.snapTarget.copy(this.snapPosition);
+
+        if (this.topLeftSnap(this.snapTarget, this.bounds)) {
+            snapped = this.element;
+        }
+
+        this.thumbnails.forEach(({ element, bounds }) => {
+            if (this.topLeftSnap(this.snapTarget, bounds)) {
+                snapped = element;
+            }
+        });
+
+        this.snapPosition.sub(this.snapTarget);
+        this.origin.sub(this.snapPosition); // Subtract delta
+
+        this.wrapper.css({ left: Math.round(this.origin.x), top: Math.round(this.origin.y) });
+
+        this.snapped = snapped;
+
+        if (this.snapped !== currentSnapped) {
+            Stage.events.emit('thumbnail_snap', { element: this.snapped, target: this });
         }
     }
 
@@ -56749,6 +57939,8 @@ class List extends Interface {
     };
 
     onUpdate = e => {
+        e.path.unshift([this.name, this.index]);
+
         this.events.emit('update', e);
     };
 
@@ -56799,7 +57991,7 @@ class List extends Interface {
     update() {
         const value = this.keys[this.index];
 
-        this.events.emit('update', { index: this.index, target: this });
+        this.events.emit('update', { path: [], index: this.index, target: this });
 
         if (this.callback) {
             this.callback(value, this);
@@ -56826,210 +58018,6 @@ class List extends Interface {
         this.removeListeners();
 
         return super.destroy();
-    }
-}
-
-/**
- * @author pschroen / https://ufo.ai/
- *
- * Based on https://github.com/mrdoob/three.js/blob/dev/src/math/Vector2.js
- */
-
-class Vector2 {
-    constructor(x = 0, y = 0) {
-        this.x = x;
-        this.y = y;
-
-        this.isVector2 = true;
-    }
-
-    set(x, y) {
-        this.x = x;
-        this.y = y;
-
-        return this;
-    }
-
-    setScalar(scalar) {
-        this.x = scalar;
-        this.y = scalar;
-
-        return this;
-    }
-
-    setX(x) {
-        this.x = x;
-
-        return this;
-    }
-
-    setY(y) {
-        this.y = y;
-
-        return this;
-    }
-
-    clone() {
-        return new Vector2(this.x, this.y);
-    }
-
-    copy(v) {
-        this.x = v.x;
-        this.y = v.y;
-
-        return this;
-    }
-
-    add(v) {
-        this.x += v.x;
-        this.y += v.y;
-
-        return this;
-    }
-
-    addScalar(scalar) {
-        this.x += scalar;
-        this.y += scalar;
-
-        return this;
-    }
-
-    addVectors(a, b) {
-        this.x = a.x + b.x;
-        this.y = a.y + b.y;
-
-        return this;
-    }
-
-    addScaledVector(v, scalar) {
-        this.x += v.x * scalar;
-        this.y += v.y * scalar;
-
-        return this;
-    }
-
-    sub(v) {
-        this.x -= v.x;
-        this.y -= v.y;
-
-        return this;
-    }
-
-    subScalar(scalar) {
-        this.x -= scalar;
-        this.y -= scalar;
-
-        return this;
-    }
-
-    subVectors(a, b) {
-        this.x = a.x - b.x;
-        this.y = a.y - b.y;
-
-        return this;
-    }
-
-    multiply(v) {
-        this.x *= v.x;
-        this.y *= v.y;
-
-        return this;
-    }
-
-    multiplyScalar(scalar) {
-        this.x *= scalar;
-        this.y *= scalar;
-
-        return this;
-    }
-
-    divide(v) {
-        this.x /= v.x;
-        this.y /= v.y;
-
-        return this;
-    }
-
-    divideScalar(scalar) {
-        return this.multiplyScalar(1 / scalar);
-    }
-
-    negate() {
-        this.x = -this.x;
-        this.y = -this.y;
-
-        return this;
-    }
-
-    dot(v) {
-        return this.x * v.x + this.y * v.y;
-    }
-
-    cross(v) {
-        return this.x * v.y - this.y * v.x;
-    }
-
-    lengthSq() {
-        return this.x * this.x + this.y * this.y;
-    }
-
-    length() {
-        return Math.sqrt(this.x * this.x + this.y * this.y);
-    }
-
-    normalize() {
-        return this.divideScalar(this.length() || 1);
-    }
-
-    angle() {
-        return Math.atan2(-this.y, -this.x) + Math.PI;
-    }
-
-    distanceTo(v) {
-        return Math.sqrt(this.distanceToSquared(v));
-    }
-
-    distanceToSquared(v) {
-        const dx = this.x - v.x;
-        const dy = this.y - v.y;
-
-        return dx * dx + dy * dy;
-    }
-
-    setLength(length) {
-        return this.normalize().multiplyScalar(length);
-    }
-
-    lerp(v, alpha) {
-        this.x += (v.x - this.x) * alpha;
-        this.y += (v.y - this.y) * alpha;
-
-        return this;
-    }
-
-    lerpVectors(v1, v2, alpha) {
-        this.x = v1.x + (v2.x - v1.x) * alpha;
-        this.y = v1.y + (v2.y - v1.y) * alpha;
-
-        return this;
-    }
-
-    equals(v) {
-        return v.x === this.x && v.y === this.y;
-    }
-
-    fromArray(array, offset = 0) {
-        this.x = array[offset];
-        this.y = array[offset + 1];
-
-        return this;
-    }
-
-    toArray(array = [], offset = 0) {
-        array[offset] = this.x;
-        array[offset + 1] = this.y;
-
-        return array;
     }
 }
 
@@ -57071,7 +58059,7 @@ class Slider extends Interface {
         this.lastOrigin = new Vector2();
 
         this.init();
-        this.setValue(this.value, true);
+        this.setValue(this.value);
 
         this.addListeners();
     }
@@ -57079,7 +58067,7 @@ class Slider extends Interface {
     init() {
         this.container = new Interface('.container');
         this.container.css({
-            height: 27,
+            height: 25,
             cursor: 'w-resize'
         });
         this.add(this.container);
@@ -57195,28 +58183,23 @@ class Slider extends Interface {
         oldGroup.destroy();
     }
 
-    setValue(value, force) {
+    setValue(value) {
         this.value = typeof value === 'string' ? parseFloat(value) : value;
         this.value = this.getValue(this.value);
-        this.lastValue = this.value;
 
-        this.update(force);
+        this.update();
     }
 
-    update(force) {
+    update() {
         const scaleX = (this.value - this.min) / this.range;
 
         this.line.css({ scaleX });
         this.number.text(this.value);
 
-        if (this.value !== this.lastValue || force) {
-            this.lastValue = this.value;
+        this.events.emit('update', { path: [], value: this.value, target: this });
 
-            this.events.emit('update', { value: this.value, target: this });
-
-            if (this.callback) {
-                this.callback(this.value, this);
-            }
+        if (this.callback) {
+            this.callback(this.value, this);
         }
     }
 
@@ -57601,7 +58584,6 @@ class ColorPicker extends Interface {
         this.isDown = false;
         this.firstDown = false;
         this.lastCursor = '';
-        this.lastValue = this.value.getHex();
         this.fastClose = true;
 
         this.h = 0;
@@ -57612,7 +58594,7 @@ class ColorPicker extends Interface {
 
         this.init();
         this.initColorRing();
-        this.setValue(this.value, true);
+        this.setValue(this.value);
 
         this.addListeners();
     }
@@ -58011,7 +58993,7 @@ class ColorPicker extends Interface {
         this.parent.css({ height });
     }
 
-    setValue(value, force) {
+    setValue(value) {
         if (value && value.isColor) {
             this.value.copy(value);
         } else {
@@ -58020,7 +59002,7 @@ class ColorPicker extends Interface {
 
         this.value.getHSL(this);
 
-        this.update(force);
+        this.update();
     }
 
     setHSL(h, s, l) {
@@ -58033,7 +59015,7 @@ class ColorPicker extends Interface {
         this.update();
     }
 
-    update(force) {
+    update() {
         this.moveMarkers();
 
         this.swatch.css({ backgroundColor: `#${this.value.getHexString()}` });
@@ -58042,18 +59024,10 @@ class ColorPicker extends Interface {
             this.content.text(`0x${this.value.getHexString().toUpperCase()}`);
         }
 
-        const value = this.value.getHex();
+        this.events.emit('update', { path: [], value: this.value, target: this });
 
-        if (value !== this.lastValue || force) {
-            this.lastValue = value;
-
-            if (this.isDown || force) {
-                this.events.emit('update', { value: this.value, target: this });
-
-                if (this.callback) {
-                    this.callback(this.value, this);
-                }
-            }
+        if (this.callback) {
+            this.callback(this.value, this);
         }
     }
 
@@ -58190,6 +59164,10 @@ class PanelItem extends Interface {
             });
 
             this.view = new PanelLink(this.data);
+            this.view.events.on('update', this.onUpdate);
+            this.container.add(this.view);
+        } else if (this.data.type === 'thumbnail') {
+            this.view = new PanelThumbnail(this.data);
             this.view.events.on('update', this.onUpdate);
             this.container.add(this.view);
         } else if (this.data.type === 'list') {
@@ -58680,7 +59658,9 @@ class Reticle extends Interface {
     }
 
     animateIn() {
-        this.clearTween().visible().css({ scale: 0.25, opacity: 0 }).tween({ scale: 1, opacity: 1 }, 400, 'easeOutCubic');
+        this.clearTween();
+        this.visible();
+        this.css({ scale: 0.25, opacity: 0 }).tween({ scale: 1, opacity: 1 }, 400, 'easeOutCubic');
 
         this.animatedIn = true;
     }
@@ -58730,7 +59710,7 @@ class TargetNumber extends Interface {
             position: 'absolute',
             left: window.devicePixelRatio > 1 ? 4 : 5,
             fontVariantNumeric: 'tabular-nums',
-            lineHeight: this.height - (window.devicePixelRatio > 1 ? 3 : 2),
+            lineHeight: this.height - (window.devicePixelRatio > 1 ? 4 : 3),
             letterSpacing: 'var(--ui-number-letter-spacing)',
             textAlign: 'center'
         });
@@ -58750,13 +59730,22 @@ class TargetNumber extends Interface {
     }
 
     animateIn(delay) {
-        this.clearTween().visible().css({ opacity: 0 }).tween({ opacity: 1 }, 400, 'easeOutCubic', delay);
+        this.clearTween();
+        this.visible();
+        this.css({ opacity: 0 }).tween({ opacity: 1 }, 400, 'easeOutCubic', delay);
     }
 
-    animateOut() {
-        this.clearTween().tween({ opacity: 0 }, 400, 'easeOutCubic', () => {
+    animateOut(fast) {
+        this.clearTween();
+
+        if (fast) {
+            this.css({ opacity: 0 });
             this.invisible();
-        });
+        } else {
+            this.tween({ opacity: 0 }, 400, 'easeOutCubic', () => {
+                this.invisible();
+            });
+        }
     }
 }
 
@@ -58912,7 +59901,9 @@ class Tracker extends Interface {
         clearTween(this.timeout);
 
         if (!this.isInstanced) {
-            this.corners.clearTween().visible().css({ scale: 0.25, opacity: 0 }).tween({ scale: 1, opacity: 1 }, 400, 'easeOutCubic');
+            this.corners.clearTween();
+            this.corners.visible();
+            this.corners.css({ scale: 0.25, opacity: 0 }).tween({ scale: 1, opacity: 1 }, 400, 'easeOutCubic');
         }
 
         this.animatedIn = true;
@@ -58946,6 +59937,7 @@ class PointInfo extends Interface {
 
         this.numbers = [];
         this.locked = false;
+        this.isOpen = false;
 
         this.init();
     }
@@ -58954,15 +59946,13 @@ class PointInfo extends Interface {
         this.css({
             position: 'absolute',
             left: 10,
-            top: -15,
-            pointerEvents: 'none'
+            top: -15
         });
 
         this.container = new Interface('.container');
         this.container.css({
             position: 'relative',
-            cursor: 'move',
-            zIndex: 1
+            cursor: 'move'
         });
         this.add(this.container);
 
@@ -59026,7 +60016,7 @@ class PointInfo extends Interface {
             this.numbers.push(number);
         });
 
-        if (this.locked) {
+        if (this.locked && this.isOpen) {
             this.numbers.forEach(number => number.visible());
         }
     }
@@ -59051,8 +60041,6 @@ class PointInfo extends Interface {
     }
 
     open() {
-        this.css({ pointerEvents: 'auto' });
-
         this.clearTween().tween({ left: 48, opacity: 1 }, 400, 'easeOutCubic');
 
         if (this.locked) {
@@ -59063,27 +60051,39 @@ class PointInfo extends Interface {
             this.panel.animateIn();
             this.panel.activate();
         }
+
+        this.isOpen = true;
     }
 
-    close() {
-        this.css({ pointerEvents: 'none' });
+    close(fast) {
+        this.clearTween();
 
-        this.clearTween().tween({ left: 10, opacity: 1 }, 400, 'easeInCubic', 200);
+        if (fast) {
+            this.css({ left: 10, opacity: 1 });
 
-        this.numbers.forEach(number => number.animateOut());
+            if (this.panel) {
+                this.panel.hide();
+            }
+        } else {
+            this.tween({ left: 10, opacity: 1 }, 400, 'easeInCubic', 100);
 
-        if (this.panel) {
-            this.panel.animateOut();
-            this.panel.deactivate();
+            if (this.panel) {
+                this.panel.animateOut();
+                this.panel.deactivate();
+            }
         }
+
+        this.numbers.forEach(number => number.animateOut(fast));
+
+        this.isOpen = false;
     }
 
     animateIn() {
-        this.clearTween().css({ opacity: 0 }).tween({ left: 10, opacity: 1 }, 400, 'easeOutCubic', 200);
+        this.clearTween().css({ left: 10, opacity: 0 }).tween({ opacity: 1 }, 400, 'easeOutCubic', 200);
     }
 
     animateOut(callback) {
-        this.clearTween().tween({ opacity: 0 }, 500, 'easeInCubic', 200, callback);
+        this.clearTween().tween({ opacity: 0 }, 400, 'easeInCubic', 300, callback);
     }
 }
 
@@ -59100,11 +60100,12 @@ class Point extends Interface {
         this.tracker = tracker;
 
         this.position = new Vector2();
+        this.target = new Vector2();
         this.origin = new Vector2();
         this.originPosition = new Vector2();
-        this.target = new Vector2();
         this.mouse = new Vector2();
         this.delta = new Vector2();
+        this.bounds = null;
         this.lastTime = null;
         this.lastMouse = new Vector2();
         this.lastOrigin = new Vector2();
@@ -59123,7 +60124,7 @@ class Point extends Interface {
         this.invisible();
         this.css({
             position: 'absolute',
-            pointerEvents: 'auto',
+            pointerEvents: 'none',
             webkitUserSelect: 'none',
             userSelect: 'none'
         });
@@ -59136,6 +60137,8 @@ class Point extends Interface {
 
     addListeners() {
         Stage.events.on('color_picker', this.onColorPicker);
+        Stage.events.on('thumbnail_dragging', this.onThumbnailDragging);
+        Stage.events.on('thumbnail_snap', this.onThumbnailSnap);
         this.info.container.element.addEventListener('mouseenter', this.onHover);
         this.info.container.element.addEventListener('mouseleave', this.onHover);
         window.addEventListener('pointerdown', this.onPointerDown);
@@ -59143,6 +60146,8 @@ class Point extends Interface {
 
     removeListeners() {
         Stage.events.off('color_picker', this.onColorPicker);
+        Stage.events.off('thumbnail_dragging', this.onThumbnailDragging);
+        Stage.events.off('thumbnail_snap', this.onThumbnailSnap);
         this.info.container.element.removeEventListener('mouseenter', this.onHover);
         this.info.container.element.removeEventListener('mouseleave', this.onHover);
         window.removeEventListener('pointerdown', this.onPointerDown);
@@ -59166,12 +60171,32 @@ class Point extends Interface {
         }
     };
 
-    onHover = async ({ type }) => {
-        if (!this.ui) {
+    onThumbnailDragging = ({ dragging, target }) => {
+        if (!this.element.contains(target.element)) {
             return;
         }
 
-        await defer();
+        if (dragging) {
+            this.bringToFront();
+        } else {
+            this.sendToBack();
+        }
+    };
+
+    onThumbnailSnap = ({ element }) => {
+        if (!this.element.contains(element)) {
+            return;
+        }
+
+        if (!this.isMove) {
+            this.isMove = true;
+        }
+    };
+
+    onHover = ({ type }) => {
+        if (!this.ui) {
+            return;
+        }
 
         if (type === 'mouseenter') {
             this.ui.onHover({ type: 'over', isPoint: true });
@@ -59191,6 +60216,7 @@ class Point extends Interface {
             this.lastOrigin.copy(this.origin);
 
             this.onPointerMove(e);
+            this.bringToFront();
 
             window.addEventListener('pointermove', this.onPointerMove);
             window.addEventListener('pointerup', this.onPointerUp);
@@ -59205,9 +60231,20 @@ class Point extends Interface {
 
         this.mouse.copy(event);
         this.delta.subVectors(this.mouse, this.lastMouse);
-        this.origin.addVectors(this.lastOrigin, this.delta);
 
-        this.isMove = true;
+        if (this.delta.length()) {
+            this.origin.addVectors(this.lastOrigin, this.delta);
+            this.originPosition.addVectors(this.origin, this.position);
+
+            if (this.ui && this.ui.snap) {
+                this.bounds = this.info.container.element.getBoundingClientRect();
+                this.ui.snap();
+            } else {
+                this.css({ left: Math.round(this.originPosition.x), top: Math.round(this.originPosition.y) });
+            }
+
+            this.isMove = true;
+        }
     };
 
     onPointerUp = e => {
@@ -59219,6 +60256,7 @@ class Point extends Interface {
         }
 
         this.onPointerMove(e);
+        this.sendToBack();
 
         if (performance.now() - this.lastTime > 250 || this.delta.length() > 50) {
             return;
@@ -59251,13 +60289,13 @@ class Point extends Interface {
     }
 
     update() {
-        if (!this.isMove) {
-            this.position.lerp(this.target, this.lerpSpeed);
+        if (this.isMove) {
+            return;
         }
 
-        this.originPosition.addVectors(this.origin, this.position);
+        this.position.lerp(this.target, this.lerpSpeed);
 
-        this.css({ left: Math.round(this.originPosition.x), top: Math.round(this.originPosition.y) });
+        this.css({ left: Math.round(this.position.x), top: Math.round(this.position.y) });
     }
 
     lock() {
@@ -59269,34 +60307,34 @@ class Point extends Interface {
     }
 
     open() {
+        this.css({ pointerEvents: 'auto' });
+
         this.info.open();
 
+        this.bounds = this.info.container.element.getBoundingClientRect();
         this.isOpen = true;
     }
 
     close(fast) {
-        if (fast) {
-            clearTween(this.timeout);
+        this.css({ pointerEvents: 'none' });
 
-            this.timeout = delayedCall(300, () => {
-                this.origin.set(0, 0);
+        this.info.close(fast);
 
-                this.isOpen = false;
-                this.isMove = false;
-            });
-        } else {
-            tween(this.origin, { x: 0, y: 0 }, 400, 'easeOutCubic');
+        this.position.copy(this.target);
+        this.origin.set(0, 0);
+        this.originPosition.copy(this.position);
 
-            this.isOpen = false;
-            this.isMove = false;
-        }
+        this.css({ left: Math.round(this.originPosition.x), top: Math.round(this.originPosition.y) });
 
-        this.info.close();
+        this.isOpen = false;
+        this.isMove = false;
     }
 
     animateIn() {
+        this.clearTween();
         this.visible();
-        this.clearTween().css({ opacity: 1 });
+        this.css({ opacity: 1 });
+
         this.info.animateIn();
     }
 
@@ -59314,9 +60352,29 @@ class Point extends Interface {
         this.info.container.tween({ opacity: 0.35 }, 400, 'easeInOutSine');
     }
 
-    deactivate() {
-        this.clearTween().tween({ opacity: 0 }, 300, 'easeOutSine');
-        this.close(true);
+    activate() {
+        this.clearTween().tween({ opacity: 1 }, 300, 'easeOutSine');
+    }
+
+    deactivate(toggle) {
+        this.css({ pointerEvents: 'none' });
+
+        this.clearTween().tween({ opacity: 0 }, 300, 'easeOutSine', () => {
+            this.enable();
+            this.close(true);
+
+            if (toggle) {
+                this.activate();
+            }
+        });
+    }
+
+    bringToFront() {
+        this.css({ zIndex: 99 });
+    }
+
+    sendToBack() {
+        this.css({ zIndex: '' }); // Original DOM order
     }
 
     destroy() {
@@ -59332,9 +60390,10 @@ class Point extends Interface {
 
 
 class Point3D extends Group {
-    static init(scene, camera, {
+    static init(renderer, scene, camera, {
         root = document.body,
         container = document.body,
+        breakpoint = 1000,
         physics = null,
         loader = new TextureLoader$1(),
         uvTexturePath = 'assets/textures/uv.jpg',
@@ -59342,11 +60401,13 @@ class Point3D extends Group {
         debug = false
     } = {}) {
         this.events = new EventEmitter();
+        this.renderer = renderer;
         this.scene = scene;
         this.camera = camera;
-        this.physics = physics;
         this.root = root instanceof Interface ? root : new Interface(root);
         this.container = container instanceof Interface ? container : new Interface(container);
+        this.breakpoint = breakpoint;
+        this.physics = physics;
         this.loader = loader;
         this.uvTexturePath = uvTexturePath;
         this.uvHelper = uvHelper;
@@ -59369,11 +60430,15 @@ class Point3D extends Group {
         this.raycastInterval = 1 / 10; // 10 frames per second
         this.lastRaycast = 0;
         this.halfScreen = new Vector2$1();
+        this.anisotropy = this.renderer.capabilities.getMaxAnisotropy();
+        this.uvTexture = null;
+        this.windowSnapMargin = 30;
         this.openColor = null;
+        this.isDragging = false;
         this.enabled = true;
 
         this.initCanvas();
-        this.initLoaders();
+        this.initTextures();
 
         this.addListeners();
         this.onResize();
@@ -59391,14 +60456,17 @@ class Point3D extends Group {
         this.container.add(this.canvas);
     }
 
-    static initLoaders() {
+    static initTextures() {
         if (this.uvHelper) {
             this.uvTexture = this.loader.load(this.uvTexturePath);
+            this.uvTexture.anisotropy = this.anisotropy;
+            this.uvTexture.userData.uv = true;
         }
     }
 
     static addListeners() {
         Stage.events.on('color_picker', this.onColorPicker);
+        Stage.events.on('thumbnail_dragging', this.onThumbnailDragging);
         Stage.events.on('invert', this.onInvert);
         window.addEventListener('resize', this.onResize);
         window.addEventListener('pointerdown', this.onPointerDown);
@@ -59409,6 +60477,7 @@ class Point3D extends Group {
 
     static removeListeners() {
         Stage.events.off('color_picker', this.onColorPicker);
+        Stage.events.off('thumbnail_dragging', this.onThumbnailDragging);
         Stage.events.off('invert', this.onInvert);
         window.removeEventListener('resize', this.onResize);
         window.removeEventListener('pointerdown', this.onPointerDown);
@@ -59427,6 +60496,10 @@ class Point3D extends Group {
         }
     };
 
+    static onThumbnailDragging = ({ dragging }) => {
+        this.isDragging = dragging;
+    };
+
     static onInvert = () => {
         this.invert();
     };
@@ -59440,11 +60513,37 @@ class Point3D extends Group {
 
         this.canvas.element.width = Math.round(this.width * this.dpr);
         this.canvas.element.height = Math.round(this.height * this.dpr);
-        this.canvas.element.style.width = this.width + 'px';
-        this.canvas.element.style.height = this.height + 'px';
+        this.canvas.element.style.width = `${this.width}px`;
+        this.canvas.element.style.height = `${this.height}px`;
         this.context.scale(this.dpr, this.dpr);
 
-        this.points.forEach(point => point.resize());
+        if (this.width < this.breakpoint) {
+            this.windowSnapMargin = 20;
+        } else {
+            this.windowSnapMargin = 30;
+        }
+
+        this.points.forEach(ui => ui.resize());
+
+        const snapped = this.getSnappedSorted();
+
+        snapped.forEach((ui, i) => {
+            if (i !== 0) {
+                let gap = 20;
+
+                if (ui.point.tracker.locked) {
+                    gap += 28;
+                }
+
+                const last = snapped[i - 1];
+                const positionX = last.point.originPosition.x + last.point.bounds.width + gap;
+
+                ui.point.origin.x = positionX;
+                ui.point.originPosition.x = positionX;
+            }
+
+            ui.snap();
+        });
     };
 
     static onPointerDown = e => {
@@ -59482,16 +60581,16 @@ class Point3D extends Group {
             if (intersection.length) {
                 this.instanceId = intersection[0].instanceId;
 
-                const point = this.points[this.objects.indexOf(intersection[0].object)];
+                const ui = this.points[this.objects.indexOf(intersection[0].object)];
 
                 if (!this.hover || this.instanceId !== this.lastInstanceId) {
                     this.lastInstanceId = this.instanceId;
-                    this.hover = point;
+                    this.hover = ui;
                     this.hover.onHover({ type: 'over' });
                     this.root.css({ cursor: 'pointer' });
-                } else if (this.hover !== point) {
+                } else if (this.hover !== ui) {
                     this.hover.onHover({ type: 'out' });
-                    this.hover = point;
+                    this.hover = ui;
                     this.hover.onHover({ type: 'over' });
                     this.root.css({ cursor: 'pointer' });
                 }
@@ -59523,10 +60622,10 @@ class Point3D extends Group {
 
         if (this.click && this.click === this.hover) {
             if (!e.shiftKey && !e.ctrlKey && !e.altKey && !e.metaKey) {
-                this.points.forEach(point => {
-                    if (point !== this.click && point.animatedIn) {
-                        point.animateOut(true);
-                        point.deactivate();
+                this.points.forEach(ui => {
+                    if (ui !== this.click && ui.animatedIn) {
+                        ui.animateOut(true);
+                        ui.deactivate();
                     }
                 });
             }
@@ -59542,37 +60641,57 @@ class Point3D extends Group {
     };
 
     static onKeyUp = e => {
-        if (e.keyCode >= 48 && e.keyCode <= 57) { // 0-9
+        if (e.keyCode >= 49 && e.keyCode <= 57) { // 1-9
             const select = this.points[e.keyCode - 49];
 
             if (select) {
                 if (!e.shiftKey && !e.ctrlKey && !e.altKey && !e.metaKey) {
-                    this.points.forEach(point => {
-                        if (point !== select && point.animatedIn) {
-                            point.animateOut(true);
-                            point.deactivate();
+                    this.points.forEach(ui => {
+                        if (ui !== select && ui.animatedIn) {
+                            ui.animateOut(true);
+                            ui.deactivate();
                         }
                     });
                 }
 
-                select.onHover({ type: 'over' });
-                select.onClick(e.shiftKey);
+                if (!e.ctrlKey) { // Ctrl key reserved for camera perspective
+                    select.onHover({ type: 'over' });
+                    select.onClick(e.shiftKey);
+                }
             } else {
                 this.animateOut();
             }
-        } else if (e.keyCode === 27) { // Esc
+        } else if (e.keyCode === 27 && !this.isDragging) { // Esc
             this.animateOut();
         }
     };
 
     // Public methods
 
+    static setCamera(camera) {
+        this.camera = camera;
+
+        this.points.forEach(ui => ui.setCamera(camera));
+    }
+
     static getPoint(mesh) {
-        return this.points.find(point => point.object === mesh);
+        return this.points.find(ui => ui.object === mesh);
     }
 
     static getSelected() {
-        return this.points.filter(point => point.selected);
+        return this.points.filter(ui => ui.selected);
+    }
+
+    static getMoved() {
+        return this.points.filter(ui => ui.point.isMove);
+    }
+
+    static getSnapped() {
+        return this.points.filter(ui => ui.snapped);
+    }
+
+    static getSnappedSorted() {
+        return this.getSnapped().sort((a, b) => a.point.originPosition.x - b.point.originPosition.x);
     }
 
     static getMultipleName() {
@@ -59580,7 +60699,7 @@ class Point3D extends Group {
     }
 
     static getMultipleTypes() {
-        const types = this.multiple.map(point => point.type);
+        const types = this.multiple.map(ui => ui.type);
         const counts = {};
 
         types.forEach(type => {
@@ -59593,21 +60712,21 @@ class Point3D extends Group {
     }
 
     static getMultipleTargetNumbers() {
-        return this.multiple.map(point => point.index + 1);
+        return this.multiple.map(ui => ui.index + 1);
     }
 
     static setIndexes() {
-        this.points.forEach((point, i) => point.setIndex(i));
+        this.points.forEach((ui, i) => ui.setIndex(i));
     }
 
     static invert() {
-        this.points.forEach(point => point.resize());
+        this.points.forEach(ui => ui.resize());
     }
 
     static update(time) {
         this.context.clearRect(0, 0, this.canvas.element.width, this.canvas.element.height);
 
-        this.points.forEach(point => point.update());
+        this.points.forEach(ui => ui.update());
 
         if (!navigator.maxTouchPoints && time - this.lastRaycast > this.raycastInterval) {
             this.onPointerMove();
@@ -59616,24 +60735,24 @@ class Point3D extends Group {
     }
 
     static add(...points) {
-        points.forEach(point => {
-            this.objects.push(point.object);
-            this.points.push(point);
+        points.forEach(ui => {
+            this.objects.push(ui.object);
+            this.points.push(ui);
         });
 
         this.setIndexes();
     }
 
     static remove(...points) {
-        points.forEach(point => {
-            const index = this.points.indexOf(point);
+        points.forEach(ui => {
+            const index = this.points.indexOf(ui);
 
             if (~index) {
                 this.objects.splice(index, 1);
                 this.points.splice(index, 1);
             }
 
-            if (point === this.hover) {
+            if (ui === this.hover) {
                 this.hover.onHover({ type: 'out' });
                 this.hover = null;
                 this.root.css({ cursor: '' });
@@ -59644,18 +60763,16 @@ class Point3D extends Group {
     }
 
     static animateOut() {
-        this.points.forEach(point => {
-            if (point.animatedIn) {
-                point.animateOut(true);
-                point.deactivate();
+        this.points.forEach(ui => {
+            if (ui.isMultiple) {
+                ui.onClick();
+            } else if (ui === this.hover && ui.point.isOpen) {
+                ui.onClick();
+            } else if (ui.animatedIn) {
+                ui.animateOut(true);
+                ui.deactivate();
             }
         });
-
-        if (this.hover) {
-            this.hover.onHover({ type: 'out' });
-            this.hover = null;
-            this.root.css({ cursor: '' });
-        }
     }
 
     static destroy() {
@@ -59700,6 +60817,15 @@ class Point3D extends Group {
         this.selected = false;
         this.animatedIn = false;
 
+        this.currentMaterialMap = null;
+        this.uvTexture = null;
+
+        this.snapPosition = new Vector2$1();
+        this.snapTarget = new Vector2$1();
+        this.snappedLeft = false;
+        this.snappedRight = false;
+        this.snapped = false;
+
         this.instances = [];
         this.matrix = new Matrix4();
 
@@ -59733,7 +60859,10 @@ class Point3D extends Group {
     initElement() {
         this.element = new Interface('.target');
         this.element.css({
-            position: 'static'
+            position: 'absolute',
+            left: 0,
+            top: 0,
+            pointerEvents: 'none'
         });
         Point3D.container.add(this.element);
     }
@@ -59820,9 +60949,9 @@ class Point3D extends Group {
             }
 
             if (isPoint && this.isMultiple) {
-                Point3D.multiple.forEach(point => {
-                    if (point !== this) {
-                        point.onHover({ type });
+                Point3D.multiple.forEach(ui => {
+                    if (ui !== this) {
+                        ui.onHover({ type });
                     }
                 });
             }
@@ -59886,14 +61015,18 @@ class Point3D extends Group {
         Point3D.events.emit('click', { target: this });
     };
 
-    onUpdate = ({ value, index, target }) => {
+    onUpdate = ({ path, value, index, target }) => {
+        if (!this.point.isMove) {
+            this.point.isMove = true;
+        }
+
         if (this.isMultiple) {
-            Point3D.multiple.forEach(point => {
-                if (point !== this) {
+            Point3D.multiple.forEach(ui => {
+                if (ui !== this) {
                     if (index !== undefined) {
-                        point.setPanelIndex(target.name, index);
+                        ui.setPanelIndex(target.name, index, path.slice());
                     } else if (value !== undefined) {
-                        point.setPanelValue(target.name, value);
+                        ui.setPanelValue(target.name, value, path.slice());
                     }
                 }
             });
@@ -59901,6 +61034,10 @@ class Point3D extends Group {
     };
 
     // Public methods
+
+    setCamera(camera) {
+        this.camera = camera;
+    }
 
     setIndex(index) {
         this.index = index;
@@ -59923,12 +61060,12 @@ class Point3D extends Group {
         }
     }
 
-    setPanelValue(name, value) {
-        this.panel.setPanelValue(name, value);
+    setPanelIndex(name, index, path) {
+        this.panel.setPanelIndex(name, index, path);
     }
 
-    setPanelIndex(name, index) {
-        this.panel.setPanelIndex(name, index);
+    setPanelValue(name, value, path) {
+        this.panel.setPanelValue(name, value, path);
     }
 
     toggleNormalsHelper(show) {
@@ -59975,23 +61112,21 @@ class Point3D extends Group {
                     this.uvTexture = Point3D.uvTexture.clone();
                 }
 
-                if (!this.currentMaterialMap && material.map !== this.uvTexture) {
+                if (material.map !== this.uvTexture) {
                     this.currentMaterialMap = material.map;
 
                     material.map = this.uvTexture;
                     material.needsUpdate = true;
                 }
             }
-        } else {
+        } else if (this.uvTexture) {
             material.map = this.currentMaterialMap;
             material.needsUpdate = true;
 
-            if (this.uvTexture) {
-                this.uvTexture.dispose();
-            }
+            this.currentMaterialMap = null;
 
-            delete this.currentMaterialMap;
-            delete this.uvTexture;
+            this.uvTexture.dispose();
+            this.uvTexture = null;
         }
     }
 
@@ -60001,7 +61136,7 @@ class Point3D extends Group {
 
     update() {
         this.line.setStartPoint(this.reticle.position);
-        this.line.setEndPoint(this.point.originPosition);
+        this.line.setEndPoint(this.point.position);
         this.line.update();
         this.reticle.update();
         this.point.update();
@@ -60083,12 +61218,25 @@ class Point3D extends Group {
             this.tracker.lock();
 
             if (this.isMultiple) {
-                Point3D.multiple.forEach(point => {
-                    if (point !== this) {
-                        point.lock();
+                Point3D.multiple.forEach(ui => {
+                    if (ui !== this) {
+                        ui.lock();
                     }
                 });
             }
+        }
+
+        if (this.snappedLeft) {
+            const snapped = Point3D.getSnapped();
+
+            snapped.forEach(ui => {
+                if (ui === this || ui.point.originPosition.x > this.point.originPosition.x) {
+                    ui.point.origin.x += 28;
+                    ui.point.originPosition.x += 28;
+
+                    ui.point.clearTween().tween({ left: Math.round(ui.point.originPosition.x) }, 400, 'easeOutCubic');
+                }
+            });
         }
     }
 
@@ -60099,12 +61247,25 @@ class Point3D extends Group {
             this.tracker.unlock();
 
             if (this.isMultiple) {
-                Point3D.multiple.forEach(point => {
-                    if (point !== this) {
-                        point.unlock();
+                Point3D.multiple.forEach(ui => {
+                    if (ui !== this) {
+                        ui.unlock();
                     }
                 });
             }
+        }
+
+        if (this.snappedLeft) {
+            const snapped = Point3D.getSnapped();
+
+            snapped.forEach(ui => {
+                if (ui === this || ui.point.originPosition.x > this.point.originPosition.x) {
+                    ui.point.origin.x -= 28;
+                    ui.point.originPosition.x -= 28;
+
+                    ui.point.clearTween().tween({ left: Math.round(ui.point.originPosition.x) }, 400, 'easeInCubic', 100);
+                }
+            });
         }
     }
 
@@ -60113,9 +61274,9 @@ class Point3D extends Group {
             this.tracker.show();
 
             if (this.isMultiple) {
-                Point3D.multiple.forEach(point => {
-                    if (point !== this) {
-                        point.show();
+                Point3D.multiple.forEach(ui => {
+                    if (ui !== this) {
+                        ui.show();
                     }
                 });
             }
@@ -60127,9 +61288,9 @@ class Point3D extends Group {
             this.tracker.hide(true);
 
             if (this.isMultiple) {
-                Point3D.multiple.forEach(point => {
-                    if (point !== this) {
-                        point.hide();
+                Point3D.multiple.forEach(ui => {
+                    if (ui !== this) {
+                        ui.hide();
                     }
                 });
             }
@@ -60214,33 +61375,33 @@ class Point3D extends Group {
         }
 
         if (Point3D.multiple.length > 1) {
-            const panel = Point3D.multiple[0];
+            const ui = Point3D.multiple[0];
 
-            panel.point.setData({
+            ui.point.setData({
                 name: Point3D.getMultipleName(),
                 type: Point3D.getMultipleTypes()
             });
 
-            if (panel.tracker) {
-                panel.point.setTargetNumbers(Point3D.getMultipleTargetNumbers());
+            if (ui.tracker) {
+                ui.point.setTargetNumbers(Point3D.getMultipleTargetNumbers());
             }
 
-            panel.isMultiple = true;
+            ui.isMultiple = true;
         } else if (Point3D.multiple.length) {
-            const panel = Point3D.multiple[0];
+            const ui = Point3D.multiple[0];
 
             Point3D.multiple.length = 0;
 
-            panel.point.setData({
-                name: panel.name,
-                type: panel.type
+            ui.point.setData({
+                name: ui.name,
+                type: ui.type
             });
 
-            if (panel.tracker) {
-                panel.point.setTargetNumbers([panel.index + 1]);
+            if (ui.tracker) {
+                ui.point.setTargetNumbers([ui.index + 1]);
             }
 
-            panel.isMultiple = false;
+            ui.isMultiple = false;
         }
     }
 
@@ -60257,9 +61418,9 @@ class Point3D extends Group {
 
             if (multiple && selected.length > 1) {
                 if (!Point3D.multiple.length) {
-                    const panel = selected.filter(point => point !== this)[0];
+                    const ui = selected.filter(ui => ui !== this)[0];
 
-                    Point3D.multiple.push(panel);
+                    Point3D.multiple.push(ui);
                 }
 
                 Point3D.multiple.push(this);
@@ -60280,6 +61441,13 @@ class Point3D extends Group {
             }
 
             if (this.isMultiple) {
+                Point3D.multiple.forEach(ui => {
+                    if (ui !== this) {
+                        ui.animateOut(true);
+                        ui.deactivate();
+                    }
+                });
+
                 Point3D.multiple.length = 0;
 
                 this.point.setData({
@@ -60300,8 +61468,105 @@ class Point3D extends Group {
                 }
             }
 
-            this.point.enable();
-            this.point.close();
+            if (this.point.isMove) {
+                this.point.deactivate(true);
+            } else {
+                this.point.enable();
+                this.point.close();
+                this.point.activate();
+            }
+        }
+    }
+
+    snap() {
+        const currentSnapped = this.snapped;
+
+        let snappedLeft = false;
+        let snappedRight = false;
+
+        this.snapPosition.copy(this.point.originPosition);
+        this.snapTarget.copy(this.snapPosition);
+
+        const windowSnapTop = Point3D.windowSnapMargin + 43;
+        let windowSnapLeft = -(48 - Point3D.windowSnapMargin);
+
+        if (this.point.tracker.locked) {
+            windowSnapLeft += 28;
+        }
+
+        if (this.snapTarget.y <= windowSnapTop + 10) {
+            this.snapTarget.y = windowSnapTop;
+        }
+
+        if (this.snapTarget.x <= windowSnapLeft + 10) {
+            this.snapTarget.x = windowSnapLeft;
+            snappedLeft = true;
+        }
+
+        const moved = Point3D.getMoved();
+
+        moved.forEach(ui => {
+            if (ui !== this) {
+                let gap = 20;
+
+                if (this.point.tracker.locked) {
+                    gap += 28;
+                }
+
+                const min = gap - 10;
+                const max = gap + 10;
+
+                if (
+                    this.snapTarget.x > windowSnapLeft + 10 && // Clamp inside window
+                    this.snapTarget.distanceTo(ui.point.originPosition) < Math.max(this.point.bounds.width, ui.point.bounds.width) + max
+                ) {
+                    // Top
+                    if (
+                        this.snapTarget.y > ui.point.originPosition.y - 10 &&
+                        this.snapTarget.y < ui.point.originPosition.y + 10
+                    ) {
+                        this.snapTarget.y = ui.point.originPosition.y;
+                    }
+
+                    // Left
+                    if (
+                        this.snapTarget.x > ui.point.originPosition.x + ui.point.bounds.width + min &&
+                        this.snapTarget.x < ui.point.originPosition.x + ui.point.bounds.width + max
+                    ) {
+                        this.snapTarget.x = ui.point.originPosition.x + ui.point.bounds.width + gap;
+                        snappedLeft = true;
+                    }
+
+                    // Right
+                    if (
+                        this.snapTarget.x > ui.point.originPosition.x - this.point.bounds.width - max &&
+                        this.snapTarget.x < ui.point.originPosition.x - this.point.bounds.width - min
+                    ) {
+                        this.snapTarget.x = ui.point.originPosition.x - this.point.bounds.width - gap;
+                        snappedRight = true;
+                    }
+                }
+            }
+        });
+
+        this.snapPosition.sub(this.snapTarget);
+        this.point.origin.sub(this.snapPosition); // Subtract delta
+        this.point.originPosition.copy(this.snapTarget);
+
+        this.point.css({ left: Math.round(this.point.originPosition.x), top: Math.round(this.point.originPosition.y) });
+
+        this.snappedLeft = snappedLeft;
+        this.snappedRight = snappedRight;
+        this.snapped = this.snappedLeft || this.snappedRight;
+
+        if (this.snapped !== currentSnapped) {
+            const moved = Point3D.getMoved();
+
+            moved.forEach(ui => {
+                if (ui !== this) {
+                    ui.snap();
+                }
+            });
         }
     }
 
@@ -60331,6 +61596,10 @@ class Point3D extends Group {
         }
 
         this.selected = false;
+        this.snappedLeft = false;
+        this.snappedRight = false;
+        this.snapped = false;
+
         this.line.deactivate();
         this.point.deactivate();
 
@@ -60418,6 +61687,12 @@ const WrapOptions = {
     Repeat: RepeatWrapping,
     Clamp: ClampToEdgeWrapping,
     Mirror: MirroredRepeatWrapping
+};
+
+const ColorSpaceOptions = {
+    None: NoColorSpace,
+    SRGB: SRGBColorSpace,
+    Linear: LinearSRGBColorSpace
 };
 
 const HelperOptions = {
@@ -61810,97 +63085,161 @@ class OimoPhysicsPanel extends Panel {
 
 
 class MapPanel extends Panel {
-    constructor(mesh) {
+    constructor(mesh, key = 'map') {
         super();
 
         this.mesh = mesh;
+        this.key = key;
 
         this.initPanel();
     }
 
     initPanel() {
+        const { anisotropy } = Point3D;
+
         const mesh = this.mesh;
+        const key = this.key;
+        const point = Point3D.getPoint(mesh);
 
         const items = [
             {
                 type: 'divider'
-            }
-            // TODO: Texture thumbnails
-        ];
+            },
+            {
+                type: 'thumbnail',
+                name: 'Map',
+                flipY: true,
+                data: mesh.material[key] || {},
+                value: mesh.material[key] && mesh.material[key].source.data,
+                callback: (value, panel) => {
+                    const mapItems = [];
 
-        if (mesh.material.map) {
-            const repeatItems = [
-                {
-                    type: 'slider',
-                    name: 'X',
-                    min: 1,
-                    max: 16,
-                    step: 1,
-                    value: mesh.material.map.repeat.x,
-                    callback: value => {
-                        mesh.material.map.repeat.setX(value);
+                    if (panel.data.isTexture && panel.data.userData.uv && !mesh.userData.uv) {
+                        mesh.userData.uv = true;
+                        point.toggleUVHelper(true);
                     }
-                },
-                {
-                    type: 'slider',
-                    name: 'Y',
-                    min: 1,
-                    max: 16,
-                    step: 1,
-                    value: mesh.material.map.repeat.y,
-                    callback: value => {
-                        mesh.material.map.repeat.setY(value);
-                    }
-                }
-            ];
 
-            items.push(
-                {
-                    type: 'slider',
-                    name: 'Anisotropy',
-                    min: 1,
-                    max: 16,
-                    step: 1,
-                    value: mesh.material.map.anisotropy,
-                    callback: value => {
-                        mesh.material.map.anisotropy = value;
-                    }
-                },
-                {
-                    type: 'list',
-                    name: 'Wrap',
-                    list: WrapOptions,
-                    value: getKeyByValue(WrapOptions, mesh.material.map.wrapS),
-                    callback: (value, panel) => {
-                        if (!panel.group) {
-                            const repeatPanel = new Panel();
-                            repeatPanel.animateIn(true);
+                    if (point.uvTexture) {
+                        if (value) {
+                            if (mesh.material[key] && panel.data.isTexture && !panel.data.userData.uv) {
+                                mesh.userData.uv = false;
+                                point.toggleUVHelper(false);
+                            }
+                        } else if (mesh.material[key]) {
+                            mesh.userData.uv = false;
+                            point.toggleUVHelper(false);
 
-                            repeatItems.forEach(data => {
-                                repeatPanel.add(new PanelItem(data));
-                            });
-
-                            panel.setContent(repeatPanel);
+                            if (mesh.material[key] && mesh.material[key].source.data) {
+                                panel.setData(mesh.material[key]);
+                                panel.setValue(mesh.material[key].source.data);
+                                return;
+                            }
                         }
-
-                        const wrapping = WrapOptions[value];
-
-                        mesh.material.map.wrapS = wrapping;
-                        mesh.material.map.wrapT = wrapping;
-
-                        if (mesh.material.map.image) {
-                            mesh.material.map.needsUpdate = true;
-                        }
-
-                        if (value === 'Repeat' || value === 'Mirror') {
-                            panel.group.show();
+                    } else if (value) {
+                        if (mesh.material[key]) {
+                            mesh.material[key].dispose();
+                            mesh.material[key] = new Texture(value);
+                            mesh.material[key].colorSpace = panel.data.colorSpace;
+                            mesh.material[key].anisotropy = panel.data.anisotropy;
+                            mesh.material[key].wrapS = panel.data.wrapS;
+                            mesh.material[key].wrapT = panel.data.wrapT;
+                            mesh.material[key].repeat.copy(panel.data.repeat);
                         } else {
-                            panel.group.hide();
+                            mesh.material[key] = new Texture(value);
+
+                            if (ColorManagement.enabled) {
+                                mesh.material[key].colorSpace = SRGBColorSpace;
+                            }
+
+                            mesh.material[key].anisotropy = anisotropy;
                         }
+
+                        mesh.material[key].needsUpdate = true;
+                        mesh.material.needsUpdate = true;
+                    } else if (mesh.material[key]) {
+                        mesh.material[key].dispose();
+                        mesh.material[key] = null;
+                        mesh.material.needsUpdate = true;
                     }
+
+                    panel.setData(mesh.material[key] || {});
+
+                    if (mesh.material[key]) {
+                        mapItems.push(
+                            {
+                                type: 'spacer'
+                            },
+                            {
+                                type: 'list',
+                                name: 'Color Space',
+                                list: ColorSpaceOptions,
+                                value: getKeyByValue(ColorSpaceOptions, mesh.material[key].colorSpace),
+                                callback: value => {
+                                    mesh.material[key].colorSpace = ColorSpaceOptions[value];
+                                    mesh.material[key].needsUpdate = true;
+                                }
+                            },
+                            {
+                                type: 'slider',
+                                name: 'Anisotropy',
+                                min: 1,
+                                max: 16,
+                                step: 1,
+                                value: mesh.material[key].anisotropy,
+                                callback: value => {
+                                    mesh.material[key].anisotropy = value;
+                                    mesh.material[key].needsUpdate = true;
+                                }
+                            },
+                            {
+                                type: 'list',
+                                name: 'Wrap',
+                                list: WrapOptions,
+                                value: getKeyByValue(WrapOptions, mesh.material[key].wrapS),
+                                callback: value => {
+                                    const wrapping = WrapOptions[value];
+
+                                    mesh.material[key].wrapS = wrapping;
+                                    mesh.material[key].wrapT = wrapping;
+                                    mesh.material[key].needsUpdate = true;
+                                }
+                            },
+                            {
+                                type: 'slider',
+                                name: 'X',
+                                min: 1,
+                                max: 16,
+                                step: 1,
+                                value: mesh.material[key].repeat.x,
+                                callback: value => {
+                                    mesh.material[key].repeat.setX(value);
+                                }
+                            },
+                            {
+                                type: 'slider',
+                                name: 'Y',
+                                min: 1,
+                                max: 16,
+                                step: 1,
+                                value: mesh.material[key].repeat.y,
+                                callback: value => {
+                                    mesh.material[key].repeat.setY(value);
+                                }
+                            }
+                        );
+                    }
+
+                    const mapPanel = new Panel();
+                    mapPanel.animateIn(true);
+
+                    mapItems.forEach(data => {
+                        mapPanel.add(new PanelItem(data));
+                    });
+
+                    panel.setContent(mapPanel);
                 }
-            );
-        }
+            }
+        ];
 
         items.forEach(data => {
             this.add(new PanelItem(data));
@@ -63269,6 +64608,42 @@ class StandardMaterialEnvPanel extends Panel {
             // TODO: Texture thumbnails
             {
                 type: 'slider',
+                name: 'Rotate X',
+                min: 0,
+                max: 360,
+                step: 0.3,
+                value: MathUtils.radToDeg(mesh.material.envMapRotation.x),
+                callback: value => {
+                    value = MathUtils.degToRad(value);
+                    mesh.material.envMapRotation.x = value;
+                }
+            },
+            {
+                type: 'slider',
+                name: 'Rotate Y',
+                min: 0,
+                max: 360,
+                step: 0.3,
+                value: MathUtils.radToDeg(mesh.material.envMapRotation.y),
+                callback: value => {
+                    value = MathUtils.degToRad(value);
+                    mesh.material.envMapRotation.y = value;
+                }
+            },
+            {
+                type: 'slider',
+                name: 'Rotate Z',
+                min: 0,
+                max: 360,
+                step: 0.3,
+                value: MathUtils.radToDeg(mesh.material.envMapRotation.z),
+                callback: value => {
+                    value = MathUtils.degToRad(value);
+                    mesh.material.envMapRotation.z = value;
+                }
+            },
+            {
+                type: 'slider',
                 name: 'Int',
                 min: 0,
                 max: 10,
@@ -63317,6 +64692,7 @@ class StandardMaterialPanel extends Panel {
         standard: [
             'roughness',
             'metalness',
+            'envMapRotation',
             'envMapIntensity'
         ]
     };
@@ -64027,6 +65403,42 @@ class PhysicalMaterialEnvPanel extends Panel {
             // TODO: Texture thumbnails
             {
                 type: 'slider',
+                name: 'Rotate X',
+                min: 0,
+                max: 360,
+                step: 0.3,
+                value: MathUtils.radToDeg(mesh.material.envMapRotation.x),
+                callback: value => {
+                    value = MathUtils.degToRad(value);
+                    mesh.material.envMapRotation.x = value;
+                }
+            },
+            {
+                type: 'slider',
+                name: 'Rotate Y',
+                min: 0,
+                max: 360,
+                step: 0.3,
+                value: MathUtils.radToDeg(mesh.material.envMapRotation.y),
+                callback: value => {
+                    value = MathUtils.degToRad(value);
+                    mesh.material.envMapRotation.y = value;
+                }
+            },
+            {
+                type: 'slider',
+                name: 'Rotate Z',
+                min: 0,
+                max: 360,
+                step: 0.3,
+                value: MathUtils.radToDeg(mesh.material.envMapRotation.z),
+                callback: value => {
+                    value = MathUtils.degToRad(value);
+                    mesh.material.envMapRotation.z = value;
+                }
+            },
+            {
+                type: 'slider',
                 name: 'Int',
                 min: 0,
                 max: 10,
@@ -64081,6 +65493,7 @@ class PhysicalMaterialPanel extends Panel {
         standard: [
             'roughness',
             'metalness',
+            'envMapRotation',
             'envMapIntensity'
         ],
         physical: [
@@ -64842,7 +66255,7 @@ class Details extends Interface {
             this.bg.clearTween().tween({ opacity: 0 }, 1000, 'easeOutSine');
         }
 
-        this.clearTween().tween({ opacity: 0 }, 300, 'easeInSine', () => {
+        this.clearTween().tween({ opacity: 0 }, 400, 'easeOutCubic', () => {
             this.invisible();
 
             if (callback) {
@@ -64883,9 +66296,7 @@ class DetailsInfo extends Interface {
             height: '100%',
             display: 'flex',
             alignItems: 'flex-end',
-            pointerEvents: 'none',
-            x: -10,
-            opacity: 0
+            pointerEvents: 'none'
         });
 
         this.container = new Interface('.container');
@@ -64931,6 +66342,7 @@ class DetailsInfo extends Interface {
     }
 
     animateIn() {
+        this.clearTween();
         this.visible();
         this.css({
             pointerEvents: 'auto',
@@ -64948,13 +66360,13 @@ class DetailsInfo extends Interface {
 
         this.title.animateIn();
 
-        this.clearTween().css({ x: -10, opacity: 0 }).tween({ x: 0, opacity: 1 }, duration, 'easeOutCubic');
+        this.css({ x: -10, opacity: 0 }).tween({ x: 0, opacity: 1 }, duration, 'easeOutCubic');
     }
 
     animateOut(callback) {
         this.css({ pointerEvents: 'none' });
 
-        this.clearTween().tween({ opacity: 0 }, 300, 'easeInSine', () => {
+        this.clearTween().tween({ opacity: 0 }, 400, 'easeOutCubic', () => {
             this.invisible();
 
             if (callback) {
@@ -65079,8 +66491,12 @@ class NavLink extends Interface {
 
 
 class HeaderInfo extends Interface {
-    constructor() {
+    constructor({
+        fpsOpen = false
+    }) {
         super('.info');
+
+        this.fpsOpen = fpsOpen;
 
         this.count = 0;
         this.time = 0;
@@ -65152,17 +66568,11 @@ class HeaderInfo extends Interface {
         }
 
         if (type === 'mouseenter') {
-            this.isOpen = true;
-            this.css({ pointerEvents: 'none' });
-            this.panel.animateIn();
+            this.animateIn();
         }
     };
 
     onPointerDown = e => {
-        if (!this.isOpen) {
-            return;
-        }
-
         this.lastTime = performance.now();
         this.lastMouse.set(e.clientX, e.clientY);
 
@@ -65186,10 +66596,6 @@ class HeaderInfo extends Interface {
         window.removeEventListener('pointerup', this.onPointerUp);
         window.removeEventListener('pointermove', this.onPointerMove);
 
-        if (!this.isOpen) {
-            return;
-        }
-
         this.onPointerMove(e);
 
         if (performance.now() - this.lastTime > 250 || this.delta.length() > 50) {
@@ -65198,11 +66604,14 @@ class HeaderInfo extends Interface {
 
         if (this.openColor && !this.openColor.element.contains(e.target)) {
             Stage.events.emit('color_picker', { open: false, target: this });
+        } else if (this.atPoint(this.mouse)) {
+            if (this.isOpen) {
+                this.animateOut();
+            } else {
+                this.animateIn();
+            }
         } else if (!this.element.contains(e.target)) {
-            this.panel.animateOut(() => {
-                this.isOpen = false;
-                this.css({ pointerEvents: 'auto' });
-            });
+            this.animateOut();
         }
     };
 
@@ -65238,6 +66647,30 @@ class HeaderInfo extends Interface {
         this.number.text(this.fps);
     }
 
+    animateIn() {
+        if (!this.panel) {
+            return;
+        }
+
+        this.css({ pointerEvents: 'none' });
+
+        this.panel.animateIn();
+
+        this.isOpen = true;
+    }
+
+    animateOut() {
+        if (!this.panel || this.fpsOpen) {
+            return;
+        }
+
+        this.panel.animateOut(() => {
+            this.css({ pointerEvents: 'auto' });
+
+            this.isOpen = false;
+        });
+    }
+
     enable() {
         this.number.tween({ opacity: 1 }, 400, 'easeInOutSine');
     }
@@ -65261,11 +66694,13 @@ class HeaderInfo extends Interface {
 class Header extends Interface {
     constructor({
         fps = false,
+        fpsOpen = false,
         ...data
     }) {
         super('.header');
 
         this.fps = fps;
+        this.fpsOpen = fpsOpen;
         this.data = data;
 
         this.links = [];
@@ -65284,6 +66719,9 @@ class Header extends Interface {
     }
 
     initViews() {
+        const fps = this.fps;
+        const fpsOpen = this.fpsOpen;
+
         if (Array.isArray(this.data.links)) {
             this.data.links.forEach(data => {
                 const link = new NavLink(data.title, data.link);
@@ -65296,8 +66734,8 @@ class Header extends Interface {
             });
         }
 
-        if (this.fps) {
-            this.info = new HeaderInfo();
+        if (fps || fpsOpen) {
+            this.info = new HeaderInfo({ fpsOpen });
             this.info.css({
                 x: -10,
                 opacity: 0
@@ -65329,13 +66767,17 @@ class Header extends Interface {
         const stagger = 200;
 
         this.children.forEach((child, i) => {
-            child.clearTween().tween({ x: 0, opacity: 1 }, duration, 'easeOutQuart', i * stagger);
+            child.clearTween().css({ x: -10, opacity: 0 }).tween({ x: 0, opacity: 1 }, duration, 'easeOutQuart', i * stagger);
         });
+
+        if (this.fpsOpen) {
+            this.info.animateIn();
+        }
     }
 
     animateOut() {
         this.children.forEach(child => {
-            child.clearTween().tween({ opacity: 0 }, 500, 'easeInCubic');
+            child.clearTween().tween({ opacity: 0 }, 400, 'easeOutCubic');
         });
     }
 }
@@ -65356,6 +66798,7 @@ class MenuItem extends Interface {
         this.index = index;
 
         this.active = false;
+        this.animatedIn = false;
 
         this.init();
 
@@ -65383,7 +66826,7 @@ class MenuItem extends Interface {
             left: 10,
             right: 10,
             bottom: 10,
-            height: 1,
+            height: window.devicePixelRatio > 1 ? 1.5 : 1,
             backgroundColor: 'var(--ui-color)',
             transformOrigin: 'left center',
             scaleX: 0
@@ -65438,17 +66881,21 @@ class MenuItem extends Interface {
     activate(direction) {
         this.active = true;
 
-        this.line.css({ transformOrigin: direction < 0 ? 'left center' : 'right center', scaleX: 0 }).tween({ scaleX: 1 }, 500, 'easeOutQuint');
+        this.line.clearTween().css({ transformOrigin: direction < 0 ? 'left center' : 'right center', scaleX: 0 }).tween({ scaleX: 1 }, 500, 'easeOutQuint');
 
-        this.tween({ opacity: 1 }, 300, 'easeOutSine');
+        if (this.animatedIn) {
+            this.clearTween().tween({ y: 0, opacity: 1 }, 300, 'easeOutSine');
+        }
     }
 
     deactivate(direction) {
         this.active = false;
 
-        this.line.css({ transformOrigin: direction > 0 ? 'left center' : 'right center' }).tween({ scaleX: 0 }, 500, 'easeOutQuint');
+        this.line.clearTween().css({ transformOrigin: direction > 0 ? 'left center' : 'right center' }).tween({ scaleX: 0 }, 500, 'easeOutQuint');
 
-        this.tween({ opacity: 0.5 }, 500, 'easeOutSine');
+        if (this.animatedIn) {
+            this.clearTween().tween({ y: 0, opacity: 0.5 }, 500, 'easeOutSine');
+        }
     }
 
     animateIn(delay) {
@@ -65456,12 +66903,16 @@ class MenuItem extends Interface {
         this.css({ y: 10, opacity: 0 }).tween({ y: 0, opacity: this.active ? 1 : 0.5 }, 700, 'easeOutCubic', delay, () => {
             this.css({ pointerEvents: 'auto' });
         });
+
+        this.animatedIn = true;
     }
 
-    animateOut(delay) {
+    animateOut() {
         this.clearTween();
         this.css({ pointerEvents: 'none' });
-        this.tween({ y: -5, opacity: 0 }, 700, 'easeOutCubic', delay);
+        this.tween({ opacity: 0 }, 400, 'easeOutCubic');
+
+        this.animatedIn = false;
     }
 
     destroy() {
@@ -65580,7 +67031,7 @@ class Menu extends Interface {
     }
 
     animateOut() {
-        this.items.forEach((item, i) => item.animateOut(i * 50));
+        this.items.forEach(item => item.animateOut());
     }
 
     destroy() {
@@ -65643,9 +67094,343 @@ class Info extends Interface {
     }
 
     animateOut() {
-        this.tween({ opacity: 0 }, 300, 'easeOutSine', () => {
+        this.tween({ opacity: 0 }, 400, 'easeOutCubic', () => {
             this.invisible();
         });
+    }
+}
+
+/**
+ * @author pschroen / https://ufo.ai/
+ */
+
+
+class Thumbnail extends Interface {
+    constructor(data) {
+        super('.thumbnail');
+
+        const defaults = {
+            width: 150,
+            height: 100,
+            snapMargin: 20,
+            position: 'tl',
+            noCanvas: false
+        };
+
+        if (data.image) {
+            data = Object.assign(defaults, data);
+
+            this.image = data.image;
+            this.width = data.width;
+            this.height = data.height;
+            this.snapMargin = data.snapMargin;
+            this.position = data.position;
+            this.noCanvas = data.noCanvas;
+            this.callback = data.callback;
+        } else {
+            this.image = data;
+            this.width = defaults.width;
+            this.height = defaults.height;
+            this.snapMargin = defaults.snapMargin;
+            this.position = defaults.position;
+            this.noCanvas = defaults.noCanvas;
+        }
+
+        this.origin = new Vector2();
+        this.mouse = new Vector2();
+        this.delta = new Vector2();
+        this.bounds = null;
+        this.lastTime = null;
+        this.lastMouse = new Vector2();
+        this.lastOrigin = new Vector2();
+        this.snapPosition = new Vector2();
+        this.snapTarget = new Vector2();
+        this.windowSnapMargin = this.snapMargin;
+        this.snappedTop = this.position === 'tl' || this.position === 'tr';
+        this.snappedRight = this.position === 'br' || this.position === 'tr';
+        this.snappedBottom = this.position === 'bl' || this.position === 'br';
+        this.snappedLeft = this.position === 'tl' || this.position === 'bl';
+        this.snapped = this.snappedTop || this.snappedRight || this.snappedBottom || this.snappedLeft;
+
+        this.init();
+
+        if (!this.noCanvas) {
+            this.initCanvas();
+        }
+
+        this.initDragAndDrop();
+        this.setThumbnail(this.image, this.noCanvas);
+
+        this.addListeners();
+    }
+
+    init() {
+        this.css({
+            position: 'absolute',
+            left: this.snapMargin,
+            top: this.snapMargin,
+            boxSizing: 'border-box',
+            width: this.width,
+            height: this.height,
+            border: '1px solid var(--ui-color-divider-line)',
+            cursor: 'move',
+            pointerEvents: 'none',
+            webkitUserSelect: 'none',
+            userSelect: 'none',
+            opacity: 0
+        });
+    }
+
+    initCanvas() {
+        this.canvas = new Interface(null, 'canvas');
+        this.canvas.css({
+            position: 'absolute',
+            left: 0,
+            top: 0,
+            width: '100%',
+            height: '100%',
+            objectFit: 'cover'
+        });
+        this.add(this.canvas);
+
+        this.context = this.canvas.element.getContext('2d');
+    }
+
+    initDragAndDrop() {
+        this.reader = new FileReader();
+    }
+
+    addListeners() {
+        this.element.addEventListener('pointerdown', this.onPointerDown);
+        this.element.addEventListener('dragover', this.onDragOver);
+        this.element.addEventListener('drop', this.onDrop);
+        this.reader.addEventListener('load', this.onLoad);
+    }
+
+    removeListeners() {
+        this.element.removeEventListener('pointerdown', this.onPointerDown);
+        this.element.removeEventListener('dragover', this.onDragOver);
+        this.element.removeEventListener('drop', this.onDrop);
+        this.reader.removeEventListener('load', this.onLoad);
+    }
+
+    loadImage(path) {
+        const image = new Image();
+
+        image.onload = () => {
+            this.setThumbnail(image, true);
+
+            image.onload = null;
+        };
+
+        image.src = path;
+    }
+
+    // Event handlers
+
+    onPointerDown = e => {
+        this.bounds = this.element.getBoundingClientRect();
+        this.lastTime = performance.now();
+        this.lastMouse.set(e.clientX, e.clientY);
+        this.lastOrigin.copy(this.bounds);
+
+        this.onPointerMove(e);
+
+        window.addEventListener('pointermove', this.onPointerMove);
+        window.addEventListener('pointerup', this.onPointerUp);
+    };
+
+    onPointerMove = ({ clientX, clientY }) => {
+        const event = {
+            x: clientX,
+            y: clientY
+        };
+
+        this.mouse.copy(event);
+        this.delta.subVectors(this.mouse, this.lastMouse);
+
+        if (this.delta.length()) {
+            this.origin.addVectors(this.lastOrigin, this.delta);
+            this.snap();
+        }
+    };
+
+    onPointerUp = e => {
+        window.removeEventListener('pointerup', this.onPointerUp);
+        window.removeEventListener('pointermove', this.onPointerMove);
+
+        this.onPointerMove(e);
+
+        if (performance.now() - this.lastTime > 250 || this.delta.length() > 50) {
+            return;
+        }
+
+        this.events.emit('click', { target: this });
+    };
+
+    onDragOver = e => {
+        e.preventDefault();
+        e.dataTransfer.dropEffect = 'copy';
+    };
+
+    onDrop = e => {
+        e.preventDefault();
+
+        this.reader.readAsDataURL(e.dataTransfer.files[0]);
+    };
+
+    onLoad = e => {
+        this.loadImage(e.target.result);
+    };
+
+    // Public methods
+
+    setThumbnail(image, noCanvas) {
+        this.image = image;
+
+        if (noCanvas) {
+            if (!this.wrapper) {
+                this.wrapper = new Interface('.wrapper');
+                this.add(this.wrapper);
+            }
+
+            const content = new Interface(this.image);
+            content.css({
+                position: 'absolute',
+                left: 0,
+                top: 0,
+                width: '100%',
+                height: '100%',
+                objectFit: 'cover'
+            });
+
+            const oldWrapper = this.wrapper;
+
+            const newWrapper = this.wrapper.clone();
+            newWrapper.add(content);
+
+            this.replace(oldWrapper, newWrapper);
+            this.wrapper = newWrapper;
+
+            oldWrapper.destroy();
+
+            if (this.canvas) {
+                this.canvas = this.canvas.destroy();
+                this.context = null;
+            }
+        } else {
+            this.update();
+        }
+
+        this.events.emit('update', { image: this.image, target: this });
+
+        if (this.callback) {
+            this.callback(this.image, this);
+        }
+    }
+
+    resize(width, height, dpr, breakpoint) {
+        if (width < breakpoint) {
+            this.windowSnapMargin = this.snapMargin - 10;
+        } else {
+            this.windowSnapMargin = this.snapMargin;
+        }
+
+        if (this.snapped) {
+            if (this.snappedTop) {
+                this.css({ top: this.windowSnapMargin });
+            }
+
+            if (this.snappedRight) {
+                this.css({ left: width - this.width - this.windowSnapMargin });
+            }
+
+            if (this.snappedBottom) {
+                this.css({ top: height - this.height - this.windowSnapMargin });
+            }
+
+            if (this.snappedLeft) {
+                this.css({ left: this.windowSnapMargin });
+            }
+        }
+
+        if (this.canvas) {
+            this.canvas.element.width = Math.round(this.width * dpr);
+            this.canvas.element.height = Math.round(this.height * dpr);
+
+            this.update();
+        }
+    }
+
+    update() {
+        if (this.canvas && this.image) {
+            // Draws from a canvas are faster
+            this.context.drawImage(this.image, 0, 0, this.canvas.element.width, this.canvas.element.height);
+        }
+    }
+
+    animateIn(delay) {
+        this.clearTween();
+        this.css({ opacity: 0 }).tween({ opacity: 1 }, 700, 'easeOutCubic', delay, () => {
+            this.css({ pointerEvents: 'auto' });
+        });
+    }
+
+    animateOut(delay) {
+        this.clearTween();
+        this.css({ pointerEvents: 'none' });
+        this.tween({ opacity: 0 }, 700, 'easeOutCubic', delay);
+    }
+
+    snap() {
+        let snappedTop = false;
+        let snappedRight = false;
+        let snappedBottom = false;
+        let snappedLeft = false;
+
+        this.snapPosition.copy(this.origin);
+        this.snapTarget.copy(this.snapPosition);
+
+        // Top
+        if (this.snapTarget.y <= this.windowSnapMargin + 10) {
+            this.snapTarget.y = this.windowSnapMargin;
+            snappedTop = true;
+        }
+
+        // Right
+        if (this.snapTarget.x >= window.innerWidth - this.width - this.windowSnapMargin - 10) {
+            this.snapTarget.x = window.innerWidth - this.width - this.windowSnapMargin;
+            snappedRight = true;
+        }
+
+        // Bottom
+        if (this.snapTarget.y >= window.innerHeight - this.height - this.windowSnapMargin - 10) {
+            this.snapTarget.y = window.innerHeight - this.height - this.windowSnapMargin;
+            snappedBottom = true;
+        }
+
+        // Left
+        if (this.snapTarget.x <= this.windowSnapMargin + 10) {
+            this.snapTarget.x = this.windowSnapMargin;
+            snappedLeft = true;
+        }
+
+        this.snapPosition.sub(this.snapTarget);
+        this.origin.sub(this.snapPosition); // Subtract delta
+
+        this.css({ left: Math.round(this.origin.x), top: Math.round(this.origin.y) });
+
+        this.snappedTop = snappedTop;
+        this.snappedRight = snappedRight;
+        this.snappedBottom = snappedBottom;
+        this.snappedLeft = snappedLeft;
+        this.snapped = this.snappedTop || this.snappedRight || this.snappedBottom || this.snappedLeft;
+    }
+
+    destroy() {
+        this.removeListeners();
+
+        return super.destroy();
     }
 }
 
@@ -65809,8 +67594,8 @@ class DetailsButton extends Interface {
 
         this.canvas.element.width = Math.round(this.width * dpr);
         this.canvas.element.height = Math.round(this.height * dpr);
-        this.canvas.element.style.width = this.width + 'px';
-        this.canvas.element.style.height = this.height + 'px';
+        this.canvas.element.style.width = `${this.width}px`;
+        this.canvas.element.style.height = `${this.height}px`;
         this.context.scale(dpr, dpr);
 
         // Context properties need to be reassigned after resize
@@ -66013,8 +67798,8 @@ class MuteButton extends Interface {
 
         this.canvas.element.width = Math.round(this.width * dpr);
         this.canvas.element.height = Math.round(this.height * dpr);
-        this.canvas.element.style.width = this.width + 'px';
-        this.canvas.element.style.height = this.height + 'px';
+        this.canvas.element.style.width = `${this.width}px`;
+        this.canvas.element.style.height = `${this.height}px`;
         this.context.scale(dpr, dpr);
 
         // Context properties need to be reassigned after resize
@@ -66092,12 +67877,14 @@ class MuteButton extends Interface {
 class UI extends Interface {
     constructor({
         fps = false,
+        fpsOpen = false,
         breakpoint = 1000,
         ...data
     } = {}) {
         super('.ui');
 
         this.fps = fps;
+        this.fpsOpen = fpsOpen;
         this.breakpoint = breakpoint;
         this.data = data;
 
@@ -66116,8 +67903,9 @@ class UI extends Interface {
         };
 
         this.startTime = performance.now();
-        this.isDetailsOpen = false;
         this.buttons = [];
+        this.isDetailsOpen = false;
+        this.animatedIn = false;
 
         this.init();
         this.initViews();
@@ -66142,6 +67930,7 @@ class UI extends Interface {
 
     initViews() {
         const fps = this.fps;
+        const fpsOpen = this.fpsOpen;
 
         if (this.data.details) {
             this.details = new Details(this.data.details);
@@ -66153,8 +67942,8 @@ class UI extends Interface {
             this.add(this.detailsInfo);
         }
 
-        if (this.data.header || fps) {
-            this.header = new Header({ ...this.data.header, fps });
+        if (this.data.header || fps || fpsOpen) {
+            this.header = new Header({ ...this.data.header, fps, fpsOpen });
             this.add(this.header);
         }
 
@@ -66164,13 +67953,18 @@ class UI extends Interface {
         }
 
         if (this.data.info) {
-            this.info = new Info({ ...this.data.info });
+            this.info = new Info(this.data.info);
             this.add(this.info);
         }
 
         if (this.data.instructions) {
             this.instructions = new Info({ ...this.data.instructions, bottom: true });
             this.add(this.instructions);
+        }
+
+        if (this.data.thumbnail) {
+            this.thumbnail = new Thumbnail(this.data.thumbnail);
+            this.add(this.thumbnail);
         }
 
         if (this.data.detailsButton) {
@@ -66245,6 +68039,10 @@ class UI extends Interface {
             this.menu.resize(width, height, dpr, this.breakpoint);
         }
 
+        if (this.thumbnail) {
+            this.thumbnail.resize(width, height, dpr, this.breakpoint);
+        }
+
         if (this.detailsButton) {
             if (width < this.breakpoint) {
                 this.detailsButton.css({
@@ -66277,8 +68075,22 @@ class UI extends Interface {
     };
 
     onKeyUp = e => {
-        if (e.keyCode === 27) { // Esc
-            this.onDetailsClick();
+        if (this.details) {
+            if (e.keyCode === 27) { // Esc
+                this.onDetailsClick();
+            }
+        }
+
+        if (e.ctrlKey && e.keyCode === 48) { // Ctrl 0
+            if (this.animatedIn) {
+                if (this.isDetailsOpen) {
+                    this.toggleDetails(false);
+                }
+
+                this.animateOut();
+            } else {
+                this.animateIn();
+            }
         }
     };
 
@@ -66296,12 +68108,12 @@ class UI extends Interface {
         this.header.info.addPanel(item);
     }
 
-    setPanelValue(label, value) {
-        this.header.info.panel.setPanelValue(label, value);
+    setPanelIndex(name, index, path) {
+        this.header.info.panel.setPanelIndex(name, index, path);
     }
 
-    setPanelIndex(label, index) {
-        this.header.info.panel.setPanelIndex(label, index);
+    setPanelValue(name, value, path) {
+        this.header.info.panel.setPanelValue(name, value, path);
     }
 
     invert(isInverted) {
@@ -66325,8 +68137,12 @@ class UI extends Interface {
             }
         });
 
-        if (this.header) {
+        if (this.header && this.header.info) {
             this.header.info.update();
+        }
+
+        if (this.thumbnail) {
+            this.thumbnail.update();
         }
     }
 
@@ -66339,7 +68155,13 @@ class UI extends Interface {
             this.menu.animateIn();
         }
 
+        if (this.thumbnail) {
+            this.thumbnail.animateIn();
+        }
+
         this.buttons.forEach(button => button.animateIn());
+
+        this.animatedIn = true;
     }
 
     animateOut() {
@@ -66367,14 +68189,16 @@ class UI extends Interface {
             this.instructions.animateOut();
         }
 
+        if (this.thumbnail) {
+            this.thumbnail.animateOut();
+        }
+
         this.buttons.forEach(button => button.animateOut());
+
+        this.animatedIn = false;
     }
 
     toggleDetails(show) {
-        if (!this.details) {
-            return;
-        }
-
         if (show) {
             this.isDetailsOpen = true;
 
@@ -66460,6 +68284,7 @@ class Title extends Interface {
     }
 
     animateIn() {
+        this.clearTween();
         this.visible();
 
         shuffle(this.letters);
@@ -66476,7 +68301,7 @@ class Title extends Interface {
             letter.clearTween().css({ opacity: 0 }).tween({ opacity: 1 }, 2000, 'easeOutCubic', 100 + i * 15);
         });
 
-        this.clearTween().tween({ opacity: 1 }, 1000, 'easeOutSine');
+        this.tween({ opacity: 1 }, 1000, 'easeOutSine');
     }
 
     animateOut(callback) {
@@ -66527,7 +68352,7 @@ class Link extends Interface {
             left: 10,
             right: 10,
             bottom: 10,
-            height: 1,
+            height: window.devicePixelRatio > 1 ? 1.5 : 1,
             backgroundColor: 'var(--ui-color)',
             transformOrigin: 'left center',
             scaleX: 0
@@ -71826,6 +73651,10 @@ class MotionBlur {
         });
     }
 
+    setCamera(camera) {
+        this.camera = camera;
+    }
+
     setSize(width, height) {
         this.renderTarget.setSize(width, height);
     }
@@ -71876,7 +73705,6 @@ class MotionBlur {
         if (object.layers.isEnabled(this.channel)) {
             if (!object.initialized) {
                 object.prevMatrixWorld = object.matrixWorld.clone();
-                object.originalMaterial = object.material;
 
                 if (object.isInstancedMesh) {
                     object.prevInstanceMatrix = new InstancedBufferAttribute(new Float32Array(object.instanceMatrix.array), 16);
@@ -71889,6 +73717,7 @@ class MotionBlur {
                 object.initialized = true;
             }
 
+            object.originalMaterial = object.material;
             object.velocityMaterial.uniforms.uPrevProjectionMatrix.value.copy(this.cameraBlur ? this.prevProjectionMatrix : this.camera.projectionMatrix);
             object.velocityMaterial.uniforms.uPrevModelViewMatrix.value.multiplyMatrices(this.cameraBlur ? this.prevMatrixWorldInverse : this.camera.matrixWorldInverse, object.prevMatrixWorld);
             object.velocityMaterial.uniforms.uInterpolateGeometry.value = this.interpolateGeometry;
@@ -72303,7 +74132,11 @@ class Text {
     }
 }
 
-// Generated by Haxe 4.2.2
+class HxOverrides {
+	static now() {
+		return Date.now();
+	}
+}
 var oimo = oimo || {};
 if(!oimo.collision) oimo.collision = {};
 if(!oimo.collision.broadphase) oimo.collision.broadphase = {};
@@ -72655,14 +74488,11 @@ oimo.collision.broadphase.bruteforce.BruteForceBroadPhase = class oimo_collision
 	collectPairs() {
 		let p = this._proxyPairList;
 		if(p != null) {
-			while(true) {
+			do {
 				p._p1 = null;
 				p._p2 = null;
 				p = p._next;
-				if(!(p != null)) {
-					break;
-				}
-			}
+			} while(p != null);
 			this._proxyPairList._next = this._proxyPairPool;
 			this._proxyPairPool = this._proxyPairList;
 			this._proxyPairList = null;
@@ -73536,14 +75366,11 @@ oimo.collision.broadphase.bvh.BvhBroadPhase = class oimo_collision_broadphase_bv
 	collectPairs() {
 		let p = this._proxyPairList;
 		if(p != null) {
-			while(true) {
+			do {
 				p._p1 = null;
 				p._p2 = null;
 				p = p._next;
-				if(!(p != null)) {
-					break;
-				}
-			}
+			} while(p != null);
 			this._proxyPairList._next = this._proxyPairPool;
 			this._proxyPairPool = this._proxyPairList;
 			this._proxyPairList = null;
@@ -74158,7 +75985,7 @@ oimo.collision.broadphase.bvh.BvhStrategy = class oimo_collision_broadphase_bvh_
 			let newArea = ((combinedMaxX - combinedMinX) * (ey1 + ez1) + ey1 * ez1) * 2;
 			let creatingCost = newArea * 2;
 			let incrementalCost = (newArea - ((currentNode._aabbMaxX - currentNode._aabbMinX) * (ey + ez) + ey * ez) * 2) * 2;
-			let descendingCost1;
+			let descendingCost1 = incrementalCost;
 			combinedMinX = c11._aabbMinX < leaf._aabbMinX ? c11._aabbMinX : leaf._aabbMinX;
 			combinedMinY = c11._aabbMinY < leaf._aabbMinY ? c11._aabbMinY : leaf._aabbMinY;
 			combinedMinZ = c11._aabbMinZ < leaf._aabbMinZ ? c11._aabbMinZ : leaf._aabbMinZ;
@@ -74176,7 +76003,7 @@ oimo.collision.broadphase.bvh.BvhStrategy = class oimo_collision_broadphase_bvh_
 				let ez1 = c11._aabbMaxZ - c11._aabbMinZ;
 				descendingCost1 = incrementalCost + (((combinedMaxX - combinedMinX) * (ey + ez) + ey * ez) * 2 - ((c11._aabbMaxX - c11._aabbMinX) * (ey1 + ez1) + ey1 * ez1) * 2);
 			}
-			let descendingCost2;
+			let descendingCost2 = incrementalCost;
 			combinedMinX = c21._aabbMinX < leaf._aabbMinX ? c21._aabbMinX : leaf._aabbMinX;
 			combinedMinY = c21._aabbMinY < leaf._aabbMinY ? c21._aabbMinY : leaf._aabbMinY;
 			combinedMinZ = c21._aabbMinZ < leaf._aabbMinZ ? c21._aabbMinZ : leaf._aabbMinZ;
@@ -75023,7 +76850,7 @@ oimo.collision.geometry.CapsuleGeometry = class oimo_collision_geometry_CapsuleG
 		let dx = endX - beginX;
 		let dz = endZ - beginZ;
 		let tminxz = 0;
-		let tmaxxz;
+		let tmaxxz = 1;
 		let a = dx * dx + dz * dz;
 		let b = beginX * dx + beginZ * dz;
 		let c = beginX * beginX + beginZ * beginZ - this._radius * this._radius;
@@ -75264,7 +77091,7 @@ oimo.collision.geometry.ConeGeometry = class oimo_collision_geometry_ConeGeometr
 		out.z = rz * invLen;
 	}
 	_rayCastLocal(beginX,beginY,beginZ,endX,endY,endZ,hit) {
-		let p1y;
+		let p1y = beginY;
 		let halfH = this._halfHeight;
 		let dx = endX - beginX;
 		let dy = endY - beginY;
@@ -75688,7 +77515,7 @@ oimo.collision.geometry.CylinderGeometry = class oimo_collision_geometry_Cylinde
 			return false;
 		}
 		let tminxz = 0;
-		let tmaxxz;
+		let tmaxxz = 1;
 		let a = dx * dx + dz * dz;
 		let b = beginX * dx + beginZ * dz;
 		let c = beginX * beginX + beginZ * beginZ - this._radius * this._radius;
@@ -76965,27 +78792,15 @@ oimo.collision.narrowphase.detector.BoxBoxDetector = class oimo_collision_narrow
 			c12X = -c12X;
 			c12Y = -c12Y;
 			c12Z = -c12Z;
-
-
-
-
 			w1 = w2;
-
-
 			h1 = h2;
-
-
 			d1 = d2;
-
-
-
-
+			tmpX = c1X;
+			tmpY = c1Y;
+			tmpZ = c1Z;
 			c1X = c2X;
 			c1Y = c2Y;
 			c1Z = c2Z;
-
-
-
 			tmpX = x1X;
 			tmpY = x1Y;
 			tmpZ = x1Z;
@@ -77157,7 +78972,6 @@ oimo.collision.narrowphase.detector.BoxBoxDetector = class oimo_collision_narrow
 			incId = 4;
 		}
 		if(-incDot < minIncDot) {
-
 			incId = 5;
 		}
 		let incV1X;
@@ -77828,7 +79642,7 @@ oimo.collision.narrowphase.detector.CapsuleCapsuleDetector = class oimo_collisio
 			t2 = 0;
 		} else if(d11 == 0) {
 			t1 = 0;
-
+			t2 = p12d2;
 			if(p12d2 < 0) {
 				t2 = 0;
 			} else if(p12d2 > d22) {
@@ -77838,7 +79652,7 @@ oimo.collision.narrowphase.detector.CapsuleCapsuleDetector = class oimo_collisio
 			}
 		} else if(d22 == 0) {
 			t2 = 0;
-
+			t1 = p21d1;
 			if(p21d1 < 0) {
 				t1 = 0;
 			} else if(p21d1 > d11) {
@@ -77863,7 +79677,7 @@ oimo.collision.narrowphase.detector.CapsuleCapsuleDetector = class oimo_collisio
 			t2 = t1 * d12 + p12d2;
 			if(t2 < 0) {
 				t2 = 0;
-
+				t1 = p21d1;
 				if(p21d1 < 0) {
 					t1 = 0;
 				} else if(p21d1 > d11) {
@@ -78678,7 +80492,7 @@ oimo.collision.narrowphase.detector.gjkepa.EpaPolyhedron = class oimo_collision_
 		let v = v1;
 		let prevT = null;
 		let firstT = null;
-		while(true) {
+		do {
 			if(v._tmpEdgeLoopNext == null) {
 				this._dumpAsObjModel();
 				this._status = 4;
@@ -78724,10 +80538,7 @@ oimo.collision.narrowphase.detector.gjkepa.EpaPolyhedron = class oimo_collision_
 			}
 			prevT = t;
 			v = v._tmpEdgeLoopNext;
-			if(!(v != v1)) {
-				break;
-			}
-		}
+		} while(v != v1);
 		if(!prevT.setAdjacentTriangle(firstT)) {
 			this._status = 1;
 		}
@@ -83809,7 +85620,7 @@ oimo.collision.narrowphase.detector.gjkepa.GjkEpa = class oimo_collision_narrowp
 		oldDirX = v.x;
 		oldDirY = v.y;
 		oldDirZ = v.z;
-		while(true) {
+		do {
 			let s0X;
 			let s0Y;
 			let s0Z;
@@ -83889,8 +85700,7 @@ oimo.collision.narrowphase.detector.gjkepa.GjkEpa = class oimo_collision_narrowp
 				break;
 			}
 			this.simplexSize--;
-			break;
-		}
+		} while(false);
 		let v1 = this.dir;
 		v1.x = oldDirX;
 		v1.y = oldDirY;
@@ -85911,15 +87721,15 @@ oimo.common.Mat3 = class oimo_common_Mat3 {
 		let e10 = this.e01;
 		let e20 = this.e02;
 		let e21 = this.e12;
-
+		this.e00 = this.e00;
 		this.e01 = this.e10;
 		this.e02 = this.e20;
 		this.e10 = e10;
-
+		this.e11 = this.e11;
 		this.e12 = this.e21;
 		this.e20 = e20;
 		this.e21 = e21;
-
+		this.e22 = this.e22;
 		return this;
 	}
 	determinant() {
@@ -86428,29 +88238,29 @@ oimo.common.Mat4 = class oimo_common_Mat4 {
 		this.e21 *= sz;
 		this.e22 *= sz;
 		this.e23 *= sz;
-
-
-
-
+		this.e30 = this.e30;
+		this.e31 = this.e31;
+		this.e32 = this.e32;
+		this.e33 = this.e33;
 		return this;
 	}
 	appendScaleEq(sx,sy,sz) {
 		this.e00 *= sx;
 		this.e01 *= sy;
 		this.e02 *= sz;
-
+		this.e03 = this.e03;
 		this.e10 *= sx;
 		this.e11 *= sy;
 		this.e12 *= sz;
-
+		this.e13 = this.e13;
 		this.e20 *= sx;
 		this.e21 *= sy;
 		this.e22 *= sz;
-
+		this.e23 = this.e23;
 		this.e30 *= sx;
 		this.e31 *= sy;
 		this.e32 *= sz;
-
+		this.e33 = this.e33;
 		return this;
 	}
 	prependRotationEq(rad,axisX,axisY,axisZ) {
@@ -86486,10 +88296,10 @@ oimo.common.Mat4 = class oimo_common_Mat4 {
 		this.e21 = e21;
 		this.e22 = e22;
 		this.e23 = e23;
-
-
-
-
+		this.e30 = this.e30;
+		this.e31 = this.e31;
+		this.e32 = this.e32;
+		this.e33 = this.e33;
 		return this;
 	}
 	appendRotationEq(rad,axisX,axisY,axisZ) {
@@ -86516,19 +88326,19 @@ oimo.common.Mat4 = class oimo_common_Mat4 {
 		this.e00 = this.e00 * r00 + this.e01 * r10 + this.e02 * r20;
 		this.e01 = e01;
 		this.e02 = e02;
-
+		this.e03 = this.e03;
 		this.e10 = this.e10 * r00 + this.e11 * r10 + this.e12 * r20;
 		this.e11 = e11;
 		this.e12 = e12;
-
+		this.e13 = this.e13;
 		this.e20 = this.e20 * r00 + this.e21 * r10 + this.e22 * r20;
 		this.e21 = e21;
 		this.e22 = e22;
-
+		this.e23 = this.e23;
 		this.e30 = this.e30 * r00 + this.e31 * r10 + this.e32 * r20;
 		this.e31 = e31;
 		this.e32 = e32;
-
+		this.e33 = this.e33;
 		return this;
 	}
 	prependTranslationEq(tx,ty,tz) {
@@ -86544,10 +88354,10 @@ oimo.common.Mat4 = class oimo_common_Mat4 {
 		this.e21 += tz * this.e31;
 		this.e22 += tz * this.e32;
 		this.e23 += tz * this.e33;
-
-
-
-
+		this.e30 = this.e30;
+		this.e31 = this.e31;
+		this.e32 = this.e32;
+		this.e33 = this.e33;
 		return this;
 	}
 	appendTranslationEq(tx,ty,tz) {
@@ -86555,25 +88365,21 @@ oimo.common.Mat4 = class oimo_common_Mat4 {
 		let e13 = this.e10 * tx + this.e11 * ty + this.e12 * tz + this.e13;
 		let e23 = this.e20 * tx + this.e21 * ty + this.e22 * tz + this.e23;
 		let e33 = this.e30 * tx + this.e31 * ty + this.e32 * tz + this.e33;
-
-
-
-
+		this.e00 = this.e00;
+		this.e01 = this.e01;
+		this.e02 = this.e02;
 		this.e03 = e03;
-
-
-
-
+		this.e10 = this.e10;
+		this.e11 = this.e11;
+		this.e12 = this.e12;
 		this.e13 = e13;
-
-
-
-
+		this.e20 = this.e20;
+		this.e21 = this.e21;
+		this.e22 = this.e22;
 		this.e23 = e23;
-
-
-
-
+		this.e30 = this.e30;
+		this.e31 = this.e31;
+		this.e32 = this.e32;
 		this.e33 = e33;
 		return this;
 	}
@@ -86587,22 +88393,22 @@ oimo.common.Mat4 = class oimo_common_Mat4 {
 		let e30 = this.e03;
 		let e31 = this.e13;
 		let e32 = this.e23;
-
+		this.e00 = this.e00;
 		this.e01 = this.e10;
 		this.e02 = this.e20;
 		this.e03 = this.e30;
 		this.e10 = e10;
-
+		this.e11 = this.e11;
 		this.e12 = this.e21;
 		this.e13 = this.e31;
 		this.e20 = e20;
 		this.e21 = e21;
-
+		this.e22 = this.e22;
 		this.e23 = this.e32;
 		this.e30 = e30;
 		this.e31 = e31;
 		this.e32 = e32;
-
+		this.e33 = this.e33;
 		return this;
 	}
 	determinant() {
@@ -87539,7 +89345,7 @@ oimo.dynamics.ContactManager = class oimo_dynamics_ContactManager {
 		let pp = this._broadPhase._proxyPairList;
 		while(pp != null) {
 			let n = pp._next;
-			while(true) {
+			do {
 				let s1;
 				let s2;
 				if(pp._p1._id < pp._p2._id) {
@@ -87628,8 +89434,7 @@ oimo.dynamics.ContactManager = class oimo_dynamics_ContactManager {
 					_this._tf2 = _this._b2._transform;
 					this._numContacts++;
 				}
-				break;
-			}
+			} while(false);
 			pp = n;
 		}
 	}
@@ -87638,7 +89443,7 @@ oimo.dynamics.ContactManager = class oimo_dynamics_ContactManager {
 		let c = this._contactList;
 		while(c != null) {
 			let n = c._next;
-			while(true) {
+			do {
 				if(c._latest) {
 					c._latest = false;
 					c._shouldBeSkipped = false;
@@ -87833,8 +89638,7 @@ oimo.dynamics.ContactManager = class oimo_dynamics_ContactManager {
 					break;
 				}
 				c._shouldBeSkipped = !(aabb1._minX < aabb2._maxX && aabb1._maxX > aabb2._minX && aabb1._minY < aabb2._maxY && aabb1._maxY > aabb2._minY && aabb1._minZ < aabb2._maxZ && aabb1._maxZ > aabb2._minZ);
-				break;
-			}
+			} while(false);
 			c = n;
 		}
 	}
@@ -87986,9 +89790,9 @@ oimo.dynamics.Island = class oimo_dynamics_Island {
 		rb._angularContactImpulseX = 0;
 		rb._angularContactImpulseY = 0;
 		rb._angularContactImpulseZ = 0;
-		if(rb._autoSleep && rb._velX * rb._velX + rb._velY * rb._velY + rb._velZ * rb._velZ < oimo.common.Setting.sleepingVelocityThreshold * oimo.common.Setting.sleepingVelocityThreshold && rb._angVelX * rb._angVelX + rb._angVelY * rb._angVelY + rb._angVelZ * rb._angVelZ < oimo.common.Setting.sleepingAngularVelocityThreshold * oimo.common.Setting.sleepingAngularVelocityThreshold) {
+		if(rb._autoSleep && rb._velX * rb._velX + rb._velY * rb._velY + rb._velZ * rb._velZ < rb._sleepingVelocityThreshold * rb._sleepingVelocityThreshold && rb._angVelX * rb._angVelX + rb._angVelY * rb._angVelY + rb._angVelZ * rb._angVelZ < rb._sleepingAngularVelocityThreshold * rb._sleepingAngularVelocityThreshold) {
 			rb._sleepTime += dt;
-			if(rb._sleepTime > oimo.common.Setting.sleepingTimeThreshold) {
+			if(rb._sleepTime >= rb._sleepingTimeThreshold) {
 				rb._sleeping = true;
 				rb._sleepTime = 0;
 			}
@@ -88190,12 +89994,12 @@ oimo.dynamics.Island = class oimo_dynamics_Island {
 			rb._angularContactImpulseY = 0;
 			rb._angularContactImpulseZ = 0;
 			rb._sleeping = false;
-			if(rb._autoSleep && rb._velX * rb._velX + rb._velY * rb._velY + rb._velZ * rb._velZ < oimo.common.Setting.sleepingVelocityThreshold * oimo.common.Setting.sleepingVelocityThreshold && rb._angVelX * rb._angVelX + rb._angVelY * rb._angVelY + rb._angVelZ * rb._angVelZ < oimo.common.Setting.sleepingAngularVelocityThreshold * oimo.common.Setting.sleepingAngularVelocityThreshold) {
+			if(rb._autoSleep && rb._velX * rb._velX + rb._velY * rb._velY + rb._velZ * rb._velZ < rb._sleepingVelocityThreshold * rb._sleepingVelocityThreshold && rb._angVelX * rb._angVelX + rb._angVelY * rb._angVelY + rb._angVelZ * rb._angVelZ < rb._sleepingAngularVelocityThreshold * rb._sleepingAngularVelocityThreshold) {
 				rb._sleepTime += dt;
 			} else {
 				rb._sleepTime = 0;
 			}
-			if(rb._sleepTime < oimo.common.Setting.sleepingTimeThreshold) {
+			if(rb._sleepTime < rb._sleepingTimeThreshold) {
 				sleepIsland = false;
 			}
 			if(rb._type == 0) {
@@ -88470,10 +90274,10 @@ oimo.dynamics.World = class oimo_dynamics_World {
 		this._shapeIdCount = 0;
 	}
 	_updateContacts() {
-		let st = Date.now() / 1000;
+		let st = HxOverrides.now() / 1000;
 		this._contactManager._updateContacts();
-		oimo.dynamics.common.Performance.broadPhaseCollisionTime = (Date.now() / 1000 - st) * 1000;
-		let st1 = Date.now() / 1000;
+		oimo.dynamics.common.Performance.broadPhaseCollisionTime = (HxOverrides.now() / 1000 - st) * 1000;
+		let st1 = HxOverrides.now() / 1000;
 		let c = this._contactManager._contactList;
 		while(c != null) {
 			let n = c._next;
@@ -88482,10 +90286,10 @@ oimo.dynamics.World = class oimo_dynamics_World {
 			}
 			c = n;
 		}
-		oimo.dynamics.common.Performance.narrowPhaseCollisionTime = (Date.now() / 1000 - st1) * 1000;
+		oimo.dynamics.common.Performance.narrowPhaseCollisionTime = (HxOverrides.now() / 1000 - st1) * 1000;
 	}
 	_solveIslands() {
-		let st = Date.now() / 1000;
+		let st = HxOverrides.now() / 1000;
 		if(oimo.common.Setting.disableSleeping) {
 			let b = this._rigidBodyList;
 			while(b != null) {
@@ -88543,7 +90347,7 @@ oimo.dynamics.World = class oimo_dynamics_World {
 			this._solversInIslands[--this._numSolversInIslands]._addedToIsland = false;
 			this._solversInIslands[this._numSolversInIslands] = null;
 		}
-		oimo.dynamics.common.Performance.dynamicsTime = (Date.now() / 1000 - st) * 1000;
+		oimo.dynamics.common.Performance.dynamicsTime = (HxOverrides.now() / 1000 - st) * 1000;
 	}
 	buildIsland(base) {
 		let stackCount = 1;
@@ -90183,10 +91987,10 @@ oimo.dynamics.World = class oimo_dynamics_World {
 		}
 		this._timeStep.dt = timeStep;
 		this._timeStep.invDt = 1 / timeStep;
-		let st = Date.now() / 1000;
+		let st = HxOverrides.now() / 1000;
 		this._updateContacts();
 		this._solveIslands();
-		oimo.dynamics.common.Performance.totalTime = (Date.now() / 1000 - st) * 1000;
+		oimo.dynamics.common.Performance.totalTime = (HxOverrides.now() / 1000 - st) * 1000;
 	}
 	addRigidBody(rigidBody) {
 		if(rigidBody._world != null) {
@@ -91022,7 +92826,7 @@ oimo.dynamics.common.DebugDraw = class oimo_dynamics_common_DebugDraw {
 		_this2.x *= radiusX;
 		_this2.y *= radiusX;
 		_this2.z *= radiusX;
-
+		ex = _this2;
 		let _this3 = this.p;
 		let _this4 = _this3.sizeVec3 == 0 ? new oimo.common.Vec3() : _this3.stackVec3[--_this3.sizeVec3];
 		_this4.x = ey.x;
@@ -91032,7 +92836,7 @@ oimo.dynamics.common.DebugDraw = class oimo_dynamics_common_DebugDraw {
 		_this5.x *= radiusY;
 		_this5.y *= radiusY;
 		_this5.z *= radiusY;
-
+		ey = _this5;
 		let angDiff = endAngle - startAngle;
 		if(angDiff < 0) {
 			angDiff = -angDiff;
@@ -91382,8 +93186,7 @@ oimo.dynamics.common.DebugDraw = class oimo_dynamics_common_DebugDraw {
 				let i = _g1++;
 				let v2 = this.tmpCircleVerts2[i];
 				let v3 = this.tmpCircleVerts2[(i + 1) % 8];
-				let n1 = this.tmpCircleVerts1[i];
-				this.triangle(_this7,v2,v3,n1,this.tmpCircleNorms[i],this.tmpCircleNorms[(i + 1) % 8],color);
+				this.triangle(_this7,v2,v3,this.tmpCircleVerts1[i],this.tmpCircleNorms[i],this.tmpCircleNorms[(i + 1) % 8],color);
 				v2 = this.tmpCircleVerts2[(i + 1) % 8];
 				v3 = this.tmpCircleVerts2[i];
 				let _this = this.p;
@@ -91395,7 +93198,6 @@ oimo.dynamics.common.DebugDraw = class oimo_dynamics_common_DebugDraw {
 				_this2.x = -_this2.x;
 				_this2.y = -_this2.y;
 				_this2.z = -_this2.z;
-
 				this.triangle(_this10,v2,v3,_this2,_this2,_this2,color);
 				let _this3 = this.p;
 				if(_this2 != null) {
@@ -91861,12 +93663,12 @@ oimo.dynamics.common.DebugDraw = class oimo_dynamics_common_DebugDraw {
 			let _g1 = 0;
 			while(_g1 < 8) {
 				let i = _g1++;
-				let v1;
+				let v1 = _this7;
 				let v2 = this.tmpCircleVerts1[i];
 				let v3 = this.tmpCircleVerts1[(i + 1) % 8];
 				let n1 = ey;
 				this.triangle(_this7,v2,v3,n1,n1,n1,color);
-
+				v1 = _this10;
 				v2 = this.tmpCircleVerts2[(i + 1) % 8];
 				v3 = this.tmpCircleVerts2[i];
 				let _this = this.p;
@@ -91878,7 +93680,7 @@ oimo.dynamics.common.DebugDraw = class oimo_dynamics_common_DebugDraw {
 				_this2.x = -_this2.x;
 				_this2.y = -_this2.y;
 				_this2.z = -_this2.z;
-
+				n1 = _this2;
 				this.triangle(_this10,v2,v3,_this2,_this2,_this2,color);
 				let _this3 = this.p;
 				if(_this2 != null) {
@@ -93960,7 +95762,6 @@ oimo.dynamics.constraint.contact.ManifoldUpdater = class oimo_dynamics_constrain
 			maxDepthIndex = 2;
 		}
 		if(p4._depth > maxDepth) {
-
 			maxDepthIndex = 3;
 		}
 		let rp1X;
@@ -94239,7 +96040,6 @@ oimo.dynamics.constraint.contact.ManifoldUpdater = class oimo_dynamics_constrain
 		let a13 = cross1X3 * cross1X3 + cross1Y3 * cross1Y3 + cross1Z3 * cross1Z3;
 		let a24 = cross2X3 * cross2X3 + cross2Y3 * cross2Y3 + cross2Z3 * cross2Z3;
 		let a34 = cross3X3 * cross3X3 + cross3Y3 * cross3Y3 + cross3Z3 * cross3Z3;
-		let a4 = a13 > a24 ? a13 > a34 ? a13 : a34 : a24 > a34 ? a24 : a34;
 		let max = a1 > a2 ? a1 > a3 ? a1 : a3 : a2 > a3 ? a2 : a3;
 		let target = 0;
 		if(a22 > max && maxDepthIndex != 1 || maxDepthIndex == 0) {
@@ -94250,8 +96050,7 @@ oimo.dynamics.constraint.contact.ManifoldUpdater = class oimo_dynamics_constrain
 			max = a33;
 			target = 2;
 		}
-		if(a4 > max && maxDepthIndex != 3) {
-
+		if((a13 > a24 ? a13 > a34 ? a13 : a34 : a24 > a34 ? a24 : a34) > max && maxDepthIndex != 3) {
 			target = 3;
 		}
 		return target;
@@ -98754,13 +100553,10 @@ oimo.dynamics.constraint.joint.RagdollJoint = class oimo_dynamics_constraint_joi
 		swingVX *= invLen * this._swingAngle;
 		swingVY *= invLen * this._swingAngle;
 		swingVZ *= invLen * this._swingAngle;
-
 		let __tmp__Y1;
 		let __tmp__Z1;
-
 		__tmp__Y1 = basis1Mat01 * swingVX + basis1Mat11 * swingVY + basis1Mat21 * swingVZ;
 		__tmp__Z1 = basis1Mat02 * swingVX + basis1Mat12 * swingVY + basis1Mat22 * swingVZ;
-
 		swingVY = __tmp__Y1;
 		swingVZ = __tmp__Z1;
 		let x1 = swingVY;
@@ -102044,7 +103840,7 @@ oimo.dynamics.constraint.solver.direct.MassMatrix = class oimo_dynamics_constrai
 		let _g3 = this._maxSubmatrixId;
 		while(_g2 < _g3) {
 			let i = _g2++;
-			let t;
+			let t = i;
 			t = (i & 85) + (i >> 1 & 85);
 			t = (t & 51) + (t >> 2 & 51);
 			t = (t & 15) + (t >> 4 & 15);
@@ -104993,6 +106789,9 @@ oimo.dynamics.rigidbody.RigidBody = class oimo_dynamics_rigidbody_RigidBody {
 		this._sleepTime = 0;
 		this._sleeping = false;
 		this._autoSleep = config.autoSleep;
+		this._sleepingVelocityThreshold = config.sleepingVelocityThreshold;
+		this._sleepingAngularVelocityThreshold = config.sleepingAngularVelocityThreshold;
+		this._sleepingTimeThreshold = config.sleepingTimeThreshold;
 		this._mass = 0;
 		this._invMass = 0;
 		this._localInertia00 = 0;
@@ -105702,7 +107501,25 @@ oimo.dynamics.rigidbody.RigidBody = class oimo_dynamics_rigidbody_RigidBody {
 			this._invLocalInertiaWithoutRotFactor21 = 0;
 			this._invLocalInertiaWithoutRotFactor22 = 0;
 			if(this._type == 0) {
-				this._type = 1;
+				this._invMass = 1e-9;
+				this._invLocalInertiaWithoutRotFactor00 = 1e-9;
+				this._invLocalInertiaWithoutRotFactor01 = 0;
+				this._invLocalInertiaWithoutRotFactor02 = 0;
+				this._invLocalInertiaWithoutRotFactor10 = 0;
+				this._invLocalInertiaWithoutRotFactor11 = 1e-9;
+				this._invLocalInertiaWithoutRotFactor12 = 0;
+				this._invLocalInertiaWithoutRotFactor20 = 0;
+				this._invLocalInertiaWithoutRotFactor21 = 0;
+				this._invLocalInertiaWithoutRotFactor22 = 1e-9;
+				this._invLocalInertia00 = this._invLocalInertiaWithoutRotFactor00 * this._rotFactor.x;
+				this._invLocalInertia01 = this._invLocalInertiaWithoutRotFactor01 * this._rotFactor.x;
+				this._invLocalInertia02 = this._invLocalInertiaWithoutRotFactor02 * this._rotFactor.x;
+				this._invLocalInertia10 = this._invLocalInertiaWithoutRotFactor10 * this._rotFactor.y;
+				this._invLocalInertia11 = this._invLocalInertiaWithoutRotFactor11 * this._rotFactor.y;
+				this._invLocalInertia12 = this._invLocalInertiaWithoutRotFactor12 * this._rotFactor.y;
+				this._invLocalInertia20 = this._invLocalInertiaWithoutRotFactor20 * this._rotFactor.z;
+				this._invLocalInertia21 = this._invLocalInertiaWithoutRotFactor21 * this._rotFactor.z;
+				this._invLocalInertia22 = this._invLocalInertiaWithoutRotFactor22 * this._rotFactor.z;
 			}
 		}
 		let __tmp__00;
@@ -107758,7 +109575,25 @@ oimo.dynamics.rigidbody.RigidBody = class oimo_dynamics_rigidbody_RigidBody {
 			this._invLocalInertiaWithoutRotFactor21 = 0;
 			this._invLocalInertiaWithoutRotFactor22 = 0;
 			if(this._type == 0) {
-				this._type = 1;
+				this._invMass = 1e-9;
+				this._invLocalInertiaWithoutRotFactor00 = 1e-9;
+				this._invLocalInertiaWithoutRotFactor01 = 0;
+				this._invLocalInertiaWithoutRotFactor02 = 0;
+				this._invLocalInertiaWithoutRotFactor10 = 0;
+				this._invLocalInertiaWithoutRotFactor11 = 1e-9;
+				this._invLocalInertiaWithoutRotFactor12 = 0;
+				this._invLocalInertiaWithoutRotFactor20 = 0;
+				this._invLocalInertiaWithoutRotFactor21 = 0;
+				this._invLocalInertiaWithoutRotFactor22 = 1e-9;
+				this._invLocalInertia00 = this._invLocalInertiaWithoutRotFactor00 * this._rotFactor.x;
+				this._invLocalInertia01 = this._invLocalInertiaWithoutRotFactor01 * this._rotFactor.x;
+				this._invLocalInertia02 = this._invLocalInertiaWithoutRotFactor02 * this._rotFactor.x;
+				this._invLocalInertia10 = this._invLocalInertiaWithoutRotFactor10 * this._rotFactor.y;
+				this._invLocalInertia11 = this._invLocalInertiaWithoutRotFactor11 * this._rotFactor.y;
+				this._invLocalInertia12 = this._invLocalInertiaWithoutRotFactor12 * this._rotFactor.y;
+				this._invLocalInertia20 = this._invLocalInertiaWithoutRotFactor20 * this._rotFactor.z;
+				this._invLocalInertia21 = this._invLocalInertiaWithoutRotFactor21 * this._rotFactor.z;
+				this._invLocalInertia22 = this._invLocalInertiaWithoutRotFactor22 * this._rotFactor.z;
 			}
 		}
 		let __tmp__00;
@@ -108486,24 +110321,6 @@ oimo.dynamics.rigidbody.RigidBody = class oimo_dynamics_rigidbody_RigidBody {
 		}
 	}
 	removeShape(shape) {
-		let prev = shape._prev;
-		let next = shape._next;
-		if(prev != null) {
-			prev._next = next;
-		}
-		if(next != null) {
-			next._prev = prev;
-		}
-		if(shape == this._shapeList) {
-			this._shapeList = this._shapeList._next;
-		}
-		if(shape == this._shapeListLast) {
-			this._shapeListLast = this._shapeListLast._prev;
-		}
-		shape._next = null;
-		shape._prev = null;
-		this._numShapes--;
-		shape._rigidBody = null;
 		if(this._world != null) {
 			let _this = this._world;
 			_this._broadPhase.destroyProxy(shape._proxy);
@@ -108608,6 +110425,24 @@ oimo.dynamics.rigidbody.RigidBody = class oimo_dynamics_rigidbody_RigidBody {
 			}
 			_this._numShapes--;
 		}
+		let prev = shape._prev;
+		let next = shape._next;
+		if(prev != null) {
+			prev._next = next;
+		}
+		if(next != null) {
+			next._prev = prev;
+		}
+		if(shape == this._shapeList) {
+			this._shapeList = this._shapeList._next;
+		}
+		if(shape == this._shapeListLast) {
+			this._shapeListLast = this._shapeListLast._prev;
+		}
+		shape._next = null;
+		shape._prev = null;
+		this._numShapes--;
+		shape._rigidBody = null;
 		this.updateMass();
 		let s = this._shapeList;
 		while(s != null) {
@@ -108784,9 +110619,12 @@ oimo.dynamics.rigidbody.RigidBodyConfig = class oimo_dynamics_rigidbody_RigidBod
 		this.linearVelocity = new oimo.common.Vec3();
 		this.angularVelocity = new oimo.common.Vec3();
 		this.type = 0;
-		this.autoSleep = true;
 		this.linearDamping = 0;
 		this.angularDamping = 0;
+		this.autoSleep = true;
+		this.sleepingVelocityThreshold = oimo.common.Setting.sleepingVelocityThreshold;
+		this.sleepingAngularVelocityThreshold = oimo.common.Setting.sleepingAngularVelocityThreshold;
+		this.sleepingTimeThreshold = oimo.common.Setting.sleepingTimeThreshold;
 	}
 };
 oimo.dynamics.rigidbody.RigidBodyType = class oimo_dynamics_rigidbody_RigidBodyType {
@@ -109252,7 +111090,9 @@ oimo.dynamics.rigidbody.ShapeConfig = class oimo_dynamics_rigidbody_ShapeConfig 
 if(!oimo.m) oimo.m = {};
 oimo.m.M = class oimo_m_M {
 };
-
+if(typeof(performance) != "undefined" ? typeof(performance.now) == "function" : false) {
+	HxOverrides.now = performance.now.bind(performance);
+}
 oimo.collision.broadphase.BroadPhaseType._BRUTE_FORCE = 1;
 oimo.collision.broadphase.BroadPhaseType._BVH = 2;
 oimo.collision.broadphase.BroadPhaseType.BRUTE_FORCE = 1;
@@ -117142,6 +118982,8 @@ class GLTFParser {
 
 			}
 
+			assignExtrasToUserData( texture, sourceDef );
+
 			texture.userData.mimeType = sourceDef.mimeType || getImageURIMimeType( sourceDef.uri );
 
 			return texture;
@@ -120062,4 +121904,4 @@ class OrbitControls extends EventDispatcher {
 
 }
 
-export { ACESFilmicToneMapping, ACESFilmicToneMappingMaterial, AddEquation, AddOperation, AdditiveAnimationBlendMode, AdditiveBlending, AfterimageMaterial, AgXToneMapping, AlphaFormat, AlwaysCompare, AlwaysDepth, AlwaysStencilFunc, AmbientLight, AmbientLightPanel, AnimationAction, AnimationClip, AnimationLoader, AnimationMixer, AnimationObjectGroup, AnimationUtils, ArcCurve, ArrayCamera, ArrowHelper, AssetLoader, AttachedBindMode, Audio$1 as Audio, AudioAnalyser, AudioContext$1 as AudioContext, AudioListener, AudioLoader, AxesHelper, BackSide, BadTVMaterial, BasicDepthPacking, BasicMaterial, BasicMaterialCommonPanel, BasicMaterialEnvPanel, BasicMaterialOptions, BasicMaterialPanel, BasicShadowMap, BatchedMesh, BloomCompositeMaterial, BlurMaterial, BokehBlurMaterial1, BokehBlurMaterial2, Bone, BooleanKeyframeTrack, Box2, Box3, Box3Helper, BoxGeometry$2 as BoxGeometry, BoxHelper, BufferAttribute, BufferGeometry, BufferGeometryLoader, BufferGeometryLoaderThread, BufferLoader, ByteType, Cache, Camera, CameraHelper, CanvasTexture, CapsuleGeometry$2 as CapsuleGeometry, CatmullRomCurve3, ChromaticAberrationMaterial, CineonToneMapping, CircleGeometry, ClampToEdgeWrapping, Clock, Cluster, Color$1 as Color, ColorKeyframeTrack, ColorManagement, ColorMaterial, ColorPicker, CombineOptions, Component, CompressedArrayTexture, CompressedCubeTexture, CompressedTexture, CompressedTextureLoader, ConeGeometry$2 as ConeGeometry, ConstantAlphaFactor, ConstantColorFactor, Content, CopyMaterial, CubeCamera, CubeReflectionMapping, CubeRefractionMapping, CubeTexture, CubeTextureLoader, CubeUVReflectionMapping, CubicBezierCurve, CubicBezierCurve3, CubicInterpolant, CullFaceBack, CullFaceFront, CullFaceFrontBack, CullFaceNone, Curve, CurvePath, CustomBlending, CustomToneMapping, CylinderGeometry$2 as CylinderGeometry, Cylindrical, DEG2RAD$1 as DEG2RAD, Data3DTexture, DataArrayTexture, DataTexture, DataTextureLoader, DataUtils, DecrementStencilOp, DecrementWrapStencilOp, DefaultLoadingManager, DepthFormat, DepthMaskMaterial, DepthMaterial, DepthStencilFormat, DepthTexture, DetachedBindMode, Details, DetailsButton, DetailsInfo, DetailsLink, DetailsTitle, DirectionalLight, DirectionalLightHelper, DirectionalLightPanel, DiscardMaterial, DiscreteInterpolant, DisplayOptions, DisplayP3ColorSpace, DodecahedronGeometry, DoubleSide, DstAlphaFactor, DstColorFactor, DynamicCopyUsage, DynamicDrawUsage, DynamicReadUsage, Easing, EdgesGeometry, EllipseCurve, EnvironmentTextureLoader, EqualCompare, EqualDepth, EqualStencilFunc, EquirectangularReflectionMapping, EquirectangularRefractionMapping, Euler, EventDispatcher, EventEmitter, ExtrudeGeometry, FXAAMaterial, FastGaussianBlurMaterial, FileLoader, FlatShadingOptions, Float16BufferAttribute, Float32BufferAttribute, FloatType, Flowmap, Fluid, Fog, FogExp2, FramebufferTexture, FresnelMaterial, FrontSide, Frustum, GLBufferAttribute, GLSL1, GLSL3, GLTFLoader, GammaCorrectionMaterial, GreaterCompare, GreaterDepth, GreaterEqualCompare, GreaterEqualDepth, GreaterEqualStencilFunc, GreaterStencilFunc, GridHelper, Group, HalfFloatType, Header, HeaderInfo, HelperOptions, HemisphereLight, HemisphereLightHelper, HemisphereLightPanel, IcosahedronGeometry, ImageBitmapLoader$1 as ImageBitmapLoader, ImageBitmapLoaderThread, ImageLoader, ImageUtils, IncrementStencilOp, IncrementWrapStencilOp, Info, InstanceOptions, InstancedBufferAttribute, InstancedBufferGeometry, InstancedInterleavedBuffer, InstancedMesh, InstancedMeshPanel, Int16BufferAttribute, Int32BufferAttribute, Int8BufferAttribute, IntType, Interface, InterleavedBuffer, InterleavedBufferAttribute, Interpolant, InterpolateDiscrete, InterpolateLinear, InterpolateSmooth, InvertStencilOp, KeepStencilOp, KeyframeTrack, LOD, LambertMaterialCommonPanel, LambertMaterialEnvPanel, LambertMaterialOptions, LambertMaterialPanel, LatheGeometry, Layers, LensflareMaterial, LessCompare, LessDepth, LessEqualCompare, LessEqualDepth, LessEqualStencilFunc, LessStencilFunc, Light, LightOptions, LightPanelController, LightProbe, Line, Line3, LineBasicMaterial, LineCurve, LineCurve3, LineDashedMaterial, LineLoop, LineSegments, LinearDisplayP3ColorSpace, LinearFilter, LinearInterpolant, LinearMipMapLinearFilter, LinearMipMapNearestFilter, LinearMipmapLinearFilter, LinearMipmapNearestFilter, LinearSRGBColorSpace, LinearToneMapping, LinearTransfer, Link, LinkedList, List, ListSelect, ListToggle, Loader$1 as Loader, LoaderUtils, LoadingManager, LoopOnce, LoopPingPong, LoopRepeat, LuminanceAlphaFormat, LuminanceFormat, LuminosityMaterial, MOUSE, Magnetic, MapPanel, MaskMaterial, MatcapMaterialCommonPanel, MatcapMaterialOptions, MatcapMaterialPanel, Material, MaterialLoader, MaterialOptions, MaterialPanelController, MaterialPanels, MaterialPatches, MathUtils, Matrix3, Matrix4, MaxEquation, Menu, MenuItem, Mesh, MeshBasicMaterial, MeshDepthMaterial, MeshDistanceMaterial, MeshHelperPanel, MeshLambertMaterial, MeshMatcapMaterial, MeshNormalMaterial, MeshPhongMaterial, MeshPhysicalMaterial, MeshStandardMaterial, MeshToonMaterial, MinEquation, MirroredRepeatWrapping, MixOperation, MotionBlur, MotionBlurCompositeMaterial, MotionBlurVelocityMaterial, MultiLoader, MultiplyBlending, MultiplyOperation, MuteButton, NavLink, NearestFilter, NearestMipMapLinearFilter, NearestMipMapNearestFilter, NearestMipmapLinearFilter, NearestMipmapNearestFilter, NeutralToneMapping, NeverCompare, NeverDepth, NeverStencilFunc, NoBlending, NoColorSpace, NoToneMapping, NormalAnimationBlendMode, NormalBlending, NormalMaterial, NormalMaterialCommonPanel, NormalMaterialOptions, NormalMaterialPanel, NormalsHelperOptions, NotEqualCompare, NotEqualDepth, NotEqualStencilFunc, NumberKeyframeTrack, Object3D, ObjectLoader, ObjectPool, ObjectSpaceNormalMap, OctahedronGeometry, OimoPhysics, OimoPhysicsBuffer, OimoPhysicsController, OimoPhysicsPanel, OneFactor, OneMinusConstantAlphaFactor, OneMinusConstantColorFactor, OneMinusDstAlphaFactor, OneMinusDstColorFactor, OneMinusSrcAlphaFactor, OneMinusSrcColorFactor, OrbitControls, OrthographicCamera, P3Primaries, PCFShadowMap, PCFSoftShadowMap, PMREMGenerator, Panel, PanelItem, PanelLink, Path, PerspectiveCamera, PhongMaterialCommonPanel, PhongMaterialEnvPanel, PhongMaterialOptions, PhongMaterialPanel, PhongMaterialPatches, PhysicalMaterialAnisotropyPanel, PhysicalMaterialClearcoatPanel, PhysicalMaterialCommonPanel, PhysicalMaterialEnvPanel, PhysicalMaterialIridescencePanel, PhysicalMaterialOptions, PhysicalMaterialPanel, PhysicalMaterialSheenPanel, PhysicalMaterialTransmissionPanel, Plane, PlaneGeometry, PlaneHelper, Point, Point3D, PointInfo, PointLight, PointLightHelper, PointLightPanel, Points, PointsMaterial, PoissonDiscBlurMaterial, PolarGridHelper, PolyhedronGeometry, PositionalAudio, PropertyBinding, PropertyMixer, QuadraticBezierCurve, QuadraticBezierCurve3, Quaternion, QuaternionKeyframeTrack, QuaternionLinearInterpolant, RAD2DEG$1 as RAD2DEG, RED_GREEN_RGTC2_Format, RED_RGTC1_Format, REVISION, RGBADepthPacking, RGBAFormat, RGBAIntegerFormat, RGBA_ASTC_10x10_Format, RGBA_ASTC_10x5_Format, RGBA_ASTC_10x6_Format, RGBA_ASTC_10x8_Format, RGBA_ASTC_12x10_Format, RGBA_ASTC_12x12_Format, RGBA_ASTC_4x4_Format, RGBA_ASTC_5x4_Format, RGBA_ASTC_5x5_Format, RGBA_ASTC_6x5_Format, RGBA_ASTC_6x6_Format, RGBA_ASTC_8x5_Format, RGBA_ASTC_8x6_Format, RGBA_ASTC_8x8_Format, RGBA_BPTC_Format, RGBA_ETC2_EAC_Format, RGBA_PVRTC_2BPPV1_Format, RGBA_PVRTC_4BPPV1_Format, RGBA_S3TC_DXT1_Format, RGBA_S3TC_DXT3_Format, RGBA_S3TC_DXT5_Format, RGBFormat, RGBMaterial, RGB_BPTC_SIGNED_Format, RGB_BPTC_UNSIGNED_Format, RGB_ETC1_Format, RGB_ETC2_Format, RGB_PVRTC_2BPPV1_Format, RGB_PVRTC_4BPPV1_Format, RGB_S3TC_DXT1_Format, RGFormat, RGIntegerFormat, RawShaderMaterial, Ray, Raycaster, Rec709Primaries, RectAreaLight, RectAreaLightPanel, RedFormat, RedIntegerFormat, Reflector, ReflectorBlurMaterial, ReflectorDudvMaterial, ReflectorMaterial, ReinhardToneMapping, RenderTarget, RepeatWrapping, ReplaceStencilOp, Reticle, ReticleInfo, ReverseSubtractEquation, RigidBodyConfig$1 as RigidBodyConfig, RigidBodyType$1 as RigidBodyType, RingGeometry, Router, SIGNED_RED_GREEN_RGTC2_Format, SIGNED_RED_RGTC1_Format, SMAABlendMaterial, SMAAEdgesMaterial, SMAAWeightsMaterial, SRGBColorSpace, SRGBTransfer, SVGLoader, Scene, SceneCompositeAddMaterial, SceneCompositeDistortionMaterial, SceneCompositeMaterial, ShaderChunk, ShaderLib, ShaderMaterial, ShadowMaterial, ShadowTextureMaterial, Shape$2 as Shape, ShapeGeometry, ShapePath, ShapeUtils, ShortType, SideOptions, Skeleton, SkeletonHelper, SkinnedMesh, Slider, Smooth, SmoothSkew, SmoothViews, SoftShadows, Sound, Sound3D, Source, Sphere, SphereGeometry$2 as SphereGeometry, Spherical, SphericalHarmonics3, SphericalJointConfig$1 as SphericalJointConfig, SplineCurve, SpotLight, SpotLightHelper, SpotLightPanel, Sprite, SpriteMaterial, SrcAlphaFactor, SrcAlphaSaturateFactor, SrcColorFactor, Stage, StandardMaterialCommonPanel, StandardMaterialEnvPanel, StandardMaterialOptions, StandardMaterialPanel, StandardMaterialPatches, StaticCopyUsage, StaticDrawUsage, StaticReadUsage, StereoCamera, StreamCopyUsage, StreamDrawUsage, StreamReadUsage, StringKeyframeTrack, SubtractEquation, SubtractiveBlending, TOUCH, TangentSpaceNormalMap, TangentsHelperOptions, TargetNumber, TetrahedronGeometry, Text, TextMaterial, Texture, TextureLoader, Thread, Ticker, TiltShiftMaterial, Title, ToneMappedOptions, ToonMaterialCommonPanel, ToonMaterialOptions, ToonMaterialPanel, TorusGeometry, TorusKnotGeometry, Tracker, Triangle, TriangleFanDrawMode, TriangleStripDrawMode, TrianglesDrawMode, TubeGeometry, Tween, UI, UVHelperOptions, UVMapping, Uint16BufferAttribute, Uint32BufferAttribute, Uint8BufferAttribute, Uint8ClampedBufferAttribute, Uniform, UniformsGroup, UniformsLib, UniformsUtils, UniversalJointConfig$1 as UniversalJointConfig, UnrealBloomBlurMaterial, UnrealBloomCompositeMaterial, UnsignedByteType, UnsignedInt248Type, UnsignedInt5999Type, UnsignedIntType, UnsignedShort4444Type, UnsignedShort5551Type, UnsignedShortType, VSMShadowMap, Vector2$1 as Vector2, Vector3, Vector4, VectorKeyframeTrack, VideoGlitchMaterial, VideoTexture, VisibleOptions, VolumetricLightLensflareMaterial, VolumetricLightMaterial, WebAudio, WebAudio3D, WebAudioParam, WebGL3DRenderTarget, WebGLArrayRenderTarget, WebGLCoordinateSystem, WebGLCubeRenderTarget, WebGLMultipleRenderTargets, WebGLRenderTarget, WebGLRenderer, WebGLUtils, WebGPUCoordinateSystem, WireframeGeometry, WireframeOptions, Wobble, WrapAroundEnding, WrapOptions, ZeroCurvatureEnding, ZeroFactor, ZeroSlopeEnding, ZeroStencilOp, absolute, basename, brightness, ceilPowerOfTwo$1 as ceilPowerOfTwo, clamp$1 as clamp, clearTween, createCanvasElement, defer, degToRad$1 as degToRad, delayedCall, euclideanModulo$1 as euclideanModulo, extension, floorPowerOfTwo$1 as floorPowerOfTwo, fract, getConstructor, getDoubleRenderTarget, getFrustum, getFrustumFromHeight, getFullscreenTriangle, getHorizontalFOV, getKeyByLight, getKeyByMaterial, getKeyByValue, getScreenSpaceBox, getSphericalCube, guid, headsTails, inverseLerp$1 as inverseLerp, isPowerOfTwo$1 as isPowerOfTwo, lerp$2 as lerp, lerpCameras, mapLinear$1 as mapLinear, parabola, pcurve, radToDeg$1 as radToDeg, randFloat$1 as randFloat, randFloatSpread$1 as randFloatSpread, randInt$1 as randInt, shuffle, smootherstep$2 as smootherstep, smoothstep$1 as smoothstep, step, ticker, tween, wait };
+export { ACESFilmicToneMapping, ACESFilmicToneMappingMaterial, AddEquation, AddOperation, AdditiveAnimationBlendMode, AdditiveBlending, AfterimageMaterial, AgXToneMapping, AlphaFormat, AlwaysCompare, AlwaysDepth, AlwaysStencilFunc, AmbientLight, AmbientLightPanel, AnimationAction, AnimationClip, AnimationLoader, AnimationMixer, AnimationObjectGroup, AnimationUtils, ArcCurve, ArrayCamera, ArrowHelper, AssetLoader, AttachedBindMode, Audio$1 as Audio, AudioAnalyser, AudioContext$1 as AudioContext, AudioListener, AudioLoader, AxesHelper, BackSide, BadTVMaterial, BasicDepthPacking, BasicMaterial, BasicMaterialCommonPanel, BasicMaterialEnvPanel, BasicMaterialOptions, BasicMaterialPanel, BasicShadowMap, BatchedMesh, BloomCompositeMaterial, BlurMaterial, BokehBlurMaterial1, BokehBlurMaterial2, Bone, BooleanKeyframeTrack, Box2, Box3, Box3Helper, BoxGeometry$2 as BoxGeometry, BoxHelper, BufferAttribute, BufferGeometry, BufferGeometryLoader, BufferGeometryLoaderThread, BufferLoader, ByteType, Cache, Camera, CameraHelper, CanvasTexture, CapsuleGeometry$2 as CapsuleGeometry, CatmullRomCurve3, ChromaticAberrationMaterial, CineonToneMapping, CircleGeometry, ClampToEdgeWrapping, Clock, Cluster, Color$1 as Color, ColorKeyframeTrack, ColorManagement, ColorMaterial, ColorPicker, ColorSpaceOptions, CombineOptions, Component, CompressedArrayTexture, CompressedCubeTexture, CompressedTexture, CompressedTextureLoader, ConeGeometry$2 as ConeGeometry, ConstantAlphaFactor, ConstantColorFactor, Content, CopyMaterial, CubeCamera, CubeReflectionMapping, CubeRefractionMapping, CubeTexture, CubeTextureLoader, CubeUVReflectionMapping, CubicBezierCurve, CubicBezierCurve3, CubicInterpolant, CullFaceBack, CullFaceFront, CullFaceFrontBack, CullFaceNone, Curve, CurvePath, CustomBlending, CustomToneMapping, CylinderGeometry$2 as CylinderGeometry, Cylindrical, DEG2RAD$1 as DEG2RAD, Data3DTexture, DataArrayTexture, DataTexture, DataTextureLoader, DataUtils, DecrementStencilOp, DecrementWrapStencilOp, DefaultLoadingManager, DepthFormat, DepthMaskMaterial, DepthMaterial, DepthStencilFormat, DepthTexture, DetachedBindMode, Details, DetailsButton, DetailsInfo, DetailsLink, DetailsTitle, DirectionalLight, DirectionalLightHelper, DirectionalLightPanel, DiscardMaterial, DiscreteInterpolant, DisplayOptions, DisplayP3ColorSpace, DodecahedronGeometry, DoubleSide, DstAlphaFactor, DstColorFactor, DynamicCopyUsage, DynamicDrawUsage, DynamicReadUsage, Easing, EdgesGeometry, EllipseCurve, EnvironmentTextureLoader, EqualCompare, EqualDepth, EqualStencilFunc, EquirectangularReflectionMapping, EquirectangularRefractionMapping, Euler, EventDispatcher, EventEmitter, ExtrudeGeometry, FXAAMaterial, FastGaussianBlurMaterial, FileLoader, FlatShadingOptions, Float16BufferAttribute, Float32BufferAttribute, FloatType, Flowmap, Fluid, Fog, FogExp2, FramebufferTexture, FresnelMaterial, FrontSide, Frustum, GLBufferAttribute, GLSL1, GLSL3, GLTFLoader, GammaCorrectionMaterial, GreaterCompare, GreaterDepth, GreaterEqualCompare, GreaterEqualDepth, GreaterEqualStencilFunc, GreaterStencilFunc, GridHelper, Group, HalfFloatType, Header, HeaderInfo, HelperOptions, HemisphereLight, HemisphereLightHelper, HemisphereLightPanel, IcosahedronGeometry, ImageBitmapLoader$1 as ImageBitmapLoader, ImageBitmapLoaderThread, ImageLoader, ImageUtils, IncrementStencilOp, IncrementWrapStencilOp, Info, InstanceOptions, InstancedBufferAttribute, InstancedBufferGeometry, InstancedInterleavedBuffer, InstancedMesh, InstancedMeshPanel, Int16BufferAttribute, Int32BufferAttribute, Int8BufferAttribute, IntType, Interface, InterleavedBuffer, InterleavedBufferAttribute, Interpolant, InterpolateDiscrete, InterpolateLinear, InterpolateSmooth, InvertStencilOp, KeepStencilOp, KeyframeTrack, LOD, LambertMaterialCommonPanel, LambertMaterialEnvPanel, LambertMaterialOptions, LambertMaterialPanel, LatheGeometry, Layers, LensflareMaterial, LessCompare, LessDepth, LessEqualCompare, LessEqualDepth, LessEqualStencilFunc, LessStencilFunc, Light, LightOptions, LightPanelController, LightProbe, Line, Line3, LineBasicMaterial, LineCurve, LineCurve3, LineDashedMaterial, LineLoop, LineSegments, LinearDisplayP3ColorSpace, LinearFilter, LinearInterpolant, LinearMipMapLinearFilter, LinearMipMapNearestFilter, LinearMipmapLinearFilter, LinearMipmapNearestFilter, LinearSRGBColorSpace, LinearToneMapping, LinearTransfer, Link, LinkedList, List, ListSelect, ListToggle, Loader$1 as Loader, LoaderUtils, LoadingManager, LoopOnce, LoopPingPong, LoopRepeat, LuminanceAlphaFormat, LuminanceFormat, LuminosityMaterial, MOUSE, Magnetic, MapPanel, MaskMaterial, MatcapMaterialCommonPanel, MatcapMaterialOptions, MatcapMaterialPanel, Material, MaterialLoader, MaterialOptions, MaterialPanelController, MaterialPanels, MaterialPatches, MathUtils, Matrix3, Matrix4, MaxEquation, Menu, MenuItem, Mesh, MeshBasicMaterial, MeshDepthMaterial, MeshDistanceMaterial, MeshHelperPanel, MeshLambertMaterial, MeshMatcapMaterial, MeshNormalMaterial, MeshPhongMaterial, MeshPhysicalMaterial, MeshStandardMaterial, MeshToonMaterial, MinEquation, MirroredRepeatWrapping, MixOperation, MotionBlur, MotionBlurCompositeMaterial, MotionBlurVelocityMaterial, MultiLoader, MultiplyBlending, MultiplyOperation, MuteButton, NavLink, NearestFilter, NearestMipMapLinearFilter, NearestMipMapNearestFilter, NearestMipmapLinearFilter, NearestMipmapNearestFilter, NeutralToneMapping, NeverCompare, NeverDepth, NeverStencilFunc, NoBlending, NoColorSpace, NoToneMapping, NormalAnimationBlendMode, NormalBlending, NormalMaterial, NormalMaterialCommonPanel, NormalMaterialOptions, NormalMaterialPanel, NormalsHelperOptions, NotEqualCompare, NotEqualDepth, NotEqualStencilFunc, NumberKeyframeTrack, Object3D, ObjectLoader, ObjectPool, ObjectSpaceNormalMap, OctahedronGeometry, OimoPhysics, OimoPhysicsBuffer, OimoPhysicsController, OimoPhysicsPanel, OneFactor, OneMinusConstantAlphaFactor, OneMinusConstantColorFactor, OneMinusDstAlphaFactor, OneMinusDstColorFactor, OneMinusSrcAlphaFactor, OneMinusSrcColorFactor, OrbitControls, OrthographicCamera, P3Primaries, PCFShadowMap, PCFSoftShadowMap, PMREMGenerator, Panel, PanelItem, PanelLink, PanelThumbnail, Path, PerspectiveCamera, PhongMaterialCommonPanel, PhongMaterialEnvPanel, PhongMaterialOptions, PhongMaterialPanel, PhongMaterialPatches, PhysicalMaterialAnisotropyPanel, PhysicalMaterialClearcoatPanel, PhysicalMaterialCommonPanel, PhysicalMaterialEnvPanel, PhysicalMaterialIridescencePanel, PhysicalMaterialOptions, PhysicalMaterialPanel, PhysicalMaterialSheenPanel, PhysicalMaterialTransmissionPanel, Plane, PlaneGeometry, PlaneHelper, Point, Point3D, PointInfo, PointLight, PointLightHelper, PointLightPanel, Points, PointsMaterial, PoissonDiscBlurMaterial, PolarGridHelper, PolyhedronGeometry, PositionalAudio, PropertyBinding, PropertyMixer, QuadraticBezierCurve, QuadraticBezierCurve3, Quaternion, QuaternionKeyframeTrack, QuaternionLinearInterpolant, RAD2DEG$1 as RAD2DEG, RED_GREEN_RGTC2_Format, RED_RGTC1_Format, REVISION, RGBADepthPacking, RGBAFormat, RGBAIntegerFormat, RGBA_ASTC_10x10_Format, RGBA_ASTC_10x5_Format, RGBA_ASTC_10x6_Format, RGBA_ASTC_10x8_Format, RGBA_ASTC_12x10_Format, RGBA_ASTC_12x12_Format, RGBA_ASTC_4x4_Format, RGBA_ASTC_5x4_Format, RGBA_ASTC_5x5_Format, RGBA_ASTC_6x5_Format, RGBA_ASTC_6x6_Format, RGBA_ASTC_8x5_Format, RGBA_ASTC_8x6_Format, RGBA_ASTC_8x8_Format, RGBA_BPTC_Format, RGBA_ETC2_EAC_Format, RGBA_PVRTC_2BPPV1_Format, RGBA_PVRTC_4BPPV1_Format, RGBA_S3TC_DXT1_Format, RGBA_S3TC_DXT3_Format, RGBA_S3TC_DXT5_Format, RGBFormat, RGBMaterial, RGB_BPTC_SIGNED_Format, RGB_BPTC_UNSIGNED_Format, RGB_ETC1_Format, RGB_ETC2_Format, RGB_PVRTC_2BPPV1_Format, RGB_PVRTC_4BPPV1_Format, RGB_S3TC_DXT1_Format, RGFormat, RGIntegerFormat, RawShaderMaterial, Ray, Raycaster, Rec709Primaries, RectAreaLight, RectAreaLightPanel, RedFormat, RedIntegerFormat, Reflector, ReflectorBlurMaterial, ReflectorDudvMaterial, ReflectorMaterial, ReinhardToneMapping, RenderTarget, RepeatWrapping, ReplaceStencilOp, Reticle, ReticleInfo, ReverseSubtractEquation, RigidBodyConfig$1 as RigidBodyConfig, RigidBodyType$1 as RigidBodyType, RingGeometry, Router, SIGNED_RED_GREEN_RGTC2_Format, SIGNED_RED_RGTC1_Format, SMAABlendMaterial, SMAAEdgesMaterial, SMAAWeightsMaterial, SRGBColorSpace, SRGBTransfer, SVGLoader, Scene, SceneCompositeAddMaterial, SceneCompositeDistortionMaterial, SceneCompositeMaterial, ShaderChunk, ShaderLib, ShaderMaterial, ShadowMaterial, ShadowTextureMaterial, Shape$2 as Shape, ShapeGeometry, ShapePath, ShapeUtils, ShortType, SideOptions, Skeleton, SkeletonHelper, SkinnedMesh, Slider, Smooth, SmoothSkew, SmoothViews, SoftShadows, Sound, Sound3D, Source, Sphere, SphereGeometry$2 as SphereGeometry, Spherical, SphericalHarmonics3, SphericalJointConfig$1 as SphericalJointConfig, SplineCurve, SpotLight, SpotLightHelper, SpotLightPanel, Sprite, SpriteMaterial, SrcAlphaFactor, SrcAlphaSaturateFactor, SrcColorFactor, Stage, StandardMaterialCommonPanel, StandardMaterialEnvPanel, StandardMaterialOptions, StandardMaterialPanel, StandardMaterialPatches, StaticCopyUsage, StaticDrawUsage, StaticReadUsage, StereoCamera, StreamCopyUsage, StreamDrawUsage, StreamReadUsage, StringKeyframeTrack, SubtractEquation, SubtractiveBlending, TOUCH, TangentSpaceNormalMap, TangentsHelperOptions, TargetNumber, TetrahedronGeometry, Text, TextMaterial, Texture, TextureLoader, Thread, Thumbnail, Ticker, TiltShiftMaterial, Title, ToneMappedOptions, ToonMaterialCommonPanel, ToonMaterialOptions, ToonMaterialPanel, TorusGeometry, TorusKnotGeometry, Tracker, Triangle, TriangleFanDrawMode, TriangleStripDrawMode, TrianglesDrawMode, TubeGeometry, Tween, UI, UVHelperOptions, UVMapping, Uint16BufferAttribute, Uint32BufferAttribute, Uint8BufferAttribute, Uint8ClampedBufferAttribute, Uniform, UniformsGroup, UniformsLib, UniformsUtils, UniversalJointConfig$1 as UniversalJointConfig, UnrealBloomBlurMaterial, UnrealBloomCompositeMaterial, UnsignedByteType, UnsignedInt248Type, UnsignedInt5999Type, UnsignedIntType, UnsignedShort4444Type, UnsignedShort5551Type, UnsignedShortType, VSMShadowMap, Vector2$1 as Vector2, Vector3, Vector4, VectorKeyframeTrack, VideoGlitchMaterial, VideoTexture, VisibleOptions, VolumetricLightLensflareMaterial, VolumetricLightMaterial, WebAudio, WebAudio3D, WebAudioParam, WebGL3DRenderTarget, WebGLArrayRenderTarget, WebGLCoordinateSystem, WebGLCubeRenderTarget, WebGLMultipleRenderTargets, WebGLRenderTarget, WebGLRenderer, WebGLUtils, WebGPUCoordinateSystem, WireframeGeometry, WireframeOptions, Wobble, WrapAroundEnding, WrapOptions, ZeroCurvatureEnding, ZeroFactor, ZeroSlopeEnding, ZeroStencilOp, absolute, basename, brightness, ceilPowerOfTwo$1 as ceilPowerOfTwo, clamp$1 as clamp, clearTween, createCanvasElement, defer, degToRad$1 as degToRad, delayedCall, euclideanModulo$1 as euclideanModulo, extension, floorPowerOfTwo$1 as floorPowerOfTwo, fract, getConstructor, getDoubleRenderTarget, getFrustum, getFrustumFromHeight, getFullscreenTriangle, getHorizontalFOV, getKeyByLight, getKeyByMaterial, getKeyByValue, getScreenSpaceBox, getSphericalCube, guid, headsTails, inverseLerp$1 as inverseLerp, isPowerOfTwo$1 as isPowerOfTwo, lerp$2 as lerp, lerpCameras, mapLinear$1 as mapLinear, parabola, pcurve, radToDeg$1 as radToDeg, randFloat$1 as randFloat, randFloatSpread$1 as randFloatSpread, randInt$1 as randInt, shuffle, smootherstep$2 as smootherstep, smoothstep$1 as smoothstep, step, ticker, tween, wait };

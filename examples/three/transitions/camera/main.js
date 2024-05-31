@@ -779,7 +779,8 @@ class ScenePanelController {
 }
 
 class PanelController {
-    static init(scene, camera, view, ui) {
+    static init(renderer, scene, camera, view, ui) {
+        this.renderer = renderer;
         this.scene = scene;
         this.camera = camera;
         this.view = view;
@@ -790,7 +791,7 @@ class PanelController {
     }
 
     static initControllers() {
-        Point3D.init(this.scene, this.camera, {
+        Point3D.init(this.renderer, this.scene, this.camera, {
             root: Stage,
             container: this.ui,
             debug: isDebug
@@ -1756,9 +1757,9 @@ Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor i
     }
 
     static initPanel() {
-        const { scene, camera } = WorldController;
+        const { renderer, scene, camera } = WorldController;
 
-        PanelController.init(scene, camera, this.view, this.ui);
+        PanelController.init(renderer, scene, camera, this.view, this.ui);
     }
 
     static addListeners() {

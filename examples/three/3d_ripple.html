@@ -521,7 +521,13 @@
                 this.view = new SceneView();
                 WorldController.scene.add(this.view);
 
-                this.ui = new UI({ fps: true });
+                this.ui = new UI({
+                    fps: true,
+                    thumbnail: {
+                        image: this.view.canvas.displace,
+                        position: 'bl' // tl, bl, br, tr
+                    }
+                });
                 this.ui.animateIn();
                 document.body.appendChild(this.ui.element);
             }

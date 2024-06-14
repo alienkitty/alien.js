@@ -57557,6 +57557,7 @@ class PanelThumbnail extends Interface {
         });
 
         const oldWrapper = this.wrapper;
+        oldWrapper.element.removeEventListener('pointerdown', this.onPointerDown);
 
         const newWrapper = this.wrapper.clone();
         newWrapper.element.addEventListener('pointerdown', this.onPointerDown);
@@ -57565,7 +57566,6 @@ class PanelThumbnail extends Interface {
         this.replace(oldWrapper, newWrapper);
         this.wrapper = newWrapper;
 
-        oldWrapper.element.removeEventListener('pointerdown', this.onPointerDown);
         oldWrapper.destroy();
 
         if (this.value) {
@@ -60345,11 +60345,11 @@ class Point extends Interface {
     }
 
     enable() {
-        this.info.container.tween({ opacity: 1 }, 400, 'easeInOutSine');
+        this.info.container.clearTween().tween({ opacity: 1 }, 400, 'easeInOutSine');
     }
 
     disable() {
-        this.info.container.tween({ opacity: 0.35 }, 400, 'easeInOutSine');
+        this.info.container.clearTween().tween({ opacity: 0.35 }, 400, 'easeInOutSine');
     }
 
     activate() {
@@ -60357,9 +60357,10 @@ class Point extends Interface {
     }
 
     deactivate(toggle) {
+        this.clearTween();
         this.css({ pointerEvents: 'none' });
 
-        this.clearTween().tween({ opacity: 0 }, 300, 'easeOutSine', () => {
+        this.tween({ opacity: 0 }, 300, 'easeOutSine', () => {
             this.enable();
             this.close(true);
 
@@ -66249,13 +66250,14 @@ class Details extends Interface {
     }
 
     animateOut(callback) {
+        this.clearTween();
         this.css({ pointerEvents: 'none' });
 
         if (this.bg) {
             this.bg.clearTween().tween({ opacity: 0 }, 1000, 'easeOutSine');
         }
 
-        this.clearTween().tween({ opacity: 0 }, 400, 'easeOutCubic', () => {
+        this.tween({ opacity: 0 }, 400, 'easeOutCubic', () => {
             this.invisible();
 
             if (callback) {
@@ -66296,7 +66298,9 @@ class DetailsInfo extends Interface {
             height: '100%',
             display: 'flex',
             alignItems: 'flex-end',
-            pointerEvents: 'none'
+            pointerEvents: 'none',
+            x: -10,
+            opacity: 0
         });
 
         this.container = new Interface('.container');
@@ -66364,9 +66368,10 @@ class DetailsInfo extends Interface {
     }
 
     animateOut(callback) {
+        this.clearTween();
         this.css({ pointerEvents: 'none' });
 
-        this.clearTween().tween({ opacity: 0 }, 400, 'easeOutCubic', () => {
+        this.tween({ opacity: 0 }, 400, 'easeOutCubic', () => {
             this.invisible();
 
             if (callback) {
@@ -66808,6 +66813,12 @@ class MenuItem extends Interface {
     init() {
         this.css({
             position: 'relative',
+            y: 10
+        });
+
+        this.container = new Interface('.container');
+        this.container.css({
+            position: 'relative',
             padding: 10,
             textAlign: 'center',
             textTransform: 'uppercase',
@@ -66818,7 +66829,8 @@ class MenuItem extends Interface {
             userSelect: 'none',
             opacity: 0
         });
-        this.text(this.name);
+        this.container.text(this.name);
+        this.add(this.container);
 
         this.line = new Interface('.line');
         this.line.css({
@@ -66831,7 +66843,7 @@ class MenuItem extends Interface {
             transformOrigin: 'left center',
             scaleX: 0
         });
-        this.add(this.line);
+        this.container.add(this.line);
     }
 
     addListeners() {
@@ -66856,9 +66868,9 @@ class MenuItem extends Interface {
         this.clearTween();
 
         if (type === 'mouseenter') {
-            this.tween({ opacity: 1 }, 200, 'easeOutSine');
+            this.container.tween({ opacity: 1 }, 200, 'easeOutSine');
         } else {
-            this.tween({ opacity: 0.5 }, 400, 'easeOutSine');
+            this.container.tween({ opacity: 0.5 }, 400, 'easeOutSine');
         }
     };
 
@@ -66881,26 +66893,29 @@ class MenuItem extends Interface {
     activate(direction) {
         this.active = true;
 
-        this.line.clearTween().css({ transformOrigin: direction < 0 ? 'left center' : 'right center', scaleX: 0 }).tween({ scaleX: 1 }, 500, 'easeOutQuint');
-
         if (this.animatedIn) {
-            this.clearTween().tween({ y: 0, opacity: 1 }, 300, 'easeOutSine');
+            this.container.clearTween().tween({ opacity: 1 }, 300, 'easeOutSine');
         }
+
+        this.line.clearTween().css({ transformOrigin: direction < 0 ? 'left center' : 'right center', scaleX: 0 }).tween({ scaleX: 1 }, 500, 'easeOutQuint');
     }
 
     deactivate(direction) {
         this.active = false;
 
-        this.line.clearTween().css({ transformOrigin: direction > 0 ? 'left center' : 'right center' }).tween({ scaleX: 0 }, 500, 'easeOutQuint');
-
         if (this.animatedIn) {
-            this.clearTween().tween({ y: 0, opacity: 0.5 }, 500, 'easeOutSine');
+            this.container.clearTween().tween({ opacity: 0.5 }, 500, 'easeOutSine');
         }
+
+        this.line.clearTween().css({ transformOrigin: direction > 0 ? 'left center' : 'right center' }).tween({ scaleX: 0 }, 500, 'easeOutQuint');
     }
 
     animateIn(delay) {
         this.clearTween();
-        this.css({ y: 10, opacity: 0 }).tween({ y: 0, opacity: this.active ? 1 : 0.5 }, 700, 'easeOutCubic', delay, () => {
+
+        this.container.clearTween().css({ opacity: 0 }).tween({ opacity: this.active ? 1 : 0.5 }, 700, 'easeOutCubic', delay);
+
+        this.css({ y: 10 }).tween({ y: 0 }, 700, 'easeOutCubic', delay, () => {
             this.css({ pointerEvents: 'auto' });
         });
 
@@ -66910,7 +66925,10 @@ class MenuItem extends Interface {
     animateOut() {
         this.clearTween();
         this.css({ pointerEvents: 'none' });
-        this.tween({ opacity: 0 }, 400, 'easeOutCubic');
+
+        this.container.clearTween().tween({ opacity: 0 }, 400, 'easeOutCubic');
+
+        this.tween({ y: 0 }, 400, 'easeOutCubic');
 
         this.animatedIn = false;
     }
@@ -67874,6 +67892,350 @@ class MuteButton extends Interface {
  */
 
 
+class AudioButtonInfo extends Interface {
+    constructor() {
+        super('.info');
+
+        this.init();
+    }
+
+    init() {
+        this.css({
+            position: 'absolute',
+            left: 0,
+            top: 0
+        });
+    }
+
+    // Event handlers
+
+    onClick = () => {
+        open(this.link);
+    };
+
+    // Public methods
+
+    setData(data) {
+        if (!data) {
+            return;
+        }
+
+        if (!this.wrapper) {
+            this.wrapper = new Interface('.wrapper');
+            this.wrapper.css({
+                position: 'relative',
+                webkitUserSelect: 'none',
+                userSelect: 'none'
+            });
+            this.add(this.wrapper);
+        }
+
+        const oldWrapper = this.wrapper;
+        oldWrapper.element.removeEventListener('click', this.onClick);
+
+        const newWrapper = this.wrapper.clone();
+
+        const name = new Interface('.name');
+        name.css({
+            fontVariantNumeric: 'tabular-nums',
+            lineHeight: 18,
+            letterSpacing: 'var(--ui-number-letter-spacing)',
+            whiteSpace: 'nowrap'
+        });
+
+        if (data.name) {
+            name.html(data.name);
+        }
+
+        const title = new Interface('.title');
+        title.css({
+            fontSize: 'var(--ui-secondary-font-size)',
+            letterSpacing: 'var(--ui-secondary-letter-spacing)',
+            paddingBottom: 3,
+            opacity: 'var(--ui-secondary-opacity)'
+        });
+
+        if (data.title) {
+            title.html(data.title);
+        }
+
+        newWrapper.add(name);
+        newWrapper.add(title);
+
+        if (data.image) {
+            const thumbnail = new Interface();
+            thumbnail.css({
+                position: 'absolute',
+                left: -40,
+                top: 3,
+                boxSizing: 'border-box',
+                width: 30,
+                height: 30,
+                border: '1px solid var(--ui-color-divider-line)',
+                cursor: 'pointer'
+            });
+            newWrapper.add(thumbnail);
+
+            const image = new Interface(data.image.cloneNode());
+            image.css({
+                position: 'absolute',
+                left: 0,
+                top: 0,
+                width: '100%',
+                height: '100%',
+                objectFit: 'cover'
+            });
+            thumbnail.add(image);
+        }
+
+        if (data.link) {
+            newWrapper.css({
+                cursor: 'pointer',
+                pointerEvents: 'auto'
+            });
+            newWrapper.element.addEventListener('click', this.onClick);
+
+            this.link = data.link;
+        }
+
+        this.tween({ y: -10, opacity: 0 }, 300, 'easeInSine', () => {
+            this.replace(oldWrapper, newWrapper);
+            this.wrapper = newWrapper;
+
+            oldWrapper.destroy();
+
+            this.css({ y: 10 }).tween({ y: 0, opacity: 1 }, 1000, 'easeOutCubic');
+        });
+    }
+}
+
+/**
+ * @author pschroen / https://ufo.ai/
+ */
+
+
+class AudioButton extends Interface {
+    constructor({
+        sound,
+        callback
+    }) {
+        super('.button');
+
+        this.sound = sound;
+        this.callback = callback;
+
+        this.width = 24;
+        this.height = 16;
+        this.animatedIn = false;
+        this.needsUpdate = false;
+
+        this.props = {
+            progress: 0,
+            yMultiplier: this.sound ? 1 : 0
+        };
+
+        this.init();
+        this.initCanvas();
+        this.setSound(this.sound);
+
+        this.addListeners();
+    }
+
+    init() {
+        this.css({
+            position: 'relative'
+        });
+
+        this.container = new Interface('.container');
+        this.container.css({
+            position: 'relative',
+            width: this.width + 20,
+            height: this.height + 20,
+            cursor: 'pointer',
+            pointerEvents: 'auto',
+            webkitUserSelect: 'none',
+            userSelect: 'none',
+            opacity: 0
+        });
+        this.add(this.container);
+    }
+
+    initCanvas() {
+        this.canvas = new Interface(null, 'canvas');
+        this.canvas.css({
+            position: 'absolute',
+            left: '50%',
+            top: '50%',
+            marginLeft: -this.width / 2,
+            marginTop: -this.height / 2
+        });
+        this.context = this.canvas.element.getContext('2d');
+        this.container.add(this.canvas);
+    }
+
+    addListeners() {
+        this.container.element.addEventListener('mouseenter', this.onHover);
+        this.container.element.addEventListener('mouseleave', this.onHover);
+        this.container.element.addEventListener('click', this.onClick);
+    }
+
+    removeListeners() {
+        this.container.element.removeEventListener('mouseenter', this.onHover);
+        this.container.element.removeEventListener('mouseleave', this.onHover);
+        this.container.element.removeEventListener('click', this.onClick);
+    }
+
+    // Event handlers
+
+    onHover = ({ type }) => {
+        if (!this.animatedIn) {
+            return;
+        }
+
+        clearTween(this.props);
+
+        this.needsUpdate = true;
+
+        if (type === 'mouseenter') {
+            tween(this.props, { yMultiplier: this.sound ? 0.7 : 0.3 }, 275, 'easeInOutCubic', () => {
+                this.needsUpdate = false;
+            });
+        } else {
+            tween(this.props, { yMultiplier: this.sound ? 1 : 0 }, 275, 'easeInOutCubic', () => {
+                this.needsUpdate = false;
+            });
+        }
+    };
+
+    onClick = () => {
+        clearTween(this.props);
+
+        if (this.sound) {
+            this.sound = false;
+
+            this.needsUpdate = true;
+
+            tween(this.props, { yMultiplier: 0 }, 300, 'easeOutCubic', () => {
+                this.needsUpdate = false;
+            });
+        } else {
+            this.sound = true;
+
+            this.needsUpdate = true;
+
+            tween(this.props, { yMultiplier: 1 }, 300, 'easeOutCubic', () => {
+                this.needsUpdate = false;
+            });
+        }
+
+        this.setSound(this.sound);
+    };
+
+    // Public methods
+
+    setData(data) {
+        if (!this.info) {
+            this.info = new AudioButtonInfo();
+            this.info.css({
+                position: 'absolute',
+                left: -145,
+                top: 0
+            });
+            this.add(this.info);
+        }
+
+        this.info.setData(data);
+    }
+
+    setSound(sound) {
+        this.events.emit('update', { sound, target: this });
+
+        if (this.callback) {
+            this.callback(sound, this);
+        }
+    }
+
+    resize() {
+        const dpr = 2; // Always 2
+
+        this.canvas.element.width = Math.round(this.width * dpr);
+        this.canvas.element.height = Math.round(this.height * dpr);
+        this.canvas.element.style.width = `${this.width}px`;
+        this.canvas.element.style.height = `${this.height}px`;
+        this.context.scale(dpr, dpr);
+
+        // Context properties need to be reassigned after resize
+        this.context.lineWidth = 1.5;
+        this.context.strokeStyle = Stage.rootStyle.getPropertyValue('--ui-color').trim();
+
+        this.update();
+    }
+
+    update() {
+        const width = this.width + 1;
+        const height = this.height / 2;
+        const progress = width * this.props.progress;
+        const increase = 90 / 180 * Math.PI / (height / 2);
+
+        this.context.clearRect(0, 0, this.canvas.element.width, this.canvas.element.height);
+        this.context.beginPath();
+
+        let counter = 0;
+        let x = 0;
+        let y = height;
+
+        for (let i = -4; i <= width; i++) {
+            if (progress >= i) {
+                this.context.moveTo(x, y);
+
+                x = i;
+                y = height - Math.sin(counter) * (height - 1) * this.props.yMultiplier;
+                counter += increase;
+
+                this.context.lineTo(x, y);
+            }
+        }
+
+        this.context.stroke();
+    }
+
+    animateIn() {
+        clearTween(this.props);
+
+        this.props.progress = 0;
+        this.props.yMultiplier = this.sound ? 1 : 0;
+
+        this.animatedIn = false;
+        this.needsUpdate = true;
+
+        tween(this.props, { progress: 1 }, 1000, 'easeOutExpo', () => {
+            this.needsUpdate = false;
+            this.animatedIn = true;
+        });
+
+        this.container.clearTween().tween({ opacity: 1 }, 400, 'easeOutCubic');
+    }
+
+    animateOut() {
+        this.animatedIn = false;
+
+        this.container.clearTween().tween({ opacity: 0 }, 400, 'easeOutCubic');
+    }
+
+    destroy() {
+        this.removeListeners();
+
+        clearTween(this);
+
+        return super.destroy();
+    }
+}
+
+/**
+ * @author pschroen / https://ufo.ai/
+ */
+
+
 class UI extends Interface {
     constructor({
         fps = false,
@@ -67988,6 +68350,17 @@ class UI extends Interface {
             this.add(this.muteButton);
             this.buttons.push(this.muteButton);
         }
+
+        if (this.data.audioButton) {
+            this.audioButton = new AudioButton(this.data.audioButton);
+            this.audioButton.css({
+                position: 'absolute',
+                right: 22,
+                bottom: 20
+            });
+            this.add(this.audioButton);
+            this.buttons.push(this.audioButton);
+        }
     }
 
     addListeners() {
@@ -68071,6 +68444,20 @@ class UI extends Interface {
             }
         }
 
+        if (this.audioButton) {
+            if (width < this.breakpoint) {
+                this.audioButton.css({
+                    right: 12,
+                    bottom: 10
+                });
+            } else {
+                this.audioButton.css({
+                    right: 22,
+                    bottom: 20
+                });
+            }
+        }
+
         this.buttons.forEach(button => button.resize());
     };
 
@@ -68091,14 +68478,16 @@ class UI extends Interface {
             } else {
                 this.animateIn();
             }
+
+            Stage.events.emit('ui', { open: this.animatedIn, target: this });
         }
     };
 
     onDetailsClick = () => {
-        if (!this.isDetailsOpen) {
-            this.toggleDetails(true);
-        } else {
+        if (this.isDetailsOpen) {
             this.toggleDetails(false);
+        } else {
+            this.toggleDetails(true);
         }
     };
 

@@ -1,0 +1,814 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+    <title>3D Input Manager — Alien.js</title>
+
+    <link rel="preconnect" href="https://fonts.gstatic.com">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto+Mono">
+    <link rel="stylesheet" href="../assets/css/style.css">
+
+    <script type="module">
+        import { BloomCompositeMaterial, BoxGeometry, Color, ColorManagement, DirectionalLight, EnvironmentTextureLoader, Group, HemisphereLight, IcosahedronGeometry, LinearSRGBColorSpace, LuminosityMaterial, MathUtils, Mesh, MeshStandardMaterial, OctahedronGeometry, OrbitControls, OrthographicCamera, PanelItem, PerspectiveCamera, Raycaster, Scene, SceneCompositeDistortionMaterial, TextureLoader, UI, UnrealBloomBlurMaterial, Vector2, WebGLRenderTarget, WebGLRenderer, getFullscreenTriangle, ticker } from '../../build/alien.three.js';
+
+        class AbstractCube extends Group {
+            constructor() {
+                super();
+
+                this.position.x = 2.5;
+            }
+
+            async initMesh() {
+                const geometry = new BoxGeometry();
+
+                const material = new MeshStandardMaterial({
+                    color: new Color().offsetHSL(0, 0, -0.65),
+                    metalness: 0.7,
+                    roughness: 0.7,
+                    flatShading: true
+                });
+
+                const mesh = new Mesh(geometry, material);
+                mesh.rotation.x = MathUtils.degToRad(-45);
+                mesh.rotation.z = MathUtils.degToRad(-45);
+                this.add(mesh);
+
+                this.mesh = mesh;
+            }
+
+            // Event handlers
+
+            onHover = ({ type }) => {
+                console.log('AbstractCube', type);
+                // if (type === 'over') {
+                // } else {
+                // }
+            };
+
+            onClick = () => {
+                console.log('AbstractCube', 'click');
+                // open('https://alien.js.org/');
+            };
+
+            // Public methods
+
+            update = () => {
+                this.mesh.rotation.y -= 0.005;
+            };
+        }
+
+        class FloatingCrystal extends Group {
+            constructor() {
+                super();
+
+                this.position.y = 0.7;
+            }
+
+            async initMesh() {
+                const geometry = new OctahedronGeometry();
+
+                const material = new MeshStandardMaterial({
+                    color: new Color().offsetHSL(0, 0, -0.65),
+                    metalness: 0.7,
+                    roughness: 0.7,
+                    flatShading: true
+                });
+
+                const mesh = new Mesh(geometry, material);
+                mesh.scale.set(0.5, 1, 0.5);
+                this.add(mesh);
+
+                this.mesh = mesh;
+            }
+
+            // Event handlers
+
+            onHover = ({ type }) => {
+                console.log('FloatingCrystal', type);
+                // if (type === 'over') {
+                // } else {
+                // }
+            };
+
+            onClick = () => {
+                console.log('FloatingCrystal', 'click');
+                // open('https://alien.js.org/');
+            };
+
+            // Public methods
+
+            update = time => {
+                this.mesh.position.y = Math.sin(time) * 0.1;
+                this.mesh.rotation.y += 0.01;
+            };
+        }
+
+        class DarkPlanet extends Group {
+            constructor() {
+                super();
+
+                this.position.x = -2.5;
+
+                // 25 degree tilt like Mars
+                this.rotation.z = MathUtils.degToRad(25);
+            }
+
+            async initMesh() {
+                const geometry = new IcosahedronGeometry(0.6, 12);
+
+                const material = new MeshStandardMaterial({
+                    color: new Color().offsetHSL(0, 0, -0.65),
+                    metalness: 0.7,
+                    roughness: 1
+                });
+
+                const mesh = new Mesh(geometry, material);
+                this.add(mesh);
+
+                this.mesh = mesh;
+            }
+
+            // Event handlers
+
+            onHover = ({ type }) => {
+                console.log('DarkPlanet', type);
+                // if (type === 'over') {
+                // } else {
+                // }
+            };
+
+            onClick = () => {
+                console.log('DarkPlanet', 'click');
+                // open('https://alien.js.org/');
+            };
+
+            // Public methods
+
+            update = () => {
+                // Counter clockwise rotation
+                this.mesh.rotation.y += 0.005;
+            };
+        }
+
+        class SceneView extends Group {
+            constructor() {
+                super();
+
+                this.visible = false;
+
+                this.initViews();
+            }
+
+            initViews() {
+                this.darkPlanet = new DarkPlanet();
+                this.add(this.darkPlanet);
+
+                this.floatingCrystal = new FloatingCrystal();
+                this.add(this.floatingCrystal);
+
+                this.abstractCube = new AbstractCube();
+                this.add(this.abstractCube);
+            }
+
+            addListeners() {
+                InputManager.add(this.darkPlanet, this.floatingCrystal, this.abstractCube);
+            }
+
+            removeListeners() {
+                InputManager.remove(this.darkPlanet, this.floatingCrystal, this.abstractCube);
+            }
+
+            // Public methods
+
+            update = time => {
+                this.darkPlanet.update(time);
+                this.floatingCrystal.update(time);
+                this.abstractCube.update(time);
+            };
+
+            animateIn = () => {
+                this.addListeners();
+            };
+
+            ready = () => Promise.all([
+                this.darkPlanet.initMesh(),
+                this.floatingCrystal.initMesh(),
+                this.abstractCube.initMesh()
+            ]);
+        }
+
+        class SceneController {
+            static init(view) {
+                this.view = view;
+            }
+
+            // Public methods
+
+            static update = time => {
+                if (!this.view.visible) {
+                    return;
+                }
+
+                this.view.update(time);
+            };
+
+            static animateIn = () => {
+                this.view.animateIn();
+
+                this.view.visible = true;
+            };
+
+            static ready = () => this.view.ready();
+        }
+
+        class PanelController {
+            static init(ui) {
+                this.ui = ui;
+
+                this.initPanel();
+            }
+
+            static initPanel() {
+                const { luminosityMaterial, bloomCompositeMaterial, compositeMaterial } = RenderManager;
+
+                const items = [
+                    {
+                        name: 'FPS'
+                    },
+                    {
+                        type: 'divider'
+                    },
+                    {
+                        type: 'slider',
+                        name: 'Thresh',
+                        min: 0,
+                        max: 1,
+                        step: 0.01,
+                        value: luminosityMaterial.uniforms.uThreshold.value,
+                        callback: value => {
+                            luminosityMaterial.uniforms.uThreshold.value = value;
+                        }
+                    },
+                    {
+                        type: 'slider',
+                        name: 'Smooth',
+                        min: 0,
+                        max: 1,
+                        step: 0.01,
+                        value: luminosityMaterial.uniforms.uSmoothing.value,
+                        callback: value => {
+                            luminosityMaterial.uniforms.uSmoothing.value = value;
+                        }
+                    },
+                    {
+                        type: 'slider',
+                        name: 'Strength',
+                        min: 0,
+                        max: 2,
+                        step: 0.01,
+                        value: RenderManager.bloomStrength,
+                        callback: value => {
+                            RenderManager.bloomStrength = value;
+                            bloomCompositeMaterial.uniforms.uBloomFactors.value = RenderManager.bloomFactors();
+                        }
+                    },
+                    {
+                        type: 'slider',
+                        name: 'Radius',
+                        min: 0,
+                        max: 1,
+                        step: 0.01,
+                        value: RenderManager.bloomRadius,
+                        callback: value => {
+                            RenderManager.bloomRadius = value;
+                            bloomCompositeMaterial.uniforms.uBloomFactors.value = RenderManager.bloomFactors();
+                        }
+                    },
+                    {
+                        type: 'slider',
+                        name: 'Chroma',
+                        min: 0,
+                        max: 10,
+                        step: 0.1,
+                        value: compositeMaterial.uniforms.uBloomDistortion.value,
+                        callback: value => {
+                            compositeMaterial.uniforms.uBloomDistortion.value = value;
+                        }
+                    }
+                ];
+
+                items.forEach(data => {
+                    this.ui.addPanel(new PanelItem(data));
+                });
+            }
+        }
+
+        const BlurDirectionX = new Vector2(1, 0);
+        const BlurDirectionY = new Vector2(0, 1);
+
+        class RenderManager {
+            static init(renderer, scene, camera) {
+                this.renderer = renderer;
+                this.scene = scene;
+                this.camera = camera;
+
+                // Bloom
+                this.luminosityThreshold = 0.1;
+                this.luminositySmoothing = 1;
+                this.bloomStrength = 0.3;
+                this.bloomRadius = 0.2;
+                this.bloomDistortion = 1.5;
+
+                this.enabled = true;
+
+                this.initRenderer();
+            }
+
+            static initRenderer() {
+                const { screenTriangle } = WorldController;
+
+                // Fullscreen triangle
+                this.screenCamera = new OrthographicCamera(-1, 1, 1, -1, 0, 1);
+                this.screen = new Mesh(screenTriangle);
+                this.screen.frustumCulled = false;
+
+                // Render targets
+                this.renderTarget = new WebGLRenderTarget(1, 1, {
+                    depthBuffer: false
+                });
+
+                this.renderTargetsHorizontal = [];
+                this.renderTargetsVertical = [];
+                this.nMips = 5;
+
+                this.renderTargetBright = this.renderTarget.clone();
+
+                for (let i = 0, l = this.nMips; i < l; i++) {
+                    this.renderTargetsHorizontal.push(this.renderTarget.clone());
+                    this.renderTargetsVertical.push(this.renderTarget.clone());
+                }
+
+                this.renderTarget.depthBuffer = true;
+
+                // Luminosity high pass material
+                this.luminosityMaterial = new LuminosityMaterial();
+                this.luminosityMaterial.uniforms.uThreshold.value = this.luminosityThreshold;
+                this.luminosityMaterial.uniforms.uSmoothing.value = this.luminositySmoothing;
+
+                // Separable Gaussian blur materials
+                this.blurMaterials = [];
+
+                const kernelSizeArray = [3, 5, 7, 9, 11];
+
+                for (let i = 0, l = this.nMips; i < l; i++) {
+                    this.blurMaterials.push(new UnrealBloomBlurMaterial(kernelSizeArray[i]));
+                }
+
+                // Bloom composite material
+                this.bloomCompositeMaterial = new BloomCompositeMaterial();
+                this.bloomCompositeMaterial.uniforms.tBlur1.value = this.renderTargetsVertical[0].texture;
+                this.bloomCompositeMaterial.uniforms.tBlur2.value = this.renderTargetsVertical[1].texture;
+                this.bloomCompositeMaterial.uniforms.tBlur3.value = this.renderTargetsVertical[2].texture;
+                this.bloomCompositeMaterial.uniforms.tBlur4.value = this.renderTargetsVertical[3].texture;
+                this.bloomCompositeMaterial.uniforms.tBlur5.value = this.renderTargetsVertical[4].texture;
+                this.bloomCompositeMaterial.uniforms.uBloomFactors.value = this.bloomFactors();
+
+                // Composite material
+                this.compositeMaterial = new SceneCompositeDistortionMaterial({ dithering: true });
+                this.compositeMaterial.uniforms.uBloomDistortion.value = this.bloomDistortion;
+            }
+
+            static bloomFactors() {
+                const bloomFactors = [1, 0.8, 0.6, 0.4, 0.2];
+
+                for (let i = 0, l = this.nMips; i < l; i++) {
+                    const factor = bloomFactors[i];
+                    bloomFactors[i] = this.bloomStrength * MathUtils.lerp(factor, 1.2 - factor, this.bloomRadius);
+                }
+
+                return bloomFactors;
+            }
+
+            // Public methods
+
+            static resize = (width, height, dpr) => {
+                this.renderer.setPixelRatio(dpr);
+                this.renderer.setSize(width, height);
+
+                width = Math.round(width * dpr);
+                height = Math.round(height * dpr);
+
+                this.renderTarget.setSize(width, height);
+
+                // Unreal bloom
+                width = MathUtils.floorPowerOfTwo(width) / 2;
+                height = MathUtils.floorPowerOfTwo(height) / 2;
+
+                this.renderTargetBright.setSize(width, height);
+
+                for (let i = 0, l = this.nMips; i < l; i++) {
+                    this.renderTargetsHorizontal[i].setSize(width, height);
+                    this.renderTargetsVertical[i].setSize(width, height);
+
+                    this.blurMaterials[i].uniforms.uResolution.value.set(width, height);
+
+                    width /= 2;
+                    height /= 2;
+                }
+            };
+
+            static update = () => {
+                const renderer = this.renderer;
+                const scene = this.scene;
+                const camera = this.camera;
+
+                if (!this.enabled) {
+                    renderer.setRenderTarget(null);
+                    renderer.render(scene, camera);
+                    return;
+                }
+
+                const renderTarget = this.renderTarget;
+                const renderTargetBright = this.renderTargetBright;
+                const renderTargetsHorizontal = this.renderTargetsHorizontal;
+                const renderTargetsVertical = this.renderTargetsVertical;
+
+                // Scene pass
+                renderer.setRenderTarget(renderTarget);
+                renderer.render(scene, camera);
+
+                // Extract bright areas
+                this.luminosityMaterial.uniforms.tMap.value = renderTarget.texture;
+                this.screen.material = this.luminosityMaterial;
+                renderer.setRenderTarget(renderTargetBright);
+                renderer.render(this.screen, this.screenCamera);
+
+                // Blur all the mips progressively
+                let inputRenderTarget = renderTargetBright;
+
+                for (let i = 0, l = this.nMips; i < l; i++) {
+                    this.screen.material = this.blurMaterials[i];
+
+                    this.blurMaterials[i].uniforms.tMap.value = inputRenderTarget.texture;
+                    this.blurMaterials[i].uniforms.uDirection.value = BlurDirectionX;
+                    renderer.setRenderTarget(renderTargetsHorizontal[i]);
+                    renderer.render(this.screen, this.screenCamera);
+
+                    this.blurMaterials[i].uniforms.tMap.value = this.renderTargetsHorizontal[i].texture;
+                    this.blurMaterials[i].uniforms.uDirection.value = BlurDirectionY;
+                    renderer.setRenderTarget(renderTargetsVertical[i]);
+                    renderer.render(this.screen, this.screenCamera);
+
+                    inputRenderTarget = renderTargetsVertical[i];
+                }
+
+                // Composite all the mips
+                this.screen.material = this.bloomCompositeMaterial;
+                renderer.setRenderTarget(renderTargetsHorizontal[0]);
+                renderer.render(this.screen, this.screenCamera);
+
+                // Composite pass (render to screen)
+                this.compositeMaterial.uniforms.tScene.value = renderTarget.texture;
+                this.compositeMaterial.uniforms.tBloom.value = renderTargetsHorizontal[0].texture;
+                this.screen.material = this.compositeMaterial;
+                renderer.setRenderTarget(null);
+                renderer.render(this.screen, this.screenCamera);
+            };
+        }
+
+        class InputManager {
+            static init(camera) {
+                this.camera = camera;
+
+                this.raycaster = new Raycaster();
+
+                this.objects = [];
+                this.mouse = new Vector2(-1, -1);
+                this.delta = new Vector2();
+                this.coords = new Vector2();
+                this.hover = null;
+                this.selected = null;
+                this.click = null;
+                this.lastTime = null;
+                this.lastMouse = new Vector2();
+                this.raycastInterval = 1 / 10; // 10 frames per second
+                this.lastRaycast = 0;
+                this.enabled = true;
+
+                this.addListeners();
+            }
+
+            static addListeners() {
+                window.addEventListener('pointerdown', this.onPointerDown);
+                window.addEventListener('pointermove', this.onPointerMove);
+                window.addEventListener('pointerup', this.onPointerUp);
+            }
+
+            static removeListeners() {
+                window.removeEventListener('pointerdown', this.onPointerDown);
+                window.removeEventListener('pointermove', this.onPointerMove);
+                window.removeEventListener('pointerup', this.onPointerUp);
+            }
+
+            // Event handlers
+
+            static onPointerDown = e => {
+                if (!this.enabled) {
+                    return;
+                }
+
+                this.lastTime = performance.now();
+                this.lastMouse.set(e.clientX, e.clientY);
+
+                this.onPointerMove(e);
+
+                if (this.hover) {
+                    this.click = this.hover;
+                }
+            };
+
+            static onPointerMove = e => {
+                if (!this.enabled) {
+                    return;
+                }
+
+                if (e) {
+                    this.mouse.x = e.clientX;
+                    this.mouse.y = e.clientY;
+                    this.coords.x = (this.mouse.x / document.documentElement.clientWidth) * 2 - 1;
+                    this.coords.y = 1 - (this.mouse.y / document.documentElement.clientHeight) * 2;
+                }
+
+                this.raycaster.setFromCamera(this.coords, this.camera);
+
+                const intersection = this.raycaster.intersectObjects(this.objects);
+
+                if (intersection.length) {
+                    let object = intersection[0].object;
+
+                    if (object.parent.isGroup) {
+                        object = object.parent;
+                    }
+
+                    if (!this.hover) {
+                        this.hover = object;
+                        this.hover.onHover({ type: 'over' });
+                        document.body.style.cursor = 'pointer';
+                    } else if (this.hover !== object) {
+                        this.hover.onHover({ type: 'out' });
+                        this.hover = object;
+                        this.hover.onHover({ type: 'over' });
+                        document.body.style.cursor = 'pointer';
+                    }
+                } else if (this.hover) {
+                    this.hover.onHover({ type: 'out' });
+                    this.hover = null;
+                    document.body.style.cursor = '';
+                }
+
+                this.delta.subVectors(this.mouse, this.lastMouse);
+            };
+
+            static onPointerUp = e => {
+                if (!this.enabled) {
+                    return;
+                }
+
+                this.onPointerMove(e);
+
+                if (performance.now() - this.lastTime > 250 || this.delta.length() > 50) {
+                    this.click = null;
+                    return;
+                }
+
+                if (this.click && this.click === this.hover) {
+                    this.click.onClick();
+                }
+
+                this.click = null;
+            };
+
+            // Public methods
+
+            static update = time => {
+                if (!navigator.maxTouchPoints && time - this.lastRaycast > this.raycastInterval) {
+                    this.onPointerMove();
+                    this.lastRaycast = time;
+                }
+            };
+
+            static add = (...objects) => {
+                this.objects.push(...objects);
+            };
+
+            static remove = (...objects) => {
+                objects.forEach(object => {
+                    const index = this.objects.indexOf(object);
+
+                    if (~index) {
+                        this.objects.splice(index, 1);
+                    }
+
+                    if (object.parent.isGroup) {
+                        object = object.parent;
+                    }
+
+                    if (object === this.hover) {
+                        this.hover.onHover({ type: 'out' });
+                        this.hover = null;
+                        document.body.style.cursor = '';
+                    }
+                });
+            };
+        }
+
+        class WorldController {
+            static init() {
+                this.initWorld();
+                this.initLights();
+                this.initLoaders();
+                this.initEnvironment();
+                this.initControls();
+
+                this.addListeners();
+            }
+
+            static initWorld() {
+                this.renderer = new WebGLRenderer({
+                    powerPreference: 'high-performance',
+                    antialias: true
+                });
+
+                // Disable color management
+                ColorManagement.enabled = false;
+                this.renderer.outputColorSpace = LinearSRGBColorSpace;
+
+                // Output canvas
+                this.element = this.renderer.domElement;
+
+                // 3D scene
+                this.scene = new Scene();
+                this.scene.background = new Color(0x060606);
+                this.camera = new PerspectiveCamera(30);
+                this.camera.near = 0.5;
+                this.camera.far = 40;
+                this.camera.position.set(0, 6, 8);
+                this.camera.lookAt(this.scene.position);
+
+                // Global geometries
+                this.screenTriangle = getFullscreenTriangle();
+
+                // Global uniforms
+                this.resolution = { value: new Vector2() };
+                this.texelSize = { value: new Vector2() };
+                this.aspect = { value: 1 };
+                this.time = { value: 0 };
+                this.frame = { value: 0 };
+
+                // Global settings
+                this.anisotropy = this.renderer.capabilities.getMaxAnisotropy();
+            }
+
+            static initLights() {
+                this.scene.add(new HemisphereLight(0x606060, 0x404040, 3));
+
+                const light = new DirectionalLight(0xffffff, 2);
+                light.position.set(5, 5, 5);
+                this.scene.add(light);
+            }
+
+            static initLoaders() {
+                this.textureLoader = new TextureLoader();
+                this.environmentLoader = new EnvironmentTextureLoader(this.renderer);
+            }
+
+            static async initEnvironment() {
+                this.scene.environment = await this.loadEnvironmentTexture('../assets/textures/env/jewelry_black_contrast.jpg');
+                this.scene.environmentIntensity = 1.2;
+            }
+
+            static initControls() {
+                this.controls = new OrbitControls(this.camera, this.renderer.domElement);
+                this.controls.enableDamping = true;
+            }
+
+            static addListeners() {
+                this.renderer.domElement.addEventListener('touchstart', this.onTouchStart);
+            }
+
+            // Event handlers
+
+            static onTouchStart = e => {
+                e.preventDefault();
+            };
+
+            // Public methods
+
+            static resize = (width, height, dpr) => {
+                this.camera.aspect = width / height;
+                this.camera.updateProjectionMatrix();
+
+                width = Math.round(width * dpr);
+                height = Math.round(height * dpr);
+
+                this.resolution.value.set(width, height);
+                this.texelSize.value.set(1 / width, 1 / height);
+                this.aspect.value = width / height;
+            };
+
+            static update = (time, delta, frame) => {
+                this.time.value = time;
+                this.frame.value = frame;
+
+                this.controls.update();
+            };
+
+            // Global handlers
+
+            static getTexture = (path, callback) => this.textureLoader.load(path, callback);
+
+            static loadTexture = path => this.textureLoader.loadAsync(path);
+
+            static loadEnvironmentTexture = path => this.environmentLoader.loadAsync(path);
+        }
+
+        class App {
+            static async init() {
+                this.initWorld();
+                this.initViews();
+                this.initControllers();
+
+                this.addListeners();
+                this.onResize();
+
+                await Promise.all([
+                    SceneController.ready(),
+                    WorldController.textureLoader.ready(),
+                    WorldController.environmentLoader.ready()
+                ]);
+
+                this.initPanel();
+
+                SceneController.animateIn();
+            }
+
+            static initWorld() {
+                WorldController.init();
+                document.body.appendChild(WorldController.element);
+            }
+
+            static initViews() {
+                this.view = new SceneView();
+                WorldController.scene.add(this.view);
+
+                this.ui = new UI({ fps: true });
+                this.ui.animateIn();
+                document.body.appendChild(this.ui.element);
+            }
+
+            static initControllers() {
+                const { renderer, scene, camera } = WorldController;
+
+                SceneController.init(this.view);
+                InputManager.init(camera);
+                RenderManager.init(renderer, scene, camera);
+            }
+
+            static initPanel() {
+                PanelController.init(this.ui);
+            }
+
+            static addListeners() {
+                window.addEventListener('resize', this.onResize);
+                ticker.add(this.onUpdate);
+                ticker.start();
+            }
+
+            // Event handlers
+
+            static onResize = () => {
+                const width = document.documentElement.clientWidth;
+                const height = document.documentElement.clientHeight;
+                const dpr = window.devicePixelRatio;
+
+                WorldController.resize(width, height, dpr);
+                RenderManager.resize(width, height, dpr);
+            };
+
+            static onUpdate = (time, delta, frame) => {
+                WorldController.update(time, delta, frame);
+                SceneController.update(time);
+                InputManager.update(time);
+                RenderManager.update(time, delta, frame);
+                this.ui.update();
+            };
+        }
+
+        App.init();
+    </script>
+</head>
+<body>
+</body>
+</html>

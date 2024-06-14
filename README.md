@@ -95,6 +95,7 @@ const program = new FXAAProgram(gl);
 [cubecamera](https://alien.js.org/examples/three/3d_cubecamera.html) (orbit camera, [debug](https://alien.js.org/examples/three/3d_cubecamera.html?debug))  
 [cubecamera rainbow](https://alien.js.org/examples/three/3d_cubecamera_rainbow.html) (orbit camera, [debug](https://alien.js.org/examples/three/3d_cubecamera_rainbow.html?debug))  
 [camera wobble](https://alien.js.org/examples/three/3d_camera_wobble.html)  
+[input manager](https://alien.js.org/examples/three/3d_input_manager.html)  
 [panel tracking](https://alien.js.org/examples/three/3d_panel_tracking.html) ([debug](https://alien.js.org/examples/three/3d_panel_tracking.html?debug))  
 [backdrop](https://alien.js.org/examples/three/3d_backdrop.html)  
 [infinite stars](https://alien.js.org/examples/three/3d_infinite_stars_rgbshift.html) (RGB shift, [debug](https://alien.js.org/examples/three/3d_infinite_stars_rgbshift.html?debug))  

@@ -98,7 +98,7 @@ const program = new FXAAProgram(gl);
 [panel tracking](https://alien.js.org/examples/three/3d_panel_tracking.html) ([debug](https://alien.js.org/examples/three/3d_panel_tracking.html?debug))  
 [backdrop](https://alien.js.org/examples/three/3d_backdrop.html)  
 [infinite stars](https://alien.js.org/examples/three/3d_infinite_stars_rgbshift.html) (RGB shift, [debug](https://alien.js.org/examples/three/3d_infinite_stars_rgbshift.html?debug))  
-[black holes](https://alien.js.org/examples/three/3d_black_holes.html) (per-object motion blur, [debug](https://alien.js.org/examples/three/3d_black_holes.html?debug), [orbit controls](https://alien.js.org/examples/three/3d_black_holes.html?orbit))  
+[black holes](https://alien.js.org/examples/three/3d_black_holes.html) (per-object motion blur, volumetric light and fluid, [debug](https://alien.js.org/examples/three/3d_black_holes.html?debug), [orbit controls](https://alien.js.org/examples/three/3d_black_holes.html?orbit))  
 [stripe gradient](https://alien.js.org/examples/three/3d_stripe_gradient.html) ([akella version](https://www.youtube.com/watch?v=LW9d2cqIHb4))  
 
 #### shader
@@ -162,8 +162,8 @@ const program = new FXAAProgram(gl);
 [instancing](https://alien.js.org/examples/three/3d_physics_instancing_thread.html) (physics thread, SSS, [debug](https://alien.js.org/examples/three/3d_physics_instancing_thread.html?debug))  
 [picking](https://alien.js.org/examples/three/3d_physics_picking.html) (contact audio, SSS, [debug](https://alien.js.org/examples/three/3d_physics_picking.html?debug))  
 [picking](https://alien.js.org/examples/three/3d_physics_picking_thread.html) (physics thread, contact audio, SSS, [debug](https://alien.js.org/examples/three/3d_physics_picking_thread.html?debug))  
-[gravity balls](https://alien.js.org/examples/three/3d_physics_gravity_balls.html) (motion blur, SSS, [debug](https://alien.js.org/examples/three/3d_physics_gravity_balls.html?200&debug))  
-[gravity balls](https://alien.js.org/examples/three/3d_physics_gravity_balls_thread.html) (physics thread, motion blur, SSS, [debug](https://alien.js.org/examples/three/3d_physics_gravity_balls_thread.html?200&debug))  
+[gravity balls](https://alien.js.org/examples/three/3d_physics_gravity_balls.html) (motion blur, SSS, volumetric light with lens flare, [debug](https://alien.js.org/examples/three/3d_physics_gravity_balls.html?200&debug))  
+[gravity balls](https://alien.js.org/examples/three/3d_physics_gravity_balls_thread.html) (physics thread, motion blur, SSS, volumetric light with lens flare, [debug](https://alien.js.org/examples/three/3d_physics_gravity_balls_thread.html?200&debug))  
 
 #### audio
 

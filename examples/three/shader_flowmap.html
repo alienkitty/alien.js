@@ -453,7 +453,7 @@
                 // Flowmap
                 this.mouse = new Vector2(-1, -1);
                 this.velocity = new Vector2();
-                this.lastTime = null;
+                this.lastTime = 0;
                 this.lastMouse = new Vector2();
 
                 // Bloom
@@ -648,7 +648,7 @@
                 if (!this.velocity.needsUpdate) {
                     this.mouse.set(-1, -1);
                     this.velocity.set(0, 0);
-                    this.lastTime = null;
+                    this.lastTime = 0;
                 }
                 this.velocity.needsUpdate = false;
 

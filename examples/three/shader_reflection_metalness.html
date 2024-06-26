@@ -255,11 +255,11 @@
                     },
                     {
                         type: 'content',
-                        callback: (value, panel) => {
+                        callback: (value, item) => {
                             const materialPanel = new StandardMaterialPanel(floor);
                             materialPanel.animateIn(true);
 
-                            panel.setContent(materialPanel);
+                            item.setContent(materialPanel);
                         }
                     },
                     {

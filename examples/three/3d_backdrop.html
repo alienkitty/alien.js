@@ -331,8 +331,8 @@
                         type: 'list',
                         list: postOptions,
                         value: getKeyByValue(postOptions, RenderManager.enabled),
-                        callback: (value, panel) => {
-                            if (!panel.group) {
+                        callback: (value, item) => {
+                            if (!item.hasContent()) {
                                 const postPanel = new Panel();
                                 postPanel.animateIn(true);
 
@@ -340,15 +340,15 @@
                                     postPanel.add(new PanelItem(data));
                                 });
 
-                                panel.setContent(postPanel);
+                                item.setContent(postPanel);
                             }
 
                             RenderManager.enabled = postOptions[value];
 
                             if (RenderManager.enabled) {
-                                panel.group.show();
+                                item.toggleContent(true);
                             } else {
-                                panel.group.hide();
+                                item.toggleContent(false);
                             }
                         }
                     }

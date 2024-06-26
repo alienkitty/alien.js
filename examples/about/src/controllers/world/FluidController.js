@@ -141,7 +141,7 @@ export class FluidController {
             this.pointer[e.id].mouse.copy(this.pointer[e.id].target);
             this.pointer[e.id].last.copy(this.pointer[e.id].mouse);
             this.pointer[e.id].tracker = this.trackers.add(new Reticle());
-            this.pointer[e.id].tracker.css({ left: Math.round(this.pointer[e.id].mouse.x), top: Math.round(this.pointer[e.id].mouse.y) });
+            this.pointer[e.id].tracker.css({ left: this.pointer[e.id].mouse.x, top: this.pointer[e.id].mouse.y });
             this.pointer[e.id].tracker.setData(Data.getReticleData(e.id));
         }
 
@@ -170,7 +170,7 @@ export class FluidController {
             if (id !== 'main') {
                 this.pointer[id].mouse.lerp(this.pointer[id].target, this.lerpSpeed);
 
-                this.pointer[id].tracker.css({ left: Math.round(this.pointer[id].mouse.x), top: Math.round(this.pointer[id].mouse.y) });
+                this.pointer[id].tracker.css({ left: this.pointer[id].mouse.x, top: this.pointer[id].mouse.y });
 
                 if (!this.pointer[id].tracker.animatedIn) {
                     this.pointer[id].tracker.animateIn();

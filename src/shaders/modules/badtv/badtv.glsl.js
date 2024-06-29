@@ -1,6 +1,6 @@
-import simplex2d from '../noise/simplex2d.glsl.js';
-
 // Based on https://github.com/felixturner/bad-tv-shader
+
+import simplex2d from '../noise/simplex2d.glsl.js';
 
 export default /* glsl */ `
 ${simplex2d}

@@ -1,7 +1,7 @@
-import rgbshift from '../rgbshift/rgbshift.glsl.js';
-
 // Based on https://github.com/OGRECave/ogre/blob/master/Samples/Media/materials/programs/GLSL/Radial_Blur_FP.glsl
 // Based on https://stackoverflow.com/questions/4579020/how-do-i-use-a-glsl-shader-to-apply-a-radial-blur-to-an-entire-scene
+
+import rgbshift from '../rgbshift/rgbshift.glsl.js';
 
 export default /* glsl */ `
 ${rgbshift}

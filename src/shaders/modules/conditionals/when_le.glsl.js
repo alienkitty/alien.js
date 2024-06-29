@@ -1,6 +1,6 @@
-import when_gt from './when_gt.glsl.js';
-
 // From https://github.com/dmnsgn/glsl-conditionals
+
+import when_gt from './when_gt.glsl.js';
 
 export default /* glsl */ `
 ${when_gt}

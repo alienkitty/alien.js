@@ -970,6 +970,11 @@ class WorldController {
         this.frame.value = frame;
     };
 
+    static ready = () => Promise.all([
+        this.textureLoader.ready(),
+        this.environmentLoader.ready()
+    ]);
+
     // Global handlers
 
     static getTexture = (path, callback) => this.textureLoader.load(path, callback);
@@ -994,11 +999,8 @@ class App {
         this.addListeners();
         this.onResize();
 
-        await Promise.all([
-            SceneController.ready(),
-            WorldController.textureLoader.ready(),
-            WorldController.environmentLoader.ready()
-        ]);
+        await SceneController.ready();
+        await WorldController.ready();
 
         this.initPanel();
 

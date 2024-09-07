@@ -1104,6 +1104,11 @@
                 this.controls.update();
             };
 
+            static ready = () => Promise.all([
+                this.textureLoader.ready(),
+                this.environmentLoader.ready()
+            ]);
+
             // Global handlers
 
             static getTexture = (path, callback) => this.textureLoader.load(path, callback);
@@ -1123,11 +1128,8 @@
                 this.addListeners();
                 this.onResize();
 
-                await Promise.all([
-                    SceneController.ready(),
-                    WorldController.textureLoader.ready(),
-                    WorldController.environmentLoader.ready()
-                ]);
+                await SceneController.ready();
+                await WorldController.ready();
 
                 this.initPanel();
 

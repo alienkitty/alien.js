@@ -43,7 +43,6 @@
             async initMesh() {
                 const { loadGLTF } = WorldController;
 
-                // https://forum.sketchfab.com/t/download-sketchfab-model-as-single-glb-or-gltf-file/38769
                 // https://sbtron.github.io/makeglb/
                 const gltf = await loadGLTF('../assets/gltf/crystal.glb');
 
@@ -97,16 +96,10 @@
             }
 
             static addListeners() {
-                window.addEventListener('pointerdown', this.onPointerDown);
                 window.addEventListener('pointermove', this.onPointerMove);
-                window.addEventListener('pointerup', this.onPointerUp);
             }
 
             // Event handlers
-
-            static onPointerDown = e => {
-                this.onPointerMove(e);
-            };
 
             static onPointerMove = ({ clientX, clientY }) => {
                 if (!this.view.visible) {
@@ -115,10 +108,6 @@
 
                 this.target.x = (clientX / document.documentElement.clientWidth) * 2 - 1;
                 this.target.y = 1 - (clientY / document.documentElement.clientHeight) * 2;
-            };
-
-            static onPointerUp = e => {
-                this.onPointerMove(e);
             };
 
             // Public methods
@@ -453,31 +442,21 @@
                     return;
                 }
 
-                window.addEventListener('pointerdown', this.onPointerDown);
                 window.addEventListener('pointermove', this.onPointerMove);
-                window.addEventListener('pointerup', this.onPointerUp);
             }
 
             // Event handlers
-
-            static onPointerDown = e => {
-                this.onPointerMove(e);
-            };
 
             static onPointerMove = ({ clientX, clientY }) => {
                 if (this.prevent) {
                     return;
                 }
 
-                this.mouse.x = (clientX - this.halfWidth);
-                this.mouse.y = (clientY - this.halfHeight);
+                this.mouse.x = clientX - this.halfWidth;
+                this.mouse.y = clientY - this.halfHeight;
 
                 this.target.x = MathUtils.degToRad(-360) + (1 - this.mouse.x) * this.rotation * this.multiplier;
                 this.target.y = (1 - this.mouse.y) * this.rotation * this.multiplier;
-            };
-
-            static onPointerUp = e => {
-                this.onPointerMove(e);
             };
 
             // Public methods

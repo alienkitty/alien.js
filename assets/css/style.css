@@ -33,7 +33,7 @@
     --ui-font-weight: 400;
     --ui-font-size: 10px;
     --ui-line-height: 15px;
-    --ui-letter-spacing: 0.02em;
+    --ui-letter-spacing: 0.03em;
     --ui-number-letter-spacing: 0.5px;
     --ui-secondary-font-size: 10px;
     --ui-secondary-letter-spacing: 0.5px;
@@ -46,8 +46,8 @@
     --ui-info-font-family: 'Gothic A1', sans-serif;
     --ui-info-font-weight: 700;
     --ui-info-font-size: 10px;
-    --ui-info-line-height: 20px;
-    --ui-info-letter-spacing: 0.8px;
+    --ui-info-line-height: 32px;
+    --ui-info-letter-spacing: 0.08em;
     --ui-info-opacity: 0.7;
     --ui-color: rgb(255 255 255 / 0.94);
     --ui-color-triplet: 255 255 255;
@@ -112,9 +112,9 @@ p {
 }
 
 a {
+    color: var(--ui-color);
     text-decoration: none;
     text-underline-offset: 3px;
-    color: var(--ui-color);
 }
 
 a:hover, a:focus {
@@ -159,12 +159,18 @@ a:hover, a:focus {
     font-weight: 700;
 }
 
+.ui {
+    z-index: 9;
+}
+
 .ui > .info {
     font-family: var(--ui-info-font-family);
     font-weight: var(--ui-info-font-weight);
     font-size: var(--ui-info-font-size);
     line-height: var(--ui-info-line-height);
     letter-spacing: var(--ui-info-letter-spacing);
+    -moz-osx-font-smoothing: grayscale;
+    -webkit-font-smoothing: antialiased;
 }
 
 .menu > * {

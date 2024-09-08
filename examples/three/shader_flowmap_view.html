@@ -397,7 +397,7 @@
                 // Flowmap
                 this.mouse = new Vector2(-1, -1);
                 this.velocity = new Vector2();
-                this.lastTime = null;
+                this.lastTime = 0;
                 this.lastMouse = new Vector2();
 
                 this.triangleWorldPosition = new Vector3();
@@ -407,16 +407,10 @@
             }
 
             static addListeners() {
-                window.addEventListener('pointerdown', this.onPointerDown);
                 window.addEventListener('pointermove', this.onPointerMove);
-                window.addEventListener('pointerup', this.onPointerUp);
             }
 
             // Event handlers
-
-            static onPointerDown = e => {
-                this.onPointerMove(e);
-            };
 
             static onPointerMove = ({ clientX, clientY }) => {
                 if (!this.view.visible) {
@@ -473,10 +467,6 @@
                 this.velocity.needsUpdate = true;
             };
 
-            static onPointerUp = e => {
-                this.onPointerMove(e);
-            };
-
             // Public methods
 
             static resize = (width, height, dpr) => {
@@ -491,7 +481,7 @@
                 if (!this.velocity.needsUpdate) {
                     this.mouse.set(-1, -1);
                     this.velocity.set(0, 0);
-                    this.lastTime = null;
+                    this.lastTime = 0;
                 }
                 this.velocity.needsUpdate = false;
 
@@ -822,16 +812,10 @@
             }
 
             static addListeners() {
-                window.addEventListener('pointerdown', this.onPointerDown);
                 window.addEventListener('pointermove', this.onPointerMove);
-                window.addEventListener('pointerup', this.onPointerUp);
             }
 
             // Event handlers
-
-            static onPointerDown = e => {
-                this.onPointerMove(e);
-            };
 
             static onPointerMove = ({ clientX, clientY }) => {
                 if (!this.enabled) {
@@ -840,10 +824,6 @@
 
                 this.mouse.x = (clientX / document.documentElement.clientWidth) * 2 - 1;
                 this.mouse.y = 1 - (clientY / document.documentElement.clientHeight) * 2;
-            };
-
-            static onPointerUp = e => {
-                this.onPointerMove(e);
             };
 
             // Public methods

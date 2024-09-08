@@ -487,11 +487,10 @@
                 this.objects = [];
                 this.mouse = new Vector2(-1, -1);
                 this.delta = new Vector2();
-                this.coords = new Vector2();
+                this.coords = new Vector2(-2, 2);
                 this.hover = null;
-                this.selected = null;
                 this.click = null;
-                this.lastTime = null;
+                this.lastTime = 0;
                 this.lastMouse = new Vector2();
                 this.raycastInterval = 1 / 10; // 10 frames per second
                 this.lastRaycast = 0;
@@ -571,12 +570,10 @@
                 this.delta.subVectors(this.mouse, this.lastMouse);
             };
 
-            static onPointerUp = e => {
+            static onPointerUp = () => {
                 if (!this.enabled) {
                     return;
                 }
-
-                this.onPointerMove(e);
 
                 if (performance.now() - this.lastTime > 250 || this.delta.length() > 50) {
                     this.click = null;
@@ -725,6 +722,11 @@
                 this.controls.update();
             };
 
+            static ready = () => Promise.all([
+                this.textureLoader.ready(),
+                this.environmentLoader.ready()
+            ]);
+
             // Global handlers
 
             static getTexture = (path, callback) => this.textureLoader.load(path, callback);
@@ -743,11 +745,8 @@
                 this.addListeners();
                 this.onResize();
 
-                await Promise.all([
-                    SceneController.ready(),
-                    WorldController.textureLoader.ready(),
-                    WorldController.environmentLoader.ready()
-                ]);
+                await SceneController.ready();
+                await WorldController.ready();
 
                 this.initPanel();
 

@@ -1409,9 +1409,7 @@ class CameraController {
     }
 
     static addListeners() {
-        window.addEventListener('pointerdown', this.onPointerDown);
         window.addEventListener('pointermove', this.onPointerMove);
-        window.addEventListener('pointerup', this.onPointerUp);
     }
 
     static transition() {
@@ -1459,10 +1457,6 @@ class CameraController {
 
     // Event handlers
 
-    static onPointerDown = e => {
-        this.onPointerMove(e);
-    };
-
     static onPointerMove = ({ clientX, clientY }) => {
         if (!this.enabled) {
             return;
@@ -1470,10 +1464,6 @@ class CameraController {
 
         this.mouse.x = (clientX / document.documentElement.clientWidth) * 2 - 1;
         this.mouse.y = 1 - (clientY / document.documentElement.clientHeight) * 2;
-    };
-
-    static onPointerUp = e => {
-        this.onPointerMove(e);
     };
 
     // Public methods
@@ -1633,6 +1623,11 @@ class WorldController {
         this.frame.value = frame;
     };
 
+    static ready = () => Promise.all([
+        this.textureLoader.ready(),
+        this.environmentLoader.ready()
+    ]);
+
     // Global handlers
 
     static getTexture = (path, callback) => this.textureLoader.load(path, callback);
@@ -1658,11 +1653,8 @@ class App {
         this.addListeners();
         this.onResize();
 
-        await Promise.all([
-            SceneController.ready(),
-            WorldController.textureLoader.ready(),
-            WorldController.environmentLoader.ready()
-        ]);
+        await SceneController.ready();
+        await WorldController.ready();
 
         this.initPanel();
 

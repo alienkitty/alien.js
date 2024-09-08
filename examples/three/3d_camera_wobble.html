@@ -549,16 +549,10 @@
             }
 
             static addListeners() {
-                window.addEventListener('pointerdown', this.onPointerDown);
                 window.addEventListener('pointermove', this.onPointerMove);
-                window.addEventListener('pointerup', this.onPointerUp);
             }
 
             // Event handlers
-
-            static onPointerDown = e => {
-                this.onPointerMove(e);
-            };
 
             static onPointerMove = ({ clientX, clientY }) => {
                 if (!this.enabled) {
@@ -566,10 +560,6 @@
                 }
 
                 this.mouse.set(clientX, clientY);
-            };
-
-            static onPointerUp = e => {
-                this.onPointerMove(e);
             };
 
             // Public methods

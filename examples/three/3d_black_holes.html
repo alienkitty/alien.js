@@ -901,16 +901,10 @@
             }
 
             static addListeners() {
-                window.addEventListener('pointerdown', this.onPointerDown);
                 window.addEventListener('pointermove', this.onPointerMove);
-                window.addEventListener('pointerup', this.onPointerUp);
             }
 
             // Event handlers
-
-            static onPointerDown = e => {
-                this.onPointerMove(e);
-            };
 
             static onPointerMove = ({ clientX, clientY }) => {
                 if (!this.enabled) {
@@ -944,10 +938,6 @@
                         dy: deltaY * -5
                     });
                 }
-            };
-
-            static onPointerUp = e => {
-                this.onPointerMove(e);
             };
 
             // Public methods

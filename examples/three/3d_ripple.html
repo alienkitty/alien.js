@@ -281,9 +281,7 @@
 
             static addListeners() {
                 document.addEventListener('visibilitychange', this.onVisibility);
-                window.addEventListener('pointerdown', this.onPointerDown);
                 window.addEventListener('pointermove', this.onPointerMove);
-                window.addEventListener('pointerup', this.onPointerUp);
             }
 
             // Event handlers
@@ -294,10 +292,6 @@
                 } else {
                     this.constantWaving();
                 }
-            };
-
-            static onPointerDown = e => {
-                this.onPointerMove(e);
             };
 
             static onPointerMove = ({ clientX, clientY }) => {
@@ -318,10 +312,6 @@
                         this.timeout = false;
                     });
                 }
-            };
-
-            static onPointerUp = e => {
-                this.onPointerMove(e);
             };
 
             // Public methods

@@ -119,14 +119,12 @@ export class FluidController {
         this.send(event);
     };
 
-    static onPointerUp = e => {
+    static onPointerUp = () => {
         if (!this.enabled) {
             return;
         }
 
         this.pointer.main.isDown = false;
-
-        this.onPointerMove(e);
     };
 
     static onMotion = e => {

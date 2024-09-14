@@ -123,8 +123,8 @@ a:hover, a:focus {
 }
 
 ::selection {
-    background-color: var(--ui-color);
     color: var(--bg-color);
+    background-color: var(--ui-color);
 }
 
 .info, .target, .panel, .number, .name, .type, .primary, .secondary, .details-info {

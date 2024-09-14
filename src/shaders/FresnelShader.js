@@ -15,9 +15,8 @@ out vec3 vWorldNormal;
 out vec3 vViewDirection;
 
 void main() {
-    vec4 worldPosition = modelMatrix * vec4(position, 1.0);
     vWorldNormal = normalize(modelMatrix * vec4(normal, 0.0)).xyz;
-    vViewDirection = normalize(cameraPosition - worldPosition.xyz);
+    vViewDirection = normalize(cameraPosition - (modelMatrix * vec4(position, 1.0)).xyz);
 
     vec4 mvPosition = vec4(position, 1.0);
 

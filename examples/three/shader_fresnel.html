@@ -66,9 +66,9 @@
 
                             float result = mix(v1, v2, progress);
 
-                            vec4 worldPosition = modelMatrix * vec4(position + result * normal, 1.0);
+                            vec3 worldPosition = (modelMatrix * vec4(position + result * normal, 1.0)).xyz;
                             vWorldNormal = normalize(modelMatrix * vec4(normal, 0.0)).xyz;
-                            vViewDirection = normalize(cameraPosition - worldPosition.xyz);
+                            vViewDirection = normalize(cameraPosition - worldPosition);
 
                             gl_Position = projectionMatrix * modelViewMatrix * vec4(position + result * normal, 1.0);
                         }

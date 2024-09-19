@@ -25,12 +25,18 @@
     --ui-color-triplet: 255 255 255;
     --ui-color-line-opacity: 0.5;
     --ui-color-divider-line-opacity: 0.15;
+    --ui-color-graph-bottom-line-opacity: 0.15;
     --ui-invert-light-color: #000;
     --ui-invert-light-color-triplet: 0 0 0;
     --ui-invert-dark-color: rgb(255 255 255 / 0.94);
     --ui-invert-dark-color-triplet: 255 255 255;
     --ui-color-line: rgb(var(--ui-color-triplet) / var(--ui-color-line-opacity));
     --ui-color-divider-line: rgb(var(--ui-color-triplet) / var(--ui-color-divider-line-opacity));
+    --ui-color-graph-bottom-line: rgb(var(--ui-color-triplet) / var(--ui-color-graph-bottom-line-opacity));
+    --ui-color-range-1: #3b528b;
+    --ui-color-range-2: #21918c;
+    --ui-color-range-3: #5ec962;
+    --ui-color-range-4: #fde725;
 }
 
 *, :after, :before {
@@ -99,7 +105,7 @@ a:hover, a:focus {
     background-color: var(--ui-color);
 }
 
-.info, .target, .panel, .number, .name, .type, .primary, .secondary, .details-info {
+.info, .target, .panel, .number, .name, .type, .primary, .secondary, .details-info, .graph-marker {
     font-family: var(--ui-font-family);
     font-weight: var(--ui-font-weight);
     font-size: var(--ui-font-size);

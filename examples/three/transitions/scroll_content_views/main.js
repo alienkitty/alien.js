@@ -971,12 +971,12 @@ class WorldController {
             antialias: true
         });
 
+        // Output canvas
+        this.element = this.renderer.domElement;
+
         // Disable color management
         ColorManagement.enabled = false;
         this.renderer.outputColorSpace = LinearSRGBColorSpace;
-
-        // Output canvas
-        this.element = this.renderer.domElement;
 
         // Global 3D camera
         this.camera = new PerspectiveCamera(30);

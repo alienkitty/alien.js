@@ -15,12 +15,12 @@ export class WorldController {
             depth: false
         });
 
+        // Output canvas
+        this.element = this.renderer.domElement;
+
         // Disable color management
         ColorManagement.enabled = false;
         this.renderer.outputColorSpace = LinearSRGBColorSpace;
-
-        // Output canvas
-        this.element = this.renderer.domElement;
 
         // Fullscreen triangle
         this.screenCamera = new OrthographicCamera(-1, 1, 1, -1, 0, 1);

@@ -1408,7 +1408,7 @@
 
                 await Promise.all([
                     SceneController.ready(),
-                    this.bufferLoader.ready()
+                    this.loader.ready()
                 ]);
 
                 await WorldController.ready();
@@ -1428,8 +1428,8 @@
             }
 
             static initLoader() {
-                this.bufferLoader = new BufferLoader();
-                this.bufferLoader.loadAll(['../assets/sounds/gong.mp3']);
+                this.loader = new BufferLoader();
+                this.loader.loadAll(['../assets/sounds/gong.mp3']);
             }
 
             static initWorld() {
@@ -1459,7 +1459,7 @@
                 const { scene, camera } = WorldController;
 
                 WebAudio.init({ sampleRate: 48000 });
-                WebAudio.load(this.bufferLoader.files);
+                WebAudio.load(this.loader.files);
 
                 AudioController.init(scene, camera, this.view);
             }

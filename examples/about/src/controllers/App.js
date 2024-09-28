@@ -8,8 +8,8 @@ import { TrackersView } from '../views/TrackersView.js';
 import { breakpoint, store } from '../config/Config.js';
 
 export class App {
-    static async init(bufferLoader) {
-        this.bufferLoader = bufferLoader;
+    static async init(loader) {
+        this.loader = loader;
 
         const sound = localStorage.getItem('sound');
         store.sound = sound ? JSON.parse(sound) : true;
@@ -23,7 +23,7 @@ export class App {
 
         await Promise.all([
             document.fonts.ready,
-            this.bufferLoader.ready()
+            this.loader.ready()
         ]);
 
         this.initAudio();
@@ -89,7 +89,7 @@ A fluid shader tribute to Mr.doob’s Multiuser Sketchpad from 2010. Multiuser F
 
     static initAudio() {
         WebAudio.init({ sampleRate: 48000 });
-        WebAudio.load(this.bufferLoader.files);
+        WebAudio.load(this.loader.files);
 
         AudioController.init(this.ui);
     }

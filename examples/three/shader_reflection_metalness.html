@@ -627,6 +627,7 @@
                 this.textureLoader.setOptions({
                     preserveData: true
                 });
+                this.textureLoader.cache = true;
 
                 this.environmentLoader = new EnvironmentTextureLoader(this.renderer);
                 this.svgLoader = new SVGLoader();

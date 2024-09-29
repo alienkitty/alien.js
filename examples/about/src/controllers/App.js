@@ -35,6 +35,9 @@ export class App {
     }
 
     static initViews() {
+        this.trackers = new TrackersView();
+        Stage.add(this.trackers);
+
         this.ui = new UI({
             fps: true,
             breakpoint,
@@ -76,9 +79,6 @@ A fluid shader tribute to Mr.doob’s Multiuser Sketchpad from 2010. Multiuser F
             }
         });
         Stage.add(this.ui);
-
-        this.trackers = new TrackersView();
-        Stage.add(this.trackers);
     }
 
     static initControllers() {

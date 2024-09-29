@@ -14,14 +14,14 @@ export class AudioController {
         this.multiplier = 8;
         this.easing = 0.97;
         this.lerpSpeed = 0.07;
-        this.enabled = WebAudio.context.state === 'running';
+        this.enabled = WebAudio.enabled;
 
         this.addListeners();
     }
 
     static addListeners() {
         document.addEventListener('visibilitychange', this.onVisibility);
-        window.addEventListener('pointerdown', this.onPointerDown);
+        document.addEventListener('pointerdown', this.onPointerDown);
 
         if (this.enabled || !store.sound) {
             return;
@@ -71,7 +71,7 @@ export class AudioController {
     static onPointerDown = () => {
         this.enabled = true;
 
-        window.removeEventListener('pointerdown', this.onPointerDown);
+        document.removeEventListener('pointerdown', this.onPointerDown);
 
         WebAudio.resume();
 

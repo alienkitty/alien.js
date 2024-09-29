@@ -33,6 +33,13 @@ export class Socket extends EventEmitter {
         this.on('heartbeat', this.onHeartbeat);
     }
 
+    removeListeners() {
+        this.socket.removeEventListener('close', this.onClose);
+        this.socket.removeEventListener('message', this.onMessage);
+        this.off('users', this.onUsers);
+        this.off('heartbeat', this.onHeartbeat);
+    }
+
     ip2long(ip) {
         let ipl = 0;
 
@@ -155,6 +162,8 @@ export class Socket extends EventEmitter {
     };
 
     close = () => {
+        this.removeListeners();
+
         this.socket.close();
     };
 }

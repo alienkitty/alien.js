@@ -35,9 +35,22 @@
     --ui-line-height: 15px;
     --ui-letter-spacing: 0.03em;
     --ui-number-letter-spacing: 0.5px;
+    --ui-title-font-size: 11px;
+    --ui-title-line-height: 18px;
+    --ui-title-letter-spacing: 1px;
     --ui-secondary-font-size: 10px;
     --ui-secondary-letter-spacing: 0.5px;
     --ui-secondary-opacity: 0.7;
+    --ui-name-font-family: 'Gothic A1', sans-serif;
+    --ui-name-font-weight: 500;
+    --ui-name-font-size: 13px;
+    --ui-name-line-height: 18px;
+    --ui-name-letter-spacing: 0.03em;
+    --ui-caption-font-family: 'Gothic A1', sans-serif;
+    --ui-caption-font-weight: 500;
+    --ui-caption-font-size: 12px;
+    --ui-caption-line-height: 16px;
+    --ui-caption-letter-spacing: 0.03em;
     --ui-link-font-family: 'Gothic A1', sans-serif;
     --ui-link-font-weight: 700;
     --ui-link-font-size: 11px;
@@ -53,12 +66,18 @@
     --ui-color-triplet: 255 255 255;
     --ui-color-line-opacity: 0.5;
     --ui-color-divider-line-opacity: 0.15;
+    --ui-color-graph-bottom-line-opacity: 0.15;
     --ui-invert-light-color: #000;
     --ui-invert-light-color-triplet: 0 0 0;
     --ui-invert-dark-color: rgb(255 255 255 / 0.94);
     --ui-invert-dark-color-triplet: 255 255 255;
     --ui-color-line: rgb(var(--ui-color-triplet) / var(--ui-color-line-opacity));
     --ui-color-divider-line: rgb(var(--ui-color-triplet) / var(--ui-color-divider-line-opacity));
+    --ui-color-graph-bottom-line: rgb(var(--ui-color-triplet) / var(--ui-color-graph-bottom-line-opacity));
+    --ui-color-range-1: #3b528b;
+    --ui-color-range-2: #21918c;
+    --ui-color-range-3: #5ec962;
+    --ui-color-range-4: #fde725;
 }
 
 *, :after, :before {
@@ -88,7 +107,7 @@ body {
     font-family: 'Gothic A1', sans-serif;
     font-weight: 500;
     font-size: 13px;
-    line-height: 1.5;
+    line-height: 1.6;
     letter-spacing: normal;
     background-color: var(--bg-color);
     color: var(--ui-color);
@@ -115,19 +134,14 @@ a {
     color: var(--ui-color);
     text-decoration: none;
     text-underline-offset: 3px;
+
+    &:hover, &:focus {
+        color: var(--ui-color);
+        text-decoration: underline;
+    }
 }
 
-a:hover, a:focus {
-    color: var(--ui-color);
-    text-decoration: underline;
-}
-
-::selection {
-    background-color: var(--ui-color);
-    color: var(--bg-color);
-}
-
-.info, .target, .panel, .number, .name, .type, .primary, .secondary, .details-info {
+.info, .target, .panel, .number, .name, .type, .primary, .secondary, .marker, input {
     font-family: var(--ui-font-family);
     font-weight: var(--ui-font-weight);
     font-size: var(--ui-font-size);
@@ -135,6 +149,24 @@ a:hover, a:focus {
     letter-spacing: var(--ui-letter-spacing);
     -moz-osx-font-smoothing: auto;
     -webkit-font-smoothing: auto;
+}
+
+.title {
+    .name {
+        font-family: var(--ui-name-font-family);
+        font-weight: var(--ui-name-font-weight);
+        font-size: var(--ui-name-font-size);
+        line-height: var(--ui-name-line-height);
+        letter-spacing: var(--ui-name-letter-spacing);
+    }
+
+    .caption {
+        font-family: var(--ui-caption-font-family);
+        font-weight: var(--ui-caption-font-weight);
+        font-size: var(--ui-caption-font-size);
+        line-height: var(--ui-caption-line-height);
+        letter-spacing: var(--ui-caption-letter-spacing);
+    }
 }
 
 .link, .menu .item {
@@ -151,28 +183,31 @@ a:hover, a:focus {
     font-size: inherit;
     line-height: 22px;
     letter-spacing: inherit;
-}
 
-.details .link .line {
-    position: relative;
-    top: 1px;
-    font-weight: 700;
+    .line {
+        font-weight: 700;
+    }
 }
 
 .ui {
     z-index: 9;
-}
 
-.ui > .info {
-    font-family: var(--ui-info-font-family);
-    font-weight: var(--ui-info-font-weight);
-    font-size: var(--ui-info-font-size);
-    line-height: var(--ui-info-line-height);
-    letter-spacing: var(--ui-info-letter-spacing);
-    -moz-osx-font-smoothing: grayscale;
-    -webkit-font-smoothing: antialiased;
+    > .info {
+        font-family: var(--ui-info-font-family);
+        font-weight: var(--ui-info-font-weight);
+        font-size: var(--ui-info-font-size);
+        line-height: var(--ui-info-line-height);
+        letter-spacing: var(--ui-info-letter-spacing);
+        -moz-osx-font-smoothing: grayscale;
+        -webkit-font-smoothing: antialiased;
+    }
 }
 
 .menu > * {
     width: 44px;
+}
+
+::selection {
+    background-color: var(--ui-color);
+    color: var(--bg-color);
 }

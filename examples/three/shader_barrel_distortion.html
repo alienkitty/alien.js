@@ -167,9 +167,9 @@
                             gl_PointSize = uScale * (150.0 / -mvPosition.z);
                             gl_Position = projectionMatrix * mvPosition;
 
-                            vec3 pos = (modelMatrix * vec4(p, 1.0)).xyz;
+                            vec3 worldPosition = (modelMatrix * vec4(p, 1.0)).xyz;
                             float linearDepth = 1.0 / (uCameraFar - uCameraNear);
-                            float linearPos = length(cameraPosition - pos) * linearDepth;
+                            float linearPos = length(cameraPosition - worldPosition) * linearDepth;
 
                             vFade = 1.0 - linearPos * 0.75;
                             vFade *= smoothstep(0.09, 0.13, linearPos);
@@ -606,12 +606,12 @@
                     antialias: true
                 });
 
+                // Output canvas
+                this.element = this.renderer.domElement;
+
                 // Disable color management
                 ColorManagement.enabled = false;
                 this.renderer.outputColorSpace = LinearSRGBColorSpace;
-
-                // Output canvas
-                this.element = this.renderer.domElement;
 
                 // 3D scene
                 this.scene = new Scene();

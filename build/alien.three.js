@@ -803,7 +803,7 @@ let ImageBitmapLoader$1 = class ImageBitmapLoader extends Loader$1 {
  * Copyright 2010-2024 Three.js Authors
  * SPDX-License-Identifier: MIT
  */
-const REVISION = '168';
+const REVISION = '169';
 
 const MOUSE = { LEFT: 0, MIDDLE: 1, RIGHT: 2, ROTATE: 0, DOLLY: 1, PAN: 2 };
 const TOUCH = { ROTATE: 0, PAN: 1, DOLLY_PAN: 2, DOLLY_ROTATE: 3 };
@@ -2389,6 +2389,38 @@ function probeAsync( gl, sync, interval ) {
 		setTimeout( probe, interval );
 
 	} );
+
+}
+
+function toNormalizedProjectionMatrix( projectionMatrix ) {
+
+	const m = projectionMatrix.elements;
+
+	// Convert [-1, 1] to [0, 1] projection matrix
+	m[ 2 ] = 0.5 * m[ 2 ] + 0.5 * m[ 3 ];
+	m[ 6 ] = 0.5 * m[ 6 ] + 0.5 * m[ 7 ];
+	m[ 10 ] = 0.5 * m[ 10 ] + 0.5 * m[ 11 ];
+	m[ 14 ] = 0.5 * m[ 14 ] + 0.5 * m[ 15 ];
+
+}
+
+function toReversedProjectionMatrix( projectionMatrix ) {
+
+	const m = projectionMatrix.elements;
+	const isPerspectiveMatrix = m[ 11 ] === - 1;
+
+	// Reverse [0, 1] projection matrix
+	if ( isPerspectiveMatrix ) {
+
+		m[ 10 ] = - m[ 10 ] - 1;
+		m[ 14 ] = - m[ 14 ];
+
+	} else {
+
+		m[ 10 ] = - m[ 10 ];
+		m[ 14 ] = - m[ 14 ] + 1;
+
+	}
 
 }
 
@@ -8987,6 +9019,10 @@ const _vap = /*@__PURE__*/ new Vector3();
 const _vbp = /*@__PURE__*/ new Vector3();
 const _vcp = /*@__PURE__*/ new Vector3();
 
+const _v40 = /*@__PURE__*/ new Vector4();
+const _v41 = /*@__PURE__*/ new Vector4();
+const _v42 = /*@__PURE__*/ new Vector4();
+
 class Triangle {
 
 	constructor( a = new Vector3(), b = new Vector3(), c = new Vector3() ) {
@@ -9076,6 +9112,25 @@ class Triangle {
 		target.addScaledVector( v1, _v3$2.x );
 		target.addScaledVector( v2, _v3$2.y );
 		target.addScaledVector( v3, _v3$2.z );
+
+		return target;
+
+	}
+
+	static getInterpolatedAttribute( attr, i1, i2, i3, barycoord, target ) {
+
+		_v40.setScalar( 0 );
+		_v41.setScalar( 0 );
+		_v42.setScalar( 0 );
+
+		_v40.fromBufferAttribute( attr, i1 );
+		_v41.fromBufferAttribute( attr, i2 );
+		_v42.fromBufferAttribute( attr, i3 );
+
+		target.setScalar( 0 );
+		target.addScaledVector( _v40, barycoord.x );
+		target.addScaledVector( _v41, barycoord.y );
+		target.addScaledVector( _v42, barycoord.z );
 
 		return target;
 
@@ -10696,7 +10751,6 @@ class BufferAttribute {
 		this.normalized = normalized;
 
 		this.usage = StaticDrawUsage;
-		this._updateRange = { offset: 0, count: - 1 };
 		this.updateRanges = [];
 		this.gpuType = FloatType;
 
@@ -10709,13 +10763,6 @@ class BufferAttribute {
 	set needsUpdate( value ) {
 
 		if ( value === true ) this.version ++;
-
-	}
-
-	get updateRange() {
-
-		warnOnce( 'THREE.BufferAttribute: updateRange() is deprecated and will be removed in r169. Use addUpdateRange() instead.' ); // @deprecated, r159
-		return this._updateRange;
 
 	}
 
@@ -12363,14 +12410,6 @@ const _vC$1 = /*@__PURE__*/ new Vector3();
 const _tempA = /*@__PURE__*/ new Vector3();
 const _morphA = /*@__PURE__*/ new Vector3();
 
-const _uvA$1 = /*@__PURE__*/ new Vector2$1();
-const _uvB$1 = /*@__PURE__*/ new Vector2$1();
-const _uvC$1 = /*@__PURE__*/ new Vector2$1();
-
-const _normalA = /*@__PURE__*/ new Vector3();
-const _normalB = /*@__PURE__*/ new Vector3();
-const _normalC = /*@__PURE__*/ new Vector3();
-
 const _intersectionPoint = /*@__PURE__*/ new Vector3();
 const _intersectionPointWorld = /*@__PURE__*/ new Vector3();
 
@@ -12713,33 +12752,24 @@ function checkGeometryIntersection( object, material, raycaster, ray, uv, uv1, n
 
 	if ( intersection ) {
 
+		const barycoord = new Vector3();
+		Triangle.getBarycoord( _intersectionPoint, _vA$1, _vB$1, _vC$1, barycoord );
+
 		if ( uv ) {
 
-			_uvA$1.fromBufferAttribute( uv, a );
-			_uvB$1.fromBufferAttribute( uv, b );
-			_uvC$1.fromBufferAttribute( uv, c );
-
-			intersection.uv = Triangle.getInterpolation( _intersectionPoint, _vA$1, _vB$1, _vC$1, _uvA$1, _uvB$1, _uvC$1, new Vector2$1() );
+			intersection.uv = Triangle.getInterpolatedAttribute( uv, a, b, c, barycoord, new Vector2$1() );
 
 		}
 
 		if ( uv1 ) {
 
-			_uvA$1.fromBufferAttribute( uv1, a );
-			_uvB$1.fromBufferAttribute( uv1, b );
-			_uvC$1.fromBufferAttribute( uv1, c );
-
-			intersection.uv1 = Triangle.getInterpolation( _intersectionPoint, _vA$1, _vB$1, _vC$1, _uvA$1, _uvB$1, _uvC$1, new Vector2$1() );
+			intersection.uv1 = Triangle.getInterpolatedAttribute( uv1, a, b, c, barycoord, new Vector2$1() );
 
 		}
 
 		if ( normal ) {
 
-			_normalA.fromBufferAttribute( normal, a );
-			_normalB.fromBufferAttribute( normal, b );
-			_normalC.fromBufferAttribute( normal, c );
-
-			intersection.normal = Triangle.getInterpolation( _intersectionPoint, _vA$1, _vB$1, _vC$1, _normalA, _normalB, _normalC, new Vector3() );
+			intersection.normal = Triangle.getInterpolatedAttribute( normal, a, b, c, barycoord, new Vector3() );
 
 			if ( intersection.normal.dot( ray.direction ) > 0 ) {
 
@@ -12760,6 +12790,7 @@ function checkGeometryIntersection( object, material, raycaster, ray, uv, uv1, n
 		Triangle.getNormal( _vA$1, _vB$1, _vC$1, face.normal );
 
 		intersection.face = face;
+		intersection.barycoord = barycoord;
 
 	}
 
@@ -14403,19 +14434,60 @@ function WebGLAttributes( gl ) {
 	function updateBuffer( buffer, attribute, bufferType ) {
 
 		const array = attribute.array;
-		const updateRange = attribute._updateRange; // @deprecated, r159
 		const updateRanges = attribute.updateRanges;
 
 		gl.bindBuffer( bufferType, buffer );
 
-		if ( updateRange.count === - 1 && updateRanges.length === 0 ) {
+		if ( updateRanges.length === 0 ) {
 
 			// Not using update ranges
 			gl.bufferSubData( bufferType, 0, array );
 
-		}
+		} else {
 
-		if ( updateRanges.length !== 0 ) {
+			// Before applying update ranges, we merge any adjacent / overlapping
+			// ranges to reduce load on `gl.bufferSubData`. Empirically, this has led
+			// to performance improvements for applications which make heavy use of
+			// update ranges. Likely due to GPU command overhead.
+			//
+			// Note that to reduce garbage collection between frames, we merge the
+			// update ranges in-place. This is safe because this method will clear the
+			// update ranges once updated.
+
+			updateRanges.sort( ( a, b ) => a.start - b.start );
+
+			// To merge the update ranges in-place, we work from left to right in the
+			// existing updateRanges array, merging ranges. This may result in a final
+			// array which is smaller than the original. This index tracks the last
+			// index representing a merged range, any data after this index can be
+			// trimmed once the merge algorithm is completed.
+			let mergeIndex = 0;
+
+			for ( let i = 1; i < updateRanges.length; i ++ ) {
+
+				const previousRange = updateRanges[ mergeIndex ];
+				const range = updateRanges[ i ];
+
+				// We add one here to merge adjacent ranges. This is safe because ranges
+				// operate over positive integers.
+				if ( range.start <= previousRange.start + previousRange.count + 1 ) {
+
+					previousRange.count = Math.max(
+						previousRange.count,
+						range.start + range.count - previousRange.start
+					);
+
+				} else {
+
+					++ mergeIndex;
+					updateRanges[ mergeIndex ] = range;
+
+				}
+
+			}
+
+			// Trim the array to only contain the merged ranges.
+			updateRanges.length = mergeIndex + 1;
 
 			for ( let i = 0, l = updateRanges.length; i < l; i ++ ) {
 
@@ -14427,16 +14499,6 @@ function WebGLAttributes( gl ) {
 			}
 
 			attribute.clearUpdateRanges();
-
-		}
-
-		// @deprecated, r159
-		if ( updateRange.count !== - 1 ) {
-
-			gl.bufferSubData( bufferType, updateRange.offset * array.BYTES_PER_ELEMENT,
-				array, updateRange.offset, updateRange.count );
-
-			updateRange.count = - 1; // reset range
 
 		}
 
@@ -14897,7 +14959,7 @@ const vertex$2 = "#include <common>\n#include <batching_pars_vertex>\n#include <
 
 const fragment$2 = "uniform vec3 color;\nuniform float opacity;\n#include <common>\n#include <packing>\n#include <fog_pars_fragment>\n#include <bsdfs>\n#include <lights_pars_begin>\n#include <logdepthbuf_pars_fragment>\n#include <shadowmap_pars_fragment>\n#include <shadowmask_pars_fragment>\nvoid main() {\n\t#include <logdepthbuf_fragment>\n\tgl_FragColor = vec4( color, opacity * ( 1.0 - getShadowMask() ) );\n\t#include <tonemapping_fragment>\n\t#include <colorspace_fragment>\n\t#include <fog_fragment>\n}";
 
-const vertex$1 = "uniform float rotation;\nuniform vec2 center;\n#include <common>\n#include <uv_pars_vertex>\n#include <fog_pars_vertex>\n#include <logdepthbuf_pars_vertex>\n#include <clipping_planes_pars_vertex>\nvoid main() {\n\t#include <uv_vertex>\n\tvec4 mvPosition = modelViewMatrix * vec4( 0.0, 0.0, 0.0, 1.0 );\n\tvec2 scale;\n\tscale.x = length( vec3( modelMatrix[ 0 ].x, modelMatrix[ 0 ].y, modelMatrix[ 0 ].z ) );\n\tscale.y = length( vec3( modelMatrix[ 1 ].x, modelMatrix[ 1 ].y, modelMatrix[ 1 ].z ) );\n\t#ifndef USE_SIZEATTENUATION\n\t\tbool isPerspective = isPerspectiveMatrix( projectionMatrix );\n\t\tif ( isPerspective ) scale *= - mvPosition.z;\n\t#endif\n\tvec2 alignedPosition = ( position.xy - ( center - vec2( 0.5 ) ) ) * scale;\n\tvec2 rotatedPosition;\n\trotatedPosition.x = cos( rotation ) * alignedPosition.x - sin( rotation ) * alignedPosition.y;\n\trotatedPosition.y = sin( rotation ) * alignedPosition.x + cos( rotation ) * alignedPosition.y;\n\tmvPosition.xy += rotatedPosition;\n\tgl_Position = projectionMatrix * mvPosition;\n\t#include <logdepthbuf_vertex>\n\t#include <clipping_planes_vertex>\n\t#include <fog_vertex>\n}";
+const vertex$1 = "uniform float rotation;\nuniform vec2 center;\n#include <common>\n#include <uv_pars_vertex>\n#include <fog_pars_vertex>\n#include <logdepthbuf_pars_vertex>\n#include <clipping_planes_pars_vertex>\nvoid main() {\n\t#include <uv_vertex>\n\tvec4 mvPosition = modelViewMatrix[ 3 ];\n\tvec2 scale = vec2( length( modelMatrix[ 0 ].xyz ), length( modelMatrix[ 1 ].xyz ) );\n\t#ifndef USE_SIZEATTENUATION\n\t\tbool isPerspective = isPerspectiveMatrix( projectionMatrix );\n\t\tif ( isPerspective ) scale *= - mvPosition.z;\n\t#endif\n\tvec2 alignedPosition = ( position.xy - ( center - vec2( 0.5 ) ) ) * scale;\n\tvec2 rotatedPosition;\n\trotatedPosition.x = cos( rotation ) * alignedPosition.x - sin( rotation ) * alignedPosition.y;\n\trotatedPosition.y = sin( rotation ) * alignedPosition.x + cos( rotation ) * alignedPosition.y;\n\tmvPosition.xy += rotatedPosition;\n\tgl_Position = projectionMatrix * mvPosition;\n\t#include <logdepthbuf_vertex>\n\t#include <clipping_planes_vertex>\n\t#include <fog_vertex>\n}";
 
 const fragment$1 = "uniform vec3 diffuse;\nuniform float opacity;\n#include <common>\n#include <uv_pars_fragment>\n#include <map_pars_fragment>\n#include <alphamap_pars_fragment>\n#include <alphatest_pars_fragment>\n#include <alphahash_pars_fragment>\n#include <fog_pars_fragment>\n#include <logdepthbuf_pars_fragment>\n#include <clipping_planes_pars_fragment>\nvoid main() {\n\tvec4 diffuseColor = vec4( diffuse, opacity );\n\t#include <clipping_planes_fragment>\n\tvec3 outgoingLight = vec3( 0.0 );\n\t#include <logdepthbuf_fragment>\n\t#include <map_fragment>\n\t#include <alphamap_fragment>\n\t#include <alphatest_fragment>\n\t#include <alphahash_fragment>\n\toutgoingLight = diffuseColor.rgb;\n\t#include <opaque_fragment>\n\t#include <tonemapping_fragment>\n\t#include <colorspace_fragment>\n\t#include <fog_fragment>\n}";
 
@@ -16663,6 +16725,14 @@ function WebGLCapabilities( gl, extensions, parameters, utils ) {
 	}
 
 	const logarithmicDepthBuffer = parameters.logarithmicDepthBuffer === true;
+	const reverseDepthBuffer = parameters.reverseDepthBuffer === true && extensions.has( 'EXT_clip_control' );
+
+	if ( reverseDepthBuffer === true ) {
+
+		const ext = extensions.get( 'EXT_clip_control' );
+		ext.clipControlEXT( ext.LOWER_LEFT_EXT, ext.ZERO_TO_ONE_EXT );
+
+	}
 
 	const maxTextures = gl.getParameter( gl.MAX_TEXTURE_IMAGE_UNITS );
 	const maxVertexTextures = gl.getParameter( gl.MAX_VERTEX_TEXTURE_IMAGE_UNITS );
@@ -16690,6 +16760,7 @@ function WebGLCapabilities( gl, extensions, parameters, utils ) {
 
 		precision: precision,
 		logarithmicDepthBuffer: logarithmicDepthBuffer,
+		reverseDepthBuffer: reverseDepthBuffer,
 
 		maxTextures: maxTextures,
 		maxVertexTextures: maxVertexTextures,
@@ -20707,6 +20778,7 @@ function WebGLProgram( renderer, cacheKey, parameters, bindingStates ) {
 			parameters.numLightProbes > 0 ? '#define USE_LIGHT_PROBES' : '',
 
 			parameters.logarithmicDepthBuffer ? '#define USE_LOGDEPTHBUF' : '',
+			parameters.reverseDepthBuffer ? '#define USE_REVERSEDEPTHBUF' : '',
 
 			'uniform mat4 modelMatrix;',
 			'uniform mat4 modelViewMatrix;',
@@ -20872,6 +20944,7 @@ function WebGLProgram( renderer, cacheKey, parameters, bindingStates ) {
 			parameters.decodeVideoTexture ? '#define DECODE_VIDEO_TEXTURE' : '',
 
 			parameters.logarithmicDepthBuffer ? '#define USE_LOGDEPTHBUF' : '',
+			parameters.reverseDepthBuffer ? '#define USE_REVERSEDEPTHBUF' : '',
 
 			'uniform mat4 viewMatrix;',
 			'uniform vec3 cameraPosition;',
@@ -21264,6 +21337,7 @@ function WebGLPrograms( renderer, cubemaps, cubeuvmaps, extensions, capabilities
 	const programs = [];
 
 	const logarithmicDepthBuffer = capabilities.logarithmicDepthBuffer;
+	const reverseDepthBuffer = capabilities.reverseDepthBuffer;
 	const SUPPORTS_VERTEX_TEXTURES = capabilities.vertexTextures;
 
 	let precision = capabilities.precision;
@@ -21555,6 +21629,7 @@ function WebGLPrograms( renderer, cubemaps, cubeuvmaps, extensions, capabilities
 
 			sizeAttenuation: material.sizeAttenuation === true,
 			logarithmicDepthBuffer: logarithmicDepthBuffer,
+			reverseDepthBuffer: reverseDepthBuffer,
 
 			skinning: object.isSkinnedMesh === true,
 
@@ -21774,38 +21849,40 @@ function WebGLPrograms( renderer, cubemaps, cubeuvmaps, extensions, capabilities
 			_programLayers.enable( 2 );
 		if ( parameters.logarithmicDepthBuffer )
 			_programLayers.enable( 3 );
-		if ( parameters.skinning )
+		if ( parameters.reverseDepthBuffer )
 			_programLayers.enable( 4 );
-		if ( parameters.morphTargets )
+		if ( parameters.skinning )
 			_programLayers.enable( 5 );
-		if ( parameters.morphNormals )
+		if ( parameters.morphTargets )
 			_programLayers.enable( 6 );
-		if ( parameters.morphColors )
+		if ( parameters.morphNormals )
 			_programLayers.enable( 7 );
-		if ( parameters.premultipliedAlpha )
+		if ( parameters.morphColors )
 			_programLayers.enable( 8 );
-		if ( parameters.shadowMapEnabled )
+		if ( parameters.premultipliedAlpha )
 			_programLayers.enable( 9 );
-		if ( parameters.doubleSided )
+		if ( parameters.shadowMapEnabled )
 			_programLayers.enable( 10 );
-		if ( parameters.flipSided )
+		if ( parameters.doubleSided )
 			_programLayers.enable( 11 );
-		if ( parameters.useDepthPacking )
+		if ( parameters.flipSided )
 			_programLayers.enable( 12 );
-		if ( parameters.dithering )
+		if ( parameters.useDepthPacking )
 			_programLayers.enable( 13 );
-		if ( parameters.transmission )
+		if ( parameters.dithering )
 			_programLayers.enable( 14 );
-		if ( parameters.sheen )
+		if ( parameters.transmission )
 			_programLayers.enable( 15 );
-		if ( parameters.opaque )
+		if ( parameters.sheen )
 			_programLayers.enable( 16 );
-		if ( parameters.pointsUvs )
+		if ( parameters.opaque )
 			_programLayers.enable( 17 );
-		if ( parameters.decodeVideoTexture )
+		if ( parameters.pointsUvs )
 			_programLayers.enable( 18 );
-		if ( parameters.alphaToCoverage )
+		if ( parameters.decodeVideoTexture )
 			_programLayers.enable( 19 );
+		if ( parameters.alphaToCoverage )
+			_programLayers.enable( 20 );
 
 		array.push( _programLayers.mask );
 
@@ -23363,6 +23440,18 @@ function WebGLShadowMap( renderer, objects, capabilities ) {
 
 }
 
+const reversedFuncs = {
+	[ NeverDepth ]: AlwaysDepth,
+	[ LessDepth ]: GreaterDepth,
+	[ EqualDepth ]: NotEqualDepth,
+	[ LessEqualDepth ]: GreaterEqualDepth,
+
+	[ AlwaysDepth ]: NeverDepth,
+	[ GreaterDepth ]: LessDepth,
+	[ NotEqualDepth ]: EqualDepth,
+	[ GreaterEqualDepth ]: LessEqualDepth,
+};
+
 function WebGLState( gl ) {
 
 	function ColorBuffer() {
@@ -23427,12 +23516,19 @@ function WebGLState( gl ) {
 	function DepthBuffer() {
 
 		let locked = false;
+		let reversed = false;
 
 		let currentDepthMask = null;
 		let currentDepthFunc = null;
 		let currentDepthClear = null;
 
 		return {
+
+			setReversed: function ( value ) {
+
+				reversed = value;
+
+			},
 
 			setTest: function ( depthTest ) {
 
@@ -23460,6 +23556,8 @@ function WebGLState( gl ) {
 			},
 
 			setFunc: function ( depthFunc ) {
+
+				if ( reversed ) depthFunc = reversedFuncs[ depthFunc ];
 
 				if ( currentDepthFunc !== depthFunc ) {
 
@@ -24999,6 +25097,28 @@ function WebGLTextures( _gl, extensions, state, properties, capabilities, utils,
 			if ( glType === _gl.BYTE ) internalFormat = _gl.RG8I;
 			if ( glType === _gl.SHORT ) internalFormat = _gl.RG16I;
 			if ( glType === _gl.INT ) internalFormat = _gl.RG32I;
+
+		}
+
+		if ( glFormat === _gl.RGB_INTEGER ) {
+
+			if ( glType === _gl.UNSIGNED_BYTE ) internalFormat = _gl.RGB8UI;
+			if ( glType === _gl.UNSIGNED_SHORT ) internalFormat = _gl.RGB16UI;
+			if ( glType === _gl.UNSIGNED_INT ) internalFormat = _gl.RGB32UI;
+			if ( glType === _gl.BYTE ) internalFormat = _gl.RGB8I;
+			if ( glType === _gl.SHORT ) internalFormat = _gl.RGB16I;
+			if ( glType === _gl.INT ) internalFormat = _gl.RGB32I;
+
+		}
+
+		if ( glFormat === _gl.RGBA_INTEGER ) {
+
+			if ( glType === _gl.UNSIGNED_BYTE ) internalFormat = _gl.RGBA8UI;
+			if ( glType === _gl.UNSIGNED_SHORT ) internalFormat = _gl.RGBA16UI;
+			if ( glType === _gl.UNSIGNED_INT ) internalFormat = _gl.RGBA32UI;
+			if ( glType === _gl.BYTE ) internalFormat = _gl.RGBA8I;
+			if ( glType === _gl.SHORT ) internalFormat = _gl.RGBA16I;
+			if ( glType === _gl.INT ) internalFormat = _gl.RGBA32I;
 
 		}
 
@@ -29595,6 +29715,7 @@ class WebGLRenderer {
 
 		// camera matrices cache
 
+		const _currentProjectionMatrix = new Matrix4();
 		const _projScreenMatrix = new Matrix4();
 
 		const _vector3 = new Vector3();
@@ -29689,6 +29810,8 @@ class WebGLRenderer {
 			capabilities = new WebGLCapabilities( _gl, extensions, parameters, utils );
 
 			state = new WebGLState( _gl );
+
+			if ( capabilities.reverseDepthBuffer ) state.buffers.depth.setReversed( true );
 
 			info = new WebGLInfo( _gl );
 			properties = new WebGLProperties();
@@ -29989,7 +30112,13 @@ class WebGLRenderer {
 
 			}
 
-			if ( depth ) bits |= _gl.DEPTH_BUFFER_BIT;
+			if ( depth ) {
+
+				bits |= _gl.DEPTH_BUFFER_BIT;
+				_gl.clearDepth( this.capabilities.reverseDepthBuffer ? 0 : 1 );
+
+			}
+
 			if ( stencil ) {
 
 				bits |= _gl.STENCIL_BUFFER_BIT;
@@ -30377,6 +30506,12 @@ class WebGLRenderer {
 			const materials = new Set();
 
 			scene.traverse( function ( object ) {
+
+				if ( ! ( object.isMesh || object.isPoints || object.isLine || object.isSprite ) ) {
+
+					return;
+
+				}
 
 				const material = object.material;
 
@@ -31364,7 +31499,21 @@ class WebGLRenderer {
 
 				// common camera uniforms
 
-				p_uniforms.setValue( _gl, 'projectionMatrix', camera.projectionMatrix );
+				if ( capabilities.reverseDepthBuffer ) {
+
+					_currentProjectionMatrix.copy( camera.projectionMatrix );
+
+					toNormalizedProjectionMatrix( _currentProjectionMatrix );
+					toReversedProjectionMatrix( _currentProjectionMatrix );
+
+					p_uniforms.setValue( _gl, 'projectionMatrix', _currentProjectionMatrix );
+
+				} else {
+
+					p_uniforms.setValue( _gl, 'projectionMatrix', camera.projectionMatrix );
+
+				}
+
 				p_uniforms.setValue( _gl, 'viewMatrix', camera.matrixWorldInverse );
 
 				const uCamPos = p_uniforms.map.cameraPosition;
@@ -31845,61 +31994,55 @@ class WebGLRenderer {
 
 			if ( framebuffer ) {
 
-				state.bindFramebuffer( _gl.FRAMEBUFFER, framebuffer );
+				const texture = renderTarget.texture;
+				const textureFormat = texture.format;
+				const textureType = texture.type;
 
-				try {
+				if ( ! capabilities.textureFormatReadable( textureFormat ) ) {
 
-					const texture = renderTarget.texture;
-					const textureFormat = texture.format;
-					const textureType = texture.type;
+					throw new Error( 'THREE.WebGLRenderer.readRenderTargetPixelsAsync: renderTarget is not in RGBA or implementation defined format.' );
 
-					if ( ! capabilities.textureFormatReadable( textureFormat ) ) {
+				}
 
-						throw new Error( 'THREE.WebGLRenderer.readRenderTargetPixelsAsync: renderTarget is not in RGBA or implementation defined format.' );
+				if ( ! capabilities.textureTypeReadable( textureType ) ) {
 
-					}
+					throw new Error( 'THREE.WebGLRenderer.readRenderTargetPixelsAsync: renderTarget is not in UnsignedByteType or implementation defined type.' );
 
-					if ( ! capabilities.textureTypeReadable( textureType ) ) {
+				}
 
-						throw new Error( 'THREE.WebGLRenderer.readRenderTargetPixelsAsync: renderTarget is not in UnsignedByteType or implementation defined type.' );
+				// the following if statement ensures valid read requests (no out-of-bounds pixels, see #8604)
+				if ( ( x >= 0 && x <= ( renderTarget.width - width ) ) && ( y >= 0 && y <= ( renderTarget.height - height ) ) ) {
 
-					}
-
-					// the following if statement ensures valid read requests (no out-of-bounds pixels, see #8604)
-					if ( ( x >= 0 && x <= ( renderTarget.width - width ) ) && ( y >= 0 && y <= ( renderTarget.height - height ) ) ) {
-
-						const glBuffer = _gl.createBuffer();
-						_gl.bindBuffer( _gl.PIXEL_PACK_BUFFER, glBuffer );
-						_gl.bufferData( _gl.PIXEL_PACK_BUFFER, buffer.byteLength, _gl.STREAM_READ );
-						_gl.readPixels( x, y, width, height, utils.convert( textureFormat ), utils.convert( textureType ), 0 );
-						_gl.flush();
-
-						// check if the commands have finished every 8 ms
-						const sync = _gl.fenceSync( _gl.SYNC_GPU_COMMANDS_COMPLETE, 0 );
-						await probeAsync( _gl, sync, 4 );
-
-						try {
-
-							_gl.bindBuffer( _gl.PIXEL_PACK_BUFFER, glBuffer );
-							_gl.getBufferSubData( _gl.PIXEL_PACK_BUFFER, 0, buffer );
-
-						} finally {
-
-							_gl.deleteBuffer( glBuffer );
-							_gl.deleteSync( sync );
-
-						}
-
-						return buffer;
-
-					}
-
-				} finally {
-
-					// restore framebuffer of current render target if necessary
-
-					const framebuffer = ( _currentRenderTarget !== null ) ? properties.get( _currentRenderTarget ).__webglFramebuffer : null;
+					// set the active frame buffer to the one we want to read
 					state.bindFramebuffer( _gl.FRAMEBUFFER, framebuffer );
+
+					const glBuffer = _gl.createBuffer();
+					_gl.bindBuffer( _gl.PIXEL_PACK_BUFFER, glBuffer );
+					_gl.bufferData( _gl.PIXEL_PACK_BUFFER, buffer.byteLength, _gl.STREAM_READ );
+					_gl.readPixels( x, y, width, height, utils.convert( textureFormat ), utils.convert( textureType ), 0 );
+
+					// reset the frame buffer to the currently set buffer before waiting
+					const currFramebuffer = _currentRenderTarget !== null ? properties.get( _currentRenderTarget ).__webglFramebuffer : null;
+					state.bindFramebuffer( _gl.FRAMEBUFFER, currFramebuffer );
+
+					// check if the commands have finished every 8 ms
+					const sync = _gl.fenceSync( _gl.SYNC_GPU_COMMANDS_COMPLETE, 0 );
+
+					_gl.flush();
+
+					await probeAsync( _gl, sync, 4 );
+
+					// read the data and delete the buffer
+					_gl.bindBuffer( _gl.PIXEL_PACK_BUFFER, glBuffer );
+					_gl.getBufferSubData( _gl.PIXEL_PACK_BUFFER, 0, buffer );
+					_gl.deleteBuffer( glBuffer );
+					_gl.deleteSync( sync );
+
+					return buffer;
+
+				} else {
+
+					throw new Error( 'THREE.WebGLRenderer.readRenderTargetPixelsAsync: requested read bounds are out of range.' );
 
 				}
 
@@ -32385,7 +32528,6 @@ class InterleavedBuffer {
 		this.count = array !== undefined ? array.length / stride : 0;
 
 		this.usage = StaticDrawUsage;
-		this._updateRange = { offset: 0, count: - 1 };
 		this.updateRanges = [];
 
 		this.version = 0;
@@ -32399,13 +32541,6 @@ class InterleavedBuffer {
 	set needsUpdate( value ) {
 
 		if ( value === true ) this.version ++;
-
-	}
-
-	get updateRange() {
-
-		warnOnce( 'THREE.InterleavedBuffer: updateRange() is deprecated and will be removed in r169. Use addUpdateRange() instead.' ); // @deprecated, r159
-		return this._updateRange;
 
 	}
 
@@ -33170,6 +33305,27 @@ class LOD extends Object3D {
 		this.add( object );
 
 		return this;
+
+	}
+
+	removeLevel( distance ) {
+
+		const levels = this.levels;
+
+		for ( let i = 0; i < levels.length; i ++ ) {
+
+			if ( levels[ i ].distance === distance ) {
+
+				const removedElements = levels.splice( i, 1 );
+				this.remove( removedElements[ 0 ].object );
+
+				return true;
+
+			}
+
+		}
+
+		return false;
 
 	}
 
@@ -34292,6 +34448,9 @@ class BatchedMesh extends Mesh {
 		// stores visible, active, and geometry id per object
 		this._drawInfo = [];
 
+		// instance ids that have been set as inactive, and are available to be overwritten
+		this._availableInstanceIds = [];
+
 		// geometry information
 		this._drawRanges = [];
 		this._reservedRanges = [];
@@ -34491,23 +34650,36 @@ class BatchedMesh extends Mesh {
 
 	addInstance( geometryId ) {
 
+		const atCapacity = this._drawInfo.length >= this.maxInstanceCount;
+
 		// ensure we're not over geometry
-		if ( this._drawInfo.length >= this._maxInstanceCount ) {
+		if ( atCapacity && this._availableInstanceIds.length === 0 ) {
 
 			throw new Error( 'BatchedMesh: Maximum item count reached.' );
 
 		}
 
-		this._drawInfo.push( {
-
+		const instanceDrawInfo = {
 			visible: true,
 			active: true,
 			geometryIndex: geometryId,
+		};
 
-		} );
+		let drawId = null;
 
-		// initialize the matrix
-		const drawId = this._drawInfo.length - 1;
+		// Prioritize using previously freed instance ids
+		if ( this._availableInstanceIds.length > 0 ) {
+
+			drawId = this._availableInstanceIds.pop();
+			this._drawInfo[ drawId ] = instanceDrawInfo;
+
+		} else {
+
+			drawId = this._drawInfo.length;
+			this._drawInfo.push( instanceDrawInfo );
+
+		}
+
 		const matricesTexture = this._matricesTexture;
 		const matricesArray = matricesTexture.image.data;
 		_identityMatrix$2.toArray( matricesArray, drawId * 16 );
@@ -34756,10 +34928,7 @@ class BatchedMesh extends Mesh {
 	}
 	*/
 
-	/*
 	deleteInstance( instanceId ) {
-
-		// Note: User needs to call optimize() afterward to pack the data.
 
 		const drawInfo = this._drawInfo;
 		if ( instanceId >= drawInfo.length || drawInfo[ instanceId ].active === false ) {
@@ -34769,12 +34938,12 @@ class BatchedMesh extends Mesh {
 		}
 
 		drawInfo[ instanceId ].active = false;
+		this._availableInstanceIds.push( instanceId );
 		this._visibilityChanged = true;
 
 		return this;
 
 	}
-	*/
 
 	// get bounding box and compute it if it doesn't exist
 	getBoundingBoxAt( geometryId, target ) {
@@ -34976,6 +35145,59 @@ class BatchedMesh extends Mesh {
 		}
 
 		return drawInfo[ instanceId ].visible;
+
+	}
+
+	setGeometryIdAt( instanceId, geometryId ) {
+
+		// return early if the geometry is out of range or not active
+		const drawInfo = this._drawInfo;
+		if ( instanceId >= drawInfo.length || drawInfo[ instanceId ].active === false ) {
+
+			return null;
+
+		}
+
+		// check if the provided geometryId is within the valid range
+		if ( geometryId < 0 || geometryId >= this._geometryCount ) {
+
+			return null;
+
+		}
+
+		drawInfo[ instanceId ].geometryIndex = geometryId;
+
+		return this;
+
+	}
+
+	getGeometryIdAt( instanceId ) {
+
+		const drawInfo = this._drawInfo;
+		if ( instanceId >= drawInfo.length || drawInfo[ instanceId ].active === false ) {
+
+			return - 1;
+
+		}
+
+		return drawInfo[ instanceId ].geometryIndex;
+
+	}
+
+	getGeometryRangeAt( geometryId, target = {} ) {
+
+		if ( geometryId < 0 || geometryId >= this._geometryCount ) {
+
+			return null;
+
+		}
+
+		const drawRange = this._drawRanges[ geometryId ];
+
+		target.start = drawRange.start;
+		target.count = drawRange.count;
+
+		return target;
 
 	}
 
@@ -35530,6 +35752,7 @@ function checkIntersection( object, raycaster, ray, thresholdSq, a, b ) {
 		index: a,
 		face: null,
 		faceIndex: null,
+		barycoord: null,
 		object: object
 
 	};
@@ -35795,6 +36018,8 @@ function testPoint( point, index, localThresholdSq, matrixWorld, raycaster, inte
 			point: intersectPoint,
 			index: index,
 			face: null,
+			faceIndex: null,
+			barycoord: null,
 			object: object
 
 		} );
@@ -38297,12 +38522,19 @@ let CylinderGeometry$2 = class CylinderGeometry extends BufferGeometry {
 
 					// faces
 
-					indices.push( a, b, d );
-					indices.push( b, c, d );
+					if ( radiusTop > 0 ) {
 
-					// update group counter
+						indices.push( a, b, d );
+						groupCount += 3;
 
-					groupCount += 6;
+					}
+
+					if ( radiusBottom > 0 ) {
+
+						indices.push( b, c, d );
+						groupCount += 3;
+
+					}
 
 				}
 
@@ -46612,7 +46844,7 @@ class MaterialLoader extends Loader {
 
 		}
 
-		const material = MaterialLoader.createMaterialFromType( json.type );
+		const material = this.createMaterialFromType( json.type );
 
 		if ( json.uuid !== undefined ) material.uuid = json.uuid;
 		if ( json.name !== undefined ) material.name = json.name;
@@ -46865,6 +47097,12 @@ class MaterialLoader extends Loader {
 
 		this.textures = value;
 		return this;
+
+	}
+
+	createMaterialFromType( type ) {
+
+		return MaterialLoader.createMaterialFromType( type );
 
 	}
 
@@ -48698,7 +48936,7 @@ class Clock {
 
 function now() {
 
-	return ( typeof performance === 'undefined' ? Date : performance ).now(); // see #10732
+	return performance.now();
 
 }
 
@@ -48990,7 +49228,7 @@ let Audio$1 = class Audio extends Object3D {
 
 	}
 
-	stop() {
+	stop( delay = 0 ) {
 
 		if ( this.hasPlaybackControl === false ) {
 
@@ -49003,7 +49241,7 @@ let Audio$1 = class Audio extends Object3D {
 
 		if ( this.source !== null ) {
 
-			this.source.stop();
+			this.source.stop( this.context.currentTime + delay );
 			this.source.onended = null;
 
 		}
@@ -54645,7 +54883,7 @@ class ShapePath {
 
 class Controls extends EventDispatcher {
 
-	constructor( object, domElement ) {
+	constructor( object, domElement = null ) {
 
 		super();
 
@@ -56790,7 +57028,7 @@ class WebAudio {
         return this.context.state === 'running';
     }
 
-    static load(files = {}) {
+    static load(files) {
         for (const path in files) {
             this.add(this, basename(path), files[path]);
         }
@@ -56958,6 +57196,11 @@ class WebAudio {
 
     static resume() {
         this.context.resume();
+
+        if (this.gain.value) {
+            this.gain.set(0);
+            this.gain.fade(1, 500);
+        }
     }
 
     static getPath(path) {
@@ -57785,7 +58028,7 @@ class PanelThumbnail extends Interface {
     constructor({
         name,
         flipY = false,
-        data = {},
+        data,
         value,
         callback
     }) {
@@ -57982,8 +58225,6 @@ class PanelThumbnail extends Interface {
     onPointerUp = e => {
         window.removeEventListener('pointermove', this.onPointerMove);
         window.removeEventListener('pointerup', this.onPointerUp);
-
-        this.onPointerMove(e);
 
         let intersects = false;
 
@@ -58649,7 +58890,7 @@ class PanelGraph extends Interface {
             this.number.css({
                 cssFloat: 'right',
                 fontVariantNumeric: 'tabular-nums',
-                letterSpacing: 1
+                letterSpacing: 'var(--ui-title-letter-spacing)'
             });
             this.container.add(this.number);
         }
@@ -59086,9 +59327,9 @@ class PanelGraph extends Interface {
             return;
         }
 
-        clearTween(this.props);
-
         this.hoveredIn = true;
+
+        clearTween(this.props);
 
         tween(this.props, { handleAlpha: 1 }, 275, 'easeInOutCubic', null, () => {
             this.needsUpdate = true;
@@ -59104,9 +59345,9 @@ class PanelGraph extends Interface {
             return;
         }
 
-        clearTween(this.props);
-
         this.hoveredIn = false;
+
+        clearTween(this.props);
 
         tween(this.props, { handleAlpha: 0 }, 275, 'easeInOutCubic', null, () => {
             this.needsUpdate = true;
@@ -59659,11 +59900,9 @@ class Slider extends Interface {
         this.update();
     };
 
-    onPointerUp = e => {
+    onPointerUp = () => {
         window.removeEventListener('pointermove', this.onPointerMove);
         window.removeEventListener('pointerup', this.onPointerUp);
-
-        this.onPointerMove(e);
     };
 
     // Public methods
@@ -60204,7 +60443,7 @@ class ColorPicker extends Interface {
         }
     };
 
-    onPointerUp = e => {
+    onPointerUp = () => {
         window.removeEventListener('pointermove', this.onPointerMove);
         window.removeEventListener('pointerup', this.onPointerUp);
 
@@ -60214,8 +60453,6 @@ class ColorPicker extends Interface {
 
         this.isDown = false;
         this.distance = 256;
-
-        this.onPointerMove(e);
     };
 
     // Public methods
@@ -60676,6 +60913,7 @@ class ReticleCanvas extends Component {
 
         this.radius = 4;
         this.position = new Vector2();
+        this.animatedIn = false;
 
         this.props = {
             scale: 1,
@@ -60724,12 +60962,20 @@ class ReticleCanvas extends Component {
         this.props.alpha = 0;
 
         tween(this.props, { scale: 1, alpha: 1 }, 400, 'easeOutCubic');
+
+        this.animatedIn = true;
     }
 
     animateOut(callback) {
         clearTween(this.props);
 
-        tween(this.props, { scale: 0, alpha: 0 }, 500, 'easeInCubic', callback);
+        tween(this.props, { scale: 0, alpha: 0 }, 500, 'easeInCubic', () => {
+            this.animatedIn = false;
+
+            if (callback) {
+                callback();
+            }
+        });
     }
 }
 
@@ -61132,7 +61378,7 @@ class PointInfo extends Interface {
 
         this.name = new Interface('.name');
         this.name.css({
-            lineHeight: 18,
+            lineHeight: 'var(--ui-title-line-height)',
             whiteSpace: 'nowrap'
         });
         this.container.add(this.name);
@@ -61429,7 +61675,6 @@ class Point extends Interface {
             return;
         }
 
-        this.onPointerMove(e);
         this.sendToBack();
 
         if (performance.now() - this.lastTime > 250 || this.delta.length() > 50) {
@@ -61754,16 +61999,16 @@ class Point3D extends Group {
             if (intersection.length) {
                 this.instanceId = intersection[0].instanceId;
 
-                const ui = this.points[this.objects.indexOf(intersection[0].object)];
+                const object = this.points[this.objects.indexOf(intersection[0].object)];
 
                 if (!this.hover || this.instanceId !== this.lastInstanceId) {
                     this.lastInstanceId = this.instanceId;
-                    this.hover = ui;
+                    this.hover = object;
                     this.hover.onHover({ type: 'over' });
                     this.root.css({ cursor: 'pointer' });
-                } else if (this.hover !== ui) {
+                } else if (this.hover !== object) {
                     this.hover.onHover({ type: 'out' });
-                    this.hover = ui;
+                    this.hover = object;
                     this.hover.onHover({ type: 'over' });
                     this.root.css({ cursor: 'pointer' });
                 }
@@ -61785,8 +62030,6 @@ class Point3D extends Group {
         if (!this.enabled) {
             return;
         }
-
-        this.onPointerMove(e);
 
         if (performance.now() - this.lastTime > 250 || this.delta.length() > 50) {
             this.click = null;
@@ -67223,10 +67466,7 @@ class DetailsLink extends Interface {
     init() {
         this.css({
             width: 'fit-content',
-            whiteSpace: 'nowrap',
-            pointerEvents: 'auto',
-            webkitUserSelect: 'none',
-            userSelect: 'none'
+            whiteSpace: 'nowrap'
         });
         this.attr({ href: this.link });
 
@@ -67379,6 +67619,10 @@ class Details extends Interface {
 
     // Public methods
 
+    setContent(content) {
+        this.content.html(content);
+    }
+
     resize(width, height, dpr, breakpoint) {
         if (width < breakpoint) {
             this.css({ display: '' });
@@ -67452,7 +67696,7 @@ class Details extends Interface {
 
 class DetailsInfo extends Interface {
     constructor(data) {
-        super('.details-info');
+        super('.details');
 
         this.data = data;
 
@@ -67478,7 +67722,6 @@ class DetailsInfo extends Interface {
         this.container = new Interface('.container');
         this.container.css({
             position: 'relative',
-            width: 400,
             margin: '10% 10% 6%'
         });
         this.add(this.container);
@@ -67488,32 +67731,26 @@ class DetailsInfo extends Interface {
         this.title = new DetailsTitle(this.data.title);
         this.container.add(this.title);
 
-        this.content = new Interface('.content', 'p');
-        this.content.css({
+        this.info = new Interface('.info', 'p');
+        this.info.css({
             width: 'fit-content',
             textTransform: 'uppercase'
         });
-        this.content.html(this.data.content);
-        this.container.add(this.content);
+        this.info.html(this.data.content);
+        this.container.add(this.info);
     }
 
     // Public methods
 
+    setContent(content) {
+        this.info.html(content);
+    }
+
     resize(width, height, dpr, breakpoint) {
         if (width < breakpoint) {
-            this.css({ display: '' });
-
-            this.container.css({
-                width: '',
-                margin: '24px 20px 0'
-            });
+            this.container.css({ margin: '0 20px 24px' });
         } else {
-            this.css({ display: 'flex' });
-
-            this.container.css({
-                width: 400,
-                margin: '10% 10% 6%'
-            });
+            this.container.css({ margin: '10% 10% 6%' });
         }
     }
 
@@ -67550,6 +67787,322 @@ class DetailsInfo extends Interface {
                 callback();
             }
         });
+    }
+}
+
+/**
+ * @author pschroen / https://ufo.ai/
+ */
+
+
+class HeaderInfo extends Interface {
+    constructor({
+        fpsOpen = false
+    }) {
+        super('.info');
+
+        this.fpsOpen = fpsOpen;
+
+        this.time = 0;
+        this.count = 0;
+        this.prev = 0;
+        this.fps = 0;
+
+        this.mouse = new Vector2();
+        this.delta = new Vector2();
+        this.lastTime = 0;
+        this.lastMouse = new Vector2();
+        this.openColor = null;
+        this.isOpen = false;
+
+        this.init();
+    }
+
+    init() {
+        this.css({
+            cssFloat: 'right',
+            padding: 10,
+            pointerEvents: 'auto',
+            webkitUserSelect: 'none',
+            userSelect: 'none'
+        });
+
+        this.number = new Interface('.number');
+        this.number.css({
+            fontVariantNumeric: 'tabular-nums',
+            fontSize: 'var(--ui-title-font-size)',
+            letterSpacing: 'var(--ui-title-letter-spacing)'
+        });
+        this.number.text(this.fps);
+        this.add(this.number);
+    }
+
+    addListeners() {
+        Stage.events.on('color_picker', this.onColorPicker);
+        this.element.addEventListener('mouseenter', this.onHover);
+        this.element.addEventListener('mouseleave', this.onHover);
+        window.addEventListener('pointerdown', this.onPointerDown);
+    }
+
+    removeListeners() {
+        Stage.events.off('color_picker', this.onColorPicker);
+        this.element.removeEventListener('mouseenter', this.onHover);
+        this.element.removeEventListener('mouseleave', this.onHover);
+        window.removeEventListener('pointerdown', this.onPointerDown);
+    }
+
+    // Event handlers
+
+    onColorPicker = ({ open, target }) => {
+        if (!this.openColor && !this.element.contains(target.element)) {
+            return;
+        }
+
+        if (open) {
+            this.disable();
+
+            this.openColor = target;
+        } else {
+            this.enable();
+
+            this.openColor = null;
+        }
+    };
+
+    onHover = ({ type }) => {
+        if (this.isOpen) {
+            return;
+        }
+
+        if (type === 'mouseenter') {
+            this.animateIn();
+        }
+    };
+
+    onPointerDown = e => {
+        this.lastTime = performance.now();
+        this.lastMouse.set(e.clientX, e.clientY);
+
+        this.onPointerMove(e);
+
+        window.addEventListener('pointermove', this.onPointerMove);
+        window.addEventListener('pointerup', this.onPointerUp);
+    };
+
+    onPointerMove = ({ clientX, clientY }) => {
+        const event = {
+            x: clientX,
+            y: clientY
+        };
+
+        this.mouse.copy(event);
+        this.delta.subVectors(this.mouse, this.lastMouse);
+    };
+
+    onPointerUp = e => {
+        window.removeEventListener('pointermove', this.onPointerMove);
+        window.removeEventListener('pointerup', this.onPointerUp);
+
+        if (performance.now() - this.lastTime > 250 || this.delta.length() > 50) {
+            return;
+        }
+
+        if (this.openColor && !this.openColor.element.contains(e.target)) {
+            Stage.events.emit('color_picker', { open: false, target: this });
+        } else if (this.atPoint(this.mouse)) {
+            if (this.isOpen) {
+                this.animateOut();
+            } else {
+                this.animateIn();
+            }
+        } else if (!this.element.contains(e.target)) {
+            this.animateOut();
+        }
+    };
+
+    // Public methods
+
+    addPanel(item) {
+        if (!this.panel) {
+            this.panel = new Panel();
+            this.panel.css({
+                position: 'absolute',
+                top: 0,
+                right: 10,
+                marginTop: 10
+            });
+            this.add(this.panel);
+
+            this.addListeners();
+        }
+
+        this.panel.add(item);
+    }
+
+    update() {
+        this.time = performance.now();
+
+        if (this.time - 1000 > this.prev) {
+            this.fps = Math.round(this.count * 1000 / (this.time - this.prev));
+            this.prev = this.time;
+            this.count = 0;
+        }
+
+        this.count++;
+
+        this.number.text(this.fps);
+    }
+
+    animateIn() {
+        if (!this.panel) {
+            return;
+        }
+
+        this.css({ pointerEvents: 'none' });
+
+        this.panel.animateIn();
+
+        this.isOpen = true;
+    }
+
+    animateOut() {
+        if (!this.panel || this.fpsOpen) {
+            return;
+        }
+
+        this.panel.animateOut(() => {
+            this.css({ pointerEvents: 'auto' });
+
+            this.isOpen = false;
+        });
+    }
+
+    enable() {
+        this.number.tween({ opacity: 1 }, 400, 'easeInOutSine');
+    }
+
+    disable() {
+        this.number.tween({ opacity: 0.35 }, 400, 'easeInOutSine');
+    }
+
+    destroy() {
+        this.removeListeners();
+
+        return super.destroy();
+    }
+}
+
+/**
+ * @author pschroen / https://ufo.ai/
+ */
+
+
+class HeaderTitle extends Interface {
+    constructor({
+        link,
+        target,
+        ...data
+    }) {
+        super('.title');
+
+        this.link = link;
+        this.target = target;
+        this.data = data;
+
+        this.init();
+
+        this.addListeners();
+    }
+
+    init() {
+        this.css({
+            cssFloat: 'left',
+            padding: 10,
+            whiteSpace: 'nowrap'
+        });
+
+        if (this.link) {
+            this.css({
+                cursor: 'pointer',
+                pointerEvents: 'auto'
+            });
+        } else {
+            this.css({
+                pointerEvents: 'none'
+            });
+        }
+
+        if (this.data.name) {
+            this.name = new Interface('.name');
+            this.name.html(this.data.name);
+            this.add(this.name);
+        }
+
+        if (this.data.caption) {
+            this.caption = new Interface('.caption');
+            this.caption.css({
+                opacity: 'var(--ui-secondary-opacity)'
+            });
+            this.caption.html(this.data.caption);
+            this.add(this.caption);
+        }
+    }
+
+    addListeners() {
+        if (this.link) {
+            this.element.addEventListener('click', this.onClick);
+        }
+    }
+
+    removeListeners() {
+        if (this.link) {
+            this.element.removeEventListener('click', this.onClick);
+        }
+    }
+
+    // Event handlers
+
+    onClick = () => {
+        open(this.link, this.target);
+
+        this.events.emit('click', { target: this });
+    };
+
+    // Public methods
+
+    setData(data) {
+        if (!data) {
+            return;
+        }
+
+        if (this.name) {
+            this.name.html(data.name);
+        }
+
+        if (this.caption) {
+            this.caption.html(data.caption);
+        }
+
+        this.link = data.link;
+        this.target = data.target;
+
+        if (this.link) {
+            this.css({
+                cursor: 'pointer',
+                pointerEvents: 'auto'
+            });
+        } else {
+            this.css({
+                cursor: '',
+                pointerEvents: 'none'
+            });
+        }
+    }
+
+    destroy() {
+        this.removeListeners();
+
+        return super.destroy();
     }
 }
 
@@ -67667,209 +68220,6 @@ class NavLink extends Interface {
  */
 
 
-class HeaderInfo extends Interface {
-    constructor({
-        fpsOpen = false
-    }) {
-        super('.info');
-
-        this.fpsOpen = fpsOpen;
-
-        this.time = 0;
-        this.count = 0;
-        this.prev = 0;
-        this.fps = 0;
-
-        this.mouse = new Vector2();
-        this.delta = new Vector2();
-        this.lastTime = 0;
-        this.lastMouse = new Vector2();
-        this.openColor = null;
-        this.isOpen = false;
-
-        this.init();
-    }
-
-    init() {
-        this.css({
-            cssFloat: 'right',
-            padding: 10,
-            pointerEvents: 'auto',
-            webkitUserSelect: 'none',
-            userSelect: 'none'
-        });
-
-        this.number = new Interface('.number');
-        this.number.css({
-            fontVariantNumeric: 'tabular-nums',
-            letterSpacing: 1
-        });
-        this.number.text(this.fps);
-        this.add(this.number);
-    }
-
-    addListeners() {
-        Stage.events.on('color_picker', this.onColorPicker);
-        this.element.addEventListener('mouseenter', this.onHover);
-        this.element.addEventListener('mouseleave', this.onHover);
-        window.addEventListener('pointerdown', this.onPointerDown);
-    }
-
-    removeListeners() {
-        Stage.events.off('color_picker', this.onColorPicker);
-        this.element.removeEventListener('mouseenter', this.onHover);
-        this.element.removeEventListener('mouseleave', this.onHover);
-        window.removeEventListener('pointerdown', this.onPointerDown);
-    }
-
-    // Event handlers
-
-    onColorPicker = ({ open, target }) => {
-        if (!this.openColor && !this.element.contains(target.element)) {
-            return;
-        }
-
-        if (open) {
-            this.disable();
-
-            this.openColor = target;
-        } else {
-            this.enable();
-
-            this.openColor = null;
-        }
-    };
-
-    onHover = ({ type }) => {
-        if (this.isOpen) {
-            return;
-        }
-
-        if (type === 'mouseenter') {
-            this.animateIn();
-        }
-    };
-
-    onPointerDown = e => {
-        this.lastTime = performance.now();
-        this.lastMouse.set(e.clientX, e.clientY);
-
-        this.onPointerMove(e);
-
-        window.addEventListener('pointermove', this.onPointerMove);
-        window.addEventListener('pointerup', this.onPointerUp);
-    };
-
-    onPointerMove = ({ clientX, clientY }) => {
-        const event = {
-            x: clientX,
-            y: clientY
-        };
-
-        this.mouse.copy(event);
-        this.delta.subVectors(this.mouse, this.lastMouse);
-    };
-
-    onPointerUp = e => {
-        window.removeEventListener('pointermove', this.onPointerMove);
-        window.removeEventListener('pointerup', this.onPointerUp);
-
-        this.onPointerMove(e);
-
-        if (performance.now() - this.lastTime > 250 || this.delta.length() > 50) {
-            return;
-        }
-
-        if (this.openColor && !this.openColor.element.contains(e.target)) {
-            Stage.events.emit('color_picker', { open: false, target: this });
-        } else if (this.atPoint(this.mouse)) {
-            if (this.isOpen) {
-                this.animateOut();
-            } else {
-                this.animateIn();
-            }
-        } else if (!this.element.contains(e.target)) {
-            this.animateOut();
-        }
-    };
-
-    // Public methods
-
-    addPanel(item) {
-        if (!this.panel) {
-            this.panel = new Panel();
-            this.panel.css({
-                position: 'absolute',
-                top: 0,
-                right: 10,
-                marginTop: 10
-            });
-            this.add(this.panel);
-
-            this.addListeners();
-        }
-
-        this.panel.add(item);
-    }
-
-    update() {
-        this.time = performance.now();
-
-        if (this.time - 1000 > this.prev) {
-            this.fps = Math.round(this.count * 1000 / (this.time - this.prev));
-            this.prev = this.time;
-            this.count = 0;
-        }
-
-        this.count++;
-
-        this.number.text(this.fps);
-    }
-
-    animateIn() {
-        if (!this.panel) {
-            return;
-        }
-
-        this.css({ pointerEvents: 'none' });
-
-        this.panel.animateIn();
-
-        this.isOpen = true;
-    }
-
-    animateOut() {
-        if (!this.panel || this.fpsOpen) {
-            return;
-        }
-
-        this.panel.animateOut(() => {
-            this.css({ pointerEvents: 'auto' });
-
-            this.isOpen = false;
-        });
-    }
-
-    enable() {
-        this.number.tween({ opacity: 1 }, 400, 'easeInOutSine');
-    }
-
-    disable() {
-        this.number.tween({ opacity: 0.35 }, 400, 'easeInOutSine');
-    }
-
-    destroy() {
-        this.removeListeners();
-
-        return super.destroy();
-    }
-}
-
-/**
- * @author pschroen / https://ufo.ai/
- */
-
-
 class Header extends Interface {
     constructor({
         fps = false,
@@ -67900,6 +68250,15 @@ class Header extends Interface {
     initViews() {
         const fps = this.fps;
         const fpsOpen = this.fpsOpen;
+
+        if (this.data.title) {
+            this.title = new HeaderTitle(this.data.title);
+            this.title.css({
+                x: -10,
+                opacity: 0
+            });
+            this.add(this.title);
+        }
 
         if (Array.isArray(this.data.links)) {
             this.data.links.forEach(data => {
@@ -68279,15 +68638,23 @@ class Info extends Interface {
 
     // Public methods
 
+    setContent(content) {
+        this.content.html(content);
+    }
+
     animateIn(delay) {
         this.visible();
         this.tween({ opacity: 1 }, 800, 'easeInOutSine', delay);
         this.content.css({ y: 10 }).tween({ y: 0 }, 1200, 'easeOutCubic', delay);
     }
 
-    animateOut() {
+    animateOut(callback) {
         this.tween({ opacity: 0 }, 400, 'easeOutCubic', () => {
             this.invisible();
+
+            if (callback) {
+                callback();
+            }
         });
     }
 }
@@ -68447,11 +68814,9 @@ class Thumbnail extends Interface {
         }
     };
 
-    onPointerUp = e => {
+    onPointerUp = () => {
         window.removeEventListener('pointermove', this.onPointerMove);
         window.removeEventListener('pointerup', this.onPointerUp);
-
-        this.onPointerMove(e);
 
         if (performance.now() - this.lastTime > 250 || this.delta.length() > 50) {
             return;
@@ -68765,7 +69130,10 @@ class DetailsButton extends Interface {
             this.number.css({
                 position: 'absolute',
                 left: 34,
-                top: 12
+                top: 12,
+                fontVariantNumeric: 'tabular-nums',
+                fontSize: 'var(--ui-title-font-size)',
+                letterSpacing: 'var(--ui-title-letter-spacing)'
             });
             this.number.text(data.count);
             this.add(this.number);
@@ -69112,7 +69480,7 @@ class AudioButtonInfo extends Interface {
         const name = new Interface('.name');
         name.css({
             fontVariantNumeric: 'tabular-nums',
-            lineHeight: 18,
+            lineHeight: 'var(--ui-title-line-height)',
             letterSpacing: 'var(--ui-number-letter-spacing)',
             whiteSpace: 'nowrap'
         });
@@ -69459,9 +69827,7 @@ class UI extends Interface {
             width: '100%',
             height: '100%',
             color: 'var(--ui-color)',
-            pointerEvents: 'none',
-            webkitUserSelect: 'none',
-            userSelect: 'none'
+            pointerEvents: 'none'
         });
     }
 
@@ -69988,11 +70354,13 @@ class Link extends Interface {
 
 class GraphMarker extends Interface {
     constructor({
-        name
+        name,
+        noDrag = false
     }) {
-        super('.graph-marker');
+        super('.marker');
 
         this.name = name;
+        this.noDrag = noDrag;
 
         this.width = 0;
 
@@ -70013,13 +70381,16 @@ class GraphMarker extends Interface {
             left: 0,
             top: 0,
             transform: 'translate(-50%, -50%)',
-            lineHeight: 18,
+            lineHeight: 'var(--ui-title-line-height)',
             whiteSpace: 'nowrap',
-            cursor: 'move',
             zIndex: 1,
             opacity: 0
         });
         this.html(this.name);
+
+        if (!this.noDrag) {
+            this.css({ cursor: 'move' });
+        }
 
         await defer();
 
@@ -70027,13 +70398,17 @@ class GraphMarker extends Interface {
     }
 
     addListeners() {
-        this.element.addEventListener('pointerdown', this.onPointerDown);
-        window.addEventListener('keyup', this.onKeyUp);
+        if (!this.noDrag) {
+            this.element.addEventListener('pointerdown', this.onPointerDown);
+            window.addEventListener('keyup', this.onKeyUp);
+        }
     }
 
     removeListeners() {
-        this.element.removeEventListener('pointerdown', this.onPointerDown);
-        window.removeEventListener('keyup', this.onKeyUp);
+        if (!this.noDrag) {
+            this.element.removeEventListener('pointerdown', this.onPointerDown);
+            window.removeEventListener('keyup', this.onKeyUp);
+        }
     }
 
     // Event handlers
@@ -70064,11 +70439,9 @@ class GraphMarker extends Interface {
         }
     };
 
-    onPointerUp = e => {
+    onPointerUp = () => {
         window.removeEventListener('pointermove', this.onPointerMove);
         window.removeEventListener('pointerup', this.onPointerUp);
-
-        this.onPointerMove(e);
 
         this.isDragging = false;
 
@@ -70110,7 +70483,7 @@ class GraphMarker extends Interface {
 
 class Graph extends Interface {
     constructor({
-        width = 150,
+        width = 300,
         height = 50,
         resolution = 80,
         precision = 0,
@@ -70121,6 +70494,7 @@ class Graph extends Interface {
         ghost,
         noHover = false,
         noMarker = false,
+        noMarkerDrag = false,
         noGradient = false
     } = {}) {
         super('.graph');
@@ -70136,6 +70510,7 @@ class Graph extends Interface {
         this.ghost = ghost;
         this.noHover = noHover;
         this.noMarker = noMarker;
+        this.noMarkerDrag = noMarkerDrag;
         this.noGradient = noGradient;
 
         if (!Stage.root) {
@@ -70153,17 +70528,21 @@ class Graph extends Interface {
         this.length = 0;
         this.lookup = [];
         this.bounds = null;
+        this.origin = new Vector2();
         this.mouse = new Vector2();
         this.delta = new Vector2();
         this.lastTime = 0;
         this.lastMouse = new Vector2();
         this.mouseX = 0;
         this.items = [];
+        this.mobileOffset = navigator.maxTouchPoints ? -50 : 0; // Position above finger
         this.isDragging = false;
+        this.isDraggingAway = false;
         this.animatedIn = false;
         this.hoveredIn = false;
         this.needsUpdate = false;
         this.graphNeedsUpdate = false;
+        this.initialized = false;
 
         this.lineColors = {
             graph: Stage.rootStyle.getPropertyValue('--ui-color-line').trim(),
@@ -70218,7 +70597,8 @@ class Graph extends Interface {
             cursor: 'crosshair',
             pointerEvents: 'auto',
             webkitUserSelect: 'none',
-            userSelect: 'none'
+            userSelect: 'none',
+            touchAction: 'none'
         });
 
         if (!this.noHover) {
@@ -70333,10 +70713,6 @@ class Graph extends Interface {
             window.addEventListener('pointerdown', this.onPointerDown);
             window.addEventListener('pointermove', this.onPointerMove);
         }
-
-        if (!this.noMarker && navigator.maxTouchPoints) {
-            this.element.addEventListener('contextmenu', this.onContextMenu);
-        }
     }
 
     removeListeners() {
@@ -70345,10 +70721,6 @@ class Graph extends Interface {
             this.element.removeEventListener('mouseleave', this.onHover);
             window.removeEventListener('pointerdown', this.onPointerDown);
             window.removeEventListener('pointermove', this.onPointerMove);
-        }
-
-        if (!this.noMarker && navigator.maxTouchPoints) {
-            this.element.removeEventListener('contextmenu', this.onContextMenu);
         }
 
         this.items.forEach(item => {
@@ -70364,6 +70736,10 @@ class Graph extends Interface {
     // Event handlers
 
     onHover = ({ type }) => {
+        if (this.isDraggingAway) {
+            return;
+        }
+
         if (!this.animatedIn) {
             if (type === 'mouseenter') {
                 this.hoveredIn = true;
@@ -70409,31 +70785,17 @@ class Graph extends Interface {
         this.mouse.copy(event);
         this.delta.subVectors(this.mouse, this.lastMouse);
 
-        if (this.delta.length()) {
-            this.bounds = this.element.getBoundingClientRect();
-            this.mouseX = clamp$1((this.mouse.x - this.bounds.left) / this.width, 0, 1);
-        }
+        this.bounds = this.element.getBoundingClientRect();
+        this.mouseX = clamp$1((this.mouse.x - this.bounds.left) / this.width, 0, 1);
     };
 
     onPointerUp = e => {
         window.removeEventListener('pointerup', this.onPointerUp);
 
-        this.onPointerMove(e);
-
         if (performance.now() - this.lastTime > 250 || this.delta.length() > 50) {
             return;
         }
 
-        this.onClick(e);
-    };
-
-    onContextMenu = e => {
-        e.preventDefault();
-
-        this.onClick(e);
-    };
-
-    onClick = e => {
         if (e.target !== this.element) {
             return;
         }
@@ -70442,15 +70804,30 @@ class Graph extends Interface {
             return;
         }
 
-        this.addMarker([this.mouseX, this.getMarkerName()]);
+        if (!this.noMarker && !this.noMarkerDrag) {
+            this.addMarker([this.mouseX, this.getMarkerName()]);
+        }
     };
 
     onMarkerUpdate = ({ dragging, target }) => {
         this.isDragging = dragging;
+        this.isDraggingAway = Math.abs(this.delta.y) > 50;
 
-        if (this.isDragging) {
+        if (this.isDragging && this.isDraggingAway) {
+            this.origin.subVectors(this.mouse, this.bounds);
+            target.css({ left: this.origin.x, top: this.origin.y + this.mobileOffset });
+            this.hoverOut();
+        } else if (this.isDragging) {
             target.x = this.mouseX;
+            target.css({ top: -12 });
+            this.hoverIn();
+        } else if (this.isDraggingAway) {
+            this.isDraggingAway = false;
+            this.removeMarker(target);
+            this.hoverOut(true);
         }
+
+        this.needsUpdate = true;
     };
 
     onMarkerClick = e => {
@@ -70533,7 +70910,7 @@ class Graph extends Interface {
     }
 
     addMarker([x, name], delay = 0) {
-        const item = new GraphMarker({ name });
+        const item = new GraphMarker({ name, noDrag: this.noMarkerDrag });
         item.css({ top: -12 });
         item.x = x;
         item.multiplier = 0;
@@ -70548,6 +70925,22 @@ class Graph extends Interface {
 
             item.css({ opacity: item.multiplier });
         });
+
+        if (this.initialized) {
+            Stage.events.emit('marker', { type: 'add', item, target: this });
+        }
+    }
+
+    removeMarker(marker) {
+        const index = this.items.indexOf(marker);
+
+        if (~index) {
+            const item = this.items.splice(index, 1)[0];
+
+            Stage.events.emit('marker', { type: 'remove', item, target: this });
+
+            item.destroy();
+        }
     }
 
     update(value) {
@@ -70580,6 +70973,10 @@ class Graph extends Interface {
         if (this.needsUpdate || this.hoveredIn || this.isDragging) {
             this.drawGraph();
             this.needsUpdate = false;
+        }
+
+        if (!this.initialized) {
+            this.initialized = true;
         }
     }
 
@@ -70625,13 +71022,15 @@ class Graph extends Interface {
                 this.context.stroke();
             }
 
-            this.items.forEach(item => {
-                item.css({ left: clamp$1(item.x * this.width, 0.5, this.width - 0.5) });
-            });
+            if (!this.isDraggingAway) {
+                this.items.forEach(item => {
+                    item.css({ left: clamp$1(item.x * this.width, 0.5, this.width - 0.5) });
+                });
+            }
         }
 
         // Draw handle line and circle
-        if (!this.noHover) {
+        if (!this.noHover && !this.isDraggingAway) {
             if (this.graphNeedsUpdate) {
                 this.graph.path.attr({ d: this.pathData });
                 this.calculateLookup();
@@ -70750,9 +71149,9 @@ class Graph extends Interface {
             return;
         }
 
-        clearTween(this.props);
-
         this.hoveredIn = true;
+
+        clearTween(this.props);
 
         tween(this.props, { handleAlpha: 1 }, 275, 'easeInOutCubic', null, () => {
             this.needsUpdate = true;
@@ -70763,22 +71162,32 @@ class Graph extends Interface {
         this.info.tween({ opacity: 1 }, 275, 'easeInOutCubic');
     }
 
-    hoverOut() {
+    hoverOut(fast) {
         if (!this.hoveredIn) {
             return;
         }
 
-        clearTween(this.props);
-
         this.hoveredIn = false;
 
-        tween(this.props, { handleAlpha: 0 }, 275, 'easeInOutCubic', null, () => {
-            this.needsUpdate = true;
-        });
+        clearTween(this.props);
 
-        this.info.clearTween().tween({ opacity: 0 }, 275, 'easeInOutCubic', () => {
+        this.info.clearTween();
+
+        if (fast) {
+            this.props.handleAlpha = 0;
+            this.needsUpdate = true;
+
+            this.info.css({ opacity: 0 });
             this.info.invisible();
-        });
+        } else {
+            tween(this.props, { handleAlpha: 0 }, 275, 'easeInOutCubic', null, () => {
+                this.needsUpdate = true;
+            });
+
+            this.info.tween({ opacity: 0 }, 275, 'easeInOutCubic', () => {
+                this.info.invisible();
+            });
+        }
     }
 
     animateIn() {
@@ -70833,7 +71242,7 @@ class Graph extends Interface {
 
 class GraphSegments extends Interface {
     constructor({
-        width = 150,
+        width = 300,
         height = 50,
         resolution = 80,
         precision = 0,
@@ -70845,6 +71254,7 @@ class GraphSegments extends Interface {
         ghost,
         noHover = false,
         noMarker = false,
+        noMarkerDrag = false,
         noGradient = false
     } = {}) {
         super('.graph-segments');
@@ -70861,7 +71271,9 @@ class GraphSegments extends Interface {
         this.ghost = ghost;
         this.noHover = noHover;
         this.noMarker = noMarker;
+        this.noMarkerDrag = noMarkerDrag;
         this.noGradient = noGradient;
+        this.initialized = false;
 
         if (!Stage.root) {
             Stage.root = document.querySelector(':root');
@@ -70876,13 +71288,16 @@ class GraphSegments extends Interface {
         this.ghostArray = [];
         this.graphs = [];
         this.bounds = null;
+        this.origin = new Vector2();
         this.mouse = new Vector2();
         this.delta = new Vector2();
         this.lastTime = 0;
         this.lastMouse = new Vector2();
         this.mouseX = 0;
         this.items = [];
+        this.mobileOffset = navigator.maxTouchPoints ? -50 : 0; // Position above finger
         this.isDragging = false;
+        this.isDraggingAway = false;
         this.animatedIn = false;
         this.hoveredIn = false;
         this.needsUpdate = false;
@@ -70941,7 +71356,8 @@ class GraphSegments extends Interface {
             cursor: 'crosshair',
             pointerEvents: 'auto',
             webkitUserSelect: 'none',
-            userSelect: 'none'
+            userSelect: 'none',
+            touchAction: 'none'
         });
 
         if (!this.noHover) {
@@ -71064,10 +71480,6 @@ class GraphSegments extends Interface {
             window.addEventListener('pointerdown', this.onPointerDown);
             window.addEventListener('pointermove', this.onPointerMove);
         }
-
-        if (!this.noMarker && navigator.maxTouchPoints) {
-            this.element.addEventListener('contextmenu', this.onContextMenu);
-        }
     }
 
     removeListeners() {
@@ -71076,10 +71488,6 @@ class GraphSegments extends Interface {
             this.element.removeEventListener('mouseleave', this.onHover);
             window.removeEventListener('pointerdown', this.onPointerDown);
             window.removeEventListener('pointermove', this.onPointerMove);
-        }
-
-        if (!this.noMarker && navigator.maxTouchPoints) {
-            this.element.removeEventListener('contextmenu', this.onContextMenu);
         }
 
         this.items.forEach(item => {
@@ -71099,6 +71507,10 @@ class GraphSegments extends Interface {
     // Event handlers
 
     onHover = ({ type }) => {
+        if (this.isDraggingAway) {
+            return;
+        }
+
         if (!this.animatedIn) {
             if (type === 'mouseenter') {
                 this.hoveredIn = true;
@@ -71144,31 +71556,17 @@ class GraphSegments extends Interface {
         this.mouse.copy(event);
         this.delta.subVectors(this.mouse, this.lastMouse);
 
-        if (this.delta.length()) {
-            this.bounds = this.element.getBoundingClientRect();
-            this.mouseX = clamp$1((this.mouse.x - this.bounds.left) / this.width, 0, 1);
-        }
+        this.bounds = this.element.getBoundingClientRect();
+        this.mouseX = clamp$1((this.mouse.x - this.bounds.left) / this.width, 0, 1);
     };
 
     onPointerUp = e => {
         window.removeEventListener('pointerup', this.onPointerUp);
 
-        this.onPointerMove(e);
-
         if (performance.now() - this.lastTime > 250 || this.delta.length() > 50) {
             return;
         }
 
-        this.onClick(e);
-    };
-
-    onContextMenu = e => {
-        e.preventDefault();
-
-        this.onClick(e);
-    };
-
-    onClick = e => {
         if (e.target !== this.element) {
             return;
         }
@@ -71177,15 +71575,30 @@ class GraphSegments extends Interface {
             return;
         }
 
-        this.addMarker([this.mouseX, this.getMarkerName()]);
+        if (!this.noMarker && !this.noMarkerDrag) {
+            this.addMarker([this.mouseX, this.getMarkerName()]);
+        }
     };
 
     onMarkerUpdate = ({ dragging, target }) => {
         this.isDragging = dragging;
+        this.isDraggingAway = Math.abs(this.delta.y) > 50;
 
-        if (this.isDragging) {
+        if (this.isDragging && this.isDraggingAway) {
+            this.origin.subVectors(this.mouse, this.bounds);
+            target.css({ left: this.origin.x, top: this.origin.y + this.mobileOffset });
+            this.hoverOut();
+        } else if (this.isDragging) {
             target.x = this.mouseX;
+            target.css({ top: -12 });
+            this.hoverIn();
+        } else if (this.isDraggingAway) {
+            this.isDraggingAway = false;
+            this.removeMarker(target);
+            this.hoverOut(true);
         }
+
+        this.needsUpdate = true;
     };
 
     onMarkerClick = e => {
@@ -71274,7 +71687,7 @@ class GraphSegments extends Interface {
     }
 
     addMarker([x, name], delay = 0) {
-        const item = new GraphMarker({ name });
+        const item = new GraphMarker({ name, noDrag: this.noMarkerDrag });
         item.css({ top: -12 });
         item.x = x;
         item.multiplier = 0;
@@ -71289,6 +71702,22 @@ class GraphSegments extends Interface {
 
             item.css({ opacity: item.multiplier });
         });
+
+        if (this.initialized) {
+            Stage.events.emit('marker', { type: 'add', item, target: this });
+        }
+    }
+
+    removeMarker(marker) {
+        const index = this.items.indexOf(marker);
+
+        if (~index) {
+            const item = this.items.splice(index, 1)[0];
+
+            Stage.events.emit('marker', { type: 'remove', item, target: this });
+
+            item.destroy();
+        }
     }
 
     update(value) {
@@ -71321,6 +71750,10 @@ class GraphSegments extends Interface {
         if (this.needsUpdate || this.hoveredIn || this.isDragging) {
             this.drawGraph();
             this.needsUpdate = false;
+        }
+
+        if (!this.initialized) {
+            this.initialized = true;
         }
     }
 
@@ -71380,13 +71813,15 @@ class GraphSegments extends Interface {
                 this.context.stroke();
             }
 
-            this.items.forEach(item => {
-                item.css({ left: clamp$1(item.x * this.width, 0.5, this.width - 0.5) });
-            });
+            if (!this.isDraggingAway) {
+                this.items.forEach(item => {
+                    item.css({ left: clamp$1(item.x * this.width, 0.5, this.width - 0.5) });
+                });
+            }
         }
 
         // Draw handle line and circle
-        if (!this.noHover) {
+        if (!this.noHover && !this.isDraggingAway) {
             if (this.graphNeedsUpdate) {
                 this.graphs.forEach(graph => {
                     graph.path.attr({ d: graph.pathData });
@@ -71548,9 +71983,9 @@ class GraphSegments extends Interface {
             return;
         }
 
-        clearTween(this.props);
-
         this.hoveredIn = true;
+
+        clearTween(this.props);
 
         tween(this.props, { handleAlpha: 1 }, 275, 'easeInOutCubic', null, () => {
             this.needsUpdate = true;
@@ -71561,22 +71996,32 @@ class GraphSegments extends Interface {
         this.info.tween({ opacity: 1 }, 275, 'easeInOutCubic');
     }
 
-    hoverOut() {
+    hoverOut(fast) {
         if (!this.hoveredIn) {
             return;
         }
 
-        clearTween(this.props);
-
         this.hoveredIn = false;
 
-        tween(this.props, { handleAlpha: 0 }, 275, 'easeInOutCubic', null, () => {
-            this.needsUpdate = true;
-        });
+        clearTween(this.props);
 
-        this.info.clearTween().tween({ opacity: 0 }, 275, 'easeInOutCubic', () => {
+        this.info.clearTween();
+
+        if (fast) {
+            this.props.handleAlpha = 0;
+            this.needsUpdate = true;
+
+            this.info.css({ opacity: 0 });
             this.info.invisible();
-        });
+        } else {
+            tween(this.props, { handleAlpha: 0 }, 275, 'easeInOutCubic', null, () => {
+                this.needsUpdate = true;
+            });
+
+            this.info.tween({ opacity: 0 }, 275, 'easeInOutCubic', () => {
+                this.info.invisible();
+            });
+        }
     }
 
     animateIn() {
@@ -71647,6 +72092,7 @@ class RadialGraph extends Interface {
         ghost,
         noHover = false,
         noMarker = false,
+        noMarkerDrag = false,
         noGradient = false
     } = {}) {
         super('.radial-graph');
@@ -71667,6 +72113,7 @@ class RadialGraph extends Interface {
         this.ghost = ghost;
         this.noHover = noHover;
         this.noMarker = noMarker;
+        this.noMarkerDrag = noMarkerDrag;
         this.noGradient = noGradient;
 
         if (!Stage.root) {
@@ -71680,8 +72127,8 @@ class RadialGraph extends Interface {
         this.middle = this.width / 2;
         this.radius = this.middle - this.graphHeight;
         this.distance = this.radius - this.graphHeight;
-        this.startAngle = degToRad$1(this.start);
         this.rangeHeight = this.getRangeHeight(this.range);
+        this.startAngle = degToRad$1(this.start);
         this.array = [];
         this.ghostArray = [];
         this.points = [];
@@ -71690,6 +72137,7 @@ class RadialGraph extends Interface {
         this.lookup = [];
         this.bounds = null;
         this.offset = new Vector2();
+        this.origin = new Vector2();
         this.mouse = new Vector2();
         this.delta = new Vector2();
         this.lastTime = 0;
@@ -71698,11 +72146,14 @@ class RadialGraph extends Interface {
         this.lastHover = 'out';
         this.lastCursor = '';
         this.items = [];
+        this.mobileOffset = navigator.maxTouchPoints ? -50 : 0; // Position above finger
         this.isDragging = false;
+        this.isDraggingAway = false;
         this.animatedIn = false;
         this.hoveredIn = false;
         this.needsUpdate = false;
         this.graphNeedsUpdate = false;
+        this.initialized = false;
 
         this.lineColors = {
             graph: Stage.rootStyle.getPropertyValue('--ui-color-line').trim(),
@@ -71756,7 +72207,8 @@ class RadialGraph extends Interface {
             height: this.height,
             pointerEvents: 'auto',
             webkitUserSelect: 'none',
-            userSelect: 'none'
+            userSelect: 'none',
+            touchAction: 'none'
         });
 
         if (!this.noHover) {
@@ -71888,20 +72340,12 @@ class RadialGraph extends Interface {
             window.addEventListener('pointerdown', this.onPointerDown);
             window.addEventListener('pointermove', this.onPointerMove);
         }
-
-        if (!this.noMarker && navigator.maxTouchPoints) {
-            this.element.addEventListener('contextmenu', this.onContextMenu);
-        }
     }
 
     removeListeners() {
         if (!this.noHover) {
             window.removeEventListener('pointerdown', this.onPointerDown);
             window.removeEventListener('pointermove', this.onPointerMove);
-        }
-
-        if (!this.noMarker && navigator.maxTouchPoints) {
-            this.element.removeEventListener('contextmenu', this.onContextMenu);
         }
 
         this.items.forEach(item => {
@@ -71934,45 +72378,31 @@ class RadialGraph extends Interface {
         this.mouse.copy(event);
         this.delta.subVectors(this.mouse, this.lastMouse);
 
-        if (this.delta.length()) {
-            this.bounds = this.element.getBoundingClientRect();
-            this.offset.x = this.mouse.x - (this.bounds.left + this.middle);
-            this.offset.y = this.mouse.y - (this.bounds.top + this.middle);
+        this.bounds = this.element.getBoundingClientRect();
+        this.offset.x = this.mouse.x - (this.bounds.left + this.middle);
+        this.offset.y = this.mouse.y - (this.bounds.top + this.middle);
 
-            const distance = this.offset.length();
-            const angle = this.offset.angle();
+        const distance = this.offset.length();
+        const angle = this.offset.angle();
 
-            this.mouseAngle = angle / TwoPI;
+        this.mouseAngle = angle / TwoPI;
 
-            if (distance > this.distance && distance < this.middle) {
-                this.setHover('over');
-                this.setCursor('crosshair');
-            } else {
-                this.setHover();
-                this.setCursor();
-            }
+        if (distance > this.distance && distance < this.middle) {
+            this.setHover('over');
+            this.setCursor('crosshair');
+        } else {
+            this.setHover();
+            this.setCursor();
         }
     };
 
     onPointerUp = e => {
         window.removeEventListener('pointerup', this.onPointerUp);
 
-        this.onPointerMove(e);
-
         if (performance.now() - this.lastTime > 250 || this.delta.length() > 50) {
             return;
         }
 
-        this.onClick(e);
-    };
-
-    onContextMenu = e => {
-        e.preventDefault();
-
-        this.onClick(e);
-    };
-
-    onClick = e => {
         if (e.target !== this.element) {
             return;
         }
@@ -71981,15 +72411,29 @@ class RadialGraph extends Interface {
             return;
         }
 
-        this.addMarker([this.mouseAngle, this.getMarkerName()]);
+        if (!this.noMarker && !this.noMarkerDrag) {
+            this.addMarker([this.mouseAngle, this.getMarkerName()]);
+        }
     };
 
     onMarkerUpdate = ({ dragging, target }) => {
         this.isDragging = dragging;
+        this.isDraggingAway = this.offset.length() > this.middle + 50;
 
-        if (this.isDragging) {
+        if (this.isDragging && this.isDraggingAway) {
+            this.origin.subVectors(this.mouse, this.bounds);
+            target.css({ left: this.origin.x, top: this.origin.y + this.mobileOffset });
+            this.hoverOut();
+        } else if (this.isDragging) {
             target.angle = this.mouseAngle;
+            this.hoverIn();
+        } else if (this.isDraggingAway) {
+            this.isDraggingAway = false;
+            this.removeMarker(target);
+            this.hoverOut(true);
         }
+
+        this.needsUpdate = true;
     };
 
     onMarkerClick = e => {
@@ -72012,6 +72456,10 @@ class RadialGraph extends Interface {
     }
 
     setHover(type = 'out') {
+        if (this.isDraggingAway) {
+            return;
+        }
+
         if (type !== this.lastHover) {
             this.lastHover = type;
 
@@ -72077,6 +72525,9 @@ class RadialGraph extends Interface {
     setSize(width, height) {
         this.width = width;
         this.height = height;
+        this.middle = this.width / 2;
+        this.radius = this.middle - this.graphHeight;
+        this.distance = this.radius - this.graphHeight;
         this.rangeHeight = this.getRangeHeight(this.range);
 
         this.css({
@@ -72106,7 +72557,7 @@ class RadialGraph extends Interface {
     }
 
     addMarker([angle, name], delay = 0) {
-        const item = new GraphMarker({ name });
+        const item = new GraphMarker({ name, noDrag: this.noMarkerDrag });
         item.angle = angle;
         item.multiplier = 0;
         item.events.on('update', this.onMarkerUpdate);
@@ -72120,6 +72571,22 @@ class RadialGraph extends Interface {
 
             item.css({ opacity: item.multiplier });
         });
+
+        if (this.initialized) {
+            Stage.events.emit('marker', { type: 'add', item, target: this });
+        }
+    }
+
+    removeMarker(marker) {
+        const index = this.items.indexOf(marker);
+
+        if (~index) {
+            const item = this.items.splice(index, 1)[0];
+
+            Stage.events.emit('marker', { type: 'remove', item, target: this });
+
+            item.destroy();
+        }
     }
 
     update(value) {
@@ -72152,6 +72619,10 @@ class RadialGraph extends Interface {
         if (this.needsUpdate || this.hoveredIn || this.isDragging) {
             this.drawGraph();
             this.needsUpdate = false;
+        }
+
+        if (!this.initialized) {
+            this.initialized = true;
         }
     }
 
@@ -72235,12 +72706,14 @@ class RadialGraph extends Interface {
                 this.context.lineTo(x1, y1);
                 this.context.stroke();
 
-                this.items[i].css({ left: x2, top: y2 });
+                if (!this.isDraggingAway) {
+                    this.items[i].css({ left: x2, top: y2 });
+                }
             }
         }
 
         // Draw handle line and circle
-        if (!this.noHover) {
+        if (!this.noHover && !this.isDraggingAway) {
             if (this.graphNeedsUpdate) {
                 this.graph.path.attr({ d: this.pathData });
                 this.calculateLookup();
@@ -72486,9 +72959,9 @@ class RadialGraph extends Interface {
             return;
         }
 
-        clearTween(this.props);
-
         this.hoveredIn = true;
+
+        clearTween(this.props);
 
         tween(this.props, { handleAlpha: 1 }, 275, 'easeInOutCubic', null, () => {
             this.needsUpdate = true;
@@ -72499,22 +72972,1092 @@ class RadialGraph extends Interface {
         this.info.tween({ opacity: 1 }, 275, 'easeInOutCubic');
     }
 
-    hoverOut() {
+    hoverOut(fast) {
         if (!this.hoveredIn) {
             return;
         }
 
-        clearTween(this.props);
-
         this.hoveredIn = false;
 
-        tween(this.props, { handleAlpha: 0 }, 275, 'easeInOutCubic', null, () => {
+        clearTween(this.props);
+
+        this.info.clearTween();
+
+        if (fast) {
+            this.props.handleAlpha = 0;
+            this.needsUpdate = true;
+
+            this.info.css({ opacity: 0 });
+            this.info.invisible();
+        } else {
+            tween(this.props, { handleAlpha: 0 }, 275, 'easeInOutCubic', null, () => {
+                this.needsUpdate = true;
+            });
+
+            this.info.tween({ opacity: 0 }, 275, 'easeInOutCubic', () => {
+                this.info.invisible();
+            });
+        }
+    }
+
+    animateIn() {
+        clearTween(this.props);
+
+        tween(this.props, { alpha: 1 }, 500, 'easeOutSine');
+
+        tween(this.props, { progress: 1 }, 650, 'easeInOutCubic', () => {
+            tween(this.props, { yMultiplier: 1 }, 400, 'easeOutCubic', () => {
+                this.animatedIn = true;
+
+                if (this.hoveredIn) {
+                    this.hoverIn(true);
+                }
+            }, () => {
+                this.needsUpdate = true;
+            });
+        }, () => {
+            this.needsUpdate = true;
+        });
+    }
+
+    animateOut() {
+        clearTween(this.props);
+
+        this.animatedIn = false;
+
+        tween(this.props, { alpha: 0 }, 300, 'easeOutSine');
+
+        tween(this.props, { yMultiplier: 0 }, 300, 'easeOutCubic', null, () => {
+            this.needsUpdate = true;
+
+            if (!this.noMarker) {
+                this.items.forEach(item => {
+                    item.css({ opacity: this.props.yMultiplier });
+                });
+            }
+        });
+
+        this.setCursor();
+    }
+
+    destroy() {
+        this.removeListeners();
+
+        return super.destroy();
+    }
+}
+
+/**
+ * @author pschroen / https://ufo.ai/
+ */
+
+
+class RadialGraphSegments extends Interface {
+    constructor({
+        width = 300,
+        height = 300,
+        start = 0,
+        graphHeight = 50,
+        resolution = 80,
+        tension = 6,
+        precision = 0,
+        lookupPrecision = 0,
+        textDistanceX = 20,
+        textDistanceY = 10,
+        segments = [],
+        markers = [],
+        range = 1,
+        value,
+        ghost,
+        noHover = false,
+        noMarker = false,
+        noMarkerDrag = false,
+        noGradient = false
+    } = {}) {
+        super('.radial-graph-segments');
+
+        this.width = width;
+        this.height = height;
+        this.start = start;
+        this.graphHeight = graphHeight;
+        this.resolution = resolution;
+        this.tension = tension;
+        this.precision = precision;
+        this.lookupPrecision = lookupPrecision;
+        this.textDistanceX = textDistanceX;
+        this.textDistanceY = textDistanceY;
+        this.segments = segments;
+        this.markers = markers;
+        this.range = range;
+        this.value = value;
+        this.ghost = ghost;
+        this.noHover = noHover;
+        this.noMarker = noMarker;
+        this.noMarkerDrag = noMarkerDrag;
+        this.noGradient = noGradient;
+
+        if (!Stage.root) {
+            Stage.root = document.querySelector(':root');
+            Stage.rootStyle = getComputedStyle(Stage.root);
+        }
+
+        this.startTime = performance.now();
+        this.frame = 0;
+
+        this.middle = this.width / 2;
+        this.radius = this.middle - this.graphHeight;
+        this.distance = this.radius - this.graphHeight;
+        this.rangeHeight = this.getRangeHeight(this.range);
+        this.startAngle = degToRad$1(this.start);
+        this.array = [];
+        this.ghostArray = [];
+        this.points = [];
+        this.graphs = [];
+        this.bounds = null;
+        this.offset = new Vector2();
+        this.origin = new Vector2();
+        this.mouse = new Vector2();
+        this.delta = new Vector2();
+        this.lastTime = 0;
+        this.lastMouse = new Vector2();
+        this.mouseAngle = 0;
+        this.lastHover = 'out';
+        this.lastCursor = '';
+        this.items = [];
+        this.mobileOffset = navigator.maxTouchPoints ? -50 : 0; // Position above finger
+        this.isDragging = false;
+        this.isDraggingAway = false;
+        this.animatedIn = false;
+        this.hoveredIn = false;
+        this.needsUpdate = false;
+        this.graphNeedsUpdate = false;
+        this.initialized = false;
+
+        this.lineColors = {
+            graph: Stage.rootStyle.getPropertyValue('--ui-color-line').trim(),
+            bottom: Stage.rootStyle.getPropertyValue('--ui-color-graph-bottom-line').trim(),
+            handle: Stage.rootStyle.getPropertyValue('--ui-color').trim()
+        };
+
+        this.colorRange = [
+            new Color(Stage.rootStyle.getPropertyValue('--ui-color-range-1').trim()),
+            new Color(Stage.rootStyle.getPropertyValue('--ui-color-range-2').trim()),
+            new Color(Stage.rootStyle.getPropertyValue('--ui-color-range-3').trim()),
+            new Color(Stage.rootStyle.getPropertyValue('--ui-color-range-4').trim())
+        ];
+
+        this.colorStep = 1 / 3 / 5; // 5 steps per colour interpolation
+        this.color = new Color();
+        this.alpha = 1;
+
+        this.props = {
+            alpha: 0,
+            handleAlpha: 0,
+            yMultiplier: 0,
+            progress: 0
+        };
+
+        this.init();
+        this.initCanvas();
+
+        if (!this.noHover && this.lookupPrecision) {
+            this.initGraphs();
+        }
+
+        if (!this.noMarker) {
+            this.initMarkers();
+        }
+
+        this.setSize(this.width, this.height);
+        this.setArray(this.value);
+
+        if (this.ghost) {
+            this.setGhostArray(this.ghost);
+        }
+
+        this.addListeners();
+    }
+
+    init() {
+        this.css({
+            position: 'relative',
+            width: this.width,
+            height: this.height,
+            pointerEvents: 'auto',
+            webkitUserSelect: 'none',
+            userSelect: 'none',
+            touchAction: 'none'
+        });
+
+        if (!this.noHover) {
+            this.info = new Interface('.info');
+            this.info.invisible();
+            this.info.css({
+                position: 'absolute',
+                left: 0,
+                top: 0,
+                transform: 'translate(-50%, -50%)',
+                fontSize: 'const(--ui-secondary-font-size)',
+                letterSpacing: 'const(--ui-secondary-letter-spacing)',
+                zIndex: 1,
+                pointerEvents: 'none',
+                opacity: 0
+            });
+            this.add(this.info);
+        }
+    }
+
+    initGraphs() {
+        // Not added to DOM
+        this.graphs = this.segments.map(() => {
+            const graph = new Interface(null, 'svg');
+            graph.path = new Interface(null, 'svg', 'path');
+            graph.add(graph.path);
+
+            graph.pathData = '';
+            graph.length = 0;
+            graph.lookup = [];
+
+            return graph;
+        });
+    }
+
+    calculateLookup(graph) {
+        graph.length = graph.path.element.getTotalLength();
+        graph.lookup = [];
+
+        let i = 0;
+
+        while (i <= 1) {
+            const point = graph.path.element.getPointAtLength(i * graph.length);
+            const x = point.x - this.middle;
+            const y = point.y - this.middle;
+
+            let angle = (-this.startAngle + Math.atan2(y, x)) % TwoPI;
+
+            if (angle < 0) {
+                angle += TwoPI;
+            }
+
+            graph.lookup.push({
+                x: point.x,
+                y: point.y,
+                angle
+            });
+
+            i += 1 / this.lookupPrecision;
+        }
+    }
+
+    getCurvePoint(graph, mouseAngle, start, slice) {
+        const angle = mouseAngle * TwoPI;
+        const approxIndex = Math.floor(start + slice * mouseAngle * this.lookupPrecision);
+
+        let i = Math.max(1, approxIndex - Math.floor(this.lookupPrecision / 3));
+
+        for (; i < this.lookupPrecision; i++) {
+            if (graph.lookup[i].angle > angle) {
+                break;
+            }
+        }
+
+        if (i === this.lookupPrecision) {
+            const x = graph.lookup[this.lookupPrecision - 1].x;
+            const y = graph.lookup[this.lookupPrecision - 1].y;
+
+            return { x, y };
+        }
+
+        const lower = graph.lookup[i - 1];
+        const upper = graph.lookup[i];
+        const percent = (angle - lower.angle) / (upper.angle - lower.angle);
+        const diffX = upper.x - lower.x;
+        const diffY = upper.y - lower.y;
+        const x = lower.x + diffX * percent;
+        const y = lower.y + diffY * percent;
+
+        return { x, y };
+    }
+
+    initCanvas() {
+        this.canvas = new Interface(null, 'canvas');
+        this.canvas.css({
+            position: 'absolute',
+            left: 0,
+            top: 0,
+            pointerEvents: 'none'
+        });
+        this.context = this.canvas.element.getContext('2d');
+        this.add(this.canvas);
+    }
+
+    createGradient(x0, y0, r0, x1, y1, r1, alpha = 1) {
+        this.alpha = alpha;
+
+        const gradient = this.context.createRadialGradient(x0, y0, r0, x1, y1, r1);
+
+        let offset = 0;
+
+        for (let i = 0; i < 3; i++) {
+            for (let t = 0; t < 5; t++) {
+                gradient.addColorStop(offset, this.toRGBA(this.color.lerpColors(this.colorRange[i], this.colorRange[i + 1], Easing.easeInOutSine(t / 5)), 1));
+
+                offset += this.colorStep;
+            }
+        }
+
+        gradient.addColorStop(offset, this.toRGBA(this.colorRange[3], 1));
+
+        return gradient;
+    }
+
+    toRGBA(color, alpha) {
+        return `rgb(${Math.round(color.r * 255)} ${Math.round(color.g * 255)} ${Math.round(color.b * 255)} / ${alpha * this.alpha})`;
+    }
+
+    initMarkers() {
+        this.markers.map(data => {
+            this.addMarker(data, 650);
+        });
+    }
+
+    addListeners() {
+        if (!this.noHover) {
+            window.addEventListener('pointerdown', this.onPointerDown);
+            window.addEventListener('pointermove', this.onPointerMove);
+        }
+    }
+
+    removeListeners() {
+        if (!this.noHover) {
+            window.removeEventListener('pointerdown', this.onPointerDown);
+            window.removeEventListener('pointermove', this.onPointerMove);
+        }
+
+        this.items.forEach(item => {
+            item.events.off('update', this.onMarkerUpdate);
+            item.events.off('click', this.onMarkerClick);
+        });
+    }
+
+    getRangeHeight(range) {
+        if (Array.isArray(range)) {
+            return range.map(range => (this.graphHeight - 5) / range);
+        } else {
+            return new Array(this.segments.length).fill((this.graphHeight - 5) / range);
+        }
+    }
+
+    // Event handlers
+
+    onPointerDown = e => {
+        this.lastTime = performance.now();
+        this.lastMouse.set(e.clientX, e.clientY);
+
+        this.onPointerMove(e);
+
+        window.addEventListener('pointerup', this.onPointerUp);
+    };
+
+    onPointerMove = e => {
+        const event = {
+            x: e.clientX,
+            y: e.clientY
+        };
+
+        this.mouse.copy(event);
+        this.delta.subVectors(this.mouse, this.lastMouse);
+
+        this.bounds = this.element.getBoundingClientRect();
+        this.offset.x = this.mouse.x - (this.bounds.left + this.middle);
+        this.offset.y = this.mouse.y - (this.bounds.top + this.middle);
+
+        const distance = this.offset.length();
+        const angle = this.offset.angle();
+
+        this.mouseAngle = angle / TwoPI;
+
+        if (distance > this.distance && distance < this.middle) {
+            this.setHover('over');
+            this.setCursor('crosshair');
+        } else {
+            this.setHover();
+            this.setCursor();
+        }
+    };
+
+    onPointerUp = e => {
+        window.removeEventListener('pointerup', this.onPointerUp);
+
+        if (performance.now() - this.lastTime > 250 || this.delta.length() > 50) {
+            return;
+        }
+
+        if (e.target !== this.element) {
+            return;
+        }
+
+        if (this.items.find(item => item.angle === this.mouseAngle)) {
+            return;
+        }
+
+        if (!this.noMarker && !this.noMarkerDrag) {
+            this.addMarker([this.mouseAngle, this.getMarkerName()]);
+        }
+    };
+
+    onMarkerUpdate = ({ dragging, target }) => {
+        this.isDragging = dragging;
+        this.isDraggingAway = this.offset.length() > this.middle + 50;
+
+        if (this.isDragging && this.isDraggingAway) {
+            this.origin.subVectors(this.mouse, this.bounds);
+            target.css({ left: this.origin.x, top: this.origin.y + this.mobileOffset });
+            this.hoverOut();
+        } else if (this.isDragging) {
+            target.angle = this.mouseAngle;
+            this.hoverIn();
+        } else if (this.isDraggingAway) {
+            this.isDraggingAway = false;
+            this.removeMarker(target);
+            this.hoverOut(true);
+        }
+
+        this.needsUpdate = true;
+    };
+
+    onMarkerClick = e => {
+        console.log('onMarkerClick', e);
+    };
+
+    // Public methods
+
+    getMarkerName() {
+        const names = this.items.map(item => item.name);
+
+        let count = 1;
+        let name = `Marker ${count++}`;
+
+        while (names.includes(name)) {
+            name = `Marker ${count++}`;
+        }
+
+        return name;
+    }
+
+    setHover(type = 'out') {
+        if (this.isDraggingAway) {
+            return;
+        }
+
+        if (type !== this.lastHover) {
+            this.lastHover = type;
+
+            if (!this.animatedIn) {
+                if (type === 'over') {
+                    this.hoveredIn = true;
+                } else {
+                    this.hoveredIn = false;
+                }
+
+                return;
+            }
+
+            clearTween(this.timeout);
+
+            if (type === 'over') {
+                this.hoverIn();
+            } else {
+                this.timeout = delayedCall(200, () => {
+                    this.hoverOut();
+                });
+            }
+        }
+    }
+
+    setCursor(cursor = '') {
+        if (cursor !== this.lastCursor) {
+            this.lastCursor = cursor;
+
+            this.css({ cursor });
+        }
+    }
+
+    setGhostArray(value) {
+        if (Array.isArray(value)) {
+            this.ghostArray = value;
+        } else {
+            this.ghostArray = new Array(this.resolution).fill(0);
+        }
+
+        this.needsUpdate = true;
+
+        this.update();
+    }
+
+    setArray(value) {
+        if (Array.isArray(value)) {
+            this.array = value;
+        } else {
+            this.array = new Array(this.resolution).fill(0);
+        }
+
+        this.needsUpdate = true;
+
+        if (!this.noHover && this.lookupPrecision) {
+            this.graphs.forEach(graph => {
+                graph.pathData = '';
+            });
+
+            this.graphNeedsUpdate = true;
+        }
+
+        this.update();
+    }
+
+    setSize(width, height) {
+        this.width = width;
+        this.height = height;
+        this.middle = this.width / 2;
+        this.radius = this.middle - this.graphHeight;
+        this.distance = this.radius - this.graphHeight;
+        this.rangeHeight = this.getRangeHeight(this.range);
+
+        this.css({
+            width: this.width,
+            height: this.height
+        });
+
+        const dpr = 2; // Always 2
+
+        this.canvas.element.width = Math.round(this.width * dpr);
+        this.canvas.element.height = Math.round(this.height * dpr);
+        this.canvas.element.style.width = `${this.width}px`;
+        this.canvas.element.style.height = `${this.height}px`;
+        this.context.scale(dpr, dpr);
+
+        this.strokeStyle = this.createGradient(this.middle, this.middle, this.radius, this.middle, this.middle, this.middle);
+        this.fillStyle = this.createGradient(this.middle, this.middle, this.radius, this.middle, this.middle, this.middle, 0.07);
+
+        this.needsUpdate = true;
+
+        if (!this.noHover && this.lookupPrecision) {
+            this.graphs.forEach(graph => {
+                graph.pathData = '';
+            });
+
+            this.graphNeedsUpdate = true;
+        }
+
+        this.update();
+    }
+
+    addMarker([angle, name], delay = 0) {
+        const item = new GraphMarker({ name, noDrag: this.noMarkerDrag });
+        item.angle = angle;
+        item.multiplier = 0;
+        item.events.on('update', this.onMarkerUpdate);
+        item.events.on('click', this.onMarkerClick);
+        this.add(item);
+
+        this.items.push(item);
+
+        tween(item, { multiplier: 1 }, 400, 'easeOutCubic', delay, null, () => {
+            this.needsUpdate = true;
+
+            item.css({ opacity: item.multiplier });
+        });
+
+        if (this.initialized) {
+            Stage.events.emit('marker', { type: 'add', item, target: this });
+        }
+    }
+
+    removeMarker(marker) {
+        const index = this.items.indexOf(marker);
+
+        if (~index) {
+            const item = this.items.splice(index, 1)[0];
+
+            Stage.events.emit('marker', { type: 'remove', item, target: this });
+
+            item.destroy();
+        }
+    }
+
+    update(value) {
+        if (!ticker.isAnimating && ++this.frame > ticker.frame) {
+            ticker.onTick(performance.now() - this.startTime);
+        }
+
+        if (!this.array.length) {
+            return;
+        }
+
+        if (value !== undefined) {
+            if (Array.isArray(value)) {
+                this.setArray(value);
+            } else {
+                if (this.ghost) {
+                    const ghost = this.array.pop();
+                    this.array.unshift(value);
+                    this.ghostArray.pop();
+                    this.ghostArray.unshift(ghost);
+                } else {
+                    this.array.shift();
+                    this.array.push(value);
+                }
+
+                this.needsUpdate = true;
+            }
+        }
+
+        if (this.needsUpdate || this.hoveredIn || this.isDragging) {
+            this.drawGraph();
+            this.needsUpdate = false;
+        }
+
+        if (!this.initialized) {
+            this.initialized = true;
+        }
+    }
+
+    drawGraph() {
+        const h = this.graphHeight - 1;
+
+        if (this.props.alpha < 0.001) {
+            this.context.globalAlpha = 0;
+        } else {
+            this.context.globalAlpha = this.props.alpha;
+        }
+
+        this.context.clearRect(0, 0, this.canvas.element.width, this.canvas.element.height);
+
+        // Draw inner circle
+        this.context.lineWidth = 1;
+        this.context.strokeStyle = this.lineColors.bottom;
+
+        this.context.beginPath();
+        this.context.arc(this.middle, this.middle, this.middle - h, this.startAngle, this.startAngle + TwoPI * this.props.progress);
+        this.context.stroke();
+
+        // Draw segment lines
+        let end = 0;
+
+        for (let i = 0, l = this.array.length, il = this.segments.length; i < il; i++) {
+            end += this.segments[i] / l;
+
+            const angle = this.startAngle + end * TwoPI;
+            const c = Math.cos(angle);
+            const s = Math.sin(angle);
+            const r0 = this.middle - (h - 0.5);
+            const r1 = this.middle - (h - 0.5 - (h - 0.5) * this.props.yMultiplier);
+            const x0 = this.middle + r0 * c;
+            const y0 = this.middle + r0 * s;
+            const x1 = this.middle + r1 * c;
+            const y1 = this.middle + r1 * s;
+
+            this.context.beginPath();
+            this.context.moveTo(x0, y0);
+            this.context.lineTo(x1, y1);
+            this.context.stroke();
+        }
+
+        // Draw graph line and radial gradient fill
+        if (this.ghostArray.length) {
+            this.drawPath(h, this.ghostArray, true);
+        }
+
+        this.drawPath(h, this.array);
+
+        // Draw marker lines
+        if (!this.noMarker) {
+            this.context.lineWidth = 1.5;
+            this.context.strokeStyle = this.lineColors.graph;
+
+            for (let i = 0, l = this.items.length; i < l; i++) {
+                const mouseAngle = this.items[i].angle;
+                const textDistanceX = this.items[i].width / 2 + 10;
+
+                let textOffset;
+
+                if (mouseAngle >= 0 && mouseAngle < 0.25) {
+                    textOffset = mapLinear$1(mouseAngle, 0, 0.25, textDistanceX, this.textDistanceY);
+                } else if (mouseAngle >= 0.25 && mouseAngle < 0.5) {
+                    textOffset = mapLinear$1(mouseAngle, 0.25, 0.5, this.textDistanceY, textDistanceX);
+                } else if (mouseAngle >= 0.5 && mouseAngle < 0.75) {
+                    textOffset = mapLinear$1(mouseAngle, 0.5, 0.75, textDistanceX, this.textDistanceY);
+                } else if (mouseAngle >= 0.75 && mouseAngle <= 1) {
+                    textOffset = mapLinear$1(mouseAngle, 0.75, 1, this.textDistanceY, textDistanceX);
+                }
+
+                const angle = mouseAngle * TwoPI;
+                const c = Math.cos(angle);
+                const s = Math.sin(angle);
+                const r0 = this.middle - (h - 0.5);
+                const r1 = this.middle - (h - 0.5 - (h - 0.5) * this.items[i].multiplier * this.props.yMultiplier);
+                const r2 = this.middle + textOffset;
+                const x0 = this.middle + r0 * c;
+                const y0 = this.middle + r0 * s;
+                const x1 = this.middle + r1 * c;
+                const y1 = this.middle + r1 * s;
+                const x2 = this.middle + r2 * c;
+                const y2 = this.middle + r2 * s;
+
+                this.context.beginPath();
+                this.context.moveTo(x0, y0);
+                this.context.lineTo(x1, y1);
+                this.context.stroke();
+
+                if (!this.isDraggingAway) {
+                    this.items[i].css({ left: x2, top: y2 });
+                }
+            }
+        }
+
+        // Draw handle line and circle
+        if (!this.noHover && !this.isDraggingAway) {
+            if (this.graphNeedsUpdate) {
+                this.graphs.forEach(graph => {
+                    graph.path.attr({ d: graph.pathData });
+                    this.calculateLookup(graph);
+                });
+
+                this.graphNeedsUpdate = false;
+            }
+
+            let angle = (-this.startAngle + Math.atan2(this.offset.y, this.offset.x)) % TwoPI;
+
+            if (angle < 0) {
+                angle += TwoPI;
+            }
+
+            const length = this.array.length;
+            const segmentsLength = this.segments.length;
+            const mouseAngle = angle / TwoPI;
+            const value = this.array[Math.floor(mouseAngle * length)];
+
+            let i = 0;
+            let start = 0;
+            let slice = 0;
+            let end = 0;
+
+            for (; i < segmentsLength; i++) {
+                start = end;
+                slice = this.segments[i] / length;
+                end += slice;
+
+                if (mouseAngle >= start && mouseAngle <= end) {
+                    break;
+                }
+            }
+
+            if (i === segmentsLength) {
+                i = segmentsLength - 1;
+            }
+
+            let radius;
+
+            if (this.lookupPrecision) {
+                const point = this.getCurvePoint(this.graphs[i], mouseAngle, start, slice);
+                const x = point.x - this.middle;
+                const y = point.y - this.middle;
+                const distance = Math.sqrt(x * x + y * y);
+
+                radius = this.middle - (h - (distance - this.radius) - 1);
+            } else {
+                radius = this.middle - (h - value * this.rangeHeight[i] - 1);
+            }
+
+            let textOffset;
+
+            if (this.mouseAngle >= 0 && this.mouseAngle < 0.25) {
+                textOffset = mapLinear$1(this.mouseAngle, 0, 0.25, this.textDistanceX, this.textDistanceY);
+            } else if (this.mouseAngle >= 0.25 && this.mouseAngle < 0.5) {
+                textOffset = mapLinear$1(this.mouseAngle, 0.25, 0.5, this.textDistanceY, this.textDistanceX);
+            } else if (this.mouseAngle >= 0.5 && this.mouseAngle < 0.75) {
+                textOffset = mapLinear$1(this.mouseAngle, 0.5, 0.75, this.textDistanceX, this.textDistanceY);
+            } else if (this.mouseAngle >= 0.75 && this.mouseAngle <= 1) {
+                textOffset = mapLinear$1(this.mouseAngle, 0.75, 1, this.textDistanceY, this.textDistanceX);
+            }
+
+            angle = this.mouseAngle * TwoPI;
+
+            const c = Math.cos(angle);
+            const s = Math.sin(angle);
+            const r0 = this.radius - textOffset;
+            const r1 = this.radius;
+            const r2 = radius - 2;
+            const r3 = radius;
+            const x0 = this.middle + r0 * c;
+            const y0 = this.middle + r0 * s;
+            const x1 = this.middle + r1 * c;
+            const y1 = this.middle + r1 * s;
+            const x2 = this.middle + r2 * c;
+            const y2 = this.middle + r2 * s;
+            const x3 = this.middle + r3 * c;
+            const y3 = this.middle + r3 * s;
+
+            if (this.props.handleAlpha < 0.001) {
+                this.context.globalAlpha = 0;
+            } else {
+                this.context.globalAlpha = this.props.handleAlpha;
+            }
+
+            this.context.lineWidth = 1;
+            this.context.strokeStyle = this.lineColors.handle;
+
+            this.context.beginPath();
+            this.context.moveTo(x1, y1);
+            this.context.lineTo(x2, y2);
+            this.context.stroke();
+
+            this.context.beginPath();
+            this.context.arc(x3, y3, 2.5, 0, TwoPI);
+            this.context.stroke();
+
+            this.info.css({ left: x0, top: y0 });
+            this.info.text(value.toFixed(this.precision));
+        }
+    }
+
+    drawPath(h, array, ghost) {
+        if (ghost) {
+            this.context.globalAlpha = 0.35;
+        } else {
+            this.context.globalAlpha = this.props.alpha;
+        }
+
+        // Draw graph line
+        this.context.lineWidth = 1.5;
+
+        if (this.noGradient) {
+            this.context.strokeStyle = this.lineColors.graph;
+        } else {
+            this.context.strokeStyle = this.strokeStyle;
+            this.context.fillStyle = this.fillStyle;
+            this.context.shadowColor = 'rgb(255 255 255 / 0.2)';
+            this.context.shadowBlur = 15;
+        }
+
+        if (!this.noHover && this.graphNeedsUpdate && !ghost) {
+            this.points.length = 0;
+
+            let end = 0;
+
+            for (let i = 0, l = array.length, il = this.segments.length; i < il; i++) {
+                const start = end;
+                end += this.segments[i];
+
+                const startAngle = (start / l) * TwoPI;
+                const segmentSlice = (this.segments[i] / l) * TwoPI;
+
+                for (let j = 0, jl = this.segments[i]; j < jl; j++) {
+                    const radius = this.middle - (this.graphHeight - array[start + j] * this.rangeHeight[i]);
+
+                    if (j === 0) {
+                        const rad0 = this.startAngle + startAngle + segmentSlice * ((j - 1) / (jl - 1));
+                        const rad1 = this.startAngle + startAngle;
+
+                        this.points[j] = {
+                            x: this.middle + radius * Math.cos(rad0),
+                            y: this.middle + radius * Math.sin(rad0)
+                        };
+
+                        this.points[j + 1] = {
+                            x: this.middle + radius * Math.cos(rad1),
+                            y: this.middle + radius * Math.sin(rad1)
+                        };
+                    } else if (j !== jl - 1) {
+                        const rad = this.startAngle + startAngle + segmentSlice * (j / (jl - 1));
+
+                        this.points[j + 1] = {
+                            x: this.middle + radius * Math.cos(rad),
+                            y: this.middle + radius * Math.sin(rad)
+                        };
+                    } else if (j === jl - 1) {
+                        const rad0 = this.startAngle + startAngle + segmentSlice;
+                        const rad1 = this.startAngle + startAngle + segmentSlice * ((j + 1) / (jl - 1));
+
+                        this.points[j + 1] = {
+                            x: this.middle + radius * Math.cos(rad0),
+                            y: this.middle + radius * Math.sin(rad0)
+                        };
+
+                        this.points[j + 2] = {
+                            x: this.middle + radius * Math.cos(rad1),
+                            y: this.middle + radius * Math.sin(rad1)
+                        };
+                    }
+                }
+
+                this.graphs[i].pathData += `M ${this.points[1].x} ${this.points[1].y}`;
+
+                for (let j = 1, jl = this.points.length; j < jl - 2; j++) {
+                    const p0 = this.points[j - 1];
+                    const p1 = this.points[j];
+                    const p2 = this.points[j + 1];
+                    const p3 = this.points[j + 2];
+
+                    const cp1x = p1.x + (p2.x - p0.x) / this.tension;
+                    const cp1y = p1.y + (p2.y - p0.y) / this.tension;
+
+                    const cp2x = p2.x - (p3.x - p1.x) / this.tension;
+                    const cp2y = p2.y - (p3.y - p1.y) / this.tension;
+
+                    this.graphs[i].pathData += ` C ${cp1x} ${cp1y} ${cp2x} ${cp2y} ${p2.x} ${p2.y}`;
+                }
+            }
+        }
+
+        this.points.length = 0;
+
+        let end = 0;
+
+        for (let i = 0, l = array.length, il = this.segments.length; i < il; i++) {
+            const start = end;
+            end += this.segments[i];
+
+            const startAngle = (start / l) * TwoPI;
+            const endAngle = (end / l) * TwoPI;
+            const segmentSlice = (this.segments[i] / l) * TwoPI;
+
+            for (let j = 0, jl = this.segments[i]; j < jl; j++) {
+                const radius = this.middle - (h - array[start + j] * this.rangeHeight[i] * this.props.yMultiplier - 1);
+
+                if (j === 0) {
+                    const rad0 = this.startAngle + startAngle + segmentSlice * ((j - 1) / (jl - 1));
+                    const rad1 = this.startAngle + startAngle;
+
+                    this.points[j] = {
+                        x: this.middle + radius * Math.cos(rad0),
+                        y: this.middle + radius * Math.sin(rad0)
+                    };
+
+                    this.points[j + 1] = {
+                        x: this.middle + radius * Math.cos(rad1),
+                        y: this.middle + radius * Math.sin(rad1)
+                    };
+                } else if (j !== jl - 1) {
+                    const rad = this.startAngle + startAngle + segmentSlice * (j / (jl - 1));
+
+                    this.points[j + 1] = {
+                        x: this.middle + radius * Math.cos(rad),
+                        y: this.middle + radius * Math.sin(rad)
+                    };
+                } else if (j === jl - 1) {
+                    const rad0 = this.startAngle + startAngle + segmentSlice;
+                    const rad1 = this.startAngle + startAngle + segmentSlice * ((j + 1) / (jl - 1));
+
+                    this.points[j + 1] = {
+                        x: this.middle + radius * Math.cos(rad0),
+                        y: this.middle + radius * Math.sin(rad0)
+                    };
+
+                    this.points[j + 2] = {
+                        x: this.middle + radius * Math.cos(rad1),
+                        y: this.middle + radius * Math.sin(rad1)
+                    };
+                }
+            }
+
+            if (this.props.progress === 1) {
+                this.context.beginPath();
+                this.context.moveTo(this.points[1].x, this.points[1].y);
+
+                for (let j = 1, jl = this.points.length; j < jl - 2; j++) {
+                    const p0 = this.points[j - 1];
+                    const p1 = this.points[j];
+                    const p2 = this.points[j + 1];
+                    const p3 = this.points[j + 2];
+
+                    const cp1x = p1.x + (p2.x - p0.x) / this.tension;
+                    const cp1y = p1.y + (p2.y - p0.y) / this.tension;
+
+                    const cp2x = p2.x - (p3.x - p1.x) / this.tension;
+                    const cp2y = p2.y - (p3.y - p1.y) / this.tension;
+
+                    this.context.bezierCurveTo(cp1x, cp1y, cp2x, cp2y, p2.x, p2.y);
+                }
+
+                this.context.stroke();
+
+                // Draw radial gradient fill
+                if (!this.noGradient) {
+                    const radius = this.middle - h;
+                    const x0 = this.middle + radius * Math.cos(this.startAngle + endAngle);
+                    const y0 = this.middle + radius * Math.sin(this.startAngle + endAngle);
+                    const x1 = this.middle + radius * Math.cos(this.startAngle + startAngle);
+                    const y1 = this.middle + radius * Math.sin(this.startAngle + startAngle);
+
+                    this.context.shadowBlur = 0;
+                    this.context.lineTo(x0, y0);
+                    this.context.lineTo(x1, y1);
+                    this.context.fill();
+                }
+            }
+        }
+
+        // Inner circle hole
+        if (this.props.progress === 1) {
+            this.context.save();
+            this.context.fillStyle = '#000';
+            this.context.globalCompositeOperation = 'destination-out';
+            this.context.beginPath();
+            this.context.arc(this.middle, this.middle, this.radius, 0, TwoPI);
+            this.context.fill();
+            this.context.restore();
+        } else {
+            this.context.beginPath();
+            this.context.arc(this.middle, this.middle, this.middle - h, this.startAngle, this.startAngle + TwoPI * this.props.progress);
+            this.context.stroke();
+        }
+    }
+
+    hoverIn(force) {
+        if (this.hoveredIn && !force) {
+            return;
+        }
+
+        this.hoveredIn = true;
+
+        clearTween(this.props);
+
+        tween(this.props, { handleAlpha: 1 }, 275, 'easeInOutCubic', null, () => {
             this.needsUpdate = true;
         });
 
-        this.info.clearTween().tween({ opacity: 0 }, 275, 'easeInOutCubic', () => {
+        this.info.clearTween();
+        this.info.visible();
+        this.info.tween({ opacity: 1 }, 275, 'easeInOutCubic');
+    }
+
+    hoverOut(fast) {
+        if (!this.hoveredIn) {
+            return;
+        }
+
+        this.hoveredIn = false;
+
+        clearTween(this.props);
+
+        this.info.clearTween();
+
+        if (fast) {
+            this.props.handleAlpha = 0;
+            this.needsUpdate = true;
+
+            this.info.css({ opacity: 0 });
             this.info.invisible();
-        });
+        } else {
+            tween(this.props, { handleAlpha: 0 }, 275, 'easeInOutCubic', null, () => {
+                this.needsUpdate = true;
+            });
+
+            this.info.tween({ opacity: 0 }, 275, 'easeInOutCubic', () => {
+                this.info.invisible();
+            });
+        }
     }
 
     animateIn() {
@@ -72586,7 +74129,7 @@ class ReticleInfo extends Interface {
         this.primary = new Interface('.primary');
         this.primary.css({
             fontVariantNumeric: 'tabular-nums',
-            lineHeight: 18,
+            lineHeight: 'var(--ui-title-line-height)',
             letterSpacing: 'var(--ui-number-letter-spacing)',
             whiteSpace: 'nowrap'
         });
@@ -72632,6 +74175,7 @@ class Reticle extends Interface {
         this.width = size;
         this.height = size;
         this.position = new Vector2();
+        this.animatedIn = false;
 
         this.init();
     }
@@ -72686,11 +74230,15 @@ class Reticle extends Interface {
         this.clearTween();
         this.visible();
         this.css({ scale: 0.25, opacity: 0 }).tween({ scale: 1, opacity: 1 }, 400, 'easeOutCubic');
+
+        this.animatedIn = true;
     }
 
     animateOut(callback) {
         this.clearTween().tween({ scale: 0, opacity: 0 }, 500, 'easeInCubic', () => {
             this.invisible();
+
+            this.animatedIn = false;
 
             if (callback) {
                 callback();
@@ -72909,6 +74457,381 @@ class ProgressCanvas extends Interface {
         this.removeListeners();
 
         clearTween(this);
+
+        return super.destroy();
+    }
+}
+
+/**
+ * @author pschroen / https://ufo.ai/
+ */
+
+
+class InputField extends Interface {
+    constructor({
+        placeholder = '',
+        maxlength = '',
+        noLine = false,
+        forceFocus = false
+    }) {
+        super('.field');
+
+        this.placeholder = placeholder;
+        this.maxlength = maxlength;
+        this.noLine = noLine;
+        this.forceFocus = forceFocus;
+
+        this.lastValue = '';
+        this.isFocused = false;
+
+        this.init();
+        this.setAttributes();
+
+        this.addListeners();
+    }
+
+    init() {
+        this.css({
+            position: 'relative',
+            height: this.maxlength && !this.noLine ? 26 : 19,
+            pointerEvents: 'none',
+            opacity: 0.7
+        });
+
+        this.input = new Interface(null, 'input');
+        this.input.css({
+            width: '100%',
+            height: this.maxlength && !this.noLine ? 25 : 19,
+            backgroundColor: 'transparent',
+            fontSize: 'var(--ui-title-font-size)',
+            lineHeight: 'normal',
+            letterSpacing: 'var(--ui-title-letter-spacing)',
+            color: 'var(--ui-color)',
+            resize: 'none'
+        });
+        this.add(this.input);
+
+        if (this.maxlength && !this.noLine) {
+            this.line = new Interface('.line');
+            this.line.css({
+                position: 'absolute',
+                left: 0,
+                right: 0,
+                bottom: 0,
+                height: 1,
+                backgroundColor: 'var(--ui-color)',
+                transformOrigin: 'left center',
+                scaleX: 0,
+                opacity: 0
+            });
+            this.add(this.line);
+        }
+    }
+
+    setAttributes() {
+        this.input.element.setAttribute('name', 'inputField');
+        this.input.element.setAttribute('autocomplete', 'off');
+        this.input.element.setAttribute('autocapitalize', 'off');
+        this.input.element.setAttribute('autocorrect', 'off');
+        this.input.element.setAttribute('spellcheck', 'false');
+        this.input.element.setAttribute('placeholder', this.placeholder);
+        this.input.element.setAttribute('maxlength', this.maxlength);
+    }
+
+    addListeners() {
+        this.input.element.addEventListener('focus', this.onFocus);
+        this.input.element.addEventListener('blur', this.onBlur);
+        this.input.element.addEventListener('keydown', this.onKeyDown);
+        this.input.element.addEventListener('keyup', this.onKeyUp);
+        this.element.addEventListener('mouseenter', this.onHover);
+        this.element.addEventListener('mouseleave', this.onHover);
+
+        if (this.forceFocus) {
+            window.addEventListener('keypress', this.onForceFocus);
+        }
+    }
+
+    removeListeners() {
+        this.input.element.removeEventListener('focus', this.onFocus);
+        this.input.element.removeEventListener('blur', this.onBlur);
+        this.input.element.removeEventListener('keydown', this.onKeyDown);
+        this.input.element.removeEventListener('keyup', this.onKeyUp);
+        this.element.removeEventListener('mouseenter', this.onHover);
+        this.element.removeEventListener('mouseleave', this.onHover);
+
+        if (this.forceFocus) {
+            window.removeEventListener('keypress', this.onForceFocus);
+        }
+    }
+
+    // Event handlers
+
+    onFocus = () => {
+        this.onHover({ type: 'mouseenter' });
+
+        this.isFocused = true;
+    };
+
+    onBlur = () => {
+        this.isFocused = false;
+
+        this.onHover({ type: 'mouseleave' });
+    };
+
+    onKeyDown = e => {
+        if (e.keyCode === 13) { // Enter
+            e.preventDefault();
+        }
+    };
+
+    onKeyUp = e => {
+        if (e.keyCode === 13) { // Enter
+            this.events.emit('complete');
+        }
+
+        const value = this.input.element.value;
+
+        if (value !== this.lastValue) {
+            this.lastValue = value;
+
+            this.events.emit('typing', { text: value });
+        }
+    };
+
+    onHover = e => {
+        if (this.isFocused) {
+            return;
+        }
+
+        if (this.line) {
+            this.line.clearTween();
+
+            if (e.type === 'mouseenter') {
+                this.line.tween({ scaleX: 1, opacity: 0.3 }, 800, 'easeOutQuint');
+            } else {
+                this.line.tween({ opacity: 0 }, 200, 'easeInOutSine', () => {
+                    this.line.css({ scaleX: 0 });
+                });
+            }
+        }
+
+        this.events.emit('hover', e);
+    };
+
+    onForceFocus = () => {
+        if (this.isFocused) {
+            return;
+        }
+
+        this.focus();
+    };
+
+    // Public methods
+
+    setValue(value) {
+        this.input.element.value = value;
+        this.lastValue = value;
+    }
+
+    focus() {
+        this.input.element.focus();
+        this.onFocus();
+    }
+
+    blur() {
+        this.input.element.blur();
+        this.onBlur();
+    }
+
+    destroy() {
+        this.removeListeners();
+
+        return super.destroy();
+    }
+}
+
+/**
+ * @author pschroen / https://ufo.ai/
+ */
+
+
+class InputTotal extends Interface {
+    constructor({
+        maxlength
+    }) {
+        super('.total');
+
+        this.maxlength = maxlength;
+
+        this.length = 0;
+        this.animatedIn = false;
+
+        this.init();
+    }
+
+    init() {
+        this.css({
+            position: 'absolute',
+            left: 0,
+            right: 0,
+            bottom: 0,
+            height: 15,
+            opacity: 0
+        });
+
+        this.info = new Interface('.info');
+        this.info.css({
+            fontSize: 'var(--ui-secondary-font-size)',
+            letterSpacing: 'var(--ui-secondary-letter-spacing)',
+            opacity: 0.9
+        });
+        this.info.text(`${this.length}/${this.maxlength}`);
+        this.add(this.info);
+    }
+
+    // Public methods
+
+    setValue(value) {
+        this.length = value.length;
+
+        this.info.text(`${this.length}/${this.maxlength}`);
+    }
+
+    animateIn() {
+        if (this.animatedIn) {
+            return;
+        }
+
+        this.animatedIn = true;
+
+        this.clearTween().css({ y: 10, opacity: 0 }).tween({ y: 0, opacity: 1 }, 500, 'easeOutCubic');
+    }
+
+    animateOut() {
+        this.animatedIn = false;
+
+        this.clearTween().tween({ opacity: 0 }, 200, 'easeInOutSine');
+    }
+}
+
+/**
+ * @author pschroen / https://ufo.ai/
+ */
+
+
+class Input extends Interface {
+    constructor(data = {}) {
+        super('.input');
+
+        this.data = data;
+
+        this.isComplete = false;
+
+        this.init();
+        this.initViews();
+
+        this.addListeners();
+    }
+
+    init() {
+        this.invisible();
+        this.css({
+            height: this.data.maxlength ? 45 : 19,
+            zIndex: 99999,
+            opacity: 0
+        });
+    }
+
+    initViews() {
+        this.input = new InputField(this.data);
+        this.add(this.input);
+
+        if (this.data.maxlength) {
+            this.total = new InputTotal(this.data);
+            this.add(this.total);
+        }
+    }
+
+    addListeners() {
+        this.input.events.on('hover', this.onHover);
+        this.input.events.on('typing', this.onTyping);
+        this.input.events.on('complete', this.onComplete);
+    }
+
+    removeListeners() {
+        this.input.events.off('hover', this.onHover);
+        this.input.events.off('typing', this.onTyping);
+        this.input.events.off('complete', this.onComplete);
+    }
+
+    // Event handlers
+
+    onHover = ({ type }) => {
+        if (type === 'mouseenter') {
+            this.input.tween({ opacity: 1 }, 200, 'easeOutSine');
+
+            if (this.total) {
+                this.total.animateIn();
+            }
+        } else {
+            this.input.tween({ opacity: 0.7 }, 200, 'easeOutSine');
+
+            if (this.total) {
+                this.total.animateOut();
+            }
+        }
+    };
+
+    onTyping = ({ text }) => {
+        if (this.total) {
+            this.total.setValue(text);
+        }
+
+        this.events.emit('update', { value: text, target: this });
+    };
+
+    onComplete = () => {
+        this.isComplete = true;
+
+        this.events.emit('complete', { target: this });
+    };
+
+    // Public methods
+
+    setValue(value) {
+        this.input.setValue(value);
+
+        if (this.total) {
+            this.total.setValue(value);
+        }
+    }
+
+    focus() {
+        this.input.focus();
+    }
+
+    blur() {
+        this.input.blur();
+    }
+
+    animateIn() {
+        this.visible();
+
+        return this.tween({ opacity: 1 }, 400, 'easeOutCubic', () => {
+            this.input.css({ pointerEvents: 'auto' });
+        });
+    }
+
+    animateOut() {
+        this.input.css({ pointerEvents: 'none' });
+
+        return this.tween({ opacity: 0 }, 600, 'easeInOutSine', () => {
+            this.invisible();
+        });
+    }
+
+    destroy() {
+        this.removeListeners();
 
         return super.destroy();
     }
@@ -73356,9 +75279,7 @@ class Magnetic extends Component {
         }
     };
 
-    onPointerUp = e => {
-        this.onPointerMove(e);
-
+    onPointerUp = () => {
         this.onHover({ type: 'out' });
     };
 
@@ -73811,9 +75732,8 @@ out vec3 vWorldNormal;
 out vec3 vViewDirection;
 
 void main() {
-    vec4 worldPosition = modelMatrix * vec4(position, 1.0);
     vWorldNormal = normalize(modelMatrix * vec4(normal, 0.0)).xyz;
-    vViewDirection = normalize(cameraPosition - worldPosition.xyz);
+    vViewDirection = normalize(cameraPosition - (modelMatrix * vec4(position, 1.0)).xyz);
 
     vec4 mvPosition = vec4(position, 1.0);
 
@@ -76105,8 +78025,8 @@ in vec3 normal;
 in vec2 uv;
 
 uniform mat4 modelMatrix;
+uniform mat4 modelViewMatrix;
 uniform mat4 projectionMatrix;
-uniform mat4 viewMatrix;
 uniform mat3 normalMatrix;
 uniform vec3 cameraPosition;
 
@@ -76122,12 +78042,9 @@ void main() {
     vUv = (uMapTransform * vec3(uv, 1.0)).xy;
     vCoord = uMatrix * vec4(position, 1.0);
     vNormal = normalMatrix * normal;
+    vToEye = cameraPosition - (modelMatrix * vec4(position, 1.0)).xyz;
 
-    vec4 worldPosition = modelMatrix * vec4(position, 1.0);
-    vToEye = cameraPosition - worldPosition.xyz;
-
-    vec4 mvPosition = viewMatrix * worldPosition;
-    gl_Position = projectionMatrix * mvPosition;
+    gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
 }
 `;
 
@@ -76300,8 +78217,8 @@ in vec3 normal;
 in vec2 uv;
 
 uniform mat4 modelMatrix;
+uniform mat4 modelViewMatrix;
 uniform mat4 projectionMatrix;
-uniform mat4 viewMatrix;
 uniform mat3 normalMatrix;
 uniform vec3 cameraPosition;
 
@@ -76317,12 +78234,9 @@ void main() {
     vUv = (uMapTransform * vec3(uv, 1.0)).xy;
     vCoord = uMatrix * vec4(position, 1.0);
     vNormal = normalMatrix * normal;
+    vToEye = cameraPosition - (modelMatrix * vec4(position, 1.0)).xyz;
 
-    vec4 worldPosition = modelMatrix * vec4(position, 1.0);
-    vToEye = cameraPosition - worldPosition.xyz;
-
-    vec4 mvPosition = viewMatrix * worldPosition;
-    gl_Position = projectionMatrix * mvPosition;
+    gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
 }
 `;
 
@@ -120431,16 +122345,6 @@ class GLTFLoader extends Loader {
 
 	}
 
-	setDDSLoader() {
-
-		throw new Error(
-
-			'THREE.GLTFLoader: "MSFT_texture_dds" no longer supported. Please update to "KHR_texture_basisu".'
-
-		);
-
-	}
-
 	setKTX2Loader( ktx2Loader ) {
 
 		this.ktx2Loader = ktx2Loader;
@@ -123317,6 +125221,9 @@ class GLTFParser {
 
 				}
 
+				// Ignore normalized since we copy from sparse
+				bufferAttribute.normalized = false;
+
 				for ( let i = 0, il = sparseIndices.length; i < il; i ++ ) {
 
 					const index = sparseIndices[ i ];
@@ -123328,6 +125235,8 @@ class GLTFParser {
 					if ( itemSize >= 5 ) throw new Error( 'THREE.GLTFLoader: Unsupported itemSize in sparse BufferAttribute.' );
 
 				}
+
+				bufferAttribute.normalized = normalized;
 
 			}
 
@@ -126400,4 +128309,4 @@ function interceptControlUp( event ) {
 
 }
 
-export { ACESFilmicToneMapping, ACESFilmicToneMappingMaterial, AddEquation, AddOperation, AdditiveAnimationBlendMode, AdditiveBlending, AfterimageMaterial, AgXToneMapping, AlphaFormat, AlwaysCompare, AlwaysDepth, AlwaysStencilFunc, AmbientLight, AmbientLightPanel, AnimationAction, AnimationClip, AnimationLoader, AnimationMixer, AnimationObjectGroup, AnimationUtils, ArcCurve, ArrayCamera, ArrowHelper, AssetLoader, AttachedBindMode, Audio$1 as Audio, AudioAnalyser, AudioButton, AudioButtonInfo, AudioContext$1 as AudioContext, AudioListener, AudioLoader, AxesHelper, BackSide, BadTVMaterial, BasicDepthPacking, BasicMaterial, BasicMaterialCommonPanel, BasicMaterialEnvPanel, BasicMaterialOptions, BasicMaterialPanel, BasicShadowMap, BatchedMesh, BloomCompositeMaterial, BlurMaterial, BokehBlurMaterial1, BokehBlurMaterial2, Bone, BooleanKeyframeTrack, Box2, Box3, Box3Helper, BoxGeometry$2 as BoxGeometry, BoxHelper, BufferAttribute, BufferGeometry, BufferGeometryLoader, BufferGeometryLoaderThread, BufferLoader, ByteType, Cache, Camera, CameraHelper, CanvasTexture, CapsuleGeometry$2 as CapsuleGeometry, CatmullRomCurve3, ChromaticAberrationMaterial, CineonToneMapping, CircleGeometry, ClampToEdgeWrapping, Clock, Cluster, Color$1 as Color, ColorKeyframeTrack, ColorManagement, ColorMaterial, ColorPicker, ColorSpaceOptions, CombineOptions, Component, CompressedArrayTexture, CompressedCubeTexture, CompressedTexture, CompressedTextureLoader, ConeGeometry$2 as ConeGeometry, ConstantAlphaFactor, ConstantColorFactor, Content, Controls, CopyMaterial, CubeCamera, CubeReflectionMapping, CubeRefractionMapping, CubeTexture, CubeTextureLoader, CubeUVReflectionMapping, CubicBezierCurve, CubicBezierCurve3, CubicInterpolant, CullFaceBack, CullFaceFront, CullFaceFrontBack, CullFaceNone, Curve, CurvePath, CustomBlending, CustomToneMapping, CylinderGeometry$2 as CylinderGeometry, Cylindrical, Data3DTexture, DataArrayTexture, DataTexture, DataTextureLoader, DataUtils, DecrementStencilOp, DecrementWrapStencilOp, DefaultLoadingManager, DepthFormat, DepthMaskMaterial, DepthMaterial, DepthStencilFormat, DepthTexture, DetachedBindMode, Details, DetailsButton, DetailsInfo, DetailsLink, DetailsTitle, DirectionalLight, DirectionalLightHelper, DirectionalLightPanel, DiscardMaterial, DiscreteInterpolant, DisplayOptions, DisplayP3ColorSpace, DodecahedronGeometry, DoubleSide, DstAlphaFactor, DstColorFactor, DynamicCopyUsage, DynamicDrawUsage, DynamicReadUsage, Easing, EdgesGeometry, EllipseCurve, EnvironmentTextureLoader, EqualCompare, EqualDepth, EqualStencilFunc, EquirectangularReflectionMapping, EquirectangularRefractionMapping, Euler, EventDispatcher, EventEmitter, ExtrudeGeometry, FXAAMaterial, FastGaussianBlurMaterial, FileLoader, FlatShadingOptions, Float16BufferAttribute, Float32BufferAttribute, FloatType, Flowmap, Fluid, Fog, FogExp2, FramebufferTexture, FresnelMaterial, FrontSide, Frustum, GLBufferAttribute, GLSL1, GLSL3, GLTFLoader, GammaCorrectionMaterial, Graph, GraphSegments, GreaterCompare, GreaterDepth, GreaterEqualCompare, GreaterEqualDepth, GreaterEqualStencilFunc, GreaterStencilFunc, GridHelper, Group, HalfFloatType, Header, HeaderInfo, HelperOptions, HemisphereLight, HemisphereLightHelper, HemisphereLightPanel, IcosahedronGeometry, ImageBitmapLoader$1 as ImageBitmapLoader, ImageBitmapLoaderThread, ImageLoader, ImageUtils, IncrementStencilOp, IncrementWrapStencilOp, Info, InstanceOptions, InstancedBufferAttribute, InstancedBufferGeometry, InstancedInterleavedBuffer, InstancedMesh, InstancedMeshPanel, Int16BufferAttribute, Int32BufferAttribute, Int8BufferAttribute, IntType, Interface, InterleavedBuffer, InterleavedBufferAttribute, Interpolant, InterpolateDiscrete, InterpolateLinear, InterpolateSmooth, InvertStencilOp, KeepStencilOp, KeyframeTrack, LOD, LambertMaterialCommonPanel, LambertMaterialEnvPanel, LambertMaterialOptions, LambertMaterialPanel, LatheGeometry, Layers, LensflareMaterial, LessCompare, LessDepth, LessEqualCompare, LessEqualDepth, LessEqualStencilFunc, LessStencilFunc, Light, LightOptions, LightPanelController, LightProbe, Line, Line3, LineBasicMaterial, LineCanvas, LineCurve, LineCurve3, LineDashedMaterial, LineLoop, LineSegments, LinearDisplayP3ColorSpace, LinearFilter, LinearInterpolant, LinearMipMapLinearFilter, LinearMipMapNearestFilter, LinearMipmapLinearFilter, LinearMipmapNearestFilter, LinearSRGBColorSpace, LinearToneMapping, LinearTransfer, Link, LinkedList, List, ListSelect, ListToggle, Loader$1 as Loader, LoaderUtils, LoadingManager, LoopOnce, LoopPingPong, LoopRepeat, LuminanceAlphaFormat, LuminanceFormat, LuminosityMaterial, MOUSE, Magnetic, MapPanel, MaskMaterial, MatcapMaterialCommonPanel, MatcapMaterialOptions, MatcapMaterialPanel, Material, MaterialLoader, MaterialOptions, MaterialPanelController, MaterialPanels, MaterialPatches, MathUtils, Matrix2, Matrix3, Matrix4, MaxEquation, Menu, MenuItem, Mesh, MeshBasicMaterial, MeshDepthMaterial, MeshDistanceMaterial, MeshHelperPanel, MeshLambertMaterial, MeshMatcapMaterial, MeshNormalMaterial, MeshPhongMaterial, MeshPhysicalMaterial, MeshStandardMaterial, MeshToonMaterial, MinEquation, MirroredRepeatWrapping, MixOperation, MotionBlur, MotionBlurCompositeMaterial, MotionBlurVelocityMaterial, MultiLoader, MultiplyBlending, MultiplyOperation, MuteButton, NavLink, NearestFilter, NearestMipMapLinearFilter, NearestMipMapNearestFilter, NearestMipmapLinearFilter, NearestMipmapNearestFilter, NeutralToneMapping, NeverCompare, NeverDepth, NeverStencilFunc, NoBlending, NoColorSpace, NoToneMapping, NormalAnimationBlendMode, NormalBlending, NormalMaterial, NormalMaterialCommonPanel, NormalMaterialOptions, NormalMaterialPanel, NormalsHelperOptions, NotEqualCompare, NotEqualDepth, NotEqualStencilFunc, NumberKeyframeTrack, Object3D, ObjectLoader, ObjectPool, ObjectSpaceNormalMap, OctahedronGeometry, OimoPhysics, OimoPhysicsBuffer, OimoPhysicsController, OimoPhysicsPanel, OneFactor, OneMinusConstantAlphaFactor, OneMinusConstantColorFactor, OneMinusDstAlphaFactor, OneMinusDstColorFactor, OneMinusSrcAlphaFactor, OneMinusSrcColorFactor, OrbitControls, OrthographicCamera, P3Primaries, PCFShadowMap, PCFSoftShadowMap, PI, PI60, PI90, PMREMGenerator, Panel, PanelGraph, PanelItem, PanelLink, PanelThumbnail, Path, PerspectiveCamera, PhongMaterialCommonPanel, PhongMaterialEnvPanel, PhongMaterialOptions, PhongMaterialPanel, PhongMaterialPatches, PhysicalMaterialAnisotropyPanel, PhysicalMaterialClearcoatPanel, PhysicalMaterialCommonPanel, PhysicalMaterialEnvPanel, PhysicalMaterialIridescencePanel, PhysicalMaterialOptions, PhysicalMaterialPanel, PhysicalMaterialSheenPanel, PhysicalMaterialTransmissionPanel, Plane, PlaneGeometry, PlaneHelper, Point, Point3D, PointInfo, PointLight, PointLightHelper, PointLightPanel, Points, PointsMaterial, PoissonDiscBlurMaterial, PolarGridHelper, PolyhedronGeometry, PositionalAudio, Progress, ProgressCanvas, PropertyBinding, PropertyMixer, QuadraticBezierCurve, QuadraticBezierCurve3, Quaternion, QuaternionKeyframeTrack, QuaternionLinearInterpolant, RED_GREEN_RGTC2_Format, RED_RGTC1_Format, REVISION, RGBADepthPacking, RGBAFormat, RGBAIntegerFormat, RGBA_ASTC_10x10_Format, RGBA_ASTC_10x5_Format, RGBA_ASTC_10x6_Format, RGBA_ASTC_10x8_Format, RGBA_ASTC_12x10_Format, RGBA_ASTC_12x12_Format, RGBA_ASTC_4x4_Format, RGBA_ASTC_5x4_Format, RGBA_ASTC_5x5_Format, RGBA_ASTC_6x5_Format, RGBA_ASTC_6x6_Format, RGBA_ASTC_8x5_Format, RGBA_ASTC_8x6_Format, RGBA_ASTC_8x8_Format, RGBA_BPTC_Format, RGBA_ETC2_EAC_Format, RGBA_PVRTC_2BPPV1_Format, RGBA_PVRTC_4BPPV1_Format, RGBA_S3TC_DXT1_Format, RGBA_S3TC_DXT3_Format, RGBA_S3TC_DXT5_Format, RGBDepthPacking, RGBFormat, RGBIntegerFormat, RGBMaterial, RGB_BPTC_SIGNED_Format, RGB_BPTC_UNSIGNED_Format, RGB_ETC1_Format, RGB_ETC2_Format, RGB_PVRTC_2BPPV1_Format, RGB_PVRTC_4BPPV1_Format, RGB_S3TC_DXT1_Format, RGDepthPacking, RGFormat, RGIntegerFormat, RadialGraph, RawShaderMaterial, Ray, Raycaster, Rec709Primaries, RectAreaLight, RectAreaLightPanel, RedFormat, RedIntegerFormat, Reflector, ReflectorBlurMaterial, ReflectorDudvMaterial, ReflectorMaterial, ReinhardToneMapping, RenderTarget, RepeatWrapping, ReplaceStencilOp, Reticle, ReticleCanvas, ReticleInfo, ReverseSubtractEquation, RigidBodyConfig$1 as RigidBodyConfig, RigidBodyType$1 as RigidBodyType, RingGeometry, Router, SIGNED_RED_GREEN_RGTC2_Format, SIGNED_RED_RGTC1_Format, SMAABlendMaterial, SMAAEdgesMaterial, SMAAWeightsMaterial, SRGBColorSpace, SRGBTransfer, SVGLoader, Scene, SceneCompositeAddMaterial, SceneCompositeDistortionMaterial, SceneCompositeMaterial, ShaderChunk, ShaderLib, ShaderMaterial, ShadowMaterial, ShadowTextureMaterial, Shape$2 as Shape, ShapeGeometry, ShapePath, ShapeUtils, ShortType, SideOptions, Skeleton, SkeletonHelper, SkinnedMesh, Slider, Smooth, SmoothSkew, SmoothViews, SoftShadows, Sound, Sound3D, Source, Sphere, SphereGeometry$2 as SphereGeometry, Spherical, SphericalHarmonics3, SphericalJointConfig$1 as SphericalJointConfig, SplineCurve, SpotLight, SpotLightHelper, SpotLightPanel, Sprite, SpriteMaterial, SrcAlphaFactor, SrcAlphaSaturateFactor, SrcColorFactor, Stage, StandardMaterialCommonPanel, StandardMaterialEnvPanel, StandardMaterialOptions, StandardMaterialPanel, StandardMaterialPatches, StaticCopyUsage, StaticDrawUsage, StaticReadUsage, StereoCamera, StreamCopyUsage, StreamDrawUsage, StreamReadUsage, StringKeyframeTrack, SubtractEquation, SubtractiveBlending, TOUCH, TangentSpaceNormalMap, TangentsHelperOptions, TargetNumber, TetrahedronGeometry, Text, TextMaterial, Texture, TextureLoader, TextureUtils, Third, Thread, Thumbnail, Ticker, TiltShiftMaterial, Title, ToneMappedOptions, ToonMaterialCommonPanel, ToonMaterialOptions, ToonMaterialPanel, TorusGeometry, TorusKnotGeometry, Tracker, Triangle, TriangleFanDrawMode, TriangleStripDrawMode, TrianglesDrawMode, TubeGeometry, Tween, TwoPI, UI, UVHelperOptions, UVMapping, Uint16BufferAttribute, Uint32BufferAttribute, Uint8BufferAttribute, Uint8ClampedBufferAttribute, Uniform, UniformsGroup, UniformsLib, UniformsUtils, UniversalJointConfig$1 as UniversalJointConfig, UnrealBloomBlurMaterial, UnrealBloomCompositeMaterial, UnsignedByteType, UnsignedInt248Type, UnsignedInt5999Type, UnsignedIntType, UnsignedShort4444Type, UnsignedShort5551Type, UnsignedShortType, VSMShadowMap, Vector2$1 as Vector2, Vector3, Vector4, VectorKeyframeTrack, VideoGlitchMaterial, VideoTexture, VisibleOptions, VolumetricLightLensflareMaterial, VolumetricLightMaterial, WebAudio, WebAudio3D, WebAudioParam, WebGL3DRenderTarget, WebGLArrayRenderTarget, WebGLCoordinateSystem, WebGLCubeRenderTarget, WebGLMultipleRenderTargets, WebGLRenderTarget, WebGLRenderer, WebGLUtils, WebGPUCoordinateSystem, WireframeGeometry, WireframeOptions, Wobble, WrapAroundEnding, WrapOptions, ZeroCurvatureEnding, ZeroFactor, ZeroSlopeEnding, ZeroStencilOp, absolute, basename, brightness, ceilPowerOfTwo$1 as ceilPowerOfTwo, clamp$1 as clamp, clearTween, createCanvasElement, defer, degToRad$1 as degToRad, delayedCall, euclideanModulo$1 as euclideanModulo, extension, floorPowerOfTwo$1 as floorPowerOfTwo, fract, getConstructor, getDoubleRenderTarget, getFrustum, getFrustumFromHeight, getFullscreenTriangle, getKeyByLight, getKeyByMaterial, getKeyByValue, getScreenSpaceBox, getSphericalCube, guid, headsTails, inverseLerp$1 as inverseLerp, isPowerOfTwo$1 as isPowerOfTwo, lerp$2 as lerp, lerpCameras, mapLinear$1 as mapLinear, parabola, pcurve, radToDeg$1 as radToDeg, randFloat$1 as randFloat, randFloatSpread$1 as randFloatSpread, randInt$1 as randInt, shuffle, smootherstep$2 as smootherstep, smoothstep$1 as smoothstep, step, ticker, tween, wait };
+export { ACESFilmicToneMapping, ACESFilmicToneMappingMaterial, AddEquation, AddOperation, AdditiveAnimationBlendMode, AdditiveBlending, AfterimageMaterial, AgXToneMapping, AlphaFormat, AlwaysCompare, AlwaysDepth, AlwaysStencilFunc, AmbientLight, AmbientLightPanel, AnimationAction, AnimationClip, AnimationLoader, AnimationMixer, AnimationObjectGroup, AnimationUtils, ArcCurve, ArrayCamera, ArrowHelper, AssetLoader, AttachedBindMode, Audio$1 as Audio, AudioAnalyser, AudioButton, AudioButtonInfo, AudioContext$1 as AudioContext, AudioListener, AudioLoader, AxesHelper, BackSide, BadTVMaterial, BasicDepthPacking, BasicMaterial, BasicMaterialCommonPanel, BasicMaterialEnvPanel, BasicMaterialOptions, BasicMaterialPanel, BasicShadowMap, BatchedMesh, BloomCompositeMaterial, BlurMaterial, BokehBlurMaterial1, BokehBlurMaterial2, Bone, BooleanKeyframeTrack, Box2, Box3, Box3Helper, BoxGeometry$2 as BoxGeometry, BoxHelper, BufferAttribute, BufferGeometry, BufferGeometryLoader, BufferGeometryLoaderThread, BufferLoader, ByteType, Cache, Camera, CameraHelper, CanvasTexture, CapsuleGeometry$2 as CapsuleGeometry, CatmullRomCurve3, ChromaticAberrationMaterial, CineonToneMapping, CircleGeometry, ClampToEdgeWrapping, Clock, Cluster, Color$1 as Color, ColorKeyframeTrack, ColorManagement, ColorMaterial, ColorPicker, ColorSpaceOptions, CombineOptions, Component, CompressedArrayTexture, CompressedCubeTexture, CompressedTexture, CompressedTextureLoader, ConeGeometry$2 as ConeGeometry, ConstantAlphaFactor, ConstantColorFactor, Content, Controls, CopyMaterial, CubeCamera, CubeReflectionMapping, CubeRefractionMapping, CubeTexture, CubeTextureLoader, CubeUVReflectionMapping, CubicBezierCurve, CubicBezierCurve3, CubicInterpolant, CullFaceBack, CullFaceFront, CullFaceFrontBack, CullFaceNone, Curve, CurvePath, CustomBlending, CustomToneMapping, CylinderGeometry$2 as CylinderGeometry, Cylindrical, Data3DTexture, DataArrayTexture, DataTexture, DataTextureLoader, DataUtils, DecrementStencilOp, DecrementWrapStencilOp, DefaultLoadingManager, DepthFormat, DepthMaskMaterial, DepthMaterial, DepthStencilFormat, DepthTexture, DetachedBindMode, Details, DetailsButton, DetailsInfo, DetailsLink, DetailsTitle, DirectionalLight, DirectionalLightHelper, DirectionalLightPanel, DiscardMaterial, DiscreteInterpolant, DisplayOptions, DisplayP3ColorSpace, DodecahedronGeometry, DoubleSide, DstAlphaFactor, DstColorFactor, DynamicCopyUsage, DynamicDrawUsage, DynamicReadUsage, Easing, EdgesGeometry, EllipseCurve, EnvironmentTextureLoader, EqualCompare, EqualDepth, EqualStencilFunc, EquirectangularReflectionMapping, EquirectangularRefractionMapping, Euler, EventDispatcher, EventEmitter, ExtrudeGeometry, FXAAMaterial, FastGaussianBlurMaterial, FileLoader, FlatShadingOptions, Float16BufferAttribute, Float32BufferAttribute, FloatType, Flowmap, Fluid, Fog, FogExp2, FramebufferTexture, FresnelMaterial, FrontSide, Frustum, GLBufferAttribute, GLSL1, GLSL3, GLTFLoader, GammaCorrectionMaterial, Graph, GraphMarker, GraphSegments, GreaterCompare, GreaterDepth, GreaterEqualCompare, GreaterEqualDepth, GreaterEqualStencilFunc, GreaterStencilFunc, GridHelper, Group, HalfFloatType, Header, HeaderInfo, HeaderTitle, HelperOptions, HemisphereLight, HemisphereLightHelper, HemisphereLightPanel, IcosahedronGeometry, ImageBitmapLoader$1 as ImageBitmapLoader, ImageBitmapLoaderThread, ImageLoader, ImageUtils, IncrementStencilOp, IncrementWrapStencilOp, Info, Input, InputField, InputTotal, InstanceOptions, InstancedBufferAttribute, InstancedBufferGeometry, InstancedInterleavedBuffer, InstancedMesh, InstancedMeshPanel, Int16BufferAttribute, Int32BufferAttribute, Int8BufferAttribute, IntType, Interface, InterleavedBuffer, InterleavedBufferAttribute, Interpolant, InterpolateDiscrete, InterpolateLinear, InterpolateSmooth, InvertStencilOp, KeepStencilOp, KeyframeTrack, LOD, LambertMaterialCommonPanel, LambertMaterialEnvPanel, LambertMaterialOptions, LambertMaterialPanel, LatheGeometry, Layers, LensflareMaterial, LessCompare, LessDepth, LessEqualCompare, LessEqualDepth, LessEqualStencilFunc, LessStencilFunc, Light, LightOptions, LightPanelController, LightProbe, Line, Line3, LineBasicMaterial, LineCanvas, LineCurve, LineCurve3, LineDashedMaterial, LineLoop, LineSegments, LinearDisplayP3ColorSpace, LinearFilter, LinearInterpolant, LinearMipMapLinearFilter, LinearMipMapNearestFilter, LinearMipmapLinearFilter, LinearMipmapNearestFilter, LinearSRGBColorSpace, LinearToneMapping, LinearTransfer, Link, LinkedList, List, ListSelect, ListToggle, Loader$1 as Loader, LoaderUtils, LoadingManager, LoopOnce, LoopPingPong, LoopRepeat, LuminanceAlphaFormat, LuminanceFormat, LuminosityMaterial, MOUSE, Magnetic, MapPanel, MaskMaterial, MatcapMaterialCommonPanel, MatcapMaterialOptions, MatcapMaterialPanel, Material, MaterialLoader, MaterialOptions, MaterialPanelController, MaterialPanels, MaterialPatches, MathUtils, Matrix2, Matrix3, Matrix4, MaxEquation, Menu, MenuItem, Mesh, MeshBasicMaterial, MeshDepthMaterial, MeshDistanceMaterial, MeshHelperPanel, MeshLambertMaterial, MeshMatcapMaterial, MeshNormalMaterial, MeshPhongMaterial, MeshPhysicalMaterial, MeshStandardMaterial, MeshToonMaterial, MinEquation, MirroredRepeatWrapping, MixOperation, MotionBlur, MotionBlurCompositeMaterial, MotionBlurVelocityMaterial, MultiLoader, MultiplyBlending, MultiplyOperation, MuteButton, NavLink, NearestFilter, NearestMipMapLinearFilter, NearestMipMapNearestFilter, NearestMipmapLinearFilter, NearestMipmapNearestFilter, NeutralToneMapping, NeverCompare, NeverDepth, NeverStencilFunc, NoBlending, NoColorSpace, NoToneMapping, NormalAnimationBlendMode, NormalBlending, NormalMaterial, NormalMaterialCommonPanel, NormalMaterialOptions, NormalMaterialPanel, NormalsHelperOptions, NotEqualCompare, NotEqualDepth, NotEqualStencilFunc, NumberKeyframeTrack, Object3D, ObjectLoader, ObjectPool, ObjectSpaceNormalMap, OctahedronGeometry, OimoPhysics, OimoPhysicsBuffer, OimoPhysicsController, OimoPhysicsPanel, OneFactor, OneMinusConstantAlphaFactor, OneMinusConstantColorFactor, OneMinusDstAlphaFactor, OneMinusDstColorFactor, OneMinusSrcAlphaFactor, OneMinusSrcColorFactor, OrbitControls, OrthographicCamera, P3Primaries, PCFShadowMap, PCFSoftShadowMap, PI, PI60, PI90, PMREMGenerator, Panel, PanelGraph, PanelItem, PanelLink, PanelThumbnail, Path, PerspectiveCamera, PhongMaterialCommonPanel, PhongMaterialEnvPanel, PhongMaterialOptions, PhongMaterialPanel, PhongMaterialPatches, PhysicalMaterialAnisotropyPanel, PhysicalMaterialClearcoatPanel, PhysicalMaterialCommonPanel, PhysicalMaterialEnvPanel, PhysicalMaterialIridescencePanel, PhysicalMaterialOptions, PhysicalMaterialPanel, PhysicalMaterialSheenPanel, PhysicalMaterialTransmissionPanel, Plane, PlaneGeometry, PlaneHelper, Point, Point3D, PointInfo, PointLight, PointLightHelper, PointLightPanel, Points, PointsMaterial, PoissonDiscBlurMaterial, PolarGridHelper, PolyhedronGeometry, PositionalAudio, Progress, ProgressCanvas, PropertyBinding, PropertyMixer, QuadraticBezierCurve, QuadraticBezierCurve3, Quaternion, QuaternionKeyframeTrack, QuaternionLinearInterpolant, RED_GREEN_RGTC2_Format, RED_RGTC1_Format, REVISION, RGBADepthPacking, RGBAFormat, RGBAIntegerFormat, RGBA_ASTC_10x10_Format, RGBA_ASTC_10x5_Format, RGBA_ASTC_10x6_Format, RGBA_ASTC_10x8_Format, RGBA_ASTC_12x10_Format, RGBA_ASTC_12x12_Format, RGBA_ASTC_4x4_Format, RGBA_ASTC_5x4_Format, RGBA_ASTC_5x5_Format, RGBA_ASTC_6x5_Format, RGBA_ASTC_6x6_Format, RGBA_ASTC_8x5_Format, RGBA_ASTC_8x6_Format, RGBA_ASTC_8x8_Format, RGBA_BPTC_Format, RGBA_ETC2_EAC_Format, RGBA_PVRTC_2BPPV1_Format, RGBA_PVRTC_4BPPV1_Format, RGBA_S3TC_DXT1_Format, RGBA_S3TC_DXT3_Format, RGBA_S3TC_DXT5_Format, RGBDepthPacking, RGBFormat, RGBIntegerFormat, RGBMaterial, RGB_BPTC_SIGNED_Format, RGB_BPTC_UNSIGNED_Format, RGB_ETC1_Format, RGB_ETC2_Format, RGB_PVRTC_2BPPV1_Format, RGB_PVRTC_4BPPV1_Format, RGB_S3TC_DXT1_Format, RGDepthPacking, RGFormat, RGIntegerFormat, RadialGraph, RadialGraphSegments, RawShaderMaterial, Ray, Raycaster, Rec709Primaries, RectAreaLight, RectAreaLightPanel, RedFormat, RedIntegerFormat, Reflector, ReflectorBlurMaterial, ReflectorDudvMaterial, ReflectorMaterial, ReinhardToneMapping, RenderTarget, RepeatWrapping, ReplaceStencilOp, Reticle, ReticleCanvas, ReticleInfo, ReverseSubtractEquation, RigidBodyConfig$1 as RigidBodyConfig, RigidBodyType$1 as RigidBodyType, RingGeometry, Router, SIGNED_RED_GREEN_RGTC2_Format, SIGNED_RED_RGTC1_Format, SMAABlendMaterial, SMAAEdgesMaterial, SMAAWeightsMaterial, SRGBColorSpace, SRGBTransfer, SVGLoader, Scene, SceneCompositeAddMaterial, SceneCompositeDistortionMaterial, SceneCompositeMaterial, ShaderChunk, ShaderLib, ShaderMaterial, ShadowMaterial, ShadowTextureMaterial, Shape$2 as Shape, ShapeGeometry, ShapePath, ShapeUtils, ShortType, SideOptions, Skeleton, SkeletonHelper, SkinnedMesh, Slider, Smooth, SmoothSkew, SmoothViews, SoftShadows, Sound, Sound3D, Source, Sphere, SphereGeometry$2 as SphereGeometry, Spherical, SphericalHarmonics3, SphericalJointConfig$1 as SphericalJointConfig, SplineCurve, SpotLight, SpotLightHelper, SpotLightPanel, Sprite, SpriteMaterial, SrcAlphaFactor, SrcAlphaSaturateFactor, SrcColorFactor, Stage, StandardMaterialCommonPanel, StandardMaterialEnvPanel, StandardMaterialOptions, StandardMaterialPanel, StandardMaterialPatches, StaticCopyUsage, StaticDrawUsage, StaticReadUsage, StereoCamera, StreamCopyUsage, StreamDrawUsage, StreamReadUsage, StringKeyframeTrack, SubtractEquation, SubtractiveBlending, TOUCH, TangentSpaceNormalMap, TangentsHelperOptions, TargetNumber, TetrahedronGeometry, Text, TextMaterial, Texture, TextureLoader, TextureUtils, Third, Thread, Thumbnail, Ticker, TiltShiftMaterial, Title, ToneMappedOptions, ToonMaterialCommonPanel, ToonMaterialOptions, ToonMaterialPanel, TorusGeometry, TorusKnotGeometry, Tracker, Triangle, TriangleFanDrawMode, TriangleStripDrawMode, TrianglesDrawMode, TubeGeometry, Tween, TwoPI, UI, UVHelperOptions, UVMapping, Uint16BufferAttribute, Uint32BufferAttribute, Uint8BufferAttribute, Uint8ClampedBufferAttribute, Uniform, UniformsGroup, UniformsLib, UniformsUtils, UniversalJointConfig$1 as UniversalJointConfig, UnrealBloomBlurMaterial, UnrealBloomCompositeMaterial, UnsignedByteType, UnsignedInt248Type, UnsignedInt5999Type, UnsignedIntType, UnsignedShort4444Type, UnsignedShort5551Type, UnsignedShortType, VSMShadowMap, Vector2$1 as Vector2, Vector3, Vector4, VectorKeyframeTrack, VideoGlitchMaterial, VideoTexture, VisibleOptions, VolumetricLightLensflareMaterial, VolumetricLightMaterial, WebAudio, WebAudio3D, WebAudioParam, WebGL3DRenderTarget, WebGLArrayRenderTarget, WebGLCoordinateSystem, WebGLCubeRenderTarget, WebGLMultipleRenderTargets, WebGLRenderTarget, WebGLRenderer, WebGLUtils, WebGPUCoordinateSystem, WireframeGeometry, WireframeOptions, Wobble, WrapAroundEnding, WrapOptions, ZeroCurvatureEnding, ZeroFactor, ZeroSlopeEnding, ZeroStencilOp, absolute, basename, brightness, ceilPowerOfTwo$1 as ceilPowerOfTwo, clamp$1 as clamp, clearTween, createCanvasElement, defer, degToRad$1 as degToRad, delayedCall, euclideanModulo$1 as euclideanModulo, extension, floorPowerOfTwo$1 as floorPowerOfTwo, fract, getConstructor, getDoubleRenderTarget, getFrustum, getFrustumFromHeight, getFullscreenTriangle, getKeyByLight, getKeyByMaterial, getKeyByValue, getScreenSpaceBox, getSphericalCube, guid, headsTails, inverseLerp$1 as inverseLerp, isPowerOfTwo$1 as isPowerOfTwo, lerp$2 as lerp, lerpCameras, mapLinear$1 as mapLinear, parabola, pcurve, radToDeg$1 as radToDeg, randFloat$1 as randFloat, randFloatSpread$1 as randFloatSpread, randInt$1 as randInt, shuffle, smootherstep$2 as smootherstep, smoothstep$1 as smoothstep, step, ticker, tween, wait };

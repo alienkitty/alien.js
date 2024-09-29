@@ -823,12 +823,12 @@ class WorldController {
             antialias: true
         });
 
+        // Output canvas
+        this.element = this.renderer.domElement;
+
         // Disable color management
         ColorManagement.enabled = false;
         this.renderer.outputColorSpace = LinearSRGBColorSpace;
-
-        // Output canvas
-        this.element = this.renderer.domElement;
 
         // 3D scene
         this.scene = new Scene();

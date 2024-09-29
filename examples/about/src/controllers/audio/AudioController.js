@@ -22,6 +22,7 @@ export class AudioController {
     static addListeners() {
         document.addEventListener('visibilitychange', this.onVisibility);
         document.addEventListener('pointerdown', this.onPointerDown);
+        window.addEventListener('beforeunload', this.onBeforeUnload);
 
         if (this.enabled || !store.sound) {
             return;
@@ -78,6 +79,10 @@ export class AudioController {
         this.ui.instructions.animateOut();
 
         this.trigger('bass_drum');
+    };
+
+    static onBeforeUnload = () => {
+        WebAudio.mute();
     };
 
     // Public methods

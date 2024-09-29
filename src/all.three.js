@@ -61,6 +61,7 @@ export * from '@alienkitty/space.js/src/three/panels/Patches.js';
 export { UI } from '@alienkitty/space.js/src/ui/UI.js';
 export { Header } from '@alienkitty/space.js/src/ui/Header.js';
 export { HeaderInfo } from '@alienkitty/space.js/src/ui/HeaderInfo.js';
+export { HeaderTitle } from '@alienkitty/space.js/src/ui/HeaderTitle.js';
 export { NavLink } from '@alienkitty/space.js/src/ui/NavLink.js';
 export { Details } from '@alienkitty/space.js/src/ui/Details.js';
 export { DetailsInfo } from '@alienkitty/space.js/src/ui/DetailsInfo.js';
@@ -78,7 +79,9 @@ export { MenuItem } from '@alienkitty/space.js/src/ui/MenuItem.js';
 export { Thumbnail } from '@alienkitty/space.js/src/ui/Thumbnail.js';
 export { Graph } from '@alienkitty/space.js/src/ui/Graph.js';
 export { GraphSegments } from '@alienkitty/space.js/src/ui/GraphSegments.js';
+export { GraphMarker } from '@alienkitty/space.js/src/ui/GraphMarker.js';
 export { RadialGraph } from '@alienkitty/space.js/src/ui/RadialGraph.js';
+export { RadialGraphSegments } from '@alienkitty/space.js/src/ui/RadialGraphSegments.js';
 export { LineCanvas } from '@alienkitty/space.js/src/ui/LineCanvas.js';
 export { Reticle } from '@alienkitty/space.js/src/ui/Reticle.js';
 export { ReticleCanvas } from '@alienkitty/space.js/src/ui/ReticleCanvas.js';
@@ -89,6 +92,9 @@ export { PointInfo } from '@alienkitty/space.js/src/ui/PointInfo.js';
 export { TargetNumber } from '@alienkitty/space.js/src/ui/TargetNumber.js';
 export { Progress } from '@alienkitty/space.js/src/ui/Progress.js';
 export { ProgressCanvas } from '@alienkitty/space.js/src/ui/ProgressCanvas.js';
+export { Input } from '@alienkitty/space.js/src/ui/Input.js';
+export { InputField } from '@alienkitty/space.js/src/ui/InputField.js';
+export { InputTotal } from '@alienkitty/space.js/src/ui/InputTotal.js';
 export { Point3D } from '@alienkitty/space.js/src/three/ui/Point3D.js';
 
 // Extras

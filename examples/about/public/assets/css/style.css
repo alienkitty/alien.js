@@ -38,6 +38,16 @@
     --ui-secondary-font-size: 10px;
     --ui-secondary-letter-spacing: 0.5px;
     --ui-secondary-opacity: 0.7;
+    --ui-name-font-family: 'Gothic A1', sans-serif;
+    --ui-name-font-weight: 500;
+    --ui-name-font-size: 13px;
+    --ui-name-line-height: 18px;
+    --ui-name-letter-spacing: 0.03em;
+    --ui-caption-font-family: 'Gothic A1', sans-serif;
+    --ui-caption-font-weight: 500;
+    --ui-caption-font-size: 12px;
+    --ui-caption-line-height: 16px;
+    --ui-caption-letter-spacing: 0.03em;
     --ui-link-font-family: 'Gothic A1', sans-serif;
     --ui-link-font-weight: 700;
     --ui-link-font-size: 11px;
@@ -136,6 +146,24 @@ a {
     letter-spacing: var(--ui-letter-spacing);
     -moz-osx-font-smoothing: auto;
     -webkit-font-smoothing: auto;
+}
+
+.title {
+    .name {
+        font-family: var(--ui-name-font-family);
+        font-weight: var(--ui-name-font-weight);
+        font-size: var(--ui-name-font-size);
+        line-height: var(--ui-name-line-height);
+        letter-spacing: var(--ui-name-letter-spacing);
+    }
+
+    .caption {
+        font-family: var(--ui-caption-font-family);
+        font-weight: var(--ui-caption-font-weight);
+        font-size: var(--ui-caption-font-size);
+        line-height: var(--ui-caption-line-height);
+        letter-spacing: var(--ui-caption-letter-spacing);
+    }
 }
 
 .link, .menu .item {

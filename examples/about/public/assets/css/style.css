@@ -185,8 +185,6 @@ a {
     letter-spacing: inherit;
 
     .line {
-        position: relative;
-        top: 1px;
         font-weight: 700;
     }
 }

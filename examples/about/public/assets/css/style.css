@@ -35,6 +35,9 @@
     --ui-line-height: 15px;
     --ui-letter-spacing: 0.03em;
     --ui-number-letter-spacing: 0.5px;
+    --ui-title-font-size: 11px;
+    --ui-title-line-height: 18px;
+    --ui-title-letter-spacing: 1px;
     --ui-secondary-font-size: 10px;
     --ui-secondary-letter-spacing: 0.5px;
     --ui-secondary-opacity: 0.7;

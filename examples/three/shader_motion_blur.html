@@ -13,9 +13,6 @@
     <script type="module">
         import { AdditiveBlending, BloomCompositeMaterial, Color, ColorManagement, DepthMaterial, DisplayOptions, EnvironmentTextureLoader, Group, HemisphereLight, IcosahedronGeometry, ImageBitmapLoaderThread, LinearSRGBColorSpace, LuminosityMaterial, MathUtils, Mesh, MeshBasicMaterial, MeshMatcapMaterial, MeshStandardMaterial, MotionBlur, MotionBlurCompositeMaterial, NoBlending, NormalMaterial, OrbitControls, OrthographicCamera, PanelItem, PerspectiveCamera, RepeatWrapping, Scene, SceneCompositeDistortionMaterial, SphereGeometry, TextureLoader, Thread, UI, UnrealBloomBlurMaterial, Vector2, WebGLRenderTarget, WebGLRenderer, getFullscreenTriangle, getKeyByValue, ticker } from '../../build/alien.three.js';
 
-        const isDebug = /[?&]debug/.test(location.search);
-        const isOrbit = /[?&]orbit/.test(location.search);
-
         const layers = {
             default: 0,
             velocity: 1
@@ -74,36 +71,19 @@
                 thicknessMap.wrapT = RepeatWrapping;
                 thicknessMap.repeat.set(2, 1);
 
-                let material;
-
-                if (isDebug) {
-                    material = new MeshStandardMaterial({
-                        color: new Color().offsetHSL(0, 0, -0.65),
-                        emissive: new Color(0xff0000),
-                        metalness: 1.7,
-                        roughness: 1.5,
-                        map,
-                        metalnessMap: ormMap,
-                        roughnessMap: ormMap,
-                        aoMap: ormMap,
-                        aoMapIntensity: 1,
-                        normalMap,
-                        normalScale: new Vector2(3, 3)
-                    });
-                } else {
-                    material = new MeshStandardMaterial({
-                        color: new Color().offsetHSL(0, 0, -0.65),
-                        metalness: 0.7,
-                        roughness: 2,
-                        map,
-                        metalnessMap: ormMap,
-                        roughnessMap: ormMap,
-                        aoMap: ormMap,
-                        aoMapIntensity: 1,
-                        normalMap,
-                        normalScale: new Vector2(3, 3)
-                    });
-                }
+                const material = new MeshStandardMaterial({
+                    color: new Color().offsetHSL(0, 0, -0.65),
+                    emissive: new Color(0xff0000),
+                    metalness: 1.7,
+                    roughness: 1.5,
+                    map,
+                    metalnessMap: ormMap,
+                    roughnessMap: ormMap,
+                    aoMap: ormMap,
+                    aoMapIntensity: 1,
+                    normalMap,
+                    normalScale: new Vector2(3, 3)
+                });
 
                 // Second channel for aoMap and lightMap
                 // https://threejs.org/docs/#api/en/materials/MeshStandardMaterial.aoMap
@@ -776,10 +756,6 @@
             }
 
             static initControls() {
-                if (!isOrbit) {
-                    return;
-                }
-
                 this.controls = new OrbitControls(this.camera, this.renderer.domElement);
                 this.controls.enableDamping = true;
             }

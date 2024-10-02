@@ -99,7 +99,7 @@ const program = new FXAAProgram(gl);
 [panel tracking](https://alien.js.org/examples/three/3d_panel_tracking.html) ([debug](https://alien.js.org/examples/three/3d_panel_tracking.html?debug))  
 [backdrop](https://alien.js.org/examples/three/3d_backdrop.html)  
 [infinite stars](https://alien.js.org/examples/three/3d_infinite_stars_rgbshift.html) (RGB shift, [debug](https://alien.js.org/examples/three/3d_infinite_stars_rgbshift.html?debug))  
-[black holes](https://alien.js.org/examples/three/3d_black_holes.html) (per-object motion blur, volumetric light and fluid, [debug](https://alien.js.org/examples/three/3d_black_holes.html?debug), [orbit controls](https://alien.js.org/examples/three/3d_black_holes.html?orbit))  
+[black holes](https://alien.js.org/examples/three/3d_black_holes.html) (per-object motion blur, volumetric light and fluid sim, [debug](https://alien.js.org/examples/three/3d_black_holes.html?debug), [orbit controls](https://alien.js.org/examples/three/3d_black_holes.html?orbit))  
 [stripe gradient](https://alien.js.org/examples/three/3d_stripe_gradient.html) ([akella version](https://www.youtube.com/watch?v=LW9d2cqIHb4))  
 
 #### shader
@@ -142,7 +142,7 @@ const program = new FXAAProgram(gl);
 [anamorphic light](https://alien.js.org/examples/three/shader_anamorphic_light.html) (fast anamorphic lens flares)  
 [lensflare](https://alien.js.org/examples/three/shader_lensflare.html)  
 [lensflare](https://alien.js.org/examples/three/shader_anamorphic_light_lensflare.html) (with anamorphic light)  
-[motion blur](https://alien.js.org/examples/three/shader_motion_blur.html) (per-object and camera, [debug](https://alien.js.org/examples/three/shader_motion_blur.html?debug), [orbit controls](https://alien.js.org/examples/three/shader_motion_blur.html?orbit))  
+[motion blur](https://alien.js.org/examples/three/shader_motion_blur.html) (per-object and camera)  
 [baked cube](https://alien.js.org/examples/three/shader_baked_cube.html)  
 [baked cube](https://alien.js.org/examples/three/shader_baked_cube_dudv.html) (DuDv)  
 [baked cube](https://alien.js.org/examples/three/shader_baked_cube_sss.html) (SSS, [debug](https://alien.js.org/examples/three/shader_baked_cube_sss.html?debug))  

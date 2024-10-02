@@ -15,7 +15,7 @@
 
         const isDebug = /[?&]debug/.test(location.search);
 
-        const count = parseInt(location.search.slice(1), 10) || 20;
+        const count = parseInt(location.search.slice(1), 10) || 100;
 
         const layers = {
             default: 0,
@@ -749,7 +749,7 @@
 
                 // Volumetric light and lens flare
                 this.lightPosition = new Vector3();
-                this.vlExposure = 0.01;
+                this.vlExposure = 0.1;
                 this.vlDecay = 1;
                 this.vlDensity = 1;
                 this.vlWeight = 0.4;

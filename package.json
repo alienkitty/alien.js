@@ -22,6 +22,6 @@
   "author": "pschroen",
   "license": "MIT",
   "dependencies": {
-    "@alienkitty/space.js": "latest"
+    "@alienkitty/space.js": "alienkitty/space.js#dev"
   }
 }

@@ -289,6 +289,8 @@ class AbstractCube extends Group {
     update = () => {
         this.mesh.rotation.y -= 0.005 * params.speed;
     };
+
+    ready = () => this.initMesh();
 }
 
 class FloatingCrystal extends Group {
@@ -395,6 +397,8 @@ class FloatingCrystal extends Group {
         this.mesh.position.y = (1 + Math.sin(time * params.speed)) * 0.1;
         this.mesh.rotation.y += 0.01 * params.speed;
     };
+
+    ready = () => this.initMesh();
 }
 
 class DarkPlanet extends Group {
@@ -502,6 +506,8 @@ class DarkPlanet extends Group {
         // Counter clockwise rotation
         this.mesh.rotation.y += 0.005 * params.speed;
     };
+
+    ready = () => this.initMesh();
 }
 
 class Floor extends Group {
@@ -545,6 +551,7 @@ class Floor extends Group {
                 /* glsl */ `
                 uniform mat3 uvTransform;
                 uniform mat4 textureMatrix;
+
                 out vec2 vUv;
                 out vec4 vCoord;
 
@@ -568,6 +575,7 @@ class Floor extends Group {
                 uniform sampler2D map;
                 uniform sampler2D reflectMap;
                 uniform sampler2D reflectMapBlur;
+
                 in vec2 vUv;
                 in vec4 vCoord;
 
@@ -625,6 +633,8 @@ class Floor extends Group {
 
         this.reflector.setSize(width, height);
     };
+
+    ready = () => this.initMesh();
 }
 
 class SceneView extends Group {
@@ -666,10 +676,10 @@ class SceneView extends Group {
     };
 
     ready = () => Promise.all([
-        this.floor.initMesh(),
-        this.darkPlanet.initMesh(),
-        this.floatingCrystal.initMesh(),
-        this.abstractCube.initMesh()
+        this.floor.ready(),
+        this.darkPlanet.ready(),
+        this.floatingCrystal.ready(),
+        this.abstractCube.ready()
     ]);
 }
 

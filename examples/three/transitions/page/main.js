@@ -191,6 +191,8 @@ class AbstractCube extends Group {
     update = () => {
         this.mesh.rotation.y -= 0.005;
     };
+
+    ready = () => this.initMesh();
 }
 
 class FloatingCrystal extends Group {
@@ -262,6 +264,8 @@ class FloatingCrystal extends Group {
         this.mesh.position.y = Math.sin(time) * 0.1;
         this.mesh.rotation.y += 0.01;
     };
+
+    ready = () => this.initMesh();
 }
 
 class DarkPlanet extends Group {
@@ -334,6 +338,8 @@ class DarkPlanet extends Group {
         // Counter clockwise rotation
         this.mesh.rotation.y += 0.005;
     };
+
+    ready = () => this.initMesh();
 }
 
 class SceneView extends Group {
@@ -365,9 +371,9 @@ class SceneView extends Group {
     };
 
     ready = () => Promise.all([
-        this.darkPlanet.initMesh(),
-        this.floatingCrystal.initMesh(),
-        this.abstractCube.initMesh()
+        this.darkPlanet.ready(),
+        this.floatingCrystal.ready(),
+        this.abstractCube.ready()
     ]);
 }
 

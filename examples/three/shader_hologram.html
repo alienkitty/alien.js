@@ -232,6 +232,8 @@
 
                 this.uniforms = uniforms;
             }
+
+            ready = () => this.initMesh();
         }
 
         class DarkPlanet extends Group {
@@ -292,6 +294,8 @@
                 const mesh = new Mesh(geometry, material);
                 this.add(mesh);
             }
+
+            ready = () => this.initMesh();
         }
 
         class PittedMetalSphere extends Group {
@@ -434,6 +438,8 @@
 
                 this.uniforms = uniforms;
             }
+
+            ready = () => this.initMesh();
         }
 
         class SceneView extends Group {
@@ -459,9 +465,9 @@
             // Public methods
 
             ready = () => Promise.all([
-                this.pittedMetalSphere.initMesh(),
-                this.darkPlanet.initMesh(),
-                this.polishedConcreteSphere.initMesh()
+                this.pittedMetalSphere.ready(),
+                this.darkPlanet.ready(),
+                this.polishedConcreteSphere.ready()
             ]);
         }
 

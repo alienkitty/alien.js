@@ -51,6 +51,8 @@
 
                 this.add(group);
             }
+
+            ready = () => this.initMesh();
         }
 
         class Floor extends Group {
@@ -122,6 +124,8 @@
 
                 this.reflector.setSize(width, height);
             };
+
+            ready = () => this.initMesh();
         }
 
         class SceneView extends Group {
@@ -148,8 +152,8 @@
             };
 
             ready = () => Promise.all([
-                this.floor.initMesh(),
-                this.triangle.initMesh()
+                this.floor.ready(),
+                this.triangle.ready()
             ]);
         }
 

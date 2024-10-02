@@ -127,11 +127,11 @@ export class OimoPhysicsBuffer {
             shapeConfig.geometry = new ConvexHullGeometry(array);
         }
 
-        if (position) {
+        if (position !== undefined) {
             shapeConfig.position.copyFrom(new Vec3(position[0], position[1], position[2]));
         }
 
-        if (quaternion) {
+        if (quaternion !== undefined) {
             shapeConfig.rotation.fromQuat(new Quat(quaternion[0], quaternion[1], quaternion[2], quaternion[3]));
         }
 
@@ -255,7 +255,7 @@ export class OimoPhysicsBuffer {
             bodyConfig.autoSleep = autoSleep;
         }
 
-        if (kinematic) {
+        if (kinematic !== undefined) {
             bodyConfig.type = RigidBodyType.KINEMATIC;
         } else if (density === 0 || type === undefined) {
             bodyConfig.type = RigidBodyType.STATIC;
@@ -265,7 +265,7 @@ export class OimoPhysicsBuffer {
 
         const body = new RigidBody(bodyConfig);
 
-        if (type) {
+        if (type !== undefined) {
             if (shapes !== undefined) {
                 for (let i = 0; i < shapes.length; i++) {
                     const shape = shapes[i];
@@ -291,31 +291,31 @@ export class OimoPhysicsBuffer {
             }
         }
 
-        if (position) {
+        if (position !== undefined) {
             body.setPosition(new Vec3(position[0], position[1], position[2]));
         }
 
-        if (quaternion) {
+        if (quaternion !== undefined) {
             body.setOrientation(new Quat(quaternion[0], quaternion[1], quaternion[2], quaternion[3]));
         }
 
-        if (gravityScale) {
+        if (gravityScale !== undefined) {
             body.setGravityScale(gravityScale);
         }
 
-        if (linearVelocity) {
+        if (linearVelocity !== undefined) {
             body.setLinearVelocity(linearVelocity);
         }
 
-        if (angularVelocity) {
+        if (angularVelocity !== undefined) {
             body.setAngularVelocity(angularVelocity);
         }
 
-        if (linearDamping) {
+        if (linearDamping !== undefined) {
             body.setLinearDamping(linearDamping);
         }
 
-        if (angularDamping) {
+        if (angularDamping !== undefined) {
             body.setAngularDamping(angularDamping);
         }
 

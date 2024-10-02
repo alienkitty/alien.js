@@ -41,15 +41,15 @@ export class OimoPhysicsController {
             object.name = MathUtils.generateUUID();
         }
 
-        if (position) {
+        if (position !== undefined) {
             object.position = position.toArray();
         }
 
-        if (quaternion) {
+        if (quaternion !== undefined) {
             object.quaternion = quaternion.toArray();
         }
 
-        if (geometry) {
+        if (geometry !== undefined) {
             const parameters = geometry.parameters;
 
             if (geometry.type === 'BoxGeometry') {

@@ -25,7 +25,7 @@ export * from '@alienkitty/space.js/src/utils/Utils.js';
 export { EventEmitter } from '@alienkitty/space.js/src/utils/EventEmitter.js';
 export { Interface } from '@alienkitty/space.js/src/utils/Interface.js';
 export { Stage } from '@alienkitty/space.js/src/utils/Stage.js';
-export { Router } from '@alienkitty/space.js/src/utils/Router.js';
+export * from '@alienkitty/space.js/src/utils/Router.js';
 export { Component } from '@alienkitty/space.js/src/utils/Component.js';
 export { LinkedList } from '@alienkitty/space.js/src/utils/LinkedList.js';
 export { ObjectPool } from '@alienkitty/space.js/src/utils/ObjectPool.js';

@@ -2,6 +2,7 @@ import { AssetLoader, BloomCompositeMaterial, BlurMaterial, BoxGeometry, Color, 
 
 const isDebug = /[?&]debug/.test(location.search);
 
+const assetPath = '/examples/';
 const breakpoint = 1000;
 
 class Data {
@@ -915,10 +916,10 @@ class WorldController {
 
     static initLoaders() {
         this.textureLoader = new TextureLoader();
-        this.textureLoader.setPath('/examples/');
+        this.textureLoader.setPath(assetPath);
 
         this.environmentLoader = new EnvironmentTextureLoader(this.renderer);
-        this.environmentLoader.setPath('/examples/');
+        this.environmentLoader.setPath(assetPath);
     }
 
     static async initEnvironment() {

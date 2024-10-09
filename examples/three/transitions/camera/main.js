@@ -1,7 +1,9 @@
-import { AdditiveBlending, AssetLoader, BasicShadowMap, BloomCompositeMaterial, BoxGeometry, Color, ColorManagement, DepthMaterial, DirectionalLight, DisplayOptions, EnvironmentTextureLoader, GLSL3, Group, HemisphereLight, IcosahedronGeometry, ImageBitmapLoaderThread, LinearSRGBColorSpace, LuminosityMaterial, MathUtils, Mesh, MeshBasicMaterial, MeshMatcapMaterial, MeshStandardMaterial, MotionBlur, MotionBlurCompositeMaterial, NearestFilter, NoBlending, NormalMaterial, OctahedronGeometry, OrthographicCamera, PanelItem, PerspectiveCamera, PlaneGeometry, Point3D, RawShaderMaterial, Reflector, RepeatWrapping, Router, Scene, SceneCompositeMaterial, ShadowMaterial, Stage, TextureLoader, Thread, UI, UnrealBloomBlurMaterial, Vector2, Vector3, WebGLRenderTarget, WebGLRenderer, clearTween, delayedCall, getFullscreenTriangle, getKeyByValue, lerpCameras, ticker, tween } from '../../../../build/alien.three.js';
+import { AdditiveBlending, AssetLoader, BasicShadowMap, BloomCompositeMaterial, BoxGeometry, Color, ColorManagement, DepthMaterial, DirectionalLight, DisplayOptions, EnvironmentTextureLoader, GLSL3, Group, HemisphereLight, IcosahedronGeometry, ImageBitmapLoaderThread, LinearSRGBColorSpace, LuminosityMaterial, MathUtils, Mesh, MeshBasicMaterial, MeshMatcapMaterial, MeshStandardMaterial, MotionBlur, MotionBlurCompositeMaterial, NearestFilter, NoBlending, NormalMaterial, OctahedronGeometry, OrthographicCamera, PanelItem, PerspectiveCamera, PlaneGeometry, Point3D, RawShaderMaterial, Reflector, RepeatWrapping, Scene, SceneCompositeMaterial, ShadowMaterial, Stage, TextureLoader, Thread, UI, UnrealBloomBlurMaterial, Vector2, Vector3, WebGLRenderTarget, WebGLRenderer, clearTween, delayedCall, getFullscreenTriangle, getKeyByValue, lerpCameras, router, ticker, tween } from '../../../../build/alien.three.js';
 
 const isDebug = /[?&]debug/.test(location.search);
 
+const basePath = '/examples/three/transitions/camera';
+const assetPath = '/examples/';
 const breakpoint = 1000;
 
 const layers = {
@@ -705,7 +707,7 @@ class SceneController {
     // Public methods
 
     static getView = () => {
-        const { data } = Router.get(location.pathname);
+        const { data } = router.get(location.pathname);
 
         switch (data.path) {
             case '/dark_planet':
@@ -780,9 +782,10 @@ class ScenePanelController {
         const data = Data.pages[target.index];
 
         if (data && data.path) {
-            const path = Router.getPath(data.path);
+            const path = router.getPath(data.path);
 
-            Router.setPath(`${path}/`);
+            router.setPath(`${path}/`);
+
             Point3D.animateOut();
         }
     };
@@ -1445,12 +1448,12 @@ class CameraController {
 
         if (this.zoomedIn) {
             this.ui.details.animateOut(() => {
-                const { data } = Router.get(location.pathname);
+                const { data } = router.get(location.pathname);
 
                 this.ui.details.title.setTitle(data.title.replace(/[\s.]+/g, '_'));
 
                 const next = Data.getNext(data);
-                const path = Router.getPath(next.path);
+                const path = router.getPath(next.path);
 
                 this.ui.link.setLink(next.path !== '/' ? `${path}/` : path);
 
@@ -1595,11 +1598,11 @@ class WorldController {
     static initLoaders() {
         this.textureLoader = new TextureLoader();
         this.textureLoader.cache = true;
-        this.textureLoader.setPath('/examples/');
+        this.textureLoader.setPath(assetPath);
 
         this.environmentLoader = new EnvironmentTextureLoader(this.renderer);
         this.environmentLoader.cache = true;
-        this.environmentLoader.setPath('/examples/');
+        this.environmentLoader.setPath(assetPath);
     }
 
     static async initEnvironment() {
@@ -1703,7 +1706,7 @@ class App {
 
     static initRouter() {
         Data.pages.forEach(page => {
-            Router.add(page.path, Page, page);
+            router.add(page.path, Page, page);
         });
 
         // Landing and 404 page
@@ -1721,10 +1724,13 @@ class App {
             home = Data.pages[0]; // Dark Planet
         }
 
-        Router.add('/', Page, home);
-        Router.add('404', Page, home);
+        router.add('/', Page, home);
+        router.add('404', Page, home);
 
-        Router.init({ path: '/examples/three/transitions/camera' });
+        router.init({
+            path: basePath,
+            scrollRestoration: 'auto'
+        });
     }
 
     static initViews() {
@@ -1795,7 +1801,7 @@ Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor i
     static onClick = (e, { target }) => {
         e.preventDefault();
 
-        Router.setPath(target.link);
+        router.setPath(target.link);
     };
 
     // Public methods

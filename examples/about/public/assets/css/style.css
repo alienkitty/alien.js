@@ -1,29 +1,25 @@
 @font-face {
     font-family: 'D-DIN';
-    font-style: normal;
-    font-weight: 400;
     src: url(../fonts/D-DIN.woff2) format('woff2');
+    font-weight: 400;
 }
 
 @font-face {
     font-family: 'Gothic A1';
-    font-style: normal;
-    font-weight: 500;
     src: url(../fonts/GothicA1-Medium.woff2) format('woff2');
+    font-weight: 500;
 }
 
 @font-face {
     font-family: 'Gothic A1';
-    font-style: normal;
-    font-weight: 700;
     src: url(../fonts/GothicA1-Bold.woff2) format('woff2');
+    font-weight: 700;
 }
 
 @font-face {
     font-family: 'Roboto Mono';
-    font-style: normal;
-    font-weight: 500;
     src: url(../fonts/RobotoMono-Medium.woff2) format('woff2');
+    font-weight: 500;
 }
 
 :root {

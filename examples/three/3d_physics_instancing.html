@@ -11,7 +11,7 @@
     <link rel="stylesheet" href="../assets/css/style.css">
 
     <script type="module">
-        import { BasicShadowMap, BloomCompositeMaterial, BoxGeometry, Color, ColorManagement, DirectionalLight, DynamicDrawUsage, EnvironmentTextureLoader, Group, HemisphereLight, IcosahedronGeometry, ImageBitmapLoaderThread, InstancedMesh, LinearSRGBColorSpace, LuminosityMaterial, MathUtils, Matrix4, Mesh, MeshBasicMaterial, MeshStandardMaterial, NoBlending, OimoPhysics, OrthographicCamera, PanelItem, PerspectiveCamera, PlaneGeometry, PointLight, Reflector, RepeatWrapping, Scene, SceneCompositeDistortionMaterial, ShaderChunk, ShadowMaterial, SphereGeometry, TextureLoader, Thread, UI, UnrealBloomBlurMaterial, Vector2, Vector3, WebGLRenderTarget, WebGLRenderer, getFrustum, getFullscreenTriangle, getKeyByValue, ticker } from '../../build/alien.three.js';
+        import { BasicShadowMap, BloomCompositeMaterial, BoxGeometry, Color, ColorManagement, DirectionalLight, DynamicDrawUsage, EnvironmentTextureLoader, Group, HemisphereLight, IcosahedronGeometry, ImageBitmapLoaderThread, InstancedMesh, LinearSRGBColorSpace, LuminosityMaterial, MathUtils, Matrix4, Mesh, MeshBasicMaterial, MeshStandardMaterial, NoBlending, OimoPhysics, OrthographicCamera, PanelItem, PerspectiveCamera, PlaneGeometry, PointLight, Reflector, RepeatWrapping, Scene, SceneCompositeDistortionMaterial, ShaderChunk, ShadowMaterial, SphereGeometry, TextureLoader, UI, UnrealBloomBlurMaterial, Vector2, Vector3, WebGLRenderTarget, WebGLRenderer, getFrustum, getFullscreenTriangle, getKeyByValue, ticker } from '../../build/alien.three.js';
 
         const isDebug = /[?&]debug/.test(location.search);
 
@@ -933,8 +933,6 @@
 
             static initThread() {
                 ImageBitmapLoaderThread.init();
-
-                Thread.shared();
             }
 
             static initWorld() {

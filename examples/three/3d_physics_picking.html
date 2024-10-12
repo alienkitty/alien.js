@@ -11,7 +11,7 @@
     <link rel="stylesheet" href="../assets/css/style.css">
 
     <script type="module">
-        import { BasicShadowMap, BloomCompositeMaterial, BoxGeometry, BufferLoader, Color, ColorManagement, DirectionalLight, EnvironmentTextureLoader, Group, HemisphereLight, IcosahedronGeometry, ImageBitmapLoaderThread, LinearSRGBColorSpace, LuminosityMaterial, MathUtils, Mesh, MeshBasicMaterial, MeshPhongMaterial, MeshStandardMaterial, NoBlending, OimoPhysics, OrthographicCamera, PanelItem, PerspectiveCamera, PlaneGeometry, PointLight, Raycaster, Reflector, RepeatWrapping, RigidBodyConfig, RigidBodyType, Scene, SceneCompositeDistortionMaterial, ShaderChunk, ShadowMaterial, Sound3D, SphereGeometry, SphericalJointConfig, TextureLoader, Thread, UI, UnrealBloomBlurMaterial, Vector2, Vector3, WebAudio, WebGLRenderTarget, WebGLRenderer, delayedCall, getFullscreenTriangle, getKeyByValue, ticker } from '../../build/alien.three.js';
+        import { BasicShadowMap, BloomCompositeMaterial, BoxGeometry, BufferLoader, Color, ColorManagement, DirectionalLight, EnvironmentTextureLoader, Group, HemisphereLight, IcosahedronGeometry, ImageBitmapLoaderThread, LinearSRGBColorSpace, LuminosityMaterial, MathUtils, Mesh, MeshBasicMaterial, MeshPhongMaterial, MeshStandardMaterial, NoBlending, OimoPhysics, OrthographicCamera, PanelItem, PerspectiveCamera, PlaneGeometry, PointLight, Raycaster, Reflector, RepeatWrapping, RigidBodyConfig, RigidBodyType, Scene, SceneCompositeDistortionMaterial, ShaderChunk, ShadowMaterial, Sound3D, SphereGeometry, SphericalJointConfig, TextureLoader, UI, UnrealBloomBlurMaterial, Vector2, Vector3, WebAudio, WebGLRenderTarget, WebGLRenderer, delayedCall, getFullscreenTriangle, getKeyByValue, ticker } from '../../build/alien.three.js';
 
         const isDebug = /[?&]debug/.test(location.search);
 
@@ -1187,8 +1187,6 @@
 
             static initThread() {
                 ImageBitmapLoaderThread.init();
-
-                Thread.shared();
             }
 
             static initLoader() {

@@ -19,7 +19,7 @@
     </style>
 
     <script type="module">
-        import { BasicShadowMap, BufferGeometryLoader, BufferGeometryLoaderThread, Color, ColorManagement, DirectionalLight, Group, HemisphereLight, ImageBitmapLoaderThread, LinearSRGBColorSpace, Mesh, MeshPhongMaterial, NoBlending, OrbitControls, PanelItem, PerspectiveCamera, PlaneGeometry, Reflector, RepeatWrapping, Scene, ShadowMaterial, SoftShadows, SphereGeometry, TextureLoader, Thread, UI, Vector2, WebGLRenderer, getFullscreenTriangle, ticker } from '../../build/alien.three.js';
+        import { BasicShadowMap, BufferGeometryLoader, BufferGeometryLoaderThread, Color, ColorManagement, DirectionalLight, Group, HemisphereLight, ImageBitmapLoaderThread, LinearSRGBColorSpace, Mesh, MeshPhongMaterial, NoBlending, OrbitControls, PanelItem, PerspectiveCamera, PlaneGeometry, Reflector, RepeatWrapping, Scene, ShadowMaterial, SoftShadows, SphereGeometry, TextureLoader, UI, Vector2, WebGLRenderer, getFullscreenTriangle, ticker } from '../../build/alien.three.js';
 
         // Based on https://threejs.org/examples/#webgl_shadowmap_pcss by spidersharma03
 
@@ -452,8 +452,6 @@
             static initThread() {
                 ImageBitmapLoaderThread.init();
                 BufferGeometryLoaderThread.init();
-
-                Thread.shared();
             }
 
             static initWorld() {

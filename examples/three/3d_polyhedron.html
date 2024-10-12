@@ -11,7 +11,7 @@
     <link rel="stylesheet" href="../assets/css/style.css">
 
     <script type="module">
-        import { BloomCompositeMaterial, BufferGeometryLoader, BufferGeometryLoaderThread, Color, ColorManagement, DirectionalLight, EnvironmentTextureLoader, Group, HemisphereLight, ImageBitmapLoaderThread, LinearSRGBColorSpace, LuminosityMaterial, MathUtils, Mesh, MeshStandardMaterial, OrthographicCamera, PanelItem, PerspectiveCamera, PointLight, PointLightHelper, RepeatWrapping, Scene, SceneCompositeDistortionMaterial, TextureLoader, Thread, UI, UnrealBloomBlurMaterial, Vector2, Vector3, WebGLRenderTarget, WebGLRenderer, getFrustum, getFullscreenTriangle, ticker, tween } from '../../build/alien.three.js';
+        import { BloomCompositeMaterial, BufferGeometryLoader, BufferGeometryLoaderThread, Color, ColorManagement, DirectionalLight, EnvironmentTextureLoader, Group, HemisphereLight, ImageBitmapLoaderThread, LinearSRGBColorSpace, LuminosityMaterial, MathUtils, Mesh, MeshStandardMaterial, OrthographicCamera, PanelItem, PerspectiveCamera, PointLight, PointLightHelper, RepeatWrapping, Scene, SceneCompositeDistortionMaterial, TextureLoader, UI, UnrealBloomBlurMaterial, Vector2, Vector3, WebGLRenderTarget, WebGLRenderer, getFrustum, getFullscreenTriangle, ticker, tween } from '../../build/alien.three.js';
 
         const isDebug = /[?&]debug/.test(location.search);
 
@@ -672,8 +672,6 @@
             static initThread() {
                 ImageBitmapLoaderThread.init();
                 BufferGeometryLoaderThread.init();
-
-                Thread.shared();
             }
 
             static initWorld() {

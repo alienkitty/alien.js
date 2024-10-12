@@ -11,7 +11,7 @@
     <link rel="stylesheet" href="../assets/css/style.css">
 
     <script type="module">
-        import { AdditiveBlending, BloomCompositeMaterial, BlurMaterial, Color, ColorManagement, DepthMaterial, DirectionalLight, DisplayOptions, DynamicDrawUsage, EnvironmentTextureLoader, Group, HemisphereLight, IcosahedronGeometry, ImageBitmapLoaderThread, InstancedMesh, LinearSRGBColorSpace, LuminosityMaterial, MathUtils, Matrix4, Mesh, MeshBasicMaterial, MeshMatcapMaterial, MeshStandardMaterial, MotionBlur, MotionBlurCompositeMaterial, NoBlending, NormalMaterial, OimoPhysics, OrthographicCamera, PanelItem, PerspectiveCamera, PlaneGeometry, PointLight, RepeatWrapping, RigidBodyConfig, RigidBodyType, Scene, SceneCompositeAddMaterial, ShaderChunk, TextureLoader, Thread, UI, UniversalJointConfig, UnrealBloomBlurMaterial, Vector2, Vector3, VolumetricLightLensflareMaterial, WebGLRenderTarget, WebGLRenderer, getFrustum, getFullscreenTriangle, getKeyByValue, headsTails, ticker } from '../../build/alien.three.js';
+        import { AdditiveBlending, BloomCompositeMaterial, BlurMaterial, Color, ColorManagement, DepthMaterial, DirectionalLight, DisplayOptions, DynamicDrawUsage, EnvironmentTextureLoader, Group, HemisphereLight, IcosahedronGeometry, ImageBitmapLoaderThread, InstancedMesh, LinearSRGBColorSpace, LuminosityMaterial, MathUtils, Matrix4, Mesh, MeshBasicMaterial, MeshMatcapMaterial, MeshStandardMaterial, MotionBlur, MotionBlurCompositeMaterial, NoBlending, NormalMaterial, OimoPhysics, OrthographicCamera, PanelItem, PerspectiveCamera, PlaneGeometry, PointLight, RepeatWrapping, RigidBodyConfig, RigidBodyType, Scene, SceneCompositeAddMaterial, ShaderChunk, TextureLoader, UI, UniversalJointConfig, UnrealBloomBlurMaterial, Vector2, Vector3, VolumetricLightLensflareMaterial, WebGLRenderTarget, WebGLRenderer, getFrustum, getFullscreenTriangle, getKeyByValue, headsTails, ticker } from '../../build/alien.three.js';
 
         const isDebug = /[?&]debug/.test(location.search);
 
@@ -1395,9 +1395,6 @@
 
             static initThread() {
                 ImageBitmapLoaderThread.init();
-
-                Thread.count--; // Make room for the physics thread
-                Thread.shared();
             }
 
             static initWorld() {

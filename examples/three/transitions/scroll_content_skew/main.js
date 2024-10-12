@@ -1,4 +1,4 @@
-import { AssetLoader, BloomCompositeMaterial, BlurMaterial, BoxGeometry, Color, ColorManagement, Details, DirectionalLight, EnvironmentTextureLoader, GLSL3, Group, HemisphereLight, IcosahedronGeometry, ImageBitmapLoaderThread, Interface, LinearSRGBColorSpace, LuminosityMaterial, MathUtils, Mesh, MeshStandardMaterial, NoBlending, OctahedronGeometry, OrthographicCamera, PanelItem, PerspectiveCamera, RawShaderMaterial, RepeatWrapping, Scene, SceneCompositeMaterial, SmoothSkew, Stage, TextureLoader, Thread, UI, UnrealBloomBlurMaterial, Vector2, WebGLRenderTarget, WebGLRenderer, clearTween, defer, getFullscreenTriangle, ticker, tween } from '../../../../build/alien.three.js';
+import { AssetLoader, BloomCompositeMaterial, BlurMaterial, BoxGeometry, Color, ColorManagement, Details, DirectionalLight, EnvironmentTextureLoader, GLSL3, Group, HemisphereLight, IcosahedronGeometry, ImageBitmapLoaderThread, Interface, LinearSRGBColorSpace, LuminosityMaterial, MathUtils, Mesh, MeshStandardMaterial, NoBlending, OctahedronGeometry, OrthographicCamera, PanelItem, PerspectiveCamera, RawShaderMaterial, RepeatWrapping, Scene, SceneCompositeMaterial, SmoothSkew, Stage, TextureLoader, UI, UnrealBloomBlurMaterial, Vector2, WebGLRenderTarget, WebGLRenderer, clearTween, defer, getFullscreenTriangle, ticker, tween } from '../../../../build/alien.three.js';
 
 const isDebug = /[?&]debug/.test(location.search);
 
@@ -1016,8 +1016,6 @@ class App {
 
     static initThread() {
         ImageBitmapLoaderThread.init();
-
-        Thread.shared();
     }
 
     static initLoader() {

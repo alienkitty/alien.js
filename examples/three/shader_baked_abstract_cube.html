@@ -19,7 +19,7 @@
     </style>
 
     <script type="module">
-        import { BasicMaterial, BufferGeometryLoader, BufferGeometryLoaderThread, Color, ColorManagement, DoubleSide, Group, ImageBitmapLoaderThread, LinearSRGBColorSpace, Mesh, OrbitControls, PerspectiveCamera, Scene, ShadowTextureMaterial, TextureLoader, Thread, Vector2, WebGLRenderer, getFullscreenTriangle, ticker } from '../../build/alien.three.js';
+        import { BasicMaterial, BufferGeometryLoader, BufferGeometryLoaderThread, Color, ColorManagement, DoubleSide, Group, ImageBitmapLoaderThread, LinearSRGBColorSpace, Mesh, OrbitControls, PerspectiveCamera, Scene, ShadowTextureMaterial, TextureLoader, Vector2, WebGLRenderer, getFullscreenTriangle, ticker } from '../../build/alien.three.js';
 
         class AbstractCube extends Group {
             constructor() {
@@ -276,8 +276,6 @@
             static initThread() {
                 ImageBitmapLoaderThread.init();
                 BufferGeometryLoaderThread.init();
-
-                Thread.shared();
             }
 
             static initWorld() {

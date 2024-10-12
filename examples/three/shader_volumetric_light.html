@@ -11,7 +11,7 @@
     <link rel="stylesheet" href="../assets/css/style.css">
 
     <script type="module">
-        import { BloomCompositeMaterial, BlurMaterial, Color, ColorManagement, EnvironmentTextureLoader, Group, HemisphereLight, IcosahedronGeometry, ImageBitmapLoaderThread, LinearSRGBColorSpace, LuminosityMaterial, MathUtils, Mesh, MeshBasicMaterial, MeshStandardMaterial, OrthographicCamera, PanelItem, PerspectiveCamera, PointLight, RepeatWrapping, Scene, SceneCompositeAddMaterial, ShaderChunk, TextureLoader, Thread, UI, UnrealBloomBlurMaterial, Vector2, Vector3, VolumetricLightMaterial, WebGLRenderTarget, WebGLRenderer, getFullscreenTriangle, ticker } from '../../build/alien.three.js';
+        import { BloomCompositeMaterial, BlurMaterial, Color, ColorManagement, EnvironmentTextureLoader, Group, HemisphereLight, IcosahedronGeometry, ImageBitmapLoaderThread, LinearSRGBColorSpace, LuminosityMaterial, MathUtils, Mesh, MeshBasicMaterial, MeshStandardMaterial, OrthographicCamera, PanelItem, PerspectiveCamera, PointLight, RepeatWrapping, Scene, SceneCompositeAddMaterial, ShaderChunk, TextureLoader, UI, UnrealBloomBlurMaterial, Vector2, Vector3, VolumetricLightMaterial, WebGLRenderTarget, WebGLRenderer, getFullscreenTriangle, ticker } from '../../build/alien.three.js';
 
         const colors = {
             lightColor: 0xf44336
@@ -991,8 +991,6 @@
 
             static initThread() {
                 ImageBitmapLoaderThread.init();
-
-                Thread.shared();
             }
 
             static initWorld() {

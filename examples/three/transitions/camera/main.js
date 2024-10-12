@@ -1,4 +1,4 @@
-import { AdditiveBlending, AssetLoader, BasicShadowMap, BloomCompositeMaterial, BoxGeometry, Color, ColorManagement, DepthMaterial, DirectionalLight, DisplayOptions, EnvironmentTextureLoader, GLSL3, Group, HemisphereLight, IcosahedronGeometry, ImageBitmapLoaderThread, LinearSRGBColorSpace, LuminosityMaterial, MathUtils, Mesh, MeshBasicMaterial, MeshMatcapMaterial, MeshStandardMaterial, MotionBlur, MotionBlurCompositeMaterial, NearestFilter, NoBlending, NormalMaterial, OctahedronGeometry, OrthographicCamera, PanelItem, PerspectiveCamera, PlaneGeometry, Point3D, RawShaderMaterial, Reflector, RepeatWrapping, Scene, SceneCompositeMaterial, ShadowMaterial, Stage, TextureLoader, Thread, UI, UnrealBloomBlurMaterial, Vector2, Vector3, WebGLRenderTarget, WebGLRenderer, clearTween, delayedCall, getFullscreenTriangle, getKeyByValue, lerpCameras, router, ticker, tween } from '../../../../build/alien.three.js';
+import { AdditiveBlending, AssetLoader, BasicShadowMap, BloomCompositeMaterial, BoxGeometry, Color, ColorManagement, DepthMaterial, DirectionalLight, DisplayOptions, EnvironmentTextureLoader, GLSL3, Group, HemisphereLight, IcosahedronGeometry, ImageBitmapLoaderThread, LinearSRGBColorSpace, LuminosityMaterial, MathUtils, Mesh, MeshBasicMaterial, MeshMatcapMaterial, MeshStandardMaterial, MotionBlur, MotionBlurCompositeMaterial, NearestFilter, NoBlending, NormalMaterial, OctahedronGeometry, OrthographicCamera, PanelItem, PerspectiveCamera, PlaneGeometry, Point3D, RawShaderMaterial, Reflector, RepeatWrapping, Scene, SceneCompositeMaterial, ShadowMaterial, Stage, TextureLoader, UI, UnrealBloomBlurMaterial, Vector2, Vector3, WebGLRenderTarget, WebGLRenderer, clearTween, delayedCall, getFullscreenTriangle, getKeyByValue, lerpCameras, router, ticker, tween } from '../../../../build/alien.three.js';
 
 const isDebug = /[?&]debug/.test(location.search);
 
@@ -1679,8 +1679,6 @@ class App {
 
     static initThread() {
         ImageBitmapLoaderThread.init();
-
-        Thread.shared();
     }
 
     static initLoader() {

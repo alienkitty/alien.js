@@ -11,7 +11,7 @@
     <link rel="stylesheet" href="../assets/css/style.css">
 
     <script type="module">
-        import { AdditiveBlending, BloomCompositeMaterial, BlurMaterial, Color, ColorManagement, CopyMaterial, DepthMaterial, DisplayOptions, EnvironmentTextureLoader, Fluid, GLSL3, Group, IcosahedronGeometry, ImageBitmapLoaderThread, LinearSRGBColorSpace, LuminosityMaterial, MathUtils, Mesh, MeshBasicMaterial, MeshMatcapMaterial, MeshStandardMaterial, MotionBlur, NearestFilter, NoBlending, NormalMaterial, OrbitControls, OrthographicCamera, PanelItem, PerspectiveCamera, RawShaderMaterial, RepeatWrapping, Scene, SceneCompositeAddMaterial, SphereGeometry, TextureLoader, Thread, UI, UnrealBloomBlurMaterial, Vector2, Vector3, VolumetricLightMaterial, WebGLRenderTarget, WebGLRenderer, getFullscreenTriangle, getKeyByValue, ticker } from '../../build/alien.three.js';
+        import { AdditiveBlending, BloomCompositeMaterial, BlurMaterial, Color, ColorManagement, CopyMaterial, DepthMaterial, DisplayOptions, EnvironmentTextureLoader, Fluid, GLSL3, Group, IcosahedronGeometry, ImageBitmapLoaderThread, LinearSRGBColorSpace, LuminosityMaterial, MathUtils, Mesh, MeshBasicMaterial, MeshMatcapMaterial, MeshStandardMaterial, MotionBlur, NearestFilter, NoBlending, NormalMaterial, OrbitControls, OrthographicCamera, PanelItem, PerspectiveCamera, RawShaderMaterial, RepeatWrapping, Scene, SceneCompositeAddMaterial, SphereGeometry, TextureLoader, UI, UnrealBloomBlurMaterial, Vector2, Vector3, VolumetricLightMaterial, WebGLRenderTarget, WebGLRenderer, getFullscreenTriangle, getKeyByValue, ticker } from '../../build/alien.three.js';
 
         const isDebug = /[?&]debug/.test(location.search);
         const isOrbit = /[?&]orbit/.test(location.search);
@@ -1394,8 +1394,6 @@
 
             static initThread() {
                 ImageBitmapLoaderThread.init();
-
-                Thread.shared();
             }
 
             static initWorld() {

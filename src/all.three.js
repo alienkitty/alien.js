@@ -103,10 +103,8 @@ export { SmoothSkew } from '@alienkitty/space.js/src/extras/SmoothSkew.js';
 export { SmoothViews } from '@alienkitty/space.js/src/extras/SmoothViews.js';
 export { Magnetic } from '@alienkitty/space.js/src/extras/Magnetic.js';
 
-// Materials
+// Three
 export * from './three/materials/Materials.js';
-
-// 3D
 export { Wobble } from './three/utils/Wobble.js';
 export { Flowmap } from './three/utils/Flowmap.js';
 export { Fluid } from './three/utils/Fluid.js';

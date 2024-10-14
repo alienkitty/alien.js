@@ -2,6 +2,9 @@ import { GLSL3, NoBlending, RawShaderMaterial } from 'three';
 
 import { vertexShader, fragmentShader } from '../../shaders/BloomCompositeShader.js';
 
+/**
+ * A bloom composite pass material based on the bloom from Unreal Engine.
+ */
 export class BloomCompositeMaterial extends RawShaderMaterial {
     constructor({
         dithering = false

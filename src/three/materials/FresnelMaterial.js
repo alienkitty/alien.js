@@ -2,6 +2,9 @@ import { Color, GLSL3, RawShaderMaterial } from 'three';
 
 import { vertexShader, fragmentShader } from '../../shaders/FresnelShader.js';
 
+/**
+ * A Fresnel material with instancing support.
+ */
 export class FresnelMaterial extends RawShaderMaterial {
     constructor({
         baseColor,

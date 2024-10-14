@@ -53,6 +53,9 @@ void main() {
 }
 `;
 
+/**
+ * A class for a mouse flowmap.
+ */
 export class Flowmap {
     constructor(renderer, {
         size = 128,

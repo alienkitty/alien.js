@@ -2,6 +2,9 @@ import { GLSL3, NoBlending, RawShaderMaterial } from 'three';
 
 import { vertexShader, fragmentShader } from '../../shaders/SceneCompositeShader.js';
 
+/**
+ * A composite pass material for a scene with bloom added.
+ */
 export class SceneCompositeMaterial extends RawShaderMaterial {
     constructor({
         dithering = false

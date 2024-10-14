@@ -2,6 +2,9 @@ import { GLSL3, LinearFilter, NearestFilter, NoBlending, RawShaderMaterial, Text
 
 import { vertexShader, fragmentShader } from '../../shaders/SMAAWeightsShader.js';
 
+/**
+ * An SMAA weights pass material.
+ */
 export class SMAAWeightsMaterial extends RawShaderMaterial {
     constructor(loader = new TextureLoader(), {
         areaTexturePath = 'assets/textures/smaa/area.png',

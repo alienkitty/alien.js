@@ -2,6 +2,9 @@ import { GLSL3, NearestFilter, NoBlending, RawShaderMaterial, RepeatWrapping, Te
 
 import { vertexShader, fragmentShader } from '../../shaders/MotionBlurCompositeShader.js';
 
+/**
+ * A per-object motion blur pass material with blue noise jitter.
+ */
 export class MotionBlurCompositeMaterial extends RawShaderMaterial {
     constructor(loader = new TextureLoader(), {
         samples = 7,

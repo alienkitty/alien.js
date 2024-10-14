@@ -2,6 +2,9 @@ import { GLSL3, NoBlending, RawShaderMaterial } from 'three';
 
 import { vertexShader, fragmentShader } from '../../shaders/ACESFilmicToneMappingShader.js';
 
+/**
+ * An ACES Filmic tone mapping material with exposure parameter.
+ */
 export class ACESFilmicToneMappingMaterial extends RawShaderMaterial {
     constructor() {
         super({

@@ -4,6 +4,9 @@
  * Based on https://oframe.github.io/ogl/examples/?src=msdf-text.html by gordonnl
  */
 
+/**
+ * A class for creating MSDF (Multichannel Signed Distance Fields) text buffers.
+ */
 export class Text {
     constructor({
         font,

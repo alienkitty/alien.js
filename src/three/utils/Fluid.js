@@ -252,6 +252,9 @@ void main () {
 }
 `;
 
+/**
+ * A class for fluid distortion.
+ */
 export class Fluid {
     constructor(renderer, {
         simRes = 128,

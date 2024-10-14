@@ -50,6 +50,9 @@ const ContactCallback = oimo.dynamics.callback.ContactCallback;
 // Defaults
 Setting.defaultGJKMargin = 0.0001;
 
+/**
+ * A class for using the OimoPhysics 3D physics engine with an array buffer.
+ */
 export class OimoPhysicsBuffer {
     constructor({
         fps = 60,

@@ -6,6 +6,9 @@
 
 import { ShaderChunk } from 'three';
 
+/**
+ * A three.js shader patch for PCSS (Percent Closer Soft-Shadows).
+ */
 export class SoftShadows {
     static init({
         size = 0.005,

@@ -2,6 +2,10 @@ import { Color, GLSL3, RawShaderMaterial } from 'three';
 
 import { vertexShader, fragmentShader } from '../../shaders/TextShader.js';
 
+/**
+ * An MSDF (Multichannel Signed Distance Fields) text material,
+ * with color and alpha parameters.
+ */
 export class TextMaterial extends RawShaderMaterial {
     constructor({
         map = null,

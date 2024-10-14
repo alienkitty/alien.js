@@ -7,6 +7,9 @@
 
 import { Group, MathUtils, Matrix4 } from 'three';
 
+/**
+ * A controller class for using the {@link OimoPhysicsBuffer | OimoPhysicsBuffer}.
+ */
 export class OimoPhysicsController {
     constructor() {
         this.shapes = [];

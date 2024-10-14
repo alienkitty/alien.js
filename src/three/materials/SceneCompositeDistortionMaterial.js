@@ -2,6 +2,10 @@ import { GLSL3, NoBlending, RawShaderMaterial } from 'three';
 
 import { vertexShader, fragmentShader } from '../../shaders/SceneCompositeDistortionShader.js';
 
+/**
+ * A composite pass material for a scene with distorted bloom added,
+ * and distortion parameter.
+ */
 export class SceneCompositeDistortionMaterial extends RawShaderMaterial {
     constructor({
         dithering = false

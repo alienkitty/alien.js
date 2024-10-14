@@ -2,6 +2,9 @@ import { GLSL3, NoBlending, RawShaderMaterial } from 'three';
 
 import { vertexShader, fragmentShader } from '../../shaders/RGBShader.js';
 
+/**
+ * An RGB shift pass material with angle and amount parameters.
+ */
 export class RGBMaterial extends RawShaderMaterial {
     constructor() {
         super({

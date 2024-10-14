@@ -2,6 +2,9 @@ import { GLSL3, RawShaderMaterial } from 'three';
 
 import { vertexShader, fragmentShader } from '../../shaders/BasicShader.js';
 
+/**
+ * A basic texture map material with alpha parameter and instancing support.
+ */
 export class BasicMaterial extends RawShaderMaterial {
     constructor({
         map = null,

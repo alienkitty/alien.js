@@ -2,6 +2,9 @@ import { GLSL3, NearestFilter, NoBlending, RawShaderMaterial, RepeatWrapping, Te
 
 import { vertexShader, fragmentShader } from '../../shaders/PoissonDiscBlurShader.js';
 
+/**
+ * A Poisson-disc blur pass material.
+ */
 export class PoissonDiscBlurMaterial extends RawShaderMaterial {
     constructor(loader = new TextureLoader(), {
         blueNoisePath = 'assets/textures/blue_noise.png',

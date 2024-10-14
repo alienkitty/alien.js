@@ -2,6 +2,9 @@ import { GLSL3, RawShaderMaterial } from 'three';
 
 import { vertexShader, fragmentShader } from '../../shaders/DepthShader.js';
 
+/**
+ * A depth material with dithering and instancing support.
+ */
 export class DepthMaterial extends RawShaderMaterial {
     constructor({
         dithering = false,

@@ -2,6 +2,9 @@ import { GLSL3, Matrix3, Matrix4, NoBlending, RawShaderMaterial } from 'three';
 
 import { vertexShader, fragmentShader } from '../../shaders/ReflectorDudvShader.js';
 
+/**
+ * A reflection material with DuDv map.
+ */
 export class ReflectorDudvMaterial extends RawShaderMaterial {
     constructor({
         map = null,

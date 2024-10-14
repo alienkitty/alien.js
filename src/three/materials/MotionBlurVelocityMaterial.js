@@ -2,6 +2,9 @@ import { GLSL3, Matrix4, RawShaderMaterial } from 'three';
 
 import { vertexShader, fragmentShader } from '../../shaders/MotionBlurVelocityShader.js';
 
+/**
+ * A velocity pass material with instancing support.
+ */
 export class MotionBlurVelocityMaterial extends RawShaderMaterial {
     constructor({
         instancing = false

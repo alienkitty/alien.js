@@ -9,6 +9,9 @@ import { Color, HalfFloatType, InstancedBufferAttribute, Matrix4, WebGLRenderTar
 
 import { MotionBlurVelocityMaterial } from '../materials/MotionBlurVelocityMaterial.js';
 
+/**
+ * A class for per-object motion blur.
+ */
 export class MotionBlur {
     constructor(renderer, scene, camera, channel, {
         width = 256,

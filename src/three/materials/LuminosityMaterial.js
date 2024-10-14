@@ -2,6 +2,9 @@ import { GLSL3, NoBlending, RawShaderMaterial } from 'three';
 
 import { vertexShader, fragmentShader } from '../../shaders/LuminosityShader.js';
 
+/**
+ * A luminosity high pass material with threshold and smoothing parameters.
+ */
 export class LuminosityMaterial extends RawShaderMaterial {
     constructor() {
         super({

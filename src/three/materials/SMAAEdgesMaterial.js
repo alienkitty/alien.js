@@ -2,6 +2,9 @@ import { GLSL3, NoBlending, RawShaderMaterial, Vector2 } from 'three';
 
 import { vertexShader, fragmentShader } from '../../shaders/SMAAEdgesShader.js';
 
+/**
+ * An SMAA edges pass material.
+ */
 export class SMAAEdgesMaterial extends RawShaderMaterial {
     constructor() {
         super({

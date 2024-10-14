@@ -2,6 +2,9 @@ import { GLSL3, NoBlending, RawShaderMaterial, Vector2 } from 'three';
 
 import { vertexShader, fragmentShader } from '../../shaders/FastGaussianBlurShader.js';
 
+/**
+ * A separable Gaussian blur pass material.
+ */
 export class FastGaussianBlurMaterial extends RawShaderMaterial {
     constructor() {
         super({

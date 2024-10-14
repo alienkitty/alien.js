@@ -2,6 +2,10 @@ import { GLSL3, RawShaderMaterial } from 'three';
 
 import { vertexShader, fragmentShader } from '../../shaders/ShadowTextureShader.js';
 
+/**
+ * A basic texture map material with alpha parameter,
+ * that uses the green channel of the texture as the shadow.
+ */
 export class ShadowTextureMaterial extends RawShaderMaterial {
     constructor({
         map = null

@@ -2,6 +2,9 @@ import { GLSL3, NoBlending, RawShaderMaterial } from 'three';
 
 import { vertexShader, fragmentShader } from '../../shaders/DepthMaskShader.js';
 
+/**
+ * A depth mask pass material that discards the lesser depth.
+ */
 export class DepthMaskMaterial extends RawShaderMaterial {
     constructor() {
         super({

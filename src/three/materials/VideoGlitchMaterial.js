@@ -2,6 +2,9 @@ import { GLSL3, NoBlending, RawShaderMaterial } from 'three';
 
 import { vertexShader, fragmentShader } from '../../shaders/VideoGlitchShader.js';
 
+/**
+ * A TV-style glitch pass material with distortion and speed parameters.
+ */
 export class VideoGlitchMaterial extends RawShaderMaterial {
     constructor() {
         super({

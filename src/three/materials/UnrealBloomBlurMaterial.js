@@ -2,6 +2,9 @@ import { GLSL3, NoBlending, RawShaderMaterial, Vector2 } from 'three';
 
 import { vertexShader, fragmentShader } from '../../shaders/UnrealBloomBlurShader.js';
 
+/**
+ * A separable Gaussian blur pass material based on the bloom from Unreal Engine.
+ */
 export class UnrealBloomBlurMaterial extends RawShaderMaterial {
     constructor(kernelRadius) {
         super({

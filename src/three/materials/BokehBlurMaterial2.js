@@ -2,6 +2,9 @@ import { GLSL3, NoBlending, RawShaderMaterial, Vector2 } from 'three';
 
 import { vertexShader, fragmentShader } from '../../shaders/BokehBlurShader2.js';
 
+/**
+ * A bokeh blur two pass material.
+ */
 export class BokehBlurMaterial2 extends RawShaderMaterial {
     constructor() {
         super({

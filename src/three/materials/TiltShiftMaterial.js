@@ -2,6 +2,9 @@ import { GLSL3, NoBlending, RawShaderMaterial, Vector2 } from 'three';
 
 import { vertexShader, fragmentShader } from '../../shaders/TiltShiftShader.js';
 
+/**
+ * A separable Gaussian blur pass material for a simple fake tilt-shift effect.
+ */
 export class TiltShiftMaterial extends RawShaderMaterial {
     constructor(direction = new Vector2(0.5, 0.5)) {
         super({

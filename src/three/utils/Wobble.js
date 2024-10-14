@@ -6,6 +6,10 @@ import { Vector3 } from 'three';
 
 import { ImprovedNoise } from 'three/addons/math/ImprovedNoise.js';
 
+/**
+ * A class for applying Perlin noise to a position in 3D space,
+ * with frequency, amplitude, scale, and linear interpolation parameters.
+ */
 export class Wobble {
     constructor(position) {
         this.position = position;

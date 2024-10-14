@@ -4,11 +4,13 @@ import { vertexShader, fragmentShader } from '../../shaders/DepthShader.js';
 
 export class DepthMaterial extends RawShaderMaterial {
     constructor({
+        dithering = false,
         instancing = false
     } = {}) {
         const parameters = {
             glslVersion: GLSL3,
             defines: {
+                DITHERING: dithering
             },
             vertexShader,
             fragmentShader

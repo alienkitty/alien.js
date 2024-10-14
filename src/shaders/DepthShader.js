@@ -31,7 +31,10 @@ ${dither}
 void main() {
     FragColor = vec4(vec3(gl_FragCoord.w), 1.0);
 
-    FragColor.rgb = dither(FragColor.rgb);
+    #ifdef DITHERING
+        FragColor.rgb = dither(FragColor.rgb);
+    #endif
+
     FragColor.a = 1.0;
 }
 `;

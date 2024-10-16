@@ -13,6 +13,7 @@ import { ImprovedNoise } from 'three/addons/math/ImprovedNoise.js';
 export class Wobble {
     constructor(position) {
         this.position = position;
+
         this.origin = new Vector3();
         this.target = new Vector3();
         this.perlin = new ImprovedNoise();

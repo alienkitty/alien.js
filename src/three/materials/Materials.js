@@ -1,6 +1,8 @@
 export { NormalMaterial } from './NormalMaterial.js';
 export { ColorMaterial } from './ColorMaterial.js';
+export { ColorLightingMaterial } from './ColorLightingMaterial.js';
 export { BasicMaterial } from './BasicMaterial.js';
+export { BasicLightingMaterial } from './BasicLightingMaterial.js';
 export { ShadowTextureMaterial } from './ShadowTextureMaterial.js';
 export { MaskMaterial } from './MaskMaterial.js';
 export { DepthMaterial } from './DepthMaterial.js';

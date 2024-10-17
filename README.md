@@ -109,6 +109,7 @@ const program = new FXAAProgram(gl);
 [fxaa](https://alien.js.org/examples/ogl/shader_fxaa.html) (OGL version)  
 [smaa](https://alien.js.org/examples/three/shader_smaa.html)  
 [blur](https://alien.js.org/examples/three/shader_blur.html) (Gaussian blur)  
+[blur](https://alien.js.org/examples/three/shader_single_pass_blur.html) (single pass Gaussian blur sum)  
 [blur](https://alien.js.org/examples/three/shader_poisson_disc_blur.html) (Poisson disc blur)  
 [blur](https://alien.js.org/examples/three/shader_bokeh_blur.html) (Bokeh blur)  
 [bloom](https://alien.js.org/examples/three/shader_bloom.html)  

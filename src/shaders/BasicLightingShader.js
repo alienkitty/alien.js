@@ -35,6 +35,7 @@ precision highp float;
 
 uniform sampler2D tMap;
 uniform vec3 uLightPosition;
+uniform float uLightIntensity;
 uniform float uAlpha;
 
 in vec2 vUv;
@@ -46,7 +47,7 @@ void main() {
     vec3 normal = normalize(vNormal);
 
     vec3 light = normalize(uLightPosition);
-    float shading = dot(normal, light) * 0.15;
+    float shading = dot(normal, light) * uLightIntensity;
 
     FragColor = texture(tMap, vUv);
     FragColor.rgb += shading;

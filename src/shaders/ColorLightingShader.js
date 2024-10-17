@@ -30,6 +30,7 @@ precision highp float;
 
 uniform vec3 uColor;
 uniform vec3 uLightPosition;
+uniform float uLightIntensity;
 uniform float uAlpha;
 
 in vec3 vNormal;
@@ -40,7 +41,7 @@ void main() {
     vec3 normal = normalize(vNormal);
 
     vec3 light = normalize(uLightPosition);
-    float shading = dot(normal, light) * 0.15;
+    float shading = dot(normal, light) * uLightIntensity;
 
     FragColor = vec4(uColor + shading, uAlpha);
 }

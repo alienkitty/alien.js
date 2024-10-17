@@ -4,7 +4,7 @@ import { vertexShader, fragmentShader } from '../../shaders/ColorLightingShader.
 
 /**
  * A basic color material with position-based lighting,
- * alpha parameter and instancing support.
+ * intensity and alpha parameters plus instancing support.
  */
 export class ColorLightingMaterial extends RawShaderMaterial {
     constructor({
@@ -18,6 +18,7 @@ export class ColorLightingMaterial extends RawShaderMaterial {
             uniforms: {
                 uColor: { value: color instanceof Color ? color : new Color(color) },
                 uLightPosition: { value: new Vector3(0.5, 1.0, -0.3) },
+                uLightIntensity: { value: 0.15 },
                 uAlpha: { value: 1 }
             },
             vertexShader,

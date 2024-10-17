@@ -4,7 +4,7 @@ import { vertexShader, fragmentShader } from '../../shaders/BasicLightingShader.
 
 /**
  * A basic texture map material with position-based lighting,
- * alpha parameter and instancing support.
+ * intensity and alpha parameters plus instancing support.
  */
 export class BasicLightingMaterial extends RawShaderMaterial {
     constructor({
@@ -19,6 +19,7 @@ export class BasicLightingMaterial extends RawShaderMaterial {
                 tMap: { value: null },
                 uMapTransform: { value: new Matrix3() },
                 uLightPosition: { value: new Vector3(0.5, 1.0, -0.3) },
+                uLightIntensity: { value: 0.15 },
                 uAlpha: { value: 1 }
             },
             vertexShader,

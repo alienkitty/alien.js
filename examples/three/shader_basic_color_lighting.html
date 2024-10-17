@@ -11,7 +11,7 @@
     <link rel="stylesheet" href="../assets/css/style.css">
 
     <script type="module">
-        import { BufferGeometryLoader, BufferGeometryLoaderThread, Color, ColorLightingMaterial, ColorManagement, DirectionalLight, EnvironmentTextureLoader, Group, HemisphereLight, ImageBitmapLoaderThread, LinearSRGBColorSpace, MathUtils, Mesh, MeshBasicMaterial, PerspectiveCamera, Scene, SphereGeometry, TextureLoader, UI, Vector2, Vector3, WebGLRenderer, getFrustum, getFullscreenTriangle, ticker, tween } from '../../build/alien.three.js';
+        import { BufferGeometryLoader, BufferGeometryLoaderThread, Color, ColorLightingMaterial, ColorManagement, DirectionalLight, EnvironmentTextureLoader, Group, HemisphereLight, ImageBitmapLoaderThread, LinearSRGBColorSpace, MathUtils, Mesh, MeshBasicMaterial, PanelItem, PerspectiveCamera, Scene, SphereGeometry, TextureLoader, UI, Vector2, Vector3, WebGLRenderer, getFrustum, getFullscreenTriangle, ticker, tween } from '../../build/alien.three.js';
 
         const isDebug = /[?&]debug/.test(location.search);
 
@@ -138,6 +138,43 @@
             };
 
             static ready = () => this.view.polyhedron.ready();
+        }
+
+        class PanelController {
+            static init(view, ui) {
+                this.view = view;
+                this.ui = ui;
+
+                this.initPanel();
+            }
+
+            static initPanel() {
+                const { polyhedron } = this.view;
+
+                const items = [
+                    {
+                        name: 'FPS'
+                    },
+                    {
+                        type: 'divider'
+                    },
+                    {
+                        type: 'slider',
+                        name: 'Int',
+                        min: 0,
+                        max: 1,
+                        step: 0.01,
+                        value: polyhedron.material.uniforms.uLightIntensity.value,
+                        callback: value => {
+                            polyhedron.material.uniforms.uLightIntensity.value = value;
+                        }
+                    }
+                ];
+
+                items.forEach(data => {
+                    this.ui.addPanel(new PanelItem(data));
+                });
+            }
         }
 
         class RenderManager {
@@ -374,6 +411,8 @@
                 await SceneController.ready();
                 await WorldController.ready();
 
+                this.initPanel();
+
                 CameraController.animateIn();
                 SceneController.animateIn();
             }
@@ -403,6 +442,10 @@
                 CameraController.init(camera);
                 SceneController.init(this.view);
                 RenderManager.init(renderer, scene, camera);
+            }
+
+            static initPanel() {
+                PanelController.init(this.view, this.ui);
             }
 
             static addListeners() {

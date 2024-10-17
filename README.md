@@ -115,6 +115,8 @@ const program = new FXAAProgram(gl);
 [bloom](https://alien.js.org/examples/three/shader_unreal_bloom.html) (Unreal bloom)  
 [bloom](https://alien.js.org/examples/three/shader_bloom_dither.html) (Unreal bloom with dither)  
 [bloom](https://alien.js.org/examples/three/shader_bloom_hdr.html) (Unreal bloom with HDR)  
+[basic lighting](https://alien.js.org/examples/three/shader_basic_color_lighting.html) (color with position-based lighting, orbit camera, [debug](https://alien.js.org/examples/three/shader_basic_color_lighting.html?debug))  
+[basic lighting](https://alien.js.org/examples/three/shader_basic_texture_lighting.html) (texture with position-based lighting, orbit camera, [debug](https://alien.js.org/examples/three/shader_basic_texture_lighting.html?debug))  
 [matcap](https://alien.js.org/examples/three/shader_matcap.html)  
 [soft particles](https://alien.js.org/examples/three/shader_soft_particles.html)  
 [tilt shift](https://alien.js.org/examples/three/shader_tilt_shift.html) (Gaussian blur)  

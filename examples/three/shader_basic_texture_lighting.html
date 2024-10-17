@@ -63,7 +63,11 @@
                 map.wrapT = RepeatWrapping;
                 map.repeat.set(2, 1);
 
-                const material = new BasicLightingMaterial({ map });
+                const material = new BasicLightingMaterial({
+                    map,
+                    // lightPosition: new Vector3(0.5, 1.0, -0.3),
+                    lightIntensity: 0.25
+                });
 
                 this.material = material;
             }

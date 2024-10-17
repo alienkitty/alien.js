@@ -49,8 +49,11 @@
 
                 const geometry = await loadBufferGeometry('../assets/geometry/polyhedron.json');
 
-                const material = new ColorLightingMaterial({ color: new Color(0.2, 0.8, 1.0) });
-                // const material = new ColorLightingMaterial({ color: new Color().offsetHSL(0, 0, -0.65) });
+                const material = new ColorLightingMaterial({
+                    color: new Color(0.2, 0.8, 1.0),
+                    // lightPosition: new Vector3(0.5, 1.0, -0.3),
+                    lightIntensity: 0.1
+                });
 
                 const mesh = new Mesh(geometry, material);
                 this.add(mesh);

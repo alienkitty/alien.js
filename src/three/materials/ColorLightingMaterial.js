@@ -9,6 +9,8 @@ import { vertexShader, fragmentShader } from '../../shaders/ColorLightingShader.
 export class ColorLightingMaterial extends RawShaderMaterial {
     constructor({
         color,
+        lightPosition = new Vector3(0.5, 1.0, -0.3),
+        lightIntensity = 0.15,
         instancing = false
     } = {}) {
         const parameters = {
@@ -17,8 +19,8 @@ export class ColorLightingMaterial extends RawShaderMaterial {
             },
             uniforms: {
                 uColor: { value: color instanceof Color ? color : new Color(color) },
-                uLightPosition: { value: new Vector3(0.5, 1.0, -0.3) },
-                uLightIntensity: { value: 0.15 },
+                uLightPosition: { value: lightPosition },
+                uLightIntensity: { value: lightIntensity },
                 uAlpha: { value: 1 }
             },
             vertexShader,

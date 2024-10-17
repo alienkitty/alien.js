@@ -17,7 +17,7 @@ export const fragmentShader = /* glsl */ `
 precision highp float;
 
 uniform sampler2D tMap;
-uniform float uBluriness;
+uniform float uBlurAmount;
 uniform vec2 uDirection;
 uniform vec2 uResolution;
 
@@ -28,6 +28,6 @@ out vec4 FragColor;
 ${blur}
 
 void main() {
-    FragColor = blur(tMap, vUv, uResolution, uBluriness * uDirection);
+    FragColor = blur(tMap, vUv, uResolution, uBlurAmount * uDirection);
 }
 `;

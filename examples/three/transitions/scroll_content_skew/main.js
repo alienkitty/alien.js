@@ -554,9 +554,9 @@ class PanelController {
                 min: 0,
                 max: 10,
                 step: 0.1,
-                value: RenderManager.blurFactor,
+                value: RenderManager.blurAmount,
                 callback: value => {
-                    RenderManager.blurFactor = value;
+                    RenderManager.blurAmount = value;
                 }
             },
             {
@@ -616,7 +616,7 @@ class RenderManager {
         this.sections = container.children;
 
         // Blur
-        this.blurFactor = 10;
+        this.blurAmount = 10;
 
         // Bloom
         this.luminosityThreshold = 0.1;
@@ -662,10 +662,10 @@ class RenderManager {
 
         // Gaussian blur materials
         this.hBlurMaterial = new BlurMaterial(BlurDirectionX);
-        this.hBlurMaterial.uniforms.uBluriness.value = this.blurFactor;
+        this.hBlurMaterial.uniforms.uBlurAmount.value = this.blurAmount;
 
         this.vBlurMaterial = new BlurMaterial(BlurDirectionY);
-        this.vBlurMaterial.uniforms.uBluriness.value = this.blurFactor;
+        this.vBlurMaterial.uniforms.uBlurAmount.value = this.blurAmount;
 
         // Luminosity high pass material
         this.luminosityMaterial = new LuminosityMaterial();
@@ -835,17 +835,17 @@ class RenderManager {
         renderer.render(this.screen, this.screenCamera);
 
         // Two pass Gaussian blur (horizontal and vertical)
-        const blurFactor = MathUtils.clamp(MathUtils.inverseLerp(0.5, 0, this.compositeMaterial.uniforms.uOpacity.value), 0, 1);
+        const blurAmount = MathUtils.clamp(MathUtils.inverseLerp(0.5, 0, this.compositeMaterial.uniforms.uOpacity.value), 0, 1);
 
-        if (blurFactor > 0) {
+        if (blurAmount > 0) {
             this.hBlurMaterial.uniforms.tMap.value = renderTargetB.texture;
-            this.hBlurMaterial.uniforms.uBluriness.value = this.blurFactor * blurFactor;
+            this.hBlurMaterial.uniforms.uBlurAmount.value = this.blurAmount * blurAmount;
             this.screen.material = this.hBlurMaterial;
             renderer.setRenderTarget(renderTargetA);
             renderer.render(this.screen, this.screenCamera);
 
             this.vBlurMaterial.uniforms.tMap.value = renderTargetA.texture;
-            this.vBlurMaterial.uniforms.uBluriness.value = this.blurFactor * blurFactor;
+            this.vBlurMaterial.uniforms.uBlurAmount.value = this.blurAmount * blurAmount;
             this.screen.material = this.vBlurMaterial;
             renderer.setRenderTarget(renderTargetB);
             renderer.render(this.screen, this.screenCamera);

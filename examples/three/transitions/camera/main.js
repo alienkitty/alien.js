@@ -57,7 +57,7 @@ class CompositeMaterial extends RawShaderMaterial {
                 tScene: { value: null },
                 uFocus: { value: 0.5 },
                 uRotation: { value: 0 },
-                uBluriness: { value: 1 },
+                uBlurAmount: { value: 1 },
                 uDistortion: { value: 1.5 }
             },
             vertexShader: /* glsl */ `
@@ -78,7 +78,7 @@ class CompositeMaterial extends RawShaderMaterial {
                 uniform sampler2D tScene;
                 uniform float uFocus;
                 uniform float uRotation;
-                uniform float uBluriness;
+                uniform float uBlurAmount;
                 uniform float uDistortion;
 
                 in vec2 vUv;
@@ -96,7 +96,7 @@ class CompositeMaterial extends RawShaderMaterial {
 
                     vec2 dir = 0.5 - vUv;
                     float angle = atan(dir.y, dir.x);
-                    float amount = 0.002 * uDistortion * uBluriness * t;
+                    float amount = 0.002 * uDistortion * uBlurAmount * t;
 
                     FragColor += getRGB(tScene, vUv, angle, amount);
 
@@ -133,7 +133,7 @@ class BlurMaterial extends RawShaderMaterial {
                 uBlueNoiseResolution: { value: new Vector2(256, 256) },
                 uFocus: { value: 0.5 },
                 uRotation: { value: 0 },
-                uBluriness: { value: 1 },
+                uBlurAmount: { value: 1 },
                 uDirection: { value: direction },
                 uDebug: { value: isDebug },
                 uResolution: { value: new Vector2() },
@@ -159,7 +159,7 @@ class BlurMaterial extends RawShaderMaterial {
                 uniform vec2 uBlueNoiseResolution;
                 uniform float uFocus;
                 uniform float uRotation;
-                uniform float uBluriness;
+                uniform float uBlurAmount;
                 uniform vec2 uDirection;
                 uniform bool uDebug;
                 uniform vec2 uResolution;
@@ -184,10 +184,10 @@ class BlurMaterial extends RawShaderMaterial {
                     float t = smootherstep(0.0, 1.0, d);
                     float rnd = getBlueNoise(tBlueNoise, gl_FragCoord.xy, uBlueNoiseResolution, vec2(fract(uTime)));
 
-                    FragColor = blur(tMap, vUv, uResolution, 20.0 * uBluriness * t * rot2d(uDirection, rnd));
+                    FragColor = blur(tMap, vUv, uResolution, 20.0 * uBlurAmount * t * rot2d(uDirection, rnd));
 
                     if (uDebug) {
-                        FragColor.rgb = mix(FragColor.rgb, mix(FragColor.rgb, vec3(1), 0.5), uBluriness * t);
+                        FragColor.rgb = mix(FragColor.rgb, mix(FragColor.rgb, vec3(1), 0.5), uBlurAmount * t);
                     }
                 }
             `,
@@ -925,9 +925,9 @@ class PanelController {
                 min: 0,
                 max: 2,
                 step: 0.01,
-                value: RenderManager.blurFactor,
+                value: RenderManager.blurAmount,
                 callback: value => {
-                    RenderManager.blurFactor = value;
+                    RenderManager.blurAmount = value;
                 }
             },
             {
@@ -1028,7 +1028,7 @@ class RenderManager {
         // Blur
         this.blurFocus = navigator.maxTouchPoints ? 0.5 : 0.25;
         this.blurRotation = navigator.maxTouchPoints ? 0 : MathUtils.degToRad(75);
-        this.blurFactor = 1;
+        this.blurAmount = 1;
 
         // Bloom
         this.luminosityThreshold = 0.1;
@@ -1092,13 +1092,13 @@ class RenderManager {
         this.hBlurMaterial = new BlurMaterial(BlurDirectionX);
         this.hBlurMaterial.uniforms.uFocus.value = this.blurFocus;
         this.hBlurMaterial.uniforms.uRotation.value = this.blurRotation;
-        this.hBlurMaterial.uniforms.uBluriness.value = this.blurFactor;
+        this.hBlurMaterial.uniforms.uBlurAmount.value = this.blurAmount;
         this.hBlurMaterial.uniforms.uTime = time;
 
         this.vBlurMaterial = new BlurMaterial(BlurDirectionY);
         this.vBlurMaterial.uniforms.uFocus.value = this.blurFocus;
         this.vBlurMaterial.uniforms.uRotation.value = this.blurRotation;
-        this.vBlurMaterial.uniforms.uBluriness.value = this.blurFactor;
+        this.vBlurMaterial.uniforms.uBlurAmount.value = this.blurAmount;
         this.vBlurMaterial.uniforms.uTime = time;
 
         // Luminosity high pass material
@@ -1130,7 +1130,7 @@ class RenderManager {
         this.compositeMaterial = new CompositeMaterial();
         this.compositeMaterial.uniforms.uFocus.value = this.blurFocus;
         this.compositeMaterial.uniforms.uRotation.value = this.blurRotation;
-        this.compositeMaterial.uniforms.uBluriness.value = this.blurFactor;
+        this.compositeMaterial.uniforms.uBlurAmount.value = this.blurAmount;
 
         // Debug materials
         this.blackoutMaterial = new MeshBasicMaterial({ color: 0x000000 });
@@ -1350,16 +1350,16 @@ class RenderManager {
         renderer.render(this.screen, this.screenCamera);
 
         // Two pass Gaussian blur (horizontal and vertical)
-        if (this.blurFactor) {
+        if (this.blurAmount) {
             this.hBlurMaterial.uniforms.tMap.value = renderTargetC.texture;
-            this.hBlurMaterial.uniforms.uBluriness.value = this.blurFactor;
+            this.hBlurMaterial.uniforms.uBlurAmount.value = this.blurAmount;
             this.screen.material = this.hBlurMaterial;
             renderer.setRenderTarget(renderTargetA);
             renderer.clear();
             renderer.render(this.screen, this.screenCamera);
 
             this.vBlurMaterial.uniforms.tMap.value = renderTargetA.texture;
-            this.vBlurMaterial.uniforms.uBluriness.value = this.blurFactor;
+            this.vBlurMaterial.uniforms.uBlurAmount.value = this.blurAmount;
             this.screen.material = this.vBlurMaterial;
             renderer.setRenderTarget(renderTargetC);
             renderer.clear();
@@ -1368,7 +1368,7 @@ class RenderManager {
 
         // Composite pass (render to screen)
         this.compositeMaterial.uniforms.tScene.value = renderTargetC.texture;
-        this.compositeMaterial.uniforms.uBluriness.value = this.blurFactor;
+        this.compositeMaterial.uniforms.uBlurAmount.value = this.blurAmount;
         this.screen.material = this.compositeMaterial;
         renderer.setRenderTarget(null);
         renderer.clear();
@@ -1379,21 +1379,21 @@ class RenderManager {
     };
 
     static start = () => {
-        this.blurFactor = 0;
+        this.blurAmount = 0;
     };
 
     static zoomIn = () => {
         clearTween(this.timeout);
 
         this.timeout = delayedCall(300, () => {
-            tween(this, { blurFactor: 1 }, 1000, 'easeOutBack');
+            tween(this, { blurAmount: 1 }, 1000, 'easeOutBack');
         });
     };
 
     static zoomOut = () => {
         clearTween(this.timeout);
 
-        tween(this, { blurFactor: 0 }, 300, 'linear');
+        tween(this, { blurAmount: 0 }, 300, 'linear');
     };
 }
 

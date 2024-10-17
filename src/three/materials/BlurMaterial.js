@@ -11,7 +11,7 @@ export class BlurMaterial extends RawShaderMaterial {
             glslVersion: GLSL3,
             uniforms: {
                 tMap: { value: null },
-                uBluriness: { value: 1 },
+                uBlurAmount: { value: 1 },
                 uDirection: { value: direction },
                 uResolution: { value: new Vector2() }
             },

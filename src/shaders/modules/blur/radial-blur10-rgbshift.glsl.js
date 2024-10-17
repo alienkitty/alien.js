@@ -6,7 +6,7 @@ import rgbshift from '../rgbshift/rgbshift.glsl.js';
 export default /* glsl */ `
 ${rgbshift}
 
-vec4 radialBlurRGB(sampler2D image, vec2 uv, float sampleDist, float sampleStrength, float rgbAngle, float rgbStrength) {
+vec4 radialBlurRGB(sampler2D image, vec2 uv, float sampleDist, float sampleStrength, float rgbAngle, float rgbAmount) {
     float samples[10];
     samples[0] = -0.08;
     samples[1] = -0.05;
@@ -23,11 +23,11 @@ vec4 radialBlurRGB(sampler2D image, vec2 uv, float sampleDist, float sampleStren
     float dist = sqrt(dir.x * dir.x + dir.y * dir.y);
     dir = dir / dist;
 
-    vec4 color = getRGB(image, uv, rgbAngle, rgbStrength);
+    vec4 color = getRGB(image, uv, rgbAngle, rgbAmount);
     vec4 sum = color;
 
     for (int i = 0; i < 10; i++) {
-        sum += getRGB(image, uv + dir * samples[i] * sampleDist, rgbAngle, rgbStrength);
+        sum += getRGB(image, uv + dir * samples[i] * sampleDist, rgbAngle, rgbAmount);
     }
 
     sum /= 10.0;

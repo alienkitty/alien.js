@@ -417,10 +417,10 @@
                         min: 0,
                         max: 10,
                         step: 0.1,
-                        value: hBlurMaterial.uniforms.uBluriness.value,
+                        value: hBlurMaterial.uniforms.uBlurAmount.value,
                         callback: value => {
-                            hBlurMaterial.uniforms.uBluriness.value = value;
-                            vBlurMaterial.uniforms.uBluriness.value = value;
+                            hBlurMaterial.uniforms.uBlurAmount.value = value;
+                            vBlurMaterial.uniforms.uBlurAmount.value = value;
                         }
                     },
                     {
@@ -471,7 +471,7 @@
                 this.camera = camera;
 
                 this.blurResolutionScale = 0.25;
-                this.blurFactor = 1.5;
+                this.blurAmount = 1.5;
                 this.enabled = true;
 
                 this.initRenderer();
@@ -497,10 +497,10 @@
 
                 // Gaussian blur materials
                 this.hBlurMaterial = new BlurMaterial(BlurDirectionX);
-                this.hBlurMaterial.uniforms.uBluriness.value = this.blurFactor;
+                this.hBlurMaterial.uniforms.uBlurAmount.value = this.blurAmount;
 
                 this.vBlurMaterial = new BlurMaterial(BlurDirectionY);
-                this.vBlurMaterial.uniforms.uBluriness.value = this.blurFactor;
+                this.vBlurMaterial.uniforms.uBlurAmount.value = this.blurAmount;
 
                 // Composite material
                 this.compositeMaterial = new CompositeMaterial();

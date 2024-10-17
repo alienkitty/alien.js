@@ -25,8 +25,8 @@
                     uniforms: {
                         tMap: { value: null },
                         uBlurDist: { value: 1 },
-                        uBlurStrength: { value: 2.2 },
-                        uRGBStrength: { value: 2.2 }
+                        uBlurAmount: { value: 2.2 },
+                        uRGBAmount: { value: 2.2 }
                     },
                     vertexShader: /* glsl */ `
                         in vec3 position;
@@ -45,8 +45,8 @@
 
                         uniform sampler2D tMap;
                         uniform float uBlurDist;
-                        uniform float uBlurStrength;
-                        uniform float uRGBStrength;
+                        uniform float uBlurAmount;
+                        uniform float uRGBAmount;
 
                         in vec2 vUv;
 
@@ -59,9 +59,9 @@
                             float dist = length(dir);
                             dist = clamp(smoothstep(0.2, 0.7, dist), 0.0, 1.0);
                             float angle = atan(dir.y, dir.x);
-                            float amount = 0.002 * dist * uRGBStrength;
+                            float amount = 0.002 * dist * uRGBAmount;
 
-                            FragColor = radialBlurRGB(tMap, vUv, 0.1 * dist * uBlurDist, uBlurStrength, angle, amount);
+                            FragColor = radialBlurRGB(tMap, vUv, 0.1 * dist * uBlurDist, uBlurAmount, angle, amount);
                         }
                     `,
                     blending: NoBlending,
@@ -302,9 +302,9 @@
                         min: 0,
                         max: 10,
                         step: 0.1,
-                        value: compositeMaterial.uniforms.uBlurStrength.value,
+                        value: compositeMaterial.uniforms.uBlurAmount.value,
                         callback: value => {
-                            compositeMaterial.uniforms.uBlurStrength.value = value;
+                            compositeMaterial.uniforms.uBlurAmount.value = value;
                         }
                     },
                     {
@@ -313,9 +313,9 @@
                         min: 0,
                         max: 10,
                         step: 0.1,
-                        value: compositeMaterial.uniforms.uRGBStrength.value,
+                        value: compositeMaterial.uniforms.uRGBAmount.value,
                         callback: value => {
-                            compositeMaterial.uniforms.uRGBStrength.value = value;
+                            compositeMaterial.uniforms.uRGBAmount.value = value;
                         }
                     },
                     {

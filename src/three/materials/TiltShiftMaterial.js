@@ -12,7 +12,7 @@ export class TiltShiftMaterial extends RawShaderMaterial {
             uniforms: {
                 tMap: { value: null },
                 uFocus: { value: 0.5 },
-                uBluriness: { value: 1 },
+                uBlurAmount: { value: 1 },
                 uDirection: { value: direction },
                 uResolution: { value: new Vector2() }
             },

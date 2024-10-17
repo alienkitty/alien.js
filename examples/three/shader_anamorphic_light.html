@@ -583,7 +583,7 @@
                 this.vlWeight = 0.4;
                 this.vlClamp = 1;
                 this.blurResolutionScale = 0.25;
-                this.blurFactor = 2.5;
+                this.blurAmount = 2.5;
 
                 // Bloom
                 this.luminosityThreshold = 0.1;
@@ -648,10 +648,10 @@
 
                 // Gaussian blur materials
                 this.hBlurMaterial = new BlurMaterial(BlurDirectionX);
-                this.hBlurMaterial.uniforms.uBluriness.value = this.blurFactor;
+                this.hBlurMaterial.uniforms.uBlurAmount.value = this.blurAmount;
 
                 this.vBlurMaterial = new BlurMaterial(BlurDirectionY);
-                this.vBlurMaterial.uniforms.uBluriness.value = this.blurFactor;
+                this.vBlurMaterial.uniforms.uBlurAmount.value = this.blurAmount;
 
                 // Luminosity high pass material
                 this.luminosityMaterial = new LuminosityMaterial();

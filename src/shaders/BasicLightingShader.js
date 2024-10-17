@@ -11,11 +11,13 @@ uniform mat4 modelViewMatrix;
 uniform mat4 projectionMatrix;
 uniform mat3 normalMatrix;
 
+uniform mat3 uMapTransform;
+
 out vec2 vUv;
 out vec3 vNormal;
 
 void main() {
-    vUv = uv;
+    vUv = (uMapTransform * vec3(uv, 1.0)).xy;
     vNormal = normalize(normalMatrix * normal);
 
     vec4 mvPosition = vec4(position, 1.0);

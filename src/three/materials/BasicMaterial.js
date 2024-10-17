@@ -1,4 +1,4 @@
-import { GLSL3, RawShaderMaterial } from 'three';
+import { GLSL3, Matrix3, RawShaderMaterial } from 'three';
 
 import { vertexShader, fragmentShader } from '../../shaders/BasicShader.js';
 
@@ -15,13 +15,23 @@ export class BasicMaterial extends RawShaderMaterial {
             defines: {
             },
             uniforms: {
-                tMap: { value: map },
+                tMap: { value: null },
+                uMapTransform: { value: new Matrix3() },
                 uAlpha: { value: 1 }
             },
             vertexShader,
             fragmentShader,
             transparent: true
         };
+
+        if (map) {
+            map.updateMatrix();
+
+            parameters.uniforms = Object.assign(parameters.uniforms, {
+                tMap: { value: map },
+                uMapTransform: { value: map.matrix }
+            });
+        }
 
         if (instancing) {
             parameters.defines = Object.assign(parameters.defines, {

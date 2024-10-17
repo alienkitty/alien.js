@@ -1,4 +1,4 @@
-import { GLSL3, RawShaderMaterial, Vector3 } from 'three';
+import { GLSL3, Matrix3, RawShaderMaterial, Vector3 } from 'three';
 
 import { vertexShader, fragmentShader } from '../../shaders/BasicLightingShader.js';
 
@@ -16,7 +16,8 @@ export class BasicLightingMaterial extends RawShaderMaterial {
             defines: {
             },
             uniforms: {
-                tMap: { value: map },
+                tMap: { value: null },
+                uMapTransform: { value: new Matrix3() },
                 uLightPosition: { value: new Vector3(0.5, 1.0, -0.3) },
                 uAlpha: { value: 1 }
             },
@@ -24,6 +25,15 @@ export class BasicLightingMaterial extends RawShaderMaterial {
             fragmentShader,
             transparent: true
         };
+
+        if (map) {
+            map.updateMatrix();
+
+            parameters.uniforms = Object.assign(parameters.uniforms, {
+                tMap: { value: map },
+                uMapTransform: { value: map.matrix }
+            });
+        }
 
         if (instancing) {
             parameters.defines = Object.assign(parameters.defines, {

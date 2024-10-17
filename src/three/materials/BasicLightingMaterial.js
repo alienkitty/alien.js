@@ -9,8 +9,8 @@ import { vertexShader, fragmentShader } from '../../shaders/BasicLightingShader.
 export class BasicLightingMaterial extends RawShaderMaterial {
     constructor({
         map = null,
-        lightPosition = new Vector3(0.5, 1.0, -0.3),
-        lightIntensity = 0.15,
+        lightPosition = new Vector3(1, 1, 1),
+        lightIntensity = 0.25,
         instancing = false
     } = {}) {
         const parameters = {

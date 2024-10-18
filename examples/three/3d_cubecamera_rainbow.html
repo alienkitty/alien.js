@@ -395,6 +395,11 @@
             static initPanel() {
                 const { hBlurMaterial, vBlurMaterial, compositeMaterial } = RenderManager;
 
+                const postOptions = {
+                    Off: false,
+                    Post: true
+                };
+
                 const debugOptions = {
                     Off: false,
                     Debug: true
@@ -408,6 +413,17 @@
                 const items = [
                     {
                         name: 'FPS'
+                    },
+                    {
+                        type: 'divider'
+                    },
+                    {
+                        type: 'list',
+                        list: postOptions,
+                        value: getKeyByValue(postOptions, RenderManager.enabled),
+                        callback: value => {
+                            RenderManager.enabled = postOptions[value];
+                        }
                     },
                     {
                         type: 'divider'

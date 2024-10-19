@@ -879,10 +879,10 @@
             }
 
             static setLightPosition() {
-                this.lightPosition.project(this.camera);
-
-                const x = (this.lightPosition.x + 1) / 2;
-                const y = (this.lightPosition.y + 1) / 2;
+                const position = this.lightPosition.clone();
+                const vector = position.project(this.camera);
+                const x = (vector.x + 1) / 2;
+                const y = (vector.y + 1) / 2;
 
                 this.vlMaterial.uniforms.uLightPosition.value.set(x, y);
             }

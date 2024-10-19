@@ -277,7 +277,7 @@
                 this.camera = camera;
 
                 // Film grain and vignetting
-                this.grainAmount = 0.05;
+                this.grainAmount = 0.1;
                 this.boost = 1.1;
                 this.reduction = 0.9;
 
@@ -334,7 +334,7 @@
                 }
 
                 // Bloom composite material
-                this.bloomCompositeMaterial = new BloomCompositeMaterial();
+                this.bloomCompositeMaterial = new BloomCompositeMaterial({ dithering: true });
                 this.bloomCompositeMaterial.uniforms.tBlur1.value = this.renderTargetsVertical[0].texture;
                 this.bloomCompositeMaterial.uniforms.tBlur2.value = this.renderTargetsVertical[1].texture;
                 this.bloomCompositeMaterial.uniforms.tBlur3.value = this.renderTargetsVertical[2].texture;
@@ -345,9 +345,9 @@
                 // Composite material
                 this.compositeMaterial = new CompositeMaterial();
                 this.compositeMaterial.uniforms.uBloomDistortion.value = this.bloomDistortion;
+                this.compositeMaterial.uniforms.uGrainAmount.value = this.grainAmount;
                 this.compositeMaterial.uniforms.uBoost.value = this.boost;
                 this.compositeMaterial.uniforms.uReduction.value = this.reduction;
-                this.compositeMaterial.uniforms.uGrainAmount.value = this.grainAmount;
                 this.compositeMaterial.uniforms.uTime = time;
             }
 

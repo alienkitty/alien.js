@@ -26,7 +26,7 @@
                         tScene: { value: null },
                         tBloom: { value: null },
                         uBloomDistortion: { value: 1.5 },
-                        uGrain: { value: 0.05 },
+                        uGrainAmount: { value: 0.05 },
                         uBoost: { value: 1.1 },
                         uReduction: { value: 0.9 },
                         uTime: { value: 0 }
@@ -49,7 +49,7 @@
                         uniform sampler2D tScene;
                         uniform sampler2D tBloom;
                         uniform float uBloomDistortion;
-                        uniform float uGrain;
+                        uniform float uGrainAmount;
                         uniform float uBoost;
                         uniform float uReduction;
                         uniform float uTime;
@@ -73,7 +73,7 @@
                             FragColor.rgb += getRGB(tBloom, vUv, angle, amount).rgb;
 
                             // Film grain
-                            FragColor.rgb += vec3(uGrain * random(vUv + vec2(uTime, 0.0) * 0.06));
+                            FragColor.rgb += vec3(uGrainAmount * random(vUv + vec2(uTime, 0.0) * 0.06));
 
                             // Vignetting
                             FragColor.rgb *= uBoost - center * uReduction;
@@ -172,9 +172,9 @@
                         min: 0,
                         max: 1,
                         step: 0.01,
-                        value: compositeMaterial.uniforms.uGrain.value,
+                        value: compositeMaterial.uniforms.uGrainAmount.value,
                         callback: value => {
-                            compositeMaterial.uniforms.uGrain.value = value;
+                            compositeMaterial.uniforms.uGrainAmount.value = value;
                         }
                     },
                     {
@@ -277,7 +277,7 @@
                 this.camera = camera;
 
                 // Film grain and vignetting
-                this.grain = 0.05;
+                this.grainAmount = 0.05;
                 this.boost = 1.1;
                 this.reduction = 0.9;
 
@@ -347,7 +347,7 @@
                 this.compositeMaterial.uniforms.uBloomDistortion.value = this.bloomDistortion;
                 this.compositeMaterial.uniforms.uBoost.value = this.boost;
                 this.compositeMaterial.uniforms.uReduction.value = this.reduction;
-                this.compositeMaterial.uniforms.uGrain.value = this.grain;
+                this.compositeMaterial.uniforms.uGrainAmount.value = this.grainAmount;
                 this.compositeMaterial.uniforms.uTime = time;
             }
 

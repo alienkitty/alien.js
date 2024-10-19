@@ -363,11 +363,11 @@
 
                 this.dust.material.uniforms.tDepth.value = this.renderTargetA.depthTexture;
 
-                // Composite material
-                this.compositeMaterial = new SceneCompositeMaterial();
-
                 // Copy material
                 this.copyMaterial = new CopyMaterial();
+
+                // Composite material
+                this.compositeMaterial = new SceneCompositeMaterial();
             }
 
             static bloomFactors() {

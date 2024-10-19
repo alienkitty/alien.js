@@ -112,6 +112,7 @@ const program = new FXAAProgram(gl);
 [blur](https://alien.js.org/examples/three/shader_single_pass_blur.html) (single pass Gaussian blur sum)  
 [blur](https://alien.js.org/examples/three/shader_poisson_disc_blur.html) (Poisson-disc blur)  
 [blur](https://alien.js.org/examples/three/shader_bokeh_blur.html) (bokeh blur)  
+[blur](https://alien.js.org/examples/three/shader_vignette_blur.html) (vignette blur)  
 [bloom](https://alien.js.org/examples/three/shader_bloom.html)  
 [bloom](https://alien.js.org/examples/three/shader_unreal_bloom.html) (Unreal bloom)  
 [bloom](https://alien.js.org/examples/three/shader_bloom_dither.html) (Unreal bloom with dither)  

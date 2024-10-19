@@ -1045,7 +1045,7 @@ class RenderManager {
     }
 
     static initRenderer() {
-        const { screenTriangle, textureLoader, time, getTexture } = WorldController;
+        const { screenTriangle, textureLoader, resolution, time, getTexture } = WorldController;
 
         // Manually clear
         this.renderer.autoClear = false;
@@ -1093,12 +1093,14 @@ class RenderManager {
         this.hBlurMaterial.uniforms.uFocus.value = this.blurFocus;
         this.hBlurMaterial.uniforms.uRotation.value = this.blurRotation;
         this.hBlurMaterial.uniforms.uBlurAmount.value = this.blurAmount;
+        this.hBlurMaterial.uniforms.uResolution = resolution;
         this.hBlurMaterial.uniforms.uTime = time;
 
         this.vBlurMaterial = new BlurMaterial(BlurDirectionY);
         this.vBlurMaterial.uniforms.uFocus.value = this.blurFocus;
         this.vBlurMaterial.uniforms.uRotation.value = this.blurRotation;
         this.vBlurMaterial.uniforms.uBlurAmount.value = this.blurAmount;
+        this.vBlurMaterial.uniforms.uResolution = resolution;
         this.vBlurMaterial.uniforms.uTime = time;
 
         // Luminosity high pass material
@@ -1178,10 +1180,6 @@ class RenderManager {
         this.renderTargetC.setSize(width, height);
 
         this.motionBlur.setSize(width, height);
-
-        // Gaussian blur
-        this.hBlurMaterial.uniforms.uResolution.value.set(width, height);
-        this.vBlurMaterial.uniforms.uResolution.value.set(width, height);
 
         // Unreal bloom
         width = MathUtils.floorPowerOfTwo(width) / 2;

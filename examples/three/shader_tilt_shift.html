@@ -229,18 +229,6 @@
                     },
                     {
                         type: 'slider',
-                        name: 'Focus',
-                        min: 0,
-                        max: 1,
-                        step: 0.01,
-                        value: hBlurMaterial.uniforms.uFocus.value,
-                        callback: value => {
-                            hBlurMaterial.uniforms.uFocus.value = value;
-                            vBlurMaterial.uniforms.uFocus.value = value;
-                        }
-                    },
-                    {
-                        type: 'slider',
                         name: 'Blur',
                         min: 0,
                         max: 10,
@@ -249,6 +237,18 @@
                         callback: value => {
                             hBlurMaterial.uniforms.uBlurAmount.value = value;
                             vBlurMaterial.uniforms.uBlurAmount.value = value;
+                        }
+                    },
+                    {
+                        type: 'slider',
+                        name: 'Focus',
+                        min: 0,
+                        max: 1,
+                        step: 0.01,
+                        value: hBlurMaterial.uniforms.uFocus.value,
+                        callback: value => {
+                            hBlurMaterial.uniforms.uFocus.value = value;
+                            vBlurMaterial.uniforms.uFocus.value = value;
                         }
                     },
                     {
@@ -333,7 +333,7 @@
             }
 
             static initRenderer() {
-                const { screenTriangle } = WorldController;
+                const { screenTriangle, resolution } = WorldController;
 
                 // Manually clear
                 this.renderer.autoClear = false;
@@ -367,9 +367,11 @@
                 // Gaussian blur materials
                 this.hBlurMaterial = new TiltShiftMaterial(BlurDirectionX);
                 this.hBlurMaterial.uniforms.uBlurAmount.value = this.blurAmount;
+                this.hBlurMaterial.uniforms.uResolution = resolution;
 
                 this.vBlurMaterial = new TiltShiftMaterial(BlurDirectionY);
                 this.vBlurMaterial.uniforms.uBlurAmount.value = this.blurAmount;
+                this.vBlurMaterial.uniforms.uResolution = resolution;
 
                 // Luminosity high pass material
                 this.luminosityMaterial = new LuminosityMaterial();
@@ -429,10 +431,6 @@
 
                 this.renderTargetA.setSize(width, height);
                 this.renderTargetB.setSize(width, height);
-
-                // Gaussian blur
-                this.hBlurMaterial.uniforms.uResolution.value.set(width, height);
-                this.vBlurMaterial.uniforms.uResolution.value.set(width, height);
 
                 // Unreal bloom
                 width = MathUtils.floorPowerOfTwo(width) / 2;

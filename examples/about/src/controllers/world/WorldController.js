@@ -1,5 +1,4 @@
 import { ColorManagement, LinearSRGBColorSpace, Mesh, OrthographicCamera, Vector2, WebGLRenderer } from 'three';
-
 import { getFullscreenTriangle } from '@alienkitty/space.js/three';
 
 export class WorldController {

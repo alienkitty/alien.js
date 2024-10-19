@@ -1,5 +1,4 @@
 import { HalfFloatType, Vector2 } from 'three';
-
 import { Reticle, Stage, getDoubleRenderTarget } from '@alienkitty/space.js/three';
 
 import { Data } from '../../data/Data.js';

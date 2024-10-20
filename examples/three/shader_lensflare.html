@@ -11,7 +11,7 @@
     <link rel="stylesheet" href="../assets/css/style.css">
 
     <script type="module">
-        import { BloomCompositeMaterial, BlurMaterial, Color, ColorManagement, EnvironmentTextureLoader, Group, HemisphereLight, IcosahedronGeometry, ImageBitmapLoaderThread, LensflareMaterial, LinearSRGBColorSpace, LuminosityMaterial, MathUtils, Mesh, MeshBasicMaterial, MeshStandardMaterial, OrthographicCamera, PanelItem, PerspectiveCamera, PointLight, RepeatWrapping, Scene, SceneCompositeAddMaterial, ShaderChunk, TextureLoader, UI, UnrealBloomBlurMaterial, Vector2, Vector3, WebGLRenderTarget, WebGLRenderer, getFrustum, getFullscreenTriangle, ticker } from '../../build/alien.three.js';
+        import { BloomCompositeMaterial, BlurMaterial, Color, ColorManagement, EnvironmentTextureLoader, Group, HemisphereLight, IcosahedronGeometry, ImageBitmapLoaderThread, LensflareMaterial, LinearSRGBColorSpace, LuminosityMaterial, MathUtils, Mesh, MeshBasicMaterial, MeshStandardMaterial, OrthographicCamera, PanelItem, PerspectiveCamera, PointLight, RepeatWrapping, Scene, SceneCompositeAddMaterial, ShaderChunk, TextureLoader, UI, UnrealBloomBlurMaterial, Vector2, Vector3, WebGLRenderTarget, WebGLRenderer, getFullscreenTriangle, getViewSize, ticker } from '../../build/alien.three.js';
 
         const colors = {
             lightColor: 0xf44336
@@ -334,10 +334,12 @@
             // Public methods
 
             static resize = () => {
-                const { width, height } = WorldController.getFrustum(this.view.ball.position.z);
+                const { getViewSize } = WorldController;
 
-                this.halfWidth = width / 2;
-                this.halfHeight = height / 2;
+                const { x, y } = getViewSize(this.view.ball.position.z);
+
+                this.halfWidth = x / 2;
+                this.halfHeight = y / 2;
             };
 
             static update = () => {
@@ -978,7 +980,7 @@
 
             static loadEnvironmentTexture = path => this.environmentLoader.loadAsync(path);
 
-            static getFrustum = offsetZ => getFrustum(this.camera, offsetZ);
+            static getViewSize = object => getViewSize(this.camera, object);
         }
 
         class App {

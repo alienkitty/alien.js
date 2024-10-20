@@ -11,7 +11,7 @@
     <link rel="stylesheet" href="../assets/css/style.css">
 
     <script type="module">
-        import { BloomCompositeMaterial, BufferGeometryLoader, BufferGeometryLoaderThread, Color, ColorManagement, DirectionalLight, EnvironmentTextureLoader, Group, HemisphereLight, ImageBitmapLoaderThread, LinearSRGBColorSpace, LuminosityMaterial, MathUtils, Mesh, MeshStandardMaterial, OrthographicCamera, PanelItem, PerspectiveCamera, PointLight, PointLightHelper, RepeatWrapping, Scene, SceneCompositeDistortionMaterial, TextureLoader, UI, UnrealBloomBlurMaterial, Vector2, Vector3, WebGLRenderTarget, WebGLRenderer, getFrustum, getFullscreenTriangle, ticker, tween } from '../../build/alien.three.js';
+        import { BloomCompositeMaterial, BufferGeometryLoader, BufferGeometryLoaderThread, Color, ColorManagement, DirectionalLight, EnvironmentTextureLoader, Group, HemisphereLight, ImageBitmapLoaderThread, LinearSRGBColorSpace, LuminosityMaterial, MathUtils, Mesh, MeshStandardMaterial, OrthographicCamera, PanelItem, PerspectiveCamera, PointLight, PointLightHelper, RepeatWrapping, Scene, SceneCompositeDistortionMaterial, TextureLoader, UI, UnrealBloomBlurMaterial, Vector2, Vector3, WebGLRenderTarget, WebGLRenderer, getFullscreenTriangle, getViewSize, ticker, tween } from '../../build/alien.three.js';
 
         const isDebug = /[?&]debug/.test(location.search);
 
@@ -166,10 +166,12 @@
             // Public methods
 
             static resize = () => {
-                const { width, height } = WorldController.getFrustum(this.view.light.position.z);
+                const { getViewSize } = WorldController;
 
-                this.halfWidth = width / 2;
-                this.halfHeight = height / 2;
+                const { x, y } = getViewSize(this.view.light.position.z);
+
+                this.halfWidth = x / 2;
+                this.halfHeight = y / 2;
             };
 
             static update = () => {
@@ -647,7 +649,7 @@
 
             static loadBufferGeometry = path => this.bufferGeometryLoader.loadAsync(path);
 
-            static getFrustum = offsetZ => getFrustum(this.camera, offsetZ);
+            static getViewSize = object => getViewSize(this.camera, object);
         }
 
         class App {

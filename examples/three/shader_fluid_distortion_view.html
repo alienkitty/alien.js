@@ -11,7 +11,7 @@
     <link rel="stylesheet" href="../assets/css/style.css">
 
     <script type="module">
-        import { AdditiveBlending, BloomCompositeMaterial, Color, ColorManagement, DirectionalLight, Fluid, Fog, GLSL3, Group, HemisphereLight, LinearSRGBColorSpace, LuminosityMaterial, MathUtils, Mesh, MeshBasicMaterial, MeshStandardMaterial, OrthographicCamera, PanelItem, PerspectiveCamera, PlaneGeometry, RawShaderMaterial, Reflector, RepeatWrapping, SVGLoader, Scene, SceneCompositeDistortionMaterial, TextureLoader, UI, UnrealBloomBlurMaterial, Vector2, Vector3, WebGLRenderTarget, WebGLRenderer, getFrustum, getFullscreenTriangle, ticker } from '../../build/alien.three.js';
+        import { AdditiveBlending, BloomCompositeMaterial, Color, ColorManagement, DirectionalLight, Fluid, Fog, GLSL3, Group, HemisphereLight, LinearSRGBColorSpace, LuminosityMaterial, MathUtils, Mesh, MeshBasicMaterial, MeshStandardMaterial, OrthographicCamera, PanelItem, PerspectiveCamera, PlaneGeometry, RawShaderMaterial, Reflector, RepeatWrapping, SVGLoader, Scene, SceneCompositeDistortionMaterial, TextureLoader, UI, UnrealBloomBlurMaterial, Vector2, Vector3, WebGLRenderTarget, WebGLRenderer, getFullscreenTriangle, getViewSize, ticker } from '../../build/alien.three.js';
 
         import rgbshift from '../../src/shaders/modules/rgbshift/rgbshift.glsl.js';
 
@@ -170,10 +170,12 @@
             // Public methods
 
             resize = (width, height, dpr) => {
-                const frustum = WorldController.getFrustum(this.mesh.position.z);
+                const { getViewSize } = WorldController;
 
-                this.widthResolutionScale = this.width / frustum.width;
-                this.heightResolutionScale = this.height / frustum.height;
+                const { x, y } = getViewSize(this.mesh.position.z);
+
+                this.widthResolutionScale = this.width / x;
+                this.heightResolutionScale = this.height / y;
 
                 width = Math.round(width * dpr * this.widthResolutionScale);
                 height = Math.round(height * dpr * this.heightResolutionScale);
@@ -964,7 +966,7 @@
 
             static loadSVG = path => this.svgLoader.loadAsync(path);
 
-            static getFrustum = offsetZ => getFrustum(this.camera, offsetZ);
+            static getViewSize = object => getViewSize(this.camera, object);
         }
 
         class App {

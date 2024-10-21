@@ -200,6 +200,10 @@ a {
     }
 }
 
+.trackers {
+    z-index: 10;
+}
+
 .menu > * {
     width: 44px;
 }

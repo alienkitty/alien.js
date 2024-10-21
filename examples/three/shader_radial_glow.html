@@ -4,14 +4,16 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
 
-    <title>Radial Glow — Alien.js</title>
+    <title>Radial Glow Shader — Alien.js</title>
 
     <link rel="preconnect" href="https://fonts.gstatic.com">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto+Mono">
     <link rel="stylesheet" href="../assets/css/style.css">
 
     <script type="module">
-        import { BloomCompositeMaterial, Color, ColorManagement, EnvironmentTextureLoader, GLSL3, Group, HemisphereLight, IcosahedronGeometry, LinearSRGBColorSpace, LuminosityMaterial, MathUtils, Mesh, MeshStandardMaterial, NoBlending, OrthographicCamera, PanelItem, PerspectiveCamera, RawShaderMaterial, RepeatWrapping, Scene, ShaderChunk, TextureLoader, UI, UnrealBloomBlurMaterial, Vector2, Vector3, WebGLRenderTarget, WebGLRenderer, getFullscreenTriangle, ticker } from '../../build/alien.three.js';
+        import { BloomCompositeMaterial, Color, ColorManagement, EnvironmentTextureLoader, GLSL3, Group, HemisphereLight, IcosahedronGeometry, LinearSRGBColorSpace, LuminosityMaterial, MathUtils, Mesh, MeshStandardMaterial, NoBlending, OrbitControls, OrthographicCamera, PanelItem, PerspectiveCamera, RawShaderMaterial, RepeatWrapping, Scene, ShaderChunk, TextureLoader, UI, UnrealBloomBlurMaterial, Vector2, Vector3, WebGLRenderTarget, WebGLRenderer, getFullscreenTriangle, ticker, tween } from '../../build/alien.three.js';
+
+        const isOrbit = /[?&]orbit/.test(location.search);
 
         const colors = {
             lightColor: 0xff2a7a
@@ -77,7 +79,7 @@
                             amount = pow(amount, uPower);
                             amount *= uAmount;
 
-                            FragColor.rgb += uLightColor * (1.0 - amount) * 0.3;
+                            FragColor.rgb += clamp(uLightColor * (1.0 - amount) * 0.3, 0.0, 1.0);
 
                             FragColor.rgb = dither(FragColor.rgb);
                             FragColor.a = 1.0;
@@ -459,9 +461,6 @@
             // Public methods
 
             static resize = (width, height, dpr) => {
-                this.width = width;
-                this.height = height;
-
                 this.renderer.setPixelRatio(dpr);
                 this.renderer.setSize(width, height);
 
@@ -567,6 +566,10 @@
             }
 
             static addListeners() {
+                if (isOrbit) {
+                    return;
+                }
+
                 window.addEventListener('pointermove', this.onPointerMove);
             }
 
@@ -611,8 +614,21 @@
                 this.camera.lookAt(this.lookAt);
             };
 
+            static start = () => {
+                this.camera.fov = 75;
+                this.camera.updateProjectionMatrix();
+            };
+
             static animateIn = () => {
+                if (isOrbit) {
+                    return;
+                }
+
                 this.enabled = true;
+
+                tween(this.camera, { fov: 30 }, 7000, 'easeInOutCubic', null, () => {
+                    this.camera.updateProjectionMatrix();
+                });
             };
         }
 
@@ -622,6 +638,7 @@
                 this.initLights();
                 this.initLoaders();
                 this.initEnvironment();
+                this.initControls();
 
                 this.addListeners();
             }
@@ -676,6 +693,15 @@
                 this.scene.environmentIntensity = 1.2;
             }
 
+            static initControls() {
+                if (!isOrbit) {
+                    return;
+                }
+
+                this.controls = new OrbitControls(this.camera, this.renderer.domElement);
+                this.controls.enableDamping = true;
+            }
+
             static addListeners() {
                 this.renderer.domElement.addEventListener('touchstart', this.onTouchStart);
             }
@@ -700,6 +726,10 @@
             static update = (time, delta, frame) => {
                 this.time.value = time;
                 this.frame.value = frame;
+
+                if (this.controls && this.controls.enabled) {
+                    this.controls.update();
+                }
             };
 
             static ready = () => Promise.all([
@@ -730,8 +760,9 @@
 
                 this.initPanel();
 
-                CameraController.animateIn();
-                SceneController.animateIn();
+                CameraController.start();
+
+                this.animateIn();
             }
 
             static initWorld() {
@@ -775,7 +806,7 @@
 
                 WorldController.resize(width, height, dpr);
                 CameraController.resize(width, height);
-                SceneController.resize(width, height);
+                SceneController.resize();
                 RenderManager.resize(width, height, dpr);
             };
 
@@ -785,6 +816,13 @@
                 SceneController.update();
                 RenderManager.update(time, delta, frame);
                 this.ui.update();
+            };
+
+            // Public methods
+
+            static animateIn = () => {
+                CameraController.animateIn();
+                SceneController.animateIn();
             };
         }
 

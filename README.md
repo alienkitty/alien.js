@@ -126,7 +126,7 @@ const program = new FXAAProgram(gl);
 [chromatic aberration](https://alien.js.org/examples/three/shader_chromatic_aberration.html)  
 [barrel distortion](https://alien.js.org/examples/three/shader_barrel_distortion.html) (RGB shift)  
 [radial blur](https://alien.js.org/examples/three/shader_radial_blur_rgbshift.html) (RGB shift)  
-[radial glow](https://alien.js.org/examples/three/shader_radial_glow.html) (position-based)  
+[radial glow](https://alien.js.org/examples/three/shader_radial_glow.html) (position-based, [orbit controls](https://alien.js.org/examples/three/shader_radial_glow.html?orbit))  
 [film grain](https://alien.js.org/examples/three/shader_film_grain.html)  
 [reflection](https://alien.js.org/examples/three/shader_reflection.html) (fast Gaussian blur)  
 [reflection](https://alien.js.org/examples/three/shader_reflection_diffuse.html) (diffuse)  

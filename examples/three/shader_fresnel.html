@@ -10,16 +10,14 @@
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto+Mono">
     <link rel="stylesheet" href="../assets/css/style.css">
 
-    <style>
-        :root {
-            --bg-color: #b6d8f2;
-            --ui-color: #000;
-            --ui-color-triplet: 0 0 0;
-        }
-    </style>
-
     <script type="module">
         import { Color, ColorManagement, GLSL3, Group, LinearSRGBColorSpace, Mesh, OrbitControls, PanelItem, PerspectiveCamera, RawShaderMaterial, Scene, SphereGeometry, UI, Vector2, WebGLRenderer, brightness, getFullscreenTriangle, ticker } from '../../build/alien.three.js';
+
+        const colors = {
+            backgroundColor: 0x010204,
+            baseColor: 0x010204,
+            fresnelColor: 0x323850
+        };
 
         import periodic3d from '../../src/shaders/modules/noise/periodic3d.glsl.js';
 
@@ -30,8 +28,8 @@
                 super({
                     glslVersion: GLSL3,
                     uniforms: {
-                        uBaseColor: { value: new Color('#b6d8f2') },
-                        uFresnelColor: { value: new Color('#f7f6cf') },
+                        uBaseColor: { value: new Color(colors.baseColor) },
+                        uFresnelColor: { value: new Color(colors.fresnelColor) },
                         uFresnelPower: { value: 1.5 },
                         uTime: WorldController.time
                     },
@@ -238,7 +236,7 @@
 
                 // 3D scene
                 this.scene = new Scene();
-                this.scene.background = new Color(0xb6d8f2);
+                this.scene.background = new Color(colors.backgroundColor);
                 this.camera = new PerspectiveCamera(30);
                 this.camera.near = 0.5;
                 this.camera.far = 40;

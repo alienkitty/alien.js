@@ -29,8 +29,8 @@
         };
 
         const colors = {
-            backgroundColor: 0x030627,
-            lightColor: 0x8080ff
+            backgroundColor: 0x01020b,
+            lightColor: 0x323850
         };
 
         import rgbshift from '../../src/shaders/modules/rgbshift/rgbshift.glsl.js';
@@ -329,7 +329,7 @@
                 ormMap.repeat.set(2, 1);
 
                 const material = new MeshStandardMaterial({
-                    color: new Color(colors.lightColor).offsetHSL(0, 0, -0.75),
+                    color: new Color(colors.lightColor).offsetHSL(0, 0, -0.2),
                     metalness: 9,
                     roughness: 0.9,
                     map,
@@ -1276,7 +1276,7 @@
 
                 // 3D scene
                 this.scene = new Scene();
-                this.scene.background = new Color(colors.backgroundColor).offsetHSL(0, 0, -0.06);
+                this.scene.background = new Color(colors.backgroundColor);
                 this.camera = new PerspectiveCamera(30);
                 this.camera.near = 0.5;
                 this.camera.far = 40;

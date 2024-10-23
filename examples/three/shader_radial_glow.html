@@ -11,12 +11,13 @@
     <link rel="stylesheet" href="../assets/css/style.css">
 
     <script type="module">
-        import { BloomCompositeMaterial, Color, ColorManagement, EnvironmentTextureLoader, GLSL3, Group, HemisphereLight, IcosahedronGeometry, LinearSRGBColorSpace, LuminosityMaterial, MathUtils, Mesh, MeshStandardMaterial, NoBlending, OrbitControls, OrthographicCamera, PanelItem, PerspectiveCamera, RawShaderMaterial, RepeatWrapping, Scene, ShaderChunk, TextureLoader, UI, UnrealBloomBlurMaterial, Vector2, Vector3, WebGLRenderTarget, WebGLRenderer, getFullscreenTriangle, ticker, tween } from '../../build/alien.three.js';
+        import { BloomCompositeMaterial, Color, ColorManagement, EnvironmentTextureLoader, GLSL3, Group, HemisphereLight, IcosahedronGeometry, LinearSRGBColorSpace, LuminosityMaterial, MathUtils, Mesh, MeshStandardMaterial, NoBlending, OrbitControls, OrthographicCamera, PanelItem, PerspectiveCamera, RawShaderMaterial, RepeatWrapping, Scene, ShaderChunk, TextureLoader, UI, UnrealBloomBlurMaterial, Vector2, Vector3, WebGLRenderTarget, WebGLRenderer, brightness, getFullscreenTriangle, ticker, tween } from '../../build/alien.three.js';
 
         const isOrbit = /[?&]orbit/.test(location.search);
 
         const colors = {
-            lightColor: 0xff2a7a
+            backgroundColor: 0x010204,
+            lightColor: 0x323850
         };
 
         import dither from '../../src/shaders/modules/dither/dither.glsl.js';
@@ -31,8 +32,8 @@
                         tAdd: { value: null },
                         uLightPosition: { value: new Vector2(0.5, 0.5) },
                         uLightColor: { value: new Color(colors.lightColor) },
-                        uPower: { value: 3 },
-                        uAmount: { value: 0.6 },
+                        uPower: { value: 1 },
+                        uAmount: { value: 0.4 },
                         uResolution: { value: new Vector2() }
                     },
                     vertexShader: /* glsl */ `
@@ -77,9 +78,9 @@
 
                             float amount = length(uv - uLightPosition);
                             amount = pow(amount, uPower);
-                            amount *= uAmount;
+                            amount *= 1.0 - uAmount;
 
-                            FragColor.rgb += clamp(uLightColor * (1.0 - amount) * 0.3, 0.0, 1.0);
+                            FragColor.rgb += clamp(uLightColor * (1.0 - amount), 0.0, 1.0);
 
                             FragColor.rgb = dither(FragColor.rgb);
                             FragColor.a = 1.0;
@@ -259,10 +260,14 @@
         }
 
         class PanelController {
-            static init(ui) {
+            static init(scene, ui) {
+                this.scene = scene;
                 this.ui = ui;
 
+                this.lastInvert = null;
+
                 this.initPanel();
+                this.setInvert(this.scene.background);
             }
 
             static initPanel() {
@@ -271,6 +276,18 @@
                 const items = [
                     {
                         name: 'FPS'
+                    },
+                    {
+                        type: 'divider'
+                    },
+                    {
+                        type: 'color',
+                        value: this.scene.background,
+                        callback: value => {
+                            this.scene.background.copy(value);
+
+                            this.setInvert(value);
+                        }
                     },
                     {
                         type: 'divider'
@@ -359,6 +376,19 @@
                     this.ui.addPanel(new PanelItem(data));
                 });
             }
+
+            // Public methods
+
+            static setInvert = value => {
+                // Light colour is inverted
+                const invert = brightness(value) > 0.6;
+
+                if (invert !== this.lastInvert) {
+                    this.lastInvert = invert;
+
+                    this.ui.invert(invert);
+                }
+            };
         }
 
         const BlurDirectionX = new Vector2(1, 0);
@@ -658,7 +688,7 @@
 
                 // 3D scene
                 this.scene = new Scene();
-                this.scene.background = new Color(0x060606);
+                this.scene.background = new Color(colors.backgroundColor);
                 this.camera = new PerspectiveCamera(30);
                 this.camera.near = 0.5;
                 this.camera.far = 40;
@@ -788,7 +818,9 @@
             }
 
             static initPanel() {
-                PanelController.init(this.ui);
+                const { scene } = WorldController;
+
+                PanelController.init(scene, this.ui);
             }
 
             static addListeners() {

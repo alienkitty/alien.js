@@ -143,6 +143,7 @@ const program = new FXAAProgram(gl);
 [fresnel](https://alien.js.org/examples/three/shader_fresnel.html) (with looping noise)  
 [hologram](https://alien.js.org/examples/three/shader_hologram.html)  
 [subsurface scattering](https://alien.js.org/examples/three/shader_subsurface_scattering.html) (SSS)  
+[light rays](https://alien.js.org/examples/three/shader_light_rays.html) (god rays with Perlin noise texture, [akella version](https://www.youtube.com/watch?v=0D-J_Lbxeeg))  
 [volumetric light](https://alien.js.org/examples/three/shader_volumetric_light.html) (god rays)  
 [anamorphic light](https://alien.js.org/examples/three/shader_anamorphic_light.html) (fast anamorphic lens flares)  
 [lensflare](https://alien.js.org/examples/three/shader_lensflare.html) (position-based)  

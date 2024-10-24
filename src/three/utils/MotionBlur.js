@@ -14,8 +14,6 @@ import { MotionBlurVelocityMaterial } from '../materials/MotionBlurVelocityMater
  */
 export class MotionBlur {
     constructor(renderer, scene, camera, channel, {
-        width = 256,
-        height = 256,
         interpolateGeometry = 1,
         smearIntensity = 1,
         cameraBlur = true
@@ -41,7 +39,7 @@ export class MotionBlur {
         this.currentClearColor = new Color();
 
         // Render targets
-        this.renderTarget = new WebGLRenderTarget(width, height, {
+        this.renderTarget = new WebGLRenderTarget(1, 1, {
             type: HalfFloatType
         });
     }

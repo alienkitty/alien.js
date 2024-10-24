@@ -29,6 +29,7 @@ export { SceneCompositeDistortionMaterial } from './SceneCompositeDistortionMate
 export { PoissonDiscBlurMaterial } from './PoissonDiscBlurMaterial.js';
 export { MotionBlurVelocityMaterial } from './MotionBlurVelocityMaterial.js';
 export { MotionBlurCompositeMaterial } from './MotionBlurCompositeMaterial.js';
+export { DrawBuffersMaterial } from './DrawBuffersMaterial.js';
 export { BokehBlurMaterial1 } from './BokehBlurMaterial1.js';
 export { BokehBlurMaterial2 } from './BokehBlurMaterial2.js';
 export { TiltShiftMaterial } from './TiltShiftMaterial.js';

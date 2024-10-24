@@ -61,10 +61,6 @@
             }
 
             initReflector() {
-                const { light } = WorldController;
-
-                this.light = light;
-
                 this.reflector = new Reflector();
             }
 
@@ -166,9 +162,7 @@
 
                 mesh.onBeforeRender = (renderer, scene, camera) => {
                     this.visible = false;
-                    this.light.position.y *= -1;
                     this.reflector.update(renderer, scene, camera);
-                    this.light.position.y *= -1;
                     this.visible = true;
                 };
 

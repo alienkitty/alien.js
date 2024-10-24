@@ -11,7 +11,7 @@
     <link rel="stylesheet" href="../assets/css/style.css">
 
     <script type="module">
-        import { AdditiveBlending, BloomCompositeMaterial, BlurMaterial, Color, ColorManagement, DepthMaterial, DirectionalLight, DisplayOptions, DynamicDrawUsage, EnvironmentTextureLoader, Group, HemisphereLight, IcosahedronGeometry, ImageBitmapLoaderThread, InstancedMesh, LinearSRGBColorSpace, LuminosityMaterial, MathUtils, Matrix4, Mesh, MeshBasicMaterial, MeshMatcapMaterial, MeshStandardMaterial, MotionBlur, MotionBlurCompositeMaterial, NoBlending, NormalMaterial, OimoPhysics, OrthographicCamera, PanelItem, PerspectiveCamera, PlaneGeometry, PointLight, RepeatWrapping, RigidBodyConfig, RigidBodyType, Scene, SceneCompositeAddMaterial, ShaderChunk, TextureLoader, UI, UniversalJointConfig, UnrealBloomBlurMaterial, Vector2, Vector3, VolumetricLightLensflareMaterial, WebGLRenderTarget, WebGLRenderer, getFullscreenTriangle, getKeyByValue, getViewSize, headsTails, ticker } from '../../build/alien.three.js';
+        import { AdditiveBlending, BloomCompositeMaterial, BlurMaterial, Color, ColorManagement, CopyMaterial, DepthMaterial, DirectionalLight, DisplayOptions, DrawBuffers, DynamicDrawUsage, EnvironmentTextureLoader, GLSL3, Group, HemisphereLight, IcosahedronGeometry, ImageBitmapLoaderThread, InstancedMesh, LinearSRGBColorSpace, LuminosityMaterial, MathUtils, Matrix4, Mesh, MeshBasicMaterial, MeshMatcapMaterial, MeshStandardMaterial, MotionBlurCompositeMaterial, NoBlending, NormalMaterial, OimoPhysics, OrthographicCamera, Panel, PanelItem, PerspectiveCamera, PlaneGeometry, PointLight, RawShaderMaterial, RepeatWrapping, RigidBodyConfig, RigidBodyType, Scene, ShaderChunk, TextureLoader, UI, UniversalJointConfig, UnrealBloomBlurMaterial, Vector2, Vector3, VolumetricLightLensflareMaterial, WebGLRenderTarget, WebGLRenderer, getFullscreenTriangle, getKeyByValue, getViewSize, headsTails, ticker } from '../../build/alien.three.js';
 
         const isDebug = /[?&]debug/.test(location.search);
 
@@ -19,7 +19,7 @@
 
         const layers = {
             default: 0,
-            velocity: 1,
+            drawBuffers: 1,
             occlusion: 2
         };
 
@@ -27,7 +27,104 @@
             lightColor: 0xf44336
         };
 
+        import dither from '../../src/shaders/modules/dither/dither.glsl.js';
+
+        // Based on https://threejs.org/examples/#webgl_multiple_rendertargets by takahirox
+        // Based on https://oframe.github.io/ogl/examples/?src=mrt.html by gordonnl
+        // Based on https://github.com/gkjohnson/threejs-sandbox/tree/master/motionBlurPass
+        // Based on https://github.com/gkjohnson/threejs-sandbox/tree/master/shader-replacement
+
+        class CompositeMaterial extends RawShaderMaterial {
+            constructor() {
+                super({
+                    glslVersion: GLSL3,
+                    uniforms: {
+                        tColor: { value: null },
+                        tNormal: { value: null },
+                        tPosition: { value: null },
+                        tVelocity: { value: null },
+                        tScene: { value: null },
+                        tBloom: { value: null },
+                        tAdd: { value: null },
+                        uDebug: { value: isDebug },
+                        uAspect: { value: 1 }
+                    },
+                    vertexShader: /* glsl */ `
+                        in vec3 position;
+                        in vec2 uv;
+
+                        out vec2 vUv;
+
+                        void main() {
+                            vUv = uv;
+
+                            gl_Position = vec4(position, 1.0);
+                        }
+                    `,
+                    fragmentShader: /* glsl */ `
+                        precision highp float;
+
+                        uniform sampler2D tColor;
+                        uniform sampler2D tNormal;
+                        uniform sampler2D tPosition;
+                        uniform sampler2D tVelocity;
+                        uniform sampler2D tScene;
+                        uniform sampler2D tBloom;
+                        uniform sampler2D tAdd;
+                        uniform bool uDebug;
+                        uniform float uAspect;
+
+                        in vec2 vUv;
+
+                        out vec4 FragColor;
+
+                        ${dither}
+
+                        void main() {
+                            // Extract data from render targets
+                            vec3 color = texture(tColor, vUv).rgb;
+                            vec3 normal = texture(tNormal, vUv).rgb;
+                            vec4 pos = texture(tPosition, vUv);
+                            vec2 vel = texture(tVelocity, vUv).xy;
+                            float depth = pos.a;
+
+                            FragColor = texture(tScene, vUv);
+
+                            FragColor.rgb += texture(tBloom, vUv).rgb;
+
+                            FragColor.rgb += texture(tAdd, vUv).rgb;
+
+                            FragColor.rgb = dither(FragColor.rgb);
+                            FragColor.a = 1.0;
+
+                            if (uDebug) {
+                                // Render raw render targets in corner
+                                vec2 uv = gl_FragCoord.xy / vec2(250.0 * uAspect, 250.0);
+                                if (uv.y < 1.0 && uv.x < 1.0) {
+                                    FragColor.rgb = vec3(texture(tPosition, mod(uv, 1.0)).a);
+                                } else if (uv.y < 2.0 && uv.x < 1.0) {
+                                    FragColor.rgb = texture(tVelocity, mod(uv, 1.0)).rgb;
+                                } else if (uv.y < 3.0 && uv.x < 1.0) {
+                                    FragColor.rgb = texture(tPosition, mod(uv, 1.0)).rgb;
+                                } else if (uv.y < 4.0 && uv.x < 1.0) {
+                                    FragColor.rgb = texture(tScene, mod(uv, 1.0)).rgb;
+                                } else if (uv.y < 5.0 && uv.x < 1.0) {
+                                    FragColor.rgb = texture(tBloom, mod(uv, 1.0)).rgb;
+                                } else if (uv.y < 6.0 && uv.x < 1.0) {
+                                    FragColor.rgb = texture(tAdd, mod(uv, 1.0)).rgb;
+                                }
+                            }
+                        }
+                    `,
+                    blending: NoBlending,
+                    depthTest: false,
+                    depthWrite: false
+                });
+            }
+        }
+
         // https://adinunz.io/translucentPearls/
+
         // Based on http://lo-th.github.io/Oimo.js/#planet
 
         class Balls extends Group {
@@ -142,7 +239,7 @@
 
                 const mesh = new InstancedMesh(geometry, material, count);
                 mesh.instanceMatrix.setUsage(DynamicDrawUsage); // Will be updated every frame
-                mesh.layers.enable(layers.velocity);
+                mesh.layers.enable(layers.drawBuffers);
                 this.add(mesh);
 
                 const object = new Group();
@@ -291,7 +388,7 @@
                 };
 
                 const mesh = new Mesh(geometry, material);
-                mesh.layers.enable(layers.velocity);
+                mesh.layers.enable(layers.drawBuffers);
                 this.add(mesh);
 
                 // Occlusion mesh
@@ -443,7 +540,7 @@
             }
 
             static initPanel() {
-                const { motionBlur, vlMaterial, luminosityMaterial, bloomCompositeMaterial } = RenderManager;
+                const { drawBuffers, vlMaterial, luminosityMaterial, bloomCompositeMaterial, compositeMaterial } = RenderManager;
 
                 const physics = this.physics;
                 const { balls } = this.view;
@@ -454,6 +551,25 @@
                     Off: false,
                     Physics: true
                 };
+
+                const defaultOptions = {
+                    Off: false,
+                    Targets: true
+                };
+
+                const defaultItems = [
+                    {
+                        type: 'divider'
+                    },
+                    {
+                        type: 'list',
+                        list: defaultOptions,
+                        value: getKeyByValue(defaultOptions, compositeMaterial.uniforms.uDebug.value),
+                        callback: value => {
+                            compositeMaterial.uniforms.uDebug.value = defaultOptions[value];
+                        }
+                    }
+                ];
 
                 const items = [
                     {
@@ -466,8 +582,25 @@
                         type: 'list',
                         list: DisplayOptions,
                         value: getKeyByValue(DisplayOptions, RenderManager.display),
-                        callback: value => {
+                        callback: (value, item) => {
+                            if (!item.hasContent()) {
+                                const defaultPanel = new Panel();
+                                defaultPanel.animateIn(true);
+
+                                defaultItems.forEach(data => {
+                                    defaultPanel.add(new PanelItem(data));
+                                });
+
+                                item.setContent(defaultPanel);
+                            }
+
                             RenderManager.display = DisplayOptions[value];
+
+                            if (RenderManager.display === DisplayOptions.Default) {
+                                item.toggleContent(true);
+                            } else {
+                                item.toggleContent(false);
+                            }
                         }
                     },
                     {
@@ -479,7 +612,7 @@
                         value: getKeyByValue(physicsOptions, SceneController.enabled),
                         callback: value => {
                             SceneController.enabled = physicsOptions[value];
-                            motionBlur.saveState = SceneController.enabled;
+                            drawBuffers.saveState = SceneController.enabled;
                         }
                     },
                     {
@@ -503,20 +636,20 @@
                         min: 0,
                         max: 1,
                         step: 0.01,
-                        value: motionBlur.interpolateGeometry,
+                        value: drawBuffers.interpolateGeometry,
                         callback: value => {
-                            motionBlur.interpolateGeometry = value;
+                            drawBuffers.interpolateGeometry = value;
                         }
                     },
                     {
                         type: 'slider',
                         name: 'Smear',
                         min: 0,
-                        max: isDebug ? 1000 : 4,
-                        step: isDebug ? 1 : 0.02,
-                        value: isDebug ? 1000 : motionBlur.smearIntensity,
+                        max: 4,
+                        step: 0.02,
+                        value: drawBuffers.smearIntensity,
                         callback: value => {
-                            motionBlur.smearIntensity = value;
+                            drawBuffers.smearIntensity = value;
                         }
                     },
                     {
@@ -770,7 +903,7 @@
 
                 // Debug
                 DisplayOptions.Light = 8;
-                this.display = isDebug ? DisplayOptions.Velocity : DisplayOptions.Default;
+                this.display = DisplayOptions.Default;
 
                 this.enabled = true;
 
@@ -778,7 +911,7 @@
             }
 
             static initRenderer() {
-                const { screenTriangle, textureLoader, getTexture, resolution } = WorldController;
+                const { screenTriangle, textureLoader, getTexture, resolution, aspect } = WorldController;
 
                 // Manually clear
                 this.renderer.autoClear = false;
@@ -816,15 +949,16 @@
                 this.renderTargetA.depthBuffer = true;
                 this.renderTargetBlurA.depthBuffer = true;
 
-                // Motion blur
-                this.motionBlur = new MotionBlur(this.renderer, this.scene, this.camera, layers.velocity, {
+                // G-Buffer
+                this.drawBuffers = new DrawBuffers(this.renderer, this.scene, this.camera, layers.drawBuffers, {
                     cameraBlur: false
                 });
 
+                // Motion blur
                 this.motionBlurCompositeMaterial = new MotionBlurCompositeMaterial(textureLoader, {
                     blueNoisePath: '../assets/textures/blue_noise.png'
                 });
-                this.motionBlurCompositeMaterial.uniforms.tVelocity.value = this.motionBlur.renderTarget.texture;
+                this.motionBlurCompositeMaterial.uniforms.tVelocity.value = this.drawBuffers.renderTarget.textures[2];
 
                 // Occlusion material
                 this.blackoutMaterial = new MeshBasicMaterial({ color: 0x000000 });
@@ -872,7 +1006,8 @@
                 this.bloomCompositeMaterial.uniforms.uBloomFactors.value = this.bloomFactors();
 
                 // Composite material
-                this.compositeMaterial = new SceneCompositeAddMaterial({ dithering: true });
+                this.compositeMaterial = new CompositeMaterial();
+                this.compositeMaterial.uniforms.uAspect = aspect;
 
                 // Debug materials
                 this.blackoutMaterial = new MeshBasicMaterial({ color: 0x000000 });
@@ -882,6 +1017,7 @@
                 this.normalMaterialInstanced = new NormalMaterial({ instancing: true });
                 this.depthMaterial = new DepthMaterial();
                 this.depthMaterialInstanced = new DepthMaterial({ instancing: true });
+                this.copyMaterial = new CopyMaterial();
 
                 // Based on https://github.com/mrdoob/three.js/issues/26732#issuecomment-1741276120 by donmccurdy
                 this.originalMaterials = new Map();
@@ -937,7 +1073,7 @@
                 this.renderTargetA.setSize(width, height);
                 this.renderTargetB.setSize(width, height);
 
-                this.motionBlur.setSize(width, height);
+                this.drawBuffers.setSize(width, height);
 
                 // Gaussian blur
                 const blurWidth = Math.round(width * this.blurResolutionScale);
@@ -988,6 +1124,22 @@
 
                 // Renderer state
                 this.rendererState();
+
+                // G-Buffer layer
+                camera.layers.set(layers.drawBuffers);
+
+                this.drawBuffers.update();
+
+                if (this.display === DisplayOptions.Velocity) {
+                    // Debug pass (render to screen)
+                    this.copyMaterial.uniforms.tMap.value = this.drawBuffers.renderTarget.textures[2];
+                    this.screen.material = this.copyMaterial;
+                    renderer.setRenderTarget(null);
+                    renderer.clear();
+                    renderer.render(this.screen, this.screenCamera);
+                    this.restoreRendererState();
+                    return;
+                }
 
                 // Scene layer
                 camera.layers.set(layers.default);
@@ -1099,18 +1251,7 @@
                     return;
                 }
 
-                // Motion blur layer
-                camera.layers.set(layers.velocity);
-
-                if (this.display === DisplayOptions.Velocity) {
-                    // Debug pass (render to screen)
-                    this.motionBlur.update(null);
-                    this.restoreRendererState();
-                    return;
-                } else {
-                    this.motionBlur.update();
-                }
-
+                // Motion blur pass
                 this.motionBlurCompositeMaterial.uniforms.tMap.value = renderTargetA.texture;
                 this.screen.material = this.motionBlurCompositeMaterial;
                 renderer.setRenderTarget(renderTargetB);
@@ -1184,6 +1325,10 @@
                 }
 
                 // Composite pass (render to screen)
+                this.compositeMaterial.uniforms.tColor.value = renderTargetB.texture;
+                this.compositeMaterial.uniforms.tNormal.value = this.drawBuffers.renderTarget.textures[0];
+                this.compositeMaterial.uniforms.tPosition.value = this.drawBuffers.renderTarget.textures[1];
+                this.compositeMaterial.uniforms.tVelocity.value = this.drawBuffers.renderTarget.textures[2];
                 this.compositeMaterial.uniforms.tScene.value = renderTargetB.texture;
                 this.compositeMaterial.uniforms.tBloom.value = renderTargetsHorizontal[0].texture;
                 this.compositeMaterial.uniforms.tAdd.value = renderTargetBlurB.texture;

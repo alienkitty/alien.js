@@ -11,14 +11,14 @@
     <link rel="stylesheet" href="../assets/css/style.css">
 
     <script type="module">
-        import { AdditiveBlending, BloomCompositeMaterial, BlurMaterial, Color, ColorManagement, CopyMaterial, DepthMaterial, DisplayOptions, EnvironmentTextureLoader, Fluid, GLSL3, Group, IcosahedronGeometry, ImageBitmapLoaderThread, LinearSRGBColorSpace, LuminosityMaterial, MathUtils, Mesh, MeshBasicMaterial, MeshMatcapMaterial, MeshStandardMaterial, MotionBlur, NearestFilter, NoBlending, NormalMaterial, OrbitControls, OrthographicCamera, PanelItem, PerspectiveCamera, RawShaderMaterial, RepeatWrapping, Scene, SceneCompositeAddMaterial, SphereGeometry, TextureLoader, UI, UnrealBloomBlurMaterial, Vector2, Vector3, VolumetricLightMaterial, WebGLRenderTarget, WebGLRenderer, getFullscreenTriangle, getKeyByValue, ticker } from '../../build/alien.three.js';
+        import { AdditiveBlending, BloomCompositeMaterial, BlurMaterial, Color, ColorManagement, CopyMaterial, DepthMaterial, DisplayOptions, DrawBuffers, EnvironmentTextureLoader, Fluid, GLSL3, Group, IcosahedronGeometry, ImageBitmapLoaderThread, LinearSRGBColorSpace, LuminosityMaterial, MathUtils, Mesh, MeshBasicMaterial, MeshMatcapMaterial, MeshStandardMaterial, NearestFilter, NoBlending, NormalMaterial, OrbitControls, OrthographicCamera, PanelItem, PerspectiveCamera, RawShaderMaterial, RepeatWrapping, Scene, SceneCompositeAddMaterial, SphereGeometry, TextureLoader, UI, UnrealBloomBlurMaterial, Vector2, Vector3, VolumetricLightMaterial, WebGLRenderTarget, WebGLRenderer, getFullscreenTriangle, getKeyByValue, ticker } from '../../build/alien.three.js';
 
         const isDebug = /[?&]debug/.test(location.search);
         const isOrbit = /[?&]orbit/.test(location.search);
 
         const layers = {
             default: 0,
-            velocity: 1,
+            drawBuffers: 1,
             motion: 2,
             light: 3
         };
@@ -273,7 +273,7 @@
                 material.aoMap.channel = 1;
 
                 const mesh = new Mesh(geometry, material);
-                mesh.layers.enable(layers.velocity);
+                mesh.layers.enable(layers.drawBuffers);
                 mesh.layers.enable(layers.motion);
                 this.add(mesh);
             }
@@ -352,7 +352,7 @@
                 material.envMapRotation.y = scene.environmentRotation.y;
 
                 const mesh = new Mesh(geometry, material);
-                mesh.layers.enable(layers.velocity);
+                mesh.layers.enable(layers.drawBuffers);
                 mesh.layers.enable(layers.light);
                 this.add(mesh);
 
@@ -442,7 +442,7 @@
             }
 
             static initPanel() {
-                const { motionBlur, fluid, vlMaterial, luminosityMaterial, bloomCompositeMaterial, compositeMaterial } = RenderManager;
+                const { drawBuffers, fluid, vlMaterial, luminosityMaterial, bloomCompositeMaterial, compositeMaterial } = RenderManager;
 
                 const animateOptions = {
                     Off: false,
@@ -484,7 +484,7 @@
                         value: getKeyByValue(animateOptions, params.animate),
                         callback: value => {
                             params.animate = animateOptions[value];
-                            motionBlur.saveState = params.animate;
+                            drawBuffers.saveState = params.animate;
                         }
                     },
                     {
@@ -496,9 +496,9 @@
                         min: 0,
                         max: 1,
                         step: 0.01,
-                        value: motionBlur.interpolateGeometry,
+                        value: drawBuffers.interpolateGeometry,
                         callback: value => {
-                            motionBlur.interpolateGeometry = value;
+                            drawBuffers.interpolateGeometry = value;
                         }
                     },
                     {
@@ -507,9 +507,9 @@
                         min: 0,
                         max: 4,
                         step: 0.02,
-                        value: motionBlur.smearIntensity,
+                        value: drawBuffers.smearIntensity,
                         callback: value => {
-                            motionBlur.smearIntensity = value;
+                            drawBuffers.smearIntensity = value;
                         }
                     },
                     {
@@ -707,9 +707,6 @@
             }
         }
 
-        // Based on https://github.com/gkjohnson/threejs-sandbox/tree/master/motionBlurPass
-        // Based on https://github.com/gkjohnson/threejs-sandbox/tree/master/shader-replacement
-
         const BlurDirectionX = new Vector2(1, 0);
         const BlurDirectionY = new Vector2(0, 1);
 
@@ -801,14 +798,15 @@
                 });
                 this.fluid.splatMaterial.uniforms.uAspect = aspect;
 
-                // Motion blur
-                this.motionBlur = new MotionBlur(this.renderer, this.scene, this.camera, layers.velocity, {
+                // G-Buffer
+                this.drawBuffers = new DrawBuffers(this.renderer, this.scene, this.camera, layers.drawBuffers, {
                     smearIntensity: 2,
                     cameraBlur: false
                 });
 
+                // Motion blur
                 this.motionBlurCompositeMaterial = new MotionBlurCompositeMaterial();
-                this.motionBlurCompositeMaterial.uniforms.tVelocity.value = this.motionBlur.renderTarget.texture;
+                this.motionBlurCompositeMaterial.uniforms.tVelocity.value = this.drawBuffers.renderTarget.textures[1];
 
                 // Occlusion materials
                 this.blackoutMaterial = new MeshBasicMaterial({ color: 0x000000 });
@@ -956,7 +954,7 @@
                 this.renderTargetB.setSize(width, height);
                 this.renderTargetC.setSize(width, height);
 
-                this.motionBlur.setSize(width, height);
+                this.drawBuffers.setSize(width, height);
 
                 // Gaussian blur
                 const blurWidth = Math.round(width * this.blurResolutionScale);
@@ -1011,6 +1009,22 @@
 
                 // Perform all of the fluid simulation renders
                 this.fluid.update();
+
+                // G-Buffer layer
+                camera.layers.set(layers.drawBuffers);
+
+                this.drawBuffers.update();
+
+                if (this.display === DisplayOptions.Velocity) {
+                    // Debug pass (render to screen)
+                    this.copyMaterial.uniforms.tMap.value = this.drawBuffers.renderTarget.textures[1];
+                    this.screen.material = this.copyMaterial;
+                    renderer.setRenderTarget(null);
+                    renderer.clear();
+                    renderer.render(this.screen, this.screenCamera);
+                    this.restoreRendererState();
+                    return;
+                }
 
                 // Scene layer
                 camera.layers.set(layers.default);
@@ -1152,18 +1166,6 @@
                     return;
                 }
 
-                // Motion blur layer
-                camera.layers.set(layers.velocity);
-
-                if (this.display === DisplayOptions.Velocity) {
-                    // Debug pass (render to screen)
-                    this.motionBlur.update(null);
-                    this.restoreRendererState();
-                    return;
-                } else {
-                    this.motionBlur.update();
-                }
-
                 // Copy pass
                 this.copyMaterial.uniforms.tMap.value = renderTargetA.texture;
                 this.screen.material = this.copyMaterial;
@@ -1171,6 +1173,7 @@
                 renderer.clear();
                 renderer.render(this.screen, this.screenCamera);
 
+                // Motion blur pass
                 this.motionBlurCompositeMaterial.uniforms.tMap.value = renderTargetC.texture;
                 this.screen.material = this.motionBlurCompositeMaterial;
                 renderer.render(this.screen, this.screenCamera);

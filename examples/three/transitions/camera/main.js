@@ -1,4 +1,4 @@
-import { AdditiveBlending, AssetLoader, BasicShadowMap, BloomCompositeMaterial, BoxGeometry, Color, ColorManagement, DepthMaterial, DirectionalLight, DisplayOptions, EnvironmentTextureLoader, GLSL3, Group, HemisphereLight, IcosahedronGeometry, ImageBitmapLoaderThread, LinearSRGBColorSpace, LuminosityMaterial, MathUtils, Mesh, MeshBasicMaterial, MeshMatcapMaterial, MeshStandardMaterial, MotionBlur, MotionBlurCompositeMaterial, NearestFilter, NoBlending, NormalMaterial, OctahedronGeometry, OrthographicCamera, PanelItem, PerspectiveCamera, PlaneGeometry, Point3D, RawShaderMaterial, Reflector, RepeatWrapping, Scene, SceneCompositeMaterial, ShadowMaterial, Stage, TextureLoader, UI, UnrealBloomBlurMaterial, Vector2, Vector3, WebGLRenderTarget, WebGLRenderer, clearTween, delayedCall, getFullscreenTriangle, getKeyByValue, lerpCameras, router, ticker, tween } from '../../../../build/alien.three.js';
+import { AdditiveBlending, AssetLoader, BasicShadowMap, BloomCompositeMaterial, BoxGeometry, Color, ColorManagement, CopyMaterial, DepthMaterial, DirectionalLight, DisplayOptions, DrawBuffers, EnvironmentTextureLoader, GLSL3, Group, HemisphereLight, IcosahedronGeometry, ImageBitmapLoaderThread, LinearSRGBColorSpace, LuminosityMaterial, MathUtils, Mesh, MeshBasicMaterial, MeshMatcapMaterial, MeshStandardMaterial, MotionBlurCompositeMaterial, NearestFilter, NoBlending, NormalMaterial, OctahedronGeometry, OrthographicCamera, PanelItem, PerspectiveCamera, PlaneGeometry, Point3D, RawShaderMaterial, Reflector, RepeatWrapping, Scene, SceneCompositeMaterial, ShadowMaterial, Stage, TextureLoader, UI, UnrealBloomBlurMaterial, Vector2, Vector3, WebGLRenderTarget, WebGLRenderer, clearTween, delayedCall, getFullscreenTriangle, getKeyByValue, lerpCameras, router, ticker, tween } from '../../../../build/alien.three.js';
 
 const isDebug = /[?&]debug/.test(location.search);
 
@@ -8,7 +8,7 @@ const breakpoint = 1000;
 
 const layers = {
     default: 0,
-    velocity: 1
+    drawBuffers: 1
 };
 
 const params = {
@@ -266,7 +266,7 @@ class AbstractCube extends Group {
         mesh.rotation.z = MathUtils.degToRad(-45);
         mesh.castShadow = true;
         mesh.receiveShadow = true;
-        mesh.layers.enable(layers.velocity);
+        mesh.layers.enable(layers.drawBuffers);
         this.add(mesh);
 
         this.mesh = mesh;
@@ -373,7 +373,7 @@ class FloatingCrystal extends Group {
         mesh.scale.set(0.5, 1, 0.5);
         mesh.castShadow = true;
         mesh.receiveShadow = true;
-        mesh.layers.enable(layers.velocity);
+        mesh.layers.enable(layers.drawBuffers);
         this.add(mesh);
 
         this.mesh = mesh;
@@ -482,7 +482,7 @@ class DarkPlanet extends Group {
         const mesh = new Mesh(geometry, material);
         mesh.castShadow = true;
         mesh.receiveShadow = true;
-        mesh.layers.enable(layers.velocity);
+        mesh.layers.enable(layers.drawBuffers);
         this.add(mesh);
 
         this.mesh = mesh;
@@ -814,7 +814,7 @@ class PanelController {
     }
 
     static initPanel() {
-        const { motionBlur, hBlurMaterial, vBlurMaterial, luminosityMaterial, bloomCompositeMaterial, compositeMaterial } = RenderManager;
+        const { drawBuffers, hBlurMaterial, vBlurMaterial, luminosityMaterial, bloomCompositeMaterial, compositeMaterial } = RenderManager;
 
         const animateOptions = {
             Off: false,
@@ -861,7 +861,7 @@ class PanelController {
                 value: getKeyByValue(animateOptions, params.animate),
                 callback: value => {
                     params.animate = animateOptions[value];
-                    motionBlur.saveState = params.animate;
+                    drawBuffers.saveState = params.animate;
                 }
             },
             {
@@ -873,9 +873,9 @@ class PanelController {
                 min: 0,
                 max: 1,
                 step: 0.01,
-                value: motionBlur.interpolateGeometry,
+                value: drawBuffers.interpolateGeometry,
                 callback: value => {
-                    motionBlur.interpolateGeometry = value;
+                    drawBuffers.interpolateGeometry = value;
                 }
             },
             {
@@ -884,9 +884,9 @@ class PanelController {
                 min: 0,
                 max: 4,
                 step: 0.02,
-                value: motionBlur.smearIntensity,
+                value: drawBuffers.smearIntensity,
                 callback: value => {
-                    motionBlur.smearIntensity = value;
+                    drawBuffers.smearIntensity = value;
                 }
             },
             {
@@ -1080,13 +1080,14 @@ class RenderManager {
 
         this.renderTargetA.depthBuffer = true;
 
-        // Motion blur
-        this.motionBlur = new MotionBlur(this.renderer, this.scene, this.camera, layers.velocity, {
+        // G-Buffer
+        this.drawBuffers = new DrawBuffers(this.renderer, this.scene, this.camera, layers.drawBuffers, {
             interpolateGeometry: 0
         });
 
+        // Motion blur
         this.motionBlurCompositeMaterial = new MotionBlurCompositeMaterial(textureLoader);
-        this.motionBlurCompositeMaterial.uniforms.tVelocity.value = this.motionBlur.renderTarget.texture;
+        this.motionBlurCompositeMaterial.uniforms.tVelocity.value = this.drawBuffers.renderTarget.textures[1];
 
         // Gaussian blur materials
         this.hBlurMaterial = new BlurMaterial(BlurDirectionX);
@@ -1140,6 +1141,7 @@ class RenderManager {
         this.matcap2Material = new MeshMatcapMaterial({ matcap: getTexture('assets/textures/matcaps/defaultwax.jpg') });
         this.normalMaterial = new NormalMaterial();
         this.depthMaterial = new DepthMaterial();
+        this.copyMaterial = new CopyMaterial();
     }
 
     static bloomFactors() {
@@ -1179,7 +1181,7 @@ class RenderManager {
         this.renderTargetB.setSize(width, height);
         this.renderTargetC.setSize(width, height);
 
-        this.motionBlur.setSize(width, height);
+        this.drawBuffers.setSize(width, height);
 
         // Unreal bloom
         width = MathUtils.floorPowerOfTwo(width) / 2;
@@ -1219,6 +1221,22 @@ class RenderManager {
 
         // Renderer state
         this.rendererState();
+
+        // G-Buffer layer
+        camera.layers.set(layers.drawBuffers);
+
+        this.drawBuffers.update();
+
+        if (this.display === DisplayOptions.Velocity) {
+            // Debug pass (render to screen)
+            this.copyMaterial.uniforms.tMap.value = this.drawBuffers.renderTarget.textures[1];
+            this.screen.material = this.copyMaterial;
+            renderer.setRenderTarget(null);
+            renderer.clear();
+            renderer.render(this.screen, this.screenCamera);
+            this.restoreRendererState();
+            return;
+        }
 
         // Scene layer
         camera.layers.set(layers.default);
@@ -1262,18 +1280,7 @@ class RenderManager {
             return;
         }
 
-        // Motion blur layer
-        camera.layers.set(layers.velocity);
-
-        if (this.display === DisplayOptions.Velocity) {
-            // Debug pass (render to screen)
-            this.motionBlur.update(null);
-            this.restoreRendererState();
-            return;
-        } else {
-            this.motionBlur.update();
-        }
-
+        // Motion blur pass
         this.motionBlurCompositeMaterial.uniforms.tMap.value = renderTargetA.texture;
         this.screen.material = this.motionBlurCompositeMaterial;
         renderer.setRenderTarget(renderTargetB);

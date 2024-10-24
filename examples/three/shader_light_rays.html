@@ -355,10 +355,10 @@
                 this.camera = camera;
 
                 // Bloom
-                this.luminosityThreshold = 0.1;
+                this.luminosityThreshold = 0;
                 this.luminositySmoothing = 1;
-                this.bloomStrength = 0.3;
-                this.bloomRadius = 0.2;
+                this.bloomStrength = 1;
+                this.bloomRadius = 1;
 
                 this.enabled = true;
 
@@ -408,7 +408,7 @@
                 }
 
                 // Bloom composite material
-                this.bloomCompositeMaterial = new BloomCompositeMaterial();
+                this.bloomCompositeMaterial = new BloomCompositeMaterial({ dithering: true });
                 this.bloomCompositeMaterial.uniforms.tBlur1.value = this.renderTargetsVertical[0].texture;
                 this.bloomCompositeMaterial.uniforms.tBlur2.value = this.renderTargetsVertical[1].texture;
                 this.bloomCompositeMaterial.uniforms.tBlur3.value = this.renderTargetsVertical[2].texture;

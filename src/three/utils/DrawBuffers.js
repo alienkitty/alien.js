@@ -12,9 +12,8 @@ import { Color, HalfFloatType, InstancedBufferAttribute, Matrix4, WebGLRenderTar
 import { DrawBuffersMaterial } from '../materials/DrawBuffersMaterial.js';
 
 /**
- * A class for rendering normals, world positions, depth,
- * and velocities in screen UV space to draw buffers with
- * MRT (Multiple Render Targets).
+ * A class for rendering world positions, depth, and velocities in
+ * screen UV space to draw buffers with MRT (Multiple Render Targets).
  */
 export class DrawBuffers {
     constructor(renderer, scene, camera, channel, {
@@ -44,7 +43,7 @@ export class DrawBuffers {
 
         // Render targets
         this.renderTarget = new WebGLRenderTarget(1, 1, {
-            count: 3,
+            count: 2,
             type: HalfFloatType
         });
     }

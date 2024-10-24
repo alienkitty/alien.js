@@ -21,13 +21,11 @@ uniform mat4 uPrevModelViewMatrix;
 uniform mat4 uPrevProjectionMatrix;
 uniform float uInterpolateGeometry;
 
-out vec3 vNormal;
 out vec3 vWorldPosition;
 out vec4 vPrevPosition;
 out vec4 vNewPosition;
 
 void main() {
-    vNormal = normalize(normalMatrix * normal);
     vWorldPosition = (modelMatrix * vec4(position, 1.0)).xyz;
 
     // Outputs the position of the current and last frame positions
@@ -59,19 +57,14 @@ precision highp float;
 
 uniform float uSmearIntensity;
 
-in vec3 vNormal;
 in vec3 vWorldPosition;
 in vec4 vPrevPosition;
 in vec4 vNewPosition;
 
-layout(location = 0) out vec4 gNormal;
-layout(location = 1) out vec4 gPosition;
-layout(location = 2) out vec4 gVelocity;
+layout(location = 0) out vec4 gPosition;
+layout(location = 1) out vec4 gVelocity;
 
 void main() {
-    // Write normals to G-Buffer
-    gNormal = vec4(normalize(vNormal), 1.0);
-
     // Write world positions and depth to G-Buffer
     gPosition = vec4(vWorldPosition, gl_FragCoord.z);
 

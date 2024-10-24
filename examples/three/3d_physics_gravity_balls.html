@@ -958,7 +958,7 @@
                 this.motionBlurCompositeMaterial = new MotionBlurCompositeMaterial(textureLoader, {
                     blueNoisePath: '../assets/textures/blue_noise.png'
                 });
-                this.motionBlurCompositeMaterial.uniforms.tVelocity.value = this.drawBuffers.renderTarget.textures[2];
+                this.motionBlurCompositeMaterial.uniforms.tVelocity.value = this.drawBuffers.renderTarget.textures[1];
 
                 // Occlusion material
                 this.blackoutMaterial = new MeshBasicMaterial({ color: 0x000000 });
@@ -1132,7 +1132,7 @@
 
                 if (this.display === DisplayOptions.Velocity) {
                     // Debug pass (render to screen)
-                    this.copyMaterial.uniforms.tMap.value = this.drawBuffers.renderTarget.textures[2];
+                    this.copyMaterial.uniforms.tMap.value = this.drawBuffers.renderTarget.textures[1];
                     this.screen.material = this.copyMaterial;
                     renderer.setRenderTarget(null);
                     renderer.clear();
@@ -1325,10 +1325,8 @@
                 }
 
                 // Composite pass (render to screen)
-                this.compositeMaterial.uniforms.tColor.value = renderTargetB.texture;
-                this.compositeMaterial.uniforms.tNormal.value = this.drawBuffers.renderTarget.textures[0];
-                this.compositeMaterial.uniforms.tPosition.value = this.drawBuffers.renderTarget.textures[1];
-                this.compositeMaterial.uniforms.tVelocity.value = this.drawBuffers.renderTarget.textures[2];
+                this.compositeMaterial.uniforms.tPosition.value = this.drawBuffers.renderTarget.textures[0];
+                this.compositeMaterial.uniforms.tVelocity.value = this.drawBuffers.renderTarget.textures[1];
                 this.compositeMaterial.uniforms.tScene.value = renderTargetB.texture;
                 this.compositeMaterial.uniforms.tBloom.value = renderTargetsHorizontal[0].texture;
                 this.compositeMaterial.uniforms.tAdd.value = renderTargetBlurB.texture;

@@ -17,7 +17,7 @@ export class MotionBlurVelocityMaterial extends RawShaderMaterial {
                 uPrevModelViewMatrix: { value: new Matrix4() },
                 uPrevProjectionMatrix: { value: new Matrix4() },
                 uInterpolateGeometry: { value: 1 },
-                uIntensity: { value: 1 }
+                uSmearIntensity: { value: 1 }
             },
             vertexShader,
             fragmentShader

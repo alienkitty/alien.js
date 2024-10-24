@@ -49,7 +49,7 @@ void main() {
 export const fragmentShader = /* glsl */ `
 precision highp float;
 
-uniform float uIntensity;
+uniform float uSmearIntensity;
 
 in vec4 vPrevPosition;
 in vec4 vNewPosition;
@@ -67,6 +67,6 @@ void main() {
     pos1 /= 2.0;
 
     vec3 vel = pos1 - pos0;
-    FragColor = vec4(vel * uIntensity, 1.0);
+    FragColor = vec4(vel * uSmearIntensity, 1.0);
 }
 `;

@@ -11,7 +11,7 @@
     <link rel="stylesheet" href="../assets/css/style.css">
 
     <script type="module">
-        import { BloomCompositeMaterial, Color, ColorManagement, EnvironmentTextureLoader, GLSL3, Group, HemisphereLight, IcosahedronGeometry, LinearSRGBColorSpace, LuminosityMaterial, MathUtils, Mesh, MeshStandardMaterial, NoBlending, OrbitControls, OrthographicCamera, PanelItem, PerspectiveCamera, RawShaderMaterial, RepeatWrapping, Scene, ShaderChunk, TextureLoader, UI, UnrealBloomBlurMaterial, Vector2, Vector3, WebGLRenderTarget, WebGLRenderer, brightness, getFullscreenTriangle, ticker, tween } from '../../build/alien.three.js';
+        import { BloomCompositeMaterial, Color, ColorManagement, DirectionalLight, EnvironmentTextureLoader, GLSL3, Group, HemisphereLight, IcosahedronGeometry, LightOptions, LightPanelController, LinearSRGBColorSpace, LuminosityMaterial, MaterialPanelController, MathUtils, Mesh, MeshStandardMaterial, NoBlending, OrbitControls, OrthographicCamera, Panel, PanelItem, PerspectiveCamera, Point3D, RawShaderMaterial, RepeatWrapping, Scene, ScenePanel, ShaderChunk, TextureLoader, UI, UnrealBloomBlurMaterial, Vector2, Vector3, WebGLRenderTarget, WebGLRenderer, getFullscreenTriangle, getKeyByLight, getKeyByValue, ticker, tween } from '../../build/alien.three.js';
 
         const isOrbit = /[?&]orbit/.test(location.search);
 
@@ -33,7 +33,7 @@
                         uLightPosition: { value: new Vector2(0.5, 0.5) },
                         uLightColor: { value: new Color(colors.lightColor) },
                         uPower: { value: 1 },
-                        uAmount: { value: 0.4 },
+                        uAmount: { value: 0.3 },
                         uResolution: { value: new Vector2() }
                     },
                     vertexShader: /* glsl */ `
@@ -71,7 +71,7 @@
 
                             FragColor.rgb += texture(tBloom, vUv).rgb;
 
-                            // Radial gradient fake volumetric light
+                            // Radial gradient for fake volumetric light
                             vec2 uv = vUv - 0.5;
                             uv.x *= uResolution.x / uResolution.y;
                             uv += 0.5;
@@ -207,6 +207,7 @@
                 this.add(mesh);
 
                 this.uniforms = uniforms;
+                this.mesh = mesh;
             }
 
             // Public methods
@@ -259,68 +260,59 @@
             static ready = () => this.view.ready();
         }
 
-        class PanelController {
-            static init(scene, ui) {
-                this.scene = scene;
-                this.ui = ui;
-
-                this.lastInvert = null;
+        class ScenePanelController {
+            static init(view) {
+                this.view = view;
 
                 this.initPanel();
-                this.setInvert(this.scene.background);
+
+                this.addListeners();
             }
 
             static initPanel() {
-                const { luminosityMaterial, bloomCompositeMaterial, compositeMaterial } = RenderManager;
+                const { sphere } = this.view;
 
-                const items = [
-                    {
-                        name: 'FPS'
-                    },
-                    {
-                        type: 'divider'
-                    },
-                    {
-                        type: 'color',
-                        value: this.scene.background,
-                        callback: value => {
-                            this.scene.background.copy(value);
+                const objects = [sphere];
 
-                            this.setInvert(value);
-                        }
-                    },
-                    {
-                        type: 'divider'
-                    },
-                    {
-                        type: 'color',
-                        value: compositeMaterial.uniforms.uLightColor.value,
-                        callback: value => {
-                            compositeMaterial.uniforms.uLightColor.value.copy(value);
-                        }
-                    },
-                    {
-                        type: 'slider',
-                        name: 'Power',
-                        min: 0,
-                        max: 6,
-                        step: 0.05,
-                        value: compositeMaterial.uniforms.uPower.value,
-                        callback: value => {
-                            compositeMaterial.uniforms.uPower.value = value;
-                        }
-                    },
-                    {
-                        type: 'slider',
-                        name: 'Amount',
-                        min: 0,
-                        max: 1,
-                        step: 0.01,
-                        value: compositeMaterial.uniforms.uAmount.value,
-                        callback: value => {
-                            compositeMaterial.uniforms.uAmount.value = value;
-                        }
-                    },
+                objects.forEach(object => {
+                    object.point = new Point3D(object.mesh);
+                    object.add(object.point);
+
+                    MaterialPanelController.init(object.mesh, object.point);
+                });
+            }
+
+            static addListeners() {
+                Point3D.events.on('change', this.onChange);
+            }
+
+            // Event handlers
+
+            static onChange = ({ selected }) => {
+                if (selected.length) {
+                    CameraController.enabled = false;
+                } else {
+                    CameraController.enabled = true;
+                }
+            };
+        }
+
+        class PostPanel extends Panel {
+            constructor() {
+                super();
+
+                this.initPanel();
+            }
+
+            initPanel() {
+                const { luminosityMaterial, bloomCompositeMaterial } = RenderManager;
+
+                const postOptions = {
+                    Off: false,
+                    On: true
+                };
+
+                const postItems = [
                     {
                         type: 'divider'
                     },
@@ -372,6 +364,154 @@
                     }
                 ];
 
+                const items = [
+                    {
+                        type: 'divider'
+                    },
+                    {
+                        type: 'list',
+                        name: 'Post',
+                        list: postOptions,
+                        value: getKeyByValue(postOptions, RenderManager.enabled),
+                        callback: (value, item) => {
+                            if (!item.hasContent()) {
+                                const postPanel = new Panel();
+                                postPanel.animateIn(true);
+
+                                postItems.forEach(data => {
+                                    postPanel.add(new PanelItem(data));
+                                });
+
+                                item.setContent(postPanel);
+                            }
+
+                            RenderManager.enabled = postOptions[value];
+
+                            if (RenderManager.enabled) {
+                                item.toggleContent(true);
+                            } else {
+                                item.toggleContent(false);
+                            }
+                        }
+                    }
+                ];
+
+                items.forEach(data => {
+                    this.add(new PanelItem(data));
+                });
+            }
+        }
+
+        class PanelController {
+            static init(renderer, scene, camera, view, ui) {
+                this.renderer = renderer;
+                this.scene = scene;
+                this.camera = camera;
+                this.view = view;
+                this.ui = ui;
+
+                this.lights = [];
+
+                this.initControllers();
+                this.initPanel();
+            }
+
+            static initControllers() {
+                Point3D.init(this.renderer, this.scene, this.camera, {
+                    container: this.ui
+                });
+
+                ScenePanelController.init(this.view);
+                LightPanelController.init(this.scene);
+            }
+
+            static initPanel() {
+                const { compositeMaterial } = RenderManager;
+
+                const sceneOptions = {
+                    Scene: ScenePanel,
+                    Post: PostPanel
+                };
+
+                this.scene.traverse(object => {
+                    if (object.isLight) {
+                        const key = getKeyByLight(LightOptions, object);
+
+                        sceneOptions[key] = [object, LightOptions[key][1]];
+
+                        this.lights.push(object);
+                    }
+                });
+
+                const items = [
+                    {
+                        name: 'FPS'
+                    },
+                    {
+                        type: 'divider'
+                    },
+                    {
+                        type: 'color',
+                        value: compositeMaterial.uniforms.uLightColor.value,
+                        callback: value => {
+                            compositeMaterial.uniforms.uLightColor.value.copy(value);
+                        }
+                    },
+                    {
+                        type: 'slider',
+                        name: 'Power',
+                        min: 0,
+                        max: 6,
+                        step: 0.05,
+                        value: compositeMaterial.uniforms.uPower.value,
+                        callback: value => {
+                            compositeMaterial.uniforms.uPower.value = value;
+                        }
+                    },
+                    {
+                        type: 'slider',
+                        name: 'Amount',
+                        min: 0,
+                        max: 1,
+                        step: 0.01,
+                        value: compositeMaterial.uniforms.uAmount.value,
+                        callback: value => {
+                            compositeMaterial.uniforms.uAmount.value = value;
+                        }
+                    },
+                    {
+                        type: 'divider'
+                    },
+                    {
+                        type: 'list',
+                        list: sceneOptions,
+                        value: 'Scene',
+                        callback: (value, item) => {
+                            switch (value) {
+                                case 'Scene':
+                                case 'Post': {
+                                    const ScenePanel = sceneOptions[value];
+
+                                    const scenePanel = new ScenePanel(this.scene, this.ui);
+                                    scenePanel.animateIn(true);
+
+                                    item.setContent(scenePanel);
+                                    break;
+                                }
+                                default: {
+                                    const [light, LightPanel] = sceneOptions[value];
+
+                                    const lightPanel = new LightPanel(LightPanelController, light);
+                                    lightPanel.animateIn(true);
+
+                                    item.setContent(lightPanel);
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                ];
+
                 items.forEach(data => {
                     this.ui.addPanel(new PanelItem(data));
                 });
@@ -379,15 +519,12 @@
 
             // Public methods
 
-            static setInvert = value => {
-                // Light colour is inverted
-                const invert = brightness(value) > 0.6;
-
-                if (invert !== this.lastInvert) {
-                    this.lastInvert = invert;
-
-                    this.ui.invert(invert);
+            static update = time => {
+                if (!this.ui) {
+                    return;
                 }
+
+                Point3D.update(time);
             };
         }
 
@@ -395,13 +532,14 @@
         const BlurDirectionY = new Vector2(0, 1);
 
         class RenderManager {
-            static init(renderer, scene, camera) {
+            static init(renderer, scene, camera, light) {
                 this.renderer = renderer;
                 this.scene = scene;
                 this.camera = camera;
+                this.light = light;
 
                 // Volumetric light
-                this.lightPosition = new Vector3(0, 5, 2);
+                this.lightPosition = new Vector3();
 
                 // Bloom
                 this.luminosityThreshold = 0.1;
@@ -455,7 +593,7 @@
                 }
 
                 // Bloom composite material
-                this.bloomCompositeMaterial = new BloomCompositeMaterial();
+                this.bloomCompositeMaterial = new BloomCompositeMaterial({ dithering: true });
                 this.bloomCompositeMaterial.uniforms.tBlur1.value = this.renderTargetsVertical[0].texture;
                 this.bloomCompositeMaterial.uniforms.tBlur2.value = this.renderTargetsVertical[1].texture;
                 this.bloomCompositeMaterial.uniforms.tBlur3.value = this.renderTargetsVertical[2].texture;
@@ -480,10 +618,10 @@
             }
 
             static setLightPosition() {
-                const position = this.lightPosition.clone();
-                const vector = position.project(this.camera);
-                const x = (vector.x + 1) / 2;
-                const y = (vector.y + 1) / 2;
+                this.lightPosition.copy(this.light.position).project(this.camera);
+
+                const x = (this.lightPosition.x + 1) / 2;
+                const y = (this.lightPosition.y + 1) / 2;
 
                 this.compositeMaterial.uniforms.uLightPosition.value.set(x, y);
             }
@@ -711,10 +849,21 @@
 
             static initLights() {
                 this.scene.add(new HemisphereLight(0x606060, 0x404040, 3));
+
+                const light = new DirectionalLight(0xffffff, 2);
+                light.position.set(0, 5, -2);
+                this.scene.add(light);
+
+                this.light = light;
             }
 
             static initLoaders() {
                 this.textureLoader = new TextureLoader();
+                this.textureLoader.setOptions({
+                    preserveData: true
+                });
+                this.textureLoader.cache = true;
+
                 this.environmentLoader = new EnvironmentTextureLoader(this.renderer);
             }
 
@@ -810,17 +959,17 @@
             }
 
             static initControllers() {
-                const { renderer, scene, camera } = WorldController;
+                const { renderer, scene, camera, light } = WorldController;
 
                 CameraController.init(camera);
                 SceneController.init(this.view);
-                RenderManager.init(renderer, scene, camera);
+                RenderManager.init(renderer, scene, camera, light);
             }
 
             static initPanel() {
-                const { scene } = WorldController;
+                const { renderer, scene, camera } = WorldController;
 
-                PanelController.init(scene, this.ui);
+                PanelController.init(renderer, scene, camera, this.view, this.ui);
             }
 
             static addListeners() {
@@ -847,6 +996,7 @@
                 CameraController.update();
                 SceneController.update();
                 RenderManager.update(time, delta, frame);
+                PanelController.update(time);
                 this.ui.update();
             };
 

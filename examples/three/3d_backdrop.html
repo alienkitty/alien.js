@@ -313,13 +313,8 @@
                     }
                 ];
 
-                [
-                    {
-                        name: 'FPS'
-                    }
-                ].forEach(data => {
-                    this.ui.addPanel(new PanelItem(data));
-                });
+                const item = new PanelItem({ name: 'FPS' });
+                this.ui.addPanel(item);
 
                 LightPanelController.init(this.scene, this.ui);
 

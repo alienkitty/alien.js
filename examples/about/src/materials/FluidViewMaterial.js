@@ -39,11 +39,13 @@ void main() {
 
 export class FluidViewMaterial extends RawShaderMaterial {
     constructor() {
+        const { resolution } = WorldController;
+
         super({
             glslVersion: GLSL3,
             uniforms: {
                 tMap: { value: null },
-                uResolution: WorldController.resolution
+                uResolution: resolution
             },
             vertexShader,
             fragmentShader,

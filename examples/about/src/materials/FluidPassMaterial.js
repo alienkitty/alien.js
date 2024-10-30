@@ -95,6 +95,8 @@ void main() {
 
 export class FluidPassMaterial extends RawShaderMaterial {
     constructor() {
+        const { resolution, frame } = WorldController;
+
         super({
             glslVersion: GLSL3,
             defines: {
@@ -107,8 +109,8 @@ export class FluidPassMaterial extends RawShaderMaterial {
                 uLast: { value: [] },
                 uVelocity: { value: [] },
                 uStrength: { value: [] },
-                uResolution: WorldController.resolution,
-                uFrame: WorldController.frame
+                uResolution: resolution,
+                uFrame: frame
             },
             vertexShader,
             fragmentShader,

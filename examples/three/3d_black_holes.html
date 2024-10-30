@@ -33,11 +33,11 @@
             lightColor: 0x323850
         };
 
-        import rgbshift from '../../src/shaders/modules/rgbshift/rgbshift.glsl.js';
-        import dither from '../../src/shaders/modules/dither/dither.glsl.js';
-
         // Based on https://github.com/PavelDoGreat/WebGL-Fluid-Simulation
         // Based on https://oframe.github.io/ogl/examples/?src=post-fluid-distortion.html by gordonnl
+
+        import rgbshift from '../../src/shaders/modules/rgbshift/rgbshift.glsl.js';
+        import dither from '../../src/shaders/modules/dither/dither.glsl.js';
 
         class CompositeMaterial extends RawShaderMaterial {
             constructor() {
@@ -187,7 +187,7 @@
             }
         }
 
-        // https://www.youtube.com/watch?v=uD4izuDMUQA&t=996s
+        // https://www.youtube.com/watch?v=uD4izuDMUQA&t=996s by melodysheep
 
         class LighterBlackHole extends Group {
             constructor() {

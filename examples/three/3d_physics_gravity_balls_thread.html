@@ -27,12 +27,12 @@
             lightColor: 0xf44336
         };
 
-        import dither from '../../src/shaders/modules/dither/dither.glsl.js';
-
         // Based on https://threejs.org/examples/#webgl_multiple_rendertargets by takahirox
         // Based on https://oframe.github.io/ogl/examples/?src=mrt.html by gordonnl
         // Based on https://github.com/gkjohnson/threejs-sandbox/tree/master/motionBlurPass
         // Based on https://github.com/gkjohnson/threejs-sandbox/tree/master/shader-replacement
+
+        import dither from '../../src/shaders/modules/dither/dither.glsl.js';
 
         class CompositeMaterial extends RawShaderMaterial {
             constructor() {

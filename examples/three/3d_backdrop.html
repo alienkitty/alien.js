@@ -21,11 +21,11 @@
     <script type="module">
         import { AmbientLight, BasicShadowMap, BloomCompositeMaterial, Color, ColorManagement, DirectionalLight, Easing, EnvironmentTextureLoader, GLSL3, Group, HemisphereLight, IcosahedronGeometry, LightPanelController, LinearSRGBColorSpace, LuminosityMaterial, MathUtils, Mesh, MeshStandardMaterial, NoBlending, OrbitControls, OrthographicCamera, Panel, PanelItem, PerspectiveCamera, PlaneGeometry, RawShaderMaterial, Scene, SoftShadows, TextureLoader, UI, UnrealBloomBlurMaterial, Vector2, WebGLRenderTarget, WebGLRenderer, getFullscreenTriangle, getKeyByValue, ticker } from '../../build/alien.three.js';
 
-        import rgbshift from '../../src/shaders/modules/rgbshift/rgbshift.glsl.js';
-        import encodings from '../../src/shaders/modules/encodings/encodings.glsl.js';
-
         // Based on https://github.com/mrdoob/three.js/blob/dev/examples/jsm/shaders/ACESFilmicToneMappingShader.js by WestLangley
         // Based on https://github.com/mrdoob/three.js/blob/dev/examples/jsm/shaders/GammaCorrectionShader.js by WestLangley
+
+        import rgbshift from '../../src/shaders/modules/rgbshift/rgbshift.glsl.js';
+        import encodings from '../../src/shaders/modules/encodings/encodings.glsl.js';
 
         class CompositeMaterial extends RawShaderMaterial {
             constructor() {

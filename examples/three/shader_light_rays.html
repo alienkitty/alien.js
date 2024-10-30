@@ -13,14 +13,14 @@
     <script type="module">
         import { BloomCompositeMaterial, Color, ColorManagement, CopyMaterial, GLSL3, Group, LinearSRGBColorSpace, LuminosityMaterial, MathUtils, Mesh, OrthographicCamera, PanelItem, PerspectiveCamera, PlaneGeometry, RawShaderMaterial, RepeatWrapping, Scene, SceneCompositeMaterial, TextureLoader, UI, UnrealBloomBlurMaterial, Vector2, WebGLRenderTarget, WebGLRenderer, brightness, getFullscreenTriangle, getViewSize, ticker } from '../../build/alien.three.js';
 
+        // Based on https://www.youtube.com/watch?v=0D-J_Lbxeeg by akella
+
         const colors = {
             backgroundColor: 0x010204,
             lightColor: 0x323850
         };
 
         import smootherstep from '../../src/shaders/modules/smootherstep/smootherstep.glsl.js';
-
-        // Based on https://www.youtube.com/watch?v=0D-J_Lbxeeg by akella
 
         class GodRays extends Group {
             constructor() {

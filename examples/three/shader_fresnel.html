@@ -13,6 +13,8 @@
     <script type="module">
         import { Color, ColorManagement, GLSL3, Group, LinearSRGBColorSpace, Mesh, OrbitControls, PanelItem, PerspectiveCamera, RawShaderMaterial, Scene, SphereGeometry, UI, Vector2, WebGLRenderer, brightness, getFullscreenTriangle, ticker } from '../../build/alien.three.js';
 
+        // Based on https://oframe.github.io/ogl/examples/?src=fresnel.html by michaeldll
+
         const colors = {
             backgroundColor: 0x010204,
             baseColor: 0x010204,
@@ -20,8 +22,6 @@
         };
 
         import periodic3d from '../../src/shaders/modules/noise/periodic3d.glsl.js';
-
-        // Based on https://oframe.github.io/ogl/examples/?src=fresnel.html by michaeldll
 
         class FresnelMaterial extends RawShaderMaterial {
             constructor() {

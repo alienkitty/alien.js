@@ -13,10 +13,10 @@
     <script type="module">
         import { BloomCompositeMaterial, Color, ColorManagement, DirectionalLight, Fluid, Fog, GLSL3, Group, HemisphereLight, LinearSRGBColorSpace, LuminosityMaterial, MathUtils, Mesh, MeshBasicMaterial, MeshStandardMaterial, NoBlending, OrthographicCamera, PanelItem, PerspectiveCamera, PlaneGeometry, RawShaderMaterial, Reflector, RepeatWrapping, SVGLoader, Scene, TextureLoader, UI, UnrealBloomBlurMaterial, Vector2, Vector3, WebGLRenderTarget, WebGLRenderer, getFullscreenTriangle, ticker } from '../../build/alien.three.js';
 
-        import rgbshift from '../../src/shaders/modules/rgbshift/rgbshift.glsl.js';
-
         // Based on https://github.com/PavelDoGreat/WebGL-Fluid-Simulation
         // Based on https://oframe.github.io/ogl/examples/?src=post-fluid-distortion.html by gordonnl
+
+        import rgbshift from '../../src/shaders/modules/rgbshift/rgbshift.glsl.js';
 
         class CompositeMaterial extends RawShaderMaterial {
             constructor() {

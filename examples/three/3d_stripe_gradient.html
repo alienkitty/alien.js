@@ -31,9 +31,9 @@
     <script type="module">
         import { Color, ColorManagement, GLSL3, Group, LinearSRGBColorSpace, Mesh, OrthographicCamera, PanelItem, PlaneGeometry, RawShaderMaterial, Scene, UI, Vector2, WebGLRenderer, WireframeOptions, getKeyByValue, ticker } from '../../build/alien.three.js';
 
-        import simplex3d from '../../src/shaders/modules/noise/simplex3d.glsl.js';
-
         // Based on https://www.youtube.com/watch?v=LW9d2cqIHb4 by akella
+
+        import simplex3d from '../../src/shaders/modules/noise/simplex3d.glsl.js';
 
         class GradientMaterial extends RawShaderMaterial {
             constructor() {

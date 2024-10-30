@@ -13,9 +13,9 @@
     <script type="module">
         import { AdditiveBlending, BloomCompositeMaterial, Color, ColorManagement, DirectionalLight, Flowmap, Fog, GLSL3, Group, HemisphereLight, LinearSRGBColorSpace, LuminosityMaterial, MathUtils, Mesh, MeshBasicMaterial, MeshStandardMaterial, OrthographicCamera, PanelItem, PerspectiveCamera, PlaneGeometry, RawShaderMaterial, Reflector, RepeatWrapping, SVGLoader, Scene, SceneCompositeDistortionMaterial, TextureLoader, UI, UnrealBloomBlurMaterial, Vector2, Vector3, WebGLRenderTarget, WebGLRenderer, getFullscreenTriangle, getViewSize, ticker } from '../../build/alien.three.js';
 
-        import rgbshift from '../../src/shaders/modules/rgbshift/rgbshift.glsl.js';
-
         // Based on https://oframe.github.io/ogl/examples/?src=mouse-flowmap.html by gordonnl
+
+        import rgbshift from '../../src/shaders/modules/rgbshift/rgbshift.glsl.js';
 
         class FlowMaterial extends RawShaderMaterial {
             constructor() {

@@ -21,14 +21,14 @@
             particleColor: 0x8080ff
         };
 
+        // https://twitter.com/pschroen/status/1405600020284444674
+
+        // Based on https://github.com/spite/codevember-2016
+
         import noise from '../../src/shaders/modules/noise/noise2d.glsl.js';
         import rgbshift from '../../src/shaders/modules/rgbshift/rgbshift.glsl.js';
         import blendOverlay from '../../src/shaders/modules/blending/overlay.glsl.js';
         import blendSoftLight from '../../src/shaders/modules/blending/soft-light.glsl.js';
-
-        // https://twitter.com/pschroen/status/1405600020284444674
-
-        // Based on https://github.com/spite/codevember-2016
 
         class CompositeMaterial extends RawShaderMaterial {
             constructor() {

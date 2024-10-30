@@ -954,7 +954,7 @@
                     cameraBlur: false
                 });
 
-                // Motion blur
+                // Motion blur composite material
                 this.motionBlurCompositeMaterial = new MotionBlurCompositeMaterial(textureLoader, {
                     blueNoisePath: '../assets/textures/blue_noise.png'
                 });
@@ -1255,13 +1255,6 @@
                 this.motionBlurCompositeMaterial.uniforms.tMap.value = renderTargetA.texture;
                 this.screen.material = this.motionBlurCompositeMaterial;
                 renderer.setRenderTarget(renderTargetB);
-                renderer.clear();
-                renderer.render(this.screen, this.screenCamera);
-
-                // Extract bright areas
-                this.luminosityMaterial.uniforms.tMap.value = renderTargetB.texture;
-                this.screen.material = this.luminosityMaterial;
-                renderer.setRenderTarget(renderTargetBright);
                 renderer.clear();
                 renderer.render(this.screen, this.screenCamera);
 

@@ -1085,7 +1085,7 @@ class RenderManager {
             interpolateGeometry: 0
         });
 
-        // Motion blur
+        // Motion blur composite material
         this.motionBlurCompositeMaterial = new MotionBlurCompositeMaterial(textureLoader);
         this.motionBlurCompositeMaterial.uniforms.tVelocity.value = this.drawBuffers.renderTarget.textures[1];
 

@@ -423,11 +423,11 @@
                 this.screen.frustumCulled = false;
 
                 // Render targets
-                this.renderTarget = new WebGLRenderTarget(1, 1, {
+                this.afterimage = getDoubleRenderTarget(1, 1, {
                     depthBuffer: false
                 });
 
-                this.afterimage = getDoubleRenderTarget(1, 1, {
+                this.renderTarget = new WebGLRenderTarget(1, 1, {
                     depthBuffer: false
                 });
 
@@ -495,9 +495,9 @@
                 width = Math.round(width * dpr);
                 height = Math.round(height * dpr);
 
-                this.renderTarget.setSize(width, height);
-
                 this.afterimage.setSize(width, height);
+
+                this.renderTarget.setSize(width, height);
 
                 // Unreal bloom
                 width = MathUtils.floorPowerOfTwo(width) / 2;

@@ -20,16 +20,18 @@
 
         class CompositeMaterial extends RawShaderMaterial {
             constructor() {
+                const { time } = WorldController;
+
                 super({
                     glslVersion: GLSL3,
                     uniforms: {
                         tScene: { value: null },
                         tBloom: { value: null },
                         uBloomDistortion: { value: 1.5 },
-                        uGrainAmount: { value: 0.05 },
+                        uGrainAmount: { value: 0.1 },
                         uBoost: { value: 1.1 },
                         uReduction: { value: 0.9 },
-                        uTime: { value: 0 }
+                        uTime: time
                     },
                     vertexShader: /* glsl */ `
                         in vec3 position;
@@ -294,7 +296,7 @@
             }
 
             static initRenderer() {
-                const { screenTriangle, time } = WorldController;
+                const { screenTriangle } = WorldController;
 
                 // Fullscreen triangle
                 this.screenCamera = new OrthographicCamera(-1, 1, 1, -1, 0, 1);
@@ -348,7 +350,6 @@
                 this.compositeMaterial.uniforms.uGrainAmount.value = this.grainAmount;
                 this.compositeMaterial.uniforms.uBoost.value = this.boost;
                 this.compositeMaterial.uniforms.uReduction.value = this.reduction;
-                this.compositeMaterial.uniforms.uTime = time;
             }
 
             static bloomFactors() {

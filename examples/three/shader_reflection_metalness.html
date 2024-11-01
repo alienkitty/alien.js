@@ -51,6 +51,8 @@
 
                 this.add(group);
             }
+
+            ready = () => this.initMesh();
         }
 
         class Floor extends Group {
@@ -109,6 +111,7 @@
                         'void main() {',
                         /* glsl */ `
                         uniform mat4 textureMatrix;
+
                         out vec4 vCoord;
                         out vec3 vToEye;
 
@@ -130,6 +133,7 @@
                         'void main() {',
                         /* glsl */ `
                         uniform sampler2D reflectMap;
+
                         in vec4 vCoord;
                         in vec3 vToEye;
 
@@ -184,6 +188,8 @@
 
                 this.reflector.setSize(width, height);
             };
+
+            ready = () => this.initMesh();
         }
 
         class SceneView extends Group {
@@ -210,8 +216,8 @@
             };
 
             ready = () => Promise.all([
-                this.floor.initMesh(),
-                this.triangle.initMesh()
+                this.floor.ready(),
+                this.triangle.ready()
             ]);
         }
 

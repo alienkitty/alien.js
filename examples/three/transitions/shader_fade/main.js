@@ -1,5 +1,7 @@
-import { AssetLoader, BloomCompositeMaterial, BlurMaterial, BoxGeometry, Color, ColorManagement, DirectionalLight, EnvironmentTextureLoader, GLSL3, Group, HemisphereLight, IcosahedronGeometry, ImageBitmapLoaderThread, Interface, LinearSRGBColorSpace, Link, LuminosityMaterial, MathUtils, Mesh, MeshStandardMaterial, NoBlending, OctahedronGeometry, OrthographicCamera, PanelItem, PerspectiveCamera, RawShaderMaterial, RepeatWrapping, Router, Scene, SceneCompositeMaterial, Stage, TextureLoader, Thread, Title, UI, UnrealBloomBlurMaterial, Vector2, WebGLRenderTarget, WebGLRenderer, clearTween, delayedCall, getFullscreenTriangle, ticker, tween } from '../../../../build/alien.three.js';
+import { AssetLoader, BloomCompositeMaterial, BlurMaterial, BoxGeometry, Color, ColorManagement, DirectionalLight, EnvironmentTextureLoader, GLSL3, Group, HemisphereLight, IcosahedronGeometry, ImageBitmapLoaderThread, Interface, LinearSRGBColorSpace, Link, LuminosityMaterial, MathUtils, Mesh, MeshStandardMaterial, NoBlending, OctahedronGeometry, OrthographicCamera, PanelItem, PerspectiveCamera, RawShaderMaterial, RepeatWrapping, Scene, SceneCompositeMaterial, Stage, TextureLoader, Title, UI, UnrealBloomBlurMaterial, Vector2, WebGLRenderTarget, WebGLRenderer, clearTween, delayedCall, getFullscreenTriangle, router, ticker, tween } from '../../../../build/alien.three.js';
 
+const basePath = '/examples/three/transitions/shader_fade';
+const assetPath = '/examples/';
 const breakpoint = 1000;
 
 class Page {
@@ -54,13 +56,13 @@ class UIContainer extends Interface {
     }
 
     initViews() {
-        const { data } = Router.get(location.pathname);
+        const { data } = router.get(location.pathname);
 
         this.title = new Title(data.title.replace(/[\s.]+/g, '_'));
         this.add(this.title);
 
         const next = Data.getNext(data);
-        const path = Router.getPath(next.path);
+        const path = router.getPath(next.path);
 
         this.link = new Link('Next', `${path}/`);
         this.link.css({ marginTop: 'auto' });
@@ -76,7 +78,7 @@ class UIContainer extends Interface {
     // Event handlers
 
     onPopState = () => {
-        const { data } = Router.get(location.pathname);
+        const { data } = router.get(location.pathname);
 
         this.title.animateOut();
         this.link.animateOut();
@@ -92,7 +94,7 @@ class UIContainer extends Interface {
 
             RenderManager.animateIn(() => {
                 const next = Data.getNext(data);
-                const path = Router.getPath(next.path);
+                const path = router.getPath(next.path);
 
                 this.link.setLink(`${path}/`);
                 this.link.animateIn();
@@ -117,7 +119,7 @@ class UIContainer extends Interface {
     onClick = (e, { target }) => {
         e.preventDefault();
 
-        Router.setPath(target.link);
+        router.setPath(target.link);
     };
 
     // Public methods
@@ -255,6 +257,8 @@ class AbstractCube extends Group {
     update = () => {
         this.mesh.rotation.y -= 0.005;
     };
+
+    ready = () => this.initMesh();
 }
 
 class FloatingCrystal extends Group {
@@ -326,6 +330,8 @@ class FloatingCrystal extends Group {
         this.mesh.position.y = Math.sin(time) * 0.1;
         this.mesh.rotation.y += 0.01;
     };
+
+    ready = () => this.initMesh();
 }
 
 class DarkPlanet extends Group {
@@ -398,6 +404,8 @@ class DarkPlanet extends Group {
         // Counter clockwise rotation
         this.mesh.rotation.y += 0.005;
     };
+
+    ready = () => this.initMesh();
 }
 
 class SceneView extends Group {
@@ -429,9 +437,9 @@ class SceneView extends Group {
     };
 
     ready = () => Promise.all([
-        this.darkPlanet.initMesh(),
-        this.floatingCrystal.initMesh(),
-        this.abstractCube.initMesh()
+        this.darkPlanet.ready(),
+        this.floatingCrystal.ready(),
+        this.abstractCube.ready()
     ]);
 }
 
@@ -443,7 +451,7 @@ class SceneController {
     // Public methods
 
     static setView = () => {
-        const { data } = Router.get(location.pathname);
+        const { data } = router.get(location.pathname);
 
         this.view.darkPlanet.visible = false;
         this.view.floatingCrystal.visible = false;
@@ -561,9 +569,9 @@ class PanelController {
                 min: 0,
                 max: 10,
                 step: 0.1,
-                value: RenderManager.blurFactor,
+                value: RenderManager.blurAmount,
                 callback: value => {
-                    RenderManager.blurFactor = value;
+                    RenderManager.blurAmount = value;
                 }
             },
             {
@@ -595,7 +603,7 @@ class RenderManager {
         this.camera = camera;
 
         // Blur
-        this.blurFactor = 10;
+        this.blurAmount = 10;
 
         // Bloom
         this.luminosityThreshold = 0.1;
@@ -638,10 +646,10 @@ class RenderManager {
 
         // Gaussian blur materials
         this.hBlurMaterial = new BlurMaterial(BlurDirectionX);
-        this.hBlurMaterial.uniforms.uBluriness.value = this.blurFactor;
+        this.hBlurMaterial.uniforms.uBlurAmount.value = this.blurAmount;
 
         this.vBlurMaterial = new BlurMaterial(BlurDirectionY);
-        this.vBlurMaterial.uniforms.uBluriness.value = this.blurFactor;
+        this.vBlurMaterial.uniforms.uBlurAmount.value = this.blurAmount;
 
         // Luminosity high pass material
         this.luminosityMaterial = new LuminosityMaterial();
@@ -774,17 +782,17 @@ class RenderManager {
         renderer.render(this.screen, this.screenCamera);
 
         // Two pass Gaussian blur (horizontal and vertical)
-        const blurFactor = MathUtils.clamp(MathUtils.inverseLerp(0.5, 0, this.compositeMaterial.uniforms.uOpacity.value), 0, 1);
+        const blurAmount = MathUtils.clamp(MathUtils.inverseLerp(0.5, 0, this.compositeMaterial.uniforms.uOpacity.value), 0, 1);
 
-        if (blurFactor > 0) {
+        if (blurAmount > 0) {
             this.hBlurMaterial.uniforms.tMap.value = renderTargetB.texture;
-            this.hBlurMaterial.uniforms.uBluriness.value = this.blurFactor * blurFactor;
+            this.hBlurMaterial.uniforms.uBlurAmount.value = this.blurAmount * blurAmount;
             this.screen.material = this.hBlurMaterial;
             renderer.setRenderTarget(renderTargetA);
             renderer.render(this.screen, this.screenCamera);
 
             this.vBlurMaterial.uniforms.tMap.value = renderTargetA.texture;
-            this.vBlurMaterial.uniforms.uBluriness.value = this.blurFactor * blurFactor;
+            this.vBlurMaterial.uniforms.uBlurAmount.value = this.blurAmount * blurAmount;
             this.screen.material = this.vBlurMaterial;
             renderer.setRenderTarget(renderTargetB);
             renderer.render(this.screen, this.screenCamera);
@@ -866,10 +874,10 @@ class WorldController {
 
     static initLoaders() {
         this.textureLoader = new TextureLoader();
-        this.textureLoader.setPath('/examples/');
+        this.textureLoader.setPath(assetPath);
 
         this.environmentLoader = new EnvironmentTextureLoader(this.renderer);
-        this.environmentLoader.setPath('/examples/');
+        this.environmentLoader.setPath(assetPath);
     }
 
     static async initEnvironment() {
@@ -946,8 +954,6 @@ class App {
 
     static initThread() {
         ImageBitmapLoaderThread.init();
-
-        Thread.shared();
     }
 
     static initLoader() {
@@ -973,16 +979,19 @@ class App {
 
     static initRouter() {
         Data.pages.forEach(page => {
-            Router.add(page.path, Page, page);
+            router.add(page.path, Page, page);
         });
 
         // Landing and 404 page
         const home = Data.pages[0]; // Dark Planet
 
-        Router.add('/', Page, home);
-        Router.add('404', Page, home);
+        router.add('/', Page, home);
+        router.add('404', Page, home);
 
-        Router.init({ path: '/examples/three/transitions/shader_fade' });
+        router.init({
+            path: basePath,
+            scrollRestoration: 'auto'
+        });
     }
 
     static initViews() {

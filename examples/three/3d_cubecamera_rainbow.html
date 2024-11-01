@@ -11,7 +11,7 @@
     <link rel="stylesheet" href="../assets/css/style.css">
 
     <script type="module">
-        import { AdditiveBlending, BackSide, BlurMaterial, Color, ColorManagement, CubeCamera, GLSL3, Group, IcosahedronGeometry, ImageBitmapLoaderThread, LinearMipmapLinearFilter, LinearSRGBColorSpace, MathUtils, Mesh, MeshBasicMaterial, NoBlending, OrthographicCamera, PanelItem, PerspectiveCamera, RawShaderMaterial, Scene, SphereGeometry, Sprite, SpriteMaterial, TextureLoader, Thread, UI, Vector2, Vector3, WebGLCubeRenderTarget, WebGLRenderTarget, WebGLRenderer, Wobble, getFullscreenTriangle, getKeyByValue, ticker, tween } from '../../build/alien.three.js';
+        import { AdditiveBlending, BackSide, BlurMaterial, Color, ColorManagement, CubeCamera, GLSL3, Group, IcosahedronGeometry, ImageBitmapLoaderThread, LinearMipmapLinearFilter, LinearSRGBColorSpace, MathUtils, Mesh, MeshBasicMaterial, NoBlending, OrthographicCamera, PanelItem, PerspectiveCamera, RawShaderMaterial, Scene, SphereGeometry, Sprite, SpriteMaterial, TextureLoader, UI, Vector2, Vector3, WebGLCubeRenderTarget, WebGLRenderTarget, WebGLRenderer, Wobble, getFullscreenTriangle, getKeyByValue, ticker, tween } from '../../build/alien.three.js';
 
         const isDebug = /[?&]debug/.test(location.search);
 
@@ -21,17 +21,17 @@
             particleColor: 0x8080ff
         };
 
+        // https://twitter.com/pschroen/status/1405600020284444674
+
+        // Based on https://github.com/yuichiroharai/glsl-y-hsv
+        // Based on https://github.com/spite/codevember-2016
+
         import hsv2rgbSmooth from '../../src/shaders/modules/hsv/hsv2rgbSmooth.glsl.js';
         import rgb2hsv from '../../src/shaders/modules/hsv/rgb2hsv.glsl.js';
         import noise from '../../src/shaders/modules/noise/noise2d.glsl.js';
         import rgbshift from '../../src/shaders/modules/rgbshift/rgbshift.glsl.js';
         import blendOverlay from '../../src/shaders/modules/blending/overlay.glsl.js';
         import blendSoftLight from '../../src/shaders/modules/blending/soft-light.glsl.js';
-
-        // https://twitter.com/pschroen/status/1405600020284444674
-
-        // Based on https://github.com/yuichiroharai/glsl-y-hsv
-        // Based on https://github.com/spite/codevember-2016
 
         class CompositeMaterial extends RawShaderMaterial {
             constructor() {
@@ -395,6 +395,11 @@
             static initPanel() {
                 const { hBlurMaterial, vBlurMaterial, compositeMaterial } = RenderManager;
 
+                const postOptions = {
+                    Off: false,
+                    Post: true
+                };
+
                 const debugOptions = {
                     Off: false,
                     Debug: true
@@ -408,6 +413,17 @@
                 const items = [
                     {
                         name: 'FPS'
+                    },
+                    {
+                        type: 'divider'
+                    },
+                    {
+                        type: 'list',
+                        list: postOptions,
+                        value: getKeyByValue(postOptions, RenderManager.enabled),
+                        callback: value => {
+                            RenderManager.enabled = postOptions[value];
+                        }
                     },
                     {
                         type: 'divider'
@@ -462,10 +478,10 @@
                         min: 0,
                         max: 10,
                         step: 0.1,
-                        value: hBlurMaterial.uniforms.uBluriness.value,
+                        value: hBlurMaterial.uniforms.uBlurAmount.value,
                         callback: value => {
-                            hBlurMaterial.uniforms.uBluriness.value = value;
-                            vBlurMaterial.uniforms.uBluriness.value = value;
+                            hBlurMaterial.uniforms.uBlurAmount.value = value;
+                            vBlurMaterial.uniforms.uBlurAmount.value = value;
                         }
                     },
                     {
@@ -516,7 +532,7 @@
                 this.camera = camera;
 
                 this.blurResolutionScale = 0.25;
-                this.blurFactor = 1.5;
+                this.blurAmount = 1.5;
                 this.enabled = true;
 
                 this.initRenderer();
@@ -542,10 +558,10 @@
 
                 // Gaussian blur materials
                 this.hBlurMaterial = new BlurMaterial(BlurDirectionX);
-                this.hBlurMaterial.uniforms.uBluriness.value = this.blurFactor;
+                this.hBlurMaterial.uniforms.uBlurAmount.value = this.blurAmount;
 
                 this.vBlurMaterial = new BlurMaterial(BlurDirectionY);
-                this.vBlurMaterial.uniforms.uBluriness.value = this.blurFactor;
+                this.vBlurMaterial.uniforms.uBlurAmount.value = this.blurAmount;
 
                 // Composite material
                 this.compositeMaterial = new CompositeMaterial();
@@ -827,8 +843,6 @@
 
             static initThread() {
                 ImageBitmapLoaderThread.init();
-
-                Thread.shared();
             }
 
             static initWorld() {

@@ -31,7 +31,7 @@
     --ui-info-font-family: 'Gothic A1', sans-serif;
     --ui-info-font-weight: 700;
     --ui-info-font-size: 10px;
-    --ui-info-line-height: 32px;
+    --ui-info-line-height: 20px;
     --ui-info-letter-spacing: 0.08em;
     --ui-info-opacity: 0.7;
     --ui-color: rgb(255 255 255 / 0.94);
@@ -165,6 +165,7 @@ a {
     z-index: 9;
 
     > .info {
+        padding: 6px;
         font-family: var(--ui-info-font-family);
         font-weight: var(--ui-info-font-weight);
         font-size: var(--ui-info-font-size);
@@ -173,6 +174,10 @@ a {
         -moz-osx-font-smoothing: grayscale;
         -webkit-font-smoothing: antialiased;
     }
+}
+
+.trackers {
+    z-index: 10;
 }
 
 .menu > * {

@@ -11,7 +11,7 @@
     <link rel="stylesheet" href="../assets/css/style.css">
 
     <script type="module">
-        import { BasicShadowMap, BloomCompositeMaterial, BoxGeometry, Color, ColorManagement, DirectionalLight, DynamicDrawUsage, EnvironmentTextureLoader, EventEmitter, Group, HemisphereLight, IcosahedronGeometry, ImageBitmapLoaderThread, InstancedMesh, LinearSRGBColorSpace, LuminosityMaterial, MathUtils, Matrix4, Mesh, MeshBasicMaterial, MeshStandardMaterial, NoBlending, OimoPhysicsBuffer, OimoPhysicsController, OrthographicCamera, PanelItem, PerspectiveCamera, PlaneGeometry, PointLight, Reflector, RepeatWrapping, Scene, SceneCompositeDistortionMaterial, ShaderChunk, ShadowMaterial, SphereGeometry, TextureLoader, Thread, UI, UnrealBloomBlurMaterial, Vector2, Vector3, WebGLRenderTarget, WebGLRenderer, getFrustum, getFullscreenTriangle, getKeyByValue, ticker } from '../../build/alien.three.js';
+        import { BasicShadowMap, BloomCompositeMaterial, BoxGeometry, Color, ColorManagement, DirectionalLight, DynamicDrawUsage, EnvironmentTextureLoader, EventEmitter, Group, HemisphereLight, IcosahedronGeometry, ImageBitmapLoaderThread, InstancedMesh, LinearSRGBColorSpace, LuminosityMaterial, MathUtils, Matrix4, Mesh, MeshBasicMaterial, MeshStandardMaterial, NoBlending, OimoPhysicsBuffer, OimoPhysicsController, OrthographicCamera, PanelItem, PerspectiveCamera, PlaneGeometry, PointLight, Reflector, RepeatWrapping, Scene, SceneCompositeDistortionMaterial, ShaderChunk, ShadowMaterial, SphereGeometry, TextureLoader, Thread, UI, UnrealBloomBlurMaterial, Vector2, Vector3, WebGLRenderTarget, WebGLRenderer, getFullscreenTriangle, getKeyByValue, getViewSize, ticker } from '../../build/alien.three.js';
 
         const isDebug = /[?&]debug/.test(location.search);
 
@@ -294,6 +294,7 @@
                         /* glsl */ `
                         uniform mat3 uvTransform;
                         uniform mat4 textureMatrix;
+
                         out vec2 vUv;
                         out vec4 vCoord;
 
@@ -317,6 +318,7 @@
                         uniform sampler2D map;
                         uniform sampler2D reflectMap;
                         uniform sampler2D reflectMapBlur;
+
                         in vec2 vUv;
                         in vec4 vCoord;
 
@@ -583,10 +585,12 @@
             static resize = (width, height) => {
                 this.view.floor.resize(width, height);
 
-                const frustum = WorldController.getFrustum(this.view.light.position.z);
+                const { getViewSize } = WorldController;
 
-                this.halfWidth = frustum.width / 2;
-                this.halfHeight = frustum.height / 2;
+                const { x, y } = getViewSize(this.view.light.position.z);
+
+                this.halfWidth = x / 2;
+                this.halfHeight = y / 2;
             };
 
             static update = () => {
@@ -1107,7 +1111,7 @@
 
             static loadEnvironmentTexture = path => this.environmentLoader.loadAsync(path);
 
-            static getFrustum = offsetZ => getFrustum(this.camera, offsetZ);
+            static getViewSize = object => getViewSize(this.camera, object);
         }
 
         class App {
@@ -1133,7 +1137,6 @@
                 ImageBitmapLoaderThread.init();
 
                 Thread.count--; // Make room for the physics thread
-                Thread.shared();
             }
 
             static initWorld() {

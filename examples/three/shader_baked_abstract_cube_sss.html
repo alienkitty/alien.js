@@ -11,7 +11,7 @@
     <link rel="stylesheet" href="../assets/css/style.css">
 
     <script type="module">
-        import { BloomCompositeMaterial, BufferGeometryLoader, BufferGeometryLoaderThread, Color, ColorManagement, EnvironmentTextureLoader, Group, HemisphereLight, ImageBitmapLoaderThread, LinearSRGBColorSpace, LuminosityMaterial, MathUtils, Mesh, MeshStandardMaterial, OrthographicCamera, PanelItem, PerspectiveCamera, PlaneGeometry, PointLight, PointLightHelper, Reflector, ReflectorDudvMaterial, RepeatWrapping, Scene, SceneCompositeDistortionMaterial, ShaderChunk, TextureLoader, Thread, UI, UnrealBloomBlurMaterial, Vector2, Vector3, WebGLRenderTarget, WebGLRenderer, getFrustum, getFullscreenTriangle, ticker } from '../../build/alien.three.js';
+        import { BloomCompositeMaterial, BufferGeometryLoader, BufferGeometryLoaderThread, Color, ColorManagement, EnvironmentTextureLoader, Group, HemisphereLight, ImageBitmapLoaderThread, LinearSRGBColorSpace, LuminosityMaterial, MathUtils, Mesh, MeshStandardMaterial, OrthographicCamera, PanelItem, PerspectiveCamera, PlaneGeometry, PointLight, PointLightHelper, Reflector, ReflectorDudvMaterial, RepeatWrapping, Scene, SceneCompositeDistortionMaterial, ShaderChunk, TextureLoader, UI, UnrealBloomBlurMaterial, Vector2, Vector3, WebGLRenderTarget, WebGLRenderer, getFullscreenTriangle, getViewSize, ticker } from '../../build/alien.three.js';
 
         const isDebug = /[?&]debug/.test(location.search);
 
@@ -138,8 +138,8 @@
             }
 
             initMesh() {
-                this.mesh = new Mesh(this.geometry, this.material);
-                this.add(this.mesh);
+                const mesh = new Mesh(this.geometry, this.material);
+                this.add(mesh);
             }
 
             // Public methods
@@ -269,10 +269,12 @@
             static resize = (width, height) => {
                 this.view.floor.resize(width, height);
 
-                const frustum = WorldController.getFrustum(this.view.light.position.z);
+                const { getViewSize } = WorldController;
 
-                this.halfWidth = frustum.width / 2;
-                this.halfHeight = frustum.height / 2;
+                const { x, y } = getViewSize(this.view.light.position.z);
+
+                this.halfWidth = x / 2;
+                this.halfHeight = y / 2;
             };
 
             static update = () => {
@@ -773,7 +775,7 @@
 
             static loadBufferGeometry = path => this.bufferGeometryLoader.loadAsync(path);
 
-            static getFrustum = offsetZ => getFrustum(this.camera, offsetZ);
+            static getViewSize = object => getViewSize(this.camera, object);
         }
 
         class App {
@@ -798,8 +800,6 @@
             static initThread() {
                 ImageBitmapLoaderThread.init();
                 BufferGeometryLoaderThread.init();
-
-                Thread.shared();
             }
 
             static initWorld() {

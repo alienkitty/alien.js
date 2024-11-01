@@ -11,7 +11,7 @@
     <link rel="stylesheet" href="../assets/css/style.css">
 
     <script type="module">
-        import { AssetLoader, Color, ColorManagement, DirectionalLight, Group, Interface, LinearFilter, LinearSRGBColorSpace, Mesh, MeshStandardMaterial, PanelItem, PerspectiveCamera, PlaneGeometry, Scene, Texture, UI, Vector2, WebGLRenderer, WireframeOptions, clearTween, delayedCall, getFrustum, getKeyByValue, ticker } from '../../build/alien.three.js';
+        import { AssetLoader, Color, ColorManagement, DirectionalLight, Group, Interface, LinearFilter, LinearSRGBColorSpace, Mesh, MeshStandardMaterial, PanelItem, PerspectiveCamera, PlaneGeometry, Scene, Texture, UI, Vector2, WebGLRenderer, WireframeOptions, clearTween, delayedCall, getKeyByValue, getViewSize, ticker } from '../../build/alien.three.js';
 
         class GridCanvas extends Interface {
             constructor() {
@@ -228,8 +228,10 @@
 
                 this.material.displacementScale = 5 * this.multiplier;
 
-                const frustum = WorldController.getFrustum();
-                this.mesh.scale.set(frustum.width, frustum.height, 1);
+                const { getViewSize } = WorldController;
+
+                const { x, y } = getViewSize();
+                this.mesh.scale.set(x, y, 1);
             };
 
             update = () => {
@@ -484,7 +486,7 @@
 
             static loadImage = path => this.assetLoader.loadImage(path);
 
-            static getFrustum = offsetZ => getFrustum(this.camera, offsetZ);
+            static getViewSize = object => getViewSize(this.camera, object);
         }
 
         class App {

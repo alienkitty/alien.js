@@ -4,66 +4,14 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
 
-    <title>Bloom Post-processing — Alien.js</title>
+    <title>Single Pass Blur Post-processing — Alien.js</title>
 
     <link rel="preconnect" href="https://fonts.gstatic.com">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto+Mono">
     <link rel="stylesheet" href="../assets/css/style.css">
 
     <script type="module">
-        import { BlurMaterial, Color, ColorManagement, DirectionalLight, GLSL3, Group, HemisphereLight, LinearSRGBColorSpace, Mesh, MeshStandardMaterial, NoBlending, OrthographicCamera, PanelItem, PerspectiveCamera, RawShaderMaterial, Scene, SphereGeometry, UI, Vector2, WebGLRenderTarget, WebGLRenderer, getFullscreenTriangle, ticker } from '../../build/alien.three.js';
-
-        class CompositeMaterial extends RawShaderMaterial {
-            constructor() {
-                super({
-                    glslVersion: GLSL3,
-                    uniforms: {
-                        tScene: { value: null },
-                        tBloom: { value: null },
-                        uMinBright: { value: 0.1247 },
-                        uBlurBright: { value: 0.4166 }
-                    },
-                    vertexShader: /* glsl */ `
-                        in vec3 position;
-                        in vec2 uv;
-
-                        out vec2 vUv;
-
-                        void main() {
-                            vUv = uv;
-
-                            gl_Position = vec4(position, 1.0);
-                        }
-                    `,
-                    fragmentShader: /* glsl */ `
-                        precision highp float;
-
-                        uniform sampler2D tScene;
-                        uniform sampler2D tBloom;
-                        uniform float uMinBright;
-                        uniform float uBlurBright;
-
-                        in vec2 vUv;
-
-                        out vec4 FragColor;
-
-                        void main() {
-                            FragColor = texture(tScene, vUv);
-
-                            vec3 bloom = texture(tBloom, vUv).rgb;
-                            bloom.x = max(0.0, bloom.x - uMinBright);
-                            bloom.y = max(0.0, bloom.y - uMinBright);
-                            bloom.z = max(0.0, bloom.z - uMinBright);
-
-                            FragColor.rgb += bloom * uBlurBright;
-                        }
-                    `,
-                    blending: NoBlending,
-                    depthTest: false,
-                    depthWrite: false
-                });
-            }
-        }
+        import { Color, ColorManagement, CopyMaterial, DirectionalLight, Group, HemisphereLight, LinearSRGBColorSpace, Mesh, MeshStandardMaterial, OrthographicCamera, PanelItem, PerspectiveCamera, Scene, SinglePassBlurMaterial, SphereGeometry, TextureLoader, UI, Vector2, WebGLRenderTarget, WebGLRenderer, getFullscreenTriangle, ticker } from '../../build/alien.three.js';
 
         import periodic3d from '../../src/shaders/modules/noise/periodic3d.glsl.js';
 
@@ -119,7 +67,7 @@
             }
 
             static initPanel() {
-                const { hBlurMaterial, vBlurMaterial, compositeMaterial } = RenderManager;
+                const { blurMaterial } = RenderManager;
 
                 const items = [
                     {
@@ -134,32 +82,9 @@
                         min: 0,
                         max: 10,
                         step: 0.1,
-                        value: hBlurMaterial.uniforms.uBlurAmount.value,
+                        value: blurMaterial.uniforms.uBlurAmount.value,
                         callback: value => {
-                            hBlurMaterial.uniforms.uBlurAmount.value = value;
-                            vBlurMaterial.uniforms.uBlurAmount.value = value;
-                        }
-                    },
-                    {
-                        type: 'slider',
-                        name: 'Reduce',
-                        min: 0,
-                        max: 1,
-                        step: 0.01,
-                        value: compositeMaterial.uniforms.uMinBright.value,
-                        callback: value => {
-                            compositeMaterial.uniforms.uMinBright.value = value;
-                        }
-                    },
-                    {
-                        type: 'slider',
-                        name: 'Bright',
-                        min: 0,
-                        max: 1,
-                        step: 0.01,
-                        value: compositeMaterial.uniforms.uBlurBright.value,
-                        callback: value => {
-                            compositeMaterial.uniforms.uBlurBright.value = value;
+                            blurMaterial.uniforms.uBlurAmount.value = value;
                         }
                     }
                 ];
@@ -170,56 +95,42 @@
             }
         }
 
-        const BlurDirectionX = new Vector2(1, 0);
-        const BlurDirectionY = new Vector2(0, 1);
-
         class RenderManager {
             static init(renderer, scene, camera) {
                 this.renderer = renderer;
                 this.scene = scene;
                 this.camera = camera;
 
-                this.blurResolutionScale = 0.25;
-                this.blurAmount = 1.5;
+                this.blurAmount = 10;
                 this.enabled = true;
 
                 this.initRenderer();
             }
 
             static initRenderer() {
-                const { screenTriangle } = WorldController;
-
-                // Manually clear
-                this.renderer.autoClear = false;
+                const { screenTriangle, resolution } = WorldController;
 
                 // Fullscreen triangle
                 this.screenCamera = new OrthographicCamera(-1, 1, 1, -1, 0, 1);
                 this.screen = new Mesh(screenTriangle);
                 this.screen.frustumCulled = false;
 
-                // Background scene
-                this.backgroundScene = new Scene();
-                this.backgroundScene.background = new Color(0x060606);
-
                 // Render targets
-                this.renderTarget = new WebGLRenderTarget(1, 1, {
+                this.renderTargetA = new WebGLRenderTarget(1, 1, {
                     depthBuffer: false
                 });
 
-                this.renderTargetBlurA = this.renderTarget.clone();
-                this.renderTargetBlurB = this.renderTarget.clone();
+                this.renderTargetB = this.renderTargetA.clone();
 
-                this.renderTarget.depthBuffer = true;
+                this.renderTargetA.depthBuffer = true;
 
-                // Gaussian blur materials
-                this.hBlurMaterial = new BlurMaterial(BlurDirectionX);
-                this.hBlurMaterial.uniforms.uBlurAmount.value = this.blurAmount;
+                // Gaussian blur material
+                this.blurMaterial = new SinglePassBlurMaterial();
+                this.blurMaterial.uniforms.uBlurAmount.value = this.blurAmount;
+                this.blurMaterial.uniforms.uResolution = resolution;
 
-                this.vBlurMaterial = new BlurMaterial(BlurDirectionY);
-                this.vBlurMaterial.uniforms.uBlurAmount.value = this.blurAmount;
-
-                // Composite material
-                this.compositeMaterial = new CompositeMaterial();
+                // Copy material
+                this.copyMaterial = new CopyMaterial();
             }
 
             // Public methods
@@ -231,16 +142,8 @@
                 width = Math.round(width * dpr);
                 height = Math.round(height * dpr);
 
-                this.renderTarget.setSize(width, height);
-
-                width = Math.round(width * this.blurResolutionScale);
-                height = Math.round(height * this.blurResolutionScale);
-
-                this.renderTargetBlurA.setSize(width, height);
-                this.renderTargetBlurB.setSize(width, height);
-
-                this.hBlurMaterial.uniforms.uResolution.value.set(width, height);
-                this.vBlurMaterial.uniforms.uResolution.value.set(width, height);
+                this.renderTargetA.setSize(width, height);
+                this.renderTargetB.setSize(width, height);
             };
 
             static update = () => {
@@ -250,43 +153,27 @@
 
                 if (!this.enabled) {
                     renderer.setRenderTarget(null);
-                    renderer.clear();
                     renderer.render(scene, camera);
                     return;
                 }
 
-                const renderTarget = this.renderTarget;
-                const renderTargetBlurA = this.renderTargetBlurA;
-                const renderTargetBlurB = this.renderTargetBlurB;
-
-                // Background pass
-                renderer.setRenderTarget(renderTarget);
-                renderer.clear();
-                renderer.render(this.backgroundScene, camera);
+                const renderTargetA = this.renderTargetA;
+                const renderTargetB = this.renderTargetB;
 
                 // Scene pass
-                renderer.setRenderTarget(renderTarget);
+                renderer.setRenderTarget(renderTargetA);
                 renderer.render(scene, camera);
 
-                // Two pass Gaussian blur (horizontal and vertical)
-                this.hBlurMaterial.uniforms.tMap.value = renderTarget.texture;
-                this.screen.material = this.hBlurMaterial;
-                renderer.setRenderTarget(renderTargetBlurA);
-                renderer.clear();
+                // Copy pass
+                this.copyMaterial.uniforms.tMap.value = renderTargetA.texture;
+                this.screen.material = this.copyMaterial;
+                renderer.setRenderTarget(renderTargetB);
                 renderer.render(this.screen, this.screenCamera);
 
-                this.vBlurMaterial.uniforms.tMap.value = renderTargetBlurA.texture;
-                this.screen.material = this.vBlurMaterial;
-                renderer.setRenderTarget(renderTargetBlurB);
-                renderer.clear();
-                renderer.render(this.screen, this.screenCamera);
-
-                // Composite pass (render to screen)
-                this.compositeMaterial.uniforms.tScene.value = renderTarget.texture;
-                this.compositeMaterial.uniforms.tBloom.value = renderTargetBlurB.texture;
-                this.screen.material = this.compositeMaterial;
+                // Gaussian blur pass (render to screen)
+                this.blurMaterial.uniforms.tMap.value = renderTargetB.texture;
+                this.screen.material = this.blurMaterial;
                 renderer.setRenderTarget(null);
-                renderer.clear();
                 renderer.render(this.screen, this.screenCamera);
             };
         }
@@ -295,6 +182,7 @@
             static init() {
                 this.initWorld();
                 this.initLights();
+                this.initLoaders();
 
                 this.addListeners();
             }
@@ -314,6 +202,7 @@
 
                 // 3D scene
                 this.scene = new Scene();
+                this.scene.background = new Color(0x060606);
                 this.camera = new PerspectiveCamera(30);
                 this.camera.near = 0.5;
                 this.camera.far = 40;
@@ -334,9 +223,14 @@
             static initLights() {
                 this.scene.add(new HemisphereLight(0x606060, 0x404040, 3));
 
-                const light = new DirectionalLight(0xffffff, 1.3);
+                const light = new DirectionalLight(0xffffff, 2);
                 light.position.set(1, 1, 1);
                 this.scene.add(light);
+            }
+
+            static initLoaders() {
+                this.textureLoader = new TextureLoader();
+                this.textureLoader.setPath('../');
             }
 
             static addListeners() {

@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
 
-    <title>Radial Blur with RGB shift Post-processing — Alien.js</title>
+    <title>Vignette Blur Post-processing — Alien.js</title>
 
     <link rel="preconnect" href="https://fonts.gstatic.com">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto+Mono">
@@ -13,20 +13,20 @@
     <script type="module">
         import { AdditiveBlending, BloomCompositeMaterial, BufferGeometry, Color, ColorManagement, CopyMaterial, DepthTexture, DirectionalLight, EnvironmentTextureLoader, Float32BufferAttribute, GLSL3, Group, HemisphereLight, ImageBitmapLoaderThread, LinearSRGBColorSpace, LuminosityMaterial, MathUtils, Mesh, MeshStandardMaterial, NoBlending, OrbitControls, OrthographicCamera, PanelItem, PerspectiveCamera, Points, RawShaderMaterial, RepeatWrapping, Scene, SphereGeometry, TextureLoader, UI, UnrealBloomBlurMaterial, Vector2, WebGLRenderTarget, WebGLRenderer, getFullscreenTriangle, ticker } from '../../build/alien.three.js';
 
-        // Based on https://github.com/OGRECave/ogre/blob/master/Samples/Media/materials/programs/GLSL/Radial_Blur_FP.glsl
-        // Based on https://stackoverflow.com/questions/4579020/how-do-i-use-a-glsl-shader-to-apply-a-radial-blur-to-an-entire-scene
+        import smootherstep from '../../src/shaders/modules/smootherstep/smootherstep.glsl.js';
+        import blur from '../../src/shaders/modules/blur/blur.glsl.js';
 
-        import blur from '../../src/shaders/modules/blur/radial-blur8-rgbshift.glsl.js';
-
-        class CompositeMaterial extends RawShaderMaterial {
-            constructor() {
+        class BlurMaterial extends RawShaderMaterial {
+            constructor(direction = new Vector2(0.5, 0.5)) {
                 super({
                     glslVersion: GLSL3,
                     uniforms: {
                         tMap: { value: null },
-                        uBlurDist: { value: 1 },
-                        uBlurAmount: { value: 2.2 },
-                        uRGBAmount: { value: 2.2 }
+                        uBlurAmount: { value: 1 },
+                        uInnerRadius: { value: 0.5 },
+                        uOuterRadius: { value: 1 },
+                        uDirection: { value: direction },
+                        uResolution: { value: new Vector2() }
                     },
                     vertexShader: /* glsl */ `
                         in vec3 position;
@@ -44,24 +44,23 @@
                         precision highp float;
 
                         uniform sampler2D tMap;
-                        uniform float uBlurDist;
                         uniform float uBlurAmount;
-                        uniform float uRGBAmount;
+                        uniform float uInnerRadius;
+                        uniform float uOuterRadius;
+                        uniform vec2 uDirection;
+                        uniform vec2 uResolution;
 
                         in vec2 vUv;
 
                         out vec4 FragColor;
 
+                        ${smootherstep}
                         ${blur}
 
                         void main() {
-                            vec2 dir = 0.5 - vUv;
-                            float dist = length(dir);
-                            dist = clamp(smoothstep(0.2, 0.7, dist), 0.0, 1.0);
-                            float angle = atan(dir.y, dir.x);
-                            float amount = 0.002 * dist * uRGBAmount;
+                            float center = length(vUv - 0.5);
 
-                            FragColor = radialBlurRGB(tMap, vUv, 0.1 * dist * uBlurDist, uBlurAmount, angle, amount);
+                            FragColor = blur(tMap, vUv, uResolution, uBlurAmount * smootherstep(uInnerRadius, uOuterRadius, center) * uDirection);
                         }
                     `,
                     blending: NoBlending,
@@ -276,7 +275,7 @@
             }
 
             static initPanel() {
-                const { luminosityMaterial, bloomCompositeMaterial, compositeMaterial } = RenderManager;
+                const { hBlurMaterial, vBlurMaterial, luminosityMaterial, bloomCompositeMaterial } = RenderManager;
 
                 const items = [
                     {
@@ -287,35 +286,38 @@
                     },
                     {
                         type: 'slider',
-                        name: 'Distance',
+                        name: 'Blur',
                         min: 0,
-                        max: 1,
+                        max: 10,
+                        step: 0.1,
+                        value: hBlurMaterial.uniforms.uBlurAmount.value,
+                        callback: value => {
+                            hBlurMaterial.uniforms.uBlurAmount.value = value;
+                            vBlurMaterial.uniforms.uBlurAmount.value = value;
+                        }
+                    },
+                    {
+                        type: 'slider',
+                        name: 'Inner',
+                        min: 0,
+                        max: 2,
                         step: 0.01,
-                        value: compositeMaterial.uniforms.uBlurDist.value,
+                        value: hBlurMaterial.uniforms.uInnerRadius.value,
                         callback: value => {
-                            compositeMaterial.uniforms.uBlurDist.value = value;
+                            hBlurMaterial.uniforms.uInnerRadius.value = value;
+                            vBlurMaterial.uniforms.uInnerRadius.value = value;
                         }
                     },
                     {
                         type: 'slider',
-                        name: 'Strength',
+                        name: 'Outer',
                         min: 0,
-                        max: 10,
-                        step: 0.1,
-                        value: compositeMaterial.uniforms.uBlurAmount.value,
+                        max: 2,
+                        step: 0.01,
+                        value: hBlurMaterial.uniforms.uOuterRadius.value,
                         callback: value => {
-                            compositeMaterial.uniforms.uBlurAmount.value = value;
-                        }
-                    },
-                    {
-                        type: 'slider',
-                        name: 'Chroma',
-                        min: 0,
-                        max: 10,
-                        step: 0.1,
-                        value: compositeMaterial.uniforms.uRGBAmount.value,
-                        callback: value => {
-                            compositeMaterial.uniforms.uRGBAmount.value = value;
+                            hBlurMaterial.uniforms.uOuterRadius.value = value;
+                            vBlurMaterial.uniforms.uOuterRadius.value = value;
                         }
                     },
                     {
@@ -385,6 +387,11 @@
                 this.camera = camera;
                 this.dust = dust;
 
+                // Blur
+                this.blurAmount = 2.2;
+                this.innerRadius = 0.22;
+                this.outerRadius = 0.66;
+
                 // Bloom
                 this.luminosityThreshold = 0.1;
                 this.luminositySmoothing = 1;
@@ -397,7 +404,7 @@
             }
 
             static initRenderer() {
-                const { screenTriangle } = WorldController;
+                const { screenTriangle, resolution } = WorldController;
 
                 // Manually clear
                 this.renderer.autoClear = false;
@@ -427,6 +434,19 @@
 
                 this.renderTargetA.depthBuffer = true;
                 this.renderTargetA.depthTexture = new DepthTexture();
+
+                // Gaussian blur materials
+                this.hBlurMaterial = new BlurMaterial(BlurDirectionX);
+                this.hBlurMaterial.uniforms.uBlurAmount.value = this.blurAmount;
+                this.hBlurMaterial.uniforms.uInnerRadius.value = this.innerRadius;
+                this.hBlurMaterial.uniforms.uOuterRadius.value = this.outerRadius;
+                this.hBlurMaterial.uniforms.uResolution = resolution;
+
+                this.vBlurMaterial = new BlurMaterial(BlurDirectionY);
+                this.vBlurMaterial.uniforms.uBlurAmount.value = this.blurAmount;
+                this.vBlurMaterial.uniforms.uInnerRadius.value = this.innerRadius;
+                this.vBlurMaterial.uniforms.uOuterRadius.value = this.outerRadius;
+                this.vBlurMaterial.uniforms.uResolution = resolution;
 
                 // Luminosity high pass material
                 this.luminosityMaterial = new LuminosityMaterial();
@@ -462,9 +482,6 @@
 
                 // Copy material
                 this.copyMaterial = new CopyMaterial();
-
-                // Composite material
-                this.compositeMaterial = new CompositeMaterial();
             }
 
             static bloomFactors() {
@@ -574,9 +591,22 @@
                 renderer.setRenderTarget(renderTargetB);
                 renderer.render(this.dustScene, camera);
 
-                // Composite pass (render to screen)
-                this.compositeMaterial.uniforms.tMap.value = renderTargetB.texture;
-                this.screen.material = this.compositeMaterial;
+                // Two pass Gaussian blur (horizontal and vertical)
+                this.hBlurMaterial.uniforms.tMap.value = renderTargetB.texture;
+                this.screen.material = this.hBlurMaterial;
+                renderer.setRenderTarget(renderTargetA);
+                renderer.clear();
+                renderer.render(this.screen, this.screenCamera);
+
+                this.vBlurMaterial.uniforms.tMap.value = renderTargetA.texture;
+                this.screen.material = this.vBlurMaterial;
+                renderer.setRenderTarget(renderTargetB);
+                renderer.clear();
+                renderer.render(this.screen, this.screenCamera);
+
+                // Copy pass (render to screen)
+                this.copyMaterial.uniforms.tMap.value = renderTargetB.texture;
+                this.screen.material = this.copyMaterial;
                 renderer.setRenderTarget(null);
                 renderer.clear();
                 renderer.render(this.screen, this.screenCamera);

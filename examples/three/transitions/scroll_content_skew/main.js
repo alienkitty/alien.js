@@ -1,7 +1,8 @@
-import { AssetLoader, BloomCompositeMaterial, BlurMaterial, BoxGeometry, Color, ColorManagement, Details, DirectionalLight, EnvironmentTextureLoader, GLSL3, Group, HemisphereLight, IcosahedronGeometry, ImageBitmapLoaderThread, Interface, LinearSRGBColorSpace, LuminosityMaterial, MathUtils, Mesh, MeshStandardMaterial, NoBlending, OctahedronGeometry, OrthographicCamera, PanelItem, PerspectiveCamera, RawShaderMaterial, RepeatWrapping, Scene, SceneCompositeMaterial, SmoothSkew, Stage, TextureLoader, Thread, UI, UnrealBloomBlurMaterial, Vector2, WebGLRenderTarget, WebGLRenderer, clearTween, defer, getFullscreenTriangle, ticker, tween } from '../../../../build/alien.three.js';
+import { AssetLoader, BloomCompositeMaterial, BlurMaterial, BoxGeometry, Color, ColorManagement, Details, DirectionalLight, EnvironmentTextureLoader, GLSL3, Group, HemisphereLight, IcosahedronGeometry, ImageBitmapLoaderThread, Interface, LinearSRGBColorSpace, LuminosityMaterial, MathUtils, Mesh, MeshStandardMaterial, NoBlending, OctahedronGeometry, OrthographicCamera, PanelItem, PerspectiveCamera, RawShaderMaterial, RepeatWrapping, Scene, SceneCompositeMaterial, SmoothSkew, Stage, TextureLoader, UI, UnrealBloomBlurMaterial, Vector2, WebGLRenderTarget, WebGLRenderer, clearTween, defer, getFullscreenTriangle, ticker, tween } from '../../../../build/alien.three.js';
 
 const isDebug = /[?&]debug/.test(location.search);
 
+const assetPath = '/examples/';
 const breakpoint = 1000;
 
 class Data {
@@ -227,6 +228,8 @@ class AbstractCube extends Group {
     update = () => {
         this.mesh.rotation.y -= 0.005;
     };
+
+    ready = () => this.initMesh();
 }
 
 class FloatingCrystal extends Group {
@@ -298,6 +301,8 @@ class FloatingCrystal extends Group {
         this.mesh.position.y = Math.sin(time) * 0.1;
         this.mesh.rotation.y += 0.01;
     };
+
+    ready = () => this.initMesh();
 }
 
 class DarkPlanet extends Group {
@@ -370,6 +375,8 @@ class DarkPlanet extends Group {
         // Counter clockwise rotation
         this.mesh.rotation.y += 0.005;
     };
+
+    ready = () => this.initMesh();
 }
 
 class SceneView extends Group {
@@ -401,9 +408,9 @@ class SceneView extends Group {
     };
 
     ready = () => Promise.all([
-        this.darkPlanet.initMesh(),
-        this.floatingCrystal.initMesh(),
-        this.abstractCube.initMesh()
+        this.darkPlanet.ready(),
+        this.floatingCrystal.ready(),
+        this.abstractCube.ready()
     ]);
 }
 
@@ -547,9 +554,9 @@ class PanelController {
                 min: 0,
                 max: 10,
                 step: 0.1,
-                value: RenderManager.blurFactor,
+                value: RenderManager.blurAmount,
                 callback: value => {
-                    RenderManager.blurFactor = value;
+                    RenderManager.blurAmount = value;
                 }
             },
             {
@@ -609,7 +616,7 @@ class RenderManager {
         this.sections = container.children;
 
         // Blur
-        this.blurFactor = 10;
+        this.blurAmount = 10;
 
         // Bloom
         this.luminosityThreshold = 0.1;
@@ -655,10 +662,10 @@ class RenderManager {
 
         // Gaussian blur materials
         this.hBlurMaterial = new BlurMaterial(BlurDirectionX);
-        this.hBlurMaterial.uniforms.uBluriness.value = this.blurFactor;
+        this.hBlurMaterial.uniforms.uBlurAmount.value = this.blurAmount;
 
         this.vBlurMaterial = new BlurMaterial(BlurDirectionY);
-        this.vBlurMaterial.uniforms.uBluriness.value = this.blurFactor;
+        this.vBlurMaterial.uniforms.uBlurAmount.value = this.blurAmount;
 
         // Luminosity high pass material
         this.luminosityMaterial = new LuminosityMaterial();
@@ -828,17 +835,17 @@ class RenderManager {
         renderer.render(this.screen, this.screenCamera);
 
         // Two pass Gaussian blur (horizontal and vertical)
-        const blurFactor = MathUtils.clamp(MathUtils.inverseLerp(0.5, 0, this.compositeMaterial.uniforms.uOpacity.value), 0, 1);
+        const blurAmount = MathUtils.clamp(MathUtils.inverseLerp(0.5, 0, this.compositeMaterial.uniforms.uOpacity.value), 0, 1);
 
-        if (blurFactor > 0) {
+        if (blurAmount > 0) {
             this.hBlurMaterial.uniforms.tMap.value = renderTargetB.texture;
-            this.hBlurMaterial.uniforms.uBluriness.value = this.blurFactor * blurFactor;
+            this.hBlurMaterial.uniforms.uBlurAmount.value = this.blurAmount * blurAmount;
             this.screen.material = this.hBlurMaterial;
             renderer.setRenderTarget(renderTargetA);
             renderer.render(this.screen, this.screenCamera);
 
             this.vBlurMaterial.uniforms.tMap.value = renderTargetA.texture;
-            this.vBlurMaterial.uniforms.uBluriness.value = this.blurFactor * blurFactor;
+            this.vBlurMaterial.uniforms.uBlurAmount.value = this.blurAmount * blurAmount;
             this.screen.material = this.vBlurMaterial;
             renderer.setRenderTarget(renderTargetB);
             renderer.render(this.screen, this.screenCamera);
@@ -921,10 +928,10 @@ class WorldController {
 
     static initLoaders() {
         this.textureLoader = new TextureLoader();
-        this.textureLoader.setPath('/examples/');
+        this.textureLoader.setPath(assetPath);
 
         this.environmentLoader = new EnvironmentTextureLoader(this.renderer);
-        this.environmentLoader.setPath('/examples/');
+        this.environmentLoader.setPath(assetPath);
     }
 
     static async initEnvironment() {
@@ -1009,8 +1016,6 @@ class App {
 
     static initThread() {
         ImageBitmapLoaderThread.init();
-
-        Thread.shared();
     }
 
     static initLoader() {

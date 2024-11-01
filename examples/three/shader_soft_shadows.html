@@ -19,7 +19,7 @@
     </style>
 
     <script type="module">
-        import { BasicShadowMap, BufferGeometryLoader, BufferGeometryLoaderThread, Color, ColorManagement, DirectionalLight, Group, HemisphereLight, ImageBitmapLoaderThread, LinearSRGBColorSpace, Mesh, MeshPhongMaterial, NoBlending, OrbitControls, PanelItem, PerspectiveCamera, PlaneGeometry, Reflector, RepeatWrapping, Scene, ShadowMaterial, SoftShadows, SphereGeometry, TextureLoader, Thread, UI, Vector2, WebGLRenderer, getFullscreenTriangle, ticker } from '../../build/alien.three.js';
+        import { BasicShadowMap, BufferGeometryLoader, BufferGeometryLoaderThread, Color, ColorManagement, DirectionalLight, Group, HemisphereLight, ImageBitmapLoaderThread, LinearSRGBColorSpace, Mesh, MeshPhongMaterial, NoBlending, OrbitControls, PanelItem, PerspectiveCamera, PlaneGeometry, Reflector, RepeatWrapping, Scene, ShadowMaterial, SoftShadows, SphereGeometry, TextureLoader, UI, Vector2, WebGLRenderer, getFullscreenTriangle, ticker } from '../../build/alien.three.js';
 
         // Based on https://threejs.org/examples/#webgl_shadowmap_pcss by spidersharma03
 
@@ -61,10 +61,6 @@
             }
 
             initReflector() {
-                const { light } = WorldController;
-
-                this.light = light;
-
                 this.reflector = new Reflector();
             }
 
@@ -98,6 +94,7 @@
                         /* glsl */ `
                         uniform mat3 uvTransform;
                         uniform mat4 textureMatrix;
+
                         out vec2 vUv;
                         out vec4 vCoord;
 
@@ -121,6 +118,7 @@
                         uniform sampler2D map;
                         uniform sampler2D reflectMap;
                         uniform sampler2D reflectMapBlur;
+
                         in vec2 vUv;
                         in vec4 vCoord;
 
@@ -164,9 +162,7 @@
 
                 mesh.onBeforeRender = (renderer, scene, camera) => {
                     this.visible = false;
-                    this.light.position.y *= -1;
                     this.reflector.update(renderer, scene, camera);
-                    this.light.position.y *= -1;
                     this.visible = true;
                 };
 
@@ -450,8 +446,6 @@
             static initThread() {
                 ImageBitmapLoaderThread.init();
                 BufferGeometryLoaderThread.init();
-
-                Thread.shared();
             }
 
             static initWorld() {

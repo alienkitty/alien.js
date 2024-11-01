@@ -13,10 +13,10 @@
     <script type="module">
         import { Color, ColorManagement, GLSL3, Group, LinearSRGBColorSpace, Mesh, OrbitControls, PanelItem, PerspectiveCamera, RawShaderMaterial, Scene, SphereGeometry, UI, Vector2, WebGLRenderer, getFullscreenTriangle, ticker } from '../../build/alien.three.js';
 
+        // Based on https://github.com/spite/perlin-experiments
+
         import periodic3d from '../../src/shaders/modules/noise/periodic3d.glsl.js';
         import dither from '../../src/shaders/modules/dither/dither.glsl.js';
-
-        // Based on https://github.com/spite/perlin-experiments
 
         class DepthMaterial extends RawShaderMaterial {
             constructor() {

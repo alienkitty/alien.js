@@ -11,7 +11,7 @@
     <link rel="stylesheet" href="../assets/css/style.css">
 
     <script type="module">
-        import { AdditiveBlending, BloomCompositeMaterial, BufferGeometry, Color, ColorManagement, CopyMaterial, DepthTexture, DirectionalLight, EnvironmentTextureLoader, Float32BufferAttribute, GLSL3, Group, HemisphereLight, ImageBitmapLoaderThread, LinearSRGBColorSpace, LuminosityMaterial, MathUtils, Mesh, MeshStandardMaterial, OrbitControls, OrthographicCamera, PanelItem, PerspectiveCamera, Points, RawShaderMaterial, RepeatWrapping, Scene, SphereGeometry, TextureLoader, Thread, TiltShiftMaterial, UI, UnrealBloomBlurMaterial, Vector2, WebGLRenderTarget, WebGLRenderer, getFullscreenTriangle, ticker } from '../../build/alien.three.js';
+        import { AdditiveBlending, BloomCompositeMaterial, BufferGeometry, Color, ColorManagement, CopyMaterial, DepthTexture, DirectionalLight, EnvironmentTextureLoader, Float32BufferAttribute, GLSL3, Group, HemisphereLight, ImageBitmapLoaderThread, LinearSRGBColorSpace, LuminosityMaterial, MathUtils, Mesh, MeshStandardMaterial, OrbitControls, OrthographicCamera, PanelItem, PerspectiveCamera, Points, RawShaderMaterial, RepeatWrapping, Scene, SphereGeometry, TextureLoader, TiltShiftMaterial, UI, UnrealBloomBlurMaterial, Vector2, WebGLRenderTarget, WebGLRenderer, getFullscreenTriangle, ticker } from '../../build/alien.three.js';
 
         import simplex3d from '../../src/shaders/modules/noise/simplex3d.glsl.js';
         import depth from '../../src/shaders/modules/depth/depth.glsl.js';
@@ -229,6 +229,18 @@
                     },
                     {
                         type: 'slider',
+                        name: 'Blur',
+                        min: 0,
+                        max: 10,
+                        step: 0.1,
+                        value: hBlurMaterial.uniforms.uBlurAmount.value,
+                        callback: value => {
+                            hBlurMaterial.uniforms.uBlurAmount.value = value;
+                            vBlurMaterial.uniforms.uBlurAmount.value = value;
+                        }
+                    },
+                    {
+                        type: 'slider',
                         name: 'Focus',
                         min: 0,
                         max: 1,
@@ -237,18 +249,6 @@
                         callback: value => {
                             hBlurMaterial.uniforms.uFocus.value = value;
                             vBlurMaterial.uniforms.uFocus.value = value;
-                        }
-                    },
-                    {
-                        type: 'slider',
-                        name: 'Blur',
-                        min: 0,
-                        max: 10,
-                        step: 0.1,
-                        value: hBlurMaterial.uniforms.uBluriness.value,
-                        callback: value => {
-                            hBlurMaterial.uniforms.uBluriness.value = value;
-                            vBlurMaterial.uniforms.uBluriness.value = value;
                         }
                     },
                     {
@@ -319,7 +319,7 @@
                 this.dust = dust;
 
                 // Blur
-                this.blurFactor = 7;
+                this.blurAmount = 7;
 
                 // Bloom
                 this.luminosityThreshold = 0.1;
@@ -333,7 +333,7 @@
             }
 
             static initRenderer() {
-                const { screenTriangle } = WorldController;
+                const { screenTriangle, resolution } = WorldController;
 
                 // Manually clear
                 this.renderer.autoClear = false;
@@ -366,10 +366,12 @@
 
                 // Gaussian blur materials
                 this.hBlurMaterial = new TiltShiftMaterial(BlurDirectionX);
-                this.hBlurMaterial.uniforms.uBluriness.value = this.blurFactor;
+                this.hBlurMaterial.uniforms.uBlurAmount.value = this.blurAmount;
+                this.hBlurMaterial.uniforms.uResolution = resolution;
 
                 this.vBlurMaterial = new TiltShiftMaterial(BlurDirectionY);
-                this.vBlurMaterial.uniforms.uBluriness.value = this.blurFactor;
+                this.vBlurMaterial.uniforms.uBlurAmount.value = this.blurAmount;
+                this.vBlurMaterial.uniforms.uResolution = resolution;
 
                 // Luminosity high pass material
                 this.luminosityMaterial = new LuminosityMaterial();
@@ -429,10 +431,6 @@
 
                 this.renderTargetA.setSize(width, height);
                 this.renderTargetB.setSize(width, height);
-
-                // Gaussian blur
-                this.hBlurMaterial.uniforms.uResolution.value.set(width, height);
-                this.vBlurMaterial.uniforms.uResolution.value.set(width, height);
 
                 // Unreal bloom
                 width = MathUtils.floorPowerOfTwo(width) / 2;
@@ -672,8 +670,6 @@
 
             static initThread() {
                 ImageBitmapLoaderThread.init();
-
-                Thread.shared();
             }
 
             static initWorld() {

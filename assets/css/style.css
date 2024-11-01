@@ -1,29 +1,25 @@
 @font-face {
     font-family: 'D-DIN';
-    font-style: normal;
-    font-weight: 400;
     src: url(../fonts/D-DIN.woff2) format('woff2');
+    font-weight: 400;
 }
 
 @font-face {
     font-family: 'Gothic A1';
-    font-style: normal;
-    font-weight: 500;
     src: url(../fonts/GothicA1-Medium.woff2) format('woff2');
+    font-weight: 500;
 }
 
 @font-face {
     font-family: 'Gothic A1';
-    font-style: normal;
-    font-weight: 700;
     src: url(../fonts/GothicA1-Bold.woff2) format('woff2');
+    font-weight: 700;
 }
 
 @font-face {
     font-family: 'Roboto Mono';
-    font-style: normal;
-    font-weight: 500;
     src: url(../fonts/RobotoMono-Medium.woff2) format('woff2');
+    font-weight: 500;
 }
 
 :root {
@@ -59,7 +55,7 @@
     --ui-info-font-family: 'Gothic A1', sans-serif;
     --ui-info-font-weight: 700;
     --ui-info-font-size: 10px;
-    --ui-info-line-height: 32px;
+    --ui-info-line-height: 20px;
     --ui-info-letter-spacing: 0.08em;
     --ui-info-opacity: 0.7;
     --ui-color: rgb(255 255 255 / 0.94);
@@ -193,6 +189,7 @@ a {
     z-index: 9;
 
     > .info {
+        padding: 6px;
         font-family: var(--ui-info-font-family);
         font-weight: var(--ui-info-font-weight);
         font-size: var(--ui-info-font-size);
@@ -201,6 +198,10 @@ a {
         -moz-osx-font-smoothing: grayscale;
         -webkit-font-smoothing: antialiased;
     }
+}
+
+.trackers {
+    z-index: 10;
 }
 
 .menu > * {

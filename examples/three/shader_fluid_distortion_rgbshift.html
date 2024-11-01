@@ -13,10 +13,10 @@
     <script type="module">
         import { BloomCompositeMaterial, Color, ColorManagement, DirectionalLight, Fluid, Fog, GLSL3, Group, HemisphereLight, LinearSRGBColorSpace, LuminosityMaterial, MathUtils, Mesh, MeshBasicMaterial, MeshStandardMaterial, NoBlending, OrthographicCamera, PanelItem, PerspectiveCamera, PlaneGeometry, RawShaderMaterial, Reflector, RepeatWrapping, SVGLoader, Scene, TextureLoader, UI, UnrealBloomBlurMaterial, Vector2, Vector3, WebGLRenderTarget, WebGLRenderer, getFullscreenTriangle, ticker } from '../../build/alien.three.js';
 
-        import rgbshift from '../../src/shaders/modules/rgbshift/rgbshift.glsl.js';
-
         // Based on https://github.com/PavelDoGreat/WebGL-Fluid-Simulation
         // Based on https://oframe.github.io/ogl/examples/?src=post-fluid-distortion.html by gordonnl
+
+        import rgbshift from '../../src/shaders/modules/rgbshift/rgbshift.glsl.js';
 
         class CompositeMaterial extends RawShaderMaterial {
             constructor() {
@@ -110,6 +110,8 @@
 
                 this.add(group);
             }
+
+            ready = () => this.initMesh();
         }
 
         class Floor extends Group {
@@ -185,6 +187,7 @@
                         'void main() {',
                         /* glsl */ `
                         uniform mat4 textureMatrix;
+
                         out vec4 vCoord;
                         out vec3 vToEye;
 
@@ -208,6 +211,7 @@
                         uniform sampler2D reflectMap;
                         uniform float mirror;
                         uniform float mixStrength;
+
                         in vec4 vCoord;
                         in vec3 vToEye;
 
@@ -260,6 +264,8 @@
 
                 this.reflector.setSize(width, height);
             };
+
+            ready = () => this.initMesh();
         }
 
         class SceneView extends Group {
@@ -286,8 +292,8 @@
             };
 
             ready = () => Promise.all([
-                this.floor.initMesh(),
-                this.triangle.initMesh()
+                this.floor.ready(),
+                this.triangle.ready()
             ]);
         }
 

@@ -1,12 +1,14 @@
-import { AdditiveBlending, AssetLoader, BasicShadowMap, BloomCompositeMaterial, BoxGeometry, Color, ColorManagement, DepthMaterial, DirectionalLight, DisplayOptions, EnvironmentTextureLoader, GLSL3, Group, HemisphereLight, IcosahedronGeometry, ImageBitmapLoaderThread, LinearSRGBColorSpace, LuminosityMaterial, MathUtils, Mesh, MeshBasicMaterial, MeshMatcapMaterial, MeshStandardMaterial, MotionBlur, MotionBlurCompositeMaterial, NearestFilter, NoBlending, NormalMaterial, OctahedronGeometry, OrthographicCamera, PanelItem, PerspectiveCamera, PlaneGeometry, Point3D, RawShaderMaterial, Reflector, RepeatWrapping, Router, Scene, SceneCompositeMaterial, ShadowMaterial, Stage, TextureLoader, Thread, UI, UnrealBloomBlurMaterial, Vector2, Vector3, WebGLRenderTarget, WebGLRenderer, clearTween, delayedCall, getFullscreenTriangle, getKeyByValue, lerpCameras, ticker, tween } from '../../../../build/alien.three.js';
+import { AdditiveBlending, AssetLoader, BasicShadowMap, BloomCompositeMaterial, BoxGeometry, Color, ColorManagement, CopyMaterial, DepthMaterial, DirectionalLight, DisplayOptions, DrawBuffers, EnvironmentTextureLoader, GLSL3, Group, HemisphereLight, IcosahedronGeometry, ImageBitmapLoaderThread, LinearSRGBColorSpace, LuminosityMaterial, MathUtils, Mesh, MeshBasicMaterial, MeshMatcapMaterial, MeshStandardMaterial, MotionBlurCompositeMaterial, NearestFilter, NoBlending, NormalMaterial, OctahedronGeometry, OrthographicCamera, PanelItem, PerspectiveCamera, PlaneGeometry, Point3D, RawShaderMaterial, Reflector, RepeatWrapping, Scene, SceneCompositeMaterial, ShadowMaterial, Stage, TextureLoader, UI, UnrealBloomBlurMaterial, Vector2, Vector3, WebGLRenderTarget, WebGLRenderer, clearTween, delayedCall, getFullscreenTriangle, getKeyByValue, lerpCameras, router, ticker, tween } from '../../../../build/alien.three.js';
 
 const isDebug = /[?&]debug/.test(location.search);
 
+const basePath = '/examples/three/transitions/camera';
+const assetPath = '/examples/';
 const breakpoint = 1000;
 
 const layers = {
     default: 0,
-    velocity: 1
+    drawBuffers: 1
 };
 
 const params = {
@@ -55,7 +57,7 @@ class CompositeMaterial extends RawShaderMaterial {
                 tScene: { value: null },
                 uFocus: { value: 0.5 },
                 uRotation: { value: 0 },
-                uBluriness: { value: 1 },
+                uBlurAmount: { value: 1 },
                 uDistortion: { value: 1.5 }
             },
             vertexShader: /* glsl */ `
@@ -76,7 +78,7 @@ class CompositeMaterial extends RawShaderMaterial {
                 uniform sampler2D tScene;
                 uniform float uFocus;
                 uniform float uRotation;
-                uniform float uBluriness;
+                uniform float uBlurAmount;
                 uniform float uDistortion;
 
                 in vec2 vUv;
@@ -94,7 +96,7 @@ class CompositeMaterial extends RawShaderMaterial {
 
                     vec2 dir = 0.5 - vUv;
                     float angle = atan(dir.y, dir.x);
-                    float amount = 0.002 * uDistortion * uBluriness * t;
+                    float amount = 0.002 * uDistortion * uBlurAmount * t;
 
                     FragColor += getRGB(tScene, vUv, angle, amount);
 
@@ -131,7 +133,7 @@ class BlurMaterial extends RawShaderMaterial {
                 uBlueNoiseResolution: { value: new Vector2(256, 256) },
                 uFocus: { value: 0.5 },
                 uRotation: { value: 0 },
-                uBluriness: { value: 1 },
+                uBlurAmount: { value: 1 },
                 uDirection: { value: direction },
                 uDebug: { value: isDebug },
                 uResolution: { value: new Vector2() },
@@ -157,7 +159,7 @@ class BlurMaterial extends RawShaderMaterial {
                 uniform vec2 uBlueNoiseResolution;
                 uniform float uFocus;
                 uniform float uRotation;
-                uniform float uBluriness;
+                uniform float uBlurAmount;
                 uniform vec2 uDirection;
                 uniform bool uDebug;
                 uniform vec2 uResolution;
@@ -182,10 +184,10 @@ class BlurMaterial extends RawShaderMaterial {
                     float t = smootherstep(0.0, 1.0, d);
                     float rnd = getBlueNoise(tBlueNoise, gl_FragCoord.xy, uBlueNoiseResolution, vec2(fract(uTime)));
 
-                    FragColor = blur(tMap, vUv, uResolution, 20.0 * uBluriness * t * rot2d(uDirection, rnd));
+                    FragColor = blur(tMap, vUv, uResolution, 20.0 * uBlurAmount * t * rot2d(uDirection, rnd));
 
                     if (uDebug) {
-                        FragColor.rgb = mix(FragColor.rgb, mix(FragColor.rgb, vec3(1), 0.5), uBluriness * t);
+                        FragColor.rgb = mix(FragColor.rgb, mix(FragColor.rgb, vec3(1), 0.5), uBlurAmount * t);
                     }
                 }
             `,
@@ -264,7 +266,7 @@ class AbstractCube extends Group {
         mesh.rotation.z = MathUtils.degToRad(-45);
         mesh.castShadow = true;
         mesh.receiveShadow = true;
-        mesh.layers.enable(layers.velocity);
+        mesh.layers.enable(layers.drawBuffers);
         this.add(mesh);
 
         this.mesh = mesh;
@@ -289,6 +291,8 @@ class AbstractCube extends Group {
     update = () => {
         this.mesh.rotation.y -= 0.005 * params.speed;
     };
+
+    ready = () => this.initMesh();
 }
 
 class FloatingCrystal extends Group {
@@ -369,7 +373,7 @@ class FloatingCrystal extends Group {
         mesh.scale.set(0.5, 1, 0.5);
         mesh.castShadow = true;
         mesh.receiveShadow = true;
-        mesh.layers.enable(layers.velocity);
+        mesh.layers.enable(layers.drawBuffers);
         this.add(mesh);
 
         this.mesh = mesh;
@@ -395,6 +399,8 @@ class FloatingCrystal extends Group {
         this.mesh.position.y = (1 + Math.sin(time * params.speed)) * 0.1;
         this.mesh.rotation.y += 0.01 * params.speed;
     };
+
+    ready = () => this.initMesh();
 }
 
 class DarkPlanet extends Group {
@@ -476,7 +482,7 @@ class DarkPlanet extends Group {
         const mesh = new Mesh(geometry, material);
         mesh.castShadow = true;
         mesh.receiveShadow = true;
-        mesh.layers.enable(layers.velocity);
+        mesh.layers.enable(layers.drawBuffers);
         this.add(mesh);
 
         this.mesh = mesh;
@@ -502,6 +508,8 @@ class DarkPlanet extends Group {
         // Counter clockwise rotation
         this.mesh.rotation.y += 0.005 * params.speed;
     };
+
+    ready = () => this.initMesh();
 }
 
 class Floor extends Group {
@@ -545,6 +553,7 @@ class Floor extends Group {
                 /* glsl */ `
                 uniform mat3 uvTransform;
                 uniform mat4 textureMatrix;
+
                 out vec2 vUv;
                 out vec4 vCoord;
 
@@ -568,6 +577,7 @@ class Floor extends Group {
                 uniform sampler2D map;
                 uniform sampler2D reflectMap;
                 uniform sampler2D reflectMapBlur;
+
                 in vec2 vUv;
                 in vec4 vCoord;
 
@@ -625,6 +635,8 @@ class Floor extends Group {
 
         this.reflector.setSize(width, height);
     };
+
+    ready = () => this.initMesh();
 }
 
 class SceneView extends Group {
@@ -666,10 +678,10 @@ class SceneView extends Group {
     };
 
     ready = () => Promise.all([
-        this.floor.initMesh(),
-        this.darkPlanet.initMesh(),
-        this.floatingCrystal.initMesh(),
-        this.abstractCube.initMesh()
+        this.floor.ready(),
+        this.darkPlanet.ready(),
+        this.floatingCrystal.ready(),
+        this.abstractCube.ready()
     ]);
 }
 
@@ -695,7 +707,7 @@ class SceneController {
     // Public methods
 
     static getView = () => {
-        const { data } = Router.get(location.pathname);
+        const { data } = router.get(location.pathname);
 
         switch (data.path) {
             case '/dark_planet':
@@ -770,9 +782,10 @@ class ScenePanelController {
         const data = Data.pages[target.index];
 
         if (data && data.path) {
-            const path = Router.getPath(data.path);
+            const path = router.getPath(data.path);
 
-            Router.setPath(`${path}/`);
+            router.setPath(`${path}/`);
+
             Point3D.animateOut();
         }
     };
@@ -801,7 +814,7 @@ class PanelController {
     }
 
     static initPanel() {
-        const { motionBlur, hBlurMaterial, vBlurMaterial, luminosityMaterial, bloomCompositeMaterial, compositeMaterial } = RenderManager;
+        const { drawBuffers, hBlurMaterial, vBlurMaterial, luminosityMaterial, bloomCompositeMaterial, compositeMaterial } = RenderManager;
 
         const animateOptions = {
             Off: false,
@@ -848,7 +861,7 @@ class PanelController {
                 value: getKeyByValue(animateOptions, params.animate),
                 callback: value => {
                     params.animate = animateOptions[value];
-                    motionBlur.saveState = params.animate;
+                    drawBuffers.saveState = params.animate;
                 }
             },
             {
@@ -860,9 +873,9 @@ class PanelController {
                 min: 0,
                 max: 1,
                 step: 0.01,
-                value: motionBlur.interpolateGeometry,
+                value: drawBuffers.interpolateGeometry,
                 callback: value => {
-                    motionBlur.interpolateGeometry = value;
+                    drawBuffers.interpolateGeometry = value;
                 }
             },
             {
@@ -871,9 +884,9 @@ class PanelController {
                 min: 0,
                 max: 4,
                 step: 0.02,
-                value: motionBlur.smearIntensity,
+                value: drawBuffers.smearIntensity,
                 callback: value => {
-                    motionBlur.smearIntensity = value;
+                    drawBuffers.smearIntensity = value;
                 }
             },
             {
@@ -912,9 +925,9 @@ class PanelController {
                 min: 0,
                 max: 2,
                 step: 0.01,
-                value: RenderManager.blurFactor,
+                value: RenderManager.blurAmount,
                 callback: value => {
-                    RenderManager.blurFactor = value;
+                    RenderManager.blurAmount = value;
                 }
             },
             {
@@ -1015,7 +1028,7 @@ class RenderManager {
         // Blur
         this.blurFocus = navigator.maxTouchPoints ? 0.5 : 0.25;
         this.blurRotation = navigator.maxTouchPoints ? 0 : MathUtils.degToRad(75);
-        this.blurFactor = 1;
+        this.blurAmount = 1;
 
         // Bloom
         this.luminosityThreshold = 0.1;
@@ -1032,7 +1045,7 @@ class RenderManager {
     }
 
     static initRenderer() {
-        const { screenTriangle, textureLoader, time, getTexture } = WorldController;
+        const { screenTriangle, textureLoader, resolution, time, getTexture } = WorldController;
 
         // Manually clear
         this.renderer.autoClear = false;
@@ -1067,25 +1080,28 @@ class RenderManager {
 
         this.renderTargetA.depthBuffer = true;
 
-        // Motion blur
-        this.motionBlur = new MotionBlur(this.renderer, this.scene, this.camera, layers.velocity, {
+        // G-Buffer
+        this.drawBuffers = new DrawBuffers(this.renderer, this.scene, this.camera, layers.drawBuffers, {
             interpolateGeometry: 0
         });
 
+        // Motion blur composite material
         this.motionBlurCompositeMaterial = new MotionBlurCompositeMaterial(textureLoader);
-        this.motionBlurCompositeMaterial.uniforms.tVelocity.value = this.motionBlur.renderTarget.texture;
+        this.motionBlurCompositeMaterial.uniforms.tVelocity.value = this.drawBuffers.renderTarget.textures[1];
 
         // Gaussian blur materials
         this.hBlurMaterial = new BlurMaterial(BlurDirectionX);
         this.hBlurMaterial.uniforms.uFocus.value = this.blurFocus;
         this.hBlurMaterial.uniforms.uRotation.value = this.blurRotation;
-        this.hBlurMaterial.uniforms.uBluriness.value = this.blurFactor;
+        this.hBlurMaterial.uniforms.uBlurAmount.value = this.blurAmount;
+        this.hBlurMaterial.uniforms.uResolution = resolution;
         this.hBlurMaterial.uniforms.uTime = time;
 
         this.vBlurMaterial = new BlurMaterial(BlurDirectionY);
         this.vBlurMaterial.uniforms.uFocus.value = this.blurFocus;
         this.vBlurMaterial.uniforms.uRotation.value = this.blurRotation;
-        this.vBlurMaterial.uniforms.uBluriness.value = this.blurFactor;
+        this.vBlurMaterial.uniforms.uBlurAmount.value = this.blurAmount;
+        this.vBlurMaterial.uniforms.uResolution = resolution;
         this.vBlurMaterial.uniforms.uTime = time;
 
         // Luminosity high pass material
@@ -1117,7 +1133,7 @@ class RenderManager {
         this.compositeMaterial = new CompositeMaterial();
         this.compositeMaterial.uniforms.uFocus.value = this.blurFocus;
         this.compositeMaterial.uniforms.uRotation.value = this.blurRotation;
-        this.compositeMaterial.uniforms.uBluriness.value = this.blurFactor;
+        this.compositeMaterial.uniforms.uBlurAmount.value = this.blurAmount;
 
         // Debug materials
         this.blackoutMaterial = new MeshBasicMaterial({ color: 0x000000 });
@@ -1125,6 +1141,7 @@ class RenderManager {
         this.matcap2Material = new MeshMatcapMaterial({ matcap: getTexture('assets/textures/matcaps/defaultwax.jpg') });
         this.normalMaterial = new NormalMaterial();
         this.depthMaterial = new DepthMaterial();
+        this.copyMaterial = new CopyMaterial();
     }
 
     static bloomFactors() {
@@ -1164,11 +1181,7 @@ class RenderManager {
         this.renderTargetB.setSize(width, height);
         this.renderTargetC.setSize(width, height);
 
-        this.motionBlur.setSize(width, height);
-
-        // Gaussian blur
-        this.hBlurMaterial.uniforms.uResolution.value.set(width, height);
-        this.vBlurMaterial.uniforms.uResolution.value.set(width, height);
+        this.drawBuffers.setSize(width, height);
 
         // Unreal bloom
         width = MathUtils.floorPowerOfTwo(width) / 2;
@@ -1208,6 +1221,22 @@ class RenderManager {
 
         // Renderer state
         this.rendererState();
+
+        // G-Buffer layer
+        camera.layers.set(layers.drawBuffers);
+
+        this.drawBuffers.update();
+
+        if (this.display === DisplayOptions.Velocity) {
+            // Debug pass (render to screen)
+            this.copyMaterial.uniforms.tMap.value = this.drawBuffers.renderTarget.textures[1];
+            this.screen.material = this.copyMaterial;
+            renderer.setRenderTarget(null);
+            renderer.clear();
+            renderer.render(this.screen, this.screenCamera);
+            this.restoreRendererState();
+            return;
+        }
 
         // Scene layer
         camera.layers.set(layers.default);
@@ -1251,18 +1280,7 @@ class RenderManager {
             return;
         }
 
-        // Motion blur layer
-        camera.layers.set(layers.velocity);
-
-        if (this.display === DisplayOptions.Velocity) {
-            // Debug pass (render to screen)
-            this.motionBlur.update(null);
-            this.restoreRendererState();
-            return;
-        } else {
-            this.motionBlur.update();
-        }
-
+        // Motion blur pass
         this.motionBlurCompositeMaterial.uniforms.tMap.value = renderTargetA.texture;
         this.screen.material = this.motionBlurCompositeMaterial;
         renderer.setRenderTarget(renderTargetB);
@@ -1337,16 +1355,16 @@ class RenderManager {
         renderer.render(this.screen, this.screenCamera);
 
         // Two pass Gaussian blur (horizontal and vertical)
-        if (this.blurFactor) {
+        if (this.blurAmount) {
             this.hBlurMaterial.uniforms.tMap.value = renderTargetC.texture;
-            this.hBlurMaterial.uniforms.uBluriness.value = this.blurFactor;
+            this.hBlurMaterial.uniforms.uBlurAmount.value = this.blurAmount;
             this.screen.material = this.hBlurMaterial;
             renderer.setRenderTarget(renderTargetA);
             renderer.clear();
             renderer.render(this.screen, this.screenCamera);
 
             this.vBlurMaterial.uniforms.tMap.value = renderTargetA.texture;
-            this.vBlurMaterial.uniforms.uBluriness.value = this.blurFactor;
+            this.vBlurMaterial.uniforms.uBlurAmount.value = this.blurAmount;
             this.screen.material = this.vBlurMaterial;
             renderer.setRenderTarget(renderTargetC);
             renderer.clear();
@@ -1355,7 +1373,7 @@ class RenderManager {
 
         // Composite pass (render to screen)
         this.compositeMaterial.uniforms.tScene.value = renderTargetC.texture;
-        this.compositeMaterial.uniforms.uBluriness.value = this.blurFactor;
+        this.compositeMaterial.uniforms.uBlurAmount.value = this.blurAmount;
         this.screen.material = this.compositeMaterial;
         renderer.setRenderTarget(null);
         renderer.clear();
@@ -1366,21 +1384,21 @@ class RenderManager {
     };
 
     static start = () => {
-        this.blurFactor = 0;
+        this.blurAmount = 0;
     };
 
     static zoomIn = () => {
         clearTween(this.timeout);
 
         this.timeout = delayedCall(300, () => {
-            tween(this, { blurFactor: 1 }, 1000, 'easeOutBack');
+            tween(this, { blurAmount: 1 }, 1000, 'easeOutBack');
         });
     };
 
     static zoomOut = () => {
         clearTween(this.timeout);
 
-        tween(this, { blurFactor: 0 }, 300, 'linear');
+        tween(this, { blurAmount: 0 }, 300, 'linear');
     };
 }
 
@@ -1435,12 +1453,12 @@ class CameraController {
 
         if (this.zoomedIn) {
             this.ui.details.animateOut(() => {
-                const { data } = Router.get(location.pathname);
+                const { data } = router.get(location.pathname);
 
                 this.ui.details.title.setTitle(data.title.replace(/[\s.]+/g, '_'));
 
                 const next = Data.getNext(data);
-                const path = Router.getPath(next.path);
+                const path = router.getPath(next.path);
 
                 this.ui.link.setLink(next.path !== '/' ? `${path}/` : path);
 
@@ -1585,11 +1603,11 @@ class WorldController {
     static initLoaders() {
         this.textureLoader = new TextureLoader();
         this.textureLoader.cache = true;
-        this.textureLoader.setPath('/examples/');
+        this.textureLoader.setPath(assetPath);
 
         this.environmentLoader = new EnvironmentTextureLoader(this.renderer);
         this.environmentLoader.cache = true;
-        this.environmentLoader.setPath('/examples/');
+        this.environmentLoader.setPath(assetPath);
     }
 
     static async initEnvironment() {
@@ -1666,8 +1684,6 @@ class App {
 
     static initThread() {
         ImageBitmapLoaderThread.init();
-
-        Thread.shared();
     }
 
     static initLoader() {
@@ -1693,7 +1709,7 @@ class App {
 
     static initRouter() {
         Data.pages.forEach(page => {
-            Router.add(page.path, Page, page);
+            router.add(page.path, Page, page);
         });
 
         // Landing and 404 page
@@ -1711,10 +1727,13 @@ class App {
             home = Data.pages[0]; // Dark Planet
         }
 
-        Router.add('/', Page, home);
-        Router.add('404', Page, home);
+        router.add('/', Page, home);
+        router.add('404', Page, home);
 
-        Router.init({ path: '/examples/three/transitions/camera' });
+        router.init({
+            path: basePath,
+            scrollRestoration: 'auto'
+        });
     }
 
     static initViews() {
@@ -1785,7 +1804,7 @@ Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor i
     static onClick = (e, { target }) => {
         e.preventDefault();
 
-        Router.setPath(target.link);
+        router.setPath(target.link);
     };
 
     // Public methods

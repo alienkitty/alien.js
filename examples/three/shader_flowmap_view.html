@@ -11,11 +11,11 @@
     <link rel="stylesheet" href="../assets/css/style.css">
 
     <script type="module">
-        import { AdditiveBlending, BloomCompositeMaterial, Color, ColorManagement, DirectionalLight, Flowmap, Fog, GLSL3, Group, HemisphereLight, LinearSRGBColorSpace, LuminosityMaterial, MathUtils, Mesh, MeshBasicMaterial, MeshStandardMaterial, OrthographicCamera, PanelItem, PerspectiveCamera, PlaneGeometry, RawShaderMaterial, Reflector, RepeatWrapping, SVGLoader, Scene, SceneCompositeDistortionMaterial, TextureLoader, UI, UnrealBloomBlurMaterial, Vector2, Vector3, WebGLRenderTarget, WebGLRenderer, getFrustum, getFullscreenTriangle, ticker } from '../../build/alien.three.js';
-
-        import rgbshift from '../../src/shaders/modules/rgbshift/rgbshift.glsl.js';
+        import { AdditiveBlending, BloomCompositeMaterial, Color, ColorManagement, DirectionalLight, Flowmap, Fog, GLSL3, Group, HemisphereLight, LinearSRGBColorSpace, LuminosityMaterial, MathUtils, Mesh, MeshBasicMaterial, MeshStandardMaterial, OrthographicCamera, PanelItem, PerspectiveCamera, PlaneGeometry, RawShaderMaterial, Reflector, RepeatWrapping, SVGLoader, Scene, SceneCompositeDistortionMaterial, TextureLoader, UI, UnrealBloomBlurMaterial, Vector2, Vector3, WebGLRenderTarget, WebGLRenderer, getFullscreenTriangle, getViewSize, ticker } from '../../build/alien.three.js';
 
         // Based on https://oframe.github.io/ogl/examples/?src=mouse-flowmap.html by gordonnl
+
+        import rgbshift from '../../src/shaders/modules/rgbshift/rgbshift.glsl.js';
 
         class FlowMaterial extends RawShaderMaterial {
             constructor() {
@@ -173,10 +173,12 @@
             // Public methods
 
             resize = (width, height, dpr) => {
-                const frustum = WorldController.getFrustum(this.mesh.position.z);
+                const { getViewSize } = WorldController;
 
-                this.widthResolutionScale = this.width / frustum.width;
-                this.heightResolutionScale = this.height / frustum.height;
+                const { x, y } = getViewSize(this.mesh.position.z);
+
+                this.widthResolutionScale = this.width / x;
+                this.heightResolutionScale = this.height / y;
 
                 width = Math.round(width * dpr * this.widthResolutionScale);
                 height = Math.round(height * dpr * this.heightResolutionScale);
@@ -282,6 +284,7 @@
                         'void main() {',
                         /* glsl */ `
                         uniform mat4 textureMatrix;
+
                         out vec4 vCoord;
                         out vec3 vToEye;
 
@@ -305,6 +308,7 @@
                         uniform sampler2D reflectMap;
                         uniform float mirror;
                         uniform float mixStrength;
+
                         in vec4 vCoord;
                         in vec3 vToEye;
 
@@ -357,6 +361,8 @@
 
                 this.reflector.setSize(width, height);
             };
+
+            ready = () => this.initMesh();
         }
 
         class SceneView extends Group {
@@ -384,7 +390,7 @@
             };
 
             ready = () => Promise.all([
-                this.floor.initMesh(),
+                this.floor.ready(),
                 this.triangle.ready()
             ]);
         }
@@ -952,7 +958,7 @@
 
             static loadSVG = path => this.svgLoader.loadAsync(path);
 
-            static getFrustum = offsetZ => getFrustum(this.camera, offsetZ);
+            static getViewSize = object => getViewSize(this.camera, object);
         }
 
         class App {

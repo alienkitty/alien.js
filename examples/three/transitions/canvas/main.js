@@ -1,5 +1,7 @@
-import { AssetLoader, BloomCompositeMaterial, BoxGeometry, Color, ColorManagement, DirectionalLight, EnvironmentTextureLoader, Group, HemisphereLight, IcosahedronGeometry, ImageBitmapLoaderThread, Interface, LinearSRGBColorSpace, Link, LuminosityMaterial, MathUtils, Mesh, MeshStandardMaterial, OctahedronGeometry, OrthographicCamera, PanelItem, PerspectiveCamera, RepeatWrapping, Router, Scene, SceneCompositeMaterial, Stage, TextureLoader, Thread, Title, UI, UnrealBloomBlurMaterial, Vector2, WebGLRenderTarget, WebGLRenderer, clearTween, delayedCall, getFullscreenTriangle, ticker, tween } from '../../../../build/alien.three.js';
+import { AssetLoader, BloomCompositeMaterial, BoxGeometry, Color, ColorManagement, DirectionalLight, EnvironmentTextureLoader, Group, HemisphereLight, IcosahedronGeometry, ImageBitmapLoaderThread, Interface, LinearSRGBColorSpace, Link, LuminosityMaterial, MathUtils, Mesh, MeshStandardMaterial, OctahedronGeometry, OrthographicCamera, PanelItem, PerspectiveCamera, RepeatWrapping, Scene, SceneCompositeMaterial, Stage, TextureLoader, Title, UI, UnrealBloomBlurMaterial, Vector2, WebGLRenderTarget, WebGLRenderer, clearTween, delayedCall, getFullscreenTriangle, router, ticker, tween } from '../../../../build/alien.three.js';
 
+const basePath = '/examples/three/transitions/canvas';
+const assetPath = '/examples/';
 const breakpoint = 1000;
 
 class Page {
@@ -199,7 +201,7 @@ class UIContainer extends Interface {
     }
 
     initViews() {
-        const { data } = Router.get(location.pathname);
+        const { data } = router.get(location.pathname);
 
         this.background = new UIBackground();
         this.add(this.background);
@@ -208,7 +210,7 @@ class UIContainer extends Interface {
         this.add(this.title);
 
         const next = Data.getNext(data);
-        const path = Router.getPath(next.path);
+        const path = router.getPath(next.path);
 
         this.link = new Link('Next', `${path}/`);
         this.link.css({ marginTop: 'auto' });
@@ -223,7 +225,7 @@ class UIContainer extends Interface {
     // Event handlers
 
     onPopState = () => {
-        const { data } = Router.get(location.pathname);
+        const { data } = router.get(location.pathname);
 
         this.title.animateOut();
         this.link.animateOut();
@@ -239,7 +241,7 @@ class UIContainer extends Interface {
 
             this.background.animateOut(() => {
                 const next = Data.getNext(data);
-                const path = Router.getPath(next.path);
+                const path = router.getPath(next.path);
 
                 this.link.setLink(`${path}/`);
                 this.link.animateIn();
@@ -250,7 +252,7 @@ class UIContainer extends Interface {
     onClick = (e, { target }) => {
         e.preventDefault();
 
-        Router.setPath(target.link);
+        router.setPath(target.link);
     };
 
     // Public methods
@@ -350,6 +352,8 @@ class AbstractCube extends Group {
     update = () => {
         this.mesh.rotation.y -= 0.005;
     };
+
+    ready = () => this.initMesh();
 }
 
 class FloatingCrystal extends Group {
@@ -421,6 +425,8 @@ class FloatingCrystal extends Group {
         this.mesh.position.y = Math.sin(time) * 0.1;
         this.mesh.rotation.y += 0.01;
     };
+
+    ready = () => this.initMesh();
 }
 
 class DarkPlanet extends Group {
@@ -493,6 +499,8 @@ class DarkPlanet extends Group {
         // Counter clockwise rotation
         this.mesh.rotation.y += 0.005;
     };
+
+    ready = () => this.initMesh();
 }
 
 class SceneView extends Group {
@@ -524,9 +532,9 @@ class SceneView extends Group {
     };
 
     ready = () => Promise.all([
-        this.darkPlanet.initMesh(),
-        this.floatingCrystal.initMesh(),
-        this.abstractCube.initMesh()
+        this.darkPlanet.ready(),
+        this.floatingCrystal.ready(),
+        this.abstractCube.ready()
     ]);
 }
 
@@ -538,7 +546,7 @@ class SceneController {
     // Public methods
 
     static setView = () => {
-        const { data } = Router.get(location.pathname);
+        const { data } = router.get(location.pathname);
 
         this.view.darkPlanet.visible = false;
         this.view.floatingCrystal.visible = false;
@@ -893,10 +901,10 @@ class WorldController {
 
     static initLoaders() {
         this.textureLoader = new TextureLoader();
-        this.textureLoader.setPath('/examples/');
+        this.textureLoader.setPath(assetPath);
 
         this.environmentLoader = new EnvironmentTextureLoader(this.renderer);
-        this.environmentLoader.setPath('/examples/');
+        this.environmentLoader.setPath(assetPath);
     }
 
     static async initEnvironment() {
@@ -973,8 +981,6 @@ class App {
 
     static initThread() {
         ImageBitmapLoaderThread.init();
-
-        Thread.shared();
     }
 
     static initLoader() {
@@ -1000,16 +1006,19 @@ class App {
 
     static initRouter() {
         Data.pages.forEach(page => {
-            Router.add(page.path, Page, page);
+            router.add(page.path, Page, page);
         });
 
         // Landing and 404 page
         const home = Data.pages[0]; // Dark Planet
 
-        Router.add('/', Page, home);
-        Router.add('404', Page, home);
+        router.add('/', Page, home);
+        router.add('404', Page, home);
 
-        Router.init({ path: '/examples/three/transitions/canvas' });
+        router.init({
+            path: basePath,
+            scrollRestoration: 'auto'
+        });
     }
 
     static initViews() {

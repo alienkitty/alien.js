@@ -39,6 +39,7 @@ export { ReflectorDudvMaterial } from './ReflectorDudvMaterial.js';
 export { ChromaticAberrationMaterial } from './ChromaticAberrationMaterial.js';
 export { VideoGlitchMaterial } from './VideoGlitchMaterial.js';
 export { AfterimageMaterial } from './AfterimageMaterial.js';
+export { DatamoshMaterial } from './DatamoshMaterial.js';
 export { VolumetricLightMaterial } from './VolumetricLightMaterial.js';
 export { VolumetricLightLensflareMaterial } from './VolumetricLightLensflareMaterial.js';
 export { LensflareMaterial } from './LensflareMaterial.js';

@@ -161,6 +161,7 @@ const program = new FXAAProgram(gl);
 [soft shadows](https://alien.js.org/examples/three/shader_soft_shadows.html)  
 [text](https://alien.js.org/examples/three/shader_text.html) (MSDF text)  
 [afterimage](https://alien.js.org/examples/three/shader_afterimage.html)  
+[datamosh](https://alien.js.org/examples/three/shader_datamosh.html)  
 [alienkitty](https://alienkitty.com/) (2d scene, flowmap with RGB shift, MSDF text)  
 
 #### physics

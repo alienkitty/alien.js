@@ -13,6 +13,8 @@ export class DatamoshMaterial extends RawShaderMaterial {
                 tOld: { value: null },
                 tNew: { value: null },
                 tVelocity: { value: null },
+                uAmount: { value: 1 },
+                uLossy: { value: 1 },
                 uDamping: { value: 0.96 },
                 uResolution: { value: new Vector2() },
                 uTime: { value: 0 },

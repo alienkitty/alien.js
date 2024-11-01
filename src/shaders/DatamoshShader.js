@@ -23,6 +23,8 @@ precision highp float;
 uniform sampler2D tOld;
 uniform sampler2D tNew;
 uniform sampler2D tVelocity;
+uniform float uAmount;
+uniform float uLossy;
 uniform float uDamping;
 uniform vec2 uResolution;
 uniform float uTime;
@@ -41,14 +43,23 @@ void main() {
     }
 
     vec2 blockUv = round(vUv * 32.0) / 32.0;
-    float rnd = random(vec2(uTime, blockUv.x + blockUv.y * uResolution.x));
-    // Noise float per UV block, changes over time
 
-    vec2 vel = texture(tVelocity, blockUv).xy;
-    vel = max(abs(vel) - round(rnd / 1.4), 0.0) * sign(vel); // Randomize motion vector
+    // Noise float per UV block, changes over time
+    float rnd = random(vec2(uTime, blockUv.x + blockUv.y * uResolution.x));
+
+    vec2 vel = texture(tVelocity, mix(vUv, blockUv, uLossy)).xy;
+
+    // Randomize motion vector
+    vel = mix(vel, max(abs(vel) - round(rnd / 1.4), 0.0) * sign(vel), uLossy);
 
     vec2 motionUv = vUv - vel;
 
-    FragColor = mix(texture(tNew, vUv), texture(tOld, motionUv), mix(round(1.0 - rnd / 1.4), 1.0, uDamping));
+    vec4 color = mix(
+        texture(tNew, vUv),
+        texture(tOld, motionUv),
+        mix(round(1.0 - rnd / 1.4) * uLossy, 1.0, uDamping) * uAmount
+    );
+
+    FragColor = color;
 }
 `;

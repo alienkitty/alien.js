@@ -663,6 +663,28 @@
                         min: 0,
                         max: 1,
                         step: 0.01,
+                        value: datamoshMaterial.uniforms.uAmount.value,
+                        callback: value => {
+                            datamoshMaterial.uniforms.uAmount.value = value;
+                        }
+                    },
+                    {
+                        type: 'slider',
+                        name: 'Lossy',
+                        min: 0,
+                        max: 1,
+                        step: 0.01,
+                        value: datamoshMaterial.uniforms.uLossy.value,
+                        callback: value => {
+                            datamoshMaterial.uniforms.uLossy.value = value;
+                        }
+                    },
+                    {
+                        type: 'slider',
+                        name: 'Damping',
+                        min: 0,
+                        max: 1,
+                        step: 0.01,
                         value: datamoshMaterial.uniforms.uDamping.value,
                         callback: value => {
                             datamoshMaterial.uniforms.uDamping.value = value;
@@ -912,6 +934,8 @@
                 this.blurAmount = 2.5;
 
                 // Datamosh
+                this.datamoshAmount = 1;
+                this.datamoshLossy = 1;
                 this.datamoshDamping = 0.96;
 
                 // Bloom
@@ -1009,6 +1033,8 @@
                 // Datamosh material
                 this.datamoshMaterial = new DatamoshMaterial();
                 this.datamoshMaterial.uniforms.tVelocity.value = this.drawBuffers.renderTarget.textures[1];
+                this.datamoshMaterial.uniforms.uAmount.value = this.datamoshAmount;
+                this.datamoshMaterial.uniforms.uLossy.value = this.datamoshLossy;
                 this.datamoshMaterial.uniforms.uDamping.value = this.datamoshDamping;
                 this.datamoshMaterial.uniforms.uResolution = resolution;
                 this.datamoshMaterial.uniforms.uTime = time;

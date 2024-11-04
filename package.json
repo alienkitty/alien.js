@@ -1,7 +1,7 @@
 {
   "name": "@alienkitty/alien.js",
   "version": "1.2.0",
-  "description": "MVC design pattern and graphics pipeline",
+  "description": "MVC design pattern and render pipeline",
   "type": "module",
   "exports": {
     "./ogl": "./src/ogl.js",

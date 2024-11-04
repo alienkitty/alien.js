@@ -978,7 +978,6 @@
                 });
 
                 this.renderTargetB = this.renderTargetA.clone();
-                this.renderTargetC = this.renderTargetA.clone();
 
                 this.renderTargetBlurA = this.renderTargetA.clone();
                 this.renderTargetBlurB = this.renderTargetA.clone();
@@ -1131,7 +1130,6 @@
 
                 this.renderTargetA.setSize(width, height);
                 this.renderTargetB.setSize(width, height);
-                this.renderTargetC.setSize(width, height);
 
                 this.drawBuffers.setSize(width, height);
 
@@ -1176,7 +1174,6 @@
 
                 const renderTargetA = this.renderTargetA;
                 const renderTargetB = this.renderTargetB;
-                const renderTargetC = this.renderTargetC;
                 const renderTargetBlurA = this.renderTargetBlurA;
                 const renderTargetBlurB = this.renderTargetBlurB;
                 const renderTargetBright = this.renderTargetBright;
@@ -1327,13 +1324,6 @@
                 renderer.clear();
                 renderer.render(this.screen, this.screenCamera);
                 this.datamosh.swap();
-
-                // Copy pass (pixel recycling)
-                this.copyMaterial.uniforms.tMap.value = renderTargetB.texture;
-                this.screen.material = this.copyMaterial;
-                renderer.setRenderTarget(renderTargetC);
-                renderer.clear();
-                renderer.render(this.screen, this.screenCamera);
 
                 // Extract bright areas
                 this.luminosityMaterial.uniforms.tMap.value = this.datamosh.read.texture;

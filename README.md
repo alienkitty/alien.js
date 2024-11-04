@@ -219,7 +219,6 @@ npx eslint examples/three/transitions
 ### Resources
 
 * [The Wiki](https://github.com/alienkitty/alien.js/wiki)
-* [Tween](https://github.com/alienkitty/alien.js/wiki/Tween)
 * [Changelog](https://github.com/alienkitty/alien.js/releases)
 
 ### See also

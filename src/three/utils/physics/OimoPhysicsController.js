@@ -52,7 +52,15 @@ export class OimoPhysicsController {
             object.quaternion = quaternion.toArray();
         }
 
-        if (geometry !== undefined) {
+        if (shapes !== undefined) {
+            object.type = 'compound';
+            object.shapes = [];
+
+            for (let i = 0; i < shapes.length; i++) {
+                const { position, quaternion, scale, geometry } = shapes[i];
+                object.shapes.push(this.getObject(position, quaternion, scale, geometry, { name: `${object.name}_${i}` }));
+            }
+        } else if (geometry !== undefined) {
             const parameters = geometry.parameters;
 
             if (geometry.type === 'BoxGeometry') {
@@ -148,16 +156,6 @@ export class OimoPhysicsController {
 
         if (kinematic !== undefined) {
             object.kinematic = kinematic;
-        }
-
-        if (shapes !== undefined) {
-            object.type = 'compound';
-            object.shapes = [];
-
-            for (let i = 0; i < shapes.length; i++) {
-                const { position, quaternion, scale, geometry } = shapes[i];
-                object.shapes.push(this.getObject(position, quaternion, scale, geometry, { name: `${object.name}_${i}` }));
-            }
         }
 
         return object;

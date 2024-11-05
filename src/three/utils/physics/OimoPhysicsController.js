@@ -85,7 +85,7 @@ export class OimoPhysicsController {
 
                 object.type = 'capsule';
                 object.size = [radius, height];
-            } else {
+            } else if (geometry.type !== 'PlaneGeometry') {
                 const vertices = geometry.getAttribute('position');
                 const array = [];
 

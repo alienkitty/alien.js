@@ -144,7 +144,7 @@ export class OimoPhysics {
             const height = parameters.length !== undefined ? (parameters.length * scale.y) / 2 : 0.5;
 
             shapeConfig.geometry = new CapsuleGeometry(radius, height);
-        } else {
+        } else if (geometry.type !== 'PlaneGeometry') {
             const vertices = geometry.getAttribute('position');
             const array = [];
 

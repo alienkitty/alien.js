@@ -256,8 +256,9 @@
                     object.updateMatrix();
 
                     mesh.setMatrixAt(i, object.matrix);
-                    mesh.computeBoundingSphere();
                 }
+
+                mesh.computeBoundingSphere();
 
                 // Physics
                 physics.add(mesh, { autoSleep: false });

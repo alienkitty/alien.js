@@ -272,13 +272,13 @@ export class OimoPhysicsController {
                         this.object.updateMatrix();
 
                         object.setMatrixAt(j, this.object.matrix);
-                        object.computeBoundingSphere();
                     }
 
                     index += 8;
                 }
 
                 object.instanceMatrix.needsUpdate = true;
+                object.computeBoundingSphere();
             } else {
                 if (array[index + 7] !== 1) {
                     object.position.fromArray(array, index);

@@ -8,7 +8,7 @@ const breakpoint = 1000;
 
 const layers = {
     default: 0,
-    drawBuffers: 1
+    buffers: 1
 };
 
 const params = {
@@ -266,7 +266,7 @@ class AbstractCube extends Group {
         mesh.rotation.z = MathUtils.degToRad(-45);
         mesh.castShadow = true;
         mesh.receiveShadow = true;
-        mesh.layers.enable(layers.drawBuffers);
+        mesh.layers.enable(layers.buffers);
         this.add(mesh);
 
         this.mesh = mesh;
@@ -373,7 +373,7 @@ class FloatingCrystal extends Group {
         mesh.scale.set(0.5, 1, 0.5);
         mesh.castShadow = true;
         mesh.receiveShadow = true;
-        mesh.layers.enable(layers.drawBuffers);
+        mesh.layers.enable(layers.buffers);
         this.add(mesh);
 
         this.mesh = mesh;
@@ -482,7 +482,7 @@ class DarkPlanet extends Group {
         const mesh = new Mesh(geometry, material);
         mesh.castShadow = true;
         mesh.receiveShadow = true;
-        mesh.layers.enable(layers.drawBuffers);
+        mesh.layers.enable(layers.buffers);
         this.add(mesh);
 
         this.mesh = mesh;
@@ -1081,7 +1081,7 @@ class RenderManager {
         this.renderTargetA.depthBuffer = true;
 
         // G-Buffer
-        this.drawBuffers = new DrawBuffers(this.renderer, this.scene, this.camera, layers.drawBuffers, {
+        this.drawBuffers = new DrawBuffers(this.renderer, this.scene, this.camera, layers.buffers, {
             interpolateGeometry: 0
         });
 
@@ -1223,7 +1223,7 @@ class RenderManager {
         this.rendererState();
 
         // G-Buffer layer
-        camera.layers.set(layers.drawBuffers);
+        camera.layers.set(layers.buffers);
 
         this.drawBuffers.update();
 

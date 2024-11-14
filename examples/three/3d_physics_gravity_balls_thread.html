@@ -123,10 +123,6 @@
             }
         }
 
-        // https://adinunz.io/translucentPearls/
-
-        // Based on http://lo-th.github.io/Oimo.js/#planet
-
         class ScenePhysics extends EventEmitter {
             constructor(shapes) {
                 super();
@@ -363,6 +359,10 @@
             ready = () => this.init();
         }
 
+        // https://adinunz.io/translucentPearls/
+
+        // Based on http://lo-th.github.io/Oimo.js/#planet
+
         class Balls extends Group {
             constructor() {
                 super();
@@ -433,7 +433,7 @@
 
                 const uniforms = {
                     thicknessMap: { value: thicknessMap },
-                    thicknessDistortion: { value: 0.1 },
+                    thicknessDistortion: { value: 0.05 },
                     thicknessAmbient: { value: 0 },
                     thicknessAttenuation: { value: 0.8 },
                     thicknessPower: { value: 2 },
@@ -759,7 +759,7 @@
 
             static ready = async () => {
                 await this.view.ready();
-                this.physics.ready();
+                await this.physics.ready();
             };
         }
 

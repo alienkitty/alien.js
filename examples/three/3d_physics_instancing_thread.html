@@ -627,7 +627,7 @@
 
             static ready = async () => {
                 await this.view.ready();
-                this.physics.ready();
+                await this.physics.ready();
             };
         }
 

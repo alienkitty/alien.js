@@ -415,6 +415,18 @@ export class OimoPhysicsBuffer {
         body.applyImpulse(this.v1.init(impulse[0], impulse[1], impulse[2]), this.v2.init(positionInWorld[0], positionInWorld[1], positionInWorld[2]));
     }
 
+    wakeUp(name) {
+        const body = this.map.get(name);
+
+        body.wakeUp();
+    }
+
+    sleep(name) {
+        const body = this.map.get(name);
+
+        body.sleep();
+    }
+
     step() {
         const array = this.array;
 

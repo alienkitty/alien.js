@@ -502,6 +502,18 @@ export class OimoPhysics {
         body.applyImpulse(impulse, positionInWorld);
     }
 
+    wakeUp(object, index) {
+        const body = this.getObjectBody(object, index);
+
+        body.wakeUp();
+    }
+
+    sleep(object, index) {
+        const body = this.getObjectBody(object, index);
+
+        body.sleep();
+    }
+
     step() {
         this.world.step(this.timestep);
 

@@ -784,7 +784,7 @@ class RenderManager {
         // Two pass Gaussian blur (horizontal and vertical)
         const blurAmount = MathUtils.clamp(MathUtils.inverseLerp(0.5, 0, this.compositeMaterial.uniforms.uOpacity.value), 0, 1);
 
-        if (blurAmount > 0) {
+        if (blurAmount) {
             this.hBlurMaterial.uniforms.tMap.value = renderTargetB.texture;
             this.hBlurMaterial.uniforms.uBlurAmount.value = this.blurAmount * blurAmount;
             this.screen.material = this.hBlurMaterial;

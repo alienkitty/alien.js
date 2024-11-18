@@ -36,7 +36,7 @@
     --ui-title-letter-spacing: 1px;
     --ui-secondary-font-size: 10px;
     --ui-secondary-letter-spacing: 0.5px;
-    --ui-secondary-opacity: 0.7;
+    --ui-secondary-color: #868686;
     --ui-name-font-family: 'Gothic A1', sans-serif;
     --ui-name-font-weight: 500;
     --ui-name-font-size: 13px;
@@ -57,15 +57,15 @@
     --ui-info-font-size: 10px;
     --ui-info-line-height: 20px;
     --ui-info-letter-spacing: 0.08em;
-    --ui-info-opacity: 0.7;
-    --ui-color: rgb(255 255 255 / 0.94);
+    --ui-info-color: #868686;
+    --ui-color: #fff;
     --ui-color-triplet: 255 255 255;
     --ui-color-line-opacity: 0.5;
     --ui-color-divider-line-opacity: 0.15;
     --ui-color-graph-bottom-line-opacity: 0.15;
     --ui-invert-light-color: #000;
     --ui-invert-light-color-triplet: 0 0 0;
-    --ui-invert-dark-color: rgb(255 255 255 / 0.94);
+    --ui-invert-dark-color: #fff;
     --ui-invert-dark-color-triplet: 255 255 255;
     --ui-color-line: rgb(var(--ui-color-triplet) / var(--ui-color-line-opacity));
     --ui-color-divider-line: rgb(var(--ui-color-triplet) / var(--ui-color-divider-line-opacity));

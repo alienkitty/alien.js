@@ -140,14 +140,10 @@
                 this.add(mesh);
 
                 // Occlusion mesh
-                const occMesh = new Mesh(
-                    geometry,
-                    new MeshBasicMaterial({
-                        color: new Color(colors.lightColor).multiply(new Color(0.55, 0.55, 1)) // Blue tint
-                    })
-                );
-                occMesh.position.copy(mesh.position);
-                occMesh.scale.copy(mesh.scale);
+                const occMesh = mesh.clone();
+                occMesh.material = new MeshBasicMaterial({
+                    color: new Color(colors.lightColor).multiply(new Color(0.55, 0.55, 1)) // Blue tint
+                });
                 occMesh.layers.set(layers.occlusion);
                 this.add(occMesh);
             }
@@ -611,19 +607,19 @@
                 // Occlusion material
                 this.blackoutMaterial = new MeshBasicMaterial({ color: 0x000000 });
 
-                // Lens flare material
-                this.lensflareMaterial = new LensflareMaterial();
-                this.lensflareMaterial.uniforms.uScale.value = this.lensflareScale;
-                this.lensflareMaterial.uniforms.uExposure.value = this.lensflareExposure;
-                this.lensflareMaterial.uniforms.uClamp.value = this.lensflareClamp;
-                this.lensflareMaterial.uniforms.uResolution = resolution;
-
                 // Gaussian blur materials
                 this.hBlurMaterial = new BlurMaterial(BlurDirectionX);
                 this.hBlurMaterial.uniforms.uBlurAmount.value = this.blurAmount;
 
                 this.vBlurMaterial = new BlurMaterial(BlurDirectionY);
                 this.vBlurMaterial.uniforms.uBlurAmount.value = this.blurAmount;
+
+                // Lens flare material
+                this.lensflareMaterial = new LensflareMaterial();
+                this.lensflareMaterial.uniforms.uScale.value = this.lensflareScale;
+                this.lensflareMaterial.uniforms.uExposure.value = this.lensflareExposure;
+                this.lensflareMaterial.uniforms.uClamp.value = this.lensflareClamp;
+                this.lensflareMaterial.uniforms.uResolution = resolution;
 
                 // Luminosity high pass material
                 this.luminosityMaterial = new LuminosityMaterial();

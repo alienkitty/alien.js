@@ -747,19 +747,19 @@
                 // Occlusion material
                 this.blackoutMaterial = new MeshBasicMaterial({ color: 0x000000 });
 
-                // Video glitch material
-                this.videoGlitchMaterial = new VideoGlitchMaterial();
-                this.videoGlitchMaterial.uniforms.uDistortion.value = this.glitchDistortion;
-                this.videoGlitchMaterial.uniforms.uDistortion2.value = this.glitchDistortion2;
-                this.videoGlitchMaterial.uniforms.uSpeed.value = this.glitchSpeed;
-                this.videoGlitchMaterial.uniforms.uTime = time;
-
                 // Gaussian blur materials
                 this.hBlurMaterial = new BlurMaterial(BlurDirectionX);
                 this.hBlurMaterial.uniforms.uBlurAmount.value = this.blurAmount;
 
                 this.vBlurMaterial = new BlurMaterial(BlurDirectionY);
                 this.vBlurMaterial.uniforms.uBlurAmount.value = this.blurAmount;
+
+                // Video glitch material
+                this.videoGlitchMaterial = new VideoGlitchMaterial();
+                this.videoGlitchMaterial.uniforms.uDistortion.value = this.glitchDistortion;
+                this.videoGlitchMaterial.uniforms.uDistortion2.value = this.glitchDistortion2;
+                this.videoGlitchMaterial.uniforms.uSpeed.value = this.glitchSpeed;
+                this.videoGlitchMaterial.uniforms.uTime = time;
 
                 // Luminosity high pass material
                 this.luminosityMaterial = new LuminosityMaterial();

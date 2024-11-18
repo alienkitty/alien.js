@@ -812,6 +812,13 @@
                 this.blackoutMaterial = new MeshBasicMaterial({ color: 0x000000 });
                 this.backgroundMaterial = new MeshBasicMaterial({ color: this.scene.background });
 
+                // Gaussian blur materials
+                this.hBlurMaterial = new BlurMaterial(BlurDirectionX);
+                this.hBlurMaterial.uniforms.uBlurAmount.value = this.blurAmount;
+
+                this.vBlurMaterial = new BlurMaterial(BlurDirectionY);
+                this.vBlurMaterial.uniforms.uBlurAmount.value = this.blurAmount;
+
                 // Volumetric light material
                 this.vlMaterial = new VolumetricLightMaterial();
                 this.vlMaterial.uniforms.uExposure.value = this.vlExposure;
@@ -819,13 +826,6 @@
                 this.vlMaterial.uniforms.uDensity.value = this.vlDensity;
                 this.vlMaterial.uniforms.uWeight.value = this.vlWeight;
                 this.vlMaterial.uniforms.uClamp.value = this.vlClamp;
-
-                // Gaussian blur materials
-                this.hBlurMaterial = new BlurMaterial(BlurDirectionX);
-                this.hBlurMaterial.uniforms.uBlurAmount.value = this.blurAmount;
-
-                this.vBlurMaterial = new BlurMaterial(BlurDirectionY);
-                this.vBlurMaterial.uniforms.uBlurAmount.value = this.blurAmount;
 
                 // Luminosity high pass material
                 this.luminosityMaterial = new LuminosityMaterial();

@@ -634,11 +634,11 @@
                     this.screen.material = this.luminosityMaterial;
                     this.screen.material.blending = AdditiveBlending;
                     renderer.render(this.screen, this.screenCamera);
+                    this.screen.material.blending = NoBlending;
                     this.restoreRendererState();
                     return;
                 } else {
                     this.screen.material = this.luminosityMaterial;
-                    this.screen.material.blending = NoBlending;
                     renderer.setRenderTarget(renderTargetBright);
                     renderer.clear();
                     renderer.render(this.screen, this.screenCamera);

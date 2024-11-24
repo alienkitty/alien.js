@@ -121,10 +121,6 @@ export class AudioController {
         this.trigger('mouse_move', id, speed, pan, rate);
     };
 
-    static start = () => {
-        this.enabled = true;
-    };
-
     static trigger = (event, id, gain, pan, rate) => {
         switch (event) {
             case 'bass_drum':
@@ -166,6 +162,12 @@ export class AudioController {
         WebAudio.fadeOutAndStop(id, 500, 'easeOutSine', () => {
             WebAudio.remove(id);
         });
+    };
+
+    static start = () => {
+        this.enabled = true;
+
+        this.trigger('fluid_start');
     };
 
     static mute = () => {

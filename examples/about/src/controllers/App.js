@@ -1,8 +1,10 @@
-import { Stage, UI, WebAudio, ticker, wait } from '@alienkitty/space.js/three';
+import { Interface, Stage, UI, WebAudio, clearTween, delayedCall, ticker, wait } from '@alienkitty/space.js/three';
 
+import { Data } from '../data/Data.js';
 import { AudioController } from './audio/AudioController.js';
 import { WorldController } from './world/WorldController.js';
 import { FluidController } from './world/FluidController.js';
+import { PanelController } from './panel/PanelController.js';
 import { TrackersView } from '../views/TrackersView.js';
 
 import { breakpoint, store } from '../config/Config.js';
@@ -16,6 +18,9 @@ export class App {
 
         this.initWorld();
         this.initViews();
+
+        await Data.Socket.ready();
+
         this.initControllers();
 
         this.addListeners();
@@ -27,6 +32,9 @@ export class App {
         ]);
 
         this.initAudio();
+        this.initPanel();
+
+        FluidController.start();
     }
 
     static initWorld() {
@@ -49,24 +57,57 @@ export class App {
                     }
                 ]
             },
+            info: {
+                content: 'Observer'
+            },
             details: {
                 background: true,
                 title: 'Multiuser Fluid'.replace(/[\s.]+/g, '_'),
-                content: /* html */ `
+                content: [
+                    {
+                        content: /* html */ `
 A fluid shader tribute to Mr.doob’s Multiuser Sketchpad from 2010. Multiuser Fluid is an experiment to combine UI and data visualization elements in a multiuser environment.
-                `,
-                links: [
-                    {
-                        title: 'Source code',
-                        link: 'https://glitch.com/edit/#!/multiuser-fluid'
+                        `,
+                        links: [
+                            {
+                                title: 'Mr.doob’s Multiuser Sketchpad',
+                                link: 'https://multiuser-sketchpad.glitch.me/'
+                            },
+                            {
+                                title: 'David A Roberts’ Single-pass Fluid Solver',
+                                link: 'https://www.shadertoy.com/view/XlsBDf'
+                            },
+                            {
+                                title: 'Source code',
+                                link: 'https://github.com/pschroen/multiuser-fluid'
+                            }
+                        ]
                     },
                     {
-                        title: 'Mr.doob’s Multiuser Sketchpad',
-                        link: 'https://glitch.com/edit/#!/multiuser-sketchpad'
+                        title: 'Development',
+                        content: /* html */ `
+Space.js
+<br>Alien.js
+<br>Three.js
+                        `
                     },
                     {
-                        title: 'David A Roberts’ Single-pass Fluid Solver',
-                        link: 'https://www.shadertoy.com/view/XlsBDf'
+                        title: 'Fonts',
+                        content: /* html */ `
+Roboto Mono
+<br>D-DIN
+<br>Gothic A1
+                        `
+                    },
+                    {
+                        title: 'Audio',
+                        content: /* html */ `
+AudioMicro
+                        `
+                    },
+                    {
+                        title: 'Users',
+                        width: '100%'
                     }
                 ]
             },
@@ -78,20 +119,37 @@ A fluid shader tribute to Mr.doob’s Multiuser Sketchpad from 2010. Multiuser F
                 sound: store.sound
             }
         });
+        this.ui.css({ position: 'static' });
         Stage.add(this.ui);
+
+        const content = new Interface('.content');
+        content.css({
+            width: 'fit-content'
+        });
+        this.ui.detailsUsers = this.ui.details.content[this.ui.details.content.length - 1].add(content);
+        this.ui.detailsUsers.css({
+            position: 'relative',
+            display: 'flex',
+            flexWrap: 'wrap',
+            gap: 12
+        });
     }
 
     static initControllers() {
         const { renderer, screen, screenCamera } = WorldController;
 
-        FluidController.init(renderer, screen, screenCamera, this.trackers);
+        FluidController.init(renderer, screen, screenCamera, this.trackers, this.ui);
     }
 
     static initAudio() {
         WebAudio.init({ sampleRate: 48000 });
-        WebAudio.load(this.loader.files);
+        WebAudio.load(this.loader.filter(path => /sounds/.test(path)));
 
         AudioController.init(this.ui);
+    }
+
+    static initPanel() {
+        PanelController.init(this.ui);
     }
 
     static addListeners() {
@@ -109,11 +167,28 @@ A fluid shader tribute to Mr.doob’s Multiuser Sketchpad from 2010. Multiuser F
     };
 
     static onDetails = ({ open }) => {
+        clearTween(this.timeout);
+
         if (open) {
+            document.documentElement.classList.add('scroll');
+
+            this.ui.detailsUsers.children.forEach((child, i) => {
+                child.enable();
+                child.animateIn(1075 + i * 15, true);
+            });
+
             if (store.sound) {
                 AudioController.trigger('about_section');
             }
         } else {
+            this.timeout = delayedCall(400, () => {
+                document.documentElement.classList.remove('scroll');
+
+                this.ui.detailsUsers.children.forEach(child => {
+                    child.disable();
+                });
+            });
+
             if (store.sound) {
                 AudioController.trigger('fluid_section');
             }
@@ -137,8 +212,8 @@ A fluid shader tribute to Mr.doob’s Multiuser Sketchpad from 2010. Multiuser F
         const height = document.documentElement.clientHeight;
         const dpr = 1; // Always 1
 
-        WorldController.resize(width, height, dpr);
         AudioController.resize();
+        WorldController.resize(width, height, dpr);
         FluidController.resize(width, height, dpr);
     };
 
@@ -152,7 +227,9 @@ A fluid shader tribute to Mr.doob’s Multiuser Sketchpad from 2010. Multiuser F
 
     static start = async () => {
         AudioController.start();
-        AudioController.trigger('fluid_start');
+    };
+
+    static animateIn = async () => {
         FluidController.animateIn();
 
         await wait(1000);

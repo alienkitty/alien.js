@@ -64,9 +64,11 @@ export class Preloader {
 
         this.loader = this.loader.destroy();
 
+        this.app.start();
+
         await this.view.animateOut();
         this.view = this.view.destroy();
 
-        this.app.start();
+        this.app.animateIn();
     };
 }

@@ -1,23 +1,29 @@
 import { EventEmitter, Stage } from '@alienkitty/space.js/three';
 
-import { store } from '../config/Config.js';
+import { numPointers, store } from '../config/Config.js';
 
 export class Socket extends EventEmitter {
     constructor() {
         super();
 
         this.views = [];
-        // 0: USERS: EVENT_ID(UINT8), USER_ID(UINT8), NICKNAME(UINT8), REMOTE_ADDRESS(UINT32), LATENCY(UINT16)
-        // 1: HEARTBEAT: EVENT_ID(UINT8), USER_ID(UINT8), TIME(UINT64)
-        // 2: NICKNAME: EVENT_ID(UINT8), USER_ID(UINT8), NICKNAME(UINT8)
+        // 0: USERS: EVENT_ID(UINT8), MOUSE_ID(UINT8), NICKNAME(UINT8), REMOTE_ADDRESS(UINT32), LATENCY(UINT16)
+        // 1: HEARTBEAT: EVENT_ID(UINT8), MOUSE_ID(UINT8), TIME(UINT64)
+        // 2: NICKNAME: EVENT_ID(UINT8), MOUSE_ID(UINT8), NICKNAME(UINT8)
         this.views[2] = new DataView(new ArrayBuffer(1 + 1 + 10));
-        // 3: MOTION: EVENT_ID(UINT8), USER_ID(UINT8), IS_DOWN(UINT8), X(FLOAT32), Y(FLOAT32)
+        // 3: MOTION: EVENT_ID(UINT8), MOUSE_ID(UINT8), IS_DOWN(UINT8), X(FLOAT32), Y(FLOAT32)
         this.views[3] = new DataView(new ArrayBuffer(1 + 1 + 1 + 4 + 4));
 
         this.encoder = new TextEncoder();
         this.decoder = new TextDecoder();
 
         this.connected = false;
+
+        // Promise with resolvers
+        // this.promise
+        // this.resolve
+        // this.reject
+        Object.assign(this, Promise.withResolvers());
     }
 
     init() {
@@ -82,12 +88,18 @@ export class Socket extends EventEmitter {
                     index += byteLength;
                 }
 
-                this.emit('users', users);
+                this.emit('users', { users });
                 break;
             }
-            case 1:
-                this.emit('heartbeat', data);
+            case 1: {
+                const id = data.getUint8(1).toString();
+                const time = Number(data.getBigInt64(2));
+
+                this.emit('heartbeat', { id, time });
+
+                this.send(data);
                 break;
+            }
             case 3: {
                 const id = data.getUint8(1).toString();
                 const isDown = !!data.getUint8(2);
@@ -100,54 +112,62 @@ export class Socket extends EventEmitter {
         }
     };
 
-    onUsers = e => {
-        store.users = e;
+    onUsers = ({ users }) => {
+        store.users = users;
 
-        Stage.events.emit('update', e);
+        Stage.events.emit('update', users);
     };
 
-    onHeartbeat = e => {
+    onHeartbeat = ({ id/* , time */ }) => {
         if (!this.connected) {
             this.connected = true;
-            this.id = e.getUint8(1).toString();
+            // this.id = id;
+
+            store.id = id;
+
+            if (Number(id) === numPointers) {
+                store.observer = true;
+            }
 
             this.nickname(store.nickname);
-        }
 
-        this.send(e);
+            this.resolve();
+        }
     };
 
     // Public methods
 
     nickname = text => {
-        const data = this.views[2];
-        data.setUint8(0, 2);
+        const view = this.views[2];
+        view.setUint8(0, 2);
+        // view.setUint8(1, this.id); // Set server-side
 
         const buf = this.encoder.encode(text);
 
         for (let i = 0; i < 10; i++) {
-            data.setUint8(2 + i, buf[i]);
+            view.setUint8(2 + i, buf[i]);
         }
 
-        this.send(data);
+        this.send(view);
     };
 
     motion = ({ isDown, x, y }) => {
-        const data = this.views[3];
-        data.setUint8(0, 3);
-        data.setUint8(2, isDown ? 1 : 0);
-        data.setFloat32(3, x);
-        data.setFloat32(7, y);
+        const view = this.views[3];
+        view.setUint8(0, 3);
+        // view.setUint8(1, this.id); // Set server-side
+        view.setUint8(2, isDown ? 1 : 0);
+        view.setFloat32(3, x);
+        view.setFloat32(7, y);
 
-        this.send(data);
+        this.send(view);
     };
 
-    send = data => {
+    send = view => {
         if (!this.connected) {
             return;
         }
 
-        this.socket.send(data.buffer);
+        this.socket.send(view.buffer);
     };
 
     connect = () => {
@@ -166,4 +186,6 @@ export class Socket extends EventEmitter {
 
         this.socket.close();
     };
+
+    ready = () => this.promise;
 }

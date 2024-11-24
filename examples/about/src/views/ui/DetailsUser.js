@@ -7,6 +7,7 @@ export class DetailsUser extends Interface {
         this.infoWidth = parseFloat(Stage.rootStyle.getPropertyValue('--ui-panel-width').trim());
         this.width = this.infoWidth * 2;
         this.height = 60;
+        this.hoveredIn = false;
 
         this.data = {
             id: '',
@@ -18,6 +19,8 @@ export class DetailsUser extends Interface {
         };
 
         this.init();
+
+        this.update();
     }
 
     init() {
@@ -31,7 +34,7 @@ export class DetailsUser extends Interface {
         this.graph = new Graph({
             width: this.width - this.infoWidth,
             height: this.height,
-            range: 3,
+            range: 300,
             suffix: 'ms',
             ghost: true,
             noMarker: true
@@ -75,12 +78,16 @@ export class DetailsUser extends Interface {
     addListeners() {
         this.element.addEventListener('mouseenter', this.onHover);
         this.element.addEventListener('mouseleave', this.onHover);
+        this.graph.element.addEventListener('mouseenter', this.onGraphHover);
+        this.graph.element.addEventListener('mouseleave', this.onGraphHover);
         ticker.add(this.onUpdate);
     }
 
     removeListeners() {
         this.element.removeEventListener('mouseenter', this.onHover);
         this.element.removeEventListener('mouseleave', this.onHover);
+        this.graph.element.removeEventListener('mouseenter', this.onGraphHover);
+        this.graph.element.removeEventListener('mouseleave', this.onGraphHover);
         ticker.remove(this.onUpdate);
     }
 
@@ -94,24 +101,42 @@ export class DetailsUser extends Interface {
         }
     };
 
+    onGraphHover = ({ type }) => {
+        if (type === 'mouseenter') {
+            this.hoveredIn = true;
+        } else {
+            this.hoveredIn = false;
+        }
+    };
+
     onUpdate = () => {
-        this.graph.update(this.data.latency);
+        if (this.graph.needsUpdate || this.hoveredIn) {
+            this.graph.update();
+        }
     };
 
     // Public methods
 
-    setData(data, e) {
-        Object.assign(this.data, data, e);
+    setData = data => {
+        Object.assign(this.data, data);
 
-        this.content.text(`${this.data.nickname}
+        if (data.id) {
+            this.content.text(`${this.data.nickname}
 ${this.data.latency}ms`);
+
+            this.update();
+        }
 
         this.info.text(`Mouse:  ${this.data.id}${this.data.isDown ? ' Down' : ''}
 X:${this.data.x.toFixed(4).padStart(12, ' ')}
 Y:${this.data.y.toFixed(4).padStart(12, ' ')}`);
-    }
+    };
 
-    animateIn(delay, fast) {
+    update = () => {
+        this.graph.update(this.data.latency);
+    };
+
+    animateIn = (delay, fast) => {
         this.clearTween();
         this.visible();
 
@@ -122,9 +147,9 @@ Y:${this.data.y.toFixed(4).padStart(12, ' ')}`);
         } else {
             this.css({ y: -10, opacity: 0 }).tween({ y: 0, opacity: 1 }, 400, 'easeOutCubic', delay);
         }
-    }
+    };
 
-    animateOut(callback) {
+    animateOut = callback => {
         this.graph.animateOut();
 
         this.clearTween().tween({ opacity: 0 }, 500, 'easeInCubic', () => {
@@ -134,19 +159,19 @@ Y:${this.data.y.toFixed(4).padStart(12, ' ')}`);
                 callback();
             }
         });
-    }
+    };
 
-    enable() {
+    enable = () => {
         this.addListeners();
-    }
+    };
 
-    disable() {
+    disable = () => {
         this.removeListeners();
-    }
+    };
 
-    destroy() {
+    destroy = () => {
         this.disable();
 
         return super.destroy();
-    }
+    };
 }

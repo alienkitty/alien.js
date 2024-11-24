@@ -18,7 +18,7 @@
 
         const layers = {
             default: 0,
-            drawBuffers: 1,
+            buffers: 1,
             motion: 2,
             light: 3
         };
@@ -273,7 +273,7 @@
                 material.aoMap.channel = 1;
 
                 const mesh = new Mesh(geometry, material);
-                mesh.layers.enable(layers.drawBuffers);
+                mesh.layers.enable(layers.buffers);
                 mesh.layers.enable(layers.motion);
                 this.add(mesh);
             }
@@ -352,7 +352,7 @@
                 material.envMapRotation.y = scene.environmentRotation.y;
 
                 const mesh = new Mesh(geometry, material);
-                mesh.layers.enable(layers.drawBuffers);
+                mesh.layers.enable(layers.buffers);
                 mesh.layers.enable(layers.light);
                 this.add(mesh);
 
@@ -799,7 +799,7 @@
                 this.fluid.splatMaterial.uniforms.uAspect = aspect;
 
                 // G-Buffer
-                this.drawBuffers = new DrawBuffers(this.renderer, this.scene, this.camera, layers.drawBuffers, {
+                this.drawBuffers = new DrawBuffers(this.renderer, this.scene, this.camera, layers.buffers, {
                     smearIntensity: 2,
                     cameraBlur: false
                 });
@@ -812,6 +812,13 @@
                 this.blackoutMaterial = new MeshBasicMaterial({ color: 0x000000 });
                 this.backgroundMaterial = new MeshBasicMaterial({ color: this.scene.background });
 
+                // Gaussian blur materials
+                this.hBlurMaterial = new BlurMaterial(BlurDirectionX);
+                this.hBlurMaterial.uniforms.uBlurAmount.value = this.blurAmount;
+
+                this.vBlurMaterial = new BlurMaterial(BlurDirectionY);
+                this.vBlurMaterial.uniforms.uBlurAmount.value = this.blurAmount;
+
                 // Volumetric light material
                 this.vlMaterial = new VolumetricLightMaterial();
                 this.vlMaterial.uniforms.uExposure.value = this.vlExposure;
@@ -819,13 +826,6 @@
                 this.vlMaterial.uniforms.uDensity.value = this.vlDensity;
                 this.vlMaterial.uniforms.uWeight.value = this.vlWeight;
                 this.vlMaterial.uniforms.uClamp.value = this.vlClamp;
-
-                // Gaussian blur materials
-                this.hBlurMaterial = new BlurMaterial(BlurDirectionX);
-                this.hBlurMaterial.uniforms.uBlurAmount.value = this.blurAmount;
-
-                this.vBlurMaterial = new BlurMaterial(BlurDirectionY);
-                this.vBlurMaterial.uniforms.uBlurAmount.value = this.blurAmount;
 
                 // Luminosity high pass material
                 this.luminosityMaterial = new LuminosityMaterial();
@@ -1011,7 +1011,7 @@
                 this.fluid.update();
 
                 // G-Buffer layer
-                camera.layers.set(layers.drawBuffers);
+                camera.layers.set(layers.buffers);
 
                 this.drawBuffers.update();
 
@@ -1192,11 +1192,11 @@
                     this.screen.material = this.luminosityMaterial;
                     this.screen.material.blending = AdditiveBlending;
                     renderer.render(this.screen, this.screenCamera);
+                    this.screen.material.blending = NoBlending;
                     this.restoreRendererState();
                     return;
                 } else {
                     this.screen.material = this.luminosityMaterial;
-                    this.screen.material.blending = NoBlending;
                     renderer.setRenderTarget(renderTargetBright);
                     renderer.clear();
                     renderer.render(this.screen, this.screenCamera);

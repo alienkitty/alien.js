@@ -79,7 +79,12 @@ let Loader$1 = class Loader {
         this.fetchOptions;
         this.cache = false;
         this.files = {};
-        this.promise = new Promise(resolve => this.resolve = resolve);
+
+        // Promise with resolvers
+        // this.promise
+        // this.resolve
+        // this.reject
+        Object.assign(this, Promise.withResolvers());
     }
 
     load(/* path, callback */) {}
@@ -405,7 +410,7 @@ class AssetLoader extends Loader$1 {
         this.total++;
     }
 
-    loadImage(path, callback) {
+    loadImage(path) {
         const image = new Image();
 
         image.crossOrigin = this.crossOrigin;
@@ -425,21 +430,13 @@ class AssetLoader extends Loader$1 {
             };
         });
 
-        if (callback) {
-            promise.then(callback);
-        }
-
         return promise;
     }
 
-    loadData(path, callback) {
+    loadData(path) {
         const promise = fetch(`${this.getPath(path)}?${guid()}`, this.options).then(response => {
             return response.json();
         });
-
-        if (callback) {
-            promise.then(callback);
-        }
 
         return promise;
     }
@@ -606,6 +603,10 @@ class Cluster {
         }
     }
 
+    get length() {
+        return this.array.length;
+    }
+
     get() {
         const object = this.array[this.index];
 
@@ -626,8 +627,8 @@ class Cluster {
         this.array.push(...objects);
     }
 
-    length() {
-        return this.array.length;
+    shuffle() {
+        this.array.sort(() => Math.random() - 0.5);
     }
 
     destroy() {
@@ -55871,7 +55872,6 @@ class Ticker {
                 callback.frame++;
 
                 callback(this.time, delta, callback.frame);
-
                 continue;
             }
 
@@ -56504,8 +56504,8 @@ function clearTween(object) {
 // https://developer.mozilla.org/en-US/docs/Web/CSS/filter
 const Transforms = ['x', 'y', 'z', 'skewX', 'skewY', 'rotation', 'rotationX', 'rotationY', 'rotationZ', 'scale', 'scaleX', 'scaleY', 'scaleZ'];
 const Filters = ['blur', 'brightness', 'contrast', 'grayscale', 'hue', 'invert', 'saturate', 'sepia'];
-const Numeric = ['opacity', 'zIndex', 'fontWeight', 'strokeWidth', 'strokeDashoffset', 'stopOpacity'];
-const Lacuna1 = ['opacity', 'brightness', 'contrast', 'saturate', 'scale', 'stopOpacity'];
+const Numeric = ['opacity', 'zIndex', 'fontWeight', 'strokeWidth', 'strokeDashoffset', 'stopOpacity', 'flexGrow'];
+const Lacuna1 = ['opacity', 'scale', 'brightness', 'contrast', 'saturate', 'stopOpacity'];
 
 /**
  * A base class for HTML elements with tween and destroy methods,
@@ -56538,7 +56538,7 @@ const Lacuna1 = ['opacity', 'brightness', 'contrast', 'saturate', 'scale', 'stop
  * logo.add(image);
  *
  * logo.tween({ scale: 1, opacity: 1 }, 2000, 'easeOutCubic');
-*/
+ */
 class Interface {
     constructor(name, type = 'div', qualifiedName) {
         this.events = new EventEmitter();
@@ -56551,7 +56551,7 @@ class Interface {
             this.element = name;
         } else if (type !== null) {
             if (type === 'svg') {
-                this.element = document.createElementNS('http://www.w3.org/2000/svg', qualifiedName || 'svg');
+                this.element = document.createElementNS('http://www.w3.org/2000/svg', qualifiedName || type);
             } else {
                 this.element = document.createElement(type);
             }
@@ -56559,8 +56559,8 @@ class Interface {
             if (typeof name === 'string') {
                 if (name.startsWith('.')) {
                     this.element.className = name.slice(1);
-                } else {
-                    this.element.id = name;
+                } else if (name.startsWith('#')) {
+                    this.element.id = name.slice(1);
                 }
             }
         }
@@ -57319,6 +57319,10 @@ class LinkedList {
         this.current = null;
     }
 
+    get length() {
+        return this.nodes.length;
+    }
+
     push(object) {
         const node = {
             object,
@@ -57329,7 +57333,10 @@ class LinkedList {
         this.nodes.push(node);
 
         if (!this.first) {
-            node.next = node.prev = this.last = this.first = node;
+            this.first = node;
+            this.last = node;
+            node.prev = node;
+            node.next = node;
         } else {
             node.next = this.first;
             node.prev = this.last;
@@ -57392,7 +57399,15 @@ class LinkedList {
 
         this.current = this.current.next;
 
+        if (this.nodes.length === 1 || this.current === this.first) {
+            return;
+        }
+
         return this.current.object;
+    }
+
+    find(callback) {
+        return this.nodes.map(node => node.object).find(callback);
     }
 
     destroy() {
@@ -57430,8 +57445,18 @@ class ObjectPool {
         }
     }
 
+    get length() {
+        return this.array.length;
+    }
+
     get() {
-        return this.array.shift() || (this.type ? new this.type() : null);
+        const object = this.array.shift();
+
+        if (object !== undefined) {
+            return object;
+        }
+
+        return this.type ? new this.type() : null;
     }
 
     empty() {
@@ -57442,8 +57467,8 @@ class ObjectPool {
         this.array.push(...objects);
     }
 
-    length() {
-        return this.array.length;
+    shuffle() {
+        this.array.sort(() => Math.random() - 0.5);
     }
 
     destroy() {
@@ -59551,10 +59576,12 @@ class Color {
 class PanelGraph extends Interface {
     constructor({
         name,
+        height = 40,
         resolution = 80,
         precision = 0,
         lookupPrecision = 0,
         range = 1,
+        suffix = '',
         value,
         ghost,
         noText = false,
@@ -59565,10 +59592,12 @@ class PanelGraph extends Interface {
         super('.panel-graph');
 
         this.name = name;
+        this.height = height;
         this.resolution = resolution;
         this.precision = precision;
         this.lookupPrecision = lookupPrecision;
         this.range = range;
+        this.suffix = suffix;
         this.value = value;
         this.ghost = ghost;
         this.noText = noText;
@@ -59577,7 +59606,6 @@ class PanelGraph extends Interface {
         this.callback = callback;
 
         this.width = parseFloat(Stage.rootStyle.getPropertyValue('--ui-panel-width').trim());
-        this.height = this.width / 2;
         this.rangeHeight = this.getRangeHeight(this.range);
         this.array = [];
         this.ghostArray = [];
@@ -59611,7 +59639,7 @@ class PanelGraph extends Interface {
         if (this.value === undefined) {
             this.last = performance.now();
             this.time = 0;
-            this.deltaTime = 0;
+            this.delta = 0;
             this.count = 0;
             this.prev = 0;
             this.fps = 0;
@@ -59645,8 +59673,7 @@ class PanelGraph extends Interface {
         this.css({
             position: 'relative',
             width: this.width,
-            height: this.height,
-            cursor: 'crosshair'
+            height: this.height
         });
 
         this.container = new Interface('.container');
@@ -59870,9 +59897,9 @@ class PanelGraph extends Interface {
     };
 
     onUpdate = () => {
-        if (this.value === undefined) {
+        if (!this.callback) {
             this.time = performance.now();
-            this.deltaTime = this.time - this.last;
+            this.delta = this.time - this.last;
             this.last = this.time;
 
             if (this.time - 1000 > this.prev) {
@@ -59880,9 +59907,9 @@ class PanelGraph extends Interface {
                 this.prev = this.time;
                 this.count = 0;
 
-                if (this.deltaTime < this.refreshRate240) {
+                if (this.delta < this.refreshRate240) {
                     this.rangeHeight = this.getRangeHeight(720);
-                } else if (this.deltaTime < this.refreshRate120) {
+                } else if (this.delta < this.refreshRate120) {
                     this.rangeHeight = this.getRangeHeight(360);
                 } else {
                     this.rangeHeight = this.getRangeHeight(180);
@@ -59893,10 +59920,8 @@ class PanelGraph extends Interface {
 
             this.update(this.fps);
             this.setValue(this.fps);
-        } else if (this.callback) {
-            this.value = this.callback(this.value, this);
         } else {
-            this.update();
+            this.value = this.callback(this.value, this);
         }
     };
 
@@ -59934,6 +59959,10 @@ class PanelGraph extends Interface {
     }
 
     setValue(value) {
+        if (!value) {
+            return;
+        }
+
         if (this.number) {
             this.number.text(value.toFixed(this.precision));
         }
@@ -59957,10 +59986,10 @@ class PanelGraph extends Interface {
                 this.setArray(value);
             } else {
                 if (this.ghost) {
-                    const ghost = this.array.pop();
-                    this.array.unshift(value);
-                    this.ghostArray.pop();
-                    this.ghostArray.unshift(ghost);
+                    const ghost = this.array.shift();
+                    this.array.push(value);
+                    this.ghostArray.shift();
+                    this.ghostArray.push(ghost);
                 } else {
                     this.array.shift();
                     this.array.push(value);
@@ -60042,7 +60071,7 @@ class PanelGraph extends Interface {
             this.context.stroke();
 
             this.info.css({ left: x });
-            this.info.text(value.toFixed(this.precision));
+            this.info.text(`${value.toFixed(this.precision)}${this.suffix}`);
         }
     }
 
@@ -61531,11 +61560,11 @@ class PanelItem extends Interface {
 
     animateOut(index, total, delay, callback) {
         this.clearTween().tween({ y: -10, opacity: 0 }, 500, 'easeInCubic', delay, () => {
-            if (index === 0 && callback) {
-                if (this.graph) {
-                    this.graph.disable();
-                }
+            if (this.graph) {
+                this.graph.disable();
+            }
 
+            if (index === 0 && callback) {
                 callback();
             }
         });
@@ -62213,8 +62242,8 @@ class PointInfo extends Interface {
         this.type.css({
             fontSize: 'var(--ui-secondary-font-size)',
             letterSpacing: 'var(--ui-secondary-letter-spacing)',
-            paddingBottom: 3,
-            opacity: 'var(--ui-secondary-opacity)'
+            color: 'var(--ui-secondary-color)',
+            paddingBottom: 3
         });
         this.container.add(this.type);
     }
@@ -68728,6 +68757,7 @@ class Details extends Interface {
 
         this.data = data;
 
+        this.content = [];
         this.links = [];
 
         this.init();
@@ -68739,13 +68769,7 @@ class Details extends Interface {
     init() {
         this.invisible();
         this.css({
-            position: 'absolute',
-            left: 0,
-            top: 0,
-            width: '100%',
-            height: '100%',
-            display: 'flex',
-            alignItems: 'center',
+            position: 'relative',
             pointerEvents: 'none',
             opacity: 0
         });
@@ -68753,10 +68777,12 @@ class Details extends Interface {
         if (this.data.background) {
             this.bg = new Interface('.bg');
             this.bg.css({
-                position: 'absolute',
+                position: 'fixed',
+                left: 0,
+                top: 0,
                 width: '100%',
                 height: '100%',
-                backgroundColor: '#000'
+                backgroundColor: 'var(--bg-color)'
             });
             this.add(this.bg);
         }
@@ -68764,8 +68790,9 @@ class Details extends Interface {
         this.container = new Interface('.container');
         this.container.css({
             position: 'relative',
-            width: 400,
-            margin: '10% 10% 13%'
+            display: 'flex',
+            flexWrap: 'wrap',
+            padding: '10vw calc(100vw - 10vw - 440px) 13vw 10vw'
         });
         this.add(this.container);
     }
@@ -68774,12 +68801,57 @@ class Details extends Interface {
         this.title = new DetailsTitle(this.data.title);
         this.container.add(this.title);
 
-        this.content = new Interface('.content', 'p');
-        this.content.css({
-            width: 'fit-content'
+        if (!Array.isArray(this.data.content)) {
+            this.data.content = [this.data.content];
+        }
+
+        this.data.content.forEach(data => {
+            if (typeof data === 'object') {
+                const container = new Interface('.content');
+                container.css({
+                    flexGrow: 1,
+                    width: data.width
+                });
+
+                if (data.title) {
+                    const info = new Interface('.info', 'h2');
+                    info.css({
+                        width: 'fit-content'
+                    });
+                    info.html(data.title);
+                    container.add(info);
+                }
+
+                const content = new Interface('.content');
+                content.css({
+                    width: 'fit-content'
+                });
+                content.html(data.content);
+                container.add(content);
+
+                if (Array.isArray(data.links)) {
+                    data.links.forEach(data => {
+                        const link = new DetailsLink(data.title, data.link);
+                        link.css({
+                            display: 'block'
+                        });
+                        container.add(link);
+                        this.links.push(link);
+                    });
+                }
+
+                this.container.add(container);
+                this.content.push(container);
+            } else {
+                const content = new Interface('.content');
+                content.css({
+                    width: 'fit-content'
+                });
+                content.html(data);
+                this.container.add(content);
+                this.content.push(content);
+            }
         });
-        this.content.html(this.data.content);
-        this.container.add(this.content);
 
         if (Array.isArray(this.data.links)) {
             this.data.links.forEach(data => {
@@ -68813,24 +68885,18 @@ class Details extends Interface {
 
     // Public methods
 
-    setContent(content) {
-        this.content.html(content);
+    setContent(content, index = 0) {
+        this.content[index].html(content);
     }
 
     resize(width, height, dpr, breakpoint) {
         if (width < breakpoint) {
-            this.css({ display: '' });
-
             this.container.css({
-                width: '',
-                margin: '80px 20px 40px'
+                padding: '80px 20px 40px'
             });
         } else {
-            this.css({ display: 'flex' });
-
             this.container.css({
-                width: 400,
-                margin: '10% 10% 13%'
+                padding: '10vw calc(100vw - 10vw - 440px) 13vw 10vw'
             });
         }
     }
@@ -69224,7 +69290,7 @@ class HeaderTitle extends Interface {
         if (this.data.caption) {
             this.caption = new Interface('.caption');
             this.caption.css({
-                opacity: 'var(--ui-secondary-opacity)'
+                color: 'var(--ui-secondary-color)'
             });
             this.caption.html(this.data.caption);
             this.add(this.caption);
@@ -69417,7 +69483,7 @@ class Header extends Interface {
 
     init() {
         this.css({
-            position: 'absolute',
+            position: 'fixed',
             left: 20,
             top: 20,
             right: 20
@@ -69523,6 +69589,10 @@ class MenuItem extends Interface {
     init() {
         this.css({
             position: 'relative',
+            cursor: 'pointer',
+            pointerEvents: 'none',
+            webkitUserSelect: 'none',
+            userSelect: 'none',
             y: 10
         });
 
@@ -69533,10 +69603,6 @@ class MenuItem extends Interface {
             textAlign: 'center',
             textTransform: 'uppercase',
             whiteSpace: 'nowrap',
-            cursor: 'pointer',
-            pointerEvents: 'none',
-            webkitUserSelect: 'none',
-            userSelect: 'none',
             opacity: 0
         });
         this.container.text(this.name);
@@ -69790,11 +69856,13 @@ class Info extends Interface {
     init() {
         this.invisible();
         this.css({
-            position: 'absolute',
+            position: 'fixed',
             left: '50%',
             width: 300,
             marginLeft: -300 / 2,
-            pointerEvents: 'auto',
+            pointerEvents: 'none',
+            webkitUserSelect: 'none',
+            userSelect: 'none',
             opacity: 0
         });
 
@@ -69808,7 +69876,7 @@ class Info extends Interface {
         this.content.css({
             textAlign: 'center',
             textTransform: 'uppercase',
-            opacity: 'var(--ui-info-opacity)'
+            color: 'var(--ui-info-color)'
         });
         this.content.html(this.data.content);
         this.add(this.content);
@@ -70670,7 +70738,7 @@ class AudioButtonInfo extends Interface {
         title.css({
             fontSize: 'var(--ui-secondary-font-size)',
             letterSpacing: 'var(--ui-secondary-letter-spacing)',
-            opacity: 'var(--ui-secondary-opacity)'
+            color: 'var(--ui-secondary-color)'
         });
 
         if (data.title) {
@@ -71075,7 +71143,7 @@ class UI extends Interface {
         if (this.data.detailsButton) {
             this.detailsButton = new DetailsButton();
             this.detailsButton.css({
-                position: 'absolute',
+                position: 'fixed',
                 left: 19,
                 bottom: 18
             });
@@ -71086,7 +71154,7 @@ class UI extends Interface {
         if (this.data.muteButton) {
             this.muteButton = new MuteButton(this.data.muteButton);
             this.muteButton.css({
-                position: 'absolute',
+                position: 'fixed',
                 right: 22,
                 bottom: 20
             });
@@ -71097,7 +71165,7 @@ class UI extends Interface {
         if (this.data.audioButton) {
             this.audioButton = new AudioButton(this.data.audioButton);
             this.audioButton.css({
-                position: 'absolute',
+                position: 'fixed',
                 right: 22,
                 bottom: 20
             });
@@ -71213,11 +71281,11 @@ class UI extends Interface {
 
         if (e.ctrlKey && e.keyCode === 48) { // Ctrl 0
             if (this.animatedIn) {
+                this.animateOut();
+
                 if (this.isDetailsOpen) {
                     this.toggleDetails(false);
                 }
-
-                this.animateOut();
             } else {
                 this.animateIn();
             }
@@ -71704,15 +71772,16 @@ class GraphMarker extends Interface {
  */
 class Graph extends Interface {
     constructor({
+        value,
+        ghost,
         width = 300,
-        height = 50,
+        height = 60,
         resolution = 80,
         precision = 0,
         lookupPrecision = 0,
         markers = [],
         range = 1,
-        value,
-        ghost,
+        suffix = '',
         noHover = false,
         noMarker = false,
         noMarkerDrag = false,
@@ -71720,6 +71789,8 @@ class Graph extends Interface {
     } = {}) {
         super('.graph');
 
+        this.value = value;
+        this.ghost = ghost;
         this.width = width;
         this.height = height;
         this.resolution = resolution;
@@ -71727,8 +71798,7 @@ class Graph extends Interface {
         this.lookupPrecision = lookupPrecision;
         this.markers = markers;
         this.range = range;
-        this.value = value;
-        this.ghost = ghost;
+        this.suffix = suffix;
         this.noHover = noHover;
         this.noMarker = noMarker;
         this.noMarkerDrag = noMarkerDrag;
@@ -71800,12 +71870,13 @@ class Graph extends Interface {
             this.initMarkers();
         }
 
-        this.setSize(this.width, this.height);
         this.setArray(this.value);
 
         if (this.ghost) {
             this.setGhostArray(this.ghost);
         }
+
+        this.setSize(this.width, this.height);
 
         this.addListeners();
     }
@@ -72178,10 +72249,10 @@ class Graph extends Interface {
                 this.setArray(value);
             } else {
                 if (this.ghost) {
-                    const ghost = this.array.pop();
-                    this.array.unshift(value);
-                    this.ghostArray.pop();
-                    this.ghostArray.unshift(ghost);
+                    const ghost = this.array.shift();
+                    this.array.push(value);
+                    this.ghostArray.shift();
+                    this.ghostArray.push(ghost);
                 } else {
                     this.array.shift();
                     this.array.push(value);
@@ -72294,7 +72365,7 @@ class Graph extends Interface {
             this.context.stroke();
 
             this.info.css({ left: x });
-            this.info.text(value.toFixed(this.precision));
+            this.info.text(`${value.toFixed(this.precision)}${this.suffix}`);
         }
     }
 
@@ -72483,16 +72554,17 @@ class Graph extends Interface {
  */
 class GraphSegments extends Interface {
     constructor({
+        value,
+        ghost,
         width = 300,
-        height = 50,
+        height = 60,
         resolution = 80,
         precision = 0,
         lookupPrecision = 0,
         segments = [],
         markers = [],
         range = 1,
-        value,
-        ghost,
+        suffix = '',
         noHover = false,
         noMarker = false,
         noMarkerDrag = false,
@@ -72500,6 +72572,8 @@ class GraphSegments extends Interface {
     } = {}) {
         super('.graph-segments');
 
+        this.value = value;
+        this.ghost = ghost;
         this.width = width;
         this.height = height;
         this.resolution = resolution;
@@ -72508,8 +72582,7 @@ class GraphSegments extends Interface {
         this.segments = segments;
         this.markers = markers;
         this.range = range;
-        this.value = value;
-        this.ghost = ghost;
+        this.suffix = suffix;
         this.noHover = noHover;
         this.noMarker = noMarker;
         this.noMarkerDrag = noMarkerDrag;
@@ -72579,12 +72652,13 @@ class GraphSegments extends Interface {
             this.initMarkers();
         }
 
-        this.setSize(this.width, this.height);
         this.setArray(this.value);
 
         if (this.ghost) {
             this.setGhostArray(this.ghost);
         }
+
+        this.setSize(this.width, this.height);
 
         this.addListeners();
     }
@@ -72975,10 +73049,10 @@ class GraphSegments extends Interface {
                 this.setArray(value);
             } else {
                 if (this.ghost) {
-                    const ghost = this.array.pop();
-                    this.array.unshift(value);
-                    this.ghostArray.pop();
-                    this.ghostArray.unshift(ghost);
+                    const ghost = this.array.shift();
+                    this.array.push(value);
+                    this.ghostArray.shift();
+                    this.ghostArray.push(ghost);
                 } else {
                     this.array.shift();
                     this.array.push(value);
@@ -73131,7 +73205,7 @@ class GraphSegments extends Interface {
             this.context.stroke();
 
             this.info.css({ left: x });
-            this.info.text(value.toFixed(this.precision));
+            this.info.text(`${value.toFixed(this.precision)}${this.suffix}`);
         }
     }
 
@@ -73336,10 +73410,12 @@ class GraphSegments extends Interface {
  */
 class RadialGraph extends Interface {
     constructor({
+        value,
+        ghost,
         width = 300,
         height = 300,
         start = 0,
-        graphHeight = 50,
+        graphHeight = 60,
         resolution = 80,
         tension = 6,
         precision = 0,
@@ -73348,8 +73424,7 @@ class RadialGraph extends Interface {
         textDistanceY = 10,
         markers = [],
         range = 1,
-        value,
-        ghost,
+        suffix = '',
         noHover = false,
         noMarker = false,
         noMarkerDrag = false,
@@ -73357,6 +73432,8 @@ class RadialGraph extends Interface {
     } = {}) {
         super('.radial-graph');
 
+        this.value = value;
+        this.ghost = ghost;
         this.width = width;
         this.height = height;
         this.start = start;
@@ -73369,8 +73446,7 @@ class RadialGraph extends Interface {
         this.textDistanceY = textDistanceY;
         this.markers = markers;
         this.range = range;
-        this.value = value;
-        this.ghost = ghost;
+        this.suffix = suffix;
         this.noHover = noHover;
         this.noMarker = noMarker;
         this.noMarkerDrag = noMarkerDrag;
@@ -73450,12 +73526,13 @@ class RadialGraph extends Interface {
             this.initMarkers();
         }
 
-        this.setSize(this.width, this.height);
         this.setArray(this.value);
 
         if (this.ghost) {
             this.setGhostArray(this.ghost);
         }
+
+        this.setSize(this.width, this.height);
 
         this.addListeners();
     }
@@ -73868,8 +73945,8 @@ class RadialGraph extends Interface {
                     this.ghostArray.pop();
                     this.ghostArray.unshift(ghost);
                 } else {
-                    this.array.shift();
-                    this.array.push(value);
+                    this.array.pop();
+                    this.array.unshift(value);
                 }
 
                 this.needsUpdate = true;
@@ -74050,7 +74127,7 @@ class RadialGraph extends Interface {
             this.context.stroke();
 
             this.info.css({ left: x0, top: y0 });
-            this.info.text(value.toFixed(this.precision));
+            this.info.text(`${value.toFixed(this.precision)}${this.suffix}`);
         }
     }
 
@@ -74334,10 +74411,12 @@ class RadialGraph extends Interface {
  */
 class RadialGraphSegments extends Interface {
     constructor({
+        value,
+        ghost,
         width = 300,
         height = 300,
         start = 0,
-        graphHeight = 50,
+        graphHeight = 60,
         resolution = 80,
         tension = 6,
         precision = 0,
@@ -74347,8 +74426,7 @@ class RadialGraphSegments extends Interface {
         segments = [],
         markers = [],
         range = 1,
-        value,
-        ghost,
+        suffix = '',
         noHover = false,
         noMarker = false,
         noMarkerDrag = false,
@@ -74356,6 +74434,8 @@ class RadialGraphSegments extends Interface {
     } = {}) {
         super('.radial-graph-segments');
 
+        this.value = value;
+        this.ghost = ghost;
         this.width = width;
         this.height = height;
         this.start = start;
@@ -74369,8 +74449,7 @@ class RadialGraphSegments extends Interface {
         this.segments = segments;
         this.markers = markers;
         this.range = range;
-        this.value = value;
-        this.ghost = ghost;
+        this.suffix = suffix;
         this.noHover = noHover;
         this.noMarker = noMarker;
         this.noMarkerDrag = noMarkerDrag;
@@ -74448,12 +74527,13 @@ class RadialGraphSegments extends Interface {
             this.initMarkers();
         }
 
-        this.setSize(this.width, this.height);
         this.setArray(this.value);
 
         if (this.ghost) {
             this.setGhostArray(this.ghost);
         }
+
+        this.setSize(this.width, this.height);
 
         this.addListeners();
     }
@@ -74884,8 +74964,8 @@ class RadialGraphSegments extends Interface {
                     this.ghostArray.pop();
                     this.ghostArray.unshift(ghost);
                 } else {
-                    this.array.shift();
-                    this.array.push(value);
+                    this.array.pop();
+                    this.array.unshift(value);
                 }
 
                 this.needsUpdate = true;
@@ -75097,7 +75177,7 @@ class RadialGraphSegments extends Interface {
             this.context.stroke();
 
             this.info.css({ left: x0, top: y0 });
-            this.info.text(value.toFixed(this.precision));
+            this.info.text(`${value.toFixed(this.precision)}${this.suffix}`);
         }
     }
 
@@ -75419,7 +75499,7 @@ class ReticleInfo extends Interface {
         this.secondary.css({
             fontSize: 'var(--ui-secondary-font-size)',
             letterSpacing: 'var(--ui-secondary-letter-spacing)',
-            opacity: 'var(--ui-secondary-opacity)'
+            color: 'var(--ui-secondary-color)'
         });
         this.add(this.secondary);
     }
@@ -75524,6 +75604,14 @@ class Reticle extends Interface {
                 callback();
             }
         });
+    }
+
+    activate() {
+        this.clearTween().tween({ opacity: 1 }, 300, 'easeOutSine');
+    }
+
+    deactivate() {
+        this.clearTween().tween({ opacity: 0 }, 300, 'easeOutSine');
     }
 }
 
@@ -76020,6 +76108,8 @@ class Input extends Interface {
         this.css({
             height: this.data.maxlength ? 45 : 20,
             zIndex: 99999,
+            webkitUserSelect: 'none',
+            userSelect: 'none',
             opacity: 0
         });
     }
@@ -119690,7 +119780,8 @@ oimo.dynamics.rigidbody.RigidBodyType.KINEMATIC = 2;
 /**
  * @author pschroen / https://ufo.ai/
  *
- * Based on https://github.com/mrdoob/three.js/blob/dev/examples/jsm/physics/OimoPhysics.js by VBT-YTokan
+ * Based on https://github.com/mrdoob/three.js/blob/66c460eca3c025678ff2bc0aa423f4ba10e9571e/examples/jsm/libs/OimoPhysics/index.js by VBT-YTokan
+ * Based on https://github.com/mrdoob/three.js/blob/66c460eca3c025678ff2bc0aa423f4ba10e9571e/examples/jsm/physics/OimoPhysics.js by VBT-YTokan
  * Based on https://github.com/lo-th/phy
  */
 
@@ -119726,6 +119817,7 @@ oimo.dynamics.constraint.joint.RotationalLimitMotor;
 const Vec3$1 = oimo.common.Vec3;
 oimo.common.Quat;
 oimo.common.Mat3;
+oimo.common.Mat4;
 oimo.common.MathUtil;
 oimo.common.Transform;
 const Setting$1 = oimo.common.Setting;
@@ -120186,6 +120278,18 @@ class OimoPhysics {
         body.applyImpulse(impulse, positionInWorld);
     }
 
+    wakeUp(object, index) {
+        const body = this.getObjectBody(object, index);
+
+        body.wakeUp();
+    }
+
+    sleep(object, index) {
+        const body = this.getObjectBody(object, index);
+
+        body.sleep();
+    }
+
     step() {
         this.world.step(this.timestep);
 
@@ -120203,10 +120307,10 @@ class OimoPhysics {
                     this.object.updateMatrix();
 
                     object.setMatrixAt(j, this.object.matrix);
-                    object.computeBoundingSphere();
                 }
 
                 object.instanceMatrix.needsUpdate = true;
+                object.computeBoundingSphere();
             } else {
                 const body = this.map.get(object);
 
@@ -120220,7 +120324,8 @@ class OimoPhysics {
 /**
  * @author pschroen / https://ufo.ai/
  *
- * Based on https://github.com/mrdoob/three.js/blob/dev/examples/jsm/physics/OimoPhysics.js by VBT-YTokan
+ * Based on https://github.com/mrdoob/three.js/blob/66c460eca3c025678ff2bc0aa423f4ba10e9571e/examples/jsm/libs/OimoPhysics/index.js by VBT-YTokan
+ * Based on https://github.com/mrdoob/three.js/blob/66c460eca3c025678ff2bc0aa423f4ba10e9571e/examples/jsm/physics/OimoPhysics.js by VBT-YTokan
  * Based on https://github.com/lo-th/phy
  */
 
@@ -120246,11 +120351,19 @@ const RagdollJointConfig = oimo.dynamics.constraint.joint.RagdollJointConfig;
 const RagdollJoint = oimo.dynamics.constraint.joint.RagdollJoint;
 const GenericJointConfig = oimo.dynamics.constraint.joint.GenericJointConfig;
 const GenericJoint = oimo.dynamics.constraint.joint.GenericJoint;
+oimo.dynamics.constraint.joint.JointConfig;
 const Joint = oimo.dynamics.constraint.joint.Joint;
+oimo.dynamics.constraint.joint.SpringDamper;
+oimo.dynamics.constraint.joint.TranslationalLimitMotor;
+oimo.dynamics.constraint.joint.RotationalLimitMotor;
 
 // Common
 const Vec3 = oimo.common.Vec3;
 const Quat = oimo.common.Quat;
+oimo.common.Mat3;
+oimo.common.Mat4;
+oimo.common.MathUtil;
+oimo.common.Transform;
 const Setting = oimo.common.Setting;
 
 // Collision
@@ -120261,8 +120374,10 @@ const ConeGeometry = oimo.collision.geometry.ConeGeometry;
 const CylinderGeometry = oimo.collision.geometry.CylinderGeometry;
 const CapsuleGeometry = oimo.collision.geometry.CapsuleGeometry;
 const ConvexHullGeometry = oimo.collision.geometry.ConvexHullGeometry;
+oimo.collision.geometry.Geometry;
 
 // Callback
+oimo.dynamics.callback.RayCastClosest;
 const ContactCallback = oimo.dynamics.callback.ContactCallback;
 
 // Defaults
@@ -120622,6 +120737,18 @@ class OimoPhysicsBuffer {
         body.applyImpulse(this.v1.init(impulse[0], impulse[1], impulse[2]), this.v2.init(positionInWorld[0], positionInWorld[1], positionInWorld[2]));
     }
 
+    wakeUp(name) {
+        const body = this.map.get(name);
+
+        body.wakeUp();
+    }
+
+    sleep(name) {
+        const body = this.map.get(name);
+
+        body.sleep();
+    }
+
     step() {
         const array = this.array;
 
@@ -120655,7 +120782,8 @@ class OimoPhysicsBuffer {
 /**
  * @author pschroen / https://ufo.ai/
  *
- * Based on https://github.com/mrdoob/three.js/blob/dev/examples/jsm/physics/OimoPhysics.js by VBT-YTokan
+ * Based on https://github.com/mrdoob/three.js/blob/66c460eca3c025678ff2bc0aa423f4ba10e9571e/examples/jsm/libs/OimoPhysics/index.js by VBT-YTokan
+ * Based on https://github.com/mrdoob/three.js/blob/66c460eca3c025678ff2bc0aa423f4ba10e9571e/examples/jsm/physics/OimoPhysics.js by VBT-YTokan
  * Based on https://github.com/lo-th/phy
  */
 
@@ -120705,7 +120833,15 @@ class OimoPhysicsController {
             object.quaternion = quaternion.toArray();
         }
 
-        if (geometry !== undefined) {
+        if (shapes !== undefined) {
+            object.type = 'compound';
+            object.shapes = [];
+
+            for (let i = 0; i < shapes.length; i++) {
+                const { position, quaternion, scale, geometry } = shapes[i];
+                object.shapes.push(this.getObject(position, quaternion, scale, geometry, { name: `${object.name}_${i}` }));
+            }
+        } else if (geometry !== undefined) {
             const parameters = geometry.parameters;
 
             if (geometry.type === 'BoxGeometry') {
@@ -120738,7 +120874,7 @@ class OimoPhysicsController {
 
                 object.type = 'capsule';
                 object.size = [radius, height];
-            } else {
+            } else if (geometry.type !== 'PlaneGeometry') {
                 const vertices = geometry.getAttribute('position');
                 const array = [];
 
@@ -120801,16 +120937,6 @@ class OimoPhysicsController {
 
         if (kinematic !== undefined) {
             object.kinematic = kinematic;
-        }
-
-        if (shapes !== undefined) {
-            object.type = 'compound';
-            object.shapes = [];
-
-            for (let i = 0; i < shapes.length; i++) {
-                const { position, quaternion, scale, geometry } = shapes[i];
-                object.shapes.push(this.getObject(position, quaternion, scale, geometry, { name: `${object.name}_${i}` }));
-            }
         }
 
         return object;
@@ -120927,13 +121053,13 @@ class OimoPhysicsController {
                         this.object.updateMatrix();
 
                         object.setMatrixAt(j, this.object.matrix);
-                        object.computeBoundingSphere();
                     }
 
                     index += 8;
                 }
 
                 object.instanceMatrix.needsUpdate = true;
+                object.computeBoundingSphere();
             } else {
                 if (array[index + 7] !== 1) {
                     object.position.fromArray(array, index);

@@ -142,12 +142,8 @@
                 this.add(mesh);
 
                 // Occlusion mesh
-                const occMesh = new Mesh(
-                    geometry,
-                    new MeshBasicMaterial({ color: colors.lightColor })
-                );
-                occMesh.position.copy(mesh.position);
-                occMesh.scale.copy(mesh.scale);
+                const occMesh = mesh.clone();
+                occMesh.material = new MeshBasicMaterial({ color: colors.lightColor });
                 occMesh.layers.set(layers.occlusion);
                 this.add(occMesh);
             }
@@ -599,6 +595,13 @@
                 // Occlusion material
                 this.blackoutMaterial = new MeshBasicMaterial({ color: 0x000000 });
 
+                // Gaussian blur materials
+                this.hBlurMaterial = new BlurMaterial(BlurDirectionX);
+                this.hBlurMaterial.uniforms.uBlurAmount.value = this.blurAmount;
+
+                this.vBlurMaterial = new BlurMaterial(BlurDirectionY);
+                this.vBlurMaterial.uniforms.uBlurAmount.value = this.blurAmount;
+
                 // Volumetric light material
                 this.vlMaterial = new VolumetricLightMaterial();
                 this.vlMaterial.uniforms.uExposure.value = this.vlExposure;
@@ -606,13 +609,6 @@
                 this.vlMaterial.uniforms.uDensity.value = this.vlDensity;
                 this.vlMaterial.uniforms.uWeight.value = this.vlWeight;
                 this.vlMaterial.uniforms.uClamp.value = this.vlClamp;
-
-                // Gaussian blur materials
-                this.hBlurMaterial = new BlurMaterial(BlurDirectionX);
-                this.hBlurMaterial.uniforms.uBlurAmount.value = this.blurAmount;
-
-                this.vBlurMaterial = new BlurMaterial(BlurDirectionY);
-                this.vBlurMaterial.uniforms.uBlurAmount.value = this.blurAmount;
 
                 // Luminosity high pass material
                 this.luminosityMaterial = new LuminosityMaterial();

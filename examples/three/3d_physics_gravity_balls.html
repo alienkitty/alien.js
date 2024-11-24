@@ -19,7 +19,7 @@
 
         const layers = {
             default: 0,
-            drawBuffers: 1,
+            buffers: 1,
             occlusion: 2
         };
 
@@ -239,7 +239,7 @@
 
                 const mesh = new InstancedMesh(geometry, material, count);
                 mesh.instanceMatrix.setUsage(DynamicDrawUsage); // Will be updated every frame
-                mesh.layers.enable(layers.drawBuffers);
+                mesh.layers.enable(layers.buffers);
                 this.add(mesh);
 
                 const object = new Group();
@@ -256,8 +256,9 @@
                     object.updateMatrix();
 
                     mesh.setMatrixAt(i, object.matrix);
-                    mesh.computeBoundingSphere();
                 }
+
+                mesh.computeBoundingSphere();
 
                 // Physics
                 physics.add(mesh, { autoSleep: false });
@@ -388,16 +389,12 @@
                 };
 
                 const mesh = new Mesh(geometry, material);
-                mesh.layers.enable(layers.drawBuffers);
+                mesh.layers.enable(layers.buffers);
                 this.add(mesh);
 
                 // Occlusion mesh
-                const occMesh = new Mesh(
-                    geometry,
-                    new MeshBasicMaterial({ color: colors.lightColor })
-                );
-                occMesh.position.copy(mesh.position);
-                occMesh.scale.copy(mesh.scale);
+                const occMesh = mesh.clone();
+                occMesh.material = new MeshBasicMaterial({ color: colors.lightColor });
                 occMesh.layers.set(layers.occlusion);
                 this.add(occMesh);
 
@@ -950,7 +947,7 @@
                 this.renderTargetBlurA.depthBuffer = true;
 
                 // G-Buffer
-                this.drawBuffers = new DrawBuffers(this.renderer, this.scene, this.camera, layers.drawBuffers, {
+                this.drawBuffers = new DrawBuffers(this.renderer, this.scene, this.camera, layers.buffers, {
                     cameraBlur: false
                 });
 
@@ -963,6 +960,13 @@
                 // Occlusion material
                 this.blackoutMaterial = new MeshBasicMaterial({ color: 0x000000 });
 
+                // Gaussian blur materials
+                this.hBlurMaterial = new BlurMaterial(BlurDirectionX);
+                this.hBlurMaterial.uniforms.uBlurAmount.value = this.blurAmount;
+
+                this.vBlurMaterial = new BlurMaterial(BlurDirectionY);
+                this.vBlurMaterial.uniforms.uBlurAmount.value = this.blurAmount;
+
                 // Volumetric light material
                 this.vlMaterial = new VolumetricLightLensflareMaterial();
                 this.vlMaterial.uniforms.uExposure.value = this.vlExposure;
@@ -974,13 +978,6 @@
                 this.vlMaterial.uniforms.uLensflareExposure.value = this.lensflareExposure;
                 this.vlMaterial.uniforms.uLensflareClamp.value = this.lensflareClamp;
                 this.vlMaterial.uniforms.uResolution = resolution;
-
-                // Gaussian blur materials
-                this.hBlurMaterial = new BlurMaterial(BlurDirectionX);
-                this.hBlurMaterial.uniforms.uBlurAmount.value = this.blurAmount;
-
-                this.vBlurMaterial = new BlurMaterial(BlurDirectionY);
-                this.vBlurMaterial.uniforms.uBlurAmount.value = this.blurAmount;
 
                 // Luminosity high pass material
                 this.luminosityMaterial = new LuminosityMaterial();
@@ -1126,7 +1123,7 @@
                 this.rendererState();
 
                 // G-Buffer layer
-                camera.layers.set(layers.drawBuffers);
+                camera.layers.set(layers.buffers);
 
                 this.drawBuffers.update();
 
@@ -1270,11 +1267,11 @@
                     this.screen.material = this.luminosityMaterial;
                     this.screen.material.blending = AdditiveBlending;
                     renderer.render(this.screen, this.screenCamera);
+                    this.screen.material.blending = NoBlending;
                     this.restoreRendererState();
                     return;
                 } else {
                     this.screen.material = this.luminosityMaterial;
-                    this.screen.material.blending = NoBlending;
                     renderer.setRenderTarget(renderTargetBright);
                     renderer.clear();
                     renderer.render(this.screen, this.screenCamera);

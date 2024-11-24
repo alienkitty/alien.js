@@ -19,7 +19,7 @@
 
         const layers = {
             default: 0,
-            drawBuffers: 1,
+            buffers: 1,
             occlusion: 2
         };
 
@@ -241,7 +241,7 @@
 
                 const mesh = new InstancedMesh(geometry, material, count);
                 mesh.instanceMatrix.setUsage(DynamicDrawUsage); // Will be updated every frame
-                mesh.layers.enable(layers.drawBuffers);
+                mesh.layers.enable(layers.buffers);
                 this.add(mesh);
 
                 const object = new Group();
@@ -258,8 +258,9 @@
                     object.updateMatrix();
 
                     mesh.setMatrixAt(i, object.matrix);
-                    mesh.computeBoundingSphere();
                 }
+
+                mesh.computeBoundingSphere();
 
                 // Physics
                 physics.add(mesh, { autoSleep: false });
@@ -390,16 +391,12 @@
                 };
 
                 const mesh = new Mesh(geometry, material);
-                mesh.layers.enable(layers.drawBuffers);
+                mesh.layers.enable(layers.buffers);
                 this.add(mesh);
 
                 // Occlusion mesh
-                const occMesh = new Mesh(
-                    geometry,
-                    new MeshBasicMaterial({ color: colors.lightColor })
-                );
-                occMesh.position.copy(mesh.position);
-                occMesh.scale.copy(mesh.scale);
+                const occMesh = mesh.clone();
+                occMesh.material = new MeshBasicMaterial({ color: colors.lightColor });
                 occMesh.layers.set(layers.occlusion);
                 this.add(occMesh);
 
@@ -978,7 +975,6 @@
                 });
 
                 this.renderTargetB = this.renderTargetA.clone();
-                this.renderTargetC = this.renderTargetA.clone();
 
                 this.renderTargetBlurA = this.renderTargetA.clone();
                 this.renderTargetBlurB = this.renderTargetA.clone();
@@ -998,7 +994,7 @@
                 this.renderTargetBlurA.depthBuffer = true;
 
                 // G-Buffer
-                this.drawBuffers = new DrawBuffers(this.renderer, this.scene, this.camera, layers.drawBuffers, {
+                this.drawBuffers = new DrawBuffers(this.renderer, this.scene, this.camera, layers.buffers, {
                     cameraBlur: false
                 });
 
@@ -1011,6 +1007,13 @@
                 // Occlusion material
                 this.blackoutMaterial = new MeshBasicMaterial({ color: 0x000000 });
 
+                // Gaussian blur materials
+                this.hBlurMaterial = new BlurMaterial(BlurDirectionX);
+                this.hBlurMaterial.uniforms.uBlurAmount.value = this.blurAmount;
+
+                this.vBlurMaterial = new BlurMaterial(BlurDirectionY);
+                this.vBlurMaterial.uniforms.uBlurAmount.value = this.blurAmount;
+
                 // Volumetric light material
                 this.vlMaterial = new VolumetricLightLensflareMaterial();
                 this.vlMaterial.uniforms.uExposure.value = this.vlExposure;
@@ -1022,13 +1025,6 @@
                 this.vlMaterial.uniforms.uLensflareExposure.value = this.lensflareExposure;
                 this.vlMaterial.uniforms.uLensflareClamp.value = this.lensflareClamp;
                 this.vlMaterial.uniforms.uResolution = resolution;
-
-                // Gaussian blur materials
-                this.hBlurMaterial = new BlurMaterial(BlurDirectionX);
-                this.hBlurMaterial.uniforms.uBlurAmount.value = this.blurAmount;
-
-                this.vBlurMaterial = new BlurMaterial(BlurDirectionY);
-                this.vBlurMaterial.uniforms.uBlurAmount.value = this.blurAmount;
 
                 // Datamosh material
                 this.datamoshMaterial = new DatamoshMaterial();
@@ -1131,7 +1127,6 @@
 
                 this.renderTargetA.setSize(width, height);
                 this.renderTargetB.setSize(width, height);
-                this.renderTargetC.setSize(width, height);
 
                 this.drawBuffers.setSize(width, height);
 
@@ -1176,7 +1171,6 @@
 
                 const renderTargetA = this.renderTargetA;
                 const renderTargetB = this.renderTargetB;
-                const renderTargetC = this.renderTargetC;
                 const renderTargetBlurA = this.renderTargetBlurA;
                 const renderTargetBlurB = this.renderTargetBlurB;
                 const renderTargetBright = this.renderTargetBright;
@@ -1187,7 +1181,7 @@
                 this.rendererState();
 
                 // G-Buffer layer
-                camera.layers.set(layers.drawBuffers);
+                camera.layers.set(layers.buffers);
 
                 this.drawBuffers.update();
 
@@ -1328,13 +1322,6 @@
                 renderer.render(this.screen, this.screenCamera);
                 this.datamosh.swap();
 
-                // Copy pass (pixel recycling)
-                this.copyMaterial.uniforms.tMap.value = renderTargetB.texture;
-                this.screen.material = this.copyMaterial;
-                renderer.setRenderTarget(renderTargetC);
-                renderer.clear();
-                renderer.render(this.screen, this.screenCamera);
-
                 // Extract bright areas
                 this.luminosityMaterial.uniforms.tMap.value = this.datamosh.read.texture;
 
@@ -1347,11 +1334,11 @@
                     this.screen.material = this.luminosityMaterial;
                     this.screen.material.blending = AdditiveBlending;
                     renderer.render(this.screen, this.screenCamera);
+                    this.screen.material.blending = NoBlending;
                     this.restoreRendererState();
                     return;
                 } else {
                     this.screen.material = this.luminosityMaterial;
-                    this.screen.material.blending = NoBlending;
                     renderer.setRenderTarget(renderTargetBright);
                     renderer.clear();
                     renderer.render(this.screen, this.screenCamera);

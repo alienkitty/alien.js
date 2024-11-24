@@ -5,14 +5,14 @@
     --ui-font-weight: 400;
     --ui-font-size: 10px;
     --ui-line-height: 15px;
-    --ui-letter-spacing: 0.03em;
+    --ui-letter-spacing: 0.04em;
     --ui-number-letter-spacing: 0.5px;
     --ui-title-font-size: 11px;
     --ui-title-line-height: 18px;
     --ui-title-letter-spacing: 1px;
     --ui-secondary-font-size: 10px;
     --ui-secondary-letter-spacing: 0.5px;
-    --ui-secondary-opacity: 0.7;
+    --ui-secondary-color: #868686;
     --ui-name-font-family: 'Gothic A1', sans-serif;
     --ui-name-font-weight: 500;
     --ui-name-font-size: 13px;
@@ -33,15 +33,15 @@
     --ui-info-font-size: 10px;
     --ui-info-line-height: 20px;
     --ui-info-letter-spacing: 0.08em;
-    --ui-info-opacity: 0.7;
-    --ui-color: rgb(255 255 255 / 0.94);
+    --ui-info-color: rgb(255 255 255 / 0.55);
+    --ui-color: #fff;
     --ui-color-triplet: 255 255 255;
     --ui-color-line-opacity: 0.5;
     --ui-color-divider-line-opacity: 0.15;
     --ui-color-graph-bottom-line-opacity: 0.15;
     --ui-invert-light-color: #000;
     --ui-invert-light-color-triplet: 0 0 0;
-    --ui-invert-dark-color: rgb(255 255 255 / 0.94);
+    --ui-invert-dark-color: #fff;
     --ui-invert-dark-color-triplet: 255 255 255;
     --ui-color-line: rgb(var(--ui-color-triplet) / var(--ui-color-line-opacity));
     --ui-color-divider-line: rgb(var(--ui-color-triplet) / var(--ui-color-divider-line-opacity));
@@ -88,12 +88,31 @@ body {
     -webkit-tap-highlight-color: transparent;
 }
 
+canvas {
+    position: fixed;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+}
+
+.scroll {
+    *, :after, :before {
+        touch-action: unset;
+    }
+
+    body {
+        position: unset;
+        overflow-y: auto;
+    }
+}
+
 h1 {
-    margin: 0 0 6px -1px;
+    margin: 0 0 10px -1px;
     font-family: 'Roboto', sans-serif;
     font-weight: 300;
     font-size: 23px;
-    line-height: 1.3;
+    line-height: 1;
     letter-spacing: normal;
     text-transform: uppercase;
 }
@@ -113,7 +132,7 @@ a {
     }
 }
 
-.info, .target, .panel, .number, .name, .type, .primary, .secondary, .marker, input {
+input, pre, .info, .target, .panel, .number, .name, .type, .primary, .secondary, .marker {
     font-family: var(--ui-font-family);
     font-weight: var(--ui-font-weight);
     font-size: var(--ui-font-size);
@@ -149,20 +168,38 @@ a {
     letter-spacing: var(--ui-link-letter-spacing);
 }
 
-.details .link {
-    font-family: inherit;
-    font-weight: inherit;
-    font-size: inherit;
-    line-height: 22px;
-    letter-spacing: inherit;
+.details {
+    h2 {
+        margin: 35px 0 8px 0;
+        font-size: 10.5px;
+        line-height: 1;
+        text-transform: uppercase;
+        color: #868686;
+    }
 
-    .line {
-        font-weight: 700;
+    .link {
+        font-family: inherit;
+        font-weight: inherit;
+        font-size: inherit;
+        line-height: 22px;
+        letter-spacing: inherit;
+
+        &:first-of-type {
+            margin-top: 6px;
+        }
+
+        .line {
+            font-weight: 700;
+        }
     }
 }
 
 .ui {
     z-index: 9;
+
+    .menu > * {
+        width: 44px;
+    }
 
     > .info {
         padding: 6px;
@@ -178,10 +215,6 @@ a {
 
 .trackers {
     z-index: 10;
-}
-
-.menu > * {
-    width: 44px;
 }
 
 ::selection {

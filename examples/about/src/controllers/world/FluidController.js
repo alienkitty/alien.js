@@ -187,7 +187,7 @@ export class FluidController {
         this.pointer.mouse.copy(event);
 
         if (this.pointer.info) {
-            this.pointer.info.setData(Data.getUserData(store.id), {
+            this.pointer.info.setData({
                 isDown: this.pointer.isDown,
                 x: event.x / this.width,
                 y: event.y / this.height
@@ -234,7 +234,7 @@ export class FluidController {
             pointer.isDown = e.isDown;
             pointer.target.set(e.x * this.width, e.y * this.height);
 
-            pointer.info.setData(Data.getUserData(e.id), {
+            pointer.info.setData({
                 isDown: e.isDown,
                 x: e.x,
                 y: e.y

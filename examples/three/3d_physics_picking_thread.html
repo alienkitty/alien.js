@@ -294,7 +294,7 @@
             }
 
             initLight() {
-                const light = new PointLight(colors.lightColor, 0.9, 100, 0);
+                const light = new PointLight(colors.lightColor, 0.9, 4.4, 0);
                 this.add(light);
             }
 
@@ -312,8 +312,8 @@
                 material.onBeforeCompile = shader => {
                     shader.uniforms.thicknessDistortion = { value: 0.1 };
                     shader.uniforms.thicknessAmbient = { value: 0 };
-                    shader.uniforms.thicknessAttenuation = { value: 0.8 };
-                    shader.uniforms.thicknessPower = { value: 2 };
+                    shader.uniforms.thicknessAttenuation = { value: 0.7 };
+                    shader.uniforms.thicknessPower = { value: 1 };
                     shader.uniforms.thicknessScale = { value: 16 };
 
                     shader.fragmentShader = shader.fragmentShader.replace(

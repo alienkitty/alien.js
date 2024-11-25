@@ -29,7 +29,7 @@
             }
 
             initLight() {
-                const light = new PointLight(colors.lightColor, 0.9, 100, 0);
+                const light = new PointLight(colors.lightColor, 0.9, 4.4, 0);
                 this.add(light);
 
                 if (isDebug) {
@@ -91,8 +91,8 @@
                     thicknessMap: { value: thicknessMap },
                     thicknessDistortion: { value: 0.1 },
                     thicknessAmbient: { value: 0 },
-                    thicknessAttenuation: { value: 0.8 },
-                    thicknessPower: { value: 2 },
+                    thicknessAttenuation: { value: 0.7 },
+                    thicknessPower: { value: 1 },
                     thicknessScale: { value: 16 }
                 };
 

@@ -138,9 +138,9 @@ export class FluidController {
                     const tracker = pointer.tracker;
                     const info = pointer.info;
 
-                    this.list.remove(pointer);
-
                     tracker.animateOut(() => {
+                        this.list.remove(pointer);
+
                         const i = Number(id);
 
                         this.passMaterial.uniforms.uMouse.value[i].set(0.5, 0.5);

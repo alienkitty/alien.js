@@ -80,11 +80,7 @@ let Loader$1 = class Loader {
         this.cache = false;
         this.files = {};
 
-        // Promise with resolvers
-        // this.promise
-        // this.resolve
-        // this.reject
-        Object.assign(this, Promise.withResolvers());
+        this.promise = new Promise(resolve => this.resolve = resolve);
     }
 
     load(/* path, callback */) {}
@@ -651,6 +647,12 @@ class Cluster {
  */
 
 
+var hardware;
+
+if (typeof window !== 'undefined') {
+    hardware = navigator.hardwareConcurrency || 4;
+}
+
 /**
  * Creates a shared worker cluster or individual worker with the given methods.
  * @example
@@ -660,7 +662,7 @@ class Cluster {
  * console.log(image);
  */
 class Thread extends EventEmitter {
-    static count = navigator.hardwareConcurrency || 4;
+    static count = Math.max(Math.min(hardware, 8), 4);
     static params = {};
 
     static upload(...objects) {
@@ -61797,6 +61799,7 @@ class ReticleCanvas extends Component {
         }
 
         this.context.save();
+
         this.context.translate(this.position.x, this.position.y);
         this.context.scale(this.props.scale, this.props.scale);
 

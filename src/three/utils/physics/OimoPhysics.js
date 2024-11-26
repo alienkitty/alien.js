@@ -486,7 +486,7 @@ export class OimoPhysics {
         const body = this.getObjectBody(object, index);
 
         const contactCallback = new ContactCallback();
-        contactCallback.preSolve = contact => callback(body, contact);
+        contactCallback.beginContact = contact => callback(body, contact);
 
         let shape = body.getShapeList();
 

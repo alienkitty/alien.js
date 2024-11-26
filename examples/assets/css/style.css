@@ -96,15 +96,13 @@ canvas {
     height: 100%;
 }
 
-.scroll {
-    *, :after, :before {
-        touch-action: unset;
-    }
+.scroll *, .scroll :after, .scroll :before {
+    touch-action: unset;
+}
 
-    body {
-        position: unset;
-        overflow-y: auto;
-    }
+.scroll body {
+    position: unset;
+    overflow-y: auto;
 }
 
 h1 {
@@ -125,11 +123,11 @@ a {
     color: var(--ui-color);
     text-decoration: none;
     text-underline-offset: 3px;
+}
 
-    &:hover, &:focus {
-        color: var(--ui-color);
-        text-decoration: underline;
-    }
+a:hover, a:focus {
+    color: var(--ui-color);
+    text-decoration: underline;
 }
 
 input, pre, .info, .target, .panel, .number, .name, .type, .primary, .secondary, .marker {
@@ -142,22 +140,20 @@ input, pre, .info, .target, .panel, .number, .name, .type, .primary, .secondary,
     -webkit-font-smoothing: auto;
 }
 
-.title {
-    .name {
-        font-family: var(--ui-name-font-family);
-        font-weight: var(--ui-name-font-weight);
-        font-size: var(--ui-name-font-size);
-        line-height: var(--ui-name-line-height);
-        letter-spacing: var(--ui-name-letter-spacing);
-    }
+.title .name {
+    font-family: var(--ui-name-font-family);
+    font-weight: var(--ui-name-font-weight);
+    font-size: var(--ui-name-font-size);
+    line-height: var(--ui-name-line-height);
+    letter-spacing: var(--ui-name-letter-spacing);
+}
 
-    .caption {
-        font-family: var(--ui-caption-font-family);
-        font-weight: var(--ui-caption-font-weight);
-        font-size: var(--ui-caption-font-size);
-        line-height: var(--ui-caption-line-height);
-        letter-spacing: var(--ui-caption-letter-spacing);
-    }
+.title .caption {
+    font-family: var(--ui-caption-font-family);
+    font-weight: var(--ui-caption-font-weight);
+    font-size: var(--ui-caption-font-size);
+    line-height: var(--ui-caption-line-height);
+    letter-spacing: var(--ui-caption-letter-spacing);
 }
 
 .link, .menu .item {
@@ -168,49 +164,47 @@ input, pre, .info, .target, .panel, .number, .name, .type, .primary, .secondary,
     letter-spacing: var(--ui-link-letter-spacing);
 }
 
-.details {
-    h2 {
-        margin: 35px 0 8px 0;
-        font-size: 10.5px;
-        line-height: 1;
-        text-transform: uppercase;
-        color: #868686;
-    }
+.details h2 {
+    margin: 35px 0 8px 0;
+    font-size: 10.5px;
+    line-height: 1;
+    text-transform: uppercase;
+    color: #868686;
+}
 
-    .link {
-        font-family: inherit;
-        font-weight: inherit;
-        font-size: inherit;
-        line-height: 22px;
-        letter-spacing: inherit;
+.details .link {
+    font-family: inherit;
+    font-weight: inherit;
+    font-size: inherit;
+    line-height: 22px;
+    letter-spacing: inherit;
+}
 
-        &:first-of-type {
-            margin-top: 6px;
-        }
+.details .link:first-of-type {
+    margin-top: 6px;
+}
 
-        .line {
-            font-weight: 700;
-        }
-    }
+.details .link .line {
+    font-weight: 700;
 }
 
 .ui {
     z-index: 9;
+}
 
-    .menu > * {
-        width: 44px;
-    }
+.ui .menu > * {
+    width: 44px;
+}
 
-    > .info {
-        padding: 6px;
-        font-family: var(--ui-info-font-family);
-        font-weight: var(--ui-info-font-weight);
-        font-size: var(--ui-info-font-size);
-        line-height: var(--ui-info-line-height);
-        letter-spacing: var(--ui-info-letter-spacing);
-        -moz-osx-font-smoothing: grayscale;
-        -webkit-font-smoothing: antialiased;
-    }
+.ui > .info {
+    padding: 6px;
+    font-family: var(--ui-info-font-family);
+    font-weight: var(--ui-info-font-weight);
+    font-size: var(--ui-info-font-size);
+    line-height: var(--ui-info-line-height);
+    letter-spacing: var(--ui-info-letter-spacing);
+    -moz-osx-font-smoothing: grayscale;
+    -webkit-font-smoothing: antialiased;
 }
 
 .trackers {

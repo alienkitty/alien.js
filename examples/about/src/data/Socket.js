@@ -19,11 +19,7 @@ export class Socket extends EventEmitter {
 
         this.connected = false;
 
-        // Promise with resolvers
-        // this.promise
-        // this.resolve
-        // this.reject
-        Object.assign(this, Promise.withResolvers());
+        this.promise = new Promise(resolve => this.resolve = resolve);
     }
 
     init() {

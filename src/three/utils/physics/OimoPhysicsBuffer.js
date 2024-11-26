@@ -399,7 +399,7 @@ export class OimoPhysicsBuffer {
         const body = this.map.get(name);
 
         const contactCallback = new ContactCallback();
-        contactCallback.preSolve = contact => callback(body, name, contact);
+        contactCallback.beginContact = contact => callback(body, name, contact);
 
         let shape = body.getShapeList();
 

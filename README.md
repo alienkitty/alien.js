@@ -183,6 +183,7 @@ const program = new FXAAProgram(gl);
 [instancing](https://alien.js.org/examples/three/3d_physics_instancing_thread.html) (physics thread)  
 [picking](https://alien.js.org/examples/three/3d_physics_picking_thread.html) (physics thread)  
 [multiuser blocks](https://multiuser-blocks.glitch.me/) (websocket thread, [glitch](https://glitch.com/edit/#!/multiuser-blocks))  
+[multiuser balls](https://multiuser-balls.glitch.me/) (websocket thread, [glitch](https://glitch.com/edit/#!/multiuser-balls))  
 
 #### websockets
 
@@ -190,6 +191,7 @@ const program = new FXAAProgram(gl);
 [binary](https://hello-websockets-binary.glitch.me/) ([glitch](https://glitch.com/edit/#!/hello-websockets-binary))  
 [multiuser fluid](https://multiuser-fluid.glitch.me/) (binary, [glitch](https://glitch.com/edit/#!/multiuser-fluid))  
 [multiuser blocks](https://multiuser-blocks.glitch.me/) (binary, [glitch](https://glitch.com/edit/#!/multiuser-blocks))  
+[multiuser balls](https://multiuser-balls.glitch.me/) (binary, [glitch](https://glitch.com/edit/#!/multiuser-balls))  
 
 ### Getting started
 

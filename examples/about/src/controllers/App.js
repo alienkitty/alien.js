@@ -62,7 +62,7 @@ export class App {
             },
             details: {
                 background: true,
-                title: 'Multiuser Fluid'.replace(/[\s.]+/g, '_'),
+                title: 'Multiuser Fluid'.replace(/[\s.-]+/g, '_'),
                 content: [
                     {
                         content: /* html */ `

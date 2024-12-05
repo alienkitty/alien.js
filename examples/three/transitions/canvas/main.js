@@ -206,7 +206,7 @@ class UIContainer extends Interface {
         this.background = new UIBackground();
         this.add(this.background);
 
-        this.title = new Title(data.title.replace(/[\s.]+/g, '_'));
+        this.title = new Title(data.title.replace(/[\s.-]+/g, '_'));
         this.add(this.title);
 
         const next = Data.getNext(data);
@@ -236,7 +236,7 @@ class UIContainer extends Interface {
             SceneController.setView();
 
             this.timeout = delayedCall(950, () => {
-                this.title.setTitle(data.title.replace(/[\s.]+/g, '_'));
+                this.title.setTitle(data.title.replace(/[\s.-]+/g, '_'));
             });
 
             this.background.animateOut(() => {

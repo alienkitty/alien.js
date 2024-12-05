@@ -63,7 +63,7 @@ class UIContainer extends Interface {
     }
 
     initViews() {
-        this.title = new Title(Data.sections[Data.sectionIndex].title.replace(/[\s.]+/g, '_'));
+        this.title = new Title(Data.sections[Data.sectionIndex].title.replace(/[\s.-]+/g, '_'));
         this.add(this.title);
 
         this.link = new Link('Next');
@@ -83,7 +83,7 @@ class UIContainer extends Interface {
         clearTween(this.timeout);
 
         this.timeout = delayedCall(300, () => {
-            this.title.setTitle(Data.sections[index].title.replace(/[\s.]+/g, '_'), RenderManager.smooth.direction);
+            this.title.setTitle(Data.sections[index].title.replace(/[\s.-]+/g, '_'), RenderManager.smooth.direction);
         });
     };
 

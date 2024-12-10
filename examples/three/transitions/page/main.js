@@ -58,7 +58,7 @@ class UIContainer extends Interface {
     initViews() {
         const { data } = router.get(location.pathname);
 
-        this.title = new Title(data.title.replace(/[\s.]+/g, '_'));
+        this.title = new Title(data.title.replace(/[\s.-]+/g, '_'));
         this.add(this.title);
 
         const next = Data.getNext(data);
@@ -85,7 +85,7 @@ class UIContainer extends Interface {
         clearTween(this.timeout);
 
         this.timeout = delayedCall(300, () => {
-            this.title.setTitle(data.title.replace(/[\s.]+/g, '_'));
+            this.title.setTitle(data.title.replace(/[\s.-]+/g, '_'));
         });
 
         const next = Data.getNext(data);

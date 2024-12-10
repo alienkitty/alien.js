@@ -1455,7 +1455,7 @@ class CameraController {
             this.ui.details.animateOut(() => {
                 const { data } = router.get(location.pathname);
 
-                this.ui.details.title.setTitle(data.title.replace(/[\s.]+/g, '_'));
+                this.ui.details.title.setTitle(data.title.replace(/[\s.-]+/g, '_'));
 
                 const next = Data.getNext(data);
                 const path = router.getPath(next.path);

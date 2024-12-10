@@ -58,7 +58,7 @@ class UIContainer extends Interface {
     initViews() {
         const { data } = router.get(location.pathname);
 
-        this.title = new Title(data.title.replace(/[\s.]+/g, '_'));
+        this.title = new Title(data.title.replace(/[\s.-]+/g, '_'));
         this.add(this.title);
 
         const next = Data.getNext(data);
@@ -89,7 +89,7 @@ class UIContainer extends Interface {
             SceneController.setView();
 
             this.timeout = delayedCall(700, () => {
-                this.title.setTitle(data.title.replace(/[\s.]+/g, '_'));
+                this.title.setTitle(data.title.replace(/[\s.-]+/g, '_'));
             });
 
             RenderManager.animateIn(() => {

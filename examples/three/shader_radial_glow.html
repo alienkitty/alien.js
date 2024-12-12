@@ -93,9 +93,12 @@
             }
         }
 
-        class Sphere extends Group {
+        class DarkPlanet extends Group {
             constructor() {
                 super();
+
+                // 25 degree tilt like Mars
+                this.rotation.z = MathUtils.degToRad(25);
             }
 
             async initMesh() {
@@ -108,13 +111,12 @@
                 geometry.attributes.uv1 = geometry.attributes.uv;
 
                 // Textures
-                const [map, normalMap, ormMap, thicknessMap] = await Promise.all([
+                const [map, normalMap, ormMap] = await Promise.all([
                     // loadTexture('../assets/textures/uv.jpg'),
                     loadTexture('../assets/textures/pbr/pitted_metal_basecolor.jpg'),
                     loadTexture('../assets/textures/pbr/pitted_metal_normal.jpg'),
                     // https://occlusion-roughness-metalness.glitch.me/
-                    loadTexture('../assets/textures/pbr/pitted_metal_orm.jpg'),
-                    loadTexture('../assets/textures/pbr/pitted_metal_height.jpg')
+                    loadTexture('../assets/textures/pbr/pitted_metal_orm.jpg')
                 ]);
 
                 map.anisotropy = anisotropy;
@@ -132,12 +134,8 @@
                 ormMap.wrapT = RepeatWrapping;
                 ormMap.repeat.set(2, 1);
 
-                thicknessMap.anisotropy = anisotropy;
-                thicknessMap.wrapS = RepeatWrapping;
-                thicknessMap.wrapT = RepeatWrapping;
-                thicknessMap.repeat.set(2, 1);
-
                 const material = new MeshStandardMaterial({
+                    name: 'Dark Planet',
                     color: new Color().offsetHSL(0, 0, -0.65),
                     metalness: 0.7,
                     roughness: 2,
@@ -147,7 +145,10 @@
                     aoMap: ormMap,
                     aoMapIntensity: 1,
                     normalMap,
-                    normalScale: new Vector2(3, 3)
+                    normalScale: new Vector2(3, 3),
+                    polygonOffset: true,
+                    polygonOffsetFactor: 1,
+                    polygonOffsetUnits: 1
                 });
 
                 // Second channel for aoMap and lightMap
@@ -162,6 +163,11 @@
 
             // Public methods
 
+            update = () => {
+                // Counter clockwise rotation
+                this.mesh.rotation.y += 0.005;
+            };
+
             ready = () => this.initMesh();
         }
 
@@ -175,8 +181,8 @@
             }
 
             initViews() {
-                this.sphere = new Sphere();
-                this.add(this.sphere);
+                this.darkPlanet = new DarkPlanet();
+                this.add(this.darkPlanet);
             }
 
             // Public methods
@@ -185,9 +191,10 @@
             };
 
             update = () => {
+                this.darkPlanet.update();
             };
 
-            ready = () => this.sphere.ready();
+            ready = () => this.darkPlanet.ready();
         }
 
         class SceneController {
@@ -201,6 +208,11 @@
             };
 
             static update = () => {
+                if (!this.view.visible) {
+                    return;
+                }
+
+                this.view.update();
             };
 
             static animateIn = () => {
@@ -220,9 +232,9 @@
             }
 
             static initPanel() {
-                const { sphere } = this.view;
+                const { darkPlanet } = this.view;
 
-                const objects = [sphere];
+                const objects = [darkPlanet];
 
                 objects.forEach(object => {
                     object.point = new Point3D(object.mesh);
@@ -671,10 +683,10 @@
                 this.camera = camera;
 
                 this.mouse = new Vector2();
-                this.lookAt = new Vector3(0, 0, -2);
+                this.lookAt = new Vector3(0, 0, -8);
                 this.origin = new Vector3();
                 this.target = new Vector3();
-                this.targetXY = new Vector2(5, 1);
+                this.targetXY = new Vector2(8, 1);
                 this.origin.copy(this.camera.position);
 
                 this.lerpSpeed = 0.02;

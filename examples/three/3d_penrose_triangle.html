@@ -42,7 +42,7 @@
                 topMesh.position.set(100, 250, 125);
                 this.add(topMesh);
 
-                const topPlane = new PlaneGeometry(50, 50, 32);
+                const topPlane = new PlaneGeometry(50, 50);
                 const topPlaneMesh = new Mesh(topPlane, material);
                 topPlaneMesh.position.set(200, 275, 125);
                 topPlaneMesh.rotation.x = MathUtils.degToRad(-90);

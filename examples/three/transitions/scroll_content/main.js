@@ -748,8 +748,8 @@ class RenderManager {
         this.vBlurMaterial.uniforms.uResolution.value.set(width, height);
 
         // Unreal bloom
-        width = MathUtils.floorPowerOfTwo(width) / 2;
-        height = MathUtils.floorPowerOfTwo(height) / 2;
+        width = Math.round(width / 2);
+        height = Math.round(height / 2);
 
         this.renderTargetBright.setSize(width, height);
 
@@ -759,8 +759,8 @@ class RenderManager {
 
             this.blurMaterials[i].uniforms.uResolution.value.set(width, height);
 
-            width /= 2;
-            height /= 2;
+            width = Math.round(width / 2);
+            height = Math.round(height / 2);
         }
     };
 

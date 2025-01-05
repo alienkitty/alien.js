@@ -753,7 +753,7 @@ class RenderManager {
         this.container = container;
         this.sections = container.children;
 
-        // Bloom
+        // Unreal bloom
         this.luminosityThreshold = 0.1;
         this.luminositySmoothing = 1;
         this.bloomStrength = 0.3;
@@ -809,7 +809,7 @@ class RenderManager {
             this.blurMaterials.push(new UnrealBloomBlurMaterial(kernelSizeArray[i]));
         }
 
-        // Bloom composite material
+        // Unreal bloom composite material
         this.bloomCompositeMaterial = new BloomCompositeMaterial();
         this.bloomCompositeMaterial.uniforms.tBlur1.value = this.renderTargetsVertical[0].texture;
         this.bloomCompositeMaterial.uniforms.tBlur2.value = this.renderTargetsVertical[1].texture;

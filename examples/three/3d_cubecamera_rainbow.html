@@ -670,8 +670,8 @@
                 this.mouse.x = clientX - this.halfWidth;
                 this.mouse.y = clientY - this.halfHeight;
 
-                this.target.x = MathUtils.degToRad(-360) + (1 - this.mouse.x) * this.rotation * this.multiplier;
-                this.target.y = (1 - this.mouse.y) * this.rotation * this.multiplier;
+                this.target.x = MathUtils.degToRad(-360) + this.mouse.x * this.rotation * this.multiplier;
+                this.target.y = this.mouse.y * this.rotation * this.multiplier;
             };
 
             // Public methods

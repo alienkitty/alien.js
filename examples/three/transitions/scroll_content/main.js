@@ -604,7 +604,7 @@ class RenderManager {
         this.container = container;
         this.sections = container.children;
 
-        // Blur
+        // Gaussian blur
         this.blurAmount = 10;
 
         // Unreal bloom

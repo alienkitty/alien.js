@@ -922,6 +922,7 @@
                 scene.background = currentBackground;
                 renderer.setClearColor(this.currentClearColor, currentClearAlpha);
 
+                // Two pass Gaussian blur (horizontal and vertical)
                 this.hBlurMaterial.uniforms.tMap.value = renderTargetBlurA.texture;
                 this.screen.material = this.hBlurMaterial;
                 renderer.setRenderTarget(renderTargetBlurB);
@@ -934,6 +935,7 @@
                 renderer.clear();
                 renderer.render(this.screen, this.screenCamera);
 
+                // Video glitch pass
                 this.videoGlitchMaterial.uniforms.tMap.value = renderTargetBlurA.texture;
                 this.screen.material = this.videoGlitchMaterial;
                 renderer.setRenderTarget(renderTargetBlurB);

@@ -784,6 +784,7 @@
                 scene.background = currentBackground;
                 renderer.setClearColor(this.currentClearColor, currentClearAlpha);
 
+                // Two pass Gaussian blur (horizontal and vertical)
                 this.hBlurMaterial.uniforms.tMap.value = renderTargetBlurA.texture;
                 this.screen.material = this.hBlurMaterial;
                 renderer.setRenderTarget(renderTargetBlurB);
@@ -796,6 +797,7 @@
                 renderer.clear();
                 renderer.render(this.screen, this.screenCamera);
 
+                // Volumetric light pass
                 this.vlMaterial.uniforms.tMap.value = renderTargetBlurA.texture;
                 this.setLightPosition();
                 this.screen.material = this.vlMaterial;

@@ -1025,7 +1025,7 @@ class RenderManager {
         this.scene = scene;
         this.camera = camera;
 
-        // Blur
+        // Gaussian blur
         this.blurFocus = navigator.maxTouchPoints ? 0.5 : 0.25;
         this.blurRotation = navigator.maxTouchPoints ? 0 : MathUtils.degToRad(75);
         this.blurAmount = 1;

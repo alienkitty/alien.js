@@ -602,7 +602,7 @@ class RenderManager {
         this.scene = scene;
         this.camera = camera;
 
-        // Blur
+        // Gaussian blur
         this.blurAmount = 10;
 
         // Unreal bloom

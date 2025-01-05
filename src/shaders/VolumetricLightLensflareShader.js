@@ -45,15 +45,15 @@ const int samples = 20;
 ${lensflare}
 
 void main() {
-    vec2 texCoord = vUv;
-    vec2 deltaTextCoord = texCoord - uLightPosition;
+    vec2 texcoord = vUv;
+    vec2 deltaTextCoord = texcoord - uLightPosition;
     deltaTextCoord *= 1.0 / float(samples) * uDensity;
     vec4 color = vec4(0);
     float illuminationDecay = 1.0;
 
     for (int i = 0; i < samples; i++) {
-        texCoord -= ((deltaTextCoord.xy * (1.0 - uSwizzle)) + (deltaTextCoord.xx * uSwizzle)) * uScale;
-        vec4 texel = texture(tMap, texCoord);
+        texcoord -= ((deltaTextCoord.xy * (1.0 - uSwizzle)) + (deltaTextCoord.xx * uSwizzle)) * uScale;
+        vec4 texel = texture(tMap, texcoord);
         texel *= illuminationDecay * uWeight;
         color += texel;
         illuminationDecay *= uDecay;

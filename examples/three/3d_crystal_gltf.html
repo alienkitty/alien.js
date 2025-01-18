@@ -11,29 +11,7 @@
     <link rel="stylesheet" href="../assets/css/style.css">
 
     <script type="module">
-        import { BloomCompositeMaterial, Color, ColorManagement, EnvironmentTextureLoader, FrontSide, GLTFLoader, Group, HemisphereLight, LinearSRGBColorSpace, LuminosityMaterial, MathUtils, Mesh, OrbitControls, OrthographicCamera, PanelItem, PerspectiveCamera, PointLight, PointLightHelper, Scene, SceneCompositeDistortionMaterial, UI, UnrealBloomBlurMaterial, Vector2, Vector3, WebGLRenderTarget, WebGLRenderer, getFullscreenTriangle, getKeyByValue, getViewSize, ticker, tween } from '../../build/alien.three.js';
-
-        const isDebug = /[?&]debug/.test(location.search);
-        const isOrbit = /[?&]orbit/.test(location.search);
-
-        class MouseLight extends Group {
-            constructor() {
-                super();
-
-                this.position.z = 2;
-
-                this.initLight();
-            }
-
-            initLight() {
-                const light = new PointLight(0xffffff, 0.9, 4.4, 0);
-                this.add(light);
-
-                if (isDebug) {
-                    WorldController.scene.add(new PointLightHelper(light, 0.125));
-                }
-            }
-        }
+        import { BloomCompositeMaterial, Color, ColorManagement, EnvironmentTextureLoader, FrontSide, GLTFLoader, Group, HemisphereLight, LinearSRGBColorSpace, LuminosityMaterial, MapControls, MathUtils, Mesh, OrthographicCamera, PanelItem, PerspectiveCamera, Scene, SceneCompositeDistortionMaterial, UI, UnrealBloomBlurMaterial, Vector2, WebGLRenderTarget, WebGLRenderer, getFullscreenTriangle, getKeyByValue, ticker } from '../../build/alien.three.js';
 
         class Crystal extends Group {
             constructor() {
@@ -68,78 +46,17 @@
             constructor() {
                 super();
 
-                this.visible = false;
-
                 this.initViews();
             }
 
             initViews() {
                 this.crystal = new Crystal();
                 this.add(this.crystal);
-
-                this.light = new MouseLight();
-                this.add(this.light);
             }
-        }
-
-        class SceneController {
-            static init(view) {
-                this.view = view;
-
-                // Mouse light
-                this.mouse = new Vector2();
-                this.target = new Vector2();
-                this.lightPosition = new Vector3();
-                this.lerpSpeed = 0.25;
-
-                this.addListeners();
-            }
-
-            static addListeners() {
-                window.addEventListener('pointermove', this.onPointerMove);
-            }
-
-            // Event handlers
-
-            static onPointerMove = ({ clientX, clientY }) => {
-                if (!this.view.visible) {
-                    return;
-                }
-
-                this.target.x = (clientX / document.documentElement.clientWidth) * 2 - 1;
-                this.target.y = 1 - (clientY / document.documentElement.clientHeight) * 2;
-            };
 
             // Public methods
 
-            static resize = () => {
-                const { getViewSize } = WorldController;
-
-                const { x, y } = getViewSize(this.view.light.position.z);
-
-                this.halfWidth = x / 2;
-                this.halfHeight = y / 2;
-            };
-
-            static update = () => {
-                if (!this.view.visible) {
-                    return;
-                }
-
-                this.mouse.lerp(this.target, this.lerpSpeed);
-
-                this.lightPosition.x = this.mouse.x * this.halfWidth;
-                this.lightPosition.y = this.mouse.y * this.halfHeight;
-                this.lightPosition.z = this.view.light.position.z;
-
-                this.view.light.position.copy(this.lightPosition);
-            };
-
-            static animateIn = () => {
-                this.view.visible = true;
-            };
-
-            static ready = () => this.view.crystal.ready();
+            ready = () => this.crystal.ready();
         }
 
         class PanelController {
@@ -413,105 +330,6 @@
             };
         }
 
-        class CameraController {
-            static init(camera) {
-                this.camera = camera;
-
-                this.mouse = new Vector2();
-                this.target = new Vector2();
-
-                // Motion control
-                this.group = new Group();
-                this.innerGroup = new Group();
-                this.group.add(this.innerGroup);
-                this.group.matrixAutoUpdate = false;
-                this.innerGroup.matrixAutoUpdate = false;
-
-                // Start position
-                this.innerGroup.position.copy(this.camera.position);
-
-                this.rotation = 0.0002;
-                this.lerpSpeed = 0.05;
-                this.multiplier = 1;
-                this.enabled = false;
-                this.prevent = true;
-
-                this.addListeners();
-            }
-
-            static addListeners() {
-                if (isOrbit) {
-                    return;
-                }
-
-                window.addEventListener('pointermove', this.onPointerMove);
-            }
-
-            // Event handlers
-
-            static onPointerMove = ({ clientX, clientY }) => {
-                if (this.prevent) {
-                    return;
-                }
-
-                this.mouse.x = clientX - this.halfWidth;
-                this.mouse.y = clientY - this.halfHeight;
-
-                this.target.x = MathUtils.degToRad(-360) + this.mouse.x * this.rotation * this.multiplier;
-                this.target.y = this.mouse.y * this.rotation * this.multiplier;
-            };
-
-            // Public methods
-
-            static resize = (width, height) => {
-                this.camera.aspect = width / height;
-                this.camera.updateProjectionMatrix();
-
-                this.halfWidth = width / 2;
-                this.halfHeight = height / 2;
-
-                if (width < height) {
-                    this.camera.position.z = 10;
-                    this.multiplier = 2;
-                } else {
-                    this.camera.position.z = 8;
-                    this.multiplier = 1;
-                }
-
-                this.innerGroup.position.z = this.camera.position.z;
-            };
-
-            static update = () => {
-                if (!this.enabled) {
-                    return;
-                }
-
-                this.group.rotation.x += (this.target.y - this.group.rotation.x) * this.lerpSpeed;
-                this.group.rotation.y += (this.target.x - this.group.rotation.y) * this.lerpSpeed;
-
-                this.updateCamera();
-            };
-
-            static updateCamera = () => {
-                this.group.updateMatrix();
-                this.innerGroup.updateMatrix();
-                this.group.updateMatrixWorld();
-                this.innerGroup.matrixWorld.decompose(this.camera.position, this.camera.quaternion, this.camera.scale);
-            };
-
-            static animateIn = () => {
-                if (isOrbit) {
-                    return;
-                }
-
-                this.enabled = true;
-
-                tween(this.target, { x: MathUtils.degToRad(-360) }, 4200, 'easeInOutQuart', () => {
-                    this.prevent = false;
-                });
-            };
-        }
-
         class WorldController {
             static init() {
                 this.initWorld();
@@ -574,11 +392,7 @@
             }
 
             static initControls() {
-                if (!isOrbit) {
-                    return;
-                }
-
-                this.controls = new OrbitControls(this.camera, this.renderer.domElement);
+                this.controls = new MapControls(this.camera, this.renderer.domElement);
                 this.controls.enableDamping = true;
             }
 
@@ -595,6 +409,9 @@
             // Public methods
 
             static resize = (width, height, dpr) => {
+                this.camera.aspect = width / height;
+                this.camera.updateProjectionMatrix();
+
                 width = Math.round(width * dpr);
                 height = Math.round(height * dpr);
 
@@ -607,9 +424,7 @@
                 this.time.value = time;
                 this.frame.value = frame;
 
-                if (this.controls && this.controls.enabled) {
-                    this.controls.update();
-                }
+                this.controls.update();
             };
 
             // Global handlers
@@ -619,8 +434,6 @@
             static getGLTF = (path, callback) => this.gltfLoader.load(path, callback);
 
             static loadGLTF = path => this.gltfLoader.loadAsync(path);
-
-            static getViewSize = object => getViewSize(this.camera, object);
         }
 
         class App {
@@ -633,14 +446,11 @@
                 this.onResize();
 
                 await Promise.all([
-                    SceneController.ready(),
+                    this.view.ready(),
                     WorldController.environmentLoader.ready()
                 ]);
 
                 this.initPanel();
-
-                CameraController.animateIn();
-                SceneController.animateIn();
             }
 
             static initWorld() {
@@ -666,8 +476,6 @@
             static initControllers() {
                 const { renderer, scene, camera } = WorldController;
 
-                CameraController.init(camera);
-                SceneController.init(this.view);
                 RenderManager.init(renderer, scene, camera);
             }
 
@@ -690,15 +498,11 @@
                 const dpr = window.devicePixelRatio;
 
                 WorldController.resize(width, height, dpr);
-                CameraController.resize(width, height);
-                SceneController.resize();
                 RenderManager.resize(width, height, dpr);
             };
 
             static onUpdate = (time, delta, frame) => {
                 WorldController.update(time, delta, frame);
-                CameraController.update();
-                SceneController.update();
                 RenderManager.update(time, delta, frame);
                 this.ui.update();
             };

@@ -11,7 +11,7 @@
     <link rel="stylesheet" href="../assets/css/style.css">
 
     <script type="module">
-        import { BasicShadowMap, BloomCompositeMaterial, BoxGeometry, Color, ColorManagement, DirectionalLight, EnvironmentTextureLoader, Group, HemisphereLight, IcosahedronGeometry, ImageBitmapLoaderThread, LinearSRGBColorSpace, LuminosityMaterial, MathUtils, Mesh, MeshStandardMaterial, NoBlending, OctahedronGeometry, OrthographicCamera, PanelItem, PerspectiveCamera, PlaneGeometry, Point3D, Reflector, RepeatWrapping, Scene, SceneCompositeDistortionMaterial, ShadowMaterial, StandardMaterialPanel, TextureLoader, UI, UnrealBloomBlurMaterial, Vector2, Vector3, WebGLRenderTarget, WebGLRenderer, getFullscreenTriangle, ticker } from '../../build/alien.three.js';
+        import { BasicShadowMap, BloomCompositeMaterial, BoxGeometry, Color, ColorManagement, DirectionalLight, EnvironmentTextureLoader, Group, HemisphereLight, IcosahedronGeometry, ImageBitmapLoaderThread, LinearSRGBColorSpace, LuminosityMaterial, MapControls, MathUtils, Mesh, MeshStandardMaterial, NoBlending, OctahedronGeometry, OrthographicCamera, PanelItem, PerspectiveCamera, PlaneGeometry, Point3D, Reflector, RepeatWrapping, Scene, SceneCompositeDistortionMaterial, ShadowMaterial, StandardMaterialPanel, TextureLoader, UI, UnrealBloomBlurMaterial, Vector2, Vector3, WebGLRenderTarget, WebGLRenderer, getFullscreenTriangle, ticker } from '../../build/alien.three.js';
 
         const isDebug = /[?&]debug/.test(location.search);
 
@@ -451,8 +451,6 @@
                 this.view = view;
 
                 this.initPanel();
-
-                this.addListeners();
             }
 
             static initPanel() {
@@ -485,20 +483,6 @@
                 floatingCrystal.point.mesh.scale.multiply(new Vector3(1, 0.9, 1));
                 abstractCube.point.mesh.scale.multiplyScalar(0.9);
             }
-
-            static addListeners() {
-                Point3D.events.on('change', this.onChange);
-            }
-
-            // Event handlers
-
-            static onChange = ({ selected }) => {
-                if (selected.length) {
-                    CameraController.enabled = false;
-                } else {
-                    CameraController.enabled = true;
-                }
-            };
         }
 
         class PanelController {
@@ -780,69 +764,13 @@
             };
         }
 
-        class CameraController {
-            static init(camera) {
-                this.camera = camera;
-
-                this.mouse = new Vector2();
-                this.lookAt = new Vector3();
-                this.origin = new Vector3();
-                this.target = new Vector3();
-                this.targetXY = new Vector2(8, 4);
-                this.origin.copy(this.camera.position);
-
-                this.lerpSpeed = 0.07;
-                this.enabled = false;
-
-                this.addListeners();
-            }
-
-            static addListeners() {
-                window.addEventListener('pointermove', this.onPointerMove);
-            }
-
-            // Event handlers
-
-            static onPointerMove = ({ clientX, clientY }) => {
-                if (!this.enabled) {
-                    return;
-                }
-
-                this.mouse.x = (clientX / document.documentElement.clientWidth) * 2 - 1;
-                this.mouse.y = 1 - (clientY / document.documentElement.clientHeight) * 2;
-            };
-
-            // Public methods
-
-            static resize = (width, height) => {
-                this.camera.aspect = width / height;
-                this.camera.updateProjectionMatrix();
-            };
-
-            static update = () => {
-                if (!this.enabled) {
-                    return;
-                }
-
-                this.target.x = this.origin.x + this.targetXY.x * this.mouse.x;
-                this.target.y = this.origin.y + this.targetXY.y * this.mouse.y;
-                this.target.z = this.origin.z;
-
-                this.camera.position.lerp(this.target, this.lerpSpeed);
-                this.camera.lookAt(this.lookAt);
-            };
-
-            static animateIn = () => {
-                this.enabled = true;
-            };
-        }
-
         class WorldController {
             static init() {
                 this.initWorld();
                 this.initLights();
                 this.initLoaders();
                 this.initEnvironment();
+                this.initControls();
 
                 this.addListeners();
             }
@@ -913,6 +841,11 @@
                 this.scene.environmentIntensity = 1.2;
             }
 
+            static initControls() {
+                this.controls = new MapControls(this.camera, this.renderer.domElement);
+                this.controls.enableDamping = true;
+            }
+
             static addListeners() {
                 this.renderer.domElement.addEventListener('touchstart', this.onTouchStart);
             }
@@ -926,6 +859,9 @@
             // Public methods
 
             static resize = (width, height, dpr) => {
+                this.camera.aspect = width / height;
+                this.camera.updateProjectionMatrix();
+
                 width = Math.round(width * dpr);
                 height = Math.round(height * dpr);
 
@@ -937,6 +873,8 @@
             static update = (time, delta, frame) => {
                 this.time.value = time;
                 this.frame.value = frame;
+
+                this.controls.update();
             };
 
             static ready = () => Promise.all([
@@ -968,7 +906,6 @@
 
                 this.initPanel();
 
-                CameraController.animateIn();
                 SceneController.animateIn();
             }
 
@@ -993,7 +930,6 @@
             static initControllers() {
                 const { renderer, scene, camera } = WorldController;
 
-                CameraController.init(camera);
                 SceneController.init(this.view);
                 RenderManager.init(renderer, scene, camera);
             }
@@ -1018,14 +954,12 @@
                 const dpr = window.devicePixelRatio;
 
                 WorldController.resize(width, height, dpr);
-                CameraController.resize(width, height);
                 SceneController.resize(width, height);
                 RenderManager.resize(width, height, dpr);
             };
 
             static onUpdate = (time, delta, frame) => {
                 WorldController.update(time, delta, frame);
-                CameraController.update();
                 SceneController.update(time);
                 RenderManager.update(time, delta, frame);
                 PanelController.update(time);

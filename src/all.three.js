@@ -126,3 +126,4 @@ export * from 'three';
 export { SVGLoader } from 'three/addons/loaders/SVGLoader.js';
 export { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 export { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+export { MapControls } from 'three/addons/controls/MapControls.js';

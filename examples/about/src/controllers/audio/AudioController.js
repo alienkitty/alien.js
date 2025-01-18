@@ -10,7 +10,7 @@ export class AudioController {
             WebAudio.mute(true);
         }
 
-        this.water = {};
+        this.map = new Map();
         this.multiplier = 8;
         this.easing = 0.97;
         this.lerpSpeed = 0.07;
@@ -32,27 +32,28 @@ export class AudioController {
     }
 
     static getMouseSpeed(id, normalX, normalY) {
-        const time = performance.now() - this.water[id].lastEventTime;
+        const water = this.map.get(id);
+        const time = performance.now() - water.lastEventTime;
 
         if (time === 0) {
-            return this.water[id].mouseSpeed;
+            return water.mouseSpeed;
         }
 
-        const distance = Math.abs(normalX - this.water[id].lastMouseX) + Math.abs(normalY - this.water[id].lastMouseY);
+        const distance = Math.abs(normalX - water.lastMouseX) + Math.abs(normalY - water.lastMouseY);
         const speed = distance / time;
 
-        this.water[id].mouseSpeed += speed * this.multiplier;
-        this.water[id].mouseSpeed *= this.easing;
+        water.mouseSpeed += speed * this.multiplier;
+        water.mouseSpeed *= this.easing;
 
-        if (Math.abs(this.water[id].mouseSpeed) < 0.001) {
-            this.water[id].mouseSpeed = 0;
+        if (Math.abs(water.mouseSpeed) < 0.001) {
+            water.mouseSpeed = 0;
         }
 
-        this.water[id].lastEventTime = performance.now();
-        this.water[id].lastMouseX = normalX;
-        this.water[id].lastMouseY = normalY;
+        water.lastEventTime = performance.now();
+        water.lastMouseX = normalX;
+        water.lastMouseY = normalY;
 
-        return this.water[id].mouseSpeed;
+        return water.mouseSpeed;
     }
 
     // Event handlers
@@ -103,13 +104,14 @@ export class AudioController {
         const normalX = x / document.documentElement.clientWidth;
         const normalY = y / document.documentElement.clientHeight;
 
-        if (!this.water[id]) {
-            this.water[id] = {};
-            this.water[id].mouseSpeed = 0;
-            this.water[id].lastEventTime = performance.now();
-            this.water[id].lastMouseX = normalX;
-            this.water[id].lastMouseY = normalY;
-            this.water[id].sound = WebAudio.clone('water_loop', id);
+        if (!this.map.has(id)) {
+            const water = {};
+            water.mouseSpeed = 0;
+            water.lastEventTime = performance.now();
+            water.lastMouseX = normalX;
+            water.lastMouseY = normalY;
+            water.sound = WebAudio.clone('water_loop', id);
+            this.map.set(id, water);
 
             WebAudio.play(id, 0, true);
         }
@@ -130,7 +132,8 @@ export class AudioController {
                 WebAudio.fadeInAndPlay('deep_spacy_loop', 0.2, true, 2000, 'linear');
                 break;
             case 'mouse_move': {
-                const sound = this.water[id] && this.water[id].sound;
+                const water = this.map.get(id);
+                const sound = water && water.sound;
 
                 if (sound && sound.isPlaying) {
                     sound.gain.value += (gain - sound.gain.value) * this.lerpSpeed;
@@ -155,9 +158,7 @@ export class AudioController {
     };
 
     static remove = id => {
-        if (this.water[id]) {
-            delete this.water[id];
-        }
+        this.map.delete(id);
 
         WebAudio.fadeOutAndStop(id, 500, 'easeOutSine', () => {
             WebAudio.remove(id);

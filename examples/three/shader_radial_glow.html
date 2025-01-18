@@ -745,9 +745,13 @@
             };
 
             static start = () => {
+                if (isOrbit) {
+                    return;
+                }
+
                 this.camera.fov = 75;
                 this.camera.updateProjectionMatrix();
-            };
+            };    
 
             static animateIn = () => {
                 if (isOrbit) {

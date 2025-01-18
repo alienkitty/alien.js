@@ -11,7 +11,7 @@
     <link rel="stylesheet" href="../assets/css/style.css">
 
     <script type="module">
-        import { BloomCompositeMaterial, Color, ColorManagement, EnvironmentTextureLoader, FrontSide, GLTFLoader, Group, HemisphereLight, LinearSRGBColorSpace, LuminosityMaterial, MapControls, MathUtils, Mesh, OrthographicCamera, PanelItem, PerspectiveCamera, Scene, SceneCompositeDistortionMaterial, UI, UnrealBloomBlurMaterial, Vector2, WebGLRenderTarget, WebGLRenderer, getFullscreenTriangle, getKeyByValue, ticker } from '../../build/alien.three.js';
+        import { BloomCompositeMaterial, Color, ColorManagement, EnvironmentTextureLoader, GLTFLoader, Group, HemisphereLight, LinearSRGBColorSpace, LuminosityMaterial, MapControls, MathUtils, Mesh, MeshPhysicalMaterial, OrthographicCamera, PanelItem, PerspectiveCamera, Scene, SceneCompositeDistortionMaterial, UI, UnrealBloomBlurMaterial, Vector2, WebGLRenderTarget, WebGLRenderer, getFullscreenTriangle, getKeyByValue, ticker } from '../../build/alien.three.js';
 
         class Crystal extends Group {
             constructor() {
@@ -31,8 +31,32 @@
 
                 // Crystal mesh
                 const mesh = model.children[0].children[0].children[0].children[0];
-                mesh.position.x = 20; // Centre the axis
-                mesh.material.side = FrontSide;
+                mesh.geometry.center();
+                mesh.position.y = 50;
+                console.log(mesh.material);
+                // mesh.material = new MeshPhysicalMaterial().copy(mesh.material);
+                const material = new MeshPhysicalMaterial();
+                material.color = mesh.material.color;
+                material.metalness = mesh.material.metalness;
+                material.roughness = mesh.material.roughness;
+                material.map = mesh.material.map;
+                material.normalMap = mesh.material.normalMap;
+                material.metalnessMap = mesh.material.metalnessMap;
+                material.roughnessMap = mesh.material.roughnessMap;
+                material.side = mesh.material.side;
+                material.transparent = mesh.material.transparent;
+                material.opacity = mesh.material.opacity;
+                material.transmission = 1;
+                material.transmissionResolutionScale = 1;
+                material.ior = 1.5;
+                material.thickness = 0.01;
+                // material.transmission = 1;
+                // material.transmissionResolutionScale = 0.01;
+                // material.ior = 1.5;
+                // material.thickness = 5;
+                mesh.material.dispose();
+                mesh.material = material;
+                console.log(mesh.material);
 
                 this.add(gltf.scene);
             }
@@ -468,7 +492,11 @@
                         content: '<a href="https://sketchfab.com/3d-models/crystal-6bac0beae27748899ef260a8bac3e4a8" target="_blank" rel="noopener">Crystal</a> by <a href="https://sketchfab.com/LM3D" target="_blank" rel="noopener">Luciano O. Mollo</a>'
                     }
                 });
-                this.ui.info.css({ pointerEvents: 'auto' });
+                this.ui.info.css({
+                    pointerEvents: 'auto',
+                    webkitUserSelect: 'auto',
+                    userSelect: 'auto'
+                });
                 this.ui.info.animateIn();
                 document.body.appendChild(this.ui.element);
             }

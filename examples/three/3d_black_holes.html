@@ -1312,9 +1312,9 @@
 
             static async initEnvironment() {
                 this.scene.environment = await this.loadEnvironmentTexture('../assets/textures/env/jewelry_black_contrast.jpg');
-                this.scene.environmentIntensity = 1.2;
                 this.scene.environmentRotation.x = MathUtils.degToRad(-45);
                 this.scene.environmentRotation.y = MathUtils.degToRad(-25);
+                this.scene.environmentIntensity = 1.2;
             }
 
             static initControls() {

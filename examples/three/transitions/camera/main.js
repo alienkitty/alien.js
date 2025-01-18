@@ -910,7 +910,7 @@ class PanelController {
                 name: 'Rotate',
                 min: 0,
                 max: 360,
-                step: 0.3,
+                step: 1,
                 value: MathUtils.radToDeg(RenderManager.blurRotation),
                 callback: value => {
                     value = MathUtils.degToRad(value);

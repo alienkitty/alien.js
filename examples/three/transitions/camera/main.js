@@ -94,8 +94,7 @@ class CompositeMaterial extends RawShaderMaterial {
                     float d = abs(uFocus - rotateUV(vUv, uRotation).y);
                     float t = smootherstep(0.0, 1.0, d);
 
-                    vec2 dir = 0.5 - vUv;
-                    float angle = atan(dir.y, dir.x);
+                    float angle = length(vUv - 0.5);
                     float amount = 0.002 * uDistortion * uBlurAmount * t;
 
                     FragColor += getRGB(tScene, vUv, angle, amount);

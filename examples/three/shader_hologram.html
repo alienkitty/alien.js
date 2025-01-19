@@ -73,7 +73,7 @@
                             vec4 blend = texture(tHologram, vUv);
 
                             // Blend soft light with background color
-                            blend = blendSoftLight(blend, vec4(uColor, 1.0), 0.75);
+                            blend = blendSoftLight(blend, vec4(uColor, 1.0), 0.8);
 
                             FragColor = blendScreen(base, blend, 1.0);
 

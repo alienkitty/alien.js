@@ -16,6 +16,7 @@
         // Based on https://codepen.io/peterhry/pen/egzjGR
 
         const colors = {
+            backgroundColor: 0x060606,
             iceColor: 0x547691,
             lightColor: 0x00ffff,
             errorColor: 0xff0000
@@ -37,7 +38,8 @@
                     uniforms: {
                         tScene: { value: null },
                         tHologram: { value: null },
-                        tGlow: { value: null }
+                        tGlow: { value: null },
+                        uColor: { value: new Color(colors.backgroundColor) }
                     },
                     vertexShader: /* glsl */ `
                         in vec3 position;
@@ -57,6 +59,7 @@
                         uniform sampler2D tScene;
                         uniform sampler2D tHologram;
                         uniform sampler2D tGlow;
+                        uniform vec3 uColor;
 
                         in vec2 vUv;
 
@@ -70,7 +73,7 @@
                             vec4 blend = texture(tHologram, vUv);
 
                             // Blend soft light with background color
-                            blend = blendSoftLight(blend, vec4(vec3(0.11), 1.0), 0.75);
+                            blend = blendSoftLight(blend, vec4(uColor, 1.0), 0.75);
 
                             FragColor = blendScreen(base, blend, 1.0);
 
@@ -1064,7 +1067,7 @@
 
                 // 3D scene
                 this.scene = new Scene();
-                this.scene.background = new Color(0x060606);
+                this.scene.background = new Color(colors.backgroundColor);
                 this.camera = new PerspectiveCamera(30);
                 this.camera.near = 0.5;
                 this.camera.far = 40;

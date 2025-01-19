@@ -4,7 +4,17 @@
  * Based on https://github.com/mrdoob/three.js/blob/dev/examples/jsm/objects/Reflector.js by Slayvin
  */
 
-import { Group, Matrix4, Mesh, OrthographicCamera, PerspectiveCamera, Plane, Vector3, Vector4, WebGLRenderTarget } from 'three';
+import {
+    Group,
+    Matrix4,
+    Mesh,
+    OrthographicCamera,
+    PerspectiveCamera,
+    Plane,
+    Vector3,
+    Vector4,
+    WebGLRenderTarget
+} from 'three';
 
 import { getDoubleRenderTarget, getFullscreenTriangle } from '@alienkitty/space.js/three';
 

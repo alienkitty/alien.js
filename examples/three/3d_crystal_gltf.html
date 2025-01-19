@@ -11,34 +11,31 @@
     <link rel="stylesheet" href="../assets/css/style.css">
 
     <script type="module">
-        import { BloomCompositeMaterial, Color, ColorManagement, EnvironmentTextureLoader, GLTFLoader, Group, HemisphereLight, LightOptions, LightPanelController, LinearSRGBColorSpace, LuminosityMaterial, MapControls, MathUtils, Mesh, MeshPhysicalMaterial, NoBlending, OrthographicCamera, Panel, PanelItem, PerspectiveCamera, PhysicalMaterialPanel, PlaneGeometry, Point3D, Reflector, RepeatWrapping, Scene, SceneCompositeDistortionMaterial, ScenePanel, ShadowMaterial, TextureLoader, UI, UnrealBloomBlurMaterial, Vector2, Vector3, WebGLRenderTarget, WebGLRenderer, getFullscreenTriangle, getKeyByLight, getKeyByValue, ticker } from '../../build/alien.three.js';
+        import { BloomCompositeMaterial, Color, ColorManagement, EnvironmentTextureLoader, GLTFLoader, Group, HemisphereLight, LightOptions, LightPanelController, LinearSRGBColorSpace, LuminosityMaterial, MapControls, MathUtils, Mesh, MeshPhysicalMaterial, OrthographicCamera, Panel, PanelItem, PerspectiveCamera, PhysicalMaterialPanel, Point3D, Scene, SceneCompositeDistortionMaterial, ScenePanel, TextureLoader, UI, UnrealBloomBlurMaterial, Vector2, Vector3, WebGLRenderTarget, WebGLRenderer, getFullscreenTriangle, getKeyByLight, getKeyByValue, ticker } from '../../build/alien.three.js';
 
         const isDebug = /[?&]debug/.test(location.search);
 
         class Crystal extends Group {
             constructor() {
                 super();
-
-                this.position.y = 0.7;
             }
 
             async initMesh() {
                 const { loadGLTF } = WorldController;
 
-                // https://sbtron.github.io/makeglb/
-                const gltf = await loadGLTF('../assets/gltf/crystal.glb');
-
                 // Sketchfab model
-                const model = gltf.scene.children[0];
-                model.rotation.z = MathUtils.degToRad(200);
-                model.scale.multiplyScalar(0.01);
+                // https://sbtron.github.io/makeglb/
+                const model = await loadGLTF('../assets/gltf/crystal.glb');
+                model.scale.setScalar(0.01);
+                model.updateMatrixWorld(); // Needed for Point3D
 
                 // Crystal mesh
                 // https://threejs.org/docs/index.html#api/en/core/Object3D.getObjectByName
                 // const avatar = gltf.scene.getObjectByName('avatar');
-                const mesh = model.children[0].children[0].children[0].children[0];
-                mesh.geometry.center();
+                const mesh = model.children[0].children[0].children[0].children[0].children[0];
+                mesh.geometry.center(); // Needed for Point3D
                 mesh.position.y = 50;
+                mesh.rotation.y = MathUtils.degToRad(200);
                 mesh.castShadow = true;
 
                 const material = new MeshPhysicalMaterial();
@@ -52,158 +49,27 @@
                 material.side = mesh.material.side;
                 material.transparent = mesh.material.transparent;
                 material.opacity = mesh.material.opacity;
-                material.transmission = 1;
-                material.transmissionResolutionScale = 1;
-                material.ior = 1.5;
-                material.thickness = 0.01;
                 // material.transmission = 1;
-                // material.transmissionResolutionScale = 0.01;
+                // material.transmissionResolutionScale = 1;
                 // material.ior = 1.5;
-                // material.thickness = 5;
+                // material.thickness = 0.01;
+                material.transmission = 1;
+                material.transmissionResolutionScale = 0.01;
+                material.ior = 1.5;
+                material.thickness = 2;
                 // material.forceSinglePass = true;
                 mesh.material.dispose();
                 mesh.material = material;
-                console.log(mesh.material);
 
-                this.add(gltf.scene);
+                this.add(model);
 
                 this.mesh = mesh;
             }
 
             // Public methods
 
-            update = time => {
-                this.mesh.position.y = Math.sin(time) * 0.1;
-                this.mesh.rotation.y += 0.01;
-            };
-
-            ready = () => this.initMesh();
-        }
-
-        import dither from '../../src/shaders/modules/dither/dither.glsl.js';
-
-        class Floor extends Group {
-            constructor() {
-                super();
-
-                this.initReflector();
-            }
-
-            initReflector() {
-                this.reflector = new Reflector({ blurIterations: 6 });
-            }
-
-            async initMesh() {
-                const { loadTexture } = WorldController;
-
-                const geometry = new PlaneGeometry(100, 100);
-
-                const map = await loadTexture('../assets/textures/waterdudv.jpg');
-                map.wrapS = RepeatWrapping;
-                map.wrapT = RepeatWrapping;
-                map.repeat.set(6, 3);
-
-                const material = new ShadowMaterial({
-                    transparent: false,
-                    blending: NoBlending,
-                    toneMapped: false
-                });
-
-                material.onBeforeCompile = shader => {
-                    map.updateMatrix();
-
-                    shader.uniforms.map = { value: map };
-                    shader.uniforms.reflectMap = { value: this.reflector.renderTarget.texture };
-                    shader.uniforms.reflectMapBlur = this.reflector.renderTargetUniform;
-                    shader.uniforms.uvTransform = { value: map.matrix };
-                    shader.uniforms.textureMatrix = this.reflector.textureMatrixUniform;
-
-                    shader.vertexShader = shader.vertexShader.replace(
-                        'void main() {',
-                        /* glsl */ `
-                        uniform mat3 uvTransform;
-                        uniform mat4 textureMatrix;
-
-                        out vec2 vUv;
-                        out vec4 vCoord;
-
-                        void main() {
-                        `
-                    );
-
-                    shader.vertexShader = shader.vertexShader.replace(
-                        '#include <project_vertex>',
-                        /* glsl */ `
-                        #include <project_vertex>
-
-                        vUv = (uvTransform * vec3(uv, 1)).xy;
-                        vCoord = textureMatrix * vec4(transformed, 1.0);
-                        `
-                    );
-
-                    shader.fragmentShader = shader.fragmentShader.replace(
-                        'void main() {',
-                        /* glsl */ `
-                        uniform sampler2D map;
-                        uniform sampler2D reflectMap;
-                        uniform sampler2D reflectMapBlur;
-
-                        in vec2 vUv;
-                        in vec4 vCoord;
-
-                        ${dither}
-
-                        void main() {
-                        `
-                    );
-
-                    shader.fragmentShader = shader.fragmentShader.replace(
-                        'gl_FragColor = vec4( color, opacity * ( 1.0 - getShadowMask() ) );',
-                        /* glsl */ `
-                        vec2 reflectionUv = vCoord.xy / vCoord.w;
-
-                        vec4 dudv = texture(map, vUv);
-                        vec4 color = texture(reflectMap, reflectionUv);
-
-                        vec4 blur;
-
-                        blur = texture(reflectMapBlur, reflectionUv + dudv.rg / 256.0);
-                        color = mix(color, blur, smoothstep(1.0, 0.1, dudv.g));
-
-                        blur = texture(reflectMapBlur, reflectionUv);
-                        color = mix(color, blur, smoothstep(0.5, 1.0, dudv.r));
-
-                        gl_FragColor = color * mix(0.3, 0.55, dudv.g);
-
-                        gl_FragColor.rgb -= (1.0 - getShadowMask()) * 0.025;
-
-                        gl_FragColor.rgb = dither(gl_FragColor.rgb);
-                        gl_FragColor.a = 1.0;
-                        `
-                    );
-                };
-
-                const mesh = new Mesh(geometry, material);
-                mesh.position.y = -0.86;
-                mesh.rotation.x = -Math.PI / 2;
-                mesh.receiveShadow = true;
-                mesh.add(this.reflector);
-
-                mesh.onBeforeRender = (renderer, scene, camera) => {
-                    this.visible = false;
-                    this.reflector.update(renderer, scene, camera);
-                    this.visible = true;
-                };
-
-                this.add(mesh);
-            }
-
-            // Public methods
-
-            resize = (width, height) => {
-                height = 1024;
-
-                this.reflector.setSize(width, height);
+            update = () => {
+                // this.mesh.rotation.y += 0.005;
             };
 
             ready = () => this.initMesh();
@@ -219,25 +85,17 @@
             }
 
             initViews() {
-                this.floor = new Floor();
-                this.add(this.floor);
-
                 this.crystal = new Crystal();
                 this.add(this.crystal);
             }
 
             // Public methods
 
-            resize = (width, height) => {
-                this.floor.resize(width, height);
-            };
-
-            update = time => {
-                this.crystal.update(time);
+            update = () => {
+                this.crystal.update();
             };
 
             ready = () => Promise.all([
-                this.floor.ready(),
                 this.crystal.ready()
             ]);
         }
@@ -249,16 +107,15 @@
 
             // Public methods
 
-            static resize = (width, height) => {
-                this.view.resize(width, height);
+            static resize = () => {
             };
 
-            static update = time => {
+            static update = () => {
                 if (!this.view.visible) {
                     return;
                 }
 
-                this.view.update(time);
+                this.view.update();
             };
 
             static animateIn = () => {
@@ -301,8 +158,8 @@
                     });
                 });
 
-                // Shrink tracker meshes a little bit
-                crystal.point.mesh.scale.multiply(new Vector3(1, 0.9, 1));
+                // Shrink tracker mesh to better match the shape of the object
+                crystal.point.mesh.scale.multiply(new Vector3(0.5, 1, 0.5));
             }
         }
 
@@ -447,6 +304,8 @@
             }
 
             static initPanel() {
+                const { crystal } = this.view;
+
                 const sceneOptions = {
                     Scene: ScenePanel,
                     Post: PostPanel
@@ -465,6 +324,15 @@
                 const items = [
                     {
                         name: 'FPS'
+                    },
+                    {
+                        type: 'content',
+                        callback: (value, item) => {
+                            const materialPanel = new PhysicalMaterialPanel(crystal.mesh);
+                            materialPanel.animateIn(true);
+
+                            item.setContent(materialPanel);
+                        }
                     },
                     {
                         type: 'divider'
@@ -800,9 +668,12 @@
 
             static loadEnvironmentTexture = path => this.environmentLoader.loadAsync(path);
 
-            static getGLTF = (path, callback) => this.gltfLoader.load(path, callback);
-
-            static loadGLTF = path => this.gltfLoader.loadAsync(path);
+            static loadGLTF = async path => {
+                const gltf = await this.gltfLoader.loadAsync(path);
+                const model = gltf.scene;
+                await this.renderer.compileAsync(model, this.camera, this.scene);
+                return model;
+            };
         }
 
         class App {

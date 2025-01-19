@@ -125,5 +125,7 @@ export { OimoPhysicsController } from './three/utils/physics/OimoPhysicsControll
 export * from 'three';
 export { SVGLoader } from 'three/addons/loaders/SVGLoader.js';
 export { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+export { KTX2Loader } from 'three/addons/loaders/KTX2Loader.js';
+export { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js';
 export { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 export { MapControls } from 'three/addons/controls/MapControls.js';

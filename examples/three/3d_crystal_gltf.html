@@ -11,7 +11,7 @@
     <link rel="stylesheet" href="../assets/css/style.css">
 
     <script type="module">
-        import { BloomCompositeMaterial, Color, ColorManagement, EnvironmentTextureLoader, GLTFLoader, Group, HemisphereLight, LightOptions, LightPanelController, LinearSRGBColorSpace, LuminosityMaterial, MapControls, MathUtils, Mesh, MeshPhysicalMaterial, OrthographicCamera, Panel, PanelItem, PerspectiveCamera, PhysicalMaterialPanel, Point3D, Scene, SceneCompositeDistortionMaterial, ScenePanel, TextureLoader, UI, UnrealBloomBlurMaterial, Vector2, Vector3, WebGLRenderTarget, WebGLRenderer, getFullscreenTriangle, getKeyByLight, getKeyByValue, ticker } from '../../build/alien.three.js';
+        import { BloomCompositeMaterial, Color, ColorManagement, DirectionalLight, EnvironmentTextureLoader, GLTFLoader, Group, HemisphereLight, LightOptions, LightPanelController, LinearSRGBColorSpace, LuminosityMaterial, MapControls, MathUtils, Mesh, MeshPhysicalMaterial, OrthographicCamera, Panel, PanelItem, PerspectiveCamera, PhysicalMaterialPanel, Point3D, Scene, SceneCompositeDistortionMaterial, ScenePanel, TextureLoader, UI, UnrealBloomBlurMaterial, Vector2, Vector3, WebGLRenderTarget, WebGLRenderer, getFullscreenTriangle, getKeyByLight, getKeyByValue, ticker } from '../../build/alien.three.js';
 
         const isDebug = /[?&]debug/.test(location.search);
 
@@ -620,6 +620,10 @@
 
             static initLights() {
                 this.scene.add(new HemisphereLight(0x606060, 0x404040, 3));
+
+                const light = new DirectionalLight(0xffffff, 2);
+                light.position.set(0.6, 0.5, 1);
+                this.scene.add(light);
             }
 
             static initLoaders() {

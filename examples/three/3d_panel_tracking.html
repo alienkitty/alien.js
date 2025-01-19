@@ -479,8 +479,8 @@
                     });
                 });
 
-                // Shrink tracker meshes a little bit
-                floatingCrystal.point.mesh.scale.multiply(new Vector3(1, 0.9, 1));
+                // Shrink tracker mesh to better match the shape of the object
+                floatingCrystal.point.mesh.scale.multiply(new Vector3(0.5, 1, 0.5));
                 abstractCube.point.mesh.scale.multiplyScalar(0.9);
             }
         }

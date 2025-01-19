@@ -49,12 +49,7 @@
                 material.side = mesh.material.side;
                 material.transparent = mesh.material.transparent;
                 material.opacity = mesh.material.opacity;
-                // material.transmission = 1;
-                // material.transmissionResolutionScale = 1;
-                // material.ior = 1.5;
-                // material.thickness = 0.01;
                 material.transmission = 1;
-                material.transmissionResolutionScale = 0.01;
                 material.ior = 1.5;
                 material.thickness = 2;
                 // material.forceSinglePass = true;
@@ -338,6 +333,20 @@
                         type: 'divider'
                     },
                     {
+                        type: 'slider',
+                        name: 'TRS',
+                        min: 0,
+                        max: 1,
+                        step: 0.01,
+                        value: RenderManager.transmissionResolutionScale,
+                        callback: value => {
+                            this.renderer.transmissionResolutionScale = value;
+                        }
+                    },
+                    {
+                        type: 'divider'
+                    },
+                    {
                         type: 'list',
                         list: sceneOptions,
                         value: 'Scene',
@@ -392,6 +401,9 @@
                 this.scene = scene;
                 this.camera = camera;
 
+                // Renderer settings
+                this.transmissionResolutionScale = 0.25;
+
                 // Unreal bloom
                 this.luminosityThreshold = 0.1;
                 this.luminositySmoothing = 1;
@@ -406,6 +418,9 @@
 
             static initRenderer() {
                 const { screenTriangle } = WorldController;
+
+                // Renderer settings
+                this.renderer.transmissionResolutionScale = this.transmissionResolutionScale;
 
                 // Fullscreen triangle
                 this.screenCamera = new OrthographicCamera(-1, 1, 1, -1, 0, 1);

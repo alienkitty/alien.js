@@ -19,7 +19,7 @@
             }
 
             async initMesh() {
-                const { loadGLTF } = WorldController;
+                const { anisotropy, loadGLTF } = WorldController;
 
                 // Sketchfab model
                 // https://sbtron.github.io/makeglb/
@@ -34,6 +34,12 @@
                 mesh.geometry.center(); // Also needed for Point3D
                 mesh.position.y = 50;
                 mesh.rotation.y = MathUtils.degToRad(200);
+
+                // Textures
+                mesh.material.map.anisotropy = anisotropy;
+                mesh.material.normalMap.anisotropy = anisotropy;
+                mesh.material.metalnessMap.anisotropy = anisotropy;
+                mesh.material.roughnessMap.anisotropy = anisotropy;
 
                 const material = new MeshPhysicalMaterial();
                 material.color = mesh.material.color;

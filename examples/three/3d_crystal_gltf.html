@@ -11,9 +11,7 @@
     <link rel="stylesheet" href="../assets/css/style.css">
 
     <script type="module">
-        import { BloomCompositeMaterial, Color, ColorManagement, DirectionalLight, EnvironmentTextureLoader, GLTFLoader, Group, HemisphereLight, LightOptions, LightPanelController, LinearSRGBColorSpace, LuminosityMaterial, MapControls, MathUtils, Mesh, MeshPhysicalMaterial, OrthographicCamera, Panel, PanelItem, PerspectiveCamera, PhysicalMaterialPanel, Point3D, Scene, SceneCompositeDistortionMaterial, ScenePanel, TextureLoader, UI, UnrealBloomBlurMaterial, Vector2, Vector3, WebGLRenderTarget, WebGLRenderer, getFullscreenTriangle, getKeyByLight, getKeyByValue, ticker } from '../../build/alien.three.js';
-
-        const isDebug = /[?&]debug/.test(location.search);
+        import { BloomCompositeMaterial, Color, ColorManagement, DirectionalLight, EnvironmentTextureLoader, GLTFLoader, Group, HemisphereLight, LightOptions, LightPanelController, LinearSRGBColorSpace, LuminosityMaterial, MapControls, MathUtils, Mesh, MeshPhysicalMaterial, OrthographicCamera, Panel, PanelItem, PerspectiveCamera, PhysicalMaterialPanel, Scene, SceneCompositeDistortionMaterial, ScenePanel, TextureLoader, UI, UnrealBloomBlurMaterial, Vector2, WebGLRenderTarget, WebGLRenderer, getFullscreenTriangle, getKeyByLight, getKeyByValue, ticker } from '../../build/alien.three.js';
 
         class Crystal extends Group {
             constructor() {
@@ -27,16 +25,15 @@
                 // https://sbtron.github.io/makeglb/
                 const model = await loadGLTF('../assets/gltf/crystal.glb');
                 model.scale.setScalar(0.01);
-                model.updateMatrixWorld(); // Needed for Point3D
+                // model.updateMatrixWorld(); // Needed for Point3D
 
                 // Crystal mesh
                 // https://threejs.org/docs/index.html#api/en/core/Object3D.getObjectByName
                 // const avatar = gltf.scene.getObjectByName('avatar');
                 const mesh = model.children[0].children[0].children[0].children[0].children[0];
-                mesh.geometry.center(); // Needed for Point3D
+                mesh.geometry.center(); // Also needed for Point3D
                 mesh.position.y = 50;
                 mesh.rotation.y = MathUtils.degToRad(200);
-                mesh.castShadow = true;
 
                 const material = new MeshPhysicalMaterial();
                 material.color = mesh.material.color;
@@ -64,7 +61,7 @@
             // Public methods
 
             update = () => {
-                // this.mesh.rotation.y += 0.005;
+                this.mesh.rotation.y += 0.005;
             };
 
             ready = () => this.initMesh();
@@ -118,44 +115,6 @@
             };
 
             static ready = () => this.view.ready();
-        }
-
-        class ScenePanelController {
-            static init(view) {
-                this.view = view;
-
-                this.initPanel();
-            }
-
-            static initPanel() {
-                const { crystal } = this.view;
-
-                const objects = [crystal];
-
-                objects.forEach(object => {
-                    object.point = new Point3D(object.mesh);
-                    object.add(object.point);
-
-                    const items = [
-                        {
-                            type: 'content',
-                            callback: (value, item) => {
-                                const materialPanel = new PhysicalMaterialPanel(object.mesh);
-                                materialPanel.animateIn(true);
-
-                                item.setContent(materialPanel);
-                            }
-                        }
-                    ];
-
-                    items.forEach(data => {
-                        object.point.addPanel(new PanelItem(data));
-                    });
-                });
-
-                // Shrink tracker mesh to better match the shape of the object
-                crystal.point.mesh.scale.multiply(new Vector3(0.5, 1, 0.5));
-            }
         }
 
         class PostPanel extends Panel {
@@ -289,12 +248,6 @@
             }
 
             static initControllers() {
-                Point3D.init(this.renderer, this.scene, this.camera, {
-                    container: this.ui,
-                    debug: isDebug
-                });
-
-                ScenePanelController.init(this.view);
                 LightPanelController.init(this.scene);
             }
 
@@ -380,16 +333,6 @@
                     this.ui.addPanel(new PanelItem(data));
                 });
             }
-
-            // Public methods
-
-            static update = time => {
-                if (!this.ui) {
-                    return;
-                }
-
-                Point3D.update(time);
-            };
         }
 
         const BlurDirectionX = new Vector2(1, 0);
@@ -772,7 +715,6 @@
                 WorldController.update(time, delta, frame);
                 SceneController.update(time);
                 RenderManager.update(time, delta, frame);
-                PanelController.update(time);
                 this.ui.update();
             };
         }

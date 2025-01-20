@@ -1,4 +1,4 @@
-import { AdditiveBlending, AssetLoader, BasicShadowMap, BloomCompositeMaterial, BoxGeometry, Color, ColorManagement, CopyMaterial, DepthMaterial, DirectionalLight, DisplayOptions, DrawBuffers, EnvironmentTextureLoader, GLSL3, Group, HemisphereLight, IcosahedronGeometry, ImageBitmapLoaderThread, LinearSRGBColorSpace, LuminosityMaterial, MathUtils, Mesh, MeshBasicMaterial, MeshMatcapMaterial, MeshStandardMaterial, MotionBlurCompositeMaterial, NearestFilter, NoBlending, NormalMaterial, OctahedronGeometry, OrthographicCamera, PanelItem, PerspectiveCamera, PlaneGeometry, Point3D, RawShaderMaterial, Reflector, RepeatWrapping, Scene, SceneCompositeMaterial, ShadowMaterial, Stage, TextureLoader, UI, UnrealBloomBlurMaterial, Vector2, Vector3, WebGLRenderTarget, WebGLRenderer, clearTween, delayedCall, getFullscreenTriangle, getKeyByValue, lerpCameras, router, ticker, tween } from '../../../../build/alien.three.js';
+import { AdditiveBlending, AssetLoader, BasicShadowMap, BloomCompositeMaterial, BoxGeometry, Color, ColorManagement, CopyMaterial, DepthMaterial, DirectionalLight, DisplayOptions, DrawBuffers, EnvironmentTextureLoader, GLSL3, Group, HemisphereLight, IcosahedronGeometry, ImageBitmapLoaderThread, LinearSRGBColorSpace, LuminosityMaterial, MapControls, MathUtils, Mesh, MeshBasicMaterial, MeshMatcapMaterial, MeshStandardMaterial, MotionBlurCompositeMaterial, NearestFilter, NoBlending, NormalMaterial, OctahedronGeometry, OrthographicCamera, PanelItem, PerspectiveCamera, PlaneGeometry, Point3D, RawShaderMaterial, Reflector, RepeatWrapping, Scene, SceneCompositeMaterial, ShadowMaterial, Stage, TextureLoader, UI, UnrealBloomBlurMaterial, Vector2, Vector3, WebGLRenderTarget, WebGLRenderer, clearTween, delayedCall, getFullscreenTriangle, getKeyByValue, lerpCameras, router, ticker, tween } from '../../../../build/alien.three.js';
 
 const isDebug = /[?&]debug/.test(location.search);
 
@@ -1402,34 +1402,23 @@ class RenderManager {
 }
 
 class CameraController {
-    static init(worldCamera, ui) {
+    static init(worldCamera, controls, ui) {
         this.worldCamera = worldCamera;
+        this.controls = controls;
         this.ui = ui;
 
         // Start position
         this.camera = this.worldCamera.clone();
-        this.mouse = new Vector2();
-        this.lookAt = new Vector3();
-        this.origin = new Vector3();
-        this.target = new Vector3();
-        this.targetXY = new Vector2(8, 4);
-        this.origin.copy(this.camera.position);
-        this.camera.lookAt(this.lookAt);
+        this.camera.matrixAutoUpdate = false;
 
         this.progress = 0;
-        this.lerpSpeed = 0.07;
         this.animatedIn = false;
         this.zoomedIn = false;
         this.enabled = false;
-
-        this.addListeners();
-    }
-
-    static addListeners() {
-        window.addEventListener('pointermove', this.onPointerMove);
     }
 
     static transition() {
+        this.controls.enabled = false;
         Point3D.enabled = false;
 
         const next = this.next;
@@ -1443,12 +1432,12 @@ class CameraController {
                 this.transition();
             } else {
                 this.animatedIn = false;
-
-                Point3D.enabled = true;
             }
         }, () => {
             lerpCameras(this.worldCamera, next.camera, this.progress);
         });
+
+        clearTween(this.timeout);
 
         if (this.zoomedIn) {
             this.ui.details.animateOut(() => {
@@ -1469,19 +1458,13 @@ class CameraController {
             this.ui.details.animateOut();
 
             RenderManager.zoomOut();
+
+            this.timeout = delayedCall(300, () => {
+                this.controls.enabled = true;
+                Point3D.enabled = true;
+            });
         }
     }
-
-    // Event handlers
-
-    static onPointerMove = ({ clientX, clientY }) => {
-        if (!this.enabled) {
-            return;
-        }
-
-        this.mouse.x = (clientX / document.documentElement.clientWidth) * 2 - 1;
-        this.mouse.y = 1 - (clientY / document.documentElement.clientHeight) * 2;
-    };
 
     // Public methods
 
@@ -1511,26 +1494,10 @@ class CameraController {
             return;
         }
 
-        this.target.x = this.origin.x + this.targetXY.x * this.mouse.x;
-        this.target.y = this.origin.y + this.targetXY.y * this.mouse.y;
-        this.target.z = this.origin.z;
-
-        this.camera.position.lerp(this.target, this.lerpSpeed);
-        this.camera.lookAt(this.lookAt);
-
-        if (!this.animatedIn) {
-            this.updateCamera();
+        if (!this.animatedIn && this.zoomedIn) {
+            this.worldCamera.position.copy(this.view.camera.position);
+            this.worldCamera.quaternion.copy(this.view.camera.quaternion);
         }
-    };
-
-    static updateCamera = () => {
-        this.worldCamera.position.copy(this.view.camera.position);
-        this.worldCamera.quaternion.copy(this.view.camera.quaternion);
-    };
-
-    static start = () => {
-        this.worldCamera.fov = 45;
-        this.worldCamera.updateProjectionMatrix();
     };
 
     static animateIn = () => {
@@ -1544,6 +1511,7 @@ class WorldController {
         this.initLights();
         this.initLoaders();
         this.initEnvironment();
+        this.initControls();
 
         this.addListeners();
     }
@@ -1614,6 +1582,11 @@ class WorldController {
         this.scene.environmentIntensity = 1.2;
     }
 
+    static initControls() {
+        this.controls = new MapControls(this.camera, this.renderer.domElement);
+        this.controls.enableDamping = true;
+    }
+
     static addListeners() {
         this.renderer.domElement.addEventListener('touchstart', this.onTouchStart);
     }
@@ -1638,6 +1611,10 @@ class WorldController {
     static update = (time, delta, frame) => {
         this.time.value = time;
         this.frame.value = frame;
+
+        if (this.controls.enabled) {
+            this.controls.update();
+        }
     };
 
     static ready = () => Promise.all([
@@ -1675,7 +1652,6 @@ class App {
 
         this.initPanel();
 
-        CameraController.start();
         RenderManager.start();
 
         this.animateIn();
@@ -1763,9 +1739,9 @@ Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor i
     }
 
     static initControllers() {
-        const { renderer, scene, camera } = WorldController;
+        const { renderer, scene, camera, controls } = WorldController;
 
-        CameraController.init(camera, this.ui);
+        CameraController.init(camera, controls, this.ui);
         SceneController.init(this.view);
         RenderManager.init(renderer, scene, camera);
     }

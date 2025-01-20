@@ -1744,12 +1744,16 @@ class App {
             breakpoint,
             details: {
                 title: '',
-                content: /* html */ `
-Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
-                `,
-                links: [
+                content: [
                     {
-                        title: 'Next'
+                        content: /* html */ `
+Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
+                        `,
+                        links: [
+                            {
+                                title: 'Next'
+                            }
+                        ]
                     }
                 ]
             }

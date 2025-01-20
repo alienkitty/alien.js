@@ -107,7 +107,7 @@ export class FluidController {
 
                 pointer.info = this.ui.detailsUsers.add(new DetailsUser());
 
-                if (this.ui.isDetailsOpen) {
+                if (this.ui.details.animatedIn) {
                     pointer.info.enable();
                     pointer.info.animateIn();
                 }

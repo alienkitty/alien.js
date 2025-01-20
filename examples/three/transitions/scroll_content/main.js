@@ -53,13 +53,17 @@ class Section extends Interface {
     initViews() {
         this.details = new Details({
             title: this.title.replace(/[\s.-]+/g, '_'),
-            content: /* html */ `
-Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
-            `,
-            links: [
+            content: [
                 {
-                    title: 'Lorem ipsum',
-                    link: 'https://en.wikipedia.org/wiki/Lorem_ipsum'
+                    content: /* html */ `
+Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
+                    `,
+                    links: [
+                        {
+                            title: 'Lorem ipsum',
+                            link: 'https://en.wikipedia.org/wiki/Lorem_ipsum'
+                        }
+                    ]
                 }
             ]
         });

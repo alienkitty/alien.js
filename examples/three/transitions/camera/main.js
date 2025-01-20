@@ -533,8 +533,6 @@ class Floor extends Group {
         map.repeat.set(6, 3);
 
         const material = new ShadowMaterial({
-            transparent: false,
-            blending: NoBlending,
             toneMapped: false
         });
 
@@ -607,7 +605,6 @@ class Floor extends Group {
                 gl_FragColor.rgb -= (1.0 - getShadowMask()) * 0.025;
 
                 gl_FragColor.rgb = dither(gl_FragColor.rgb);
-                gl_FragColor.a = 1.0;
                 `
             );
         };

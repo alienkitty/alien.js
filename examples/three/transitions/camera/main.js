@@ -1402,14 +1402,11 @@ class RenderManager {
 }
 
 class CameraController {
-    static init(worldCamera, controls, ui) {
+    static init(worldCamera, controlsCamera, controls, ui) {
         this.worldCamera = worldCamera;
+        this.camera = controlsCamera;
         this.controls = controls;
         this.ui = ui;
-
-        // Start position
-        this.camera = this.worldCamera.clone();
-        this.camera.matrixAutoUpdate = false;
 
         this.progress = 0;
         this.animatedIn = false;
@@ -1490,14 +1487,12 @@ class CameraController {
     };
 
     static update = () => {
-        if (!this.enabled) {
+        if (!this.enabled || this.animatedIn) {
             return;
         }
 
-        if (!this.animatedIn && this.zoomedIn) {
-            this.worldCamera.position.copy(this.view.camera.position);
-            this.worldCamera.quaternion.copy(this.view.camera.quaternion);
-        }
+        this.worldCamera.position.copy(this.view.camera.position);
+        this.worldCamera.quaternion.copy(this.view.camera.quaternion);
     };
 
     static animateIn = () => {
@@ -1583,7 +1578,8 @@ class WorldController {
     }
 
     static initControls() {
-        this.controls = new MapControls(this.camera, this.renderer.domElement);
+        this.controlsCamera = this.camera.clone();
+        this.controls = new MapControls(this.controlsCamera, this.renderer.domElement);
         this.controls.enableDamping = true;
     }
 
@@ -1739,9 +1735,9 @@ Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor i
     }
 
     static initControllers() {
-        const { renderer, scene, camera, controls } = WorldController;
+        const { renderer, scene, camera, controlsCamera, controls } = WorldController;
 
-        CameraController.init(camera, controls, this.ui);
+        CameraController.init(camera, controlsCamera, controls, this.ui);
         SceneController.init(this.view);
         RenderManager.init(renderer, scene, camera);
     }

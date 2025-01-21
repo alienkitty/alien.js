@@ -8,7 +8,7 @@ export default [
     files: ['**/*.js', '**/*.html'],
     ignores: [
       'eslint.config.js',
-      'rollup.config.js',
+      '**/rollup.config.js',
       '**/public/assets/js/*.js'
     ],
     plugins: {

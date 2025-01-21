@@ -1746,12 +1746,19 @@ Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor i
     }
 
     static addListeners() {
+        Stage.events.on('details', this.onDetails);
         window.addEventListener('resize', this.onResize);
         ticker.add(this.onUpdate);
         this.ui.link.events.on('click', this.onClick);
     }
 
     // Event handlers
+
+    static onDetails = ({ open }) => {
+        if (!open) {
+            history.back();
+        }
+    };
 
     static onResize = () => {
         const width = document.documentElement.clientWidth;

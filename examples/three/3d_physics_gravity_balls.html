@@ -892,7 +892,7 @@
                 this.blurResolutionScale = 0.25;
                 this.blurAmount = 2.5;
 
-                // Bloom
+                // Unreal bloom
                 this.luminosityThreshold = 0.1;
                 this.luminositySmoothing = 1;
                 this.bloomStrength = 0.3;
@@ -993,7 +993,7 @@
                     this.blurMaterials.push(new UnrealBloomBlurMaterial(kernelSizeArray[i]));
                 }
 
-                // Bloom composite material
+                // Unreal bloom composite material
                 this.bloomCompositeMaterial = new BloomCompositeMaterial();
                 this.bloomCompositeMaterial.uniforms.tBlur1.value = this.renderTargetsVertical[0].texture;
                 this.bloomCompositeMaterial.uniforms.tBlur2.value = this.renderTargetsVertical[1].texture;
@@ -1083,8 +1083,8 @@
                 this.vBlurMaterial.uniforms.uResolution.value.set(blurWidth, blurHeight);
 
                 // Unreal bloom
-                width = MathUtils.floorPowerOfTwo(width) / 2;
-                height = MathUtils.floorPowerOfTwo(height) / 2;
+                width = Math.round(width / 2);
+                height = Math.round(height / 2);
 
                 this.renderTargetBright.setSize(width, height);
 
@@ -1094,8 +1094,8 @@
 
                     this.blurMaterials[i].uniforms.uResolution.value.set(width, height);
 
-                    width /= 2;
-                    height /= 2;
+                    width = Math.round(width / 2);
+                    height = Math.round(height / 2);
                 }
             };
 
@@ -1158,6 +1158,7 @@
 
                 renderer.render(scene, camera);
 
+                // Two pass Gaussian blur (horizontal and vertical)
                 this.hBlurMaterial.uniforms.tMap.value = renderTargetBlurA.texture;
                 this.screen.material = this.hBlurMaterial;
                 renderer.setRenderTarget(renderTargetBlurB);
@@ -1170,6 +1171,7 @@
                 renderer.clear();
                 renderer.render(this.screen, this.screenCamera);
 
+                // Volumetric light pass
                 this.vlMaterial.uniforms.tMap.value = renderTargetBlurA.texture;
                 this.setLightPosition();
                 this.screen.material = this.vlMaterial;
@@ -1422,7 +1424,7 @@
                 this.scene.background = new Color(0x060606);
                 this.camera = new PerspectiveCamera(35);
                 this.camera.near = 1;
-                this.camera.far = 2000;
+                this.camera.far = 3000;
                 this.camera.position.z = 40;
                 this.camera.lookAt(this.scene.position);
 

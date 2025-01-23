@@ -11,7 +11,7 @@
     <link rel="stylesheet" href="../assets/css/style.css">
 
     <script type="module">
-        import { BloomCompositeMaterial, BoxGeometry, Color, ColorManagement, DirectionalLight, EnvironmentTextureLoader, Group, HemisphereLight, IcosahedronGeometry, LinearSRGBColorSpace, LuminosityMaterial, MathUtils, Mesh, MeshStandardMaterial, OctahedronGeometry, OrbitControls, OrthographicCamera, PanelItem, PerspectiveCamera, Raycaster, Scene, SceneCompositeDistortionMaterial, TextureLoader, UI, UnrealBloomBlurMaterial, Vector2, WebGLRenderTarget, WebGLRenderer, getFullscreenTriangle, ticker } from '../../build/alien.three.js';
+        import { BloomCompositeMaterial, BoxGeometry, Color, ColorManagement, DirectionalLight, EnvironmentTextureLoader, Group, HemisphereLight, IcosahedronGeometry, LinearSRGBColorSpace, LuminosityMaterial, MapControls, MathUtils, Mesh, MeshStandardMaterial, OctahedronGeometry, OrthographicCamera, PanelItem, PerspectiveCamera, Raycaster, Scene, SceneCompositeDistortionMaterial, TextureLoader, UI, UnrealBloomBlurMaterial, Vector2, WebGLRenderTarget, WebGLRenderer, getFullscreenTriangle, ticker } from '../../build/alien.three.js';
 
         class AbstractCube extends Group {
             constructor() {
@@ -320,7 +320,7 @@
                 this.scene = scene;
                 this.camera = camera;
 
-                // Bloom
+                // Unreal bloom
                 this.luminosityThreshold = 0.1;
                 this.luminositySmoothing = 1;
                 this.bloomStrength = 0.3;
@@ -372,7 +372,7 @@
                     this.blurMaterials.push(new UnrealBloomBlurMaterial(kernelSizeArray[i]));
                 }
 
-                // Bloom composite material
+                // Unreal bloom composite material
                 this.bloomCompositeMaterial = new BloomCompositeMaterial();
                 this.bloomCompositeMaterial.uniforms.tBlur1.value = this.renderTargetsVertical[0].texture;
                 this.bloomCompositeMaterial.uniforms.tBlur2.value = this.renderTargetsVertical[1].texture;
@@ -409,8 +409,8 @@
                 this.renderTarget.setSize(width, height);
 
                 // Unreal bloom
-                width = MathUtils.floorPowerOfTwo(width) / 2;
-                height = MathUtils.floorPowerOfTwo(height) / 2;
+                width = Math.round(width / 2);
+                height = Math.round(height / 2);
 
                 this.renderTargetBright.setSize(width, height);
 
@@ -420,8 +420,8 @@
 
                     this.blurMaterials[i].uniforms.uResolution.value.set(width, height);
 
-                    width /= 2;
-                    height /= 2;
+                    width = Math.round(width / 2);
+                    height = Math.round(height / 2);
                 }
             };
 
@@ -693,7 +693,7 @@
             }
 
             static initControls() {
-                this.controls = new OrbitControls(this.camera, this.renderer.domElement);
+                this.controls = new MapControls(this.camera, this.renderer.domElement);
                 this.controls.enableDamping = true;
             }
 

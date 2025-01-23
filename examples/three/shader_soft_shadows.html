@@ -19,7 +19,7 @@
     </style>
 
     <script type="module">
-        import { BasicShadowMap, BufferGeometryLoader, BufferGeometryLoaderThread, Color, ColorManagement, DirectionalLight, Group, HemisphereLight, ImageBitmapLoaderThread, LinearSRGBColorSpace, Mesh, MeshPhongMaterial, NoBlending, OrbitControls, PanelItem, PerspectiveCamera, PlaneGeometry, Reflector, RepeatWrapping, Scene, ShadowMaterial, SoftShadows, SphereGeometry, TextureLoader, UI, Vector2, WebGLRenderer, getFullscreenTriangle, ticker } from '../../build/alien.three.js';
+        import { BasicShadowMap, BufferGeometryLoader, BufferGeometryLoaderThread, Color, ColorManagement, DirectionalLight, Group, HemisphereLight, ImageBitmapLoaderThread, LinearSRGBColorSpace, Mesh, MeshPhongMaterial, OrbitControls, PanelItem, PerspectiveCamera, PlaneGeometry, Reflector, RepeatWrapping, Scene, ShadowMaterial, SoftShadows, SphereGeometry, TextureLoader, UI, Vector2, WebGLRenderer, getFullscreenTriangle, ticker } from '../../build/alien.three.js';
 
         // Based on https://threejs.org/examples/#webgl_shadowmap_pcss by spidersharma03
 
@@ -75,8 +75,6 @@
                 map.repeat.set(6, 3);
 
                 const material = new ShadowMaterial({
-                    transparent: false,
-                    blending: NoBlending,
                     toneMapped: false
                 });
 
@@ -149,7 +147,6 @@
                         gl_FragColor.rgb -= (1.0 - getShadowMask()) * 0.125;
 
                         gl_FragColor.rgb = dither(gl_FragColor.rgb);
-                        gl_FragColor.a = 1.0;
                         `
                     );
                 };

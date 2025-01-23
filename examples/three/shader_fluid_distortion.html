@@ -17,6 +17,7 @@
         // Based on https://oframe.github.io/ogl/examples/?src=post-fluid-distortion.html by gordonnl
 
         import rgbshift from '../../src/shaders/modules/rgbshift/rgbshift.glsl.js';
+        import dither from '../../src/shaders/modules/dither/dither.glsl.js';
 
         class CompositeMaterial extends RawShaderMaterial {
             constructor() {
@@ -53,6 +54,7 @@
                         out vec4 FragColor;
 
                         ${rgbshift}
+                        ${dither}
 
                         void main() {
                             vec3 fluid = texture(tFluid, vUv).rgb;
@@ -65,6 +67,9 @@
                             float amount = 0.001 * uBloomDistortion;
 
                             FragColor.rgb += getRGB(tBloom, uv, angle, amount).rgb;
+
+                            FragColor.rgb = dither(FragColor.rgb);
+                            FragColor.a = 1.0;
                         }
                     `,
                     blending: NoBlending,
@@ -259,7 +264,7 @@
             // Public methods
 
             resize = (width, height) => {
-                width = MathUtils.floorPowerOfTwo(width) / 2;
+                width = Math.round(width / 2);
                 height = 1024;
 
                 this.reflector.setSize(width, height);
@@ -484,7 +489,7 @@
                 // Fluid simulation
                 this.lastMouse = new Vector2();
 
-                // Bloom
+                // Unreal bloom
                 this.luminosityThreshold = 0.1;
                 this.luminositySmoothing = 1;
                 this.bloomStrength = 0.3;
@@ -544,7 +549,7 @@
                     this.blurMaterials.push(new UnrealBloomBlurMaterial(kernelSizeArray[i]));
                 }
 
-                // Bloom composite material
+                // Unreal bloom composite material
                 this.bloomCompositeMaterial = new BloomCompositeMaterial();
                 this.bloomCompositeMaterial.uniforms.tBlur1.value = this.renderTargetsVertical[0].texture;
                 this.bloomCompositeMaterial.uniforms.tBlur2.value = this.renderTargetsVertical[1].texture;
@@ -625,8 +630,8 @@
                 this.renderTarget.setSize(width, height);
 
                 // Unreal bloom
-                width = MathUtils.floorPowerOfTwo(width) / 2;
-                height = MathUtils.floorPowerOfTwo(height) / 2;
+                width = Math.round(width / 2);
+                height = Math.round(height / 2);
 
                 this.renderTargetBright.setSize(width, height);
 
@@ -636,8 +641,8 @@
 
                     this.blurMaterials[i].uniforms.uResolution.value.set(width, height);
 
-                    width /= 2;
-                    height /= 2;
+                    width = Math.round(width / 2);
+                    height = Math.round(height / 2);
                 }
             };
 

@@ -11,29 +11,7 @@
     <link rel="stylesheet" href="../assets/css/style.css">
 
     <script type="module">
-        import { BloomCompositeMaterial, Color, ColorManagement, EnvironmentTextureLoader, FrontSide, GLTFLoader, Group, HemisphereLight, LinearSRGBColorSpace, LuminosityMaterial, MathUtils, Mesh, OrbitControls, OrthographicCamera, PanelItem, PerspectiveCamera, PointLight, PointLightHelper, Scene, SceneCompositeDistortionMaterial, UI, UnrealBloomBlurMaterial, Vector2, Vector3, WebGLRenderTarget, WebGLRenderer, getFullscreenTriangle, getKeyByValue, getViewSize, ticker, tween } from '../../build/alien.three.js';
-
-        const isDebug = /[?&]debug/.test(location.search);
-        const isOrbit = /[?&]orbit/.test(location.search);
-
-        class MouseLight extends Group {
-            constructor() {
-                super();
-
-                this.position.z = 2;
-
-                this.initLight();
-            }
-
-            initLight() {
-                const light = new PointLight(0xffffff, 0.9, 4.4, 0);
-                this.add(light);
-
-                if (isDebug) {
-                    WorldController.scene.add(new PointLightHelper(light, 0.125));
-                }
-            }
-        }
+        import { BloomCompositeMaterial, Color, ColorManagement, DirectionalLight, EnvironmentTextureLoader, GLTFLoader, Group, HemisphereLight, LightOptions, LightPanelController, LinearSRGBColorSpace, LuminosityMaterial, MathUtils, Mesh, MeshPhysicalMaterial, OrbitControls, OrthographicCamera, Panel, PanelItem, PerspectiveCamera, PhysicalMaterialPanel, Scene, SceneCompositeDistortionMaterial, ScenePanel, TextureLoader, UI, UnrealBloomBlurMaterial, Vector2, WebGLRenderTarget, WebGLRenderer, getFullscreenTriangle, getKeyByLight, getKeyByValue, ticker } from '../../build/alien.three.js';
 
         class Crystal extends Group {
             constructor() {
@@ -41,25 +19,56 @@
             }
 
             async initMesh() {
-                const { loadGLTF } = WorldController;
-
-                // https://sbtron.github.io/makeglb/
-                const gltf = await loadGLTF('../assets/gltf/crystal.glb');
+                const { anisotropy, loadGLTF } = WorldController;
 
                 // Sketchfab model
-                const model = gltf.scene.children[0];
-                model.rotation.z = MathUtils.degToRad(200);
-                model.scale.multiplyScalar(0.01);
+                // https://sbtron.github.io/makeglb/
+                const model = await loadGLTF('../assets/gltf/crystal.glb');
+                model.scale.setScalar(0.01);
+                // model.updateMatrixWorld(); // Needed for Point3D
 
                 // Crystal mesh
-                const mesh = model.children[0].children[0].children[0].children[0];
-                mesh.position.x = 20; // Centre the axis
-                mesh.material.side = FrontSide;
+                // https://threejs.org/docs/index.html#api/en/core/Object3D.getObjectByName
+                // const avatar = gltf.scene.getObjectByName('avatar');
+                const mesh = model.children[0].children[0].children[0].children[0].children[0];
+                mesh.geometry.center(); // Also needed for Point3D
+                mesh.position.y = 50;
+                mesh.rotation.y = MathUtils.degToRad(200);
 
-                this.add(gltf.scene);
+                // Textures
+                mesh.material.map.anisotropy = anisotropy;
+                mesh.material.normalMap.anisotropy = anisotropy;
+                mesh.material.metalnessMap.anisotropy = anisotropy;
+                mesh.material.roughnessMap.anisotropy = anisotropy;
+
+                const material = new MeshPhysicalMaterial();
+                material.color = mesh.material.color;
+                material.metalness = mesh.material.metalness;
+                material.roughness = mesh.material.roughness;
+                material.map = mesh.material.map;
+                material.normalMap = mesh.material.normalMap;
+                material.metalnessMap = mesh.material.metalnessMap;
+                material.roughnessMap = mesh.material.roughnessMap;
+                material.side = mesh.material.side;
+                material.transparent = mesh.material.transparent;
+                material.opacity = mesh.material.opacity;
+                material.transmission = 0.95;
+                material.ior = 1.5;
+                material.thickness = 5;
+                // material.forceSinglePass = true;
+                mesh.material.dispose();
+                mesh.material = material;
+
+                this.add(model);
+
+                this.mesh = mesh;
             }
 
             // Public methods
+
+            update = () => {
+                this.mesh.rotation.y += 0.005;
+            };
 
             ready = () => this.initMesh();
         }
@@ -76,49 +85,27 @@
             initViews() {
                 this.crystal = new Crystal();
                 this.add(this.crystal);
-
-                this.light = new MouseLight();
-                this.add(this.light);
             }
+
+            // Public methods
+
+            update = () => {
+                this.crystal.update();
+            };
+
+            ready = () => Promise.all([
+                this.crystal.ready()
+            ]);
         }
 
         class SceneController {
             static init(view) {
                 this.view = view;
-
-                // Mouse light
-                this.mouse = new Vector2();
-                this.target = new Vector2();
-                this.lightPosition = new Vector3();
-                this.lerpSpeed = 0.25;
-
-                this.addListeners();
             }
-
-            static addListeners() {
-                window.addEventListener('pointermove', this.onPointerMove);
-            }
-
-            // Event handlers
-
-            static onPointerMove = ({ clientX, clientY }) => {
-                if (!this.view.visible) {
-                    return;
-                }
-
-                this.target.x = (clientX / document.documentElement.clientWidth) * 2 - 1;
-                this.target.y = 1 - (clientY / document.documentElement.clientHeight) * 2;
-            };
 
             // Public methods
 
             static resize = () => {
-                const { getViewSize } = WorldController;
-
-                const { x, y } = getViewSize(this.view.light.position.z);
-
-                this.halfWidth = x / 2;
-                this.halfHeight = y / 2;
             };
 
             static update = () => {
@@ -126,52 +113,32 @@
                     return;
                 }
 
-                this.mouse.lerp(this.target, this.lerpSpeed);
-
-                this.lightPosition.x = this.mouse.x * this.halfWidth;
-                this.lightPosition.y = this.mouse.y * this.halfHeight;
-                this.lightPosition.z = this.view.light.position.z;
-
-                this.view.light.position.copy(this.lightPosition);
+                this.view.update();
             };
 
             static animateIn = () => {
                 this.view.visible = true;
             };
 
-            static ready = () => this.view.crystal.ready();
+            static ready = () => this.view.ready();
         }
 
-        class PanelController {
-            static init(ui) {
-                this.ui = ui;
+        class PostPanel extends Panel {
+            constructor() {
+                super();
 
                 this.initPanel();
             }
 
-            static initPanel() {
+            initPanel() {
                 const { luminosityMaterial, bloomCompositeMaterial, compositeMaterial } = RenderManager;
 
                 const postOptions = {
                     Off: false,
-                    Post: true
+                    On: true
                 };
 
-                const items = [
-                    {
-                        name: 'FPS'
-                    },
-                    {
-                        type: 'divider'
-                    },
-                    {
-                        type: 'list',
-                        list: postOptions,
-                        value: getKeyByValue(postOptions, RenderManager.enabled),
-                        callback: value => {
-                            RenderManager.enabled = postOptions[value];
-                        }
-                    },
+                const postItems = [
                     {
                         type: 'divider'
                     },
@@ -234,6 +201,140 @@
                     }
                 ];
 
+                const items = [
+                    {
+                        type: 'divider'
+                    },
+                    {
+                        type: 'list',
+                        name: 'Post',
+                        list: postOptions,
+                        value: getKeyByValue(postOptions, RenderManager.enabled),
+                        callback: (value, item) => {
+                            if (!item.hasContent()) {
+                                const postPanel = new Panel();
+                                postPanel.animateIn(true);
+
+                                postItems.forEach(data => {
+                                    postPanel.add(new PanelItem(data));
+                                });
+
+                                item.setContent(postPanel);
+                            }
+
+                            RenderManager.enabled = postOptions[value];
+
+                            if (RenderManager.enabled) {
+                                item.toggleContent(true);
+                            } else {
+                                item.toggleContent(false);
+                            }
+                        }
+                    }
+                ];
+
+                items.forEach(data => {
+                    this.add(new PanelItem(data));
+                });
+            }
+        }
+
+        class PanelController {
+            static init(renderer, scene, camera, view, ui) {
+                this.renderer = renderer;
+                this.scene = scene;
+                this.camera = camera;
+                this.view = view;
+                this.ui = ui;
+
+                this.lights = [];
+
+                this.initControllers();
+                this.initPanel();
+            }
+
+            static initControllers() {
+                LightPanelController.init(this.scene);
+            }
+
+            static initPanel() {
+                const { crystal } = this.view;
+
+                const sceneOptions = {
+                    Scene: ScenePanel,
+                    Post: PostPanel
+                };
+
+                this.scene.traverse(object => {
+                    if (object.isLight) {
+                        const key = getKeyByLight(LightOptions, object);
+
+                        sceneOptions[key] = [object, LightOptions[key][1]];
+
+                        this.lights.push(object);
+                    }
+                });
+
+                const items = [
+                    {
+                        name: 'FPS'
+                    },
+                    {
+                        type: 'content',
+                        callback: (value, item) => {
+                            const materialPanel = new PhysicalMaterialPanel(crystal.mesh);
+                            materialPanel.animateIn(true);
+
+                            item.setContent(materialPanel);
+                        }
+                    },
+                    {
+                        type: 'divider'
+                    },
+                    {
+                        type: 'slider',
+                        name: 'TRS',
+                        min: 0.01,
+                        max: 1,
+                        step: 0.01,
+                        value: RenderManager.transmissionResolutionScale,
+                        callback: value => {
+                            this.renderer.transmissionResolutionScale = value;
+                        }
+                    },
+                    {
+                        type: 'divider'
+                    },
+                    {
+                        type: 'list',
+                        list: sceneOptions,
+                        value: 'Scene',
+                        callback: (value, item) => {
+                            switch (value) {
+                                case 'Scene':
+                                case 'Post': {
+                                    const ScenePanel = sceneOptions[value];
+
+                                    const scenePanel = new ScenePanel(this.scene, this.ui);
+                                    scenePanel.animateIn(true);
+
+                                    item.setContent(scenePanel);
+                                    break;
+                                }
+                                default: {
+                                    const [light, LightPanel] = sceneOptions[value];
+
+                                    const lightPanel = new LightPanel(LightPanelController, light);
+                                    lightPanel.animateIn(true);
+
+                                    item.setContent(lightPanel);
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                ];
+
                 items.forEach(data => {
                     this.ui.addPanel(new PanelItem(data));
                 });
@@ -249,7 +350,10 @@
                 this.scene = scene;
                 this.camera = camera;
 
-                // Bloom
+                // Renderer settings
+                this.transmissionResolutionScale = 1;
+
+                // Unreal bloom
                 this.luminosityThreshold = 0.1;
                 this.luminositySmoothing = 1;
                 this.bloomStrength = 0.3;
@@ -263,6 +367,9 @@
 
             static initRenderer() {
                 const { screenTriangle } = WorldController;
+
+                // Renderer settings
+                this.renderer.transmissionResolutionScale = this.transmissionResolutionScale;
 
                 // Fullscreen triangle
                 this.screenCamera = new OrthographicCamera(-1, 1, 1, -1, 0, 1);
@@ -301,7 +408,7 @@
                     this.blurMaterials.push(new UnrealBloomBlurMaterial(kernelSizeArray[i]));
                 }
 
-                // Bloom composite material
+                // Unreal bloom composite material
                 this.bloomCompositeMaterial = new BloomCompositeMaterial();
                 this.bloomCompositeMaterial.uniforms.tBlur1.value = this.renderTargetsVertical[0].texture;
                 this.bloomCompositeMaterial.uniforms.tBlur2.value = this.renderTargetsVertical[1].texture;
@@ -338,8 +445,8 @@
                 this.renderTarget.setSize(width, height);
 
                 // Unreal bloom
-                width = MathUtils.floorPowerOfTwo(width) / 2;
-                height = MathUtils.floorPowerOfTwo(height) / 2;
+                width = Math.round(width / 2);
+                height = Math.round(height / 2);
 
                 this.renderTargetBright.setSize(width, height);
 
@@ -349,8 +456,8 @@
 
                     this.blurMaterials[i].uniforms.uResolution.value.set(width, height);
 
-                    width /= 2;
-                    height /= 2;
+                    width = Math.round(width / 2);
+                    height = Math.round(height / 2);
                 }
             };
 
@@ -413,105 +520,6 @@
             };
         }
 
-        class CameraController {
-            static init(camera) {
-                this.camera = camera;
-
-                this.mouse = new Vector2();
-                this.target = new Vector2();
-
-                // Motion control
-                this.group = new Group();
-                this.innerGroup = new Group();
-                this.group.add(this.innerGroup);
-                this.group.matrixAutoUpdate = false;
-                this.innerGroup.matrixAutoUpdate = false;
-
-                // Start position
-                this.innerGroup.position.copy(this.camera.position);
-
-                this.rotation = 0.0002;
-                this.lerpSpeed = 0.05;
-                this.multiplier = 1;
-                this.enabled = false;
-                this.prevent = true;
-
-                this.addListeners();
-            }
-
-            static addListeners() {
-                if (isOrbit) {
-                    return;
-                }
-
-                window.addEventListener('pointermove', this.onPointerMove);
-            }
-
-            // Event handlers
-
-            static onPointerMove = ({ clientX, clientY }) => {
-                if (this.prevent) {
-                    return;
-                }
-
-                this.mouse.x = clientX - this.halfWidth;
-                this.mouse.y = clientY - this.halfHeight;
-
-                this.target.x = MathUtils.degToRad(-360) + (1 - this.mouse.x) * this.rotation * this.multiplier;
-                this.target.y = (1 - this.mouse.y) * this.rotation * this.multiplier;
-            };
-
-            // Public methods
-
-            static resize = (width, height) => {
-                this.camera.aspect = width / height;
-                this.camera.updateProjectionMatrix();
-
-                this.halfWidth = width / 2;
-                this.halfHeight = height / 2;
-
-                if (width < height) {
-                    this.camera.position.z = 10;
-                    this.multiplier = 2;
-                } else {
-                    this.camera.position.z = 8;
-                    this.multiplier = 1;
-                }
-
-                this.innerGroup.position.z = this.camera.position.z;
-            };
-
-            static update = () => {
-                if (!this.enabled) {
-                    return;
-                }
-
-                this.group.rotation.x += (this.target.y - this.group.rotation.x) * this.lerpSpeed;
-                this.group.rotation.y += (this.target.x - this.group.rotation.y) * this.lerpSpeed;
-
-                this.updateCamera();
-            };
-
-            static updateCamera = () => {
-                this.group.updateMatrix();
-                this.innerGroup.updateMatrix();
-                this.group.updateMatrixWorld();
-                this.innerGroup.matrixWorld.decompose(this.camera.position, this.camera.quaternion, this.camera.scale);
-            };
-
-            static animateIn = () => {
-                if (isOrbit) {
-                    return;
-                }
-
-                this.enabled = true;
-
-                tween(this.target, { x: MathUtils.degToRad(-360) }, 4200, 'easeInOutQuart', () => {
-                    this.prevent = false;
-                });
-            };
-        }
-
         class WorldController {
             static init() {
                 this.initWorld();
@@ -542,7 +550,7 @@
                 this.camera = new PerspectiveCamera(30);
                 this.camera.near = 0.5;
                 this.camera.far = 40;
-                this.camera.position.z = 8;
+                this.camera.position.set(0, 6, 8);
                 this.camera.lookAt(this.scene.position);
 
                 // Global geometries
@@ -561,23 +569,25 @@
 
             static initLights() {
                 this.scene.add(new HemisphereLight(0x606060, 0x404040, 3));
+
+                const light = new DirectionalLight(0xffffff, 0.2);
+                light.position.set(0.6, 0.5, 1);
+                this.scene.add(light);
             }
 
             static initLoaders() {
+                this.textureLoader = new TextureLoader();
                 this.environmentLoader = new EnvironmentTextureLoader(this.renderer);
                 this.gltfLoader = new GLTFLoader();
             }
 
             static async initEnvironment() {
                 this.scene.environment = await this.loadEnvironmentTexture('../assets/textures/env/jewelry_black_contrast.jpg');
-                this.scene.environmentIntensity = 1.2;
+                this.scene.environmentRotation.z = MathUtils.degToRad(100);
+                this.scene.environmentIntensity = 5;
             }
 
             static initControls() {
-                if (!isOrbit) {
-                    return;
-                }
-
                 this.controls = new OrbitControls(this.camera, this.renderer.domElement);
                 this.controls.enableDamping = true;
             }
@@ -595,6 +605,9 @@
             // Public methods
 
             static resize = (width, height, dpr) => {
+                this.camera.aspect = width / height;
+                this.camera.updateProjectionMatrix();
+
                 width = Math.round(width * dpr);
                 height = Math.round(height * dpr);
 
@@ -607,20 +620,28 @@
                 this.time.value = time;
                 this.frame.value = frame;
 
-                if (this.controls && this.controls.enabled) {
-                    this.controls.update();
-                }
+                this.controls.update();
             };
+
+            static ready = () => Promise.all([
+                this.textureLoader.ready(),
+                this.environmentLoader.ready()
+            ]);
 
             // Global handlers
 
+            static getTexture = (path, callback) => this.textureLoader.load(path, callback);
+
+            static loadTexture = path => this.textureLoader.loadAsync(path);
+
             static loadEnvironmentTexture = path => this.environmentLoader.loadAsync(path);
 
-            static getGLTF = (path, callback) => this.gltfLoader.load(path, callback);
-
-            static loadGLTF = path => this.gltfLoader.loadAsync(path);
-
-            static getViewSize = object => getViewSize(this.camera, object);
+            static loadGLTF = async path => {
+                const gltf = await this.gltfLoader.loadAsync(path);
+                const model = gltf.scene;
+                await this.renderer.compileAsync(model, this.camera, this.scene);
+                return model;
+            };
         }
 
         class App {
@@ -632,14 +653,11 @@
                 this.addListeners();
                 this.onResize();
 
-                await Promise.all([
-                    SceneController.ready(),
-                    WorldController.environmentLoader.ready()
-                ]);
+                await SceneController.ready();
+                await WorldController.ready();
 
                 this.initPanel();
 
-                CameraController.animateIn();
                 SceneController.animateIn();
             }
 
@@ -658,26 +676,31 @@
                         content: '<a href="https://sketchfab.com/3d-models/crystal-6bac0beae27748899ef260a8bac3e4a8" target="_blank" rel="noopener">Crystal</a> by <a href="https://sketchfab.com/LM3D" target="_blank" rel="noopener">Luciano O. Mollo</a>'
                     }
                 });
-                this.ui.info.css({ pointerEvents: 'auto' });
+                this.ui.info.css({
+                    pointerEvents: 'auto',
+                    webkitUserSelect: 'auto',
+                    userSelect: 'auto'
+                });
                 this.ui.info.animateIn();
+                this.ui.animateIn();
                 document.body.appendChild(this.ui.element);
             }
 
             static initControllers() {
                 const { renderer, scene, camera } = WorldController;
 
-                CameraController.init(camera);
                 SceneController.init(this.view);
                 RenderManager.init(renderer, scene, camera);
             }
 
             static initPanel() {
-                PanelController.init(this.ui);
+                const { renderer, scene, camera } = WorldController;
+
+                PanelController.init(renderer, scene, camera, this.view, this.ui);
             }
 
             static addListeners() {
                 window.addEventListener('resize', this.onResize);
-                window.addEventListener('load', this.onLoad);
                 ticker.add(this.onUpdate);
                 ticker.start();
             }
@@ -690,21 +713,15 @@
                 const dpr = window.devicePixelRatio;
 
                 WorldController.resize(width, height, dpr);
-                CameraController.resize(width, height);
-                SceneController.resize();
+                SceneController.resize(width, height);
                 RenderManager.resize(width, height, dpr);
             };
 
             static onUpdate = (time, delta, frame) => {
                 WorldController.update(time, delta, frame);
-                CameraController.update();
-                SceneController.update();
+                SceneController.update(time);
                 RenderManager.update(time, delta, frame);
                 this.ui.update();
-            };
-
-            static onLoad = () => {
-                this.ui.animateIn();
             };
         }
 

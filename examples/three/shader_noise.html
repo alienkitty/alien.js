@@ -22,7 +22,7 @@
                 super({
                     glslVersion: GLSL3,
                     uniforms: {
-                        uMultiplier: { value: 2 },
+                        uScale: { value: 2 },
                         uSpeed: { value: 0.5 },
                         uTime: WorldController.time
                     },
@@ -41,7 +41,7 @@
                     fragmentShader: /* glsl */ `
                         precision highp float;
 
-                        uniform float uMultiplier;
+                        uniform float uScale;
                         uniform float uSpeed;
                         uniform float uTime;
 
@@ -75,9 +75,9 @@
                         void main() {
                             vec2 pos = vUv.xy;
 
-                            vec2 q = vec2(fbm(pos + vec2(0.0)), fbm(pos + vec2(0.0)));
+                            vec2 q = vec2(fbm(pos), fbm(pos));
 
-                            float c = fbm(pos + sin(uTime * uSpeed) * uMultiplier * q);
+                            float c = fbm(pos + sin(uTime * uSpeed) * uScale * q);
 
                             FragColor = vec4(vec3(c), 1.0);
                         }
@@ -112,9 +112,9 @@
                         min: -5,
                         max: 5,
                         step: 0.05,
-                        value: screen.material.uniforms.uMultiplier.value,
+                        value: screen.material.uniforms.uScale.value,
                         callback: value => {
-                            screen.material.uniforms.uMultiplier.value = value;
+                            screen.material.uniforms.uScale.value = value;
                         }
                     },
                     {

@@ -71,8 +71,7 @@
                         void main() {
                             FragColor = texture(tScene, vUv);
 
-                            vec2 dir = 0.5 - vUv;
-                            float angle = atan(dir.y, dir.x);
+                            float angle = length(vUv - 0.5);
                             float amount = 0.001 * uBloomDistortion;
 
                             FragColor.rgb += getRGB(tBloom, vUv, angle, amount).rgb;
@@ -374,7 +373,7 @@
                 this.scene = scene;
                 this.camera = camera;
 
-                // Bloom
+                // Unreal bloom
                 this.luminosityThreshold = 0.75;
                 this.luminositySmoothing = 1;
                 this.bloomStrength = 0.3;
@@ -426,7 +425,7 @@
                     this.blurMaterials.push(new UnrealBloomBlurMaterial(kernelSizeArray[i]));
                 }
 
-                // Bloom composite material
+                // Unreal bloom composite material
                 this.bloomCompositeMaterial = new BloomCompositeMaterial();
                 this.bloomCompositeMaterial.uniforms.tBlur1.value = this.renderTargetsVertical[0].texture;
                 this.bloomCompositeMaterial.uniforms.tBlur2.value = this.renderTargetsVertical[1].texture;
@@ -463,8 +462,8 @@
                 this.renderTarget.setSize(width, height);
 
                 // Unreal bloom
-                width = MathUtils.floorPowerOfTwo(width) / 2;
-                height = MathUtils.floorPowerOfTwo(height) / 2;
+                width = Math.round(width / 2);
+                height = Math.round(height / 2);
 
                 this.renderTargetBright.setSize(width, height);
 
@@ -474,8 +473,8 @@
 
                     this.blurMaterials[i].uniforms.uResolution.value.set(width, height);
 
-                    width /= 2;
-                    height /= 2;
+                    width = Math.round(width / 2);
+                    height = Math.round(height / 2);
                 }
             };
 
@@ -568,7 +567,7 @@
                 this.scene.background = new Color(0xefefef);
                 this.camera = new PerspectiveCamera(35);
                 this.camera.near = 1;
-                this.camera.far = 2000;
+                this.camera.far = 3000;
                 this.camera.position.set(0, 0.5, 6);
                 this.camera.lookAt(this.scene.position);
 

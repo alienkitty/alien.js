@@ -784,7 +784,7 @@ class RenderManager {
     static init(renderer) {
         this.renderer = renderer;
 
-        // Bloom
+        // Unreal bloom
         this.luminosityThreshold = 0.1;
         this.luminositySmoothing = 1;
         this.bloomStrength = 0.3;
@@ -838,7 +838,7 @@ class RenderManager {
             this.blurMaterials.push(new UnrealBloomBlurMaterial(kernelSizeArray[i]));
         }
 
-        // Bloom composite material
+        // Unreal bloom composite material
         this.bloomCompositeMaterial = new BloomCompositeMaterial();
         this.bloomCompositeMaterial.uniforms.tBlur1.value = this.renderTargetsVertical[0].texture;
         this.bloomCompositeMaterial.uniforms.tBlur2.value = this.renderTargetsVertical[1].texture;
@@ -910,8 +910,8 @@ class RenderManager {
         this.renderTarget.setSize(width, height);
 
         // Unreal bloom
-        width = MathUtils.floorPowerOfTwo(width) / 2;
-        height = MathUtils.floorPowerOfTwo(height) / 2;
+        width = Math.round(width / 2);
+        height = Math.round(height / 2);
 
         this.renderTargetBright.setSize(width, height);
 
@@ -921,8 +921,8 @@ class RenderManager {
 
             this.blurMaterials[i].uniforms.uResolution.value.set(width, height);
 
-            width /= 2;
-            height /= 2;
+            width = Math.round(width / 2);
+            height = Math.round(height / 2);
         }
     };
 

@@ -42,7 +42,7 @@
                 topMesh.position.set(100, 250, 125);
                 this.add(topMesh);
 
-                const topPlane = new PlaneGeometry(50, 50, 32);
+                const topPlane = new PlaneGeometry(50, 50);
                 const topPlaneMesh = new Mesh(topPlane, material);
                 topPlaneMesh.position.set(200, 275, 125);
                 topPlaneMesh.rotation.x = MathUtils.degToRad(-90);
@@ -153,7 +153,7 @@
                 this.scene = scene;
                 this.camera = camera;
 
-                // Bloom
+                // Unreal bloom
                 this.luminosityThreshold = 0.1;
                 this.luminositySmoothing = 1;
                 this.bloomStrength = 0.3;
@@ -205,7 +205,7 @@
                     this.blurMaterials.push(new UnrealBloomBlurMaterial(kernelSizeArray[i]));
                 }
 
-                // Bloom composite material
+                // Unreal bloom composite material
                 this.bloomCompositeMaterial = new BloomCompositeMaterial();
                 this.bloomCompositeMaterial.uniforms.tBlur1.value = this.renderTargetsVertical[0].texture;
                 this.bloomCompositeMaterial.uniforms.tBlur2.value = this.renderTargetsVertical[1].texture;
@@ -242,8 +242,8 @@
                 this.renderTarget.setSize(width, height);
 
                 // Unreal bloom
-                width = MathUtils.floorPowerOfTwo(width) / 2;
-                height = MathUtils.floorPowerOfTwo(height) / 2;
+                width = Math.round(width / 2);
+                height = Math.round(height / 2);
 
                 this.renderTargetBright.setSize(width, height);
 
@@ -253,8 +253,8 @@
 
                     this.blurMaterials[i].uniforms.uResolution.value.set(width, height);
 
-                    width /= 2;
-                    height /= 2;
+                    width = Math.round(width / 2);
+                    height = Math.round(height / 2);
                 }
             };
 
@@ -343,7 +343,7 @@
                 this.scene.background = new Color(0x060606);
                 this.camera = new OrthographicCamera();
                 this.camera.near = 0;
-                this.camera.far = 1000;
+                this.camera.far = 3000;
                 this.camera.zoom = 1;
                 this.camera.position.set(500, 500, 500);
                 this.camera.lookAt(this.scene.position);

@@ -2,49 +2,54 @@
  * @author pschroen / https://ufo.ai/
  *
  * Based on https://developer.mozilla.org/en-US/docs/Web/API/EventTarget#simple_implementation_of_eventtarget
+ * Based on https://github.com/mrdoob/three.js/blob/dev/src/core/EventDispatcher.js
+ * Based on https://github.com/brunosimon/folio-2019/blob/master/src/javascript/Utils/EventEmitter.js
  */
 
 /**
- * A simple implementation of EventTarget with event parameter spread.
+ * A simple implementation of EventTarget with Map() based types,
+ * and event parameter spread.
  */
 class EventEmitter {
     constructor() {
-        this.callbacks = {};
+        this.map = new Map();
     }
 
     on(type, callback) {
-        if (!this.callbacks[type]) {
-            this.callbacks[type] = [];
+        if (!this.map.has(type)) {
+            this.map.set(type, new Array());
         }
 
-        this.callbacks[type].push(callback);
+        this.map.get(type).push(callback);
     }
 
     off(type, callback) {
-        if (!this.callbacks[type]) {
+        if (!this.map.has(type)) {
             return;
         }
 
         if (callback) {
-            const index = this.callbacks[type].indexOf(callback);
+            const array = this.map.get(type);
+            const index = array.indexOf(callback);
 
             if (~index) {
-                this.callbacks[type].splice(index, 1);
+                array.splice(index, 1);
             }
         } else {
-            delete this.callbacks[type];
+            this.map.delete(type);
         }
     }
 
     emit(type, ...event) {
-        if (!this.callbacks[type]) {
+        if (!this.map.has(type)) {
             return;
         }
 
-        const stack = this.callbacks[type].slice();
+        // Make a copy, in case callbacks are removed while iterating
+        const array = Array.from(this.map.get(type));
 
-        for (let i = 0, l = stack.length; i < l; i++) {
-            stack[i].call(this, ...event);
+        for (let i = 0, l = array.length; i < l; i++) {
+            array[i].call(this, ...event);
         }
     }
 
@@ -172,166 +177,10 @@ let Loader$1 = class Loader {
 
 /**
  * @author pschroen / https://ufo.ai/
- *
- * Based on https://github.com/mrdoob/three.js/blob/dev/src/math/MathUtils.js
- * Based on https://github.com/lo-th/uil
  */
 
-const PI = Math.PI;
-const TwoPI = Math.PI * 2;
-const PI90 = Math.PI / 2;
-const PI60 = Math.PI / 3;
-const Third = Math.PI * 2 / 3;
 
-function degToRad$1(degrees) {
-    return degrees * Math.PI / 180;
-}
-
-function radToDeg$1(radians) {
-    return radians * 180 / Math.PI;
-}
-
-function isPowerOfTwo$1(value) {
-    return (value & (value - 1)) === 0 && value !== 0;
-}
-
-function ceilPowerOfTwo$1(value) {
-    return Math.pow(2, Math.ceil(Math.log(value) / Math.LN2));
-}
-
-function floorPowerOfTwo$1(value) {
-    return Math.pow(2, Math.floor(Math.log(value) / Math.LN2));
-}
-
-function clamp$1(value, min, max) {
-    return Math.max(min, Math.min(max, value));
-}
-
-function euclideanModulo$1(n, m) {
-    return ((n % m) + m) % m;
-}
-
-function mapLinear$1(x, a1, a2, b1, b2) {
-    return b1 + (x - a1) * (b2 - b1) / (a2 - a1);
-}
-
-function inverseLerp$1(x, y, value) {
-    if (x !== y) {
-        return (value - x) / (y - x);
-    } else {
-        return 0;
-    }
-}
-
-function lerp$2(x, y, t) {
-    return (1 - t) * x + t * y;
-}
-
-function step(edge, value) {
-    return value < edge ? 0 : 1;
-}
-
-function smoothstep$1(x, min, max) {
-    if (x <= min) return 0;
-    if (x >= max) return 1;
-
-    x = (x - min) / (max - min);
-
-    return x * x * (3 - 2 * x);
-}
-
-function smootherstep$2(x, min, max) {
-    if (x <= min) return 0;
-    if (x >= max) return 1;
-
-    x = (x - min) / (max - min);
-
-    return x * x * x * (x * (x * 6 - 15) + 10);
-}
-
-function parabola(x, k) {
-    return Math.pow(4 * x * (1 - x), k);
-}
-
-function pcurve(x, a, b) {
-    const k = Math.pow(a + b, a + b) / (Math.pow(a, a) * Math.pow(b, b));
-
-    return k * Math.pow(x, a) * Math.pow(1 - x, b);
-}
-
-function fract(value) {
-    return value - Math.floor(value);
-}
-
-function shuffle(array) {
-    return array.sort(() => Math.random() - 0.5);
-}
-
-function randInt$1(low, high) {
-    return low + Math.floor(Math.random() * (high - low + 1));
-}
-
-function randFloat$1(low, high) {
-    return low + Math.random() * (high - low);
-}
-
-function randFloatSpread$1(range) {
-    return range * (0.5 - Math.random());
-}
-
-function headsTails(heads, tails) {
-    if (heads === undefined) {
-        return randInt$1(0, 1);
-    }
-
-    return randInt$1(0, 1) ? tails : heads;
-}
-
-function guid() {
-    return (Date.now() + randInt$1(0, 99999)).toString();
-}
-
-function brightness(color) {
-    return color.r * 0.3 + color.g * 0.59 + color.b * 0.11;
-}
-
-function basename(path, ext) {
-    const name = path.split('/').pop().split('?')[0];
-
-    return !ext ? name.split('.')[0] : name;
-}
-
-function extension(path) {
-    return path.split('.').pop().split('?')[0].toLowerCase();
-}
-
-function absolute(path) {
-    if (path.includes('//')) {
-        return path;
-    }
-
-    const port = Number(location.port) > 1000 ? `:${location.port}` : '';
-    const pathname = path.startsWith('/') ? path : `${location.pathname.replace(/\/[^/]*$/, '/')}${path}`;
-
-    return `${location.protocol}//${location.hostname}${port}${pathname}`;
-}
-
-function getKeyByValue(object, value) {
-    return Object.keys(object).find(key => object[key] === value);
-}
-
-function getConstructor(object) {
-    const isInstance = typeof object !== 'function';
-    const code = isInstance ? object.constructor.toString() : object.toString();
-    const name = code.match(/(?:class|function)\s([^\s{(]+)/)[1];
-
-    return { name, code, isInstance };
-}
-
-/**
- * @author pschroen / https://ufo.ai/
- */
-
+var id$2 = 0;
 
 /**
  * Creates various objects based on the file extension of a given source,
@@ -430,7 +279,7 @@ class AssetLoader extends Loader$1 {
     }
 
     loadData(path) {
-        const promise = fetch(`${this.getPath(path)}?${guid()}`, this.options).then(response => {
+        const promise = fetch(`${this.getPath(path)}?${++id$2}`, this.options).then(response => {
             return response.json();
         });
 
@@ -586,15 +435,15 @@ class MultiLoader extends Loader$1 {
  * A cluster of objects created from a given constructor.
  */
 class Cluster {
-    constructor(type, num = 10) {
-        this.type = type;
+    constructor(typeConstructor, num = 10) {
+        this.typeConstructor = typeConstructor;
 
         this.array = [];
         this.index = 0;
 
-        if (type) {
+        if (this.typeConstructor) {
             for (let i = 0; i < num; i++) {
-                this.array.push(new type());
+                this.array.push(new this.typeConstructor());
             }
         }
     }
@@ -644,13 +493,179 @@ class Cluster {
 
 /**
  * @author pschroen / https://ufo.ai/
+ *
+ * Based on https://github.com/mrdoob/three.js/blob/dev/src/math/MathUtils.js
+ * Based on https://github.com/lo-th/uil
+ */
+
+const PI = Math.PI;
+const TwoPI = Math.PI * 2;
+const PI90 = Math.PI / 2;
+const PI60 = Math.PI / 3;
+const Third = Math.PI * 2 / 3;
+
+function degToRad$1(degrees) {
+    return degrees * Math.PI / 180;
+}
+
+function radToDeg$1(radians) {
+    return radians * 180 / Math.PI;
+}
+
+function isPowerOfTwo$1(value) {
+    return (value & (value - 1)) === 0 && value !== 0;
+}
+
+function ceilPowerOfTwo$1(value) {
+    return Math.pow(2, Math.ceil(Math.log(value) / Math.LN2));
+}
+
+function floorPowerOfTwo$1(value) {
+    return Math.pow(2, Math.floor(Math.log(value) / Math.LN2));
+}
+
+function clamp$1(value, min, max) {
+    return Math.max(min, Math.min(max, value));
+}
+
+function euclideanModulo$1(n, m) {
+    return ((n % m) + m) % m;
+}
+
+function mapLinear$1(x, a1, a2, b1, b2) {
+    return b1 + (x - a1) * (b2 - b1) / (a2 - a1);
+}
+
+function inverseLerp$1(x, y, value) {
+    if (x !== y) {
+        return (value - x) / (y - x);
+    } else {
+        return 0;
+    }
+}
+
+function lerp$2(x, y, t) {
+    return (1 - t) * x + t * y;
+}
+
+function step(edge, value) {
+    return value < edge ? 0 : 1;
+}
+
+function smoothstep$1(x, min, max) {
+    if (x <= min) return 0;
+    if (x >= max) return 1;
+
+    x = (x - min) / (max - min);
+
+    return x * x * (3 - 2 * x);
+}
+
+function smootherstep$2(x, min, max) {
+    if (x <= min) return 0;
+    if (x >= max) return 1;
+
+    x = (x - min) / (max - min);
+
+    return x * x * x * (x * (x * 6 - 15) + 10);
+}
+
+function parabola(x, k) {
+    return Math.pow(4 * x * (1 - x), k);
+}
+
+function pcurve(x, a, b) {
+    const k = Math.pow(a + b, a + b) / (Math.pow(a, a) * Math.pow(b, b));
+
+    return k * Math.pow(x, a) * Math.pow(1 - x, b);
+}
+
+function fract(value) {
+    return value - Math.floor(value);
+}
+
+function median(numbers) {
+    const sorted = numbers.toSorted();
+    const middle = Math.floor(sorted.length / 2);
+
+    if (sorted.length % 2 === 0) {
+        return (sorted[middle - 1] + sorted[middle]) / 2;
+    }
+
+    return sorted[middle];
+}
+
+function shuffle(array) {
+    return array.sort(() => Math.random() - 0.5);
+}
+
+function randInt$1(low, high) {
+    return low + Math.floor(Math.random() * (high - low + 1));
+}
+
+function randFloat$1(low, high) {
+    return low + Math.random() * (high - low);
+}
+
+function randFloatSpread$1(range) {
+    return range * (0.5 - Math.random());
+}
+
+function headsTails(heads, tails) {
+    if (heads === undefined) {
+        return randInt$1(0, 1);
+    }
+
+    return randInt$1(0, 1) ? tails : heads;
+}
+
+function brightness(color) {
+    return color.r * 0.3 + color.g * 0.59 + color.b * 0.11;
+}
+
+function basename(path, ext) {
+    const name = path.split('/').pop().split('?')[0];
+
+    return !ext ? name.split('.')[0] : name;
+}
+
+function extension(path) {
+    return path.split('.').pop().split('?')[0].toLowerCase();
+}
+
+function absolute(path) {
+    if (path.includes('//')) {
+        return path;
+    }
+
+    const port = Number(location.port) > 1000 ? `:${location.port}` : '';
+    const pathname = path.startsWith('/') ? path : `${location.pathname.replace(/\/[^/]*$/, '/')}${path}`;
+
+    return `${location.protocol}//${location.hostname}${port}${pathname}`;
+}
+
+function getKeyByValue(object, value) {
+    return Object.keys(object).find(key => object[key] === value);
+}
+
+function getConstructor(object) {
+    const isInstance = typeof object !== 'function';
+    const code = isInstance ? object.constructor.toString() : object.toString();
+    const name = code.match(/(?:class|function)\s([^\s{(]+)/)[1];
+
+    return { name, code, isInstance };
+}
+
+/**
+ * @author pschroen / https://ufo.ai/
  */
 
 
-var hardware;
+var id$1 = 0;
+var concurrency;
 
 if (typeof window !== 'undefined') {
-    hardware = navigator.hardwareConcurrency || 4;
+    concurrency = navigator.hardwareConcurrency || 4;
 }
 
 /**
@@ -662,7 +677,7 @@ if (typeof window !== 'undefined') {
  * console.log(image);
  */
 class Thread extends EventEmitter {
-    static count = Math.max(Math.min(hardware, 8), 4);
+    static count = Math.max(Math.min(concurrency, 8), 4);
     static params = {};
 
     static upload(...objects) {
@@ -691,6 +706,12 @@ class Thread extends EventEmitter {
     } = Thread.params) {
         super();
 
+        this.initWorker(imports, classes, controller, handlers);
+
+        this.addListeners();
+    }
+
+    initWorker(imports, classes, controller, handlers) {
         const array = [];
 
         imports.forEach(bundle => {
@@ -723,8 +744,6 @@ class Thread extends EventEmitter {
         });
 
         this.worker = new Worker(URL.createObjectURL(new Blob([array.join('\n\n')], { type: 'text/javascript' })), { type: 'module' });
-
-        this.addListeners();
     }
 
     createMethod(name) {
@@ -764,11 +783,11 @@ class Thread extends EventEmitter {
         message.fn = name;
 
         if (callback) {
-            const id = guid();
+            id$1++;
 
-            message.id = id;
+            message.id = id$1;
 
-            this.on(id, callback);
+            this.on(id$1, callback);
         }
 
         this.worker.postMessage({ message }, message.buffer);
@@ -905,7 +924,7 @@ let ImageBitmapLoader$1 = class ImageBitmapLoader extends Loader$1 {
  * Copyright 2010-2024 Three.js Authors
  * SPDX-License-Identifier: MIT
  */
-const REVISION = '171';
+const REVISION = '172';
 
 const MOUSE = { LEFT: 0, MIDDLE: 1, RIGHT: 2, ROTATE: 0, DOLLY: 1, PAN: 2 };
 const TOUCH = { ROTATE: 0, PAN: 1, DOLLY_PAN: 2, DOLLY_ROTATE: 3 };
@@ -3012,6 +3031,7 @@ class Texture extends EventDispatcher {
 		this.version = 0;
 		this.onUpdate = null;
 
+		this.renderTarget = null; // assign texture to a render target
 		this.isRenderTargetTexture = false; // indicates whether a texture belongs to a render target or not
 		this.pmremVersion = 0; // indicates whether this texture should be processed by PMREMGenerator or not (only relevant for render target textures)
 
@@ -3076,6 +3096,9 @@ class Texture extends EventDispatcher {
 		this.flipY = source.flipY;
 		this.unpackAlignment = source.unpackAlignment;
 		this.colorSpace = source.colorSpace;
+
+		this.renderTarget = source.renderTarget;
+		this.isRenderTargetTexture = source.isRenderTargetTexture;
 
 		this.userData = JSON.parse( JSON.stringify( source.userData ) );
 
@@ -3977,6 +4000,7 @@ class RenderTarget extends EventDispatcher {
 
 			this.textures[ i ] = texture.clone();
 			this.textures[ i ].isRenderTargetTexture = true;
+			this.textures[ i ].renderTarget = this;
 
 		}
 
@@ -3986,6 +4010,7 @@ class RenderTarget extends EventDispatcher {
 		this.resolveDepthBuffer = options.resolveDepthBuffer;
 		this.resolveStencilBuffer = options.resolveStencilBuffer;
 
+		this._depthTexture = null;
 		this.depthTexture = options.depthTexture;
 
 		this.samples = options.samples;
@@ -4001,6 +4026,21 @@ class RenderTarget extends EventDispatcher {
 	set texture( value ) {
 
 		this.textures[ 0 ] = value;
+
+	}
+
+	set depthTexture( current ) {
+
+		if ( this._depthTexture !== null ) this._depthTexture.renderTarget = null;
+		if ( current !== null ) current.renderTarget = this;
+
+		this._depthTexture = current;
+
+	}
+
+	get depthTexture() {
+
+		return this._depthTexture;
 
 	}
 
@@ -4052,6 +4092,7 @@ class RenderTarget extends EventDispatcher {
 
 			this.textures[ i ] = source.textures[ i ].clone();
 			this.textures[ i ].isRenderTargetTexture = true;
+			this.textures[ i ].renderTarget = this;
 
 		}
 
@@ -4154,9 +4195,9 @@ class Data3DTexture extends Texture {
 	constructor( data = null, width = 1, height = 1, depth = 1 ) {
 
 		// We're going to add .setXXX() methods for setting properties later.
-		// Users can still set in DataTexture3D directly.
+		// Users can still set in Data3DTexture directly.
 		//
-		//	const texture = new THREE.DataTexture3D( data, width, height, depth );
+		//	const texture = new THREE.Data3DTexture( data, width, height, depth );
 		// 	texture.anisotropy = 16;
 		//
 		// See #14839
@@ -13577,7 +13618,7 @@ class PerspectiveCamera extends Camera {
 	 * The default film gauge is 35, so that the focal length can be specified for
 	 * a 35mm (full frame) camera.
 	 *
-	 * Values for focal length and film gauge must have the same unit.
+	 * @param {number} focalLength - Values for focal length and film gauge must have the same unit.
 	 */
 	setFocalLength( focalLength ) {
 
@@ -13591,6 +13632,8 @@ class PerspectiveCamera extends Camera {
 
 	/**
 	 * Calculates the focal length from the current .fov and .filmGauge.
+	 *
+	 * @returns {number}
 	 */
 	getFocalLength() {
 
@@ -13624,6 +13667,10 @@ class PerspectiveCamera extends Camera {
 	/**
 	 * Computes the 2D bounds of the camera's viewable rectangle at a given distance along the viewing direction.
 	 * Sets minTarget and maxTarget to the coordinates of the lower-left and upper-right corners of the view rectangle.
+	 *
+	 * @param {number} distance
+	 * @param {Vector2} minTarget
+	 * @param {Vector2} maxTarget
 	 */
 	getViewBounds( distance, minTarget, maxTarget ) {
 
@@ -13639,7 +13686,10 @@ class PerspectiveCamera extends Camera {
 
 	/**
 	 * Computes the width and height of the camera's viewable rectangle at a given distance along the viewing direction.
-	 * Copies the result into the target Vector2, where x is width and y is height.
+	 *
+	 * @param {number} distance
+	 * @param {Vector2} target - Vector2 target used to store result where x is width and y is height.
+	 * @returns {Vector2}
 	 */
 	getViewSize( distance, target ) {
 
@@ -13683,6 +13733,13 @@ class PerspectiveCamera extends Camera {
 	 *   camera.setViewOffset( fullWidth, fullHeight, w * 2, h * 1, w, h );
 	 *
 	 *   Note there is no reason monitors have to be the same size or in a grid.
+	 *
+	 * @param {number} fullWidth
+	 * @param {number} fullHeight
+	 * @param {number} x
+	 * @param {number} y
+	 * @param {number} width
+	 * @param {number} height
 	 */
 	setViewOffset( fullWidth, fullHeight, x, y, width, height ) {
 
@@ -22274,7 +22331,7 @@ function pointInTriangle( ax, ay, bx, by, cx, cy, px, py ) {
 // check if a diagonal between two polygon nodes is valid (lies in polygon interior)
 function isValidDiagonal( a, b ) {
 
-	return a.next.i !== b.i && a.prev.i !== b.i && ! intersectsPolygon( a, b ) && // dones't intersect other edges
+	return a.next.i !== b.i && a.prev.i !== b.i && ! intersectsPolygon( a, b ) && // doesn't intersect other edges
            ( locallyInside( a, b ) && locallyInside( b, a ) && middleInside( a, b ) && // locally visible
             ( area( a.prev, a, b.prev ) || area( a, b.prev, b ) ) || // does not create opposite-facing sectors
             equals( a, b ) && area( a.prev, a, a.next ) > 0 && area( b.prev, b, b.next ) > 0 ); // special zero-length case
@@ -33259,11 +33316,11 @@ class PropertyBinding {
 
 		this.targetObject = targetObject;
 
-		if ( targetObject.needsUpdate !== undefined ) { // material
+		if ( targetObject.isMaterial === true ) {
 
 			versioning = this.Versioning.NeedsUpdate;
 
-		} else if ( targetObject.matrixWorldNeedsUpdate !== undefined ) { // node transform
+		} else if ( targetObject.isObject3D === true ) {
 
 			versioning = this.Versioning.MatrixWorldNeedsUpdate;
 
@@ -35243,6 +35300,42 @@ class AnimationMixer extends EventDispatcher {
 
 }
 
+class RenderTarget3D extends RenderTarget {
+
+	constructor( width = 1, height = 1, depth = 1, options = {} ) {
+
+		super( width, height, options );
+
+		this.isRenderTarget3D = true;
+
+		this.depth = depth;
+
+		this.texture = new Data3DTexture( null, width, height, depth );
+
+		this.texture.isRenderTargetTexture = true;
+
+	}
+
+}
+
+class RenderTargetArray extends RenderTarget {
+
+	constructor( width = 1, height = 1, depth = 1, options = {} ) {
+
+		super( width, height, options );
+
+		this.isRenderTargetArray = true;
+
+		this.depth = depth;
+
+		this.texture = new DataArrayTexture( null, width, height, depth );
+
+		this.texture.isRenderTargetTexture = true;
+
+	}
+
+}
+
 class Uniform {
 
 	constructor( value ) {
@@ -36882,17 +36975,19 @@ class CameraHelper extends LineSegments {
 
 		_camera.projectionMatrixInverse.copy( this.camera.projectionMatrixInverse );
 
-		// center / target
+		// Adjust z values based on coordinate system
+		const nearZ = this.camera.coordinateSystem === WebGLCoordinateSystem ? - 1 : 0;
 
-		setPoint( 'c', pointMap, geometry, _camera, 0, 0, - 1 );
+		// center / target
+		setPoint( 'c', pointMap, geometry, _camera, 0, 0, nearZ );
 		setPoint( 't', pointMap, geometry, _camera, 0, 0, 1 );
 
 		// near
 
-		setPoint( 'n1', pointMap, geometry, _camera, - w, - h, - 1 );
-		setPoint( 'n2', pointMap, geometry, _camera, w, - h, - 1 );
-		setPoint( 'n3', pointMap, geometry, _camera, - w, h, - 1 );
-		setPoint( 'n4', pointMap, geometry, _camera, w, h, - 1 );
+		setPoint( 'n1', pointMap, geometry, _camera, - w, - h, nearZ );
+		setPoint( 'n2', pointMap, geometry, _camera, w, - h, nearZ );
+		setPoint( 'n3', pointMap, geometry, _camera, - w, h, nearZ );
+		setPoint( 'n4', pointMap, geometry, _camera, w, h, nearZ );
 
 		// far
 
@@ -36903,9 +36998,9 @@ class CameraHelper extends LineSegments {
 
 		// up
 
-		setPoint( 'u1', pointMap, geometry, _camera, w * 0.7, h * 1.1, - 1 );
-		setPoint( 'u2', pointMap, geometry, _camera, - w * 0.7, h * 1.1, - 1 );
-		setPoint( 'u3', pointMap, geometry, _camera, 0, h * 2, - 1 );
+		setPoint( 'u1', pointMap, geometry, _camera, w * 0.7, h * 1.1, nearZ );
+		setPoint( 'u2', pointMap, geometry, _camera, - w * 0.7, h * 1.1, nearZ );
+		setPoint( 'u3', pointMap, geometry, _camera, 0, h * 2, nearZ );
 
 		// cross
 
@@ -36914,10 +37009,10 @@ class CameraHelper extends LineSegments {
 		setPoint( 'cf3', pointMap, geometry, _camera, 0, - h, 1 );
 		setPoint( 'cf4', pointMap, geometry, _camera, 0, h, 1 );
 
-		setPoint( 'cn1', pointMap, geometry, _camera, - w, 0, - 1 );
-		setPoint( 'cn2', pointMap, geometry, _camera, w, 0, - 1 );
-		setPoint( 'cn3', pointMap, geometry, _camera, 0, - h, - 1 );
-		setPoint( 'cn4', pointMap, geometry, _camera, 0, h, - 1 );
+		setPoint( 'cn1', pointMap, geometry, _camera, - w, 0, nearZ );
+		setPoint( 'cn2', pointMap, geometry, _camera, w, 0, nearZ );
+		setPoint( 'cn3', pointMap, geometry, _camera, 0, - h, nearZ );
+		setPoint( 'cn4', pointMap, geometry, _camera, 0, h, nearZ );
 
 		geometry.getAttribute( 'position' ).needsUpdate = true;
 
@@ -37706,6 +37801,12 @@ function fill( texture ) {
 /**
  * Given the width, height, format, and type of a texture. Determines how many
  * bytes must be used to represent the texture.
+ *
+ * @param {Number} width
+ * @param {Number} height
+ * @param {Number} format
+ * @param {Number} type
+ * @return {Number} The number of bytes required to represent the texture.
  */
 function getByteLength( width, height, format, type ) {
 
@@ -37843,26 +37944,6 @@ const TextureUtils = {
 	fill,
 	getByteLength
 };
-
-class WebGLMultipleRenderTargets extends WebGLRenderTarget { // @deprecated, r162
-
-	constructor( width = 1, height = 1, count = 1, options = {} ) {
-
-		console.warn( 'THREE.WebGLMultipleRenderTargets has been deprecated and will be removed in r172. Use THREE.WebGLRenderTarget and set the "count" parameter to enable MRT.' );
-
-		super( width, height, { ...options, count } );
-
-		this.isWebGLMultipleRenderTargets = true;
-
-	}
-
-	get texture() {
-
-		return this.textures;
-
-	}
-
-}
 
 if ( typeof __THREE_DEVTOOLS__ !== 'undefined' ) {
 
@@ -38379,7 +38460,7 @@ var tonemapping_pars_fragment = "#ifndef saturate\n#define saturate( a ) clamp( 
 
 var transmission_fragment = "#ifdef USE_TRANSMISSION\n\tmaterial.transmission = transmission;\n\tmaterial.transmissionAlpha = 1.0;\n\tmaterial.thickness = thickness;\n\tmaterial.attenuationDistance = attenuationDistance;\n\tmaterial.attenuationColor = attenuationColor;\n\t#ifdef USE_TRANSMISSIONMAP\n\t\tmaterial.transmission *= texture2D( transmissionMap, vTransmissionMapUv ).r;\n\t#endif\n\t#ifdef USE_THICKNESSMAP\n\t\tmaterial.thickness *= texture2D( thicknessMap, vThicknessMapUv ).g;\n\t#endif\n\tvec3 pos = vWorldPosition;\n\tvec3 v = normalize( cameraPosition - pos );\n\tvec3 n = inverseTransformDirection( normal, viewMatrix );\n\tvec4 transmitted = getIBLVolumeRefraction(\n\t\tn, v, material.roughness, material.diffuseColor, material.specularColor, material.specularF90,\n\t\tpos, modelMatrix, viewMatrix, projectionMatrix, material.dispersion, material.ior, material.thickness,\n\t\tmaterial.attenuationColor, material.attenuationDistance );\n\tmaterial.transmissionAlpha = mix( material.transmissionAlpha, transmitted.a, material.transmission );\n\ttotalDiffuse = mix( totalDiffuse, transmitted.rgb, material.transmission );\n#endif";
 
-var transmission_pars_fragment = "#ifdef USE_TRANSMISSION\n\tuniform float transmission;\n\tuniform float thickness;\n\tuniform float attenuationDistance;\n\tuniform vec3 attenuationColor;\n\t#ifdef USE_TRANSMISSIONMAP\n\t\tuniform sampler2D transmissionMap;\n\t#endif\n\t#ifdef USE_THICKNESSMAP\n\t\tuniform sampler2D thicknessMap;\n\t#endif\n\tuniform vec2 transmissionSamplerSize;\n\tuniform sampler2D transmissionSamplerMap;\n\tuniform mat4 modelMatrix;\n\tuniform mat4 projectionMatrix;\n\tvarying vec3 vWorldPosition;\n\tfloat w0( float a ) {\n\t\treturn ( 1.0 / 6.0 ) * ( a * ( a * ( - a + 3.0 ) - 3.0 ) + 1.0 );\n\t}\n\tfloat w1( float a ) {\n\t\treturn ( 1.0 / 6.0 ) * ( a *  a * ( 3.0 * a - 6.0 ) + 4.0 );\n\t}\n\tfloat w2( float a ){\n\t\treturn ( 1.0 / 6.0 ) * ( a * ( a * ( - 3.0 * a + 3.0 ) + 3.0 ) + 1.0 );\n\t}\n\tfloat w3( float a ) {\n\t\treturn ( 1.0 / 6.0 ) * ( a * a * a );\n\t}\n\tfloat g0( float a ) {\n\t\treturn w0( a ) + w1( a );\n\t}\n\tfloat g1( float a ) {\n\t\treturn w2( a ) + w3( a );\n\t}\n\tfloat h0( float a ) {\n\t\treturn - 1.0 + w1( a ) / ( w0( a ) + w1( a ) );\n\t}\n\tfloat h1( float a ) {\n\t\treturn 1.0 + w3( a ) / ( w2( a ) + w3( a ) );\n\t}\n\tvec4 bicubic( sampler2D tex, vec2 uv, vec4 texelSize, float lod ) {\n\t\tuv = uv * texelSize.zw + 0.5;\n\t\tvec2 iuv = floor( uv );\n\t\tvec2 fuv = fract( uv );\n\t\tfloat g0x = g0( fuv.x );\n\t\tfloat g1x = g1( fuv.x );\n\t\tfloat h0x = h0( fuv.x );\n\t\tfloat h1x = h1( fuv.x );\n\t\tfloat h0y = h0( fuv.y );\n\t\tfloat h1y = h1( fuv.y );\n\t\tvec2 p0 = ( vec2( iuv.x + h0x, iuv.y + h0y ) - 0.5 ) * texelSize.xy;\n\t\tvec2 p1 = ( vec2( iuv.x + h1x, iuv.y + h0y ) - 0.5 ) * texelSize.xy;\n\t\tvec2 p2 = ( vec2( iuv.x + h0x, iuv.y + h1y ) - 0.5 ) * texelSize.xy;\n\t\tvec2 p3 = ( vec2( iuv.x + h1x, iuv.y + h1y ) - 0.5 ) * texelSize.xy;\n\t\treturn g0( fuv.y ) * ( g0x * textureLod( tex, p0, lod ) + g1x * textureLod( tex, p1, lod ) ) +\n\t\t\tg1( fuv.y ) * ( g0x * textureLod( tex, p2, lod ) + g1x * textureLod( tex, p3, lod ) );\n\t}\n\tvec4 textureBicubic( sampler2D sampler, vec2 uv, float lod ) {\n\t\tvec2 fLodSize = vec2( textureSize( sampler, int( lod ) ) );\n\t\tvec2 cLodSize = vec2( textureSize( sampler, int( lod + 1.0 ) ) );\n\t\tvec2 fLodSizeInv = 1.0 / fLodSize;\n\t\tvec2 cLodSizeInv = 1.0 / cLodSize;\n\t\tvec4 fSample = bicubic( sampler, uv, vec4( fLodSizeInv, fLodSize ), floor( lod ) );\n\t\tvec4 cSample = bicubic( sampler, uv, vec4( cLodSizeInv, cLodSize ), ceil( lod ) );\n\t\treturn mix( fSample, cSample, fract( lod ) );\n\t}\n\tvec3 getVolumeTransmissionRay( const in vec3 n, const in vec3 v, const in float thickness, const in float ior, const in mat4 modelMatrix ) {\n\t\tvec3 refractionVector = refract( - v, normalize( n ), 1.0 / ior );\n\t\tvec3 modelScale;\n\t\tmodelScale.x = length( vec3( modelMatrix[ 0 ].xyz ) );\n\t\tmodelScale.y = length( vec3( modelMatrix[ 1 ].xyz ) );\n\t\tmodelScale.z = length( vec3( modelMatrix[ 2 ].xyz ) );\n\t\treturn normalize( refractionVector ) * thickness * modelScale;\n\t}\n\tfloat applyIorToRoughness( const in float roughness, const in float ior ) {\n\t\treturn roughness * clamp( ior * 2.0 - 2.0, 0.0, 1.0 );\n\t}\n\tvec4 getTransmissionSample( const in vec2 fragCoord, const in float roughness, const in float ior ) {\n\t\tfloat lod = log2( transmissionSamplerSize.x ) * applyIorToRoughness( roughness, ior );\n\t\treturn textureBicubic( transmissionSamplerMap, fragCoord.xy, lod );\n\t}\n\tvec3 volumeAttenuation( const in float transmissionDistance, const in vec3 attenuationColor, const in float attenuationDistance ) {\n\t\tif ( isinf( attenuationDistance ) ) {\n\t\t\treturn vec3( 1.0 );\n\t\t} else {\n\t\t\tvec3 attenuationCoefficient = -log( attenuationColor ) / attenuationDistance;\n\t\t\tvec3 transmittance = exp( - attenuationCoefficient * transmissionDistance );\t\t\treturn transmittance;\n\t\t}\n\t}\n\tvec4 getIBLVolumeRefraction( const in vec3 n, const in vec3 v, const in float roughness, const in vec3 diffuseColor,\n\t\tconst in vec3 specularColor, const in float specularF90, const in vec3 position, const in mat4 modelMatrix,\n\t\tconst in mat4 viewMatrix, const in mat4 projMatrix, const in float dispersion, const in float ior, const in float thickness,\n\t\tconst in vec3 attenuationColor, const in float attenuationDistance ) {\n\t\tvec4 transmittedLight;\n\t\tvec3 transmittance;\n\t\t#ifdef USE_DISPERSION\n\t\t\tfloat halfSpread = ( ior - 1.0 ) * 0.025 * dispersion;\n\t\t\tvec3 iors = vec3( ior - halfSpread, ior, ior + halfSpread );\n\t\t\tfor ( int i = 0; i < 3; i ++ ) {\n\t\t\t\tvec3 transmissionRay = getVolumeTransmissionRay( n, v, thickness, iors[ i ], modelMatrix );\n\t\t\t\tvec3 refractedRayExit = position + transmissionRay;\n\t\t\n\t\t\t\tvec4 ndcPos = projMatrix * viewMatrix * vec4( refractedRayExit, 1.0 );\n\t\t\t\tvec2 refractionCoords = ndcPos.xy / ndcPos.w;\n\t\t\t\trefractionCoords += 1.0;\n\t\t\t\trefractionCoords /= 2.0;\n\t\t\n\t\t\t\tvec4 transmissionSample = getTransmissionSample( refractionCoords, roughness, iors[ i ] );\n\t\t\t\ttransmittedLight[ i ] = transmissionSample[ i ];\n\t\t\t\ttransmittedLight.a += transmissionSample.a;\n\t\t\t\ttransmittance[ i ] = diffuseColor[ i ] * volumeAttenuation( length( transmissionRay ), attenuationColor, attenuationDistance )[ i ];\n\t\t\t}\n\t\t\ttransmittedLight.a /= 3.0;\n\t\t\n\t\t#else\n\t\t\n\t\t\tvec3 transmissionRay = getVolumeTransmissionRay( n, v, thickness, ior, modelMatrix );\n\t\t\tvec3 refractedRayExit = position + transmissionRay;\n\t\t\tvec4 ndcPos = projMatrix * viewMatrix * vec4( refractedRayExit, 1.0 );\n\t\t\tvec2 refractionCoords = ndcPos.xy / ndcPos.w;\n\t\t\trefractionCoords += 1.0;\n\t\t\trefractionCoords /= 2.0;\n\t\t\ttransmittedLight = getTransmissionSample( refractionCoords, roughness, ior );\n\t\t\ttransmittance = diffuseColor * volumeAttenuation( length( transmissionRay ), attenuationColor, attenuationDistance );\n\t\t\n\t\t#endif\n\t\tvec3 attenuatedColor = transmittance * transmittedLight.rgb;\n\t\tvec3 F = EnvironmentBRDF( n, v, specularColor, specularF90, roughness );\n\t\tfloat transmittanceFactor = ( transmittance.r + transmittance.g + transmittance.b ) / 3.0;\n\t\treturn vec4( ( 1.0 - F ) * attenuatedColor, 1.0 - ( 1.0 - transmittedLight.a ) * transmittanceFactor );\n\t}\n#endif";
+var transmission_pars_fragment = "#ifdef USE_TRANSMISSION\n\tuniform float transmission;\n\tuniform float thickness;\n\tuniform float attenuationDistance;\n\tuniform vec3 attenuationColor;\n\t#ifdef USE_TRANSMISSIONMAP\n\t\tuniform sampler2D transmissionMap;\n\t#endif\n\t#ifdef USE_THICKNESSMAP\n\t\tuniform sampler2D thicknessMap;\n\t#endif\n\tuniform vec2 transmissionSamplerSize;\n\tuniform sampler2D transmissionSamplerMap;\n\tuniform mat4 modelMatrix;\n\tuniform mat4 projectionMatrix;\n\tvarying vec3 vWorldPosition;\n\tfloat w0( float a ) {\n\t\treturn ( 1.0 / 6.0 ) * ( a * ( a * ( - a + 3.0 ) - 3.0 ) + 1.0 );\n\t}\n\tfloat w1( float a ) {\n\t\treturn ( 1.0 / 6.0 ) * ( a *  a * ( 3.0 * a - 6.0 ) + 4.0 );\n\t}\n\tfloat w2( float a ){\n\t\treturn ( 1.0 / 6.0 ) * ( a * ( a * ( - 3.0 * a + 3.0 ) + 3.0 ) + 1.0 );\n\t}\n\tfloat w3( float a ) {\n\t\treturn ( 1.0 / 6.0 ) * ( a * a * a );\n\t}\n\tfloat g0( float a ) {\n\t\treturn w0( a ) + w1( a );\n\t}\n\tfloat g1( float a ) {\n\t\treturn w2( a ) + w3( a );\n\t}\n\tfloat h0( float a ) {\n\t\treturn - 1.0 + w1( a ) / ( w0( a ) + w1( a ) );\n\t}\n\tfloat h1( float a ) {\n\t\treturn 1.0 + w3( a ) / ( w2( a ) + w3( a ) );\n\t}\n\tvec4 bicubic( sampler2D tex, vec2 uv, vec4 texelSize, float lod ) {\n\t\tuv = uv * texelSize.zw + 0.5;\n\t\tvec2 iuv = floor( uv );\n\t\tvec2 fuv = fract( uv );\n\t\tfloat g0x = g0( fuv.x );\n\t\tfloat g1x = g1( fuv.x );\n\t\tfloat h0x = h0( fuv.x );\n\t\tfloat h1x = h1( fuv.x );\n\t\tfloat h0y = h0( fuv.y );\n\t\tfloat h1y = h1( fuv.y );\n\t\tvec2 p0 = ( vec2( iuv.x + h0x, iuv.y + h0y ) - 0.5 ) * texelSize.xy;\n\t\tvec2 p1 = ( vec2( iuv.x + h1x, iuv.y + h0y ) - 0.5 ) * texelSize.xy;\n\t\tvec2 p2 = ( vec2( iuv.x + h0x, iuv.y + h1y ) - 0.5 ) * texelSize.xy;\n\t\tvec2 p3 = ( vec2( iuv.x + h1x, iuv.y + h1y ) - 0.5 ) * texelSize.xy;\n\t\treturn g0( fuv.y ) * ( g0x * textureLod( tex, p0, lod ) + g1x * textureLod( tex, p1, lod ) ) +\n\t\t\tg1( fuv.y ) * ( g0x * textureLod( tex, p2, lod ) + g1x * textureLod( tex, p3, lod ) );\n\t}\n\tvec4 textureBicubic( sampler2D sampler, vec2 uv, float lod ) {\n\t\tvec2 fLodSize = vec2( textureSize( sampler, int( lod ) ) );\n\t\tvec2 cLodSize = vec2( textureSize( sampler, int( lod + 1.0 ) ) );\n\t\tvec2 fLodSizeInv = 1.0 / fLodSize;\n\t\tvec2 cLodSizeInv = 1.0 / cLodSize;\n\t\tvec4 fSample = bicubic( sampler, uv, vec4( fLodSizeInv, fLodSize ), floor( lod ) );\n\t\tvec4 cSample = bicubic( sampler, uv, vec4( cLodSizeInv, cLodSize ), ceil( lod ) );\n\t\treturn mix( fSample, cSample, fract( lod ) );\n\t}\n\tvec3 getVolumeTransmissionRay( const in vec3 n, const in vec3 v, const in float thickness, const in float ior, const in mat4 modelMatrix ) {\n\t\tvec3 refractionVector = refract( - v, normalize( n ), 1.0 / ior );\n\t\tvec3 modelScale;\n\t\tmodelScale.x = length( vec3( modelMatrix[ 0 ].xyz ) );\n\t\tmodelScale.y = length( vec3( modelMatrix[ 1 ].xyz ) );\n\t\tmodelScale.z = length( vec3( modelMatrix[ 2 ].xyz ) );\n\t\treturn normalize( refractionVector ) * thickness * modelScale;\n\t}\n\tfloat applyIorToRoughness( const in float roughness, const in float ior ) {\n\t\treturn roughness * clamp( ior * 2.0 - 2.0, 0.0, 1.0 );\n\t}\n\tvec4 getTransmissionSample( const in vec2 fragCoord, const in float roughness, const in float ior ) {\n\t\tfloat lod = log2( transmissionSamplerSize.x ) * applyIorToRoughness( roughness, ior );\n\t\treturn textureBicubic( transmissionSamplerMap, fragCoord.xy, lod );\n\t}\n\tvec3 volumeAttenuation( const in float transmissionDistance, const in vec3 attenuationColor, const in float attenuationDistance ) {\n\t\tif ( isinf( attenuationDistance ) ) {\n\t\t\treturn vec3( 1.0 );\n\t\t} else {\n\t\t\tvec3 attenuationCoefficient = -log( attenuationColor ) / attenuationDistance;\n\t\t\tvec3 transmittance = exp( - attenuationCoefficient * transmissionDistance );\t\t\treturn transmittance;\n\t\t}\n\t}\n\tvec4 getIBLVolumeRefraction( const in vec3 n, const in vec3 v, const in float roughness, const in vec3 diffuseColor,\n\t\tconst in vec3 specularColor, const in float specularF90, const in vec3 position, const in mat4 modelMatrix,\n\t\tconst in mat4 viewMatrix, const in mat4 projMatrix, const in float dispersion, const in float ior, const in float thickness,\n\t\tconst in vec3 attenuationColor, const in float attenuationDistance ) {\n\t\tvec4 transmittedLight;\n\t\tvec3 transmittance;\n\t\t#ifdef USE_DISPERSION\n\t\t\tfloat halfSpread = ( ior - 1.0 ) * 0.025 * dispersion;\n\t\t\tvec3 iors = vec3( ior - halfSpread, ior, ior + halfSpread );\n\t\t\tfor ( int i = 0; i < 3; i ++ ) {\n\t\t\t\tvec3 transmissionRay = getVolumeTransmissionRay( n, v, thickness, iors[ i ], modelMatrix );\n\t\t\t\tvec3 refractedRayExit = position + transmissionRay;\n\t\t\t\tvec4 ndcPos = projMatrix * viewMatrix * vec4( refractedRayExit, 1.0 );\n\t\t\t\tvec2 refractionCoords = ndcPos.xy / ndcPos.w;\n\t\t\t\trefractionCoords += 1.0;\n\t\t\t\trefractionCoords /= 2.0;\n\t\t\t\tvec4 transmissionSample = getTransmissionSample( refractionCoords, roughness, iors[ i ] );\n\t\t\t\ttransmittedLight[ i ] = transmissionSample[ i ];\n\t\t\t\ttransmittedLight.a += transmissionSample.a;\n\t\t\t\ttransmittance[ i ] = diffuseColor[ i ] * volumeAttenuation( length( transmissionRay ), attenuationColor, attenuationDistance )[ i ];\n\t\t\t}\n\t\t\ttransmittedLight.a /= 3.0;\n\t\t#else\n\t\t\tvec3 transmissionRay = getVolumeTransmissionRay( n, v, thickness, ior, modelMatrix );\n\t\t\tvec3 refractedRayExit = position + transmissionRay;\n\t\t\tvec4 ndcPos = projMatrix * viewMatrix * vec4( refractedRayExit, 1.0 );\n\t\t\tvec2 refractionCoords = ndcPos.xy / ndcPos.w;\n\t\t\trefractionCoords += 1.0;\n\t\t\trefractionCoords /= 2.0;\n\t\t\ttransmittedLight = getTransmissionSample( refractionCoords, roughness, ior );\n\t\t\ttransmittance = diffuseColor * volumeAttenuation( length( transmissionRay ), attenuationColor, attenuationDistance );\n\t\t#endif\n\t\tvec3 attenuatedColor = transmittance * transmittedLight.rgb;\n\t\tvec3 F = EnvironmentBRDF( n, v, specularColor, specularF90, roughness );\n\t\tfloat transmittanceFactor = ( transmittance.r + transmittance.g + transmittance.b ) / 3.0;\n\t\treturn vec4( ( 1.0 - F ) * attenuatedColor, 1.0 - ( 1.0 - transmittedLight.a ) * transmittanceFactor );\n\t}\n#endif";
 
 var uv_pars_fragment = "#if defined( USE_UV ) || defined( USE_ANISOTROPY )\n\tvarying vec2 vUv;\n#endif\n#ifdef USE_MAP\n\tvarying vec2 vMapUv;\n#endif\n#ifdef USE_ALPHAMAP\n\tvarying vec2 vAlphaMapUv;\n#endif\n#ifdef USE_LIGHTMAP\n\tvarying vec2 vLightMapUv;\n#endif\n#ifdef USE_AOMAP\n\tvarying vec2 vAoMapUv;\n#endif\n#ifdef USE_BUMPMAP\n\tvarying vec2 vBumpMapUv;\n#endif\n#ifdef USE_NORMALMAP\n\tvarying vec2 vNormalMapUv;\n#endif\n#ifdef USE_EMISSIVEMAP\n\tvarying vec2 vEmissiveMapUv;\n#endif\n#ifdef USE_METALNESSMAP\n\tvarying vec2 vMetalnessMapUv;\n#endif\n#ifdef USE_ROUGHNESSMAP\n\tvarying vec2 vRoughnessMapUv;\n#endif\n#ifdef USE_ANISOTROPYMAP\n\tvarying vec2 vAnisotropyMapUv;\n#endif\n#ifdef USE_CLEARCOATMAP\n\tvarying vec2 vClearcoatMapUv;\n#endif\n#ifdef USE_CLEARCOAT_NORMALMAP\n\tvarying vec2 vClearcoatNormalMapUv;\n#endif\n#ifdef USE_CLEARCOAT_ROUGHNESSMAP\n\tvarying vec2 vClearcoatRoughnessMapUv;\n#endif\n#ifdef USE_IRIDESCENCEMAP\n\tvarying vec2 vIridescenceMapUv;\n#endif\n#ifdef USE_IRIDESCENCE_THICKNESSMAP\n\tvarying vec2 vIridescenceThicknessMapUv;\n#endif\n#ifdef USE_SHEEN_COLORMAP\n\tvarying vec2 vSheenColorMapUv;\n#endif\n#ifdef USE_SHEEN_ROUGHNESSMAP\n\tvarying vec2 vSheenRoughnessMapUv;\n#endif\n#ifdef USE_SPECULARMAP\n\tvarying vec2 vSpecularMapUv;\n#endif\n#ifdef USE_SPECULAR_COLORMAP\n\tvarying vec2 vSpecularColorMapUv;\n#endif\n#ifdef USE_SPECULAR_INTENSITYMAP\n\tvarying vec2 vSpecularIntensityMapUv;\n#endif\n#ifdef USE_TRANSMISSIONMAP\n\tuniform mat3 transmissionMapTransform;\n\tvarying vec2 vTransmissionMapUv;\n#endif\n#ifdef USE_THICKNESSMAP\n\tuniform mat3 thicknessMapTransform;\n\tvarying vec2 vThicknessMapUv;\n#endif";
 
@@ -40622,6 +40703,12 @@ class PMREMGenerator {
 	 * in radians to be applied to the scene before PMREM generation. Optional near
 	 * and far planes ensure the scene is rendered in its entirety (the cubeCamera
 	 * is placed at the origin).
+	 *
+	 * @param {Scene} scene
+	 * @param {number} sigma
+	 * @param {number} near
+	 * @param {number} far
+	 * @return {WebGLRenderTarget}
 	 */
 	fromScene( scene, sigma = 0, near = 0.1, far = 100 ) {
 
@@ -40657,6 +40744,10 @@ class PMREMGenerator {
 	 * or HDR. The ideal input image size is 1k (1024 x 512),
 	 * as this matches best with the 256 x 256 cubemap output.
 	 * The smallest supported equirectangular image size is 64 x 32.
+	 *
+	 * @param {Texture} equirectangular
+	 * @param {WebGLRenderTarget} [renderTarget=null] - Optional render target.
+	 * @return {WebGLRenderTarget}
 	 */
 	fromEquirectangular( equirectangular, renderTarget = null ) {
 
@@ -40669,6 +40760,10 @@ class PMREMGenerator {
 	 * or HDR. The ideal input cube size is 256 x 256,
 	 * as this matches best with the 256 x 256 cubemap output.
 	 * The smallest supported cube size is 16 x 16.
+	 *
+	 * @param {Texture} cubemap
+	 * @param {null} [renderTarget=null] - Optional render target.
+	 * @return {WebGLRenderTarget}
 	 */
 	fromCubemap( cubemap, renderTarget = null ) {
 
@@ -40986,6 +41081,12 @@ class PMREMGenerator {
 	 * the blur latitudinally (around the poles), and then longitudinally (towards
 	 * the poles) to approximate the orthogonally-separable blur. It is least
 	 * accurate at the poles, but still does a decent job.
+	 *
+	 * @param {WebGLRenderTarget} cubeUVRenderTarget
+	 * @param {number} lodIn
+	 * @param {number} lodOut
+	 * @param {number} sigma
+	 * @param {Vector3} [poleAxis]
 	 */
 	_blur( cubeUVRenderTarget, lodIn, lodOut, sigma, poleAxis ) {
 
@@ -50733,7 +50834,7 @@ class WebXRDepthSensing {
 			const texProps = renderer.properties.get( texture );
 			texProps.__webglTexture = depthData.texture;
 
-			if ( ( depthData.depthNear != renderState.depthNear ) || ( depthData.depthFar != renderState.depthFar ) ) {
+			if ( ( depthData.depthNear !== renderState.depthNear ) || ( depthData.depthFar !== renderState.depthFar ) ) {
 
 				this.depthNear = depthData.depthNear;
 				this.depthFar = depthData.depthFar;
@@ -51051,7 +51152,9 @@ class WebXRManager extends EventDispatcher {
 				currentPixelRatio = renderer.getPixelRatio();
 				renderer.getSize( currentSize );
 
-				if ( session.renderState.layers === undefined ) {
+				const useLayers = session.enabledFeatures !== undefined && session.enabledFeatures.includes( 'layers' );
+
+				if ( ! useLayers ) {
 
 					const layerInit = {
 						antialias: attributes.antialias,
@@ -51233,6 +51336,10 @@ class WebXRManager extends EventDispatcher {
 		 * the cameras' projection and world matrices have already been set.
 		 * And that near and far planes are identical for both cameras.
 		 * Visualization of this technique: https://computergraphics.stackexchange.com/a/4765
+		 *
+		 * @param {ArrayCamera} camera - The camera to update.
+		 * @param {PerspectiveCamera} cameraL - The left camera.
+		 * @param {PerspectiveCamera} cameraR - The right camera.
 		 */
 		function setProjectionFromUnion( camera, cameraL, cameraR ) {
 
@@ -52725,6 +52832,9 @@ class WebGLRenderer {
 		let _clippingEnabled = false;
 		let _localClippingEnabled = false;
 
+		// transmission render target scale
+		this.transmissionResolutionScale = 1.0;
+
 		// camera matrices cache
 
 		const _currentProjectionMatrix = new Matrix4();
@@ -53801,7 +53911,7 @@ class WebGLRenderer {
 
 			//
 
-			if ( _currentRenderTarget !== null ) {
+			if ( _currentRenderTarget !== null && _currentActiveMipmapLevel === 0 ) {
 
 				// resolve multisample renderbuffers to a single-sample texture if necessary
 
@@ -54029,7 +54139,7 @@ class WebGLRenderer {
 			const transmissionRenderTarget = currentRenderState.state.transmissionRenderTarget[ camera.id ];
 
 			const activeViewport = camera.viewport || _currentViewport;
-			transmissionRenderTarget.setSize( activeViewport.z, activeViewport.w );
+			transmissionRenderTarget.setSize( activeViewport.z * _this.transmissionResolutionScale, activeViewport.w * _this.transmissionResolutionScale );
 
 			//
 
@@ -54796,6 +54906,7 @@ class WebGLRenderer {
 
 		};
 
+		const _scratchFrameBuffer = _gl.createFramebuffer();
 		this.setRenderTarget = function ( renderTarget, activeCubeFace = 0, activeMipmapLevel = 0 ) {
 
 			_currentRenderTarget = renderTarget;
@@ -54904,6 +55015,14 @@ class WebGLRenderer {
 
 			}
 
+			// Use a scratch frame buffer if rendering to a mip level to avoid depth buffers
+			// being bound that are different sizes.
+			if ( activeMipmapLevel !== 0 ) {
+
+				framebuffer = _scratchFrameBuffer;
+
+			}
+
 			const framebufferBound = state.bindFramebuffer( _gl.FRAMEBUFFER, framebuffer );
 
 			if ( framebufferBound && useDefaultFramebuffer ) {
@@ -54924,8 +55043,15 @@ class WebGLRenderer {
 			} else if ( isRenderTarget3D ) {
 
 				const textureProperties = properties.get( renderTarget.texture );
-				const layer = activeCubeFace || 0;
-				_gl.framebufferTextureLayer( _gl.FRAMEBUFFER, _gl.COLOR_ATTACHMENT0, textureProperties.__webglTexture, activeMipmapLevel || 0, layer );
+				const layer = activeCubeFace;
+				_gl.framebufferTextureLayer( _gl.FRAMEBUFFER, _gl.COLOR_ATTACHMENT0, textureProperties.__webglTexture, activeMipmapLevel, layer );
+
+			} else if ( renderTarget !== null && activeMipmapLevel !== 0 ) {
+
+				// Only bind the frame buffer if we are using a scratch frame buffer to render to a mipmap.
+				// If we rebind the texture when using a multi sample buffer then an error about inconsistent samples will be thrown.
+				const textureProperties = properties.get( renderTarget.texture );
+				_gl.framebufferTexture2D( _gl.FRAMEBUFFER, _gl.COLOR_ATTACHMENT0, _gl.TEXTURE_2D, textureProperties.__webglTexture, activeMipmapLevel );
 
 			}
 
@@ -55941,26 +56067,26 @@ const SUBDIVISION_MAX_ITERATIONS = 10;
 const kSplineTableSize = 11;
 const kSampleStepSize = 1 / (kSplineTableSize - 1);
 
-function A(aA1, aA2) {
+function A$1(aA1, aA2) {
     return 1 - 3 * aA2 + 3 * aA1;
 }
 
-function B(aA1, aA2) {
+function B$1(aA1, aA2) {
     return 3 * aA2 - 6 * aA1;
 }
 
-function C(aA1) {
+function C$2(aA1) {
     return 3 * aA1;
 }
 
 // Returns x(t) given t, x1, and x2, or y(t) given t, y1, and y2
 function calcBezier(aT, aA1, aA2) {
-    return ((A(aA1, aA2) * aT + B(aA1, aA2)) * aT + C(aA1)) * aT;
+    return ((A$1(aA1, aA2) * aT + B$1(aA1, aA2)) * aT + C$2(aA1)) * aT;
 }
 
 // Returns dx/dt given t, x1, and x2, or dy/dt given t, y1, and y2
 function getSlope(aT, aA1, aA2) {
-    return 3 * A(aA1, aA2) * aT * aT + 2 * B(aA1, aA2) * aT + C(aA1);
+    return 3 * A$1(aA1, aA2) * aT * aT + 2 * B$1(aA1, aA2) * aT + C$2(aA1);
 }
 
 function binarySubdivide(aX, aA, aB, mX1, mX2) {
@@ -57429,14 +57555,14 @@ class LinkedList {
  * A pool of objects created from a given constructor.
  */
 class ObjectPool {
-    constructor(type, num = 10) {
-        this.type = type;
+    constructor(typeConstructor, num = 10) {
+        this.typeConstructor = typeConstructor;
 
         this.array = [];
 
-        if (type) {
+        if (this.typeConstructor) {
             for (let i = 0; i < num; i++) {
-                this.array.push(new type());
+                this.array.push(new this.typeConstructor());
             }
         }
     }
@@ -57452,7 +57578,7 @@ class ObjectPool {
             return object;
         }
 
-        return this.type ? new this.type() : null;
+        return this.typeConstructor ? new this.typeConstructor() : null;
     }
 
     empty() {
@@ -57500,7 +57626,7 @@ function getSphericalCube(radius, segments) {
     const vertices = geometry.getAttribute('position');
     const normals = geometry.getAttribute('normal');
 
-    for (let i = 0; i < vertices.count; i++) {
+    for (let i = 0, l = vertices.count; i < l; i++) {
         const v = new Vector3().fromArray(vertices.array, i * 3);
         v.normalize();
         normals.setXYZ(i, v.x, v.y, v.z);
@@ -57511,6 +57637,12 @@ function getSphericalCube(radius, segments) {
     return geometry;
 }
 
+function getBoundingSphereWorld(mesh) {
+    mesh.geometry.computeBoundingSphere();
+
+    return new Sphere().copy(mesh.geometry.boundingSphere).applyMatrix4(mesh.matrixWorld);
+}
+
 function getScreenSpaceBox(mesh, camera) {
     const vertices = mesh.geometry.getAttribute('position');
     const worldPosition = new Vector3();
@@ -57518,7 +57650,7 @@ function getScreenSpaceBox(mesh, camera) {
     const min = new Vector3(1, 1, 1);
     const max = new Vector3(-1, -1, -1);
 
-    for (let i = 0; i < vertices.count; i++) {
+    for (let i = 0, l = vertices.count; i < l; i++) {
         worldPosition.fromArray(vertices.array, i * 3).applyMatrix4(mesh.matrixWorld);
         screenSpacePosition.copy(worldPosition).project(camera);
         min.min(screenSpacePosition);
@@ -57781,7 +57913,7 @@ class WebAudio {
 
     static init(options) {
         this.context = new AudioContext(options);
-        this.sounds = {};
+        this.map = new Map();
 
         this.output = this.context.createGain();
         this.output.connect(this.context.destination);
@@ -57827,23 +57959,23 @@ class WebAudio {
             sound = new Sound(parent, id, buffer, bypass);
         }
 
-        this.sounds[id] = sound;
+        this.map.set(id, sound);
 
         return sound;
     }
 
     static get(id) {
-        return this.sounds[id];
+        return this.map.get(id);
     }
 
     static remove(id) {
-        const sound = this.sounds[id];
+        const sound = this.map.get(id);
 
         if (sound) {
             sound.destroy();
         }
 
-        delete this.sounds[id];
+        this.map.delete(id);
     }
 
     static clone(parent, from, to, bypass) {
@@ -57854,7 +57986,7 @@ class WebAudio {
             parent = this;
         }
 
-        const sound = this.sounds[from];
+        const sound = this.map.get(from);
 
         if (sound) {
             return this.add(parent, to, sound.buffer, bypass);
@@ -57864,7 +57996,7 @@ class WebAudio {
     }
 
     static trigger(id) {
-        const sound = this.sounds[id];
+        const sound = this.map.get(id);
 
         if (sound) {
             sound.play();
@@ -57879,7 +58011,7 @@ class WebAudio {
             volume = 1;
         }
 
-        const sound = this.sounds[id];
+        const sound = this.map.get(id);
 
         if (sound) {
             sound.gain.set(volume);
@@ -57898,7 +58030,7 @@ class WebAudio {
             delay = 0;
         }
 
-        const sound = this.sounds[id];
+        const sound = this.map.get(id);
 
         if (sound) {
             sound.gain.set(0);
@@ -57921,7 +58053,7 @@ class WebAudio {
             delay = 0;
         }
 
-        const sound = this.sounds[id];
+        const sound = this.map.get(id);
 
         if (sound) {
             sound.ready().then(() => {
@@ -57987,10 +58119,8 @@ class WebAudio {
     }
 
     static destroy() {
-        for (const id in this.sounds) {
-            if (this.sounds[id] && this.sounds[id].destroy) {
-                this.sounds[id].destroy();
-            }
+        for (const id in this.map) {
+            this.remove(id);
         }
 
         this.context.close();
@@ -58176,7 +58306,20 @@ class Sound3D extends Group {
  * A panel container for various components.
  * @example
  * const panel = new Panel();
- * panel.add(new PanelItem({ type: 'color' }));
+ * const item = new PanelItem({
+ *     // name: 'FPS'
+ *     // type: 'spacer'
+ *     // type: 'divider'
+ *     // type: 'link'
+ *     // type: 'thumbnail'
+ *     // type: 'graph'
+ *     // type: 'meter'
+ *     // type: 'list'
+ *     // type: 'slider'
+ *     // type: 'content'
+ *     type: 'color'
+ * });
+ * panel.add(item);
  * panel.animateIn();
  * document.body.appendChild(panel.element);
  *
@@ -59643,8 +59786,8 @@ class PanelGraph extends Interface {
             this.refreshRate240 = 1000 / 180;
         }
 
-        this.props = {
-            handleAlpha: 0
+        this.handleProps = {
+            alpha: 0
         };
 
         this.init();
@@ -59942,7 +60085,7 @@ class PanelGraph extends Interface {
             if (!this.callback) {
                 this.array = value;
             } else {
-                this.array = value.slice();
+                this.array = Array.from(value);
             }
         } else {
             this.array = new Array(this.resolution).fill(0);
@@ -59954,6 +60097,8 @@ class PanelGraph extends Interface {
             this.pathData = '';
             this.graphNeedsUpdate = true;
         }
+
+        this.update();
     }
 
     setValue(value) {
@@ -60055,10 +60200,10 @@ class PanelGraph extends Interface {
                 y = h - value * this.rangeHeight - 1;
             }
 
-            if (this.props.handleAlpha < 0.001) {
+            if (this.handleProps.alpha < 0.001) {
                 this.context.globalAlpha = 0;
             } else {
-                this.context.globalAlpha = this.props.handleAlpha;
+                this.context.globalAlpha = this.handleProps.alpha;
             }
 
             this.context.lineWidth = 1;
@@ -60137,39 +60282,31 @@ class PanelGraph extends Interface {
     }
 
     hoverIn() {
-        if (this.hoveredIn) {
-            return;
-        }
+        clearTween(this.handleProps);
 
-        this.hoveredIn = true;
-
-        clearTween(this.props);
-
-        tween(this.props, { handleAlpha: 1 }, 275, 'easeInOutCubic', null, () => {
+        tween(this.handleProps, { alpha: 1 }, 275, 'easeInOutCubic', null, () => {
             this.needsUpdate = true;
         });
 
         this.info.clearTween();
         this.info.visible();
         this.info.tween({ opacity: 1 }, 275, 'easeInOutCubic');
+
+        this.hoveredIn = true;
     }
 
     hoverOut() {
-        if (!this.hoveredIn) {
-            return;
-        }
+        clearTween(this.handleProps);
 
-        this.hoveredIn = false;
-
-        clearTween(this.props);
-
-        tween(this.props, { handleAlpha: 0 }, 275, 'easeInOutCubic', null, () => {
+        tween(this.handleProps, { alpha: 0 }, 275, 'easeInOutCubic', null, () => {
             this.needsUpdate = true;
         });
 
         this.info.clearTween().tween({ opacity: 0 }, 275, 'easeInOutCubic', () => {
             this.info.invisible();
         });
+
+        this.hoveredIn = false;
     }
 
     enable() {
@@ -60451,6 +60588,8 @@ class PanelMeter extends Interface {
         }
 
         this.needsUpdate = true;
+
+        this.update();
     }
 
     resize() {
@@ -61214,6 +61353,8 @@ class Content extends Interface {
  */
 
 
+var id = 0;
+
 class ColorPicker extends Interface {
     constructor({
         name,
@@ -61302,8 +61443,9 @@ class ColorPicker extends Interface {
     }
 
     initColorRing() {
+        id++;
+
         const size = 256;
-        const id = guid();
 
         this.colorRing = new Interface(null, 'svg');
         this.colorRing.hide();
@@ -61888,7 +62030,7 @@ class PanelItem extends Interface {
             this.container.add(this.view);
         } else if (this.data.type === 'color') {
             this.container.css({
-                margin: '0 0 7px'
+                margin: '6px 0px 4px'
             });
 
             this.view = new ColorPicker(this.data);
@@ -61981,6 +62123,8 @@ class VertexNormalsHelper extends LineSegments {
 		//
 
 		this.matrixAutoUpdate = false;
+
+		this.isVertexNormalsHelper = true;
 
 		this.update();
 
@@ -62128,7 +62272,9 @@ class VertexTangentsHelper extends LineSegments {
 
 
 class ReticleCanvas extends Component {
-    constructor(context) {
+    constructor({
+        context
+    } = {}) {
         super();
 
         this.context = context;
@@ -62147,6 +62293,10 @@ class ReticleCanvas extends Component {
 
     // Public methods
 
+    setContext(context) {
+        this.context = context;
+    }
+
     theme() {
         this.lineWidth = 1.5;
         this.strokeStyle = Stage.rootStyle.getPropertyValue('--ui-color').trim();
@@ -62157,13 +62307,13 @@ class ReticleCanvas extends Component {
             return;
         }
 
+        this.context.save();
+
         if (this.props.alpha < 0.001) {
             this.context.globalAlpha = 0;
         } else {
             this.context.globalAlpha = this.props.alpha;
         }
-
-        this.context.save();
 
         this.context.translate(this.position.x, this.position.y);
         this.context.scale(this.props.scale, this.props.scale);
@@ -62214,7 +62364,9 @@ class ReticleCanvas extends Component {
 
 
 class LineCanvas extends Component {
-    constructor(context) {
+    constructor({
+        context
+    } = {}) {
         super();
 
         this.context = context;
@@ -62232,6 +62384,10 @@ class LineCanvas extends Component {
     }
 
     // Public methods
+
+    setContext(context) {
+        this.context = context;
+    }
 
     setStartPoint(position) {
         this.start.copy(position);
@@ -62251,6 +62407,8 @@ class LineCanvas extends Component {
             return;
         }
 
+        this.context.save();
+
         if (this.props.alpha < 0.001) {
             this.context.globalAlpha = 0;
         } else {
@@ -62261,8 +62419,6 @@ class LineCanvas extends Component {
         const dash = length * this.props.progress;
         const gap = length - dash;
         const offset = -length * this.props.start;
-
-        this.context.save();
 
         this.context.setLineDash([dash, gap]);
         this.context.lineDashOffset = offset;
@@ -63095,6 +63251,7 @@ class Point3D extends Group {
         this.click = null;
         this.lastTime = 0;
         this.lastMouse = new Vector2$1();
+        this.lastCursor = '';
         this.raycastInterval = 1 / 10; // 10 frames per second
         this.lastRaycast = 0;
         this.halfScreen = new Vector2$1();
@@ -63253,22 +63410,22 @@ class Point3D extends Group {
                     this.lastInstanceId = this.instanceId;
                     this.hover = object;
                     this.hover.onHover({ type: 'over' });
-                    this.root.css({ cursor: 'pointer' });
+                    this.setCursor('pointer');
                 } else if (this.hover !== object) {
                     this.hover.onHover({ type: 'out' });
                     this.hover = object;
                     this.hover.onHover({ type: 'over' });
-                    this.root.css({ cursor: 'pointer' });
+                    this.setCursor('pointer');
                 }
             } else if (this.hover) {
                 this.hover.onHover({ type: 'out' });
                 this.hover = null;
-                this.root.css({ cursor: '' });
+                this.setCursor();
             }
         } else if (this.hover) {
             this.hover.onHover({ type: 'out' });
             this.hover = null;
-            this.root.css({ cursor: '' });
+            this.setCursor();
         }
 
         this.delta.subVectors(this.mouse, this.lastMouse);
@@ -63284,6 +63441,8 @@ class Point3D extends Group {
             return;
         }
 
+        const ui = this.getCursor();
+
         if (this.click && this.click === this.hover) {
             if (!e.shiftKey && !e.ctrlKey && !e.altKey && !e.metaKey) {
                 this.points.forEach(ui => {
@@ -63297,6 +63456,8 @@ class Point3D extends Group {
             this.click.onClick(e.shiftKey);
         } else if (this.openColor && !this.openColor.element.contains(e.target)) {
             Stage.events.emit('color_picker', { open: false, target: this });
+        } else if (ui && ui.graph) {
+            ui.graph.onPointerUp();
         } else if (document.elementFromPoint(this.mouse.x, this.mouse.y) instanceof HTMLCanvasElement) {
             this.animateOut();
         }
@@ -63346,6 +63507,10 @@ class Point3D extends Group {
         return this.points.filter(ui => ui.selected);
     }
 
+    static getCursor() {
+        return this.points.find(ui => ui.lastCursor);
+    }
+
     static getMoved() {
         return this.points.filter(ui => ui.point.isMove);
     }
@@ -63383,6 +63548,20 @@ class Point3D extends Group {
         this.points.forEach((ui, i) => ui.setIndex(i));
     }
 
+    static setCursor(cursor = '') {
+        const ui = this.getCursor();
+
+        if (ui && !cursor) {
+            cursor = ui.lastCursor;
+        }
+
+        if (cursor !== this.lastCursor) {
+            this.lastCursor = cursor;
+
+            this.root.css({ cursor });
+        }
+    }
+
     static update(time) {
         this.context.clearRect(0, 0, this.canvas.element.width, this.canvas.element.height);
 
@@ -63415,7 +63594,7 @@ class Point3D extends Group {
             if (ui === this.hover) {
                 this.hover.onHover({ type: 'out' });
                 this.hover = null;
-                this.root.css({ cursor: '' });
+                this.setCursor();
             }
         });
 
@@ -63433,6 +63612,14 @@ class Point3D extends Group {
                 ui.deactivate();
             }
         });
+
+        const selected = this.getSelected();
+
+        if (!selected.length && this.hover) {
+            this.hover.onHover({ type: 'out' });
+            this.hover = null;
+            this.setCursor();
+        }
     }
 
     static destroy() {
@@ -63458,6 +63645,7 @@ class Point3D extends Group {
     constructor(mesh, {
         name = mesh.material.name || mesh.geometry.type,
         type = mesh.material.type,
+        graph = null,
         noTracker = false
     } = {}) {
         super();
@@ -63465,6 +63653,7 @@ class Point3D extends Group {
         this.object = mesh;
         this.name = name;
         this.type = type;
+        this.graph = graph;
         this.noTracker = noTracker;
         this.isInstanced = mesh.isInstancedMesh;
         this.isDefault = name === mesh.geometry.type && type === mesh.material.type;
@@ -63476,6 +63665,7 @@ class Point3D extends Group {
         this.center = new Vector2$1();
         this.size = new Vector2$1();
         this.selected = false;
+        this.lastCursor = '';
         this.animatedIn = false;
         this.currentMaterialMap = null;
         this.uvTexture = null;
@@ -63496,11 +63686,11 @@ class Point3D extends Group {
     }
 
     initMesh() {
-        this.object.geometry.computeBoundingSphere();
+        // Get world dimensions
+        this.boundingSphere = getBoundingSphereWorld(this.object);
 
-        const { radius } = this.object.geometry.boundingSphere;
-
-        this.geometry = new SphereGeometry$2(radius);
+        // Tracker geometry
+        this.geometry = new SphereGeometry$2(this.boundingSphere.radius);
 
         if (Point3D.debug) {
             this.material = new MeshBasicMaterial({
@@ -63529,34 +63719,44 @@ class Point3D extends Group {
     initViews() {
         const { context } = Point3D;
 
-        this.reticle = new ReticleCanvas(context);
-        this.element.add(this.reticle);
+        if (this.graph) {
+            this.graph.events.on('cursor', this.onCursor);
+            this.graph.setContext(context);
+            this.element.add(this.graph);
 
-        this.line = new LineCanvas(context);
-        this.element.add(this.line);
+            this.point = new Point(this, this.graph);
+            this.point.setData({
+                name: this.name,
+                type: this.type
+            });
+            this.element.add(this.point);
+        } else {
+            this.reticle = new ReticleCanvas();
+            this.reticle.setContext(context);
+            this.element.add(this.reticle);
 
-        if (!this.noTracker) {
-            this.tracker = new Tracker();
-            this.element.add(this.tracker);
+            this.line = new LineCanvas();
+            this.line.setContext(context);
+            this.element.add(this.line);
+
+            if (!this.noTracker) {
+                this.tracker = new Tracker();
+                this.element.add(this.tracker);
+            }
+
+            this.point = new Point(this, this.tracker);
+            this.point.setData({
+                name: this.name,
+                type: this.type
+            });
+            this.element.add(this.point);
         }
-
-        this.point = new Point(this, this.tracker);
-        this.point.setData({
-            name: this.name,
-            type: this.type
-        });
-        this.element.add(this.point);
     }
 
     createMesh() {
-        const { center } = this.object.geometry.boundingSphere;
-
         const mesh = new Mesh(this.geometry, this.material);
-        mesh.position.copy(this.object.position);
-        mesh.position.x += center.x;
-        mesh.position.y -= center.y; // Y flipped
-        mesh.position.z += center.z;
-        mesh.scale.copy(this.object.scale);
+        this.object.localToWorld(mesh.position);
+        mesh.worldToLocal(mesh.position);
         mesh.layers.set(31); // Last layer
         this.add(mesh);
 
@@ -63576,17 +63776,19 @@ class Point3D extends Group {
     }
 
     setInitialPosition() {
-        this.updateMatrixWorld();
-
         this.point.position.copy(this.point.target);
-    }
 
-    addListeners() {
-        this.panel.events.on('update', this.onUpdate);
+        this.updateMatrixWorld();
     }
 
     removeListeners() {
-        this.panel.events.off('update', this.onUpdate);
+        if (this.graph) {
+            this.graph.events.off('cursor', this.onCursor);
+        }
+
+        if (this.panel) {
+            this.panel.events.off('update', this.onUpdate);
+        }
     }
 
     // Event handlers
@@ -63627,9 +63829,11 @@ class Point3D extends Group {
                 this.animateIn();
             }
         } else {
-            this.timeout = delayedCall(2000, () => {
-                this.animateOut();
-            });
+            if (!this.graph) {
+                this.timeout = delayedCall(2000, () => {
+                    this.animateOut();
+                });
+            }
         }
 
         Point3D.events.emit('hover', { type, target: this });
@@ -63667,6 +63871,16 @@ class Point3D extends Group {
         Point3D.events.emit('click', { target: this });
     };
 
+    onCursor = ({ cursor }) => {
+        if (cursor !== this.lastCursor) {
+            this.lastCursor = cursor;
+
+            if (cursor || (!cursor && !Point3D.hover)) {
+                Point3D.setCursor(cursor);
+            }
+        }
+    };
+
     onUpdate = ({ path, value, index, target }) => {
         if (this.point.isOpen && !this.point.isMove) {
             this.point.isMove = true;
@@ -63676,9 +63890,9 @@ class Point3D extends Group {
             Point3D.multiple.forEach(ui => {
                 if (ui !== this) {
                     if (index !== undefined) {
-                        ui.setPanelIndex(target.name, index, path.slice());
+                        ui.setPanelIndex(target.name, index, Array.from(path));
                     } else if (value !== undefined) {
-                        ui.setPanelValue(target.name, value, path.slice());
+                        ui.setPanelValue(target.name, value, Array.from(path));
                     }
                 }
             });
@@ -63707,8 +63921,7 @@ class Point3D extends Group {
 
         if (!this.panel) {
             this.panel = this.point.info.panel;
-
-            this.addListeners();
+            this.panel.events.on('update', this.onUpdate);
         }
     }
 
@@ -63723,11 +63936,7 @@ class Point3D extends Group {
     toggleNormalsHelper(show) {
         if (show) {
             if (!this.normalsHelper) {
-                this.object.geometry.computeBoundingSphere();
-
-                const { radius } = this.object.geometry.boundingSphere;
-
-                this.normalsHelper = new VertexNormalsHelper(this.object, radius / 5);
+                this.normalsHelper = new VertexNormalsHelper(this.object, this.boundingSphere.radius / 5);
                 Point3D.scene.add(this.normalsHelper);
             }
 
@@ -63740,12 +63949,9 @@ class Point3D extends Group {
     toggleTangentsHelper(show) {
         if (show) {
             if (!this.tangentsHelper) {
-                this.object.geometry.computeBoundingSphere();
                 this.object.geometry.computeTangents();
 
-                const { radius } = this.object.geometry.boundingSphere;
-
-                this.tangentsHelper = new VertexTangentsHelper(this.object, radius / 5);
+                this.tangentsHelper = new VertexTangentsHelper(this.object, this.boundingSphere.radius / 5);
                 Point3D.scene.add(this.tangentsHelper);
             }
 
@@ -63783,28 +63989,35 @@ class Point3D extends Group {
     }
 
     theme() {
-        this.reticle.theme();
-        this.line.theme();
+        if (!this.graph) {
+            this.reticle.theme();
+            this.line.theme();
+        }
     }
 
     update() {
-        const p0 = this.reticle.position;
-        const p1 = this.point.position;
+        if (this.graph) {
+            this.graph.update();
+        } else {
+            // Set line start and end points
+            const p0 = this.reticle.position;
+            const p1 = this.point.position;
 
-        const angle = Math.atan2(p1.y - p0.y, p1.x - p0.x);
-        const radius = 3;
+            const angle = Math.atan2(p1.y - p0.y, p1.x - p0.x);
+            const radius = 3;
 
-        const x = p0.x + radius * Math.cos(angle);
-        const y = p0.y + radius * Math.sin(angle);
+            const x = p0.x + radius * Math.cos(angle);
+            const y = p0.y + radius * Math.sin(angle);
 
-        this.v.set(x, y);
+            this.v.set(x, y);
 
-        this.line.setStartPoint(this.v);
-        this.line.setEndPoint(p1);
+            this.line.setStartPoint(this.v);
+            this.line.setEndPoint(p1);
 
-        this.reticle.update();
-        this.line.update();
-        this.point.update();
+            // Update canvas elements
+            this.reticle.update();
+            this.line.update();
+        }
     }
 
     updateMatrixWorld(force) {
@@ -63812,6 +64025,7 @@ class Point3D extends Group {
 
         this.camera.updateMatrixWorld();
 
+        // Get screen space coordinates
         const box = getScreenSpaceBox(this.mesh, this.camera);
         const center = box.getCenter(this.center).multiply(this.halfScreen);
         const size = box.getSize(this.size).multiply(this.halfScreen);
@@ -63822,21 +64036,29 @@ class Point3D extends Group {
         const halfWidth = Math.round(width / 2);
         const halfHeight = Math.round(height / 2);
 
-        this.reticle.position.set(centerX, centerY);
+        // Set positions
+        if (this.graph) {
+            this.graph.position.set(centerX, centerY);
+            this.graph.setSize(width, height);
+        } else {
+            this.reticle.position.set(centerX, centerY);
 
-        if (this.tracker) {
-            this.tracker.position.set(centerX, centerY);
-            this.tracker.update();
-            this.tracker.css({
-                width,
-                height,
-                marginLeft: -halfWidth,
-                marginTop: -halfHeight
-            });
+            if (this.tracker) {
+                this.tracker.position.set(centerX, centerY);
+                this.tracker.update();
+                this.tracker.css({
+                    width,
+                    height,
+                    marginLeft: -halfWidth,
+                    marginTop: -halfHeight
+                });
+            }
+
+            this.point.target.set(centerX + halfWidth, centerY - halfHeight);
+            this.point.update();
         }
 
-        this.point.target.set(centerX + halfWidth, centerY - halfHeight);
-
+        // Update instances and helpers
         if (this.isInstanced) {
             this.instances.forEach(instance => {
                 const { position, quaternion, scale } = instance;
@@ -63963,22 +64185,31 @@ class Point3D extends Group {
     }
 
     animateIn(reverse) {
-        this.reticle.animateIn();
-        this.line.animateIn(reverse);
-        this.point.animateIn();
+        if (this.graph) {
+            this.graph.animateIn();
+        } else {
+            this.reticle.animateIn();
+            this.line.animateIn(reverse);
+
+            this.point.animateIn();
+        }
 
         this.animatedIn = true;
     }
 
     animateOut(fast, callback) {
-        this.reticle.animateOut();
-        this.line.animateOut(fast, callback);
+        if (this.graph) {
+            this.graph.animateOut();
+        } else {
+            this.reticle.animateOut();
+            this.line.animateOut(fast, callback);
 
-        if (this.tracker) {
-            this.tracker.animateOut();
+            if (this.tracker) {
+                this.tracker.animateOut();
+            }
+
+            this.point.animateOut();
         }
-
-        this.point.animateOut();
 
         this.animatedIn = false;
     }
@@ -64266,8 +64497,10 @@ class Point3D extends Group {
         this.snappedRight = false;
         this.snapped = false;
 
-        this.line.deactivate();
-        this.point.deactivate();
+        if (!this.graph) {
+            this.line.deactivate();
+            this.point.deactivate();
+        }
 
         const selected = Point3D.getSelected();
 
@@ -67555,7 +67788,7 @@ class StandardMaterialEnvPanel extends Panel {
                 name: 'Rotate X',
                 min: 0,
                 max: 360,
-                step: 0.3,
+                step: 1,
                 value: MathUtils.radToDeg(mesh.material.envMapRotation.x),
                 callback: value => {
                     value = MathUtils.degToRad(value);
@@ -67567,7 +67800,7 @@ class StandardMaterialEnvPanel extends Panel {
                 name: 'Rotate Y',
                 min: 0,
                 max: 360,
-                step: 0.3,
+                step: 1,
                 value: MathUtils.radToDeg(mesh.material.envMapRotation.y),
                 callback: value => {
                     value = MathUtils.degToRad(value);
@@ -67579,7 +67812,7 @@ class StandardMaterialEnvPanel extends Panel {
                 name: 'Rotate Z',
                 min: 0,
                 max: 360,
-                step: 0.3,
+                step: 1,
                 value: MathUtils.radToDeg(mesh.material.envMapRotation.z),
                 callback: value => {
                     value = MathUtils.degToRad(value);
@@ -68346,7 +68579,7 @@ class PhysicalMaterialEnvPanel extends Panel {
                 name: 'Rotate X',
                 min: 0,
                 max: 360,
-                step: 0.3,
+                step: 1,
                 value: MathUtils.radToDeg(mesh.material.envMapRotation.x),
                 callback: value => {
                     value = MathUtils.degToRad(value);
@@ -68358,7 +68591,7 @@ class PhysicalMaterialEnvPanel extends Panel {
                 name: 'Rotate Y',
                 min: 0,
                 max: 360,
-                step: 0.3,
+                step: 1,
                 value: MathUtils.radToDeg(mesh.material.envMapRotation.y),
                 callback: value => {
                     value = MathUtils.degToRad(value);
@@ -68370,7 +68603,7 @@ class PhysicalMaterialEnvPanel extends Panel {
                 name: 'Rotate Z',
                 min: 0,
                 max: 360,
-                step: 0.3,
+                step: 1,
                 value: MathUtils.radToDeg(mesh.material.envMapRotation.z),
                 callback: value => {
                     value = MathUtils.degToRad(value);
@@ -68731,7 +68964,7 @@ class MaterialPanelController {
                                     materialProperties[key].copy(value);
                                 }
                             } else if (Array.isArray(value)) {
-                                materialProperties[key] = value.slice();
+                                materialProperties[key] = Array.from(value);
                             } else {
                                 materialProperties[key] = value;
                             }
@@ -68915,7 +69148,7 @@ class ScenePanel extends Panel {
                     name: 'Rotate X',
                     min: 0,
                     max: 360,
-                    step: 0.3,
+                    step: 1,
                     value: MathUtils.radToDeg(scene.environmentRotation.x),
                     callback: value => {
                         value = MathUtils.degToRad(value);
@@ -68927,7 +69160,7 @@ class ScenePanel extends Panel {
                     name: 'Rotate Y',
                     min: 0,
                     max: 360,
-                    step: 0.3,
+                    step: 1,
                     value: MathUtils.radToDeg(scene.environmentRotation.y),
                     callback: value => {
                         value = MathUtils.degToRad(value);
@@ -68939,7 +69172,7 @@ class ScenePanel extends Panel {
                     name: 'Rotate Z',
                     min: 0,
                     max: 360,
-                    step: 0.3,
+                    step: 1,
                     value: MathUtils.radToDeg(scene.environmentRotation.z),
                     callback: value => {
                         value = MathUtils.degToRad(value);
@@ -69158,6 +69391,7 @@ class GraphMarker extends Interface {
             lineHeight: 'var(--ui-title-line-height)',
             whiteSpace: 'nowrap',
             zIndex: 1,
+            pointerEvents: 'auto',
             opacity: 0
         });
         this.html(this.name);
@@ -69358,9 +69592,12 @@ class Graph extends Interface {
 
         this.props = {
             alpha: 0,
-            handleAlpha: 0,
             yMultiplier: 0,
             progress: 0
+        };
+
+        this.handleProps = {
+            alpha: 0
         };
 
         this.init();
@@ -69381,8 +69618,6 @@ class Graph extends Interface {
         }
 
         this.setSize(this.width, this.height);
-
-        this.addListeners();
     }
 
     init() {
@@ -69498,7 +69733,7 @@ class Graph extends Interface {
 
     initMarkers() {
         this.markers.forEach(data => {
-            this.addMarker(data, 500);
+            this.addMarker(data);
         });
     }
 
@@ -69509,6 +69744,11 @@ class Graph extends Interface {
             window.addEventListener('pointerdown', this.onPointerDown);
             window.addEventListener('pointermove', this.onPointerMove);
         }
+
+        this.items.forEach(item => {
+            item.events.on('update', this.onMarkerUpdate);
+            item.events.on('click', this.onMarkerClick);
+        });
     }
 
     removeListeners() {
@@ -69588,11 +69828,11 @@ class Graph extends Interface {
     onPointerUp = e => {
         window.removeEventListener('pointerup', this.onPointerUp);
 
-        if (performance.now() - this.lastTime > 250 || this.delta.length() > 50) {
+        if (e.target !== this.element) {
             return;
         }
 
-        if (e.target !== this.element) {
+        if (performance.now() - this.lastTime > 250 || this.delta.length() > 50) {
             return;
         }
 
@@ -69611,16 +69851,20 @@ class Graph extends Interface {
 
         if (this.isDragging && this.isDraggingAway) {
             this.origin.subVectors(this.mouse, this.bounds);
+
             target.css({ left: this.origin.x, top: this.origin.y + this.mobileOffset });
-            this.hoverOut();
+
+            if (this.hoveredIn) {
+                this.hoverOut();
+            }
         } else if (this.isDragging) {
             target.x = this.mouseX;
+
             target.css({ top: -12 });
-            this.hoverIn();
         } else if (this.isDraggingAway) {
             this.isDraggingAway = false;
+
             this.removeMarker(target);
-            this.hoverOut(true);
         }
 
         this.needsUpdate = true;
@@ -69705,24 +69949,25 @@ class Graph extends Interface {
         this.update();
     }
 
-    addMarker([x, name], delay = 0) {
+    addMarker([x, name]) {
         const item = new GraphMarker({ name, noDrag: this.noMarkerDrag });
         item.css({ top: -12 });
         item.x = x;
         item.multiplier = 0;
-        item.events.on('update', this.onMarkerUpdate);
-        item.events.on('click', this.onMarkerClick);
         this.add(item);
 
         this.items.push(item);
 
-        tween(item, { multiplier: 1 }, 400, 'easeOutCubic', delay, null, () => {
-            this.needsUpdate = true;
-
-            item.css({ opacity: item.multiplier });
-        });
-
         if (this.initialized) {
+            item.events.on('update', this.onMarkerUpdate);
+            item.events.on('click', this.onMarkerClick);
+
+            tween(item, { multiplier: 1 }, 400, 'easeOutCubic', null, () => {
+                this.needsUpdate = true;
+
+                item.css({ opacity: item.multiplier });
+            });
+
             Stage.events.emit('marker', { type: 'add', item, target: this });
         }
     }
@@ -69766,13 +70011,13 @@ class Graph extends Interface {
             this.drawGraph();
             this.needsUpdate = false;
         }
-
-        if (!this.initialized) {
-            this.initialized = true;
-        }
     }
 
     drawGraph() {
+        if (this.props.alpha <= 0) {
+            return;
+        }
+
         const w = this.width * this.props.progress;
         const h = this.height - 1;
 
@@ -69848,10 +70093,10 @@ class Graph extends Interface {
                 y = h - value * this.rangeHeight - 1;
             }
 
-            if (this.props.handleAlpha < 0.001) {
+            if (this.handleProps.alpha < 0.001) {
                 this.context.globalAlpha = 0;
             } else {
-                this.context.globalAlpha = this.props.handleAlpha;
+                this.context.globalAlpha = this.handleProps.alpha;
             }
 
             this.context.lineWidth = 1;
@@ -69938,43 +70183,33 @@ class Graph extends Interface {
         }
     }
 
-    hoverIn(force) {
-        if (this.hoveredIn && !force) {
-            return;
-        }
+    hoverIn() {
+        clearTween(this.handleProps);
 
-        this.hoveredIn = true;
-
-        clearTween(this.props);
-
-        tween(this.props, { handleAlpha: 1 }, 275, 'easeInOutCubic', null, () => {
+        tween(this.handleProps, { alpha: 1 }, 275, 'easeInOutCubic', null, () => {
             this.needsUpdate = true;
         });
 
         this.info.clearTween();
         this.info.visible();
         this.info.tween({ opacity: 1 }, 275, 'easeInOutCubic');
+
+        this.hoveredIn = true;
     }
 
     hoverOut(fast) {
-        if (!this.hoveredIn) {
-            return;
-        }
-
-        this.hoveredIn = false;
-
-        clearTween(this.props);
+        clearTween(this.handleProps);
 
         this.info.clearTween();
 
         if (fast) {
-            this.props.handleAlpha = 0;
+            this.handleProps.alpha = 0;
             this.needsUpdate = true;
 
             this.info.css({ opacity: 0 });
             this.info.invisible();
         } else {
-            tween(this.props, { handleAlpha: 0 }, 275, 'easeInOutCubic', null, () => {
+            tween(this.handleProps, { alpha: 0 }, 275, 'easeInOutCubic', null, () => {
                 this.needsUpdate = true;
             });
 
@@ -69982,10 +70217,20 @@ class Graph extends Interface {
                 this.info.invisible();
             });
         }
+
+        this.hoveredIn = false;
     }
 
     animateIn(fast) {
+        this.addListeners();
+
         clearTween(this.props);
+
+        if (!this.initialized) {
+            this.initialized = true;
+
+            this.update();
+        }
 
         if (fast) {
             this.props.alpha = 1;
@@ -69998,9 +70243,13 @@ class Graph extends Interface {
             this.update();
 
             if (this.hoveredIn) {
-                this.hoverIn(true);
+                this.hoverIn();
             }
         } else {
+            this.props.alpha = 0;
+            this.props.yMultiplier = 0;
+            this.props.progress = 0;
+
             tween(this.props, { alpha: 1 }, 500, 'easeOutSine');
 
             tween(this.props, { progress: 1 }, 500, 'easeInOutCubic', () => {
@@ -70008,7 +70257,17 @@ class Graph extends Interface {
                     this.animatedIn = true;
 
                     if (this.hoveredIn) {
-                        this.hoverIn(true);
+                        this.hoverIn();
+                    }
+
+                    if (!this.noMarker) {
+                        this.items.forEach(item => {
+                            tween(item, { multiplier: 1 }, 400, 'easeOutCubic', null, () => {
+                                this.needsUpdate = true;
+
+                                item.css({ opacity: item.multiplier });
+                            });
+                        });
                     }
                 }, () => {
                     this.needsUpdate = true;
@@ -70020,9 +70279,13 @@ class Graph extends Interface {
     }
 
     animateOut() {
+        this.removeListeners();
+
         clearTween(this.props);
 
         this.animatedIn = false;
+
+        this.hoverOut(true);
 
         tween(this.props, { alpha: 0 }, 300, 'easeOutSine');
 
@@ -70031,7 +70294,9 @@ class Graph extends Interface {
 
             if (!this.noMarker) {
                 this.items.forEach(item => {
-                    item.css({ opacity: this.props.yMultiplier });
+                    item.multiplier = this.props.yMultiplier;
+
+                    item.css({ opacity: item.multiplier });
                 });
             }
         });
@@ -70286,6 +70551,8 @@ class Meter extends Interface {
         }
 
         this.needsUpdate = true;
+
+        this.update();
     }
 
     setWidth(width) {
@@ -70398,6 +70665,9 @@ class Meter extends Interface {
 
             this.clearTween().css({ opacity: 1 });
         } else {
+            this.props.xMultiplier = 0;
+            this.props.progress = 0;
+
             tween(this.props, { progress: 1 }, 500, 'easeInOutCubic', () => {
                 tween(this.props, { xMultiplier: 1 }, 400, 'easeOutCubic', () => {
                     this.animatedIn = true;
@@ -70454,6 +70724,7 @@ class Details extends Interface {
 
         this.content = [];
         this.links = [];
+        this.animatedIn = false;
 
         this.init();
         this.initViews();
@@ -70484,6 +70755,7 @@ class Details extends Interface {
 
         this.container = new Interface('.container');
         this.container.css({
+            position: 'relative',
             display: 'flex',
             flexWrap: 'wrap',
             padding: '10vw calc(100vw - 10vw - 440px) 13vw 10vw'
@@ -70502,17 +70774,6 @@ class Details extends Interface {
         this.data.content.forEach(data => {
             this.addContent(this.container, data);
         });
-
-        if (Array.isArray(this.data.links)) {
-            this.data.links.forEach(data => {
-                const link = new DetailsLink(data.title, data.link);
-                link.css({
-                    display: 'block'
-                });
-                this.container.add(link);
-                this.links.push(link);
-            });
-        }
     }
 
     addListeners() {
@@ -70647,6 +70908,8 @@ class Details extends Interface {
         });
 
         this.title.animateIn();
+
+        this.animatedIn = true;
     }
 
     animateOut(callback) {
@@ -70660,6 +70923,8 @@ class Details extends Interface {
                 callback();
             }
         });
+
+        this.animatedIn = false;
     }
 
     destroy() {
@@ -72803,7 +73068,6 @@ class UI extends Interface {
         this.frame = 0;
 
         this.buttons = [];
-        this.isDetailsOpen = false;
         this.animatedIn = false;
 
         this.init();
@@ -73007,7 +73271,7 @@ class UI extends Interface {
             if (this.animatedIn) {
                 this.animateOut();
 
-                if (this.isDetailsOpen) {
+                if (this.details.animatedIn) {
                     this.toggleDetails(false);
                 }
             } else {
@@ -73019,7 +73283,7 @@ class UI extends Interface {
     };
 
     onDetailsClick = () => {
-        if (this.isDetailsOpen) {
+        if (this.details.animatedIn) {
             this.toggleDetails(false);
         } else {
             this.toggleDetails(true);
@@ -73124,7 +73388,7 @@ class UI extends Interface {
 
     toggleDetails(show) {
         if (show) {
-            this.isDetailsOpen = true;
+            this.details.animatedIn = true;
 
             if (this.detailsButton) {
                 this.detailsButton.open();
@@ -73132,7 +73396,7 @@ class UI extends Interface {
 
             this.details.animateIn();
         } else {
-            this.isDetailsOpen = false;
+            this.details.animatedIn = false;
 
             this.details.animateOut();
 
@@ -73141,7 +73405,7 @@ class UI extends Interface {
             }
         }
 
-        Stage.events.emit('details', { open: this.isDetailsOpen, target: this });
+        Stage.events.emit('details', { open: this.details.animatedIn, target: this });
     }
 
     destroy() {
@@ -73444,9 +73708,12 @@ class GraphSegments extends Interface {
 
         this.props = {
             alpha: 0,
-            handleAlpha: 0,
             yMultiplier: 0,
             progress: 0
+        };
+
+        this.handleProps = {
+            alpha: 0
         };
 
         this.init();
@@ -73467,8 +73734,6 @@ class GraphSegments extends Interface {
         }
 
         this.setSize(this.width, this.height);
-
-        this.addListeners();
     }
 
     init() {
@@ -73592,7 +73857,7 @@ class GraphSegments extends Interface {
 
     initMarkers() {
         this.markers.forEach(data => {
-            this.addMarker(data, 500);
+            this.addMarker(data);
         });
     }
 
@@ -73603,6 +73868,11 @@ class GraphSegments extends Interface {
             window.addEventListener('pointerdown', this.onPointerDown);
             window.addEventListener('pointermove', this.onPointerMove);
         }
+
+        this.items.forEach(item => {
+            item.events.on('update', this.onMarkerUpdate);
+            item.events.on('click', this.onMarkerClick);
+        });
     }
 
     removeListeners() {
@@ -73686,11 +73956,11 @@ class GraphSegments extends Interface {
     onPointerUp = e => {
         window.removeEventListener('pointerup', this.onPointerUp);
 
-        if (performance.now() - this.lastTime > 250 || this.delta.length() > 50) {
+        if (e.target !== this.element) {
             return;
         }
 
-        if (e.target !== this.element) {
+        if (performance.now() - this.lastTime > 250 || this.delta.length() > 50) {
             return;
         }
 
@@ -73709,16 +73979,20 @@ class GraphSegments extends Interface {
 
         if (this.isDragging && this.isDraggingAway) {
             this.origin.subVectors(this.mouse, this.bounds);
+
             target.css({ left: this.origin.x, top: this.origin.y + this.mobileOffset });
-            this.hoverOut();
+
+            if (this.hoveredIn) {
+                this.hoverOut();
+            }
         } else if (this.isDragging) {
             target.x = this.mouseX;
+
             target.css({ top: -12 });
-            this.hoverIn();
         } else if (this.isDraggingAway) {
             this.isDraggingAway = false;
+
             this.removeMarker(target);
-            this.hoverOut(true);
         }
 
         this.needsUpdate = true;
@@ -73809,24 +74083,25 @@ class GraphSegments extends Interface {
         this.update();
     }
 
-    addMarker([x, name], delay = 0) {
+    addMarker([x, name]) {
         const item = new GraphMarker({ name, noDrag: this.noMarkerDrag });
         item.css({ top: -12 });
         item.x = x;
         item.multiplier = 0;
-        item.events.on('update', this.onMarkerUpdate);
-        item.events.on('click', this.onMarkerClick);
         this.add(item);
 
         this.items.push(item);
 
-        tween(item, { multiplier: 1 }, 400, 'easeOutCubic', delay, null, () => {
-            this.needsUpdate = true;
-
-            item.css({ opacity: item.multiplier });
-        });
-
         if (this.initialized) {
+            item.events.on('update', this.onMarkerUpdate);
+            item.events.on('click', this.onMarkerClick);
+
+            tween(item, { multiplier: 1 }, 400, 'easeOutCubic', null, () => {
+                this.needsUpdate = true;
+
+                item.css({ opacity: item.multiplier });
+            });
+
             Stage.events.emit('marker', { type: 'add', item, target: this });
         }
     }
@@ -73870,13 +74145,13 @@ class GraphSegments extends Interface {
             this.drawGraph();
             this.needsUpdate = false;
         }
-
-        if (!this.initialized) {
-            this.initialized = true;
-        }
     }
 
     drawGraph() {
+        if (this.props.alpha <= 0) {
+            return;
+        }
+
         const w = this.width * this.props.progress;
         const h = this.height - 1;
 
@@ -73992,10 +74267,10 @@ class GraphSegments extends Interface {
                 y = h - value * this.rangeHeight[i] - 1;
             }
 
-            if (this.props.handleAlpha < 0.001) {
+            if (this.handleProps.alpha < 0.001) {
                 this.context.globalAlpha = 0;
             } else {
-                this.context.globalAlpha = this.props.handleAlpha;
+                this.context.globalAlpha = this.handleProps.alpha;
             }
 
             this.context.lineWidth = 1;
@@ -74099,43 +74374,33 @@ class GraphSegments extends Interface {
         }
     }
 
-    hoverIn(force) {
-        if (this.hoveredIn && !force) {
-            return;
-        }
+    hoverIn() {
+        clearTween(this.handleProps);
 
-        this.hoveredIn = true;
-
-        clearTween(this.props);
-
-        tween(this.props, { handleAlpha: 1 }, 275, 'easeInOutCubic', null, () => {
+        tween(this.handleProps, { alpha: 1 }, 275, 'easeInOutCubic', null, () => {
             this.needsUpdate = true;
         });
 
         this.info.clearTween();
         this.info.visible();
         this.info.tween({ opacity: 1 }, 275, 'easeInOutCubic');
+
+        this.hoveredIn = true;
     }
 
     hoverOut(fast) {
-        if (!this.hoveredIn) {
-            return;
-        }
-
-        this.hoveredIn = false;
-
-        clearTween(this.props);
+        clearTween(this.handleProps);
 
         this.info.clearTween();
 
         if (fast) {
-            this.props.handleAlpha = 0;
+            this.handleProps.alpha = 0;
             this.needsUpdate = true;
 
             this.info.css({ opacity: 0 });
             this.info.invisible();
         } else {
-            tween(this.props, { handleAlpha: 0 }, 275, 'easeInOutCubic', null, () => {
+            tween(this.handleProps, { alpha: 0 }, 275, 'easeInOutCubic', null, () => {
                 this.needsUpdate = true;
             });
 
@@ -74143,10 +74408,20 @@ class GraphSegments extends Interface {
                 this.info.invisible();
             });
         }
+
+        this.hoveredIn = false;
     }
 
     animateIn(fast) {
+        this.addListeners();
+
         clearTween(this.props);
+
+        if (!this.initialized) {
+            this.initialized = true;
+
+            this.update();
+        }
 
         if (fast) {
             this.props.alpha = 1;
@@ -74159,9 +74434,13 @@ class GraphSegments extends Interface {
             this.update();
 
             if (this.hoveredIn) {
-                this.hoverIn(true);
+                this.hoverIn();
             }
         } else {
+            this.props.alpha = 0;
+            this.props.yMultiplier = 0;
+            this.props.progress = 0;
+
             tween(this.props, { alpha: 1 }, 500, 'easeOutSine');
 
             tween(this.props, { progress: 1 }, 500, 'easeInOutCubic', () => {
@@ -74169,7 +74448,17 @@ class GraphSegments extends Interface {
                     this.animatedIn = true;
 
                     if (this.hoveredIn) {
-                        this.hoverIn(true);
+                        this.hoverIn();
+                    }
+
+                    if (!this.noMarker) {
+                        this.items.forEach(item => {
+                            tween(item, { multiplier: 1 }, 400, 'easeOutCubic', null, () => {
+                                this.needsUpdate = true;
+
+                                item.css({ opacity: item.multiplier });
+                            });
+                        });
                     }
                 }, () => {
                     this.needsUpdate = true;
@@ -74181,9 +74470,13 @@ class GraphSegments extends Interface {
     }
 
     animateOut() {
+        this.removeListeners();
+
         clearTween(this.props);
 
         this.animatedIn = false;
+
+        this.hoverOut(true);
 
         tween(this.props, { alpha: 0 }, 300, 'easeOutSine');
 
@@ -74192,7 +74485,9 @@ class GraphSegments extends Interface {
 
             if (!this.noMarker) {
                 this.items.forEach(item => {
-                    item.css({ opacity: this.props.yMultiplier });
+                    item.multiplier = this.props.yMultiplier;
+
+                    item.css({ opacity: item.multiplier });
                 });
             }
         });
@@ -74314,6 +74609,10 @@ class RadialGraph extends Interface {
         this.graphNeedsUpdate = false;
         this.initialized = false;
 
+        if (this.startAngle < 0) {
+            this.startAngle += TwoPI;
+        }
+
         this.lineColors = {
             graph: Stage.rootStyle.getPropertyValue('--ui-color-line').trim(),
             bottom: Stage.rootStyle.getPropertyValue('--ui-color-graph-bottom-line').trim(),
@@ -74333,9 +74632,12 @@ class RadialGraph extends Interface {
 
         this.props = {
             alpha: 0,
-            handleAlpha: 0,
             yMultiplier: 0,
             progress: 0
+        };
+
+        this.handleProps = {
+            alpha: 0
         };
 
         this.init();
@@ -74356,8 +74658,6 @@ class RadialGraph extends Interface {
         }
 
         this.setSize(this.width, this.height);
-
-        this.addListeners();
     }
 
     init() {
@@ -74491,7 +74791,7 @@ class RadialGraph extends Interface {
 
     initMarkers() {
         this.markers.forEach(data => {
-            this.addMarker(data, 650);
+            this.addMarker(data);
         });
     }
 
@@ -74500,6 +74800,11 @@ class RadialGraph extends Interface {
             window.addEventListener('pointerdown', this.onPointerDown);
             window.addEventListener('pointermove', this.onPointerMove);
         }
+
+        this.items.forEach(item => {
+            item.events.on('update', this.onMarkerUpdate);
+            item.events.on('click', this.onMarkerClick);
+        });
     }
 
     removeListeners() {
@@ -74559,11 +74864,11 @@ class RadialGraph extends Interface {
     onPointerUp = e => {
         window.removeEventListener('pointerup', this.onPointerUp);
 
-        if (performance.now() - this.lastTime > 250 || this.delta.length() > 50) {
+        if (e.target !== this.element) {
             return;
         }
 
-        if (e.target !== this.element) {
+        if (performance.now() - this.lastTime > 250 || this.delta.length() > 50) {
             return;
         }
 
@@ -74582,15 +74887,18 @@ class RadialGraph extends Interface {
 
         if (this.isDragging && this.isDraggingAway) {
             this.origin.subVectors(this.mouse, this.bounds);
+
             target.css({ left: this.origin.x, top: this.origin.y + this.mobileOffset });
-            this.hoverOut();
+
+            if (this.hoveredIn) {
+                this.hoverOut();
+            }
         } else if (this.isDragging) {
             target.angle = this.mouseAngle;
-            this.hoverIn();
         } else if (this.isDraggingAway) {
             this.isDraggingAway = false;
+
             this.removeMarker(target);
-            this.hoverOut(true);
         }
 
         this.needsUpdate = true;
@@ -74716,23 +75024,24 @@ class RadialGraph extends Interface {
         this.update();
     }
 
-    addMarker([angle, name], delay = 0) {
+    addMarker([angle, name]) {
         const item = new GraphMarker({ name, noDrag: this.noMarkerDrag });
         item.angle = angle;
         item.multiplier = 0;
-        item.events.on('update', this.onMarkerUpdate);
-        item.events.on('click', this.onMarkerClick);
         this.add(item);
 
         this.items.push(item);
 
-        tween(item, { multiplier: 1 }, 400, 'easeOutCubic', delay, null, () => {
-            this.needsUpdate = true;
-
-            item.css({ opacity: item.multiplier });
-        });
-
         if (this.initialized) {
+            item.events.on('update', this.onMarkerUpdate);
+            item.events.on('click', this.onMarkerClick);
+
+            tween(item, { multiplier: 1 }, 400, 'easeOutCubic', null, () => {
+                this.needsUpdate = true;
+
+                item.css({ opacity: item.multiplier });
+            });
+
             Stage.events.emit('marker', { type: 'add', item, target: this });
         }
     }
@@ -74776,13 +75085,13 @@ class RadialGraph extends Interface {
             this.drawGraph();
             this.needsUpdate = false;
         }
-
-        if (!this.initialized) {
-            this.initialized = true;
-        }
     }
 
     drawGraph() {
+        if (this.props.alpha <= 0) {
+            return;
+        }
+
         const h = this.graphHeight - 1;
 
         if (this.props.alpha < 0.001) {
@@ -74929,10 +75238,10 @@ class RadialGraph extends Interface {
             const x3 = this.middle + r3 * c;
             const y3 = this.middle + r3 * s;
 
-            if (this.props.handleAlpha < 0.001) {
+            if (this.handleProps.alpha < 0.001) {
                 this.context.globalAlpha = 0;
             } else {
-                this.context.globalAlpha = this.props.handleAlpha;
+                this.context.globalAlpha = this.handleProps.alpha;
             }
 
             this.context.lineWidth = 1;
@@ -75112,43 +75421,35 @@ class RadialGraph extends Interface {
         }
     }
 
-    hoverIn(force) {
-        if (this.hoveredIn && !force) {
-            return;
-        }
+    hoverIn() {
+        clearTween(this.handleProps);
 
-        this.hoveredIn = true;
-
-        clearTween(this.props);
-
-        tween(this.props, { handleAlpha: 1 }, 275, 'easeInOutCubic', null, () => {
+        tween(this.handleProps, { alpha: 1 }, 275, 'easeInOutCubic', null, () => {
             this.needsUpdate = true;
         });
 
         this.info.clearTween();
         this.info.visible();
         this.info.tween({ opacity: 1 }, 275, 'easeInOutCubic');
+
+        this.hoveredIn = true;
     }
 
     hoverOut(fast) {
-        if (!this.hoveredIn) {
-            return;
-        }
+        this.lastHover = 'out';
 
-        this.hoveredIn = false;
-
-        clearTween(this.props);
+        clearTween(this.handleProps);
 
         this.info.clearTween();
 
         if (fast) {
-            this.props.handleAlpha = 0;
+            this.handleProps.alpha = 0;
             this.needsUpdate = true;
 
             this.info.css({ opacity: 0 });
             this.info.invisible();
         } else {
-            tween(this.props, { handleAlpha: 0 }, 275, 'easeInOutCubic', null, () => {
+            tween(this.handleProps, { alpha: 0 }, 275, 'easeInOutCubic', null, () => {
                 this.needsUpdate = true;
             });
 
@@ -75156,10 +75457,20 @@ class RadialGraph extends Interface {
                 this.info.invisible();
             });
         }
+
+        this.hoveredIn = false;
     }
 
     animateIn(fast) {
+        this.addListeners();
+
         clearTween(this.props);
+
+        if (!this.initialized) {
+            this.initialized = true;
+
+            this.update();
+        }
 
         if (fast) {
             this.props.alpha = 1;
@@ -75172,9 +75483,13 @@ class RadialGraph extends Interface {
             this.update();
 
             if (this.hoveredIn) {
-                this.hoverIn(true);
+                this.hoverIn();
             }
         } else {
+            this.props.alpha = 0;
+            this.props.yMultiplier = 0;
+            this.props.progress = 0;
+
             tween(this.props, { alpha: 1 }, 500, 'easeOutSine');
 
             tween(this.props, { progress: 1 }, 500, 'easeInOutCubic', () => {
@@ -75182,7 +75497,17 @@ class RadialGraph extends Interface {
                     this.animatedIn = true;
 
                     if (this.hoveredIn) {
-                        this.hoverIn(true);
+                        this.hoverIn();
+                    }
+
+                    if (!this.noMarker) {
+                        this.items.forEach(item => {
+                            tween(item, { multiplier: 1 }, 400, 'easeOutCubic', null, () => {
+                                this.needsUpdate = true;
+
+                                item.css({ opacity: item.multiplier });
+                            });
+                        });
                     }
                 }, () => {
                     this.needsUpdate = true;
@@ -75194,9 +75519,14 @@ class RadialGraph extends Interface {
     }
 
     animateOut() {
+        this.removeListeners();
+
         clearTween(this.props);
 
         this.animatedIn = false;
+
+        this.hoverOut(true);
+        this.setCursor();
 
         tween(this.props, { alpha: 0 }, 300, 'easeOutSine');
 
@@ -75205,12 +75535,12 @@ class RadialGraph extends Interface {
 
             if (!this.noMarker) {
                 this.items.forEach(item => {
-                    item.css({ opacity: this.props.yMultiplier });
+                    item.multiplier = this.props.yMultiplier;
+
+                    item.css({ opacity: item.multiplier });
                 });
             }
         });
-
-        this.setCursor();
     }
 
     destroy() {
@@ -75330,6 +75660,10 @@ class RadialGraphSegments extends Interface {
         this.graphNeedsUpdate = false;
         this.initialized = false;
 
+        if (this.startAngle < 0) {
+            this.startAngle += TwoPI;
+        }
+
         this.lineColors = {
             graph: Stage.rootStyle.getPropertyValue('--ui-color-line').trim(),
             bottom: Stage.rootStyle.getPropertyValue('--ui-color-graph-bottom-line').trim(),
@@ -75349,9 +75683,12 @@ class RadialGraphSegments extends Interface {
 
         this.props = {
             alpha: 0,
-            handleAlpha: 0,
             yMultiplier: 0,
             progress: 0
+        };
+
+        this.handleProps = {
+            alpha: 0
         };
 
         this.init();
@@ -75372,8 +75709,6 @@ class RadialGraphSegments extends Interface {
         }
 
         this.setSize(this.width, this.height);
-
-        this.addListeners();
     }
 
     init() {
@@ -75515,7 +75850,7 @@ class RadialGraphSegments extends Interface {
 
     initMarkers() {
         this.markers.forEach(data => {
-            this.addMarker(data, 650);
+            this.addMarker(data);
         });
     }
 
@@ -75524,6 +75859,11 @@ class RadialGraphSegments extends Interface {
             window.addEventListener('pointerdown', this.onPointerDown);
             window.addEventListener('pointermove', this.onPointerMove);
         }
+
+        this.items.forEach(item => {
+            item.events.on('update', this.onMarkerUpdate);
+            item.events.on('click', this.onMarkerClick);
+        });
     }
 
     removeListeners() {
@@ -75587,11 +75927,11 @@ class RadialGraphSegments extends Interface {
     onPointerUp = e => {
         window.removeEventListener('pointerup', this.onPointerUp);
 
-        if (performance.now() - this.lastTime > 250 || this.delta.length() > 50) {
+        if (e.target !== this.element) {
             return;
         }
 
-        if (e.target !== this.element) {
+        if (performance.now() - this.lastTime > 250 || this.delta.length() > 50) {
             return;
         }
 
@@ -75610,15 +75950,18 @@ class RadialGraphSegments extends Interface {
 
         if (this.isDragging && this.isDraggingAway) {
             this.origin.subVectors(this.mouse, this.bounds);
+
             target.css({ left: this.origin.x, top: this.origin.y + this.mobileOffset });
-            this.hoverOut();
+
+            if (this.hoveredIn) {
+                this.hoverOut();
+            }
         } else if (this.isDragging) {
             target.angle = this.mouseAngle;
-            this.hoverIn();
         } else if (this.isDraggingAway) {
             this.isDraggingAway = false;
+
             this.removeMarker(target);
-            this.hoverOut(true);
         }
 
         this.needsUpdate = true;
@@ -75750,23 +76093,24 @@ class RadialGraphSegments extends Interface {
         this.update();
     }
 
-    addMarker([angle, name], delay = 0) {
+    addMarker([angle, name]) {
         const item = new GraphMarker({ name, noDrag: this.noMarkerDrag });
         item.angle = angle;
         item.multiplier = 0;
-        item.events.on('update', this.onMarkerUpdate);
-        item.events.on('click', this.onMarkerClick);
         this.add(item);
 
         this.items.push(item);
 
-        tween(item, { multiplier: 1 }, 400, 'easeOutCubic', delay, null, () => {
-            this.needsUpdate = true;
-
-            item.css({ opacity: item.multiplier });
-        });
-
         if (this.initialized) {
+            item.events.on('update', this.onMarkerUpdate);
+            item.events.on('click', this.onMarkerClick);
+
+            tween(item, { multiplier: 1 }, 400, 'easeOutCubic', null, () => {
+                this.needsUpdate = true;
+
+                item.css({ opacity: item.multiplier });
+            });
+
             Stage.events.emit('marker', { type: 'add', item, target: this });
         }
     }
@@ -75810,13 +76154,13 @@ class RadialGraphSegments extends Interface {
             this.drawGraph();
             this.needsUpdate = false;
         }
-
-        if (!this.initialized) {
-            this.initialized = true;
-        }
     }
 
     drawGraph() {
+        if (this.props.alpha <= 0) {
+            return;
+        }
+
         const h = this.graphHeight - 1;
 
         if (this.props.alpha < 0.001) {
@@ -75994,10 +76338,10 @@ class RadialGraphSegments extends Interface {
             const x3 = this.middle + r3 * c;
             const y3 = this.middle + r3 * s;
 
-            if (this.props.handleAlpha < 0.001) {
+            if (this.handleProps.alpha < 0.001) {
                 this.context.globalAlpha = 0;
             } else {
-                this.context.globalAlpha = this.props.handleAlpha;
+                this.context.globalAlpha = this.handleProps.alpha;
             }
 
             this.context.lineWidth = 1;
@@ -76210,43 +76554,35 @@ class RadialGraphSegments extends Interface {
         }
     }
 
-    hoverIn(force) {
-        if (this.hoveredIn && !force) {
-            return;
-        }
+    hoverIn() {
+        clearTween(this.handleProps);
 
-        this.hoveredIn = true;
-
-        clearTween(this.props);
-
-        tween(this.props, { handleAlpha: 1 }, 275, 'easeInOutCubic', null, () => {
+        tween(this.handleProps, { alpha: 1 }, 275, 'easeInOutCubic', null, () => {
             this.needsUpdate = true;
         });
 
         this.info.clearTween();
         this.info.visible();
         this.info.tween({ opacity: 1 }, 275, 'easeInOutCubic');
+
+        this.hoveredIn = true;
     }
 
     hoverOut(fast) {
-        if (!this.hoveredIn) {
-            return;
-        }
+        this.lastHover = 'out';
 
-        this.hoveredIn = false;
-
-        clearTween(this.props);
+        clearTween(this.handleProps);
 
         this.info.clearTween();
 
         if (fast) {
-            this.props.handleAlpha = 0;
+            this.handleProps.alpha = 0;
             this.needsUpdate = true;
 
             this.info.css({ opacity: 0 });
             this.info.invisible();
         } else {
-            tween(this.props, { handleAlpha: 0 }, 275, 'easeInOutCubic', null, () => {
+            tween(this.handleProps, { alpha: 0 }, 275, 'easeInOutCubic', null, () => {
                 this.needsUpdate = true;
             });
 
@@ -76254,10 +76590,20 @@ class RadialGraphSegments extends Interface {
                 this.info.invisible();
             });
         }
+
+        this.hoveredIn = false;
     }
 
     animateIn(fast) {
+        this.addListeners();
+
         clearTween(this.props);
+
+        if (!this.initialized) {
+            this.initialized = true;
+
+            this.update();
+        }
 
         if (fast) {
             this.props.alpha = 1;
@@ -76270,9 +76616,13 @@ class RadialGraphSegments extends Interface {
             this.update();
 
             if (this.hoveredIn) {
-                this.hoverIn(true);
+                this.hoverIn();
             }
         } else {
+            this.props.alpha = 0;
+            this.props.yMultiplier = 0;
+            this.props.progress = 0;
+
             tween(this.props, { alpha: 1 }, 500, 'easeOutSine');
 
             tween(this.props, { progress: 1 }, 500, 'easeInOutCubic', () => {
@@ -76280,7 +76630,17 @@ class RadialGraphSegments extends Interface {
                     this.animatedIn = true;
 
                     if (this.hoveredIn) {
-                        this.hoverIn(true);
+                        this.hoverIn();
+                    }
+
+                    if (!this.noMarker) {
+                        this.items.forEach(item => {
+                            tween(item, { multiplier: 1 }, 400, 'easeOutCubic', null, () => {
+                                this.needsUpdate = true;
+
+                                item.css({ opacity: item.multiplier });
+                            });
+                        });
                     }
                 }, () => {
                     this.needsUpdate = true;
@@ -76292,9 +76652,14 @@ class RadialGraphSegments extends Interface {
     }
 
     animateOut() {
+        this.removeListeners();
+
         clearTween(this.props);
 
         this.animatedIn = false;
+
+        this.hoverOut(true);
+        this.setCursor();
 
         tween(this.props, { alpha: 0 }, 300, 'easeOutSine');
 
@@ -76303,12 +76668,1011 @@ class RadialGraphSegments extends Interface {
 
             if (!this.noMarker) {
                 this.items.forEach(item => {
-                    item.css({ opacity: this.props.yMultiplier });
+                    item.multiplier = this.props.yMultiplier;
+
+                    item.css({ opacity: item.multiplier });
                 });
             }
         });
+    }
 
+    destroy() {
+        this.removeListeners();
+
+        clearTween(this.props);
+
+        return super.destroy();
+    }
+}
+
+/**
+ * @author pschroen / https://ufo.ai/
+ */
+
+
+class RadialGraphCanvas extends Interface {
+    constructor({
+        context,
+        value,
+        ghost,
+        start = 0,
+        graphHeight = 60,
+        resolution = 80,
+        tension = 6,
+        precision = 0,
+        lookupPrecision = 0,
+        textDistanceX = 20,
+        textDistanceY = 10,
+        markers = [],
+        range = 1,
+        suffix = '',
+        noHover = false,
+        noMarker = false,
+        noMarkerDrag = false,
+        noGradient = false
+    } = {}) {
+        super('.radial-graph');
+
+        this.context = context;
+        this.value = value;
+        this.ghost = ghost;
+        this.start = start;
+        this.graphHeight = graphHeight;
+        this.resolution = resolution;
+        this.tension = tension;
+        this.precision = precision;
+        this.lookupPrecision = lookupPrecision;
+        this.textDistanceX = textDistanceX;
+        this.textDistanceY = textDistanceY;
+        this.markers = markers;
+        this.range = range;
+        this.suffix = suffix;
+        this.noHover = noHover;
+        this.noMarker = noMarker;
+        this.noMarkerDrag = noMarkerDrag;
+        this.noGradient = noGradient;
+
+        this.position = new Vector2();
+        this.objectWidth = 0;
+        this.objectHeight = 0;
+        this.width = 0;
+        this.height = 0;
+        this.halfWidth = 0;
+        this.halfHeight = 0;
+        this.middle = 0;
+        this.radius = 0;
+        this.distance = 0;
+        this.rangeHeight = 0;
+        this.startAngle = degToRad$1(this.start);
+        this.array = [];
+        this.ghostArray = [];
+        this.points = [];
+        this.pathData = '';
+        this.length = 0;
+        this.lookup = [];
+        this.bounds = null;
+        this.offset = new Vector2();
+        this.origin = new Vector2();
+        this.mouse = new Vector2();
+        this.delta = new Vector2();
+        this.lastTime = 0;
+        this.lastMouse = new Vector2();
+        this.mouseAngle = 0;
+        this.lastHover = 'out';
+        this.lastCursor = '';
+        this.items = [];
+        this.mobileOffset = navigator.maxTouchPoints ? -50 : 0; // Position above finger
+        this.isDragging = false;
+        this.isDraggingAway = false;
+        this.isResizing = false;
+        this.animatedIn = false;
+        this.hoveredIn = false;
+        this.graphNeedsUpdate = false;
+        this.initialized = false;
+
+        if (this.startAngle < 0) {
+            this.startAngle += TwoPI;
+        }
+
+        this.lineColors = {
+            graph: Stage.rootStyle.getPropertyValue('--ui-color-line').trim(),
+            bottom: Stage.rootStyle.getPropertyValue('--ui-color-graph-bottom-line').trim(),
+            handle: Stage.rootStyle.getPropertyValue('--ui-color').trim()
+        };
+
+        this.colorRange = [
+            new Color(Stage.rootStyle.getPropertyValue('--ui-color-range-1').trim()),
+            new Color(Stage.rootStyle.getPropertyValue('--ui-color-range-2').trim()),
+            new Color(Stage.rootStyle.getPropertyValue('--ui-color-range-3').trim()),
+            new Color(Stage.rootStyle.getPropertyValue('--ui-color-range-4').trim())
+        ];
+
+        this.colorStep = 1 / 3 / 5; // 5 steps per colour interpolation
+        this.color = new Color();
+        this.alpha = 1;
+
+        this.props = {
+            alpha: 0,
+            yMultiplier: 0,
+            progress: 0
+        };
+
+        this.handleProps = {
+            alpha: 0
+        };
+
+        this.init();
+
+        if (!this.noHover && this.lookupPrecision) {
+            this.initGraph();
+        }
+
+        if (!this.noMarker) {
+            this.initMarkers();
+        }
+
+        this.setArray(this.value);
+
+        if (this.ghost !== undefined) {
+            this.setGhostArray(this.ghost);
+        }
+    }
+
+    init() {
+        this.css({
+            position: 'relative',
+            width: this.width,
+            height: this.height,
+            pointerEvents: 'none',
+            webkitUserSelect: 'none',
+            userSelect: 'none',
+            touchAction: 'none'
+        });
+
+        if (!this.noHover) {
+            this.info = new Interface('.info');
+            this.info.invisible();
+            this.info.css({
+                position: 'absolute',
+                left: 0,
+                top: 0,
+                transform: 'translate(-50%, -50%)',
+                fontSize: 'const(--ui-secondary-font-size)',
+                letterSpacing: 'const(--ui-secondary-letter-spacing)',
+                zIndex: 1,
+                opacity: 0
+            });
+            this.add(this.info);
+        }
+    }
+
+    initGraph() {
+        // Not added to DOM
+        this.graph = new Interface(null, 'svg');
+        this.graph.path = new Interface(null, 'svg', 'path');
+        this.graph.add(this.graph.path);
+    }
+
+    calculateLookup() {
+        this.length = this.graph.path.element.getTotalLength();
+        this.lookup = [];
+
+        let i = 0;
+
+        while (i <= 1) {
+            const point = this.graph.path.element.getPointAtLength(i * this.length);
+            const x = point.x - this.middle;
+            const y = point.y - this.middle;
+
+            let angle = (-this.startAngle + Math.atan2(y, x)) % TwoPI;
+
+            if (angle < 0) {
+                angle += TwoPI;
+            }
+
+            this.lookup.push({
+                x: point.x,
+                y: point.y,
+                angle
+            });
+
+            i += 1 / this.lookupPrecision;
+        }
+    }
+
+    getCurvePoint(mouseAngle) {
+        const angle = mouseAngle * TwoPI;
+        const approxIndex = Math.floor(mouseAngle * this.lookupPrecision);
+
+        let i = Math.max(1, approxIndex - Math.floor(this.lookupPrecision / 3));
+
+        for (; i < this.lookupPrecision; i++) {
+            if (this.lookup[i].angle > angle) {
+                break;
+            }
+        }
+
+        if (i === this.lookupPrecision) {
+            const x = this.lookup[this.lookupPrecision - 1].x;
+            const y = this.lookup[this.lookupPrecision - 1].y;
+
+            return { x, y };
+        }
+
+        const lower = this.lookup[i - 1];
+        const upper = this.lookup[i];
+        const percent = (angle - lower.angle) / (upper.angle - lower.angle);
+        const diffX = upper.x - lower.x;
+        const diffY = upper.y - lower.y;
+        const x = lower.x + diffX * percent;
+        const y = lower.y + diffY * percent;
+
+        return { x, y };
+    }
+
+    createGradient(x0, y0, r0, x1, y1, r1, alpha = 1) {
+        this.alpha = alpha;
+
+        const gradient = this.context.createRadialGradient(x0, y0, r0, x1, y1, r1);
+
+        let offset = 0;
+
+        for (let i = 0; i < 3; i++) {
+            for (let t = 0; t < 5; t++) {
+                gradient.addColorStop(offset, this.toRGBA(this.color.lerpColors(this.colorRange[i], this.colorRange[i + 1], Easing.easeInOutSine(t / 5)), 1));
+
+                offset += this.colorStep;
+            }
+        }
+
+        gradient.addColorStop(offset, this.toRGBA(this.colorRange[3], 1));
+
+        return gradient;
+    }
+
+    toRGBA(color, alpha) {
+        return `rgb(${Math.round(color.r * 255)} ${Math.round(color.g * 255)} ${Math.round(color.b * 255)} / ${alpha * this.alpha})`;
+    }
+
+    initMarkers() {
+        this.markers.forEach(data => {
+            this.addMarker(data);
+        });
+    }
+
+    addListeners() {
+        if (!this.noHover) {
+            window.addEventListener('pointerdown', this.onPointerDown);
+            window.addEventListener('pointermove', this.onPointerMove);
+        }
+
+        this.items.forEach(item => {
+            item.events.on('update', this.onMarkerUpdate);
+            item.events.on('click', this.onMarkerClick);
+        });
+    }
+
+    removeListeners() {
+        if (!this.noHover) {
+            window.removeEventListener('pointerdown', this.onPointerDown);
+            window.removeEventListener('pointermove', this.onPointerMove);
+        }
+
+        this.items.forEach(item => {
+            item.events.off('update', this.onMarkerUpdate);
+            item.events.off('click', this.onMarkerClick);
+        });
+    }
+
+    getRangeHeight(range) {
+        return (this.graphHeight - 5) / range;
+    }
+
+    // Event handlers
+
+    onPointerDown = e => {
+        this.lastTime = performance.now();
+        this.lastMouse.set(e.clientX, e.clientY);
+
+        this.onPointerMove(e);
+    };
+
+    onPointerMove = e => {
+        if (this.isResizing) {
+            return;
+        }
+
+        if (e) {
+            const event = {
+                x: e.clientX,
+                y: e.clientY
+            };
+
+            this.mouse.copy(event);
+            this.delta.subVectors(this.mouse, this.lastMouse);
+
+            this.bounds = this.element.getBoundingClientRect();
+            this.offset.x = this.mouse.x - (this.bounds.left + this.middle);
+            this.offset.y = this.mouse.y - (this.bounds.top + this.middle);
+        }
+
+        const distance = this.offset.length();
+        const angle = this.offset.angle();
+
+        this.mouseAngle = angle / TwoPI;
+
+        if (distance > this.distance && distance < this.middle) {
+            this.setHover('over');
+            this.setCursor('crosshair');
+        } else {
+            this.setHover();
+            this.setCursor();
+        }
+    };
+
+    onPointerUp = () => {
+        if (performance.now() - this.lastTime > 250 || this.delta.length() > 50) {
+            return;
+        }
+
+        if (this.items.find(item => item.angle === this.mouseAngle)) {
+            return;
+        }
+
+        if (!this.noMarker && !this.noMarkerDrag) {
+            this.addMarker([this.mouseAngle, this.getMarkerName()]);
+        }
+    };
+
+    onMarkerUpdate = ({ dragging, target }) => {
+        this.isDragging = dragging;
+        this.isDraggingAway = this.offset.length() > this.middle + 50;
+
+        if (this.isDragging && this.isDraggingAway) {
+            this.origin.subVectors(this.mouse, this.bounds);
+
+            target.css({ left: this.origin.x, top: this.origin.y + this.mobileOffset });
+
+            if (this.hoveredIn) {
+                this.hoverOut();
+            }
+        } else if (this.isDragging) {
+            target.angle = this.mouseAngle;
+        } else if (this.isDraggingAway) {
+            this.isDraggingAway = false;
+
+            this.removeMarker(target);
+        }
+    };
+
+    onMarkerClick = e => {
+        console.log('onMarkerClick', e);
+    };
+
+    // Public methods
+
+    getMarkerName() {
+        const names = this.items.map(item => item.name);
+
+        let count = 1;
+        let name = `Marker ${count++}`;
+
+        while (names.includes(name)) {
+            name = `Marker ${count++}`;
+        }
+
+        return name;
+    }
+
+    setHover(type = 'out') {
+        if (this.isDraggingAway) {
+            return;
+        }
+
+        if (type !== this.lastHover) {
+            this.lastHover = type;
+
+            if (!this.animatedIn) {
+                if (type === 'over') {
+                    this.hoveredIn = true;
+                } else {
+                    this.hoveredIn = false;
+                }
+
+                return;
+            }
+
+            clearTween(this.timeout);
+
+            if (type === 'over') {
+                this.hoverIn();
+            } else {
+                this.timeout = delayedCall(200, () => {
+                    this.hoverOut();
+                });
+            }
+        }
+    }
+
+    setCursor(cursor = '') {
+        if (cursor !== this.lastCursor) {
+            this.lastCursor = cursor;
+
+            this.events.emit('cursor', { cursor, target: this });
+        }
+    }
+
+    setGhostArray(value) {
+        if (Array.isArray(value)) {
+            this.ghostArray = value;
+        } else {
+            this.ghostArray = new Array(this.resolution).fill(0);
+        }
+    }
+
+    setArray(value) {
+        if (Array.isArray(value)) {
+            this.array = value;
+        } else {
+            this.array = new Array(this.resolution).fill(0);
+        }
+
+        if (!this.noHover && this.lookupPrecision) {
+            this.pathData = '';
+            this.graphNeedsUpdate = true;
+        }
+    }
+
+    setContext(context) {
+        this.context = context;
+    }
+
+    setSize(width, height) {
+        // Recalculate the size only if the width changes
+        if (width !== this.objectWidth) {
+            this.objectWidth = width;
+            this.objectHeight = height;
+
+            // Increase the size so the graph is on the outside of the object
+            this.width = this.objectWidth + this.graphHeight * 4;
+            this.height = this.objectHeight + this.graphHeight * 4;
+            this.halfWidth = Math.round(this.width / 2);
+            this.halfHeight = Math.round(this.height / 2);
+
+            this.middle = this.width / 2;
+            this.radius = this.middle - this.graphHeight;
+            this.distance = this.radius - this.graphHeight;
+            this.rangeHeight = this.getRangeHeight(this.range);
+
+            this.strokeStyle = this.createGradient(this.middle, this.middle, this.radius, this.middle, this.middle, this.middle);
+            this.fillStyle = this.createGradient(this.middle, this.middle, this.radius, this.middle, this.middle, this.middle, 0.07);
+
+            this.isResizing = true;
+
+            if (!this.noHover && this.animatedIn) {
+                this.hoverOut(true);
+            }
+
+            clearTween(this.timeout);
+
+            this.timeout = delayedCall(200, () => {
+                this.isResizing = false;
+
+                if (!this.noHover && this.lookupPrecision) {
+                    this.pathData = '';
+                    this.graphNeedsUpdate = true;
+                }
+            });
+        }
+
+        this.css({
+            left: this.position.x,
+            top: this.position.y,
+            width: this.width,
+            height: this.height,
+            marginLeft: -this.halfWidth,
+            marginTop: -this.halfHeight
+        });
+    }
+
+    addMarker([angle, name]) {
+        const item = new GraphMarker({ name, noDrag: this.noMarkerDrag });
+        item.angle = angle;
+        item.multiplier = 0;
+        this.add(item);
+
+        this.items.push(item);
+
+        if (this.initialized) {
+            item.events.on('update', this.onMarkerUpdate);
+            item.events.on('click', this.onMarkerClick);
+
+            tween(item, { multiplier: 1 }, 400, 'easeOutCubic', null, () => {
+                item.css({ opacity: item.multiplier });
+            });
+
+            Stage.events.emit('marker', { type: 'add', item, target: this });
+        }
+    }
+
+    removeMarker(marker) {
+        const index = this.items.indexOf(marker);
+
+        if (~index) {
+            const item = this.items.splice(index, 1)[0];
+
+            Stage.events.emit('marker', { type: 'remove', item, target: this });
+
+            item.destroy();
+        }
+    }
+
+    update(value) {
+        if (value !== undefined) {
+            if (Array.isArray(value)) {
+                this.setArray(value);
+            } else {
+                if (this.ghost !== undefined) {
+                    const ghost = this.array.pop();
+                    this.array.unshift(value);
+                    this.ghostArray.pop();
+                    this.ghostArray.unshift(ghost);
+                } else {
+                    this.array.pop();
+                    this.array.unshift(value);
+                }
+            }
+        }
+
+        if (this.initialized) {
+            this.drawGraph();
+        }
+    }
+
+    drawGraph() {
+        if (this.props.alpha <= 0) {
+            return;
+        }
+
+        this.context.save();
+
+        // Centred
+        this.context.translate(this.position.x - this.halfWidth, this.position.y - this.halfHeight);
+
+        const h = this.graphHeight - 1;
+
+        if (this.props.alpha < 0.001) {
+            this.context.globalAlpha = 0;
+        } else {
+            this.context.globalAlpha = this.props.alpha;
+        }
+
+        // Draw inner circle
+        this.context.lineWidth = 1;
+        this.context.strokeStyle = this.lineColors.bottom;
+
+        this.context.beginPath();
+        this.context.arc(this.middle, this.middle, this.middle - h, this.startAngle, this.startAngle + TwoPI * this.props.progress);
+        this.context.stroke();
+
+        // Draw start line
+        const c = Math.cos(this.startAngle);
+        const s = Math.sin(this.startAngle);
+        const r0 = this.middle - (h - 0.5);
+        const r1 = this.middle - (h - 0.5 - (h - 0.5) * this.props.yMultiplier);
+        const x0 = this.middle + r0 * c;
+        const y0 = this.middle + r0 * s;
+        const x1 = this.middle + r1 * c;
+        const y1 = this.middle + r1 * s;
+
+        this.context.beginPath();
+        this.context.moveTo(x0, y0);
+        this.context.lineTo(x1, y1);
+        this.context.stroke();
+
+        // Draw graph line and radial gradient fill
+        if (this.ghostArray.length) {
+            this.drawPath(h, this.ghostArray, true);
+        }
+
+        if (this.array.length) {
+            this.drawPath(h, this.array);
+        }
+
+        // Draw marker lines
+        if (!this.noMarker) {
+            this.context.lineWidth = 1.5;
+            this.context.strokeStyle = this.lineColors.graph;
+
+            for (let i = 0, l = this.items.length; i < l; i++) {
+                const mouseAngle = this.items[i].angle;
+                const textDistanceX = this.items[i].width / 2 + 10;
+
+                let textOffset;
+
+                if (mouseAngle >= 0 && mouseAngle < 0.25) {
+                    textOffset = mapLinear$1(mouseAngle, 0, 0.25, textDistanceX, this.textDistanceY);
+                } else if (mouseAngle >= 0.25 && mouseAngle < 0.5) {
+                    textOffset = mapLinear$1(mouseAngle, 0.25, 0.5, this.textDistanceY, textDistanceX);
+                } else if (mouseAngle >= 0.5 && mouseAngle < 0.75) {
+                    textOffset = mapLinear$1(mouseAngle, 0.5, 0.75, textDistanceX, this.textDistanceY);
+                } else if (mouseAngle >= 0.75 && mouseAngle <= 1) {
+                    textOffset = mapLinear$1(mouseAngle, 0.75, 1, this.textDistanceY, textDistanceX);
+                }
+
+                const angle = mouseAngle * TwoPI;
+                const c = Math.cos(angle);
+                const s = Math.sin(angle);
+                const r0 = this.middle - (h - 0.5);
+                const r1 = this.middle - (h - 0.5 - (h - 0.5) * this.items[i].multiplier * this.props.yMultiplier);
+                const r2 = this.middle + textOffset;
+                const x0 = this.middle + r0 * c;
+                const y0 = this.middle + r0 * s;
+                const x1 = this.middle + r1 * c;
+                const y1 = this.middle + r1 * s;
+                const x2 = this.middle + r2 * c;
+                const y2 = this.middle + r2 * s;
+
+                this.context.beginPath();
+                this.context.moveTo(x0, y0);
+                this.context.lineTo(x1, y1);
+                this.context.stroke();
+
+                if (!this.isDraggingAway) {
+                    this.items[i].css({ left: x2, top: y2 });
+                }
+            }
+        }
+
+        // Draw handle line and circle
+        if (!this.noHover && !this.isDraggingAway) {
+            if (this.graphNeedsUpdate) {
+                this.graph.path.attr({ d: this.pathData });
+                this.calculateLookup();
+                this.graphNeedsUpdate = false;
+                this.onPointerMove();
+            }
+
+            let angle = (-this.startAngle + Math.atan2(this.offset.y, this.offset.x)) % TwoPI;
+
+            if (angle < 0) {
+                angle += TwoPI;
+            }
+
+            const mouseAngle = angle / TwoPI;
+            const value = this.array[Math.floor(mouseAngle * this.array.length)];
+
+            let radius;
+
+            if (this.lookupPrecision) {
+                const point = this.getCurvePoint(mouseAngle);
+                const x = point.x - this.middle;
+                const y = point.y - this.middle;
+                const distance = Math.sqrt(x * x + y * y);
+
+                radius = this.middle - (h - (distance - this.radius) - 1);
+            } else {
+                radius = this.middle - (h - value * this.rangeHeight - 1);
+            }
+
+            let textOffset;
+
+            if (this.mouseAngle >= 0 && this.mouseAngle < 0.25) {
+                textOffset = mapLinear$1(this.mouseAngle, 0, 0.25, this.textDistanceX, this.textDistanceY);
+            } else if (this.mouseAngle >= 0.25 && this.mouseAngle < 0.5) {
+                textOffset = mapLinear$1(this.mouseAngle, 0.25, 0.5, this.textDistanceY, this.textDistanceX);
+            } else if (this.mouseAngle >= 0.5 && this.mouseAngle < 0.75) {
+                textOffset = mapLinear$1(this.mouseAngle, 0.5, 0.75, this.textDistanceX, this.textDistanceY);
+            } else if (this.mouseAngle >= 0.75 && this.mouseAngle <= 1) {
+                textOffset = mapLinear$1(this.mouseAngle, 0.75, 1, this.textDistanceY, this.textDistanceX);
+            }
+
+            angle = this.mouseAngle * TwoPI;
+
+            const c = Math.cos(angle);
+            const s = Math.sin(angle);
+            const r0 = this.radius - textOffset;
+            const r1 = this.radius;
+            const r2 = radius - 2;
+            const r3 = radius;
+            const x0 = this.middle + r0 * c;
+            const y0 = this.middle + r0 * s;
+            const x1 = this.middle + r1 * c;
+            const y1 = this.middle + r1 * s;
+            const x2 = this.middle + r2 * c;
+            const y2 = this.middle + r2 * s;
+            const x3 = this.middle + r3 * c;
+            const y3 = this.middle + r3 * s;
+
+            if (this.handleProps.alpha < 0.001) {
+                this.context.globalAlpha = 0;
+            } else {
+                this.context.globalAlpha = this.handleProps.alpha;
+            }
+
+            this.context.lineWidth = 1;
+            this.context.strokeStyle = this.lineColors.handle;
+
+            this.context.beginPath();
+            this.context.moveTo(x1, y1);
+            this.context.lineTo(x2, y2);
+            this.context.stroke();
+
+            this.context.beginPath();
+            this.context.arc(x3, y3, 2.5, 0, TwoPI);
+            this.context.stroke();
+
+            this.info.css({ left: x0, top: y0 });
+            this.info.text(`${value.toFixed(this.precision)}${this.suffix}`);
+        }
+
+        this.context.restore();
+    }
+
+    drawPath(h, array, ghost) {
+        if (ghost) {
+            this.context.globalAlpha = 0.35;
+        } else {
+            this.context.globalAlpha = this.props.alpha;
+        }
+
+        // Draw graph line
+        this.context.lineWidth = 1.5;
+
+        if (this.noGradient) {
+            this.context.strokeStyle = this.lineColors.graph;
+        } else {
+            this.context.strokeStyle = this.strokeStyle;
+            this.context.fillStyle = this.fillStyle;
+            this.context.shadowColor = 'rgb(255 255 255 / 0.2)';
+            this.context.shadowBlur = 15;
+        }
+
+        if (!this.noHover && this.graphNeedsUpdate && !ghost) {
+            this.points.length = 0;
+
+            for (let i = 0, l = array.length; i < l; i++) {
+                const radius = this.middle - (this.graphHeight - array[i] * this.rangeHeight);
+
+                if (i === 0) {
+                    const rad0 = this.startAngle + TwoPI * ((i - 1) / (l - 1));
+                    const rad1 = this.startAngle;
+
+                    this.points[i] = {
+                        x: this.middle + radius * Math.cos(rad0),
+                        y: this.middle + radius * Math.sin(rad0)
+                    };
+
+                    this.points[i + 1] = {
+                        x: this.middle + radius * Math.cos(rad1),
+                        y: this.middle + radius * Math.sin(rad1)
+                    };
+                } else if (i !== l - 1) {
+                    const rad = this.startAngle + TwoPI * (i / (l - 1));
+
+                    this.points[i + 1] = {
+                        x: this.middle + radius * Math.cos(rad),
+                        y: this.middle + radius * Math.sin(rad)
+                    };
+                } else if (i === l - 1) {
+                    const rad0 = this.startAngle + TwoPI;
+                    const rad1 = this.startAngle + TwoPI * ((i + 1) / (l - 1));
+
+                    this.points[i + 1] = {
+                        x: this.middle + radius * Math.cos(rad0),
+                        y: this.middle + radius * Math.sin(rad0)
+                    };
+
+                    this.points[i + 2] = {
+                        x: this.middle + radius * Math.cos(rad1),
+                        y: this.middle + radius * Math.sin(rad1)
+                    };
+                }
+            }
+
+            this.pathData += `M ${this.points[1].x} ${this.points[1].y}`;
+
+            for (let i = 1, l = this.points.length; i < l - 2; i++) {
+                const p0 = this.points[i - 1];
+                const p1 = this.points[i];
+                const p2 = this.points[i + 1];
+                const p3 = this.points[i + 2];
+
+                const cp1x = p1.x + (p2.x - p0.x) / this.tension;
+                const cp1y = p1.y + (p2.y - p0.y) / this.tension;
+
+                const cp2x = p2.x - (p3.x - p1.x) / this.tension;
+                const cp2y = p2.y - (p3.y - p1.y) / this.tension;
+
+                this.pathData += ` C ${cp1x} ${cp1y} ${cp2x} ${cp2y} ${p2.x} ${p2.y}`;
+            }
+        }
+
+        this.points.length = 0;
+
+        // Close loop smoothly by repeating the first and last values
+        for (let i = 0, l = array.length; i < l; i++) {
+            const radius = this.middle - (h - array[i] * this.rangeHeight * this.props.yMultiplier - 1);
+
+            if (i === 0) {
+                const rad0 = this.startAngle + TwoPI * ((i - 1) / (l - 1));
+                const rad1 = this.startAngle;
+
+                this.points[i] = {
+                    x: this.middle + radius * Math.cos(rad0),
+                    y: this.middle + radius * Math.sin(rad0)
+                };
+
+                this.points[i + 1] = {
+                    x: this.middle + radius * Math.cos(rad1),
+                    y: this.middle + radius * Math.sin(rad1)
+                };
+            } else if (i !== l - 1) {
+                const rad = this.startAngle + TwoPI * (i / (l - 1));
+
+                this.points[i + 1] = {
+                    x: this.middle + radius * Math.cos(rad),
+                    y: this.middle + radius * Math.sin(rad)
+                };
+            } else if (i === l - 1) {
+                const rad0 = this.startAngle + TwoPI;
+                const rad1 = this.startAngle + TwoPI * ((i + 1) / (l - 1));
+
+                this.points[i + 1] = {
+                    x: this.middle + radius * Math.cos(rad0),
+                    y: this.middle + radius * Math.sin(rad0)
+                };
+
+                this.points[i + 2] = {
+                    x: this.middle + radius * Math.cos(rad1),
+                    y: this.middle + radius * Math.sin(rad1)
+                };
+            }
+        }
+
+        this.context.beginPath();
+
+        // Close loop smoothly with the first and last control points
+        if (this.props.progress === 1) {
+            this.context.moveTo(this.points[1].x, this.points[1].y);
+
+            for (let i = 1, l = this.points.length; i < l - 2; i++) {
+                const p0 = this.points[i - 1];
+                const p1 = this.points[i];
+                const p2 = this.points[i + 1];
+                const p3 = this.points[i + 2];
+
+                const cp1x = p1.x + (p2.x - p0.x) / this.tension;
+                const cp1y = p1.y + (p2.y - p0.y) / this.tension;
+
+                const cp2x = p2.x - (p3.x - p1.x) / this.tension;
+                const cp2y = p2.y - (p3.y - p1.y) / this.tension;
+
+                this.context.bezierCurveTo(cp1x, cp1y, cp2x, cp2y, p2.x, p2.y);
+            }
+        } else {
+            this.context.arc(this.middle, this.middle, this.middle - h, this.startAngle, this.startAngle + TwoPI * this.props.progress);
+        }
+
+        this.context.stroke();
+
+        // Draw radial gradient fill
+        if (!this.noGradient && this.props.progress === 1) {
+            const radius = this.middle - h;
+            const x = this.middle + radius * Math.cos(this.startAngle);
+            const y = this.middle + radius * Math.sin(this.startAngle);
+
+            this.context.shadowBlur = 0;
+            this.context.moveTo(x, y);
+            this.context.arc(this.middle, this.middle, radius, 0, TwoPI, true); // Inner circle hole
+            this.context.fill();
+        }
+    }
+
+    hoverIn() {
+        clearTween(this.handleProps);
+
+        tween(this.handleProps, { alpha: 1 }, 275, 'easeInOutCubic');
+
+        this.info.clearTween();
+        this.info.visible();
+        this.info.tween({ opacity: 1 }, 275, 'easeInOutCubic');
+
+        this.hoveredIn = true;
+    }
+
+    hoverOut(fast) {
+        this.lastHover = 'out';
+
+        clearTween(this.handleProps);
+
+        this.info.clearTween();
+
+        if (fast) {
+            this.handleProps.alpha = 0;
+
+            this.info.css({ opacity: 0 });
+            this.info.invisible();
+        } else {
+            tween(this.handleProps, { alpha: 0 }, 275, 'easeInOutCubic');
+
+            this.info.tween({ opacity: 0 }, 275, 'easeInOutCubic', () => {
+                this.info.invisible();
+            });
+        }
+
+        this.hoveredIn = false;
+    }
+
+    animateIn(fast) {
+        this.addListeners();
+
+        clearTween(this.props);
+
+        if (!this.initialized) {
+            this.initialized = true;
+
+            this.update();
+        }
+
+        if (fast) {
+            this.props.alpha = 1;
+            this.props.yMultiplier = 1;
+            this.props.progress = 1;
+
+            this.animatedIn = true;
+
+            if (this.hoveredIn) {
+                this.hoverIn();
+            }
+        } else {
+            this.props.alpha = 0;
+            this.props.yMultiplier = 0;
+            this.props.progress = 0;
+
+            tween(this.props, { alpha: 1 }, 500, 'easeOutSine');
+
+            tween(this.props, { progress: 1 }, 500, 'easeInOutCubic', () => {
+                tween(this.props, { yMultiplier: 1 }, 400, 'easeOutCubic', () => {
+                    this.animatedIn = true;
+
+                    if (this.hoveredIn) {
+                        this.hoverIn();
+                    }
+
+                    if (!this.noMarker) {
+                        this.items.forEach(item => {
+                            tween(item, { multiplier: 1 }, 400, 'easeOutCubic', null, () => {
+                                item.css({ opacity: item.multiplier });
+                            });
+                        });
+                    }
+                });
+            });
+        }
+    }
+
+    animateOut() {
+        this.removeListeners();
+
+        clearTween(this.props);
+
+        this.animatedIn = false;
+
+        this.hoverOut(true);
         this.setCursor();
+
+        tween(this.props, { alpha: 0 }, 300, 'easeOutSine');
+
+        tween(this.props, { yMultiplier: 0 }, 300, 'easeOutCubic', null, () => {
+            if (!this.noMarker) {
+                this.items.forEach(item => {
+                    item.multiplier = this.props.yMultiplier;
+
+                    item.css({ opacity: item.multiplier });
+                });
+            }
+        });
     }
 
     destroy() {
@@ -79938,8 +81302,7 @@ ${dither}
 void main() {
     FragColor = texture(tScene, vUv);
 
-    vec2 dir = 0.5 - vUv;
-    float angle = atan(dir.y, dir.x);
+    float angle = length(vUv - 0.5);
     float amount = 0.001 * uBloomDistortion;
 
     FragColor.rgb += getRGB(tBloom, vUv, angle, amount).rgb;
@@ -81378,15 +82741,15 @@ out vec4 FragColor;
 const int samples = 20;
 
 void main() {
-    vec2 texCoord = vUv;
-    vec2 deltaTextCoord = texCoord - uLightPosition;
+    vec2 texcoord = vUv;
+    vec2 deltaTextCoord = texcoord - uLightPosition;
     deltaTextCoord *= 1.0 / float(samples) * uDensity;
     vec4 color = vec4(0);
     float illuminationDecay = 1.0;
 
     for (int i = 0; i < samples; i++) {
-        texCoord -= ((deltaTextCoord.xy * (1.0 - uSwizzle)) + (deltaTextCoord.xx * uSwizzle)) * uScale;
-        vec4 texel = texture(tMap, texCoord);
+        texcoord -= ((deltaTextCoord.xy * (1.0 - uSwizzle)) + (deltaTextCoord.xx * uSwizzle)) * uScale;
+        vec4 texel = texture(tMap, texcoord);
         texel *= illuminationDecay * uWeight;
         color += texel;
         illuminationDecay *= uDecay;
@@ -81501,15 +82864,15 @@ const int samples = 20;
 ${lensflare}
 
 void main() {
-    vec2 texCoord = vUv;
-    vec2 deltaTextCoord = texCoord - uLightPosition;
+    vec2 texcoord = vUv;
+    vec2 deltaTextCoord = texcoord - uLightPosition;
     deltaTextCoord *= 1.0 / float(samples) * uDensity;
     vec4 color = vec4(0);
     float illuminationDecay = 1.0;
 
     for (int i = 0; i < samples; i++) {
-        texCoord -= ((deltaTextCoord.xy * (1.0 - uSwizzle)) + (deltaTextCoord.xx * uSwizzle)) * uScale;
-        vec4 texel = texture(tMap, texCoord);
+        texcoord -= ((deltaTextCoord.xy * (1.0 - uSwizzle)) + (deltaTextCoord.xx * uSwizzle)) * uScale;
+        vec4 texel = texture(tMap, texcoord);
         texel *= illuminationDecay * uWeight;
         color += texel;
         illuminationDecay *= uDecay;
@@ -123542,7 +124905,7 @@ class SVGLoader extends Loader {
 					( curve.aEndAngle - curve.aStartAngle ) % ( 2 * Math.PI ) < Number.EPSILON;
 
 				// Do not touch angles of a full ellipse because after transformation they
-				// would converge to a sinle value effectively removing the whole curve
+				// would converge to a single value effectively removing the whole curve
 
 				if ( ! isFullEllipse ) {
 
@@ -124033,7 +125396,7 @@ class SVGLoader extends Loader {
 
 				// check if the center of the bounding box is in the bounding box of the paths.
 				// this is a pruning method to limit the search of intersections in paths that can't envelop of the current path.
-				// if a path envelops another path. The center of that oter path, has to be inside the bounding box of the enveloping path.
+				// if a path envelops another path. The center of that other path, has to be inside the bounding box of the enveloping path.
 				if ( path.boundingBox.containsPoint( center ) ) {
 
 					const intersections = getIntersections( scanline, path.points );
@@ -127371,6 +128734,9 @@ const ALPHA_MODES = {
 
 /**
  * Specification: https://github.com/KhronosGroup/glTF/blob/master/specification/2.0/README.md#default-material
+ *
+ * @param {Object<String, Material>} cache
+ * @return {Material}
  */
 function createDefaultMaterial( cache ) {
 
@@ -127869,6 +129235,9 @@ class GLTFParser {
 	 * Textures) can be reused directly and are not marked here.
 	 *
 	 * Example: CesiumMilkTruck sample model reuses "Wheel" meshes.
+	 *
+	 * @param {Object} cache
+	 * @param {Object3D} index
 	 */
 	_addNodeRef( cache, index ) {
 
@@ -127884,7 +129253,14 @@ class GLTFParser {
 
 	}
 
-	/** Returns a reference to a shared resource, cloning it if necessary. */
+	/**
+	 * Returns a reference to a shared resource, cloning it if necessary.
+	 *
+	 * @param {Object} cache
+	 * @param {Number} index
+	 * @param {Object} object
+	 * @return {Object}
+	 */
 	_getNodeRef( cache, index, object ) {
 
 		if ( cache.refs[ index ] <= 1 ) return object;
@@ -128456,9 +129832,11 @@ class GLTFParser {
 
 	/**
 	 * Asynchronously assigns a texture to the given material parameters.
+	 *
 	 * @param {Object} materialParams
 	 * @param {string} mapName
 	 * @param {Object} mapDef
+	 * @param {string} colorSpace
 	 * @return {Promise<Texture>}
 	 */
 	assignTexture( materialParams, mapName, mapDef, colorSpace ) {
@@ -128767,7 +130145,12 @@ class GLTFParser {
 
 	}
 
-	/** When Object3D instances are targeted by animation, they need unique names. */
+	/**
+	 * When Object3D instances are targeted by animation, they need unique names.
+	 *
+	 * @param {String} originalName
+	 * @return {String}
+	 */
 	createUniqueName( originalName ) {
 
 		const sanitizedName = PropertyBinding.sanitizeNodeName( originalName || '' );
@@ -129840,6 +131223,1697 @@ function addPrimitiveAttributes( geometry, primitiveDef, parser ) {
 
 }
 
+/**
+ * @author Deepkolos / https://github.com/deepkolos
+ */
+
+class WorkerPool {
+
+	constructor( pool = 4 ) {
+
+		this.pool = pool;
+		this.queue = [];
+		this.workers = [];
+		this.workersResolve = [];
+		this.workerStatus = 0;
+
+	}
+
+	_initWorker( workerId ) {
+
+		if ( ! this.workers[ workerId ] ) {
+
+			const worker = this.workerCreator();
+			worker.addEventListener( 'message', this._onMessage.bind( this, workerId ) );
+			this.workers[ workerId ] = worker;
+
+		}
+
+	}
+
+	_getIdleWorker() {
+
+		for ( let i = 0; i < this.pool; i ++ )
+			if ( ! ( this.workerStatus & ( 1 << i ) ) ) return i;
+
+		return - 1;
+
+	}
+
+	_onMessage( workerId, msg ) {
+
+		const resolve = this.workersResolve[ workerId ];
+		resolve && resolve( msg );
+
+		if ( this.queue.length ) {
+
+			const { resolve, msg, transfer } = this.queue.shift();
+			this.workersResolve[ workerId ] = resolve;
+			this.workers[ workerId ].postMessage( msg, transfer );
+
+		} else {
+
+			this.workerStatus ^= 1 << workerId;
+
+		}
+
+	}
+
+	setWorkerCreator( workerCreator ) {
+
+		this.workerCreator = workerCreator;
+
+	}
+
+	setWorkerLimit( pool ) {
+
+		this.pool = pool;
+
+	}
+
+	postMessage( msg, transfer ) {
+
+		return new Promise( ( resolve ) => {
+
+			const workerId = this._getIdleWorker();
+
+			if ( workerId !== - 1 ) {
+
+				this._initWorker( workerId );
+				this.workerStatus |= 1 << workerId;
+				this.workersResolve[ workerId ] = resolve;
+				this.workers[ workerId ].postMessage( msg, transfer );
+
+			} else {
+
+				this.queue.push( { resolve, msg, transfer } );
+
+			}
+
+		} );
+
+	}
+
+	dispose() {
+
+		this.workers.forEach( ( worker ) => worker.terminate() );
+		this.workersResolve.length = 0;
+		this.workers.length = 0;
+		this.queue.length = 0;
+		this.workerStatus = 0;
+
+	}
+
+}
+
+const t=0,n=2,g$1=1,u=2,T=0,C$1=1,R=10,it=0,ct=9,yt=15,xt=16,wt=22,Ft=37,Ct=43,te=76,ae=83,ge=97,ue=100,we=103,Ae=109,In=165,Sn=166,pi=1000066e3;class Ii{constructor(){this.vkFormat=0,this.typeSize=1,this.pixelWidth=0,this.pixelHeight=0,this.pixelDepth=0,this.layerCount=0,this.faceCount=1,this.supercompressionScheme=0,this.levels=[],this.dataFormatDescriptor=[{vendorId:0,descriptorType:0,descriptorBlockSize:0,versionNumber:2,colorModel:0,colorPrimaries:1,transferFunction:2,flags:0,texelBlockDimension:[0,0,0,0],bytesPlane:[0,0,0,0,0,0,0,0],samples:[]}],this.keyValue={},this.globalData=null;}}class Si{constructor(t,e,n,i){this._dataView=void 0,this._littleEndian=void 0,this._offset=void 0,this._dataView=new DataView(t.buffer,t.byteOffset+e,n),this._littleEndian=i,this._offset=0;}_nextUint8(){const t=this._dataView.getUint8(this._offset);return this._offset+=1,t}_nextUint16(){const t=this._dataView.getUint16(this._offset,this._littleEndian);return this._offset+=2,t}_nextUint32(){const t=this._dataView.getUint32(this._offset,this._littleEndian);return this._offset+=4,t}_nextUint64(){const t=this._dataView.getUint32(this._offset,this._littleEndian)+2**32*this._dataView.getUint32(this._offset+4,this._littleEndian);return this._offset+=8,t}_nextInt32(){const t=this._dataView.getInt32(this._offset,this._littleEndian);return this._offset+=4,t}_nextUint8Array(t){const e=new Uint8Array(this._dataView.buffer,this._dataView.byteOffset+this._offset,t);return this._offset+=t,e}_skip(t){return this._offset+=t,this}_scan(t,e){void 0===e&&(e=0);const n=this._offset;let i=0;for(;this._dataView.getUint8(this._offset)!==e&&i<t;)i++,this._offset++;return i<t&&this._offset++,new Uint8Array(this._dataView.buffer,this._dataView.byteOffset+n,i)}}const Oi=[171,75,84,88,32,50,48,187,13,10,26,10];function Ti(t){return (new TextDecoder).decode(t)}function Pi(t){const e=new Uint8Array(t.buffer,t.byteOffset,Oi.length);if(e[0]!==Oi[0]||e[1]!==Oi[1]||e[2]!==Oi[2]||e[3]!==Oi[3]||e[4]!==Oi[4]||e[5]!==Oi[5]||e[6]!==Oi[6]||e[7]!==Oi[7]||e[8]!==Oi[8]||e[9]!==Oi[9]||e[10]!==Oi[10]||e[11]!==Oi[11])throw new Error("Missing KTX 2.0 identifier.");const n=new Ii,i=17*Uint32Array.BYTES_PER_ELEMENT,s=new Si(t,Oi.length,i,!0);n.vkFormat=s._nextUint32(),n.typeSize=s._nextUint32(),n.pixelWidth=s._nextUint32(),n.pixelHeight=s._nextUint32(),n.pixelDepth=s._nextUint32(),n.layerCount=s._nextUint32(),n.faceCount=s._nextUint32();const a=s._nextUint32();n.supercompressionScheme=s._nextUint32();const r=s._nextUint32(),o=s._nextUint32(),l=s._nextUint32(),f=s._nextUint32(),h=s._nextUint64(),U=s._nextUint64(),c=new Si(t,Oi.length+i,3*a*8,!0);for(let e=0;e<a;e++)n.levels.push({levelData:new Uint8Array(t.buffer,t.byteOffset+c._nextUint64(),c._nextUint64()),uncompressedByteLength:c._nextUint64()});const _=new Si(t,r,o,!0),p={vendorId:_._skip(4)._nextUint16(),descriptorType:_._nextUint16(),versionNumber:_._nextUint16(),descriptorBlockSize:_._nextUint16(),colorModel:_._nextUint8(),colorPrimaries:_._nextUint8(),transferFunction:_._nextUint8(),flags:_._nextUint8(),texelBlockDimension:[_._nextUint8(),_._nextUint8(),_._nextUint8(),_._nextUint8()],bytesPlane:[_._nextUint8(),_._nextUint8(),_._nextUint8(),_._nextUint8(),_._nextUint8(),_._nextUint8(),_._nextUint8(),_._nextUint8()],samples:[]},g=(p.descriptorBlockSize/4-6)/4;for(let t=0;t<g;t++){const e={bitOffset:_._nextUint16(),bitLength:_._nextUint8(),channelType:_._nextUint8(),samplePosition:[_._nextUint8(),_._nextUint8(),_._nextUint8(),_._nextUint8()],sampleLower:-Infinity,sampleUpper:Infinity};64&e.channelType?(e.sampleLower=_._nextInt32(),e.sampleUpper=_._nextInt32()):(e.sampleLower=_._nextUint32(),e.sampleUpper=_._nextUint32()),p.samples[t]=e;}n.dataFormatDescriptor.length=0,n.dataFormatDescriptor.push(p);const y=new Si(t,l,f,!0);for(;y._offset<f;){const t=y._nextUint32(),e=y._scan(t),i=Ti(e);if(n.keyValue[i]=y._nextUint8Array(t-e.byteLength-1),i.match(/^ktx/i)){const t=Ti(n.keyValue[i]);n.keyValue[i]=t.substring(0,t.lastIndexOf("\0"));}y._skip(t%4?4-t%4:0);}if(U<=0)return n;const x=new Si(t,h,U,!0),u=x._nextUint16(),b=x._nextUint16(),d=x._nextUint32(),w=x._nextUint32(),m=x._nextUint32(),D=x._nextUint32(),B=[];for(let t=0;t<a;t++)B.push({imageFlags:x._nextUint32(),rgbSliceByteOffset:x._nextUint32(),rgbSliceByteLength:x._nextUint32(),alphaSliceByteOffset:x._nextUint32(),alphaSliceByteLength:x._nextUint32()});const L=h+x._offset,v=L+d,A=v+w,k=A+m,V=new Uint8Array(t.buffer,t.byteOffset+L,d),I=new Uint8Array(t.buffer,t.byteOffset+v,w),S=new Uint8Array(t.buffer,t.byteOffset+A,m),F=new Uint8Array(t.buffer,t.byteOffset+k,D);return n.globalData={endpointCount:u,selectorCount:b,imageDescs:B,endpointsData:V,selectorsData:I,tablesData:S,extendedData:F},n}
+
+let A,I,B;const g={env:{emscripten_notify_memory_growth:function(A){B=new Uint8Array(I.exports.memory.buffer);}}};class Q{init(){return A||(A="undefined"!=typeof fetch?fetch("data:application/wasm;base64,"+C).then(A=>A.arrayBuffer()).then(A=>WebAssembly.instantiate(A,g)).then(this._init):WebAssembly.instantiate(Buffer.from(C,"base64"),g).then(this._init),A)}_init(A){I=A.instance,g.env.emscripten_notify_memory_growth(0);}decode(A,g=0){if(!I)throw new Error("ZSTDDecoder: Await .init() before decoding.");const Q=A.byteLength,C=I.exports.malloc(Q);B.set(A,C),g=g||Number(I.exports.ZSTD_findDecompressedSize(C,Q));const E=I.exports.malloc(g),i=I.exports.ZSTD_decompress(E,g,C,Q),D=B.slice(E,E+i);return I.exports.free(C),I.exports.free(E),D}}const C="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IAMNACAEQQNxBEADQCACRQ0FIAAgAkF/aiICaiIDIAEgAmotAAA6AAAgA0EDcQ0ACwsgAkEDTQ0AA0AgACACQXxqIgJqIAEgAmooAgA2AgAgAkEDSw0ACwsgAkUNAgNAIAAgAkF/aiICaiABIAJqLQAAOgAAIAINAAsMAgsgAkEDTQ0AIAIhBANAIAMgASgCADYCACABQQRqIQEgA0EEaiEDIARBfGoiBEEDSw0ACyACQQNxIQILIAJFDQADQCADIAEtAAA6AAAgA0EBaiEDIAFBAWohASACQX9qIgINAAsLIAAL8wICAn8BfgJAIAJFDQAgACACaiIDQX9qIAE6AAAgACABOgAAIAJBA0kNACADQX5qIAE6AAAgACABOgABIANBfWogAToAACAAIAE6AAIgAkEHSQ0AIANBfGogAToAACAAIAE6AAMgAkEJSQ0AIABBACAAa0EDcSIEaiIDIAFB/wFxQYGChAhsIgE2AgAgAyACIARrQXxxIgRqIgJBfGogATYCACAEQQlJDQAgAyABNgIIIAMgATYCBCACQXhqIAE2AgAgAkF0aiABNgIAIARBGUkNACADIAE2AhggAyABNgIUIAMgATYCECADIAE2AgwgAkFwaiABNgIAIAJBbGogATYCACACQWhqIAE2AgAgAkFkaiABNgIAIAQgA0EEcUEYciIEayICQSBJDQAgAa0iBUIghiAFhCEFIAMgBGohAQNAIAEgBTcDGCABIAU3AxAgASAFNwMIIAEgBTcDACABQSBqIQEgAkFgaiICQR9LDQALCyAACy8BAn8gACgCBCAAKAIAQQJ0aiICLQACIQMgACACLwEAIAEgAi0AAxAIajYCACADCy8BAn8gACgCBCAAKAIAQQJ0aiICLQACIQMgACACLwEAIAEgAi0AAxAFajYCACADCx8AIAAgASACKAIEEAg2AgAgARAEGiAAIAJBCGo2AgQLCAAgAGdBH3MLugUBDX8jAEEQayIKJAACfyAEQQNNBEAgCkEANgIMIApBDGogAyAEEAsaIAAgASACIApBDGpBBBAVIgBBbCAAEAMbIAAgACAESxsMAQsgAEEAIAEoAgBBAXRBAmoQECENQVQgAygAACIGQQ9xIgBBCksNABogAiAAQQVqNgIAIAMgBGoiAkF8aiEMIAJBeWohDiACQXtqIRAgAEEGaiELQQQh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ASIDNgLE4AEgACgCvOABIQQgACABNgK84AEgACABIAJqNgK44AEgACABIAQgA2tqNgLA4AELpgEBAX8gACAAKALs4QEQFjYCyOABIABCADcD+OABIABCADcDuOABIABBwOABakIANwMAIABBqNAAaiIBQYyAgOAANgIAIABBADYCmOIBIABCADcDiOEBIABCAzcDgOEBIABBrNABakHgEikCADcCACAAQbTQAWpB6BIoAgA2AgAgACABNgIMIAAgAEGYIGo2AgggACAAQaAwajYCBCAAIABBEGo2AgALYQEBf0G4fyEDAkAgAUEDSQ0AIAIgABAhIgFBA3YiADYCCCACIAFBAXE2AgQgAiABQQF2QQNxIgM2AgACQCADQX9qIgFBAksNAAJAIAFBAWsOAgEAAgtBbA8LIAAhAwsgAwsMACAAIAEgAkEAEC4LiAQCA38CfiADEBYhBCAAQQBBKBAQIQAgBCACSwRAIAQPCyABRQRAQX8PCwJAAkAgA0EBRg0AIAEoAAAiBkGo6r5pRg0AQXYhAyAGQXBxQdDUtMIBRw0BQQghAyACQQhJDQEgAEEAQSgQECEAIAEoAAQhASAAQQE2AhQgACABrTcDAEEADwsgASACIAMQLyIDIAJLDQAgACADNgIYQXIhAyABIARqIgVBf2otAAAiAkEIcQ0AIAJBIHEiBkUEQEFwIQMgBS0AACIFQacBSw0BIAVBB3GtQgEgBUEDdkEKaq2GIgdCA4h+IAd8IQggBEEBaiEECyACQQZ2IQMgAkECdiEFAkAgAkEDcUF/aiICQQJLBEBBACECDAELAkACQAJAIAJBAWsOAgECAAsgASAEai0AACECIARBAWohBAwCCyABIARqLwAAIQIgBEECaiEEDAELIAEgBGooAAAhAiAEQQRqIQQLIAVBAXEhBQJ+AkACQAJAIANBf2oiA0ECTQRAIANBAWsOAgIDAQtCfyAGRQ0DGiABIARqMQAADAMLIAEgBGovAACtQoACfAwCCyABIARqKAAArQwBCyABIARqKQAACyEHIAAgBTYCICAAIAI2AhwgACAHNwMAQQAhAyAAQQA2AhQgACAHIAggBhsiBzcDCCAAIAdCgIAIIAdCgIAIVBs+AhALIAMLWwEBf0G4fyEDIAIQFiICIAFNBH8gACACakF/ai0AACIAQQNxQQJ0QaAeaigC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C0Egak8NAQsgByAHKQNoNwMQIAcgBykDYDcDCCAEIA0gB0EIaiAHQdwAaiAPIA4gESAQEB4hCwwBCyACIARqIQggBCAKEAcgAkERTwRAIARBEGohAgNAIAIgCkEQaiIKEAcgAkEQaiICIAhJDQALCyAIIAlrIQIgByATNgJcIAkgCCAOa0sEQCAJIAggEWtLBEBBbCELDAILIBAgAiAOayICaiIKIANqIBBNBEAgCCAKIAMQDxoMAgsgCCAKQQAgAmsQDyEIIAcgAiADaiIDNgJkIAggAmshCCAOIQILIAlBEE8EQCADIAhqIQMDQCAIIAIQByACQRBqIQIgCEEQaiIIIANJDQALDAELAkAgCUEHTQRAIAggAi0AADoAACAIIAItAAE6AAEgCCACLQACOgACIAggAi0AAzoAAyAIQQRqIAIgCUECdCIDQcAeaigCAGoiAhAXIAIgA0HgHmooAgBrIQIgBygCZCEDDAELIAggAhAMCyADQQlJDQAgAyAIaiEDIAhBCGoiCCACQQhqIgJrQQ9MBEADQCAIIAIQDCACQQhqIQIgCEEIaiIIIANJDQAMAgALAAsDQCAIIAIQByACQRBqIQIgCEEQaiIIIANJDQALCyAHQRhqEAQaIAsgDCALEAMiAhshDCAEIAQgC2ogAhshBCAFQX9qIgUNAAsgDBADDQFBbCEMIAdBGGoQBEECSQ0BQQAhCANAIAhBA0cEQCAAIAhBAnQiAmpBrNABaiACIAdqKAJENgIAIAhBAWohCAwBCwsgBygCXCEIC0G6fyEMIA8gCGsiACANIARrSw0AIAQEfyAEIAggABALIABqBUEACyABayEMCyAHQfAAaiQAIAwLkRcCFn8FfiMAQdABayIHJAAgByAAKALw4QEiCDYCvAEgASACaiESIAggACgCgOIBaiETAkACQCAFRQRAIAEhAwwBCyAAKALE4AEhESAAKALA4AEhFSAAKAK84AEhDyAAQQE2AozhAUEAIQgDQCAIQQNHBEAgByAIQQJ0IgJqIAAgAmpBrNABaigCADYCVCAIQQFqIQgMAQsLIAcgETYCZCAHIA82AmAgByABIA9rNgJoQWwhECAHQShqIAMgBBAGEAMNASAFQQQgBUEESBshFyAHQTxqIAdBKGogACgCABATIAdBxABqIAdBKGogACgCCBATIAdBzABqIAdB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IAdB0AFqJAAgEAslACAAQgA3AgAgAEEAOwEIIABBADoACyAAIAE2AgwgACACOgAKC7QFAQN/IwBBMGsiBCQAIABB/wFqIgVBfWohBgJAIAMvAQIEQCAEQRhqIAEgAhAGIgIQAw0BIARBEGogBEEYaiADEBwgBEEIaiAEQRhqIAMQHCAAIQMDQAJAIARBGGoQBCADIAZPckUEQCADIARBEGogBEEYahASOgAAIAMgBEEIaiAEQRhqEBI6AAEgBEEYahAERQ0BIANBAmohAwsgBUF+aiEFAn8DQEG6fyECIAMiASAFSw0FIAEgBEEQaiAEQRhqEBI6AAAgAUEBaiEDIARBGGoQBEEDRgRAQQIhAiAEQQhqDAILIAMgBUsNBSABIARBCGogBEEYahASOgABIAFBAmohA0EDIQIgBEEYahAEQQNHDQALIARBEGoLIQUgAyAFIARBGGoQEjoAACABIAJqIABrIQIMAwsgAyAEQRBqIARBGGoQEjoAAiADIARBCGogBEEYahASOgADIANBBGohAwwAAAsACyAEQRhqIAEgAhAGIgIQAw0AIARBEGogBEEYaiADEBwgBEEIaiAEQRhqIAMQHCAAIQMDQAJAIARBGGoQBCADIAZPckUEQCADIARBEGogBEEYahAROgAAIAMgBEEIaiAEQRhqEBE6AAEgBEEYahAERQ0BIANBAmohAwsgBUF+aiEFAn8DQEG6fyECIAMiASAFSw0EIAEgBEEQaiAEQRhqEBE6AAAgAUEBaiEDIARBGGoQBEEDRgRAQQIhAiAEQQhqDAILIAMgBUsNBCABIARBCGogBEEYahAROgABIAFBAmohA0EDIQIgBEEYahAEQQNHDQALIARBEGoLIQUgAyAFIARBGGoQEToAACABIAJqIABrIQIMAgsgAyAEQRBqIARBGGoQEToAAiADIARBCGogBEEYahAROgADIANBBGohAwwAAAsACyAEQTBqJAAgAgtpAQF/An8CQAJAIAJBB00NACABKAAAQbfIwuF+Rw0AIAAgASgABDYCmOIBQWIgAEEQaiABIAIQPiIDEAMNAhogAEKBgICAEDcDiOEBIAAgASADaiACIANrECoMAQsgACABIAIQKgtBAAsLrQMBBn8jAEGAAWsiAyQAQWIhCAJAIAJBCUkNACAAQZjQAGogAUEIaiIEIAJBeGogAEGY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wOABCwutAgIEfwF+IwBBQGoiBCQAAkACQCACQQhJDQAgASgAAEFwcUHQ1LTCAUcNACABIAIQIiEBIABCADcDCCAAQQA2AgQgACABNgIADAELIARBGGogASACEC0iAxADBEAgACADEBoMAQsgAwRAIABBuH8QGgwBCyACIAQoAjAiA2shAiABIANqIQMDQAJAIAAgAyACIARBCGoQLCIFEAMEfyAFBSACIAVBA2oiBU8NAUG4fwsQGgwCCyAGQQFqIQYgAiAFayECIAMgBWohAyAEKAIMRQ0ACyAEKAI4BEAgAkEDTQRAIABBuH8QGgwCCyADQQRqIQMLIAQoAighAiAEKQMYIQcgAEEANgIEIAAgAyABazYCACAAIAIgBmytIAcgB0J/URs3AwgLIARBQGskAAslAQF/IwBBEGsiAiQAIAIgACABEFEgAigCACEAIAJBEGokACAAC30BBH8jAEGQBGsiBCQAIARB/wE2AggCQCAEQRBqIARBCGogBEEMaiABIAIQFSIGEAMEQCAGIQUMAQtBVCEFIAQoAgwiB0EGSw0AIAMgBEEQaiAEKAIIIAcQQSIFEAMNACAAIAEgBmogAiAGayADEDwhBQsgBEGQBGokACAFC4cBAgJ/An5BABAWIQMCQANAIAEgA08EQAJAIAAoAABBcHFB0NS0wgFGBEAgACABECIiAhADRQ0BQn4PCyAAIAEQVSIEQn1WDQMgBCAFfCIFIARUIQJCfiEEIAINAyAAIAEQUiICEAMNAwsgASACayEBIAAgAmohAAwBCwtCfiAFIAEbIQQLIAQLPwIBfwF+IwBBMGsiAiQAAn5CfiACQQhqIAAgARAtDQAaQgAgAigCHEEBRg0AGiACKQMICyEDIAJBMGokACADC40BAQJ/IwBBMGsiASQAAkAgAEUNACAAKAKI4gENACABIABB/OEBaigCADYCKCABIAApAvThATcDICAAEDAgACgCqOIBIQIgASABKAIoNgIYIAEgASkDIDcDECACIAFBEGoQGyAAQQA2AqjiASABIAEoAig2AgggASABKQMgNwMAIAAgARAbCyABQTBqJAALKgECfyMAQRBrIgAkACAAQQA2AgggAEIANwMAIAAQWCEBIABBEGokACABC4cBAQN/IwBBEGsiAiQAAkAgACgCAEUgACgCBEVzDQAgAiAAKAIINgIIIAIgACkCADcDAAJ/IAIoAgAiAQRAIAIoAghBqOMJIAERBQAMAQtBqOMJECgLIgFFDQAgASAAKQIANwL04QEgAUH84QFqIAAoAgg2AgAgARBZIAEhAwsgAkEQaiQAIAMLywEBAn8jAEEgayIBJAAgAEGBgIDAADYCtOIBIABBADYCiOIBIABBADYC7OEBIABCADcDkOIBIABBADYCpOMJIABBADYC3OIBIABCADcCzOIBIABBADYCvOIBIABBADYCxOABIABCADcCnOIBIABBpOIBakIANwIAIABBrOIBakEANgIAIAFCADcCECABQgA3AhggASABKQMYNwMIIAEgASkDEDcDACABKAIIQQh2QQFxIQIgAEEANgLg4gEgACACNgKM4gEgAUEgaiQAC3YBA38jAEEwayIBJAAgAARAIAEgAEHE0AFqIgIoAgA2AiggASAAKQK80AE3AyAgACgCACEDIAEgAigCADYCGCABIAApArzQATcDECADIAFBEGoQGyABIAEoAig2AgggASABKQMgNwMAIAAgARAbCyABQTBqJAALzAEBAX8gACABKAK00AE2ApjiASAAIAEoAgQiAjYCwOABIAAgAjYCvOABIAAgAiABKAIIaiICNgK44AEgACACNgLE4AEgASgCuNABBEAgAEKBgICAEDcDiOEBIAAgAUGk0ABqNgIMIAAgAUGUIGo2AgggACABQZwwajYCBCAAIAFBDGo2AgAgAEGs0AFqIAFBqNABaigCADYCACAAQbDQAWogAUGs0AFqKAIANgIAIABBtNABaiABQbDQAWooAgA2AgAPCyAAQgA3A4jhAQs7ACACRQRAQbp/DwsgBEUEQEFsDwsgAiAEEGAEQCAAIAEgAiADIAQgBRBhDwsgACABIAIgAyAEIAUQZQtGAQF/IwBBEGsiBSQAIAVBCGogBBAOAn8gBS0ACQRAIAAgASACIAMgBBAyDAELIAAgASACIAMgBBA0CyEAIAVBEGokACAACzQAIAAgAyAEIAUQNiIFEAMEQCAFDwsgBSAESQR/IAEgAiADIAVqIAQgBWsgABA1BUG4fwsLRgEBfyMAQRBrIgUkACAFQQhqIAQQDgJ/IAUtAAkEQCAAIAEgAiADIAQQYgwBCyAAIAEgAiADIAQQNQshACAFQRBqJAAgAAtZAQF/QQ8hAiABIABJBEAgAUEEdCAAbiECCyAAQQh2IgEgAkEYbCIAQYwIaigCAGwgAEGICGooAgBqIgJBA3YgAmogAEGACGooAgAgAEGECGooAgAgAWxqSQs3ACAAIAMgBCAFQYAQEDMiBRADBEAgBQ8LIAUgBEkEfyABIAIgAyAFaiAEIAVrIAAQMgVBuH8LC78DAQN/IwBBIGsiBSQAIAVBCGogAiADEAYiAhADRQRAIAAgAWoiB0F9aiEGIAUgBBAOIARBBGohAiAFLQACIQMDQEEAIAAgBkkgBUEIahAEGwRAIAAgAiAFQQhqIAMQAkECdGoiBC8BADsAACAFQQhqIAQtAAIQASAAIAQtAANqIgQgAiAFQQhqIAMQAkECdGoiAC8BADsAACAFQQhqIAAtAAIQASAEIAAtAANqIQAMAQUgB0F+aiEEA0AgBUEIahAEIAAgBEtyRQRAIAAgAiAFQQhqIAMQAkECdGoiBi8BADsAACAFQQhqIAYtAAIQASAAIAYtAANqIQAMAQsLA0AgACAES0UEQCAAIAIgBUEIaiADEAJBAnRqIgYvAQA7AAAgBUEIaiAGLQACEAEgACAGLQADaiEADAELCwJAIAAgB08NACAAIAIgBUEIaiADEAIiA0ECdGoiAC0AADoAACAALQADQQFGBEAgBUEIaiAALQACEAEMAQsgBSgCDEEfSw0AIAVBCGogAiADQQJ0ai0AAhABIAUoAgxBIUkNACAFQSA2AgwLIAFBbCAFQQhqEAobIQILCwsgBUEgaiQAIAILkgIBBH8jAEFAaiIJJAAgCSADQTQQCyEDAkAgBEECSA0AIAMgBEECdGooAgAhCSADQTxqIAgQIyADQQE6AD8gAyACOgA+QQAhBCADKAI8IQoDQCAEIAlGDQEgACAEQQJ0aiAKNgEAIARBAWohBAwAAAsAC0EAIQkDQCAGIAlGRQRAIAMgBSAJQQF0aiIKLQABIgtBAnRqIgwoAgAhBCADQTxqIAotAABBCHQgCGpB//8DcRAjIANBAjoAPyADIAcgC2siCiACajoAPiAEQQEgASAKa3RqIQogAygCPCELA0AgACAEQQJ0aiALNgEAIARBAWoiBCAKSQ0ACyAMIAo2AgAgCUEBaiEJDAELCyADQUBrJAALowIBCX8jAEHQAGsiCSQAIAlBEGogBUE0EAsaIAcgBmshDyAHIAFrIRADQAJAIAMgCkcEQEEBIAEgByACIApBAXRqIgYtAAEiDGsiCGsiC3QhDSAGLQAAIQ4gCUEQaiAMQQJ0aiIMKAIAIQYgCyAPTwRAIAAgBkECdGogCyAIIAUgCEE0bGogCCAQaiIIQQEgCEEBShsiCCACIAQgCEECdGooAgAiCEEBdGogAyAIayAHIA4QYyAGIA1qIQgMAgsgCUEMaiAOECMgCUEBOgAPIAkgCDoADiAGIA1qIQggCSgCDCELA0AgBiAITw0CIAAgBkECdGogCzYBACAGQQFqIQYMAAALAAsgCUHQAGokAA8LIAwgCDYCACAKQQFqIQoMAAALAAs0ACAAIAMgBCAFEDYiBRADBEAgBQ8LIAUgBEkEfyABIAIgAyAFaiAEIAVrIAAQNAVBuH8LCyMAIAA/AEEQdGtB//8DakEQdkAAQX9GBEBBAA8LQQAQAEEBCzsBAX8gAgRAA0AgACABIAJBgCAgAkGAIEkbIgMQCyEAIAFBgCBqIQEgAEGAIGohACACIANrIgINAAsLCwYAIAAQAwsLqBUJAEGICAsNAQAAAAEAAAACAAAAAgBBoAgLswYBAAAAAQAAAAIAAAACAAAAJgAAAIIAAAAhBQAASgAAAGcIAAAmAAAAwAEAAIAAAABJBQAASgAAAL4IAAApAAAALAIAAIAAAABJBQAASgAAAL4IAAAvAAAAygIAAIAAAACKBQAASgAAAIQJAAA1AAAAcwMAAIAAAACdBQAASgAAAKAJAAA9AAAAgQMAAIAAAADrBQAASwAAAD4KAABEAAAAngMAAIAAAABNBgAASwAAAKoKAABLAAAAswMAAIAAAADBBgAATQAAAB8NAABNAAAAUwQAAIAAAAAjCAAAUQAAAKYPAABUAAAAmQQAAIAAAABLCQAAVwAAALESAABYAAAA2gQAAIAAAABvCQAAXQAAACMUAABUAAAARQUAAIAAAABUCgAAagAAAIwUAABqAAAArwUAAIAAAAB2CQAAfAAAAE4QAAB8AAAA0gIAAIAAAABjBwAAkQAAAJAHAACSAAAAAAAAAAEAAAABAAAABQAAAA0AAAAdAAAAPQAAAH0AAAD9AAAA/QEAAP0DAAD9BwAA/Q8AAP0fAAD9PwAA/X8AAP3/AAD9/wEA/f8DAP3/BwD9/w8A/f8fAP3/PwD9/38A/f//AP3//wH9//8D/f//B/3//w/9//8f/f//P/3//38AAAAAAQAAAAIAAAADAAAABAAAAAUAAAAGAAAABwAAAAgAAAAJAAAACgAAAAsAAAAMAAAADQAAAA4AAAAPAAAAEAAAABEAAAASAAAAEwAAABQAAAAVAAAAFgAAABcAAAAYAAAAGQAAABoAAAAbAAAAHAAAAB0AAAAeAAAAHwAAAAMAAAAEAAAABQAAAAYAAAAHAAAACAAAAAkAAAAKAAAACwAAAAwAAAANAAAADgAAAA8AAAAQAAAAEQAAABIAAAATAAAAFAAAABUAAAAWAAAAFwAAABgAAAAZAAAAGgAAABsAAAAcAAAAHQAAAB4AAAAfAAAAIAAAACEAAAAiAAAAIwAAACUAAAAnAAAAKQAAACsAAAAvAAAAMwAAADsAAABDAAAAUwAAAGMAAACDAAAAAwEAAAMCAAADBAAAAwgAAAMQAAADIAAAA0AAAAOAAAADAAEAQeAPC1EBAAAAAQAAAAEAAAABAAAAAgAAAAIAAAADAAAAAwAAAAQAAAAEAAAABQAAAAcAAAAIAAAACQAAAAoAAAALAAAADAAAAA0AAAAOAAAADwAAABAAQcQQC4sBAQAAAAIAAAADAAAABAAAAAUAAAAGAAAABwAAAAgAAAAJAAAACgAAAAsAAAAMAAAADQAAAA4AAAAPAAAAEAAAABIAAAAUAAAAFgAAABgAAAAcAAAAIAAAACgAAAAwAAAAQAAAAIAAAAAAAQAAAAIAAAAEAAAACAAAABAAAAAgAAAAQAAAAIAAAAAAAQBBkBIL5gQBAAAAAQAAAAEAAAABAAAAAgAAAAIAAAADAAAAAwAAAAQAAAAGAAAABwAAAAgAAAAJAAAACgAAAAsAAAAMAAAADQAAAA4AAAAPAAAAEAAAAAEAAAAEAAAACAAAAAAAAAABAAEBBgAAAAAAAAQAAAAAEAAABAAAAAAgAAAFAQAAAAAAAAUDAAAAAAAABQQAAAAAAAAFBgAAAAAAAAUHAAAAAAAABQkAAAAAAAAFCgAAAAAAAAUMAAAAAAAABg4AAAAAAAEFEAAAAAAAAQUUAAAAAAABBRYAAAAAAAIFHAAAAAAAAwUgAAAAAAAEBTAAAAAgAAYFQAAAAAAABwWAAAAAAAAIBgABAAAAAAoGAAQAAAAADAYAEAAAIAAABAAAAAAAAAAEAQAAAAAAAAUCAAAAIAAABQQAAAAAAAAFBQAAACAAAAUHAAAAAAAABQgAAAAgAAAFCgAAAAAAAAULAAAAAAAABg0AAAAgAAEFEAAAAAAAAQUSAAAAIAABBRYAAAAAAAIFGAAAACAAAwUgAAAAAAADBSgAAAAAAAYEQAAAABAABgRAAAAAIAAHBYAAAAAAAAkGAAIAAAAACwYACAAAMAAABAAAAAAQAAAEAQAAACAAAAUCAAAAIAAABQMAAAAgAAAFBQAAACAAAAUGAAAAIAAABQgAAAAgAAAFCQAAACAAAAULAAAAIAAABQwAAAAAAAAGDwAAACAAAQUSAAAAIAABBRQAAAAgAAIFGAAAACAAAgUcAAAAIAADBSgAAAAgAAQFMAAAAAAAEAYAAAEAAAAPBgCAAAAAAA4GAEAAAAAADQYAIABBgBcLhwIBAAEBBQAAAAAAAAUAAAAAAAAGBD0AAAAAAAkF/QEAAAAADwX9fwAAAAAVBf3/HwAAAAMFBQAAAAAABwR9AAAAAAAMBf0PAAAAABIF/f8DAAAAFwX9/38AAAAFBR0AAAAAAAgE/QAAAAAADgX9PwAAAAAUBf3/DwAAAAIFAQAAABAABwR9AAAAAAALBf0HAAAAABEF/f8BAAAAFgX9/z8AAAAEBQ0AAAAQAAgE/QAAAAAADQX9HwAAAAATBf3/BwAAAAEFAQAAABAABgQ9AAAAAAAKBf0DAAAAABAF/f8AAAAAHAX9//8PAAAbBf3//wcAABoF/f//AwAAGQX9//8BAAAYBf3//wBBkBkLhgQBAAEBBgAAAAAAAAYDAAAAAAAABAQAAAAgAAAFBQAAAAAAAAUGAAAAAAAABQgAAAAAAAAFCQAAAAAAAAULAAAAAAAABg0AAAAAAAAGEAAAAAAAAAYTAAAAAAAABhYAAAAAAAAGGQAAAAAAAAYcAAAAAAAABh8AAAAAAAAGIgAAAAAAAQYlAAAAAAABBikAAAAAAAIGLwAAAAAAAwY7AAAAAAAEBlMAAAAAAAcGgwAAAAAACQYDAgAAEAAABAQAAAAAAAAEBQAAACAAAAUGAAAAAAAABQcAAAAgAAAFCQAAAAAAAAUKAAAAAAAABgwAAAAAAAAGDwAAAAAAAAYSAAAAAAAABhUAAAAAAAAGGAAAAAAAAAYbAAAAAAAABh4AAAAAAAAGIQAAAAAAAQYjAAAAAAABBicAAAAAAAIGKwAAAAAAAwYzAAAAAAAEBkMAAAAAAAUGYwAAAAAACAYDAQAAIAAABAQAAAAwAAAEBAAAABAAAAQFAAAAIAAABQcAAAAgAAAFCAAAACAAAAUKAAAAIAAABQsAAAAAAAAGDgAAAAAAAAYRAAAAAAAABhQAAAAAAAAGFwAAAAAAAAYaAAAAAAAABh0AAAAAAAAGIAAAAAAAEAYDAAEAAAAPBgOAAAAAAA4GA0AAAAAADQYDIAAAAAAMBgMQAAAAAAsGAwgAAAAACgYDBABBpB0L2QEBAAAAAwAAAAcAAAAPAAAAHwAAAD8AAAB/AAAA/wAAAP8BAAD/AwAA/wcAAP8PAAD/HwAA/z8AAP9/AAD//wAA//8BAP//AwD//wcA//8PAP//HwD//z8A//9/AP///wD///8B////A////wf///8P////H////z////9/AAAAAAEAAAACAAAABAAAAAAAAAACAAAABAAAAAgAAAAAAAAAAQAAAAIAAAABAAAABAAAAAQAAAAEAAAABAAAAAgAAAAIAAAACAAAAAcAAAAIAAAACQAAAAoAAAALAEGgIAsDwBBQ";
+
+const DisplayP3ColorSpace = 'display-p3';
+const LinearDisplayP3ColorSpace = 'display-p3-linear';
+
+/**
+ * Loader for KTX 2.0 GPU Texture containers.
+ *
+ * KTX 2.0 is a container format for various GPU texture formats. The loader
+ * supports Basis Universal GPU textures, which can be quickly transcoded to
+ * a wide variety of GPU texture compression formats, as well as some
+ * uncompressed DataTexture and Data3DTexture formats.
+ *
+ * References:
+ * - KTX: http://github.khronos.org/KTX-Specification/
+ * - DFD: https://www.khronos.org/registry/DataFormat/specs/1.3/dataformat.1.3.html#basicdescriptor
+ * - BasisU HDR: https://github.com/BinomialLLC/basis_universal/wiki/UASTC-HDR-Texture-Specification-v1.0
+ */
+
+
+const _taskCache$1 = new WeakMap();
+
+let _activeLoaders = 0;
+
+let _zstd;
+
+class KTX2Loader extends Loader {
+
+	constructor( manager ) {
+
+		super( manager );
+
+		this.transcoderPath = '';
+		this.transcoderBinary = null;
+		this.transcoderPending = null;
+
+		this.workerPool = new WorkerPool();
+		this.workerSourceURL = '';
+		this.workerConfig = null;
+
+		if ( typeof MSC_TRANSCODER !== 'undefined' ) {
+
+			console.warn(
+
+				'THREE.KTX2Loader: Please update to latest "basis_transcoder".'
+				+ ' "msc_basis_transcoder" is no longer supported in three.js r125+.'
+
+			);
+
+		}
+
+	}
+
+	setTranscoderPath( path ) {
+
+		this.transcoderPath = path;
+
+		return this;
+
+	}
+
+	setWorkerLimit( num ) {
+
+		this.workerPool.setWorkerLimit( num );
+
+		return this;
+
+	}
+
+	async detectSupportAsync( renderer ) {
+
+		this.workerConfig = {
+			astcSupported: await renderer.hasFeatureAsync( 'texture-compression-astc' ),
+			astcHDRSupported: false, // https://github.com/gpuweb/gpuweb/issues/3856
+			etc1Supported: await renderer.hasFeatureAsync( 'texture-compression-etc1' ),
+			etc2Supported: await renderer.hasFeatureAsync( 'texture-compression-etc2' ),
+			dxtSupported: await renderer.hasFeatureAsync( 'texture-compression-bc' ),
+			bptcSupported: await renderer.hasFeatureAsync( 'texture-compression-bptc' ),
+			pvrtcSupported: await renderer.hasFeatureAsync( 'texture-compression-pvrtc' )
+		};
+
+		return this;
+
+	}
+
+	detectSupport( renderer ) {
+
+		if ( renderer.isWebGPURenderer === true ) {
+
+			this.workerConfig = {
+				astcSupported: renderer.hasFeature( 'texture-compression-astc' ),
+				astcHDRSupported: false, // https://github.com/gpuweb/gpuweb/issues/3856
+				etc1Supported: renderer.hasFeature( 'texture-compression-etc1' ),
+				etc2Supported: renderer.hasFeature( 'texture-compression-etc2' ),
+				dxtSupported: renderer.hasFeature( 'texture-compression-bc' ),
+				bptcSupported: renderer.hasFeature( 'texture-compression-bptc' ),
+				pvrtcSupported: renderer.hasFeature( 'texture-compression-pvrtc' )
+			};
+
+		} else {
+
+			this.workerConfig = {
+				astcSupported: renderer.extensions.has( 'WEBGL_compressed_texture_astc' ),
+				astcHDRSupported: renderer.extensions.has( 'WEBGL_compressed_texture_astc' )
+					&& renderer.extensions.get( 'WEBGL_compressed_texture_astc' ).getSupportedProfiles().includes( 'hdr' ),
+				etc1Supported: renderer.extensions.has( 'WEBGL_compressed_texture_etc1' ),
+				etc2Supported: renderer.extensions.has( 'WEBGL_compressed_texture_etc' ),
+				dxtSupported: renderer.extensions.has( 'WEBGL_compressed_texture_s3tc' ),
+				bptcSupported: renderer.extensions.has( 'EXT_texture_compression_bptc' ),
+				pvrtcSupported: renderer.extensions.has( 'WEBGL_compressed_texture_pvrtc' )
+					|| renderer.extensions.has( 'WEBKIT_WEBGL_compressed_texture_pvrtc' )
+			};
+
+		}
+
+		return this;
+
+	}
+
+	init() {
+
+		if ( ! this.transcoderPending ) {
+
+			// Load transcoder wrapper.
+			const jsLoader = new FileLoader( this.manager );
+			jsLoader.setPath( this.transcoderPath );
+			jsLoader.setWithCredentials( this.withCredentials );
+			const jsContent = jsLoader.loadAsync( 'basis_transcoder.js' );
+
+			// Load transcoder WASM binary.
+			const binaryLoader = new FileLoader( this.manager );
+			binaryLoader.setPath( this.transcoderPath );
+			binaryLoader.setResponseType( 'arraybuffer' );
+			binaryLoader.setWithCredentials( this.withCredentials );
+			const binaryContent = binaryLoader.loadAsync( 'basis_transcoder.wasm' );
+
+			this.transcoderPending = Promise.all( [ jsContent, binaryContent ] )
+				.then( ( [ jsContent, binaryContent ] ) => {
+
+					const fn = KTX2Loader.BasisWorker.toString();
+
+					const body = [
+						'/* constants */',
+						'let _EngineFormat = ' + JSON.stringify( KTX2Loader.EngineFormat ),
+						'let _EngineType = ' + JSON.stringify( KTX2Loader.EngineType ),
+						'let _TranscoderFormat = ' + JSON.stringify( KTX2Loader.TranscoderFormat ),
+						'let _BasisFormat = ' + JSON.stringify( KTX2Loader.BasisFormat ),
+						'/* basis_transcoder.js */',
+						jsContent,
+						'/* worker */',
+						fn.substring( fn.indexOf( '{' ) + 1, fn.lastIndexOf( '}' ) )
+					].join( '\n' );
+
+					this.workerSourceURL = URL.createObjectURL( new Blob( [ body ] ) );
+					this.transcoderBinary = binaryContent;
+
+					this.workerPool.setWorkerCreator( () => {
+
+						const worker = new Worker( this.workerSourceURL );
+						const transcoderBinary = this.transcoderBinary.slice( 0 );
+
+						worker.postMessage( { type: 'init', config: this.workerConfig, transcoderBinary }, [ transcoderBinary ] );
+
+						return worker;
+
+					} );
+
+				} );
+
+			if ( _activeLoaders > 0 ) {
+
+				// Each instance loads a transcoder and allocates workers, increasing network and memory cost.
+
+				console.warn(
+
+					'THREE.KTX2Loader: Multiple active KTX2 loaders may cause performance issues.'
+					+ ' Use a single KTX2Loader instance, or call .dispose() on old instances.'
+
+				);
+
+			}
+
+			_activeLoaders ++;
+
+		}
+
+		return this.transcoderPending;
+
+	}
+
+	load( url, onLoad, onProgress, onError ) {
+
+		if ( this.workerConfig === null ) {
+
+			throw new Error( 'THREE.KTX2Loader: Missing initialization with `.detectSupport( renderer )`.' );
+
+		}
+
+		const loader = new FileLoader( this.manager );
+
+		loader.setResponseType( 'arraybuffer' );
+		loader.setWithCredentials( this.withCredentials );
+
+		loader.load( url, ( buffer ) => {
+
+			this.parse( buffer, onLoad, onError );
+
+		}, onProgress, onError );
+
+	}
+
+	parse( buffer, onLoad, onError ) {
+
+		if ( this.workerConfig === null ) {
+
+			throw new Error( 'THREE.KTX2Loader: Missing initialization with `.detectSupport( renderer )`.' );
+
+		}
+
+		// Check for an existing task using this buffer. A transferred buffer cannot be transferred
+		// again from this thread.
+		if ( _taskCache$1.has( buffer ) ) {
+
+			const cachedTask = _taskCache$1.get( buffer );
+
+			return cachedTask.promise.then( onLoad ).catch( onError );
+
+		}
+
+		this._createTexture( buffer )
+			.then( ( texture ) => onLoad ? onLoad( texture ) : null )
+			.catch( onError );
+
+	}
+
+	_createTextureFrom( transcodeResult, container ) {
+
+		const { type: messageType, error, data: { faces, width, height, format, type, dfdFlags } } = transcodeResult;
+
+		if ( messageType === 'error' ) return Promise.reject( error );
+
+		let texture;
+
+		if ( container.faceCount === 6 ) {
+
+			texture = new CompressedCubeTexture( faces, format, type );
+
+		} else {
+
+			const mipmaps = faces[ 0 ].mipmaps;
+
+			texture = container.layerCount > 1
+				? new CompressedArrayTexture( mipmaps, width, height, container.layerCount, format, type )
+				: new CompressedTexture( mipmaps, width, height, format, type );
+
+		}
+
+		texture.minFilter = faces[ 0 ].mipmaps.length === 1 ? LinearFilter : LinearMipmapLinearFilter;
+		texture.magFilter = LinearFilter;
+		texture.generateMipmaps = false;
+
+		texture.needsUpdate = true;
+		texture.colorSpace = parseColorSpace( container );
+		texture.premultiplyAlpha = !! ( dfdFlags & g$1 );
+
+		return texture;
+
+	}
+
+	/**
+	 * @param {ArrayBuffer} buffer
+	 * @param {object?} config
+	 * @return {Promise<CompressedTexture|CompressedArrayTexture|DataTexture|Data3DTexture>}
+	 */
+	async _createTexture( buffer, config = {} ) {
+
+		const container = Pi( new Uint8Array( buffer ) );
+
+		// Basis UASTC HDR is a subset of ASTC, which can be transcoded efficiently
+		// to BC6H. To detect whether a KTX2 file uses Basis UASTC HDR, or default
+		// ASTC, inspect the DFD color model.
+		//
+		// Source: https://github.com/BinomialLLC/basis_universal/issues/381
+		const isBasisHDR = container.vkFormat === pi
+			&& container.dataFormatDescriptor[ 0 ].colorModel === 0xA7;
+
+		// If the device supports ASTC, Basis UASTC HDR requires no transcoder.
+		const needsTranscoder = container.vkFormat === it
+			|| isBasisHDR && ! this.workerConfig.astcHDRSupported;
+
+		if ( ! needsTranscoder ) {
+
+			return createRawTexture( container );
+
+		}
+
+		//
+		const taskConfig = config;
+		const texturePending = this.init().then( () => {
+
+			return this.workerPool.postMessage( { type: 'transcode', buffer, taskConfig: taskConfig }, [ buffer ] );
+
+		} ).then( ( e ) => this._createTextureFrom( e.data, container ) );
+
+		// Cache the task result.
+		_taskCache$1.set( buffer, { promise: texturePending } );
+
+		return texturePending;
+
+	}
+
+	dispose() {
+
+		this.workerPool.dispose();
+		if ( this.workerSourceURL ) URL.revokeObjectURL( this.workerSourceURL );
+
+		_activeLoaders --;
+
+		return this;
+
+	}
+
+}
+
+
+/* CONSTANTS */
+
+KTX2Loader.BasisFormat = {
+	ETC1S: 0,
+	UASTC: 1,
+	UASTC_HDR: 2,
+};
+
+// Source: https://github.com/BinomialLLC/basis_universal/blob/master/webgl/texture_test/index.html
+KTX2Loader.TranscoderFormat = {
+	ETC1: 0,
+	ETC2: 1,
+	BC1: 2,
+	BC3: 3,
+	BC4: 4,
+	BC5: 5,
+	BC7_M6_OPAQUE_ONLY: 6,
+	BC7_M5: 7,
+	PVRTC1_4_RGB: 8,
+	PVRTC1_4_RGBA: 9,
+	ASTC_4x4: 10,
+	ATC_RGB: 11,
+	ATC_RGBA_INTERPOLATED_ALPHA: 12,
+	RGBA32: 13,
+	RGB565: 14,
+	BGR565: 15,
+	RGBA4444: 16,
+	BC6H: 22,
+	RGB_HALF: 24,
+	RGBA_HALF: 25,
+};
+
+KTX2Loader.EngineFormat = {
+	RGBAFormat: RGBAFormat,
+	RGBA_ASTC_4x4_Format: RGBA_ASTC_4x4_Format,
+	RGB_BPTC_UNSIGNED_Format: RGB_BPTC_UNSIGNED_Format,
+	RGBA_BPTC_Format: RGBA_BPTC_Format,
+	RGBA_ETC2_EAC_Format: RGBA_ETC2_EAC_Format,
+	RGBA_PVRTC_4BPPV1_Format: RGBA_PVRTC_4BPPV1_Format,
+	RGBA_S3TC_DXT5_Format: RGBA_S3TC_DXT5_Format,
+	RGB_ETC1_Format: RGB_ETC1_Format,
+	RGB_ETC2_Format: RGB_ETC2_Format,
+	RGB_PVRTC_4BPPV1_Format: RGB_PVRTC_4BPPV1_Format,
+	RGBA_S3TC_DXT1_Format: RGBA_S3TC_DXT1_Format,
+};
+
+KTX2Loader.EngineType = {
+	UnsignedByteType: UnsignedByteType,
+	HalfFloatType: HalfFloatType,
+	FloatType: FloatType,
+};
+
+/* WEB WORKER */
+
+KTX2Loader.BasisWorker = function () {
+
+	let config;
+	let transcoderPending;
+	let BasisModule;
+
+	const EngineFormat = _EngineFormat; // eslint-disable-line no-undef
+	const EngineType = _EngineType; // eslint-disable-line no-undef
+	const TranscoderFormat = _TranscoderFormat; // eslint-disable-line no-undef
+	const BasisFormat = _BasisFormat; // eslint-disable-line no-undef
+
+	self.addEventListener( 'message', function ( e ) {
+
+		const message = e.data;
+
+		switch ( message.type ) {
+
+			case 'init':
+				config = message.config;
+				init( message.transcoderBinary );
+				break;
+
+			case 'transcode':
+				transcoderPending.then( () => {
+
+					try {
+
+						const { faces, buffers, width, height, hasAlpha, format, type, dfdFlags } = transcode( message.buffer );
+
+						self.postMessage( { type: 'transcode', id: message.id, data: { faces, width, height, hasAlpha, format, type, dfdFlags } }, buffers );
+
+					} catch ( error ) {
+
+						console.error( error );
+
+						self.postMessage( { type: 'error', id: message.id, error: error.message } );
+
+					}
+
+				} );
+				break;
+
+		}
+
+	} );
+
+	function init( wasmBinary ) {
+
+		transcoderPending = new Promise( ( resolve ) => {
+
+			BasisModule = { wasmBinary, onRuntimeInitialized: resolve };
+			BASIS( BasisModule ); // eslint-disable-line no-undef
+
+		} ).then( () => {
+
+			BasisModule.initializeBasis();
+
+			if ( BasisModule.KTX2File === undefined ) {
+
+				console.warn( 'THREE.KTX2Loader: Please update Basis Universal transcoder.' );
+
+			}
+
+		} );
+
+	}
+
+	function transcode( buffer ) {
+
+		const ktx2File = new BasisModule.KTX2File( new Uint8Array( buffer ) );
+
+		function cleanup() {
+
+			ktx2File.close();
+			ktx2File.delete();
+
+		}
+
+		if ( ! ktx2File.isValid() ) {
+
+			cleanup();
+			throw new Error( 'THREE.KTX2Loader:	Invalid or unsupported .ktx2 file' );
+
+		}
+
+		let basisFormat;
+
+		if ( ktx2File.isUASTC() ) {
+
+			basisFormat = BasisFormat.UASTC;
+
+		} else if ( ktx2File.isETC1S() ) {
+
+			basisFormat = BasisFormat.ETC1S;
+
+		} else if ( ktx2File.isHDR() ) {
+
+			basisFormat = BasisFormat.UASTC_HDR;
+
+		} else {
+
+			throw new Error( 'THREE.KTX2Loader: Unknown Basis encoding' );
+
+		}
+
+		const width = ktx2File.getWidth();
+		const height = ktx2File.getHeight();
+		const layerCount = ktx2File.getLayers() || 1;
+		const levelCount = ktx2File.getLevels();
+		const faceCount = ktx2File.getFaces();
+		const hasAlpha = ktx2File.getHasAlpha();
+		const dfdFlags = ktx2File.getDFDFlags();
+
+		const { transcoderFormat, engineFormat, engineType } = getTranscoderFormat( basisFormat, width, height, hasAlpha );
+
+		if ( ! width || ! height || ! levelCount ) {
+
+			cleanup();
+			throw new Error( 'THREE.KTX2Loader:	Invalid texture' );
+
+		}
+
+		if ( ! ktx2File.startTranscoding() ) {
+
+			cleanup();
+			throw new Error( 'THREE.KTX2Loader: .startTranscoding failed' );
+
+		}
+
+		const faces = [];
+		const buffers = [];
+
+		for ( let face = 0; face < faceCount; face ++ ) {
+
+			const mipmaps = [];
+
+			for ( let mip = 0; mip < levelCount; mip ++ ) {
+
+				const layerMips = [];
+
+				let mipWidth, mipHeight;
+
+				for ( let layer = 0; layer < layerCount; layer ++ ) {
+
+					const levelInfo = ktx2File.getImageLevelInfo( mip, layer, face );
+
+					if ( face === 0 && mip === 0 && layer === 0 && ( levelInfo.origWidth % 4 !== 0 || levelInfo.origHeight % 4 !== 0 ) ) {
+
+						console.warn( 'THREE.KTX2Loader: ETC1S and UASTC textures should use multiple-of-four dimensions.' );
+
+					}
+
+					if ( levelCount > 1 ) {
+
+						mipWidth = levelInfo.origWidth;
+						mipHeight = levelInfo.origHeight;
+
+					} else {
+
+						// Handles non-multiple-of-four dimensions in textures without mipmaps. Textures with
+						// mipmaps must use multiple-of-four dimensions, for some texture formats and APIs.
+						// See mrdoob/three.js#25908.
+						mipWidth = levelInfo.width;
+						mipHeight = levelInfo.height;
+
+					}
+
+					let dst = new Uint8Array( ktx2File.getImageTranscodedSizeInBytes( mip, layer, 0, transcoderFormat ) );
+					const status = ktx2File.transcodeImage( dst, mip, layer, face, transcoderFormat, 0, - 1, - 1 );
+
+					if ( engineType === EngineType.HalfFloatType ) {
+
+						dst = new Uint16Array( dst.buffer, dst.byteOffset, dst.byteLength / Uint16Array.BYTES_PER_ELEMENT );
+
+					}
+
+					if ( ! status ) {
+
+						cleanup();
+						throw new Error( 'THREE.KTX2Loader: .transcodeImage failed.' );
+
+					}
+
+					layerMips.push( dst );
+
+				}
+
+				const mipData = concat( layerMips );
+
+				mipmaps.push( { data: mipData, width: mipWidth, height: mipHeight } );
+				buffers.push( mipData.buffer );
+
+			}
+
+			faces.push( { mipmaps, width, height, format: engineFormat, type: engineType } );
+
+		}
+
+		cleanup();
+
+		return { faces, buffers, width, height, hasAlpha, dfdFlags, format: engineFormat, type: engineType };
+
+	}
+
+	//
+
+	// Optimal choice of a transcoder target format depends on the Basis format (ETC1S, UASTC, or
+	// UASTC HDR), device capabilities, and texture dimensions. The list below ranks the formats
+	// separately for each format. Currently, priority is assigned based on:
+	//
+	//   high quality > low quality > uncompressed
+	//
+	// Prioritization may be revisited, or exposed for configuration, in the future.
+	//
+	// Reference: https://github.com/KhronosGroup/3D-Formats-Guidelines/blob/main/KTXDeveloperGuide.md
+	const FORMAT_OPTIONS = [
+		{
+			if: 'astcSupported',
+			basisFormat: [ BasisFormat.UASTC ],
+			transcoderFormat: [ TranscoderFormat.ASTC_4x4, TranscoderFormat.ASTC_4x4 ],
+			engineFormat: [ EngineFormat.RGBA_ASTC_4x4_Format, EngineFormat.RGBA_ASTC_4x4_Format ],
+			engineType: [ EngineType.UnsignedByteType ],
+			priorityETC1S: Infinity,
+			priorityUASTC: 1,
+			needsPowerOfTwo: false,
+		},
+		{
+			if: 'bptcSupported',
+			basisFormat: [ BasisFormat.ETC1S, BasisFormat.UASTC ],
+			transcoderFormat: [ TranscoderFormat.BC7_M5, TranscoderFormat.BC7_M5 ],
+			engineFormat: [ EngineFormat.RGBA_BPTC_Format, EngineFormat.RGBA_BPTC_Format ],
+			engineType: [ EngineType.UnsignedByteType ],
+			priorityETC1S: 3,
+			priorityUASTC: 2,
+			needsPowerOfTwo: false,
+		},
+		{
+			if: 'dxtSupported',
+			basisFormat: [ BasisFormat.ETC1S, BasisFormat.UASTC ],
+			transcoderFormat: [ TranscoderFormat.BC1, TranscoderFormat.BC3 ],
+			engineFormat: [ EngineFormat.RGBA_S3TC_DXT1_Format, EngineFormat.RGBA_S3TC_DXT5_Format ],
+			engineType: [ EngineType.UnsignedByteType ],
+			priorityETC1S: 4,
+			priorityUASTC: 5,
+			needsPowerOfTwo: false,
+		},
+		{
+			if: 'etc2Supported',
+			basisFormat: [ BasisFormat.ETC1S, BasisFormat.UASTC ],
+			transcoderFormat: [ TranscoderFormat.ETC1, TranscoderFormat.ETC2 ],
+			engineFormat: [ EngineFormat.RGB_ETC2_Format, EngineFormat.RGBA_ETC2_EAC_Format ],
+			engineType: [ EngineType.UnsignedByteType ],
+			priorityETC1S: 1,
+			priorityUASTC: 3,
+			needsPowerOfTwo: false,
+		},
+		{
+			if: 'etc1Supported',
+			basisFormat: [ BasisFormat.ETC1S, BasisFormat.UASTC ],
+			transcoderFormat: [ TranscoderFormat.ETC1 ],
+			engineFormat: [ EngineFormat.RGB_ETC1_Format ],
+			engineType: [ EngineType.UnsignedByteType ],
+			priorityETC1S: 2,
+			priorityUASTC: 4,
+			needsPowerOfTwo: false,
+		},
+		{
+			if: 'pvrtcSupported',
+			basisFormat: [ BasisFormat.ETC1S, BasisFormat.UASTC ],
+			transcoderFormat: [ TranscoderFormat.PVRTC1_4_RGB, TranscoderFormat.PVRTC1_4_RGBA ],
+			engineFormat: [ EngineFormat.RGB_PVRTC_4BPPV1_Format, EngineFormat.RGBA_PVRTC_4BPPV1_Format ],
+			engineType: [ EngineType.UnsignedByteType ],
+			priorityETC1S: 5,
+			priorityUASTC: 6,
+			needsPowerOfTwo: true,
+		},
+		{
+			if: 'bptcSupported',
+			basisFormat: [ BasisFormat.UASTC_HDR ],
+			transcoderFormat: [ TranscoderFormat.BC6H ],
+			engineFormat: [ EngineFormat.RGB_BPTC_UNSIGNED_Format ],
+			engineType: [ EngineType.HalfFloatType ],
+			priorityHDR: 1,
+			needsPowerOfTwo: false,
+		},
+
+		// Uncompressed fallbacks.
+
+		{
+			basisFormat: [ BasisFormat.ETC1S, BasisFormat.UASTC ],
+			transcoderFormat: [ TranscoderFormat.RGBA32, TranscoderFormat.RGBA32 ],
+			engineFormat: [ EngineFormat.RGBAFormat, EngineFormat.RGBAFormat ],
+			engineType: [ EngineType.UnsignedByteType, EngineType.UnsignedByteType ],
+			priorityETC1S: 100,
+			priorityUASTC: 100,
+			needsPowerOfTwo: false,
+		},
+		{
+			basisFormat: [ BasisFormat.UASTC_HDR ],
+			transcoderFormat: [ TranscoderFormat.RGBA_HALF ],
+			engineFormat: [ EngineFormat.RGBAFormat ],
+			engineType: [ EngineType.HalfFloatType ],
+			priorityHDR: 100,
+			needsPowerOfTwo: false,
+		}
+	];
+
+	const OPTIONS = {
+		// TODO: For ETC1S we intentionally sort by _UASTC_ priority, preserving
+		// a historical accident shown to avoid performance pitfalls for Linux with
+		// Firefox & AMD GPU (RadeonSI). Further work needed.
+		// See https://github.com/mrdoob/three.js/pull/29730.
+		[ BasisFormat.ETC1S ]: FORMAT_OPTIONS
+			.filter( ( opt ) => opt.basisFormat.includes( BasisFormat.ETC1S ) )
+			.sort( ( a, b ) => a.priorityUASTC - b.priorityUASTC ),
+
+		[ BasisFormat.UASTC ]: FORMAT_OPTIONS
+			.filter( ( opt ) => opt.basisFormat.includes( BasisFormat.UASTC ) )
+			.sort( ( a, b ) => a.priorityUASTC - b.priorityUASTC ),
+
+		[ BasisFormat.UASTC_HDR ]: FORMAT_OPTIONS
+			.filter( ( opt ) => opt.basisFormat.includes( BasisFormat.UASTC_HDR ) )
+			.sort( ( a, b ) => a.priorityHDR - b.priorityHDR ),
+	};
+
+	function getTranscoderFormat( basisFormat, width, height, hasAlpha ) {
+
+		const options = OPTIONS[ basisFormat ];
+
+		for ( let i = 0; i < options.length; i ++ ) {
+
+			const opt = options[ i ];
+
+			if ( opt.if && ! config[ opt.if ] ) continue;
+			if ( ! opt.basisFormat.includes( basisFormat ) ) continue;
+			if ( hasAlpha && opt.transcoderFormat.length < 2 ) continue;
+			if ( opt.needsPowerOfTwo && ! ( isPowerOfTwo( width ) && isPowerOfTwo( height ) ) ) continue;
+
+			const transcoderFormat = opt.transcoderFormat[ hasAlpha ? 1 : 0 ];
+			const engineFormat = opt.engineFormat[ hasAlpha ? 1 : 0 ];
+			const engineType = opt.engineType[ 0 ];
+
+			return { transcoderFormat, engineFormat, engineType };
+
+		}
+
+		throw new Error( 'THREE.KTX2Loader: Failed to identify transcoding target.' );
+
+	}
+
+	function isPowerOfTwo( value ) {
+
+		if ( value <= 2 ) return true;
+
+		return ( value & ( value - 1 ) ) === 0 && value !== 0;
+
+	}
+
+	/**
+	 * Concatenates N byte arrays.
+	 *
+	 * @param {Uint8Array[]} arrays
+	 * @return {Uint8Array}
+	 */
+	function concat( arrays ) {
+
+		if ( arrays.length === 1 ) return arrays[ 0 ];
+
+		let totalByteLength = 0;
+
+		for ( let i = 0; i < arrays.length; i ++ ) {
+
+			const array = arrays[ i ];
+			totalByteLength += array.byteLength;
+
+		}
+
+		const result = new Uint8Array( totalByteLength );
+
+		let byteOffset = 0;
+
+		for ( let i = 0; i < arrays.length; i ++ ) {
+
+			const array = arrays[ i ];
+			result.set( array, byteOffset );
+
+			byteOffset += array.byteLength;
+
+		}
+
+		return result;
+
+	}
+
+};
+
+// Parsing for non-Basis textures. These textures may have supercompression
+// like Zstd, but they do not require transcoding.
+
+const UNCOMPRESSED_FORMATS = new Set( [ RGBAFormat, RGFormat, RedFormat ] );
+
+const FORMAT_MAP = {
+
+	[ Ae ]: RGBAFormat,
+	[ ge ]: RGBAFormat,
+	[ Ft ]: RGBAFormat,
+	[ Ct ]: RGBAFormat,
+
+	[ we ]: RGFormat,
+	[ ae ]: RGFormat,
+	[ xt ]: RGFormat,
+	[ wt ]: RGFormat,
+
+	[ ue ]: RedFormat,
+	[ te ]: RedFormat,
+	[ yt ]: RedFormat,
+	[ ct ]: RedFormat,
+
+	[ pi ]: RGBA_ASTC_4x4_Format,
+	[ Sn ]: RGBA_ASTC_6x6_Format,
+	[ In ]: RGBA_ASTC_6x6_Format,
+
+};
+
+const TYPE_MAP = {
+
+	[ Ae ]: FloatType,
+	[ ge ]: HalfFloatType,
+	[ Ft ]: UnsignedByteType,
+	[ Ct ]: UnsignedByteType,
+
+	[ we ]: FloatType,
+	[ ae ]: HalfFloatType,
+	[ xt ]: UnsignedByteType,
+	[ wt ]: UnsignedByteType,
+
+	[ ue ]: FloatType,
+	[ te ]: HalfFloatType,
+	[ yt ]: UnsignedByteType,
+	[ ct ]: UnsignedByteType,
+
+	[ pi ]: HalfFloatType,
+	[ Sn ]: UnsignedByteType,
+	[ In ]: UnsignedByteType,
+
+};
+
+async function createRawTexture( container ) {
+
+	const { vkFormat } = container;
+
+	if ( FORMAT_MAP[ vkFormat ] === undefined ) {
+
+		throw new Error( 'THREE.KTX2Loader: Unsupported vkFormat.' );
+
+	}
+
+	//
+
+	let zstd;
+
+	if ( container.supercompressionScheme === n ) {
+
+		if ( ! _zstd ) {
+
+			_zstd = new Promise( async ( resolve ) => {
+
+				const zstd = new Q();
+				await zstd.init();
+				resolve( zstd );
+
+			} );
+
+		}
+
+		zstd = await _zstd;
+
+	}
+
+	//
+
+	const mipmaps = [];
+
+
+	for ( let levelIndex = 0; levelIndex < container.levels.length; levelIndex ++ ) {
+
+		const levelWidth = Math.max( 1, container.pixelWidth >> levelIndex );
+		const levelHeight = Math.max( 1, container.pixelHeight >> levelIndex );
+		const levelDepth = container.pixelDepth ? Math.max( 1, container.pixelDepth >> levelIndex ) : 0;
+
+		const level = container.levels[ levelIndex ];
+
+		let levelData;
+
+		if ( container.supercompressionScheme === t ) {
+
+			levelData = level.levelData;
+
+		} else if ( container.supercompressionScheme === n ) {
+
+			levelData = zstd.decode( level.levelData, level.uncompressedByteLength );
+
+		} else {
+
+			throw new Error( 'THREE.KTX2Loader: Unsupported supercompressionScheme.' );
+
+		}
+
+		let data;
+
+		if ( TYPE_MAP[ vkFormat ] === FloatType ) {
+
+			data = new Float32Array(
+
+				levelData.buffer,
+				levelData.byteOffset,
+				levelData.byteLength / Float32Array.BYTES_PER_ELEMENT
+
+			);
+
+		} else if ( TYPE_MAP[ vkFormat ] === HalfFloatType ) {
+
+			data = new Uint16Array(
+
+				levelData.buffer,
+				levelData.byteOffset,
+				levelData.byteLength / Uint16Array.BYTES_PER_ELEMENT
+
+			);
+
+		} else {
+
+			data = levelData;
+
+		}
+
+		mipmaps.push( {
+
+			data: data,
+			width: levelWidth,
+			height: levelHeight,
+			depth: levelDepth,
+
+		} );
+
+	}
+
+	let texture;
+
+	if ( UNCOMPRESSED_FORMATS.has( FORMAT_MAP[ vkFormat ] ) ) {
+
+		texture = container.pixelDepth === 0
+			? new DataTexture( mipmaps[ 0 ].data, container.pixelWidth, container.pixelHeight )
+			: new Data3DTexture( mipmaps[ 0 ].data, container.pixelWidth, container.pixelHeight, container.pixelDepth );
+
+	} else {
+
+		if ( container.pixelDepth > 0 ) throw new Error( 'THREE.KTX2Loader: Unsupported pixelDepth.' );
+
+		texture = new CompressedTexture( mipmaps, container.pixelWidth, container.pixelHeight );
+
+		texture.minFilter = mipmaps.length === 1 ? LinearFilter : LinearMipmapLinearFilter;
+		texture.magFilter = LinearFilter;
+
+	}
+
+	texture.mipmaps = mipmaps;
+
+	texture.type = TYPE_MAP[ vkFormat ];
+	texture.format = FORMAT_MAP[ vkFormat ];
+	texture.colorSpace = parseColorSpace( container );
+	texture.needsUpdate = true;
+
+	//
+
+	return Promise.resolve( texture );
+
+}
+
+function parseColorSpace( container ) {
+
+	const dfd = container.dataFormatDescriptor[ 0 ];
+
+	if ( dfd.colorPrimaries === C$1 ) {
+
+		return dfd.transferFunction === u ? SRGBColorSpace : LinearSRGBColorSpace;
+
+	} else if ( dfd.colorPrimaries === R ) {
+
+		return dfd.transferFunction === u ? DisplayP3ColorSpace : LinearDisplayP3ColorSpace;
+
+	} else if ( dfd.colorPrimaries === T ) {
+
+		return NoColorSpace;
+
+	} else {
+
+		console.warn( `THREE.KTX2Loader: Unsupported color primaries, "${ dfd.colorPrimaries }"` );
+		return NoColorSpace;
+
+	}
+
+}
+
+const _taskCache = new WeakMap();
+
+class DRACOLoader extends Loader {
+
+	constructor( manager ) {
+
+		super( manager );
+
+		this.decoderPath = '';
+		this.decoderConfig = {};
+		this.decoderBinary = null;
+		this.decoderPending = null;
+
+		this.workerLimit = 4;
+		this.workerPool = [];
+		this.workerNextTaskID = 1;
+		this.workerSourceURL = '';
+
+		this.defaultAttributeIDs = {
+			position: 'POSITION',
+			normal: 'NORMAL',
+			color: 'COLOR',
+			uv: 'TEX_COORD'
+		};
+		this.defaultAttributeTypes = {
+			position: 'Float32Array',
+			normal: 'Float32Array',
+			color: 'Float32Array',
+			uv: 'Float32Array'
+		};
+
+	}
+
+	setDecoderPath( path ) {
+
+		this.decoderPath = path;
+
+		return this;
+
+	}
+
+	setDecoderConfig( config ) {
+
+		this.decoderConfig = config;
+
+		return this;
+
+	}
+
+	setWorkerLimit( workerLimit ) {
+
+		this.workerLimit = workerLimit;
+
+		return this;
+
+	}
+
+	load( url, onLoad, onProgress, onError ) {
+
+		const loader = new FileLoader( this.manager );
+
+		loader.setPath( this.path );
+		loader.setResponseType( 'arraybuffer' );
+		loader.setRequestHeader( this.requestHeader );
+		loader.setWithCredentials( this.withCredentials );
+
+		loader.load( url, ( buffer ) => {
+
+			this.parse( buffer, onLoad, onError );
+
+		}, onProgress, onError );
+
+	}
+
+
+	parse( buffer, onLoad, onError = ()=>{} ) {
+
+		this.decodeDracoFile( buffer, onLoad, null, null, SRGBColorSpace, onError ).catch( onError );
+
+	}
+
+	decodeDracoFile( buffer, callback, attributeIDs, attributeTypes, vertexColorSpace = LinearSRGBColorSpace, onError = () => {} ) {
+
+		const taskConfig = {
+			attributeIDs: attributeIDs || this.defaultAttributeIDs,
+			attributeTypes: attributeTypes || this.defaultAttributeTypes,
+			useUniqueIDs: !! attributeIDs,
+			vertexColorSpace: vertexColorSpace,
+		};
+
+		return this.decodeGeometry( buffer, taskConfig ).then( callback ).catch( onError );
+
+	}
+
+	decodeGeometry( buffer, taskConfig ) {
+
+		const taskKey = JSON.stringify( taskConfig );
+
+		// Check for an existing task using this buffer. A transferred buffer cannot be transferred
+		// again from this thread.
+		if ( _taskCache.has( buffer ) ) {
+
+			const cachedTask = _taskCache.get( buffer );
+
+			if ( cachedTask.key === taskKey ) {
+
+				return cachedTask.promise;
+
+			} else if ( buffer.byteLength === 0 ) {
+
+				// Technically, it would be possible to wait for the previous task to complete,
+				// transfer the buffer back, and decode again with the second configuration. That
+				// is complex, and I don't know of any reason to decode a Draco buffer twice in
+				// different ways, so this is left unimplemented.
+				throw new Error(
+
+					'THREE.DRACOLoader: Unable to re-decode a buffer with different ' +
+					'settings. Buffer has already been transferred.'
+
+				);
+
+			}
+
+		}
+
+		//
+
+		let worker;
+		const taskID = this.workerNextTaskID ++;
+		const taskCost = buffer.byteLength;
+
+		// Obtain a worker and assign a task, and construct a geometry instance
+		// when the task completes.
+		const geometryPending = this._getWorker( taskID, taskCost )
+			.then( ( _worker ) => {
+
+				worker = _worker;
+
+				return new Promise( ( resolve, reject ) => {
+
+					worker._callbacks[ taskID ] = { resolve, reject };
+
+					worker.postMessage( { type: 'decode', id: taskID, taskConfig, buffer }, [ buffer ] );
+
+					// this.debug();
+
+				} );
+
+			} )
+			.then( ( message ) => this._createGeometry( message.geometry ) );
+
+		// Remove task from the task list.
+		// Note: replaced '.finally()' with '.catch().then()' block - iOS 11 support (#19416)
+		geometryPending
+			.catch( () => true )
+			.then( () => {
+
+				if ( worker && taskID ) {
+
+					this._releaseTask( worker, taskID );
+
+					// this.debug();
+
+				}
+
+			} );
+
+		// Cache the task result.
+		_taskCache.set( buffer, {
+
+			key: taskKey,
+			promise: geometryPending
+
+		} );
+
+		return geometryPending;
+
+	}
+
+	_createGeometry( geometryData ) {
+
+		const geometry = new BufferGeometry();
+
+		if ( geometryData.index ) {
+
+			geometry.setIndex( new BufferAttribute( geometryData.index.array, 1 ) );
+
+		}
+
+		for ( let i = 0; i < geometryData.attributes.length; i ++ ) {
+
+			const result = geometryData.attributes[ i ];
+			const name = result.name;
+			const array = result.array;
+			const itemSize = result.itemSize;
+
+			const attribute = new BufferAttribute( array, itemSize );
+
+			if ( name === 'color' ) {
+
+				this._assignVertexColorSpace( attribute, result.vertexColorSpace );
+
+				attribute.normalized = ( array instanceof Float32Array ) === false;
+
+			}
+
+			geometry.setAttribute( name, attribute );
+
+		}
+
+		return geometry;
+
+	}
+
+	_assignVertexColorSpace( attribute, inputColorSpace ) {
+
+		// While .drc files do not specify colorspace, the only 'official' tooling
+		// is PLY and OBJ converters, which use sRGB. We'll assume sRGB when a .drc
+		// file is passed into .load() or .parse(). GLTFLoader uses internal APIs
+		// to decode geometry, and vertex colors are already Linear-sRGB in there.
+
+		if ( inputColorSpace !== SRGBColorSpace ) return;
+
+		const _color = new Color$1();
+
+		for ( let i = 0, il = attribute.count; i < il; i ++ ) {
+
+			_color.fromBufferAttribute( attribute, i );
+			ColorManagement.toWorkingColorSpace( _color, SRGBColorSpace );
+			attribute.setXYZ( i, _color.r, _color.g, _color.b );
+
+		}
+
+	}
+
+	_loadLibrary( url, responseType ) {
+
+		const loader = new FileLoader( this.manager );
+		loader.setPath( this.decoderPath );
+		loader.setResponseType( responseType );
+		loader.setWithCredentials( this.withCredentials );
+
+		return new Promise( ( resolve, reject ) => {
+
+			loader.load( url, resolve, undefined, reject );
+
+		} );
+
+	}
+
+	preload() {
+
+		this._initDecoder();
+
+		return this;
+
+	}
+
+	_initDecoder() {
+
+		if ( this.decoderPending ) return this.decoderPending;
+
+		const useJS = typeof WebAssembly !== 'object' || this.decoderConfig.type === 'js';
+		const librariesPending = [];
+
+		if ( useJS ) {
+
+			librariesPending.push( this._loadLibrary( 'draco_decoder.js', 'text' ) );
+
+		} else {
+
+			librariesPending.push( this._loadLibrary( 'draco_wasm_wrapper.js', 'text' ) );
+			librariesPending.push( this._loadLibrary( 'draco_decoder.wasm', 'arraybuffer' ) );
+
+		}
+
+		this.decoderPending = Promise.all( librariesPending )
+			.then( ( libraries ) => {
+
+				const jsContent = libraries[ 0 ];
+
+				if ( ! useJS ) {
+
+					this.decoderConfig.wasmBinary = libraries[ 1 ];
+
+				}
+
+				const fn = DRACOWorker.toString();
+
+				const body = [
+					'/* draco decoder */',
+					jsContent,
+					'',
+					'/* worker */',
+					fn.substring( fn.indexOf( '{' ) + 1, fn.lastIndexOf( '}' ) )
+				].join( '\n' );
+
+				this.workerSourceURL = URL.createObjectURL( new Blob( [ body ] ) );
+
+			} );
+
+		return this.decoderPending;
+
+	}
+
+	_getWorker( taskID, taskCost ) {
+
+		return this._initDecoder().then( () => {
+
+			if ( this.workerPool.length < this.workerLimit ) {
+
+				const worker = new Worker( this.workerSourceURL );
+
+				worker._callbacks = {};
+				worker._taskCosts = {};
+				worker._taskLoad = 0;
+
+				worker.postMessage( { type: 'init', decoderConfig: this.decoderConfig } );
+
+				worker.onmessage = function ( e ) {
+
+					const message = e.data;
+
+					switch ( message.type ) {
+
+						case 'decode':
+							worker._callbacks[ message.id ].resolve( message );
+							break;
+
+						case 'error':
+							worker._callbacks[ message.id ].reject( message );
+							break;
+
+						default:
+							console.error( 'THREE.DRACOLoader: Unexpected message, "' + message.type + '"' );
+
+					}
+
+				};
+
+				this.workerPool.push( worker );
+
+			} else {
+
+				this.workerPool.sort( function ( a, b ) {
+
+					return a._taskLoad > b._taskLoad ? - 1 : 1;
+
+				} );
+
+			}
+
+			const worker = this.workerPool[ this.workerPool.length - 1 ];
+			worker._taskCosts[ taskID ] = taskCost;
+			worker._taskLoad += taskCost;
+			return worker;
+
+		} );
+
+	}
+
+	_releaseTask( worker, taskID ) {
+
+		worker._taskLoad -= worker._taskCosts[ taskID ];
+		delete worker._callbacks[ taskID ];
+		delete worker._taskCosts[ taskID ];
+
+	}
+
+	debug() {
+
+		console.log( 'Task load: ', this.workerPool.map( ( worker ) => worker._taskLoad ) );
+
+	}
+
+	dispose() {
+
+		for ( let i = 0; i < this.workerPool.length; ++ i ) {
+
+			this.workerPool[ i ].terminate();
+
+		}
+
+		this.workerPool.length = 0;
+
+		if ( this.workerSourceURL !== '' ) {
+
+			URL.revokeObjectURL( this.workerSourceURL );
+
+		}
+
+		return this;
+
+	}
+
+}
+
+/* WEB WORKER */
+
+function DRACOWorker() {
+
+	let decoderConfig;
+	let decoderPending;
+
+	onmessage = function ( e ) {
+
+		const message = e.data;
+
+		switch ( message.type ) {
+
+			case 'init':
+				decoderConfig = message.decoderConfig;
+				decoderPending = new Promise( function ( resolve/*, reject*/ ) {
+
+					decoderConfig.onModuleLoaded = function ( draco ) {
+
+						// Module is Promise-like. Wrap before resolving to avoid loop.
+						resolve( { draco: draco } );
+
+					};
+
+					DracoDecoderModule( decoderConfig ); // eslint-disable-line no-undef
+
+				} );
+				break;
+
+			case 'decode':
+				const buffer = message.buffer;
+				const taskConfig = message.taskConfig;
+				decoderPending.then( ( module ) => {
+
+					const draco = module.draco;
+					const decoder = new draco.Decoder();
+
+					try {
+
+						const geometry = decodeGeometry( draco, decoder, new Int8Array( buffer ), taskConfig );
+
+						const buffers = geometry.attributes.map( ( attr ) => attr.array.buffer );
+
+						if ( geometry.index ) buffers.push( geometry.index.array.buffer );
+
+						self.postMessage( { type: 'decode', id: message.id, geometry }, buffers );
+
+					} catch ( error ) {
+
+						console.error( error );
+
+						self.postMessage( { type: 'error', id: message.id, error: error.message } );
+
+					} finally {
+
+						draco.destroy( decoder );
+
+					}
+
+				} );
+				break;
+
+		}
+
+	};
+
+	function decodeGeometry( draco, decoder, array, taskConfig ) {
+
+		const attributeIDs = taskConfig.attributeIDs;
+		const attributeTypes = taskConfig.attributeTypes;
+
+		let dracoGeometry;
+		let decodingStatus;
+
+		const geometryType = decoder.GetEncodedGeometryType( array );
+
+		if ( geometryType === draco.TRIANGULAR_MESH ) {
+
+			dracoGeometry = new draco.Mesh();
+			decodingStatus = decoder.DecodeArrayToMesh( array, array.byteLength, dracoGeometry );
+
+		} else if ( geometryType === draco.POINT_CLOUD ) {
+
+			dracoGeometry = new draco.PointCloud();
+			decodingStatus = decoder.DecodeArrayToPointCloud( array, array.byteLength, dracoGeometry );
+
+		} else {
+
+			throw new Error( 'THREE.DRACOLoader: Unexpected geometry type.' );
+
+		}
+
+		if ( ! decodingStatus.ok() || dracoGeometry.ptr === 0 ) {
+
+			throw new Error( 'THREE.DRACOLoader: Decoding failed: ' + decodingStatus.error_msg() );
+
+		}
+
+		const geometry = { index: null, attributes: [] };
+
+		// Gather all vertex attributes.
+		for ( const attributeName in attributeIDs ) {
+
+			const attributeType = self[ attributeTypes[ attributeName ] ];
+
+			let attribute;
+			let attributeID;
+
+			// A Draco file may be created with default vertex attributes, whose attribute IDs
+			// are mapped 1:1 from their semantic name (POSITION, NORMAL, ...). Alternatively,
+			// a Draco file may contain a custom set of attributes, identified by known unique
+			// IDs. glTF files always do the latter, and `.drc` files typically do the former.
+			if ( taskConfig.useUniqueIDs ) {
+
+				attributeID = attributeIDs[ attributeName ];
+				attribute = decoder.GetAttributeByUniqueId( dracoGeometry, attributeID );
+
+			} else {
+
+				attributeID = decoder.GetAttributeId( dracoGeometry, draco[ attributeIDs[ attributeName ] ] );
+
+				if ( attributeID === - 1 ) continue;
+
+				attribute = decoder.GetAttribute( dracoGeometry, attributeID );
+
+			}
+
+			const attributeResult = decodeAttribute( draco, decoder, dracoGeometry, attributeName, attributeType, attribute );
+
+			if ( attributeName === 'color' ) {
+
+				attributeResult.vertexColorSpace = taskConfig.vertexColorSpace;
+
+			}
+
+			geometry.attributes.push( attributeResult );
+
+		}
+
+		// Add index.
+		if ( geometryType === draco.TRIANGULAR_MESH ) {
+
+			geometry.index = decodeIndex( draco, decoder, dracoGeometry );
+
+		}
+
+		draco.destroy( dracoGeometry );
+
+		return geometry;
+
+	}
+
+	function decodeIndex( draco, decoder, dracoGeometry ) {
+
+		const numFaces = dracoGeometry.num_faces();
+		const numIndices = numFaces * 3;
+		const byteLength = numIndices * 4;
+
+		const ptr = draco._malloc( byteLength );
+		decoder.GetTrianglesUInt32Array( dracoGeometry, byteLength, ptr );
+		const index = new Uint32Array( draco.HEAPF32.buffer, ptr, numIndices ).slice();
+		draco._free( ptr );
+
+		return { array: index, itemSize: 1 };
+
+	}
+
+	function decodeAttribute( draco, decoder, dracoGeometry, attributeName, attributeType, attribute ) {
+
+		const numComponents = attribute.num_components();
+		const numPoints = dracoGeometry.num_points();
+		const numValues = numPoints * numComponents;
+		const byteLength = numValues * attributeType.BYTES_PER_ELEMENT;
+		const dataType = getDracoDataType( draco, attributeType );
+
+		const ptr = draco._malloc( byteLength );
+		decoder.GetAttributeDataArrayForAllPoints( dracoGeometry, attribute, dataType, byteLength, ptr );
+		const array = new attributeType( draco.HEAPF32.buffer, ptr, numValues ).slice();
+		draco._free( ptr );
+
+		return {
+			name: attributeName,
+			array: array,
+			itemSize: numComponents
+		};
+
+	}
+
+	function getDracoDataType( draco, attributeType ) {
+
+		switch ( attributeType ) {
+
+			case Float32Array: return draco.DT_FLOAT32;
+			case Int8Array: return draco.DT_INT8;
+			case Int16Array: return draco.DT_INT16;
+			case Int32Array: return draco.DT_INT32;
+			case Uint8Array: return draco.DT_UINT8;
+			case Uint16Array: return draco.DT_UINT16;
+			case Uint32Array: return draco.DT_UINT32;
+
+		}
+
+	}
+
+}
+
 // OrbitControls performs orbiting, dollying (zooming), and panning.
 // Unlike TrackballControls, it maintains the "up" direction object.up (+Y by default).
 //
@@ -129921,6 +132995,7 @@ class OrbitControls extends Controls {
 		// Set to false to disable rotating
 		this.enableRotate = true;
 		this.rotateSpeed = 1.0;
+		this.keyRotateSpeed = 1.0;
 
 		// Set to false to disable panning
 		this.enablePan = true;
@@ -130615,7 +133690,7 @@ class OrbitControls extends Controls {
 
 					if ( this.enableRotate ) {
 
-						this._rotateUp( _twoPI * this.rotateSpeed / this.domElement.clientHeight );
+						this._rotateUp( _twoPI * this.keyRotateSpeed / this.domElement.clientHeight );
 
 					}
 
@@ -130638,7 +133713,7 @@ class OrbitControls extends Controls {
 
 					if ( this.enableRotate ) {
 
-						this._rotateUp( - _twoPI * this.rotateSpeed / this.domElement.clientHeight );
+						this._rotateUp( - _twoPI * this.keyRotateSpeed / this.domElement.clientHeight );
 
 					}
 
@@ -130661,7 +133736,7 @@ class OrbitControls extends Controls {
 
 					if ( this.enableRotate ) {
 
-						this._rotateLeft( _twoPI * this.rotateSpeed / this.domElement.clientHeight );
+						this._rotateLeft( _twoPI * this.keyRotateSpeed / this.domElement.clientHeight );
 
 					}
 
@@ -130684,7 +133759,7 @@ class OrbitControls extends Controls {
 
 					if ( this.enableRotate ) {
 
-						this._rotateLeft( - _twoPI * this.rotateSpeed / this.domElement.clientHeight );
+						this._rotateLeft( - _twoPI * this.keyRotateSpeed / this.domElement.clientHeight );
 
 					}
 
@@ -131381,4 +134456,27 @@ function interceptControlUp( event ) {
 
 }
 
-export { ACESFilmicToneMapping, ACESFilmicToneMappingMaterial, AddEquation, AddOperation, AdditiveAnimationBlendMode, AdditiveBlending, AfterimageMaterial, AgXToneMapping, AlphaFormat, AlwaysCompare, AlwaysDepth, AlwaysStencilFunc, AmbientLight, AmbientLightPanel, AnimationAction, AnimationClip, AnimationLoader, AnimationMixer, AnimationObjectGroup, AnimationUtils, ArcCurve, ArrayCamera, ArrowHelper, AssetLoader, AttachedBindMode, Audio$1 as Audio, AudioAnalyser, AudioButton, AudioButtonInfo, AudioContext$1 as AudioContext, AudioListener, AudioLoader, AxesHelper, BackSide, BadTVMaterial, BasicDepthPacking, BasicLightingMaterial, BasicMaterial, BasicMaterialCommonPanel, BasicMaterialEnvPanel, BasicMaterialOptions, BasicMaterialPanel, BasicShadowMap, BatchedMesh, BloomCompositeMaterial, BlurMaterial, BokehBlurMaterial1, BokehBlurMaterial2, Bone, BooleanKeyframeTrack, Box2, Box3, Box3Helper, BoxGeometry$2 as BoxGeometry, BoxHelper, BufferAttribute, BufferGeometry, BufferGeometryLoader, BufferGeometryLoaderThread, BufferLoader, ByteType, Cache, Camera, CameraHelper, CanvasTexture, CapsuleGeometry$2 as CapsuleGeometry, CatmullRomCurve3, ChromaticAberrationMaterial, CineonToneMapping, CircleGeometry, ClampToEdgeWrapping, Clock, Cluster, Color$1 as Color, ColorKeyframeTrack, ColorLightingMaterial, ColorManagement, ColorMaterial, ColorPicker, ColorSpaceOptions, CombineOptions, Component, CompressedArrayTexture, CompressedCubeTexture, CompressedTexture, CompressedTextureLoader, ConeGeometry$2 as ConeGeometry, ConstantAlphaFactor, ConstantColorFactor, Content, Controls, CopyMaterial, CubeCamera, CubeReflectionMapping, CubeRefractionMapping, CubeTexture, CubeTextureLoader, CubeUVReflectionMapping, CubicBezierCurve, CubicBezierCurve3, CubicInterpolant, CullFaceBack, CullFaceFront, CullFaceFrontBack, CullFaceNone, Curve, CurvePath, CustomBlending, CustomToneMapping, CylinderGeometry$2 as CylinderGeometry, Cylindrical, Data3DTexture, DataArrayTexture, DataTexture, DataTextureLoader, DataUtils, DatamoshMaterial, DecrementStencilOp, DecrementWrapStencilOp, DefaultLoadingManager, DepthFormat, DepthMaskMaterial, DepthMaterial, DepthStencilFormat, DepthTexture, DetachedBindMode, Details, DetailsButton, DetailsInfo, DetailsLink, DetailsTitle, DirectionalLight, DirectionalLightHelper, DirectionalLightPanel, DiscardMaterial, DiscreteInterpolant, DisplayOptions, DodecahedronGeometry, DoubleSide, DrawBuffers, DrawBuffersMaterial, DstAlphaFactor, DstColorFactor, DynamicCopyUsage, DynamicDrawUsage, DynamicReadUsage, Easing, EdgesGeometry, EllipseCurve, EnvironmentTextureLoader, EqualCompare, EqualDepth, EqualStencilFunc, EquirectangularReflectionMapping, EquirectangularRefractionMapping, Euler, EventDispatcher, EventEmitter, ExtrudeGeometry, FXAAMaterial, FastGaussianBlurMaterial, FileLoader, FlatShadingOptions, Float16BufferAttribute, Float32BufferAttribute, FloatType, Flowmap, Fluid, Fog, FogExp2, FramebufferTexture, FresnelMaterial, FrontSide, Frustum, GLBufferAttribute, GLSL1, GLSL3, GLTFLoader, GammaCorrectionMaterial, Graph, GraphMarker, GraphSegments, GreaterCompare, GreaterDepth, GreaterEqualCompare, GreaterEqualDepth, GreaterEqualStencilFunc, GreaterStencilFunc, GridHelper, Group, HalfFloatType, Header, HeaderInfo, HeaderTitle, HelperOptions, HemisphereLight, HemisphereLightHelper, HemisphereLightPanel, IcosahedronGeometry, ImageBitmapLoader$1 as ImageBitmapLoader, ImageBitmapLoaderThread, ImageLoader, ImageUtils, IncrementStencilOp, IncrementWrapStencilOp, Info, Input, InputField, InputTotal, InstanceOptions, InstancedBufferAttribute, InstancedBufferGeometry, InstancedInterleavedBuffer, InstancedMesh, InstancedMeshPanel, Int16BufferAttribute, Int32BufferAttribute, Int8BufferAttribute, IntType, Interface, InterleavedBuffer, InterleavedBufferAttribute, Interpolant, InterpolateDiscrete, InterpolateLinear, InterpolateSmooth, InvertStencilOp, KeepStencilOp, KeyframeTrack, LOD, LambertMaterialCommonPanel, LambertMaterialEnvPanel, LambertMaterialOptions, LambertMaterialPanel, LatheGeometry, Layers, LensflareMaterial, LessCompare, LessDepth, LessEqualCompare, LessEqualDepth, LessEqualStencilFunc, LessStencilFunc, Light, LightOptions, LightPanelController, LightProbe, Line, Line3, LineBasicMaterial, LineCanvas, LineCurve, LineCurve3, LineDashedMaterial, LineLoop, LineSegments, LinearFilter, LinearInterpolant, LinearMipMapLinearFilter, LinearMipMapNearestFilter, LinearMipmapLinearFilter, LinearMipmapNearestFilter, LinearSRGBColorSpace, LinearToneMapping, LinearTransfer, Link, LinkedList, List, ListSelect, ListToggle, Loader$1 as Loader, LoaderUtils, LoadingManager, LoopOnce, LoopPingPong, LoopRepeat, LuminanceAlphaFormat, LuminanceFormat, LuminosityMaterial, MOUSE, Magnetic, MapPanel, MaskMaterial, MatcapMaterialCommonPanel, MatcapMaterialOptions, MatcapMaterialPanel, Material, MaterialLoader, MaterialOptions, MaterialPanelController, MaterialPanels, MaterialPatches, MathUtils, Matrix2, Matrix3, Matrix4, MaxEquation, Menu, MenuItem, Mesh, MeshBasicMaterial, MeshDepthMaterial, MeshDistanceMaterial, MeshHelperPanel, MeshLambertMaterial, MeshMatcapMaterial, MeshNormalMaterial, MeshPhongMaterial, MeshPhysicalMaterial, MeshStandardMaterial, MeshToonMaterial, MinEquation, MirroredRepeatWrapping, MixOperation, MotionBlur, MotionBlurCompositeMaterial, MotionBlurVelocityMaterial, MultiLoader, MultiplyBlending, MultiplyOperation, MuteButton, NavLink, NearestFilter, NearestMipMapLinearFilter, NearestMipMapNearestFilter, NearestMipmapLinearFilter, NearestMipmapNearestFilter, NeutralToneMapping, NeverCompare, NeverDepth, NeverStencilFunc, NoBlending, NoColorSpace, NoToneMapping, NormalAnimationBlendMode, NormalBlending, NormalMaterial, NormalMaterialCommonPanel, NormalMaterialOptions, NormalMaterialPanel, NormalsHelperOptions, NotEqualCompare, NotEqualDepth, NotEqualStencilFunc, NumberKeyframeTrack, Object3D, ObjectLoader, ObjectPool, ObjectSpaceNormalMap, OctahedronGeometry, OimoPhysics, OimoPhysicsBuffer, OimoPhysicsController, OimoPhysicsPanel, OneFactor, OneMinusConstantAlphaFactor, OneMinusConstantColorFactor, OneMinusDstAlphaFactor, OneMinusDstColorFactor, OneMinusSrcAlphaFactor, OneMinusSrcColorFactor, OrbitControls, OrthographicCamera, PCFShadowMap, PCFSoftShadowMap, PI, PI60, PI90, PMREMGenerator, Panel, PanelGraph, PanelItem, PanelLink, PanelThumbnail, Path, PerspectiveCamera, PhongMaterialCommonPanel, PhongMaterialEnvPanel, PhongMaterialOptions, PhongMaterialPanel, PhongMaterialPatches, PhysicalMaterialAnisotropyPanel, PhysicalMaterialClearcoatPanel, PhysicalMaterialCommonPanel, PhysicalMaterialEnvPanel, PhysicalMaterialIridescencePanel, PhysicalMaterialOptions, PhysicalMaterialPanel, PhysicalMaterialSheenPanel, PhysicalMaterialTransmissionPanel, Plane, PlaneGeometry, PlaneHelper, Point, Point3D, PointInfo, PointLight, PointLightHelper, PointLightPanel, Points, PointsMaterial, PoissonDiscBlurMaterial, PolarGridHelper, PolyhedronGeometry, PositionalAudio, Progress, ProgressCanvas, PropertyBinding, PropertyMixer, QuadraticBezierCurve, QuadraticBezierCurve3, Quaternion, QuaternionKeyframeTrack, QuaternionLinearInterpolant, RED_GREEN_RGTC2_Format, RED_RGTC1_Format, REVISION, RGBADepthPacking, RGBAFormat, RGBAIntegerFormat, RGBA_ASTC_10x10_Format, RGBA_ASTC_10x5_Format, RGBA_ASTC_10x6_Format, RGBA_ASTC_10x8_Format, RGBA_ASTC_12x10_Format, RGBA_ASTC_12x12_Format, RGBA_ASTC_4x4_Format, RGBA_ASTC_5x4_Format, RGBA_ASTC_5x5_Format, RGBA_ASTC_6x5_Format, RGBA_ASTC_6x6_Format, RGBA_ASTC_8x5_Format, RGBA_ASTC_8x6_Format, RGBA_ASTC_8x8_Format, RGBA_BPTC_Format, RGBA_ETC2_EAC_Format, RGBA_PVRTC_2BPPV1_Format, RGBA_PVRTC_4BPPV1_Format, RGBA_S3TC_DXT1_Format, RGBA_S3TC_DXT3_Format, RGBA_S3TC_DXT5_Format, RGBDepthPacking, RGBFormat, RGBIntegerFormat, RGBMaterial, RGB_BPTC_SIGNED_Format, RGB_BPTC_UNSIGNED_Format, RGB_ETC1_Format, RGB_ETC2_Format, RGB_PVRTC_2BPPV1_Format, RGB_PVRTC_4BPPV1_Format, RGB_S3TC_DXT1_Format, RGDepthPacking, RGFormat, RGIntegerFormat, RadialGraph, RadialGraphSegments, RawShaderMaterial, Ray, Raycaster, RectAreaLight, RectAreaLightPanel, RedFormat, RedIntegerFormat, Reflector, ReflectorBlurMaterial, ReflectorDudvMaterial, ReflectorMaterial, ReinhardToneMapping, RenderTarget, RepeatWrapping, ReplaceStencilOp, Reticle, ReticleCanvas, ReticleInfo, ReverseSubtractEquation, RigidBodyConfig$1 as RigidBodyConfig, RigidBodyType$1 as RigidBodyType, RingGeometry, Router, SIGNED_RED_GREEN_RGTC2_Format, SIGNED_RED_RGTC1_Format, SMAABlendMaterial, SMAAEdgesMaterial, SMAAWeightsMaterial, SRGBColorSpace, SRGBTransfer, SVGLoader, Scene, SceneCompositeAddMaterial, SceneCompositeDistortionMaterial, SceneCompositeMaterial, ScenePanel, ShaderChunk, ShaderLib, ShaderMaterial, ShadowMaterial, ShadowTextureMaterial, Shape$2 as Shape, ShapeGeometry, ShapePath, ShapeUtils, ShortType, SideOptions, SinglePassBlurMaterial, Skeleton, SkeletonHelper, SkinnedMesh, Slider, Smooth, SmoothSkew, SmoothViews, SoftShadows, Sound, Sound3D, Source, Sphere, SphereGeometry$2 as SphereGeometry, Spherical, SphericalHarmonics3, SphericalJointConfig$1 as SphericalJointConfig, SplineCurve, SpotLight, SpotLightHelper, SpotLightPanel, Sprite, SpriteMaterial, SrcAlphaFactor, SrcAlphaSaturateFactor, SrcColorFactor, Stage, StandardMaterialCommonPanel, StandardMaterialEnvPanel, StandardMaterialOptions, StandardMaterialPanel, StandardMaterialPatches, StaticCopyUsage, StaticDrawUsage, StaticReadUsage, StereoCamera, StreamCopyUsage, StreamDrawUsage, StreamReadUsage, StringKeyframeTrack, SubtractEquation, SubtractiveBlending, TOUCH, TangentSpaceNormalMap, TangentsHelperOptions, TargetNumber, TetrahedronGeometry, Text, TextMaterial, Texture, TextureLoader, TextureUtils, Third, Thread, Thumbnail, Ticker, TiltShiftMaterial, Title, ToneMappedOptions, ToonMaterialCommonPanel, ToonMaterialOptions, ToonMaterialPanel, TorusGeometry, TorusKnotGeometry, Tracker, Triangle, TriangleFanDrawMode, TriangleStripDrawMode, TrianglesDrawMode, TubeGeometry, Tween, TwoPI, UI, UVHelperOptions, UVMapping, Uint16BufferAttribute, Uint32BufferAttribute, Uint8BufferAttribute, Uint8ClampedBufferAttribute, Uniform, UniformsGroup, UniformsLib, UniformsUtils, UniversalJointConfig$1 as UniversalJointConfig, UnrealBloomBlurMaterial, UnrealBloomCompositeMaterial, UnsignedByteType, UnsignedInt248Type, UnsignedInt5999Type, UnsignedIntType, UnsignedShort4444Type, UnsignedShort5551Type, UnsignedShortType, VSMShadowMap, Vector2$1 as Vector2, Vector3, Vector4, VectorKeyframeTrack, VideoGlitchMaterial, VideoTexture, VisibleOptions, VolumetricLightLensflareMaterial, VolumetricLightMaterial, WebAudio, WebAudio3D, WebAudioParam, WebGL3DRenderTarget, WebGLArrayRenderTarget, WebGLCoordinateSystem, WebGLCubeRenderTarget, WebGLMultipleRenderTargets, WebGLRenderTarget, WebGLRenderer, WebGLUtils, WebGPUCoordinateSystem, WireframeGeometry, WireframeOptions, Wobble, WrapAroundEnding, WrapOptions, ZeroCurvatureEnding, ZeroFactor, ZeroSlopeEnding, ZeroStencilOp, absolute, basename, brightness, ceilPowerOfTwo$1 as ceilPowerOfTwo, clamp$1 as clamp, clearTween, createCanvasElement, defer, degToRad$1 as degToRad, delayedCall, euclideanModulo$1 as euclideanModulo, extension, floorPowerOfTwo$1 as floorPowerOfTwo, fract, getConstructor, getDoubleRenderTarget, getFullscreenTriangle, getKeyByLight, getKeyByMaterial, getKeyByValue, getScreenSpaceBox, getSphericalCube, getViewSize, guid, headsTails, inverseLerp$1 as inverseLerp, isPowerOfTwo$1 as isPowerOfTwo, lerp$2 as lerp, lerpCameras, mapLinear$1 as mapLinear, parabola, pcurve, radToDeg$1 as radToDeg, randFloat$1 as randFloat, randFloatSpread$1 as randFloatSpread, randInt$1 as randInt, router, shuffle, smootherstep$2 as smootherstep, smoothstep$1 as smoothstep, step, ticker, tween, wait };
+// MapControls performs orbiting, dollying (zooming), and panning.
+// Unlike TrackballControls, it maintains the "up" direction object.up (+Y by default).
+//
+//    Orbit - right mouse, or left mouse + ctrl/meta/shiftKey / touch: two-finger rotate
+//    Zoom - middle mouse, or mousewheel / touch: two-finger spread or squish
+//    Pan - left mouse, or arrow keys / touch: one-finger move
+
+class MapControls extends OrbitControls {
+
+	constructor( object, domElement ) {
+
+		super( object, domElement );
+
+		this.screenSpacePanning = false; // pan orthogonal to world-space direction camera.up
+
+		this.mouseButtons = { LEFT: MOUSE.PAN, MIDDLE: MOUSE.DOLLY, RIGHT: MOUSE.ROTATE };
+
+		this.touches = { ONE: TOUCH.PAN, TWO: TOUCH.DOLLY_ROTATE };
+
+	}
+
+}
+
+export { ACESFilmicToneMapping, ACESFilmicToneMappingMaterial, AddEquation, AddOperation, AdditiveAnimationBlendMode, AdditiveBlending, AfterimageMaterial, AgXToneMapping, AlphaFormat, AlwaysCompare, AlwaysDepth, AlwaysStencilFunc, AmbientLight, AmbientLightPanel, AnimationAction, AnimationClip, AnimationLoader, AnimationMixer, AnimationObjectGroup, AnimationUtils, ArcCurve, ArrayCamera, ArrowHelper, AssetLoader, AttachedBindMode, Audio$1 as Audio, AudioAnalyser, AudioButton, AudioButtonInfo, AudioContext$1 as AudioContext, AudioListener, AudioLoader, AxesHelper, BackSide, BadTVMaterial, BasicDepthPacking, BasicLightingMaterial, BasicMaterial, BasicMaterialCommonPanel, BasicMaterialEnvPanel, BasicMaterialOptions, BasicMaterialPanel, BasicShadowMap, BatchedMesh, BloomCompositeMaterial, BlurMaterial, BokehBlurMaterial1, BokehBlurMaterial2, Bone, BooleanKeyframeTrack, Box2, Box3, Box3Helper, BoxGeometry$2 as BoxGeometry, BoxHelper, BufferAttribute, BufferGeometry, BufferGeometryLoader, BufferGeometryLoaderThread, BufferLoader, ByteType, Cache, Camera, CameraHelper, CanvasTexture, CapsuleGeometry$2 as CapsuleGeometry, CatmullRomCurve3, ChromaticAberrationMaterial, CineonToneMapping, CircleGeometry, ClampToEdgeWrapping, Clock, Cluster, Color$1 as Color, ColorKeyframeTrack, ColorLightingMaterial, ColorManagement, ColorMaterial, ColorPicker, ColorSpaceOptions, CombineOptions, Component, CompressedArrayTexture, CompressedCubeTexture, CompressedTexture, CompressedTextureLoader, ConeGeometry$2 as ConeGeometry, ConstantAlphaFactor, ConstantColorFactor, Content, Controls, CopyMaterial, CubeCamera, CubeReflectionMapping, CubeRefractionMapping, CubeTexture, CubeTextureLoader, CubeUVReflectionMapping, CubicBezierCurve, CubicBezierCurve3, CubicInterpolant, CullFaceBack, CullFaceFront, CullFaceFrontBack, CullFaceNone, Curve, CurvePath, CustomBlending, CustomToneMapping, CylinderGeometry$2 as CylinderGeometry, Cylindrical, DRACOLoader, Data3DTexture, DataArrayTexture, DataTexture, DataTextureLoader, DataUtils, DatamoshMaterial, DecrementStencilOp, DecrementWrapStencilOp, DefaultLoadingManager, DepthFormat, DepthMaskMaterial, DepthMaterial, DepthStencilFormat, DepthTexture, DetachedBindMode, Details, DetailsButton, DetailsInfo, DetailsLink, DetailsTitle, DirectionalLight, DirectionalLightHelper, DirectionalLightPanel, DiscardMaterial, DiscreteInterpolant, DisplayOptions, DodecahedronGeometry, DoubleSide, DrawBuffers, DrawBuffersMaterial, DstAlphaFactor, DstColorFactor, DynamicCopyUsage, DynamicDrawUsage, DynamicReadUsage, Easing, EdgesGeometry, EllipseCurve, EnvironmentTextureLoader, EqualCompare, EqualDepth, EqualStencilFunc, EquirectangularReflectionMapping, EquirectangularRefractionMapping, Euler, EventDispatcher, EventEmitter, ExtrudeGeometry, FXAAMaterial, FastGaussianBlurMaterial, FileLoader, FlatShadingOptions, Float16BufferAttribute, Float32BufferAttribute, FloatType, Flowmap, Fluid, Fog, FogExp2, FramebufferTexture, FresnelMaterial, FrontSide, Frustum, GLBufferAttribute, GLSL1, GLSL3, GLTFLoader, GammaCorrectionMaterial, Graph, GraphMarker, GraphSegments, GreaterCompare, GreaterDepth, GreaterEqualCompare, GreaterEqualDepth, GreaterEqualStencilFunc, GreaterStencilFunc, GridHelper, Group, HalfFloatType, Header, HeaderInfo, HeaderTitle, HelperOptions, HemisphereLight, HemisphereLightHelper, HemisphereLightPanel, IcosahedronGeometry, ImageBitmapLoader$1 as ImageBitmapLoader, ImageBitmapLoaderThread, ImageLoader, ImageUtils, IncrementStencilOp, IncrementWrapStencilOp, Info, Input, InputField, InputTotal, InstanceOptions, InstancedBufferAttribute, InstancedBufferGeometry, InstancedInterleavedBuffer, InstancedMesh, InstancedMeshPanel, Int16BufferAttribute, Int32BufferAttribute, Int8BufferAttribute, IntType, Interface, InterleavedBuffer, InterleavedBufferAttribute, Interpolant, InterpolateDiscrete, InterpolateLinear, InterpolateSmooth, InvertStencilOp, KTX2Loader, KeepStencilOp, KeyframeTrack, LOD, LambertMaterialCommonPanel, LambertMaterialEnvPanel, LambertMaterialOptions, LambertMaterialPanel, LatheGeometry, Layers, LensflareMaterial, LessCompare, LessDepth, LessEqualCompare, LessEqualDepth, LessEqualStencilFunc, LessStencilFunc, Light, LightOptions, LightPanelController, LightProbe, Line, Line3, LineBasicMaterial, LineCanvas, LineCurve, LineCurve3, LineDashedMaterial, LineLoop, LineSegments, LinearFilter, LinearInterpolant, LinearMipMapLinearFilter, LinearMipMapNearestFilter, LinearMipmapLinearFilter, LinearMipmapNearestFilter, LinearSRGBColorSpace, LinearToneMapping, LinearTransfer, Link, LinkedList, List, ListSelect, ListToggle, Loader$1 as Loader, LoaderUtils, LoadingManager, LoopOnce, LoopPingPong, LoopRepeat, LuminanceAlphaFormat, LuminanceFormat, LuminosityMaterial, MOUSE, Magnetic, MapControls, MapPanel, MaskMaterial, MatcapMaterialCommonPanel, MatcapMaterialOptions, MatcapMaterialPanel, Material, MaterialLoader, MaterialOptions, MaterialPanelController, MaterialPanels, MaterialPatches, MathUtils, Matrix2, Matrix3, Matrix4, MaxEquation, Menu, MenuItem, Mesh, MeshBasicMaterial, MeshDepthMaterial, MeshDistanceMaterial, MeshHelperPanel, MeshLambertMaterial, MeshMatcapMaterial, MeshNormalMaterial, MeshPhongMaterial, MeshPhysicalMaterial, MeshStandardMaterial, MeshToonMaterial, Meter, MinEquation, MirroredRepeatWrapping, MixOperation, MotionBlur, MotionBlurCompositeMaterial, MotionBlurVelocityMaterial, MultiLoader, MultiplyBlending, MultiplyOperation, MuteButton, NavLink, NearestFilter, NearestMipMapLinearFilter, NearestMipMapNearestFilter, NearestMipmapLinearFilter, NearestMipmapNearestFilter, NeutralToneMapping, NeverCompare, NeverDepth, NeverStencilFunc, NoBlending, NoColorSpace, NoToneMapping, NormalAnimationBlendMode, NormalBlending, NormalMaterial, NormalMaterialCommonPanel, NormalMaterialOptions, NormalMaterialPanel, NormalsHelperOptions, NotEqualCompare, NotEqualDepth, NotEqualStencilFunc, NumberKeyframeTrack, Object3D, ObjectLoader, ObjectPool, ObjectSpaceNormalMap, OctahedronGeometry, OimoPhysics, OimoPhysicsBuffer, OimoPhysicsController, OimoPhysicsPanel, OneFactor, OneMinusConstantAlphaFactor, OneMinusConstantColorFactor, OneMinusDstAlphaFactor, OneMinusDstColorFactor, OneMinusSrcAlphaFactor, OneMinusSrcColorFactor, OrbitControls, OrthographicCamera, PCFShadowMap, PCFSoftShadowMap, PI, PI60, PI90, PMREMGenerator, Panel, PanelGraph, PanelItem, PanelLink, PanelMeter, PanelThumbnail, Path, PerspectiveCamera, PhongMaterialCommonPanel, PhongMaterialEnvPanel, PhongMaterialOptions, PhongMaterialPanel, PhongMaterialPatches, PhysicalMaterialAnisotropyPanel, PhysicalMaterialClearcoatPanel, PhysicalMaterialCommonPanel, PhysicalMaterialEnvPanel, PhysicalMaterialIridescencePanel, PhysicalMaterialOptions, PhysicalMaterialPanel, PhysicalMaterialSheenPanel, PhysicalMaterialTransmissionPanel, Plane, PlaneGeometry, PlaneHelper, Point, Point3D, PointInfo, PointLight, PointLightHelper, PointLightPanel, Points, PointsMaterial, PoissonDiscBlurMaterial, PolarGridHelper, PolyhedronGeometry, PositionalAudio, Progress, ProgressCanvas, PropertyBinding, PropertyMixer, QuadraticBezierCurve, QuadraticBezierCurve3, Quaternion, QuaternionKeyframeTrack, QuaternionLinearInterpolant, RED_GREEN_RGTC2_Format, RED_RGTC1_Format, REVISION, RGBADepthPacking, RGBAFormat, RGBAIntegerFormat, RGBA_ASTC_10x10_Format, RGBA_ASTC_10x5_Format, RGBA_ASTC_10x6_Format, RGBA_ASTC_10x8_Format, RGBA_ASTC_12x10_Format, RGBA_ASTC_12x12_Format, RGBA_ASTC_4x4_Format, RGBA_ASTC_5x4_Format, RGBA_ASTC_5x5_Format, RGBA_ASTC_6x5_Format, RGBA_ASTC_6x6_Format, RGBA_ASTC_8x5_Format, RGBA_ASTC_8x6_Format, RGBA_ASTC_8x8_Format, RGBA_BPTC_Format, RGBA_ETC2_EAC_Format, RGBA_PVRTC_2BPPV1_Format, RGBA_PVRTC_4BPPV1_Format, RGBA_S3TC_DXT1_Format, RGBA_S3TC_DXT3_Format, RGBA_S3TC_DXT5_Format, RGBDepthPacking, RGBFormat, RGBIntegerFormat, RGBMaterial, RGB_BPTC_SIGNED_Format, RGB_BPTC_UNSIGNED_Format, RGB_ETC1_Format, RGB_ETC2_Format, RGB_PVRTC_2BPPV1_Format, RGB_PVRTC_4BPPV1_Format, RGB_S3TC_DXT1_Format, RGDepthPacking, RGFormat, RGIntegerFormat, RadialGraph, RadialGraphCanvas, RadialGraphSegments, RawShaderMaterial, Ray, Raycaster, RectAreaLight, RectAreaLightPanel, RedFormat, RedIntegerFormat, Reflector, ReflectorBlurMaterial, ReflectorDudvMaterial, ReflectorMaterial, ReinhardToneMapping, RenderTarget, RenderTarget3D, RenderTargetArray, RepeatWrapping, ReplaceStencilOp, Reticle, ReticleCanvas, ReticleInfo, ReverseSubtractEquation, RigidBodyConfig$1 as RigidBodyConfig, RigidBodyType$1 as RigidBodyType, RingGeometry, Router, SIGNED_RED_GREEN_RGTC2_Format, SIGNED_RED_RGTC1_Format, SMAABlendMaterial, SMAAEdgesMaterial, SMAAWeightsMaterial, SRGBColorSpace, SRGBTransfer, SVGLoader, Scene, SceneCompositeAddMaterial, SceneCompositeDistortionMaterial, SceneCompositeMaterial, ScenePanel, ShaderChunk, ShaderLib, ShaderMaterial, ShadowMaterial, ShadowTextureMaterial, Shape$2 as Shape, ShapeGeometry, ShapePath, ShapeUtils, ShortType, SideOptions, SinglePassBlurMaterial, Skeleton, SkeletonHelper, SkinnedMesh, Slider, Smooth, SmoothSkew, SmoothViews, SoftShadows, Sound, Sound3D, Source, Sphere, SphereGeometry$2 as SphereGeometry, Spherical, SphericalHarmonics3, SphericalJointConfig$1 as SphericalJointConfig, SplineCurve, SpotLight, SpotLightHelper, SpotLightPanel, Sprite, SpriteMaterial, SrcAlphaFactor, SrcAlphaSaturateFactor, SrcColorFactor, Stage, StandardMaterialCommonPanel, StandardMaterialEnvPanel, StandardMaterialOptions, StandardMaterialPanel, StandardMaterialPatches, StaticCopyUsage, StaticDrawUsage, StaticReadUsage, StereoCamera, StreamCopyUsage, StreamDrawUsage, StreamReadUsage, StringKeyframeTrack, SubtractEquation, SubtractiveBlending, TOUCH, TangentSpaceNormalMap, TangentsHelperOptions, TargetNumber, TetrahedronGeometry, Text, TextMaterial, Texture, TextureLoader, TextureUtils, Third, Thread, Thumbnail, Ticker, TiltShiftMaterial, Title, ToneMappedOptions, ToonMaterialCommonPanel, ToonMaterialOptions, ToonMaterialPanel, TorusGeometry, TorusKnotGeometry, Tracker, Triangle, TriangleFanDrawMode, TriangleStripDrawMode, TrianglesDrawMode, TubeGeometry, Tween, TwoPI, UI, UVHelperOptions, UVMapping, Uint16BufferAttribute, Uint32BufferAttribute, Uint8BufferAttribute, Uint8ClampedBufferAttribute, Uniform, UniformsGroup, UniformsLib, UniformsUtils, UniversalJointConfig$1 as UniversalJointConfig, UnrealBloomBlurMaterial, UnrealBloomCompositeMaterial, UnsignedByteType, UnsignedInt248Type, UnsignedInt5999Type, UnsignedIntType, UnsignedShort4444Type, UnsignedShort5551Type, UnsignedShortType, VSMShadowMap, Vector2$1 as Vector2, Vector3, Vector4, VectorKeyframeTrack, VideoGlitchMaterial, VideoTexture, VisibleOptions, VolumetricLightLensflareMaterial, VolumetricLightMaterial, WebAudio, WebAudio3D, WebAudioParam, WebGL3DRenderTarget, WebGLArrayRenderTarget, WebGLCoordinateSystem, WebGLCubeRenderTarget, WebGLRenderTarget, WebGLRenderer, WebGLUtils, WebGPUCoordinateSystem, WireframeGeometry, WireframeOptions, Wobble, WrapAroundEnding, WrapOptions, ZeroCurvatureEnding, ZeroFactor, ZeroSlopeEnding, ZeroStencilOp, absolute, basename, brightness, ceilPowerOfTwo$1 as ceilPowerOfTwo, clamp$1 as clamp, clearTween, createCanvasElement, defer, degToRad$1 as degToRad, delayedCall, euclideanModulo$1 as euclideanModulo, extension, floorPowerOfTwo$1 as floorPowerOfTwo, fract, getBoundingSphereWorld, getConstructor, getDoubleRenderTarget, getFullscreenTriangle, getKeyByLight, getKeyByMaterial, getKeyByValue, getScreenSpaceBox, getSphericalCube, getViewSize, headsTails, inverseLerp$1 as inverseLerp, isPowerOfTwo$1 as isPowerOfTwo, lerp$2 as lerp, lerpCameras, mapLinear$1 as mapLinear, median, parabola, pcurve, radToDeg$1 as radToDeg, randFloat$1 as randFloat, randFloatSpread$1 as randFloatSpread, randInt$1 as randInt, router, shuffle, smootherstep$2 as smootherstep, smoothstep$1 as smoothstep, step, ticker, tween, wait };

@@ -1,4 +1,4 @@
-import { AdditiveBlending, AssetLoader, BasicShadowMap, BloomCompositeMaterial, BoxGeometry, Color, ColorManagement, CopyMaterial, DepthMaterial, DirectionalLight, DisplayOptions, DrawBuffers, EnvironmentTextureLoader, GLSL3, Group, HemisphereLight, IcosahedronGeometry, ImageBitmapLoaderThread, LinearSRGBColorSpace, LuminosityMaterial, MathUtils, Mesh, MeshBasicMaterial, MeshMatcapMaterial, MeshStandardMaterial, MotionBlurCompositeMaterial, NearestFilter, NoBlending, NormalMaterial, OctahedronGeometry, OrthographicCamera, PanelItem, PerspectiveCamera, PlaneGeometry, Point3D, RawShaderMaterial, Reflector, RepeatWrapping, Scene, SceneCompositeMaterial, ShadowMaterial, Stage, TextureLoader, UI, UnrealBloomBlurMaterial, Vector2, Vector3, WebGLRenderTarget, WebGLRenderer, clearTween, delayedCall, getFullscreenTriangle, getKeyByValue, lerpCameras, router, ticker, tween } from '../../../../build/alien.three.js';
+import { AdditiveBlending, AssetLoader, BasicShadowMap, BloomCompositeMaterial, BoxGeometry, Color, ColorManagement, CopyMaterial, DepthMaterial, DirectionalLight, DisplayOptions, DrawBuffers, EnvironmentTextureLoader, GLSL3, Group, HemisphereLight, IcosahedronGeometry, ImageBitmapLoaderThread, LinearSRGBColorSpace, LuminosityMaterial, MapControls, MathUtils, Mesh, MeshBasicMaterial, MeshMatcapMaterial, MeshStandardMaterial, MotionBlurCompositeMaterial, NearestFilter, NoBlending, NormalMaterial, OctahedronGeometry, OrthographicCamera, PanelItem, PerspectiveCamera, PlaneGeometry, Point3D, RawShaderMaterial, Reflector, RepeatWrapping, Scene, SceneCompositeMaterial, ShadowMaterial, Stage, TextureLoader, UI, UnrealBloomBlurMaterial, Vector2, Vector3, WebGLRenderTarget, WebGLRenderer, clearTween, delayedCall, getFullscreenTriangle, getKeyByValue, lerpCameras, router, ticker, tween } from '../../../../build/alien.three.js';
 
 const isDebug = /[?&]debug/.test(location.search);
 
@@ -94,8 +94,7 @@ class CompositeMaterial extends RawShaderMaterial {
                     float d = abs(uFocus - rotateUV(vUv, uRotation).y);
                     float t = smootherstep(0.0, 1.0, d);
 
-                    vec2 dir = 0.5 - vUv;
-                    float angle = atan(dir.y, dir.x);
+                    float angle = length(vUv - 0.5);
                     float amount = 0.002 * uDistortion * uBlurAmount * t;
 
                     FragColor += getRGB(tScene, vUv, angle, amount);
@@ -534,8 +533,6 @@ class Floor extends Group {
         map.repeat.set(6, 3);
 
         const material = new ShadowMaterial({
-            transparent: false,
-            blending: NoBlending,
             toneMapped: false
         });
 
@@ -608,7 +605,6 @@ class Floor extends Group {
                 gl_FragColor.rgb -= (1.0 - getShadowMask()) * 0.025;
 
                 gl_FragColor.rgb = dither(gl_FragColor.rgb);
-                gl_FragColor.a = 1.0;
                 `
             );
         };
@@ -910,7 +906,7 @@ class PanelController {
                 name: 'Rotate',
                 min: 0,
                 max: 360,
-                step: 0.3,
+                step: 1,
                 value: MathUtils.radToDeg(RenderManager.blurRotation),
                 callback: value => {
                     value = MathUtils.degToRad(value);
@@ -1025,12 +1021,12 @@ class RenderManager {
         this.scene = scene;
         this.camera = camera;
 
-        // Blur
+        // Gaussian blur
         this.blurFocus = navigator.maxTouchPoints ? 0.5 : 0.25;
         this.blurRotation = navigator.maxTouchPoints ? 0 : MathUtils.degToRad(75);
         this.blurAmount = 1;
 
-        // Bloom
+        // Unreal bloom
         this.luminosityThreshold = 0.1;
         this.luminositySmoothing = 1;
         this.bloomStrength = 0.3;
@@ -1118,7 +1114,7 @@ class RenderManager {
             this.blurMaterials.push(new UnrealBloomBlurMaterial(kernelSizeArray[i]));
         }
 
-        // Bloom composite material
+        // Unreal bloom composite material
         this.bloomCompositeMaterial = new BloomCompositeMaterial();
         this.bloomCompositeMaterial.uniforms.tBlur1.value = this.renderTargetsVertical[0].texture;
         this.bloomCompositeMaterial.uniforms.tBlur2.value = this.renderTargetsVertical[1].texture;
@@ -1184,8 +1180,8 @@ class RenderManager {
         this.drawBuffers.setSize(width, height);
 
         // Unreal bloom
-        width = MathUtils.floorPowerOfTwo(width) / 2;
-        height = MathUtils.floorPowerOfTwo(height) / 2;
+        width = Math.round(width / 2);
+        height = Math.round(height / 2);
 
         this.renderTargetBright.setSize(width, height);
 
@@ -1195,8 +1191,8 @@ class RenderManager {
 
             this.blurMaterials[i].uniforms.uResolution.value.set(width, height);
 
-            width /= 2;
-            height /= 2;
+            width = Math.round(width / 2);
+            height = Math.round(height / 2);
         }
     };
 
@@ -1403,34 +1399,20 @@ class RenderManager {
 }
 
 class CameraController {
-    static init(worldCamera, ui) {
+    static init(worldCamera, controlsCamera, controls, ui) {
         this.worldCamera = worldCamera;
+        this.camera = controlsCamera;
+        this.controls = controls;
         this.ui = ui;
 
-        // Start position
-        this.camera = this.worldCamera.clone();
-        this.mouse = new Vector2();
-        this.lookAt = new Vector3();
-        this.origin = new Vector3();
-        this.target = new Vector3();
-        this.targetXY = new Vector2(8, 4);
-        this.origin.copy(this.camera.position);
-        this.camera.lookAt(this.lookAt);
-
         this.progress = 0;
-        this.lerpSpeed = 0.07;
         this.animatedIn = false;
         this.zoomedIn = false;
         this.enabled = false;
-
-        this.addListeners();
-    }
-
-    static addListeners() {
-        window.addEventListener('pointermove', this.onPointerMove);
     }
 
     static transition() {
+        this.controls.enabled = false;
         Point3D.enabled = false;
 
         const next = this.next;
@@ -1444,12 +1426,12 @@ class CameraController {
                 this.transition();
             } else {
                 this.animatedIn = false;
-
-                Point3D.enabled = true;
             }
         }, () => {
             lerpCameras(this.worldCamera, next.camera, this.progress);
         });
+
+        clearTween(this.timeout);
 
         if (this.zoomedIn) {
             this.ui.details.animateOut(() => {
@@ -1470,19 +1452,13 @@ class CameraController {
             this.ui.details.animateOut();
 
             RenderManager.zoomOut();
+
+            this.timeout = delayedCall(300, () => {
+                this.controls.enabled = true;
+                Point3D.enabled = true;
+            });
         }
     }
-
-    // Event handlers
-
-    static onPointerMove = ({ clientX, clientY }) => {
-        if (!this.enabled) {
-            return;
-        }
-
-        this.mouse.x = (clientX / document.documentElement.clientWidth) * 2 - 1;
-        this.mouse.y = 1 - (clientY / document.documentElement.clientHeight) * 2;
-    };
 
     // Public methods
 
@@ -1508,30 +1484,12 @@ class CameraController {
     };
 
     static update = () => {
-        if (!this.enabled) {
+        if (!this.enabled || this.animatedIn) {
             return;
         }
 
-        this.target.x = this.origin.x + this.targetXY.x * this.mouse.x;
-        this.target.y = this.origin.y + this.targetXY.y * this.mouse.y;
-        this.target.z = this.origin.z;
-
-        this.camera.position.lerp(this.target, this.lerpSpeed);
-        this.camera.lookAt(this.lookAt);
-
-        if (!this.animatedIn) {
-            this.updateCamera();
-        }
-    };
-
-    static updateCamera = () => {
         this.worldCamera.position.copy(this.view.camera.position);
         this.worldCamera.quaternion.copy(this.view.camera.quaternion);
-    };
-
-    static start = () => {
-        this.worldCamera.fov = 45;
-        this.worldCamera.updateProjectionMatrix();
     };
 
     static animateIn = () => {
@@ -1545,6 +1503,7 @@ class WorldController {
         this.initLights();
         this.initLoaders();
         this.initEnvironment();
+        this.initControls();
 
         this.addListeners();
     }
@@ -1615,6 +1574,12 @@ class WorldController {
         this.scene.environmentIntensity = 1.2;
     }
 
+    static initControls() {
+        this.controlsCamera = this.camera.clone();
+        this.controls = new MapControls(this.controlsCamera, this.renderer.domElement);
+        this.controls.enableDamping = true;
+    }
+
     static addListeners() {
         this.renderer.domElement.addEventListener('touchstart', this.onTouchStart);
     }
@@ -1639,6 +1604,10 @@ class WorldController {
     static update = (time, delta, frame) => {
         this.time.value = time;
         this.frame.value = frame;
+
+        if (this.controls.enabled) {
+            this.controls.update();
+        }
     };
 
     static ready = () => Promise.all([
@@ -1676,7 +1645,6 @@ class App {
 
         this.initPanel();
 
-        CameraController.start();
         RenderManager.start();
 
         this.animateIn();
@@ -1745,12 +1713,16 @@ class App {
             breakpoint,
             details: {
                 title: '',
-                content: /* html */ `
-Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
-                `,
-                links: [
+                content: [
                     {
-                        title: 'Next'
+                        content: /* html */ `
+Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
+                        `,
+                        links: [
+                            {
+                                title: 'Next'
+                            }
+                        ]
                     }
                 ]
             }
@@ -1760,9 +1732,9 @@ Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor i
     }
 
     static initControllers() {
-        const { renderer, scene, camera } = WorldController;
+        const { renderer, scene, camera, controlsCamera, controls } = WorldController;
 
-        CameraController.init(camera, this.ui);
+        CameraController.init(camera, controlsCamera, controls, this.ui);
         SceneController.init(this.view);
         RenderManager.init(renderer, scene, camera);
     }
@@ -1774,12 +1746,19 @@ Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor i
     }
 
     static addListeners() {
+        Stage.events.on('details', this.onDetails);
         window.addEventListener('resize', this.onResize);
         ticker.add(this.onUpdate);
         this.ui.link.events.on('click', this.onClick);
     }
 
     // Event handlers
+
+    static onDetails = ({ open }) => {
+        if (!open) {
+            history.back();
+        }
+    };
 
     static onResize = () => {
         const width = document.documentElement.clientWidth;

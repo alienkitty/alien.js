@@ -11,11 +11,12 @@
     <link rel="stylesheet" href="../assets/css/style.css">
 
     <script type="module">
-        import { AdditiveBlending, BloomCompositeMaterial, BlurMaterial, ChromaticAberrationMaterial, Color, ColorManagement, DirectionalLight, EdgesGeometry, EnvironmentTextureLoader, GLSL3, Group, HemisphereLight, ImageBitmapLoaderThread, LineBasicMaterial, LineSegments, LinearSRGBColorSpace, LuminosityMaterial, MathUtils, Mesh, MeshBasicMaterial, MeshStandardMaterial, NoBlending, OrbitControls, OrthographicCamera, PanelItem, PerspectiveCamera, RawShaderMaterial, RepeatWrapping, Scene, SphereGeometry, TextureLoader, UI, UnrealBloomBlurMaterial, Vector2, VideoGlitchMaterial, WebGLRenderTarget, WebGLRenderer, getFullscreenTriangle, ticker } from '../../build/alien.three.js';
+        import { AdditiveBlending, BloomCompositeMaterial, BlurMaterial, BoxGeometry, ChromaticAberrationMaterial, Color, ColorManagement, DirectionalLight, EdgesGeometry, EnvironmentTextureLoader, GLSL3, Group, HemisphereLight, ImageBitmapLoaderThread, LineBasicMaterial, LineSegments, LinearSRGBColorSpace, LuminosityMaterial, MapControls, MathUtils, Mesh, MeshBasicMaterial, MeshStandardMaterial, NoBlending, OctahedronGeometry, OrthographicCamera, PanelItem, PerspectiveCamera, RawShaderMaterial, RepeatWrapping, Scene, SphereGeometry, TextureLoader, UI, UnrealBloomBlurMaterial, Vector2, VideoGlitchMaterial, WebGLRenderTarget, WebGLRenderer, getFullscreenTriangle, ticker } from '../../build/alien.three.js';
 
         // Based on https://codepen.io/peterhry/pen/egzjGR
 
         const colors = {
+            backgroundColor: 0x060606,
             iceColor: 0x547691,
             lightColor: 0x00ffff,
             errorColor: 0xff0000
@@ -37,7 +38,8 @@
                     uniforms: {
                         tScene: { value: null },
                         tHologram: { value: null },
-                        tGlow: { value: null }
+                        tGlow: { value: null },
+                        uColor: { value: new Color(colors.backgroundColor) }
                     },
                     vertexShader: /* glsl */ `
                         in vec3 position;
@@ -57,6 +59,7 @@
                         uniform sampler2D tScene;
                         uniform sampler2D tHologram;
                         uniform sampler2D tGlow;
+                        uniform vec3 uColor;
 
                         in vec2 vUv;
 
@@ -70,7 +73,7 @@
                             vec4 blend = texture(tHologram, vUv);
 
                             // Blend soft light with background color
-                            blend = blendSoftLight(blend, vec4(vec3(0.11), 1.0), 0.75);
+                            blend = blendSoftLight(blend, vec4(uColor, 1.0), 0.8);
 
                             FragColor = blendScreen(base, blend, 1.0);
 
@@ -89,7 +92,7 @@
 
         import fresnel from '../../src/shaders/modules/fresnel/fresnel.glsl.js';
 
-        class PolishedConcreteSphere extends Group {
+        class AbstractCube extends Group {
             constructor() {
                 super();
 
@@ -97,52 +100,39 @@
             }
 
             async initMesh() {
-                const { anisotropy, loadTexture, loadEnvironmentTexture } = WorldController;
+                const { anisotropy, loadTexture } = WorldController;
 
-                const geometry = new SphereGeometry(1, 80, 80);
+                const geometry = new BoxGeometry();
 
                 // Second set of UVs for aoMap and lightMap
                 // https://threejs.org/docs/#api/en/materials/MeshStandardMaterial.aoMap
                 geometry.attributes.uv1 = geometry.attributes.uv;
 
                 // Textures
-                const [map, normalMap, ormMap, envMap] = await Promise.all([
+                const [map, normalMap, ormMap] = await Promise.all([
                     // loadTexture('../assets/textures/uv.jpg'),
-                    loadTexture('../assets/textures/pbr/polished_concrete_basecolor.jpg'),
-                    loadTexture('../assets/textures/pbr/polished_concrete_normal.jpg'),
+                    loadTexture('../assets/textures/pbr/pitted_metal_basecolor.jpg'),
+                    loadTexture('../assets/textures/pbr/pitted_metal_normal.jpg'),
                     // https://occlusion-roughness-metalness.glitch.me/
-                    loadTexture('../assets/textures/pbr/polished_concrete_orm.jpg'),
-                    loadEnvironmentTexture('../assets/textures/env/jewelry_black_contrast.jpg')
+                    loadTexture('../assets/textures/pbr/pitted_metal_orm.jpg')
                 ]);
 
                 map.anisotropy = anisotropy;
-                map.wrapS = RepeatWrapping;
-                map.wrapT = RepeatWrapping;
-                map.repeat.set(2, 1);
-
                 normalMap.anisotropy = anisotropy;
-                normalMap.wrapS = RepeatWrapping;
-                normalMap.wrapT = RepeatWrapping;
-                normalMap.repeat.set(2, 1);
-
                 ormMap.anisotropy = anisotropy;
-                ormMap.wrapS = RepeatWrapping;
-                ormMap.wrapT = RepeatWrapping;
-                ormMap.repeat.set(2, 1);
 
                 const material = new MeshStandardMaterial({
-                    color: new Color(colors.iceColor).offsetHSL(0, 0, -0.3),
-                    metalness: 0.75,
-                    roughness: 0.1,
+                    color: new Color().offsetHSL(0, 0, -0.65),
+                    metalness: 0.7,
+                    roughness: 3,
                     map,
                     metalnessMap: ormMap,
                     roughnessMap: ormMap,
                     aoMap: ormMap,
-                    aoMapIntensity: 0.5,
+                    aoMapIntensity: 1,
                     normalMap,
                     normalScale: new Vector2(1, 1),
-                    envMap,
-                    envMapIntensity: 0.1,
+                    flatShading: true,
                     polygonOffset: true,
                     polygonOffsetFactor: 1,
                     polygonOffsetUnits: 1
@@ -153,6 +143,8 @@
                 material.aoMap.channel = 1;
 
                 const mesh = new Mesh(geometry, material);
+                mesh.rotation.x = MathUtils.degToRad(-45);
+                mesh.rotation.z = MathUtils.degToRad(-45);
                 mesh.layers.set(layers.hologram);
                 this.add(mesh);
 
@@ -230,21 +222,34 @@
                 wireframe.layers.set(layers.hologram);
                 glowMesh.add(wireframe);
 
+                this.mesh = mesh;
+                this.glowMesh = glowMesh;
                 this.uniforms = uniforms;
             }
 
+            // Public methods
+
+            update = () => {
+                this.mesh.rotation.y -= 0.005;
+
+                // Update glow mesh
+                this.mesh.matrix.decompose(this.glowMesh.position, this.glowMesh.quaternion, this.glowMesh.scale);
+            };
+
             ready = () => this.initMesh();
         }
 
-        class DarkPlanet extends Group {
+        class FloatingCrystal extends Group {
             constructor() {
                 super();
+
+                this.position.y = 0.7;
             }
 
             async initMesh() {
                 const { anisotropy, loadTexture } = WorldController;
 
-                const geometry = new SphereGeometry(1, 80, 80);
+                const geometry = new OctahedronGeometry();
 
                 // Second set of UVs for aoMap and lightMap
                 // https://threejs.org/docs/#api/en/materials/MeshStandardMaterial.aoMap
@@ -262,86 +267,22 @@
                 map.anisotropy = anisotropy;
                 map.wrapS = RepeatWrapping;
                 map.wrapT = RepeatWrapping;
-                map.repeat.set(2, 1);
+                map.repeat.set(2, 2);
 
                 normalMap.anisotropy = anisotropy;
                 normalMap.wrapS = RepeatWrapping;
                 normalMap.wrapT = RepeatWrapping;
-                normalMap.repeat.set(2, 1);
+                normalMap.repeat.set(2, 2);
 
                 ormMap.anisotropy = anisotropy;
                 ormMap.wrapS = RepeatWrapping;
                 ormMap.wrapT = RepeatWrapping;
-                ormMap.repeat.set(2, 1);
+                ormMap.repeat.set(2, 2);
 
                 const material = new MeshStandardMaterial({
-                    color: new Color(0x060606),
-                    metalness: 1,
-                    roughness: 1,
-                    map,
-                    metalnessMap: ormMap,
-                    roughnessMap: ormMap,
-                    aoMap: ormMap,
-                    aoMapIntensity: 1,
-                    normalMap,
-                    normalScale: new Vector2(1, 1)
-                });
-
-                // Second channel for aoMap and lightMap
-                // https://threejs.org/docs/#api/en/materials/MeshStandardMaterial.aoMap
-                material.aoMap.channel = 1;
-
-                const mesh = new Mesh(geometry, material);
-                this.add(mesh);
-            }
-
-            ready = () => this.initMesh();
-        }
-
-        class PittedMetalSphere extends Group {
-            constructor() {
-                super();
-
-                this.position.x = -2.5;
-            }
-
-            async initMesh() {
-                const { anisotropy, loadTexture } = WorldController;
-
-                const geometry = new SphereGeometry(1, 80, 80);
-
-                // Second set of UVs for aoMap and lightMap
-                // https://threejs.org/docs/#api/en/materials/MeshStandardMaterial.aoMap
-                geometry.attributes.uv1 = geometry.attributes.uv;
-
-                // Textures
-                const [map, normalMap, ormMap] = await Promise.all([
-                    // loadTexture('../assets/textures/uv.jpg'),
-                    loadTexture('../assets/textures/pbr/pitted_metal_basecolor.jpg'),
-                    loadTexture('../assets/textures/pbr/pitted_metal_normal.jpg'),
-                    // https://occlusion-roughness-metalness.glitch.me/
-                    loadTexture('../assets/textures/pbr/pitted_metal_orm.jpg')
-                ]);
-
-                map.anisotropy = anisotropy;
-                map.wrapS = RepeatWrapping;
-                map.wrapT = RepeatWrapping;
-                map.repeat.set(2, 1);
-
-                normalMap.anisotropy = anisotropy;
-                normalMap.wrapS = RepeatWrapping;
-                normalMap.wrapT = RepeatWrapping;
-                normalMap.repeat.set(2, 1);
-
-                ormMap.anisotropy = anisotropy;
-                ormMap.wrapS = RepeatWrapping;
-                ormMap.wrapT = RepeatWrapping;
-                ormMap.repeat.set(2, 1);
-
-                const material = new MeshStandardMaterial({
-                    color: new Color(),
-                    metalness: 1,
-                    roughness: 1,
+                    color: new Color().offsetHSL(0, 0, -0.65),
+                    metalness: 0.7,
+                    roughness: 0.7,
                     map,
                     metalnessMap: ormMap,
                     roughnessMap: ormMap,
@@ -349,6 +290,84 @@
                     aoMapIntensity: 1,
                     normalMap,
                     normalScale: new Vector2(1, 1),
+                    flatShading: true
+                });
+
+                // Second channel for aoMap and lightMap
+                // https://threejs.org/docs/#api/en/materials/MeshStandardMaterial.aoMap
+                material.aoMap.channel = 1;
+
+                const mesh = new Mesh(geometry, material);
+                mesh.scale.set(0.5, 1, 0.5);
+                this.add(mesh);
+
+                this.mesh = mesh;
+            }
+
+            // Public methods
+
+            update = time => {
+                this.mesh.position.y = Math.sin(time) * 0.1;
+                this.mesh.rotation.y += 0.01;
+            };
+
+            ready = () => this.initMesh();
+        }
+
+        class DarkPlanet extends Group {
+            constructor() {
+                super();
+
+                this.position.x = -2.5;
+
+                // 25 degree tilt like Mars
+                this.rotation.z = MathUtils.degToRad(25);
+            }
+
+            async initMesh() {
+                const { anisotropy, loadTexture } = WorldController;
+
+                const geometry = new SphereGeometry(0.6, 40, 20);
+
+                // Second set of UVs for aoMap and lightMap
+                // https://threejs.org/docs/#api/en/materials/MeshStandardMaterial.aoMap
+                geometry.attributes.uv1 = geometry.attributes.uv;
+
+                // Textures
+                const [map, normalMap, ormMap] = await Promise.all([
+                    // loadTexture('../assets/textures/uv.jpg'),
+                    loadTexture('../assets/textures/pbr/pitted_metal_basecolor.jpg'),
+                    loadTexture('../assets/textures/pbr/pitted_metal_normal.jpg'),
+                    // https://occlusion-roughness-metalness.glitch.me/
+                    loadTexture('../assets/textures/pbr/pitted_metal_orm.jpg')
+                ]);
+
+                map.anisotropy = anisotropy;
+                map.wrapS = RepeatWrapping;
+                map.wrapT = RepeatWrapping;
+                map.repeat.set(2, 1);
+
+                normalMap.anisotropy = anisotropy;
+                normalMap.wrapS = RepeatWrapping;
+                normalMap.wrapT = RepeatWrapping;
+                normalMap.repeat.set(2, 1);
+
+                ormMap.anisotropy = anisotropy;
+                ormMap.wrapS = RepeatWrapping;
+                ormMap.wrapT = RepeatWrapping;
+                ormMap.repeat.set(2, 1);
+
+                const material = new MeshStandardMaterial({
+                    color: new Color().offsetHSL(0, 0, -0.65),
+                    metalness: 0.7,
+                    roughness: 3,
+                    map,
+                    metalnessMap: ormMap,
+                    roughnessMap: ormMap,
+                    aoMap: ormMap,
+                    aoMapIntensity: 1,
+                    normalMap,
+                    normalScale: new Vector2(3, 3),
                     polygonOffset: true,
                     polygonOffsetFactor: 1,
                     polygonOffsetUnits: 1
@@ -436,8 +455,20 @@
                 wireframe.layers.set(layers.hologram);
                 glowMesh.add(wireframe);
 
+                this.mesh = mesh;
+                this.glowMesh = glowMesh;
                 this.uniforms = uniforms;
             }
+
+            // Public methods
+
+            update = () => {
+                // Counter clockwise rotation
+                this.mesh.rotation.y += 0.005;
+
+                // Update glow mesh
+                this.mesh.matrix.decompose(this.glowMesh.position, this.glowMesh.quaternion, this.glowMesh.scale);
+            };
 
             ready = () => this.initMesh();
         }
@@ -452,22 +483,28 @@
             }
 
             initViews() {
-                this.pittedMetalSphere = new PittedMetalSphere();
-                this.add(this.pittedMetalSphere);
-
                 this.darkPlanet = new DarkPlanet();
                 this.add(this.darkPlanet);
 
-                this.polishedConcreteSphere = new PolishedConcreteSphere();
-                this.add(this.polishedConcreteSphere);
+                this.floatingCrystal = new FloatingCrystal();
+                this.add(this.floatingCrystal);
+
+                this.abstractCube = new AbstractCube();
+                this.add(this.abstractCube);
             }
 
             // Public methods
 
+            update = time => {
+                this.darkPlanet.update(time);
+                this.floatingCrystal.update(time);
+                this.abstractCube.update(time);
+            };
+
             ready = () => Promise.all([
-                this.pittedMetalSphere.ready(),
                 this.darkPlanet.ready(),
-                this.polishedConcreteSphere.ready()
+                this.floatingCrystal.ready(),
+                this.abstractCube.ready()
             ]);
         }
 
@@ -477,6 +514,17 @@
             }
 
             // Public methods
+
+            static resize = () => {
+            };
+
+            static update = time => {
+                if (!this.view.visible) {
+                    return;
+                }
+
+                this.view.update(time);
+            };
 
             static animateIn = () => {
                 this.view.visible = true;
@@ -496,7 +544,7 @@
             static initPanel() {
                 const { hBlurMaterial, vBlurMaterial, videoGlitchMaterial, luminosityMaterial, bloomCompositeMaterial, caMaterial } = RenderManager;
 
-                const { pittedMetalSphere, polishedConcreteSphere } = this.view;
+                const { darkPlanet, abstractCube } = this.view;
 
                 const items = [
                     {
@@ -511,10 +559,10 @@
                         min: 0,
                         max: 3,
                         step: 0.01,
-                        value: pittedMetalSphere.uniforms.fresnelPower.value,
+                        value: darkPlanet.uniforms.fresnelPower.value,
                         callback: value => {
-                            pittedMetalSphere.uniforms.fresnelPower.value = value;
-                            polishedConcreteSphere.uniforms.fresnelPower.value = value;
+                            darkPlanet.uniforms.fresnelPower.value = value;
+                            abstractCube.uniforms.fresnelPower.value = value;
                         }
                     },
                     {
@@ -685,7 +733,7 @@
                 this.blurResolutionScale = 0.25;
                 this.blurAmount = 1.5;
 
-                // Bloom
+                // Unreal bloom
                 this.luminosityThreshold = 0.1;
                 this.luminositySmoothing = 1;
                 this.bloomStrength = 0.3;
@@ -775,7 +823,7 @@
                     this.blurMaterials.push(new UnrealBloomBlurMaterial(kernelSizeArray[i]));
                 }
 
-                // Bloom composite material
+                // Unreal bloom composite material
                 this.bloomCompositeMaterial = new BloomCompositeMaterial();
                 this.bloomCompositeMaterial.uniforms.tBlur1.value = this.renderTargetsVertical[0].texture;
                 this.bloomCompositeMaterial.uniforms.tBlur2.value = this.renderTargetsVertical[1].texture;
@@ -834,8 +882,8 @@
                 this.vBlurMaterial.uniforms.uResolution.value.set(blurWidth, blurHeight);
 
                 // Unreal bloom
-                width = MathUtils.floorPowerOfTwo(width) / 2;
-                height = MathUtils.floorPowerOfTwo(height) / 2;
+                width = Math.round(width / 2);
+                height = Math.round(height / 2);
 
                 this.renderTargetBright.setSize(width, height);
 
@@ -845,8 +893,8 @@
 
                     this.blurMaterials[i].uniforms.uResolution.value.set(width, height);
 
-                    width /= 2;
-                    height /= 2;
+                    width = Math.round(width / 2);
+                    height = Math.round(height / 2);
                 }
             };
 
@@ -922,6 +970,7 @@
                 scene.background = currentBackground;
                 renderer.setClearColor(this.currentClearColor, currentClearAlpha);
 
+                // Two pass Gaussian blur (horizontal and vertical)
                 this.hBlurMaterial.uniforms.tMap.value = renderTargetBlurA.texture;
                 this.screen.material = this.hBlurMaterial;
                 renderer.setRenderTarget(renderTargetBlurB);
@@ -934,6 +983,7 @@
                 renderer.clear();
                 renderer.render(this.screen, this.screenCamera);
 
+                // Video glitch pass
                 this.videoGlitchMaterial.uniforms.tMap.value = renderTargetBlurA.texture;
                 this.screen.material = this.videoGlitchMaterial;
                 renderer.setRenderTarget(renderTargetBlurB);
@@ -1017,11 +1067,11 @@
 
                 // 3D scene
                 this.scene = new Scene();
-                this.scene.background = new Color(0x060606);
+                this.scene.background = new Color(colors.backgroundColor);
                 this.camera = new PerspectiveCamera(30);
                 this.camera.near = 0.5;
                 this.camera.far = 40;
-                this.camera.position.z = 12;
+                this.camera.position.set(0, 6, 8);
                 this.camera.lookAt(this.scene.position);
 
                 // Global geometries
@@ -1042,7 +1092,7 @@
                 const hemisphereLight = new HemisphereLight(0x606060, 0x404040, 3);
 
                 const directionalLight = new DirectionalLight(0xffffff, 2);
-                directionalLight.position.set(0.6, 0.5, 1);
+                directionalLight.position.set(5, 5, 5);
 
                 this.scene.add(hemisphereLight);
                 this.scene.add(directionalLight);
@@ -1068,9 +1118,8 @@
             }
 
             static initControls() {
-                this.controls = new OrbitControls(this.camera, this.renderer.domElement);
+                this.controls = new MapControls(this.camera, this.renderer.domElement);
                 this.controls.enableDamping = true;
-                // this.controls.enableZoom = false;
             }
 
             static addListeners() {
@@ -1088,12 +1137,6 @@
             static resize = (width, height, dpr) => {
                 this.camera.aspect = width / height;
                 this.camera.updateProjectionMatrix();
-
-                if (width < height) {
-                    this.camera.position.z = 14;
-                } else {
-                    this.camera.position.z = 12;
-                }
 
                 width = Math.round(width * dpr);
                 height = Math.round(height * dpr);
@@ -1190,6 +1233,7 @@
 
             static onUpdate = (time, delta, frame) => {
                 WorldController.update(time, delta, frame);
+                SceneController.update(time);
                 RenderManager.update(time, delta, frame);
                 this.ui.update();
             };

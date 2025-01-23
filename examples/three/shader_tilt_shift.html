@@ -218,7 +218,7 @@
             }
 
             static initPanel() {
-                const { hBlurMaterial, vBlurMaterial, luminosityMaterial, bloomCompositeMaterial } = RenderManager;
+                const { hTiltShiftMaterial, vTiltShiftMaterial, luminosityMaterial, bloomCompositeMaterial } = RenderManager;
 
                 const items = [
                     {
@@ -233,10 +233,10 @@
                         min: 0,
                         max: 10,
                         step: 0.1,
-                        value: hBlurMaterial.uniforms.uBlurAmount.value,
+                        value: hTiltShiftMaterial.uniforms.uBlurAmount.value,
                         callback: value => {
-                            hBlurMaterial.uniforms.uBlurAmount.value = value;
-                            vBlurMaterial.uniforms.uBlurAmount.value = value;
+                            hTiltShiftMaterial.uniforms.uBlurAmount.value = value;
+                            vTiltShiftMaterial.uniforms.uBlurAmount.value = value;
                         }
                     },
                     {
@@ -245,10 +245,10 @@
                         min: 0,
                         max: 1,
                         step: 0.01,
-                        value: hBlurMaterial.uniforms.uFocus.value,
+                        value: hTiltShiftMaterial.uniforms.uFocus.value,
                         callback: value => {
-                            hBlurMaterial.uniforms.uFocus.value = value;
-                            vBlurMaterial.uniforms.uFocus.value = value;
+                            hTiltShiftMaterial.uniforms.uFocus.value = value;
+                            vTiltShiftMaterial.uniforms.uFocus.value = value;
                         }
                     },
                     {
@@ -318,10 +318,10 @@
                 this.camera = camera;
                 this.dust = dust;
 
-                // Blur
+                // Gaussian blur
                 this.blurAmount = 7;
 
-                // Bloom
+                // Unreal bloom
                 this.luminosityThreshold = 0.1;
                 this.luminositySmoothing = 1;
                 this.bloomStrength = 0.3;
@@ -364,14 +364,14 @@
                 this.renderTargetA.depthBuffer = true;
                 this.renderTargetA.depthTexture = new DepthTexture();
 
-                // Gaussian blur materials
-                this.hBlurMaterial = new TiltShiftMaterial(BlurDirectionX);
-                this.hBlurMaterial.uniforms.uBlurAmount.value = this.blurAmount;
-                this.hBlurMaterial.uniforms.uResolution = resolution;
+                // Tilt-shift Gaussian blur materials
+                this.hTiltShiftMaterial = new TiltShiftMaterial(BlurDirectionX);
+                this.hTiltShiftMaterial.uniforms.uBlurAmount.value = this.blurAmount;
+                this.hTiltShiftMaterial.uniforms.uResolution = resolution;
 
-                this.vBlurMaterial = new TiltShiftMaterial(BlurDirectionY);
-                this.vBlurMaterial.uniforms.uBlurAmount.value = this.blurAmount;
-                this.vBlurMaterial.uniforms.uResolution = resolution;
+                this.vTiltShiftMaterial = new TiltShiftMaterial(BlurDirectionY);
+                this.vTiltShiftMaterial.uniforms.uBlurAmount.value = this.blurAmount;
+                this.vTiltShiftMaterial.uniforms.uResolution = resolution;
 
                 // Luminosity high pass material
                 this.luminosityMaterial = new LuminosityMaterial();
@@ -387,7 +387,7 @@
                     this.blurMaterials.push(new UnrealBloomBlurMaterial(kernelSizeArray[i]));
                 }
 
-                // Bloom composite material
+                // Unreal bloom composite material
                 this.bloomCompositeMaterial = new BloomCompositeMaterial();
                 this.bloomCompositeMaterial.uniforms.tBlur1.value = this.renderTargetsVertical[0].texture;
                 this.bloomCompositeMaterial.uniforms.tBlur2.value = this.renderTargetsVertical[1].texture;
@@ -433,8 +433,8 @@
                 this.renderTargetB.setSize(width, height);
 
                 // Unreal bloom
-                width = MathUtils.floorPowerOfTwo(width) / 2;
-                height = MathUtils.floorPowerOfTwo(height) / 2;
+                width = Math.round(width / 2);
+                height = Math.round(height / 2);
 
                 this.renderTargetBright.setSize(width, height);
 
@@ -444,8 +444,8 @@
 
                     this.blurMaterials[i].uniforms.uResolution.value.set(width, height);
 
-                    width /= 2;
-                    height /= 2;
+                    width = Math.round(width / 2);
+                    height = Math.round(height / 2);
                 }
             };
 
@@ -516,15 +516,15 @@
                 renderer.setRenderTarget(renderTargetB);
                 renderer.render(this.dustScene, camera);
 
-                // Two pass Gaussian blur (horizontal and vertical)
-                this.hBlurMaterial.uniforms.tMap.value = renderTargetB.texture;
-                this.screen.material = this.hBlurMaterial;
+                // Tilt-shift pass Gaussian blur (horizontal and vertical)
+                this.hTiltShiftMaterial.uniforms.tMap.value = renderTargetB.texture;
+                this.screen.material = this.hTiltShiftMaterial;
                 renderer.setRenderTarget(renderTargetA);
                 renderer.clear();
                 renderer.render(this.screen, this.screenCamera);
 
-                this.vBlurMaterial.uniforms.tMap.value = renderTargetA.texture;
-                this.screen.material = this.vBlurMaterial;
+                this.vTiltShiftMaterial.uniforms.tMap.value = renderTargetA.texture;
+                this.screen.material = this.vTiltShiftMaterial;
                 renderer.setRenderTarget(renderTargetB);
                 renderer.clear();
                 renderer.render(this.screen, this.screenCamera);

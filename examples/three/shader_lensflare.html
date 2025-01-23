@@ -556,7 +556,7 @@
                 this.blurResolutionScale = 0.25;
                 this.blurAmount = 2.5;
 
-                // Bloom
+                // Unreal bloom
                 this.luminosityThreshold = 0.1;
                 this.luminositySmoothing = 1;
                 this.bloomStrength = 0.3;
@@ -635,7 +635,7 @@
                     this.blurMaterials.push(new UnrealBloomBlurMaterial(kernelSizeArray[i]));
                 }
 
-                // Bloom composite material
+                // Unreal bloom composite material
                 this.bloomCompositeMaterial = new BloomCompositeMaterial();
                 this.bloomCompositeMaterial.uniforms.tBlur1.value = this.renderTargetsVertical[0].texture;
                 this.bloomCompositeMaterial.uniforms.tBlur2.value = this.renderTargetsVertical[1].texture;
@@ -690,8 +690,8 @@
                 this.vBlurMaterial.uniforms.uResolution.value.set(blurWidth, blurHeight);
 
                 // Unreal bloom
-                width = MathUtils.floorPowerOfTwo(width) / 2;
-                height = MathUtils.floorPowerOfTwo(height) / 2;
+                width = Math.round(width / 2);
+                height = Math.round(height / 2);
 
                 this.renderTargetBright.setSize(width, height);
 
@@ -701,8 +701,8 @@
 
                     this.blurMaterials[i].uniforms.uResolution.value.set(width, height);
 
-                    width /= 2;
-                    height /= 2;
+                    width = Math.round(width / 2);
+                    height = Math.round(height / 2);
                 }
             };
 
@@ -756,6 +756,7 @@
                 scene.background = currentBackground;
                 renderer.setClearColor(this.currentClearColor, currentClearAlpha);
 
+                // Two pass Gaussian blur (horizontal and vertical)
                 this.hBlurMaterial.uniforms.tMap.value = renderTargetBlurA.texture;
                 this.screen.material = this.hBlurMaterial;
                 renderer.setRenderTarget(renderTargetBlurB);
@@ -768,6 +769,7 @@
                 renderer.clear();
                 renderer.render(this.screen, this.screenCamera);
 
+                // Lens flare pass
                 this.lensflareMaterial.uniforms.tMap.value = renderTargetBlurA.texture;
                 this.setLightPosition();
                 this.screen.material = this.lensflareMaterial;
@@ -828,7 +830,7 @@
                 this.lookAt = new Vector3(0, 0, -2);
                 this.origin = new Vector3();
                 this.target = new Vector3();
-                this.targetXY = new Vector2(5, 0.4);
+                this.targetXY = new Vector2(2, 0.4);
                 this.origin.copy(this.camera.position);
 
                 this.lerpSpeed = 0.02;

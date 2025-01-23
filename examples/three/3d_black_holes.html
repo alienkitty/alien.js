@@ -84,8 +84,7 @@
 
                             FragColor = texture(tScene, uv);
 
-                            vec2 dir = 0.5 - vUv;
-                            float angle = atan(dir.y, dir.x);
+                            float angle = length(vUv - 0.5);
                             float amount = 0.001 * uBloomDistortion;
 
                             FragColor.rgb += getRGB(tBloom, uv, angle, amount).rgb;
@@ -732,7 +731,7 @@
                 // Fluid simulation
                 this.lastMouse = new Vector2();
 
-                // Bloom
+                // Unreal bloom
                 this.luminosityThreshold = 0.1;
                 this.luminositySmoothing = 1;
                 this.bloomStrength = 0.3;
@@ -841,7 +840,7 @@
                     this.blurMaterials.push(new UnrealBloomBlurMaterial(kernelSizeArray[i]));
                 }
 
-                // Bloom composite material
+                // Unreal bloom composite material
                 this.bloomCompositeMaterial = new BloomCompositeMaterial();
                 this.bloomCompositeMaterial.uniforms.tBlur1.value = this.renderTargetsVertical[0].texture;
                 this.bloomCompositeMaterial.uniforms.tBlur2.value = this.renderTargetsVertical[1].texture;
@@ -967,8 +966,8 @@
                 this.vBlurMaterial.uniforms.uResolution.value.set(blurWidth, blurHeight);
 
                 // Unreal bloom
-                width = MathUtils.floorPowerOfTwo(width) / 2;
-                height = MathUtils.floorPowerOfTwo(height) / 2;
+                width = Math.round(width / 2);
+                height = Math.round(height / 2);
 
                 this.renderTargetBright.setSize(width, height);
 
@@ -978,8 +977,8 @@
 
                     this.blurMaterials[i].uniforms.uResolution.value.set(width, height);
 
-                    width /= 2;
-                    height /= 2;
+                    width = Math.round(width / 2);
+                    height = Math.round(height / 2);
                 }
             };
 
@@ -1074,6 +1073,7 @@
                 renderer.clear();
                 renderer.render(this.screen, this.screenCamera);
 
+                // Six pass Gaussian blur (horizontal and vertical)
                 this.hBlurMaterial.uniforms.tMap.value = renderTargetBlurB.texture;
                 this.screen.material = this.hBlurMaterial;
                 renderer.setRenderTarget(renderTargetBlurA);
@@ -1110,6 +1110,7 @@
                 renderer.clear();
                 renderer.render(this.screen, this.screenCamera);
 
+                // Volumetric light pass
                 this.vlMaterial.uniforms.tMap.value = renderTargetBlurB.texture;
                 this.setLightPosition();
                 this.screen.material = this.vlMaterial;
@@ -1310,9 +1311,9 @@
 
             static async initEnvironment() {
                 this.scene.environment = await this.loadEnvironmentTexture('../assets/textures/env/jewelry_black_contrast.jpg');
-                this.scene.environmentIntensity = 1.2;
                 this.scene.environmentRotation.x = MathUtils.degToRad(-45);
                 this.scene.environmentRotation.y = MathUtils.degToRad(-25);
+                this.scene.environmentIntensity = 1.2;
             }
 
             static initControls() {

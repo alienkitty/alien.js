@@ -98,6 +98,7 @@ const program = new FXAAProgram(gl);
 [camera wobble](https://alien.js.org/examples/three/3d_camera_wobble.html)  
 [input manager](https://alien.js.org/examples/three/3d_input_manager.html)  
 [panel tracking](https://alien.js.org/examples/three/3d_panel_tracking.html) ([debug](https://alien.js.org/examples/three/3d_panel_tracking.html?debug))  
+[graph tracking](https://alien.js.org/examples/three/3d_graph_tracking.html) ([debug](https://alien.js.org/examples/three/3d_graph_tracking.html?debug))  
 [backdrop](https://alien.js.org/examples/three/3d_backdrop.html)  
 [infinite stars](https://alien.js.org/examples/three/3d_infinite_stars_rgbshift.html) (RGB shift, [debug](https://alien.js.org/examples/three/3d_infinite_stars_rgbshift.html?debug))  
 [black holes](https://alien.js.org/examples/three/3d_black_holes.html) (per-object motion blur, volumetric light and fluid sim, [debug](https://alien.js.org/examples/three/3d_black_holes.html?debug), [orbit controls](https://alien.js.org/examples/three/3d_black_holes.html?orbit))  

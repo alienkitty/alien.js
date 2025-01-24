@@ -874,9 +874,9 @@
                         type: 'slider',
                         name: 'Smear',
                         min: 0,
-                        max: isDebug ? 1000 : 4,
-                        step: isDebug ? 1 : 0.02,
-                        value: isDebug ? 1000 : drawBuffers.smearIntensity,
+                        max: 4,
+                        step: 0.02,
+                        value: drawBuffers.smearIntensity,
                         callback: value => {
                             drawBuffers.smearIntensity = value;
                         }
@@ -1132,7 +1132,7 @@
 
                 // Debug
                 DisplayOptions.Light = 8;
-                this.display = isDebug ? DisplayOptions.Velocity : DisplayOptions.Default;
+                this.display = DisplayOptions.Default;
 
                 this.enabled = true;
 

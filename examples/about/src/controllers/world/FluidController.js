@@ -134,9 +134,7 @@ export class FluidController {
                     pointer.tracker.setData(Data.getReticleData(pointer.id));
                     pointer.info.setData(Data.getUserData(pointer.id));
                 } else {
-                    const id = pointer.id;
-                    const tracker = pointer.tracker;
-                    const info = pointer.info;
+                    const { id, tracker, info } = pointer;
 
                     tracker.animateOut(() => {
                         this.list.remove(pointer);

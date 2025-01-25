@@ -108,7 +108,7 @@
                     new PlaneGeometry(),
                     material
                 );
-                mesh.renderOrder = -1;
+                mesh.renderOrder = -1; // Render first (default is 0)
                 this.add(mesh);
 
                 this.material = material;

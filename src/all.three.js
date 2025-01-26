@@ -84,6 +84,7 @@ export { GraphMarker } from '@alienkitty/space.js/src/ui/GraphMarker.js';
 export { RadialGraph } from '@alienkitty/space.js/src/ui/RadialGraph.js';
 export { RadialGraphSegments } from '@alienkitty/space.js/src/ui/RadialGraphSegments.js';
 export { RadialGraphCanvas } from '@alienkitty/space.js/src/ui/RadialGraphCanvas.js';
+export { RadialGraphTracker } from '@alienkitty/space.js/src/ui/RadialGraphTracker.js';
 export { Meter } from '@alienkitty/space.js/src/ui/Meter.js';
 export { LineCanvas } from '@alienkitty/space.js/src/ui/LineCanvas.js';
 export { Reticle } from '@alienkitty/space.js/src/ui/Reticle.js';

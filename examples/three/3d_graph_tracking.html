@@ -11,13 +11,162 @@
     <link rel="stylesheet" href="../assets/css/style.css">
 
     <script type="module">
-        import { BloomCompositeMaterial, Color, ColorManagement, DirectionalLight, EnvironmentTextureLoader, Group, HemisphereLight, IcosahedronGeometry, LinearSRGBColorSpace, LuminosityMaterial, MapControls, MathUtils, Mesh, MeshStandardMaterial, OrthographicCamera, PanelItem, PerspectiveCamera, Point3D, RadialGraphCanvas, RepeatWrapping, Scene, SceneCompositeDistortionMaterial, TextureLoader, UI, UnrealBloomBlurMaterial, Vector2, WebGLRenderTarget, WebGLRenderer, getFullscreenTriangle, ticker } from '../../build/alien.three.js';
+        import { BloomCompositeMaterial, BoxGeometry, Color, ColorManagement, DirectionalLight, EnvironmentTextureLoader, Group, HemisphereLight, IcosahedronGeometry, LinearSRGBColorSpace, LuminosityMaterial, MapControls, MathUtils, Mesh, MeshStandardMaterial, OctahedronGeometry, OrthographicCamera, PanelItem, PerspectiveCamera, Point3D, RadialGraphCanvas, RepeatWrapping, Scene, SceneCompositeDistortionMaterial, TextureLoader, UI, UnrealBloomBlurMaterial, Vector2, Vector3, WebGLRenderTarget, WebGLRenderer, getFullscreenTriangle, ticker } from '../../build/alien.three.js';
 
         const isDebug = /[?&]debug/.test(location.search);
+
+        class AbstractCube extends Group {
+            constructor() {
+                super();
+
+                this.position.x = 2.5;
+            }
+
+            async initMesh() {
+                const { anisotropy, loadTexture } = WorldController;
+
+                const geometry = new BoxGeometry();
+
+                // Second set of UVs for aoMap and lightMap
+                // https://threejs.org/docs/#api/en/materials/MeshStandardMaterial.aoMap
+                geometry.attributes.uv1 = geometry.attributes.uv;
+
+                // Textures
+                const [map, normalMap, ormMap] = await Promise.all([
+                    // loadTexture('../assets/textures/uv.jpg'),
+                    loadTexture('../assets/textures/pbr/pitted_metal_basecolor.jpg'),
+                    loadTexture('../assets/textures/pbr/pitted_metal_normal.jpg'),
+                    // https://occlusion-roughness-metalness.glitch.me/
+                    loadTexture('../assets/textures/pbr/pitted_metal_orm.jpg')
+                ]);
+
+                map.anisotropy = anisotropy;
+                normalMap.anisotropy = anisotropy;
+                ormMap.anisotropy = anisotropy;
+
+                const material = new MeshStandardMaterial({
+                    name: 'Abstract Cube',
+                    color: new Color().offsetHSL(0, 0, -0.65),
+                    metalness: 0.7,
+                    roughness: 0.7,
+                    map,
+                    metalnessMap: ormMap,
+                    roughnessMap: ormMap,
+                    aoMap: ormMap,
+                    aoMapIntensity: 1,
+                    normalMap,
+                    normalScale: new Vector2(1, 1),
+                    flatShading: true,
+                    polygonOffset: true,
+                    polygonOffsetFactor: 1,
+                    polygonOffsetUnits: 1
+                });
+
+                // Second channel for aoMap and lightMap
+                // https://threejs.org/docs/#api/en/materials/MeshStandardMaterial.aoMap
+                material.aoMap.channel = 1;
+
+                const mesh = new Mesh(geometry, material);
+                mesh.rotation.x = MathUtils.degToRad(-45);
+                mesh.rotation.z = MathUtils.degToRad(-45);
+                this.add(mesh);
+
+                this.mesh = mesh;
+            }
+
+            // Public methods
+
+            update = () => {
+                this.mesh.rotation.y -= 0.005;
+            };
+
+            ready = () => this.initMesh();
+        }
+
+        class FloatingCrystal extends Group {
+            constructor() {
+                super();
+
+                this.position.y = 0.7;
+            }
+
+            async initMesh() {
+                const { anisotropy, loadTexture } = WorldController;
+
+                const geometry = new OctahedronGeometry();
+
+                // Second set of UVs for aoMap and lightMap
+                // https://threejs.org/docs/#api/en/materials/MeshStandardMaterial.aoMap
+                geometry.attributes.uv1 = geometry.attributes.uv;
+
+                // Textures
+                const [map, normalMap, ormMap] = await Promise.all([
+                    // loadTexture('../assets/textures/uv.jpg'),
+                    loadTexture('../assets/textures/pbr/pitted_metal_basecolor.jpg'),
+                    loadTexture('../assets/textures/pbr/pitted_metal_normal.jpg'),
+                    // https://occlusion-roughness-metalness.glitch.me/
+                    loadTexture('../assets/textures/pbr/pitted_metal_orm.jpg')
+                ]);
+
+                map.anisotropy = anisotropy;
+                map.wrapS = RepeatWrapping;
+                map.wrapT = RepeatWrapping;
+                map.repeat.set(2, 2);
+
+                normalMap.anisotropy = anisotropy;
+                normalMap.wrapS = RepeatWrapping;
+                normalMap.wrapT = RepeatWrapping;
+                normalMap.repeat.set(2, 2);
+
+                ormMap.anisotropy = anisotropy;
+                ormMap.wrapS = RepeatWrapping;
+                ormMap.wrapT = RepeatWrapping;
+                ormMap.repeat.set(2, 2);
+
+                const material = new MeshStandardMaterial({
+                    name: 'Floating Crystal',
+                    color: new Color().offsetHSL(0, 0, -0.65),
+                    metalness: 0.7,
+                    roughness: 0.7,
+                    map,
+                    metalnessMap: ormMap,
+                    roughnessMap: ormMap,
+                    aoMap: ormMap,
+                    aoMapIntensity: 1,
+                    normalMap,
+                    normalScale: new Vector2(1, 1),
+                    flatShading: true,
+                    polygonOffset: true,
+                    polygonOffsetFactor: 1,
+                    polygonOffsetUnits: 1
+                });
+
+                // Second channel for aoMap and lightMap
+                // https://threejs.org/docs/#api/en/materials/MeshStandardMaterial.aoMap
+                material.aoMap.channel = 1;
+
+                const mesh = new Mesh(geometry, material);
+                mesh.scale.set(0.5, 1, 0.5);
+                this.add(mesh);
+
+                this.mesh = mesh;
+            }
+
+            // Public methods
+
+            update = time => {
+                this.mesh.position.y = Math.sin(time) * 0.1;
+                this.mesh.rotation.y += 0.01;
+            };
+
+            ready = () => this.initMesh();
+        }
 
         class DarkPlanet extends Group {
             constructor() {
                 super();
+
+                this.position.x = -2.5;
 
                 // 25 degree tilt like Mars
                 this.rotation.z = MathUtils.degToRad(25);
@@ -105,6 +254,12 @@
             initViews() {
                 this.darkPlanet = new DarkPlanet();
                 this.add(this.darkPlanet);
+
+                this.floatingCrystal = new FloatingCrystal();
+                this.add(this.floatingCrystal);
+
+                this.abstractCube = new AbstractCube();
+                this.add(this.abstractCube);
             }
 
             // Public methods
@@ -112,11 +267,17 @@
             resize = () => {
             };
 
-            update = () => {
-                this.darkPlanet.update();
+            update = time => {
+                this.darkPlanet.update(time);
+                this.floatingCrystal.update(time);
+                this.abstractCube.update(time);
             };
 
-            ready = () => this.darkPlanet.ready();
+            ready = () => Promise.all([
+                this.darkPlanet.ready(),
+                this.floatingCrystal.ready(),
+                this.abstractCube.ready()
+            ]);
         }
 
         class SceneController {
@@ -129,12 +290,12 @@
             static resize = () => {
             };
 
-            static update = () => {
+            static update = time => {
                 if (!this.view.visible) {
                     return;
                 }
 
-                this.view.update();
+                this.view.update(time);
             };
 
             static animateIn = () => {
@@ -152,9 +313,9 @@
             }
 
             static initPanel() {
-                const { darkPlanet } = this.view;
+                const { darkPlanet, floatingCrystal, abstractCube } = this.view;
 
-                const objects = [darkPlanet];
+                const objects = [darkPlanet, floatingCrystal, abstractCube];
 
                 objects.forEach(object => {
                     const graph = new RadialGraphCanvas({
@@ -164,7 +325,10 @@
                         lookupPrecision: 200
                     });
 
-                    object.point = new Point3D(object.mesh, { graph });
+                    object.point = new Point3D(object.mesh, {
+                        type: 'localhost',
+                        graph
+                    });
                     object.add(object.point);
 
                     const items = [
@@ -173,20 +337,9 @@
                         },
                         {
                             type: 'link',
-                            value: 'Zoom in',
+                            value: 'Update',
                             callback: () => {
-                            }
-                        },
-                        {
-                            type: 'link',
-                            value: 'Inspect',
-                            callback: () => {
-                            }
-                        },
-                        {
-                            type: 'link',
-                            value: 'Details',
-                            callback: () => {
+                                graph.setArray(Array.from({ length: 10 }, () => Math.random()));
                             }
                         }
                     ];
@@ -195,6 +348,10 @@
                         object.point.addPanel(new PanelItem(data));
                     });
                 });
+
+                // Shrink tracker mesh to better match the visual size of the object
+                floatingCrystal.point.mesh.scale.multiply(new Vector3(0.6, 1, 0.6));
+                abstractCube.point.mesh.scale.multiplyScalar(0.7);
             }
         }
 
@@ -318,7 +475,7 @@
                 this.luminositySmoothing = 1;
                 this.bloomStrength = 0.3;
                 this.bloomRadius = 0.2;
-                this.bloomDistortion = 1.5;
+                this.bloomDistortion = 1.2;
 
                 this.enabled = true;
 
@@ -661,7 +818,7 @@
 
             static onUpdate = (time, delta, frame) => {
                 WorldController.update(time, delta, frame);
-                SceneController.update();
+                SceneController.update(time);
                 RenderManager.update(time, delta, frame);
                 PanelController.update(time);
                 this.ui.update();

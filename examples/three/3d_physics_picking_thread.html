@@ -736,6 +736,7 @@
                             );
                             mesh.material.depthTest = false;
                             mesh.material.depthWrite = false;
+                            mesh.material.transparent = true;
                             mesh.position.copy(this.view.cube.position);
                             mesh.quaternion.copy(this.view.cube.quaternion);
                             mesh.updateMatrixWorld();
@@ -909,7 +910,7 @@
                 this.luminositySmoothing = 1;
                 this.bloomStrength = 0.3;
                 this.bloomRadius = 0.2;
-                this.bloomDistortion = 1.5;
+                this.bloomDistortion = 1.2;
 
                 this.enabled = true;
 
@@ -1103,7 +1104,7 @@
 
                 this.dragPlane = new Mesh(quad, material);
                 this.dragPlane.scale.multiplyScalar(200);
-                this.dragPlane.layers.set(layers.picking);
+                this.dragPlane.layers.enable(layers.picking);
             }
 
             static addListeners() {

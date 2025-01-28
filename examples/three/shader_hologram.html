@@ -11,7 +11,7 @@
     <link rel="stylesheet" href="../assets/css/style.css">
 
     <script type="module">
-        import { AdditiveBlending, BloomCompositeMaterial, BlurMaterial, BoxGeometry, ChromaticAberrationMaterial, Color, ColorManagement, DirectionalLight, EdgesGeometry, EnvironmentTextureLoader, GLSL3, Group, HemisphereLight, ImageBitmapLoaderThread, LineBasicMaterial, LineSegments, LinearSRGBColorSpace, LuminosityMaterial, MapControls, MathUtils, Mesh, MeshBasicMaterial, MeshStandardMaterial, NoBlending, OctahedronGeometry, OrthographicCamera, PanelItem, PerspectiveCamera, RawShaderMaterial, RepeatWrapping, Scene, SphereGeometry, TextureLoader, UI, UnrealBloomBlurMaterial, Vector2, VideoGlitchMaterial, WebGLRenderTarget, WebGLRenderer, getFullscreenTriangle, ticker } from '../../build/alien.three.js';
+        import { AdditiveBlending, BloomCompositeMaterial, BlurMaterial, BoxGeometry, ChromaticAberrationMaterial, Color, ColorManagement, DirectionalLight, EdgesGeometry, EnvironmentTextureLoader, GLSL3, Group, HemisphereLight, LineBasicMaterial, LineSegments, LinearSRGBColorSpace, LuminosityMaterial, MapControls, MathUtils, Mesh, MeshBasicMaterial, MeshStandardMaterial, NoBlending, OctahedronGeometry, OrthographicCamera, PanelItem, PerspectiveCamera, RawShaderMaterial, RepeatWrapping, Scene, SphereGeometry, TextureLoader, UI, UnrealBloomBlurMaterial, Vector2, VideoGlitchMaterial, WebGLRenderTarget, WebGLRenderer, getFullscreenTriangle, ticker } from '../../build/alien.three.js';
 
         // Based on https://codepen.io/peterhry/pen/egzjGR
 
@@ -1169,7 +1169,6 @@
 
         class App {
             static async init() {
-                this.initThread();
                 this.initWorld();
                 this.initViews();
                 this.initControllers();
@@ -1183,10 +1182,6 @@
                 this.initPanel();
 
                 SceneController.animateIn();
-            }
-
-            static initThread() {
-                ImageBitmapLoaderThread.init();
             }
 
             static initWorld() {

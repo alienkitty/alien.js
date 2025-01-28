@@ -1565,7 +1565,6 @@ class WorldController {
         this.textureLoader.setPath(assetPath);
 
         this.environmentLoader = new EnvironmentTextureLoader(this.renderer);
-        this.environmentLoader.cache = true;
         this.environmentLoader.setPath(assetPath);
     }
 

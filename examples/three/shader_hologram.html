@@ -11,7 +11,7 @@
     <link rel="stylesheet" href="../assets/css/style.css">
 
     <script type="module">
-        import { AdditiveBlending, BloomCompositeMaterial, BlurMaterial, BoxGeometry, ChromaticAberrationMaterial, Color, ColorManagement, DirectionalLight, EdgesGeometry, EnvironmentTextureLoader, GLSL3, Group, HemisphereLight, LineBasicMaterial, LineSegments, LinearSRGBColorSpace, LuminosityMaterial, MapControls, MathUtils, Mesh, MeshBasicMaterial, MeshStandardMaterial, NoBlending, OctahedronGeometry, OrthographicCamera, Panel, PanelItem, PerspectiveCamera, Point3D, RawShaderMaterial, RepeatWrapping, Scene, SphereGeometry, TextureLoader, UI, UnrealBloomBlurMaterial, Vector2, Vector3, VideoGlitchMaterial, WebGLRenderTarget, WebGLRenderer, getFullscreenTriangle, getKeyByValue, ticker } from '../../build/alien.three.js';
+        import { AdditiveBlending, BloomCompositeMaterial, BlurMaterial, BoxGeometry, ChromaticAberrationMaterial, Color, ColorManagement, DirectionalLight, EdgesGeometry, EnvironmentTextureLoader, GLSL3, Group, HemisphereLight, LineBasicMaterial, LineSegments, LinearSRGBColorSpace, LuminosityMaterial, MapControls, MathUtils, Mesh, MeshBasicMaterial, MeshStandardMaterial, NoBlending, OctahedronGeometry, OrthographicCamera, Panel, PanelItem, PerspectiveCamera, Point3D, RawShaderMaterial, RepeatWrapping, Scene, SphereGeometry, TextureLoader, UI, UnrealBloomBlurMaterial, Vector2, Vector3, VideoGlitchMaterial, WebGLRenderTarget, WebGLRenderer, clearTween, getFullscreenTriangle, getKeyByValue, ticker, tween } from '../../build/alien.three.js';
 
         // Based on https://codepen.io/peterhry/pen/egzjGR
 
@@ -686,6 +686,8 @@
                             value: getKeyByValue(colorOptions, object.glowMesh.material.color.getHex()),
                             callback: value => {
                                 object.setHologramColor(new Color(colorOptions[value]));
+
+                                RenderManager.glitchHologram();
                             }
                         }
                     ];
@@ -717,6 +719,8 @@
                                     object.wireframe.layers.set(layers.hologram);
 
                                     item.toggleContent(true);
+
+                                    RenderManager.glitchHologram();
                                 } else {
                                     object.mesh.layers.set(layers.default);
                                     object.glowMesh.layers.disable(layers.glow);
@@ -1268,6 +1272,19 @@
                 renderer.setRenderTarget(null);
                 renderer.clear();
                 renderer.render(this.screen, this.screenCamera);
+            };
+
+            static glitchHologram = () => {
+                clearTween(this.videoGlitchMaterial.uniforms.uDistortion2);
+                clearTween(this.videoGlitchMaterial.uniforms.uSpeed);
+
+                tween(this.videoGlitchMaterial.uniforms.uDistortion2, { value: 0.1 }, 120, 'easeOutCubic', () => {
+                    tween(this.videoGlitchMaterial.uniforms.uDistortion2, { value: this.glitchDistortion2 }, 180, 'easeOutCubic');
+                });
+
+                tween(this.videoGlitchMaterial.uniforms.uSpeed, { value: 1.3 }, 120, 'easeOutCubic', () => {
+                    tween(this.videoGlitchMaterial.uniforms.uSpeed, { value: this.glitchSpeed }, 180, 'easeOutCubic');
+                });
             };
         }
 

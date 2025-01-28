@@ -264,9 +264,6 @@
 
             // Public methods
 
-            resize = () => {
-            };
-
             update = time => {
                 this.darkPlanet.update(time);
                 this.floatingCrystal.update(time);
@@ -783,10 +780,10 @@
             }
 
             static initControllers() {
-                const { renderer, scene, camera, light } = WorldController;
+                const { renderer, scene, camera } = WorldController;
 
                 SceneController.init(this.view);
-                RenderManager.init(renderer, scene, camera, light);
+                RenderManager.init(renderer, scene, camera);
             }
 
             static initPanel() {

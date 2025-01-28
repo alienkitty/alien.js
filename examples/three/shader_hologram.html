@@ -147,6 +147,7 @@
                 mesh.rotation.x = MathUtils.degToRad(-45);
                 mesh.rotation.z = MathUtils.degToRad(-45);
                 mesh.layers.set(layers.hologram);
+                mesh.layers.enable(31); // Last layer for `Point3D` raycasting
                 this.add(mesh);
 
                 // Hologram
@@ -313,6 +314,7 @@
                 const mesh = new Mesh(geometry, material);
                 mesh.scale.set(0.5, 1, 0.5);
                 mesh.layers.set(layers.hologram);
+                mesh.layers.enable(31); // Last layer for `Point3D` raycasting
                 this.add(mesh);
 
                 // Hologram
@@ -481,6 +483,7 @@
 
                 const mesh = new Mesh(geometry, material);
                 mesh.layers.set(layers.hologram);
+                mesh.layers.enable(31); // Last layer for `Point3D` raycasting
                 this.add(mesh);
 
                 // Hologram
@@ -718,6 +721,8 @@
 
                                     item.toggleContent(false);
                                 }
+
+                                object.mesh.layers.enable(31); // Last layer for `Point3D` raycasting
                             }
                         }
                     ];

@@ -320,12 +320,12 @@
 
                 // Hologram
                 const glowMaterial = material.clone();
-                glowMaterial.color = new Color(colors.errorColor);
-                glowMaterial.emissive = new Color(colors.errorColor);
+                glowMaterial.color = new Color(colors.lightColor);
+                glowMaterial.emissive = new Color(colors.lightColor);
                 glowMaterial.emissiveIntensity = 0.125;
 
                 const uniforms = {
-                    fresnelColor: { value: new Color(colors.errorColor).offsetHSL(0, 0, 0.25) },
+                    fresnelColor: { value: new Color(colors.lightColor).offsetHSL(0, 0, 0.25) },
                     fresnelPower: { value: 1 }
                 };
 
@@ -388,7 +388,7 @@
                 // Wireframe
                 const wireframe = new LineSegments(
                     new EdgesGeometry(mesh.geometry),
-                    new LineBasicMaterial({ color: new Color(colors.errorColor).offsetHSL(0, 0, 0.25) })
+                    new LineBasicMaterial({ color: new Color(colors.lightColor).offsetHSL(0, 0, 0.25) })
                 );
                 wireframe.layers.set(layers.hologram);
                 wireframe.layers.disable(layers.hologram); // Off

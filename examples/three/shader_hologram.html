@@ -135,7 +135,7 @@
                     normalScale: new Vector2(1, 1),
                     flatShading: true,
                     polygonOffset: true,
-                    polygonOffsetFactor: 1,
+                    polygonOffsetFactor: 3,
                     polygonOffsetUnits: 1
                 });
 
@@ -294,7 +294,7 @@
                     normalScale: new Vector2(1, 1),
                     flatShading: true,
                     polygonOffset: true,
-                    polygonOffsetFactor: 1,
+                    polygonOffsetFactor: 3,
                     polygonOffsetUnits: 1
                 });
 
@@ -455,7 +455,7 @@
                     normalMap,
                     normalScale: new Vector2(3, 3),
                     polygonOffset: true,
-                    polygonOffsetFactor: 1,
+                    polygonOffsetFactor: 3,
                     polygonOffsetUnits: 1
                 });
 
@@ -1224,7 +1224,7 @@
                 this.scene = new Scene();
                 this.scene.background = new Color(colors.backgroundColor);
                 this.camera = new PerspectiveCamera(30);
-                this.camera.near = 0.5;
+                this.camera.near = 1;
                 this.camera.far = 40;
                 this.camera.position.set(0, 6, 8);
                 this.camera.lookAt(this.scene.position);

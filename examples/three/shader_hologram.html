@@ -11,7 +11,7 @@
     <link rel="stylesheet" href="../assets/css/style.css">
 
     <script type="module">
-        import { AdditiveBlending, BloomCompositeMaterial, BlurMaterial, BoxGeometry, ChromaticAberrationMaterial, Color, ColorManagement, DirectionalLight, EdgesGeometry, EnvironmentTextureLoader, GLSL3, Group, HemisphereLight, LineBasicMaterial, LineSegments, LinearSRGBColorSpace, LuminosityMaterial, MapControls, MathUtils, Mesh, MeshBasicMaterial, MeshStandardMaterial, NoBlending, OctahedronGeometry, OrthographicCamera, PanelItem, PerspectiveCamera, Point3D, RawShaderMaterial, RepeatWrapping, Scene, SphereGeometry, TextureLoader, UI, UnrealBloomBlurMaterial, Vector2, Vector3, VideoGlitchMaterial, WebGLRenderTarget, WebGLRenderer, getFullscreenTriangle, ticker } from '../../build/alien.three.js';
+        import { AdditiveBlending, BloomCompositeMaterial, BlurMaterial, BoxGeometry, ChromaticAberrationMaterial, Color, ColorManagement, DirectionalLight, EdgesGeometry, EnvironmentTextureLoader, GLSL3, Group, HemisphereLight, LineBasicMaterial, LineSegments, LinearSRGBColorSpace, LuminosityMaterial, MapControls, MathUtils, Mesh, MeshBasicMaterial, MeshStandardMaterial, NoBlending, OctahedronGeometry, OrthographicCamera, Panel, PanelItem, PerspectiveCamera, Point3D, RawShaderMaterial, RepeatWrapping, Scene, SphereGeometry, TextureLoader, UI, UnrealBloomBlurMaterial, Vector2, Vector3, VideoGlitchMaterial, WebGLRenderTarget, WebGLRenderer, getFullscreenTriangle, getKeyByValue, ticker } from '../../build/alien.three.js';
 
         // Based on https://codepen.io/peterhry/pen/egzjGR
 
@@ -231,7 +231,7 @@
 
             // Public methods
 
-            setColor = color => {
+            setHologramColor = color => {
                 this.glowMesh.material.color.copy(color);
                 this.glowMesh.material.emissive.copy(color);
                 this.wireframe.material.color.copy(color).offsetHSL(0, 0, 0.25);
@@ -397,7 +397,7 @@
 
             // Public methods
 
-            setColor = color => {
+            setHologramColor = color => {
                 this.glowMesh.material.color.copy(color);
                 this.glowMesh.material.emissive.copy(color);
                 this.wireframe.material.color.copy(color).offsetHSL(0, 0, 0.25);
@@ -565,7 +565,7 @@
 
             // Public methods
 
-            setColor = color => {
+            setHologramColor = color => {
                 this.glowMesh.material.color.copy(color);
                 this.glowMesh.material.emissive.copy(color);
                 this.wireframe.material.color.copy(color).offsetHSL(0, 0, 0.25);
@@ -659,7 +659,12 @@
                     object.point = new Point3D(object.mesh);
                     object.add(object.point);
 
-                    const items = [
+                    const hologramOptions = {
+                        Off: false,
+                        On: true
+                    };
+
+                    const hologramItems = [
                         {
                             type: 'divider'
                         },
@@ -668,7 +673,7 @@
                             name: 'Hologram',
                             value: 'Hologram',
                             callback: () => {
-                                object.setColor(new Color(colors.lightColor));
+                                object.setHologramColor(new Color(colors.lightColor));
                             }
                         },
                         {
@@ -676,7 +681,44 @@
                             name: 'Error',
                             value: 'Error',
                             callback: () => {
-                                object.setColor(new Color(colors.errorColor));
+                                object.setHologramColor(new Color(colors.errorColor));
+                            }
+                        }
+                    ];
+
+                    const items = [
+                        {
+                            type: 'divider'
+                        },
+                        {
+                            type: 'list',
+                            list: hologramOptions,
+                            value: getKeyByValue(hologramOptions, object.mesh.layers.isEnabled(layers.hologram)),
+                            callback: (value, item) => {
+                                if (!item.hasContent()) {
+                                    const hologramPanel = new Panel();
+                                    hologramPanel.animateIn(true);
+
+                                    hologramItems.forEach(data => {
+                                        hologramPanel.add(new PanelItem(data));
+                                    });
+
+                                    item.setContent(hologramPanel);
+                                }
+
+                                if (hologramOptions[value]) {
+                                    object.mesh.layers.set(layers.hologram);
+                                    object.glowMesh.layers.set(layers.glow);
+                                    object.wireframe.layers.set(layers.hologram);
+
+                                    item.toggleContent(true);
+                                } else {
+                                    object.mesh.layers.set(layers.default);
+                                    object.glowMesh.layers.disable(layers.glow);
+                                    object.wireframe.layers.disable(layers.hologram);
+
+                                    item.toggleContent(false);
+                                }
                             }
                         }
                     ];

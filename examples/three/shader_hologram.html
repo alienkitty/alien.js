@@ -11,7 +11,7 @@
     <link rel="stylesheet" href="../assets/css/style.css">
 
     <script type="module">
-        import { AdditiveBlending, BloomCompositeMaterial, BlurMaterial, BoxGeometry, ChromaticAberrationMaterial, Color, ColorManagement, DirectionalLight, EdgesGeometry, EnvironmentTextureLoader, GLSL3, Group, HemisphereLight, LineBasicMaterial, LineSegments, LinearSRGBColorSpace, LuminosityMaterial, MapControls, MathUtils, Mesh, MeshBasicMaterial, MeshStandardMaterial, NoBlending, OctahedronGeometry, OrthographicCamera, PanelItem, PerspectiveCamera, RawShaderMaterial, RepeatWrapping, Scene, SphereGeometry, TextureLoader, UI, UnrealBloomBlurMaterial, Vector2, VideoGlitchMaterial, WebGLRenderTarget, WebGLRenderer, getFullscreenTriangle, ticker } from '../../build/alien.three.js';
+        import { AdditiveBlending, BloomCompositeMaterial, BlurMaterial, BoxGeometry, ChromaticAberrationMaterial, Color, ColorManagement, DirectionalLight, EdgesGeometry, EnvironmentTextureLoader, GLSL3, Group, HemisphereLight, LineBasicMaterial, LineSegments, LinearSRGBColorSpace, LuminosityMaterial, MapControls, MathUtils, Mesh, MeshBasicMaterial, MeshStandardMaterial, NoBlending, OctahedronGeometry, OrthographicCamera, PanelItem, PerspectiveCamera, Point3D, RawShaderMaterial, RepeatWrapping, Scene, SphereGeometry, TextureLoader, UI, UnrealBloomBlurMaterial, Vector2, Vector3, VideoGlitchMaterial, WebGLRenderTarget, WebGLRenderer, getFullscreenTriangle, ticker } from '../../build/alien.three.js';
 
         // Based on https://codepen.io/peterhry/pen/egzjGR
 
@@ -122,9 +122,10 @@
                 ormMap.anisotropy = anisotropy;
 
                 const material = new MeshStandardMaterial({
+                    name: 'Abstract Cube',
                     color: new Color().offsetHSL(0, 0, -0.65),
                     metalness: 0.7,
-                    roughness: 3,
+                    roughness: 0.7,
                     map,
                     metalnessMap: ormMap,
                     roughnessMap: ormMap,
@@ -280,6 +281,7 @@
                 ormMap.repeat.set(2, 2);
 
                 const material = new MeshStandardMaterial({
+                    name: 'Floating Crystal',
                     color: new Color().offsetHSL(0, 0, -0.65),
                     metalness: 0.7,
                     roughness: 0.7,
@@ -290,7 +292,10 @@
                     aoMapIntensity: 1,
                     normalMap,
                     normalScale: new Vector2(1, 1),
-                    flatShading: true
+                    flatShading: true,
+                    polygonOffset: true,
+                    polygonOffsetFactor: 1,
+                    polygonOffsetUnits: 1
                 });
 
                 // Second channel for aoMap and lightMap
@@ -299,9 +304,86 @@
 
                 const mesh = new Mesh(geometry, material);
                 mesh.scale.set(0.5, 1, 0.5);
+                mesh.layers.set(layers.hologram);
                 this.add(mesh);
 
+                // Hologram
+                const glowMaterial = material.clone();
+                glowMaterial.color = new Color(colors.lightColor);
+                glowMaterial.emissive = new Color(colors.lightColor);
+                glowMaterial.emissiveIntensity = 0.125;
+
+                const uniforms = {
+                    fresnelColor: { value: new Color(colors.lightColor).offsetHSL(0, 0, 0.25) },
+                    fresnelPower: { value: 1.5 }
+                };
+
+                glowMaterial.onBeforeCompile = shader => {
+                    shader.uniforms = Object.assign(shader.uniforms, uniforms);
+
+                    shader.vertexShader = shader.vertexShader.replace(
+                        'void main() {',
+                        /* glsl */ `
+                        out vec3 vWorldNormal;
+                        out vec3 vViewDirection;
+
+                        void main() {
+                        `
+                    );
+
+                    shader.vertexShader = shader.vertexShader.replace(
+                        '#include <project_vertex>',
+                        /* glsl */ `
+                        #include <project_vertex>
+
+                        vWorldNormal = normalize(modelMatrix * vec4(normal, 0.0)).xyz;
+                        vViewDirection = normalize(cameraPosition - (modelMatrix * vec4(transformed, 1.0)).xyz);
+                        `
+                    );
+
+                    shader.fragmentShader = shader.fragmentShader.replace(
+                        'void main() {',
+                        /* glsl */ `
+                        uniform vec3 fresnelColor;
+                        uniform float fresnelPower;
+
+                        in vec3 vWorldNormal;
+                        in vec3 vViewDirection;
+
+                        ${fresnel}
+
+                        void main() {
+                        `
+                    );
+
+                    shader.fragmentShader = shader.fragmentShader.replace(
+                        'vec3 totalEmissiveRadiance = emissive;',
+                        /* glsl */ `
+                        vec3 totalEmissiveRadiance = emissive;
+
+                        float fresnel = getFresnel(vViewDirection, vWorldNormal, fresnelPower);
+                        totalEmissiveRadiance += (fresnel * fresnelColor) * 0.2;
+                        `
+                    );
+                };
+
+                const glowMesh = new Mesh(geometry, glowMaterial);
+                glowMesh.position.copy(mesh.position);
+                glowMesh.scale.copy(mesh.scale);
+                glowMesh.layers.set(layers.glow);
+                this.add(glowMesh);
+
+                // Wireframe
+                const wireframe = new LineSegments(
+                    new EdgesGeometry(mesh.geometry),
+                    new LineBasicMaterial({ color: new Color(colors.lightColor).offsetHSL(0, 0, 0.25) })
+                );
+                wireframe.layers.set(layers.hologram);
+                glowMesh.add(wireframe);
+
                 this.mesh = mesh;
+                this.glowMesh = glowMesh;
+                this.uniforms = uniforms;
             }
 
             // Public methods
@@ -309,6 +391,9 @@
             update = time => {
                 this.mesh.position.y = Math.sin(time) * 0.1;
                 this.mesh.rotation.y += 0.01;
+
+                // Update glow mesh
+                this.mesh.matrix.decompose(this.glowMesh.position, this.glowMesh.quaternion, this.glowMesh.scale);
             };
 
             ready = () => this.initMesh();
@@ -358,9 +443,10 @@
                 ormMap.repeat.set(2, 1);
 
                 const material = new MeshStandardMaterial({
+                    name: 'Dark Planet',
                     color: new Color().offsetHSL(0, 0, -0.65),
                     metalness: 0.7,
-                    roughness: 3,
+                    roughness: 2,
                     map,
                     metalnessMap: ormMap,
                     roughnessMap: ormMap,
@@ -533,12 +619,71 @@
             static ready = () => this.view.ready();
         }
 
+        class ScenePanelController {
+            static init(view) {
+                this.view = view;
+
+                this.initPanel();
+            }
+
+            static initPanel() {
+                const { darkPlanet, floatingCrystal, abstractCube } = this.view;
+
+                const objects = [darkPlanet, floatingCrystal, abstractCube];
+
+                objects.forEach(object => {
+                    object.point = new Point3D(object.mesh);
+                    object.add(object.point);
+
+                    const items = [
+                        {
+                            type: 'divider'
+                        },
+                        {
+                            type: 'link',
+                            name: 'Hologram',
+                            value: 'Hologram',
+                            callback: () => {
+                            }
+                        },
+                        {
+                            type: 'link',
+                            name: 'Error',
+                            value: 'Error',
+                            callback: () => {
+                            }
+                        }
+                    ];
+
+                    items.forEach(data => {
+                        object.point.addPanel(new PanelItem(data));
+                    });
+                });
+
+                // Shrink tracker mesh to better match the visual size of the object
+                floatingCrystal.point.mesh.scale.multiply(new Vector3(0.6, 1, 0.6));
+                abstractCube.point.mesh.scale.multiplyScalar(0.9);
+            }
+        }
+
         class PanelController {
-            static init(view, ui) {
+            static init(renderer, scene, camera, view, ui) {
+                this.renderer = renderer;
+                this.scene = scene;
+                this.camera = camera;
                 this.view = view;
                 this.ui = ui;
 
+                this.initControllers();
                 this.initPanel();
+            }
+
+            static initControllers() {
+                Point3D.init(this.renderer, this.scene, this.camera, {
+                    container: this.ui
+                });
+
+                ScenePanelController.init(this.view);
             }
 
             static initPanel() {
@@ -715,6 +860,16 @@
                     this.ui.addPanel(new PanelItem(data));
                 });
             }
+
+            // Public methods
+
+            static update = time => {
+                if (!this.ui) {
+                    return;
+                }
+
+                Point3D.update(time);
+            };
         }
 
         const BlurDirectionX = new Vector2(1, 0);
@@ -1085,7 +1240,7 @@
                 this.frame = { value: 0 };
 
                 // Global settings
-                // this.anisotropy = this.renderer.capabilities.getMaxAnisotropy();
+                this.anisotropy = this.renderer.capabilities.getMaxAnisotropy();
             }
 
             static initLights() {
@@ -1098,10 +1253,10 @@
                 this.scene.add(directionalLight);
 
                 // Important: Make sure your lights are on!
-                hemisphereLight.layers.enable(layers.hologram);
-                directionalLight.layers.enable(layers.hologram);
-                hemisphereLight.layers.enable(layers.glow);
-                directionalLight.layers.enable(layers.glow);
+                // hemisphereLight.layers.enable(layers.hologram);
+                // directionalLight.layers.enable(layers.hologram);
+                // hemisphereLight.layers.enable(layers.glow);
+                // directionalLight.layers.enable(layers.glow);
             }
 
             static initLoaders() {
@@ -1109,12 +1264,11 @@
                 this.textureLoader.cache = true;
 
                 this.environmentLoader = new EnvironmentTextureLoader(this.renderer);
-                this.environmentLoader.cache = true;
             }
 
             static async initEnvironment() {
                 this.scene.environment = await this.loadEnvironmentTexture('../assets/textures/env/jewelry_black_contrast.jpg');
-                this.scene.environmentIntensity = 0.5;
+                this.scene.environmentIntensity = 1.2;
             }
 
             static initControls() {
@@ -1206,7 +1360,9 @@
             }
 
             static initPanel() {
-                PanelController.init(this.view, this.ui);
+                const { renderer, scene, camera } = WorldController;
+
+                PanelController.init(renderer, scene, camera, this.view, this.ui);
             }
 
             static addListeners() {
@@ -1223,6 +1379,7 @@
                 const dpr = window.devicePixelRatio;
 
                 WorldController.resize(width, height, dpr);
+                SceneController.resize();
                 RenderManager.resize(width, height, dpr);
             };
 
@@ -1230,6 +1387,7 @@
                 WorldController.update(time, delta, frame);
                 SceneController.update(time);
                 RenderManager.update(time, delta, frame);
+                PanelController.update(time);
                 this.ui.update();
             };
         }

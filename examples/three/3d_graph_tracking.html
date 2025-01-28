@@ -264,9 +264,6 @@
 
             // Public methods
 
-            resize = () => {
-            };
-
             update = time => {
                 this.darkPlanet.update(time);
                 this.floatingCrystal.update(time);
@@ -691,9 +688,6 @@
 
             static initLoaders() {
                 this.textureLoader = new TextureLoader();
-                this.textureLoader.setOptions({
-                    preserveData: true
-                });
                 this.textureLoader.cache = true;
 
                 this.environmentLoader = new EnvironmentTextureLoader(this.renderer);
@@ -786,10 +780,10 @@
             }
 
             static initControllers() {
-                const { renderer, scene, camera, light } = WorldController;
+                const { renderer, scene, camera } = WorldController;
 
                 SceneController.init(this.view);
-                RenderManager.init(renderer, scene, camera, light);
+                RenderManager.init(renderer, scene, camera);
             }
 
             static initPanel() {

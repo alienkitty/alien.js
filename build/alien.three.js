@@ -1154,7 +1154,7 @@ class EventDispatcher {
 
 		}
 
-		if ( listeners[ type ].indexOf( listener ) === - 1 ) {
+		if ( listeners[ type ].indexOf( listener ) === -1 ) {
 
 			listeners[ type ].push( listener );
 
@@ -1168,7 +1168,7 @@ class EventDispatcher {
 
 		const listeners = this._listeners;
 
-		return listeners[ type ] !== undefined && listeners[ type ].indexOf( listener ) !== - 1;
+		return listeners[ type ] !== undefined && listeners[ type ].indexOf( listener ) !== -1;
 
 	}
 
@@ -1183,7 +1183,7 @@ class EventDispatcher {
 
 			const index = listenerArray.indexOf( listener );
 
-			if ( index !== - 1 ) {
+			if ( index !== -1 ) {
 
 				listenerArray.splice( index, 1 );
 
@@ -1472,15 +1472,15 @@ function denormalize( value, array ) {
 
 		case Int32Array:
 
-			return Math.max( value / 2147483647.0, - 1.0 );
+			return Math.max( value / 2147483647.0, -1 );
 
 		case Int16Array:
 
-			return Math.max( value / 32767.0, - 1.0 );
+			return Math.max( value / 32767.0, -1 );
 
 		case Int8Array:
 
-			return Math.max( value / 127.0, - 1.0 );
+			return Math.max( value / 127.0, -1 );
 
 		default:
 
@@ -1922,7 +1922,7 @@ let Vector2$1 = class Vector2 {
 
 		// clamp, to handle numerical problems
 
-		return Math.acos( clamp( theta, - 1, 1 ) );
+		return Math.acos( clamp( theta, -1, 1 ) );
 
 	}
 
@@ -2523,7 +2523,7 @@ function toNormalizedProjectionMatrix( projectionMatrix ) {
 function toReversedProjectionMatrix( projectionMatrix ) {
 
 	const m = projectionMatrix.elements;
-	const isPerspectiveMatrix = m[ 11 ] === - 1;
+	const isPerspectiveMatrix = m[ 11 ] === -1;
 
 	// Reverse [0, 1] projection matrix
 	if ( isPerspectiveMatrix ) {
@@ -2547,9 +2547,9 @@ const LINEAR_REC709_TO_XYZ = /*@__PURE__*/ new Matrix3().set(
 );
 
 const XYZ_TO_LINEAR_REC709 = /*@__PURE__*/ new Matrix3().set(
-	3.2409699, - 1.5373832, - 0.4986108,
-	- 0.9692436, 1.8759675, 0.0415551,
-	0.0556301, - 0.2039770, 1.0569715
+	3.2409699, -1.5373832, -0.4986108,
+	-0.9692436, 1.8759675, 0.0415551,
+	0.0556301, -0.203977, 1.0569715
 );
 
 function createColorManagement() {
@@ -4290,7 +4290,7 @@ class Quaternion {
 
 			let s = 1 - t;
 			const cos = x0 * x1 + y0 * y1 + z0 * z1 + w0 * w1,
-				dir = ( cos >= 0 ? 1 : - 1 ),
+				dir = ( cos >= 0 ? 1 : -1 ),
 				sqrSin = 1 - cos * cos;
 
 			// Skip the Slerp for tiny steps to avoid numeric problems:
@@ -4633,7 +4633,7 @@ class Quaternion {
 
 	angleTo( q ) {
 
-		return 2 * Math.acos( Math.abs( clamp( this.dot( q ), - 1, 1 ) ) );
+		return 2 * Math.acos( Math.abs( clamp( this.dot( q ), -1, 1 ) ) );
 
 	}
 
@@ -4667,9 +4667,9 @@ class Quaternion {
 
 	conjugate() {
 
-		this._x *= - 1;
-		this._y *= - 1;
-		this._z *= - 1;
+		this._x *= -1;
+		this._y *= -1;
+		this._z *= -1;
 
 		this._onChangeCallback();
 
@@ -5451,7 +5451,7 @@ class Vector3 {
 
 		// clamp, to handle numerical problems
 
-		return Math.acos( clamp( theta, - 1, 1 ) );
+		return Math.acos( clamp( theta, -1, 1 ) );
 
 	}
 
@@ -6179,7 +6179,7 @@ const _v2$3 = /*@__PURE__*/ new Vector3();
 
 class Sphere {
 
-	constructor( center = new Vector3(), radius = - 1 ) {
+	constructor( center = new Vector3(), radius = -1 ) {
 
 		this.isSphere = true;
 
@@ -6243,7 +6243,7 @@ class Sphere {
 	makeEmpty() {
 
 		this.center.set( 0, 0, 0 );
-		this.radius = - 1;
+		this.radius = -1;
 
 		return this;
 
@@ -6425,7 +6425,7 @@ const _normal$1 = /*@__PURE__*/ new Vector3();
 
 class Ray {
 
-	constructor( origin = new Vector3(), direction = new Vector3( 0, 0, - 1 ) ) {
+	constructor( origin = new Vector3(), direction = new Vector3( 0, 0, -1 ) ) {
 
 		this.origin = origin;
 		this.direction = direction;
@@ -6831,7 +6831,7 @@ class Ray {
 
 		} else if ( DdN < 0 ) {
 
-			sign = - 1;
+			sign = -1;
 			DdN = - DdN;
 
 		} else {
@@ -7691,7 +7691,7 @@ class Matrix4 {
 		if ( coordinateSystem === WebGLCoordinateSystem ) {
 
 			c = - ( far + near ) / ( far - near );
-			d = ( - 2 * far * near ) / ( far - near );
+			d = ( -2 * far * near ) / ( far - near );
 
 		} else if ( coordinateSystem === WebGPUCoordinateSystem ) {
 
@@ -7707,7 +7707,7 @@ class Matrix4 {
 		te[ 0 ] = x;	te[ 4 ] = 0;	te[ 8 ] = a; 	te[ 12 ] = 0;
 		te[ 1 ] = 0;	te[ 5 ] = y;	te[ 9 ] = b; 	te[ 13 ] = 0;
 		te[ 2 ] = 0;	te[ 6 ] = 0;	te[ 10 ] = c; 	te[ 14 ] = d;
-		te[ 3 ] = 0;	te[ 7 ] = 0;	te[ 11 ] = - 1;	te[ 15 ] = 0;
+		te[ 3 ] = 0;	te[ 7 ] = 0;	te[ 11 ] = -1;	te[ 15 ] = 0;
 
 		return this;
 
@@ -7728,12 +7728,12 @@ class Matrix4 {
 		if ( coordinateSystem === WebGLCoordinateSystem ) {
 
 			z = ( far + near ) * p;
-			zInv = - 2 * p;
+			zInv = -2 * p;
 
 		} else if ( coordinateSystem === WebGPUCoordinateSystem ) {
 
 			z = near * p;
-			zInv = - 1 * p;
+			zInv = -1 * p;
 
 		} else {
 
@@ -7928,7 +7928,7 @@ class Euler {
 
 			case 'XYZ':
 
-				this._y = Math.asin( clamp( m13, - 1, 1 ) );
+				this._y = Math.asin( clamp( m13, -1, 1 ) );
 
 				if ( Math.abs( m13 ) < 0.9999999 ) {
 
@@ -7946,7 +7946,7 @@ class Euler {
 
 			case 'YXZ':
 
-				this._x = Math.asin( - clamp( m23, - 1, 1 ) );
+				this._x = Math.asin( - clamp( m23, -1, 1 ) );
 
 				if ( Math.abs( m23 ) < 0.9999999 ) {
 
@@ -7964,7 +7964,7 @@ class Euler {
 
 			case 'ZXY':
 
-				this._x = Math.asin( clamp( m32, - 1, 1 ) );
+				this._x = Math.asin( clamp( m32, -1, 1 ) );
 
 				if ( Math.abs( m32 ) < 0.9999999 ) {
 
@@ -7982,7 +7982,7 @@ class Euler {
 
 			case 'ZYX':
 
-				this._y = Math.asin( - clamp( m31, - 1, 1 ) );
+				this._y = Math.asin( - clamp( m31, -1, 1 ) );
 
 				if ( Math.abs( m31 ) < 0.9999999 ) {
 
@@ -8000,7 +8000,7 @@ class Euler {
 
 			case 'YZX':
 
-				this._z = Math.asin( clamp( m21, - 1, 1 ) );
+				this._z = Math.asin( clamp( m21, -1, 1 ) );
 
 				if ( Math.abs( m21 ) < 0.9999999 ) {
 
@@ -8018,7 +8018,7 @@ class Euler {
 
 			case 'XZY':
 
-				this._z = Math.asin( - clamp( m12, - 1, 1 ) );
+				this._z = Math.asin( - clamp( m12, -1, 1 ) );
 
 				if ( Math.abs( m12 ) < 0.9999999 ) {
 
@@ -8545,7 +8545,7 @@ class Object3D extends EventDispatcher {
 
 		const index = this.children.indexOf( object );
 
-		if ( index !== - 1 ) {
+		if ( index !== -1 ) {
 
 			object.parent = null;
 			this.children.splice( index, 1 );
@@ -9886,7 +9886,7 @@ let Color$1 = class Color {
 
 	getHexString( colorSpace = SRGBColorSpace ) {
 
-		return ( '000000' + this.getHex( colorSpace ).toString( 16 ) ).slice( - 6 );
+		return ( '000000' + this.getHex( colorSpace ).toString( 16 ) ).slice( -6 );
 
 	}
 
@@ -10770,7 +10770,7 @@ function _generateTables() {
 
 		// very small number (0, -0)
 
-		if ( e < - 27 ) {
+		if ( e < -27 ) {
 
 			baseTable[ i ] = 0x0000;
 			baseTable[ i | 0x100 ] = 0x8000;
@@ -10779,7 +10779,7 @@ function _generateTables() {
 
 			// small number (denorm)
 
-		} else if ( e < - 14 ) {
+		} else if ( e < -14 ) {
 
 			baseTable[ i ] = 0x0400 >> ( - e - 14 );
 			baseTable[ i | 0x100 ] = ( 0x0400 >> ( - e - 14 ) ) | 0x8000;
@@ -10836,7 +10836,7 @@ function _generateTables() {
 
 		}
 
-		m &= ~ 0x00800000; // clear leading 1 bit
+		m &= -8388609; // clear leading 1 bit
 		e += 0x38800000; // adjust bias
 
 		mantissaTable[ i ] = m | e;
@@ -10894,7 +10894,7 @@ function toHalfFloat( val ) {
 
 	if ( Math.abs( val ) > 65504 ) console.warn( 'THREE.DataUtils.toHalfFloat(): Value out of range.' );
 
-	val = clamp( val, - 65504, 65504 );
+	val = clamp( val, -65504, 65504 );
 
 	_tables.floatView[ 0 ] = val;
 	const f = _tables.uint32View[ 0 ];
@@ -12161,7 +12161,7 @@ class BufferGeometry extends EventDispatcher {
 
 			tmp2.crossVectors( n2, t );
 			const test = tmp2.dot( tan2[ v ] );
-			const w = ( test < 0.0 ) ? - 1.0 : 1.0;
+			const w = ( test < 0.0 ) ? -1 : 1.0;
 
 			tangentAttribute.setXYZW( v, tmp.x, tmp.y, tmp.z, w );
 
@@ -13003,7 +13003,7 @@ function checkGeometryIntersection( object, material, raycaster, ray, uv, uv1, n
 
 			if ( intersection.normal.dot( ray.direction ) > 0 ) {
 
-				intersection.normal.multiplyScalar( - 1 );
+				intersection.normal.multiplyScalar( -1 );
 
 			}
 
@@ -13067,12 +13067,12 @@ let BoxGeometry$2 = class BoxGeometry extends BufferGeometry {
 
 		// build each side of the box geometry
 
-		buildPlane( 'z', 'y', 'x', - 1, - 1, depth, height, width, depthSegments, heightSegments, 0 ); // px
-		buildPlane( 'z', 'y', 'x', 1, - 1, depth, height, - width, depthSegments, heightSegments, 1 ); // nx
+		buildPlane( 'z', 'y', 'x', -1, -1, depth, height, width, depthSegments, heightSegments, 0 ); // px
+		buildPlane( 'z', 'y', 'x', 1, -1, depth, height, - width, depthSegments, heightSegments, 1 ); // nx
 		buildPlane( 'x', 'z', 'y', 1, 1, width, depth, height, widthSegments, depthSegments, 2 ); // py
-		buildPlane( 'x', 'z', 'y', 1, - 1, width, depth, - height, widthSegments, depthSegments, 3 ); // ny
-		buildPlane( 'x', 'y', 'z', 1, - 1, width, height, depth, widthSegments, heightSegments, 4 ); // pz
-		buildPlane( 'x', 'y', 'z', - 1, - 1, width, height, - depth, widthSegments, heightSegments, 5 ); // nz
+		buildPlane( 'x', 'z', 'y', 1, -1, width, depth, - height, widthSegments, depthSegments, 3 ); // ny
+		buildPlane( 'x', 'y', 'z', 1, -1, width, height, depth, widthSegments, heightSegments, 4 ); // pz
+		buildPlane( 'x', 'y', 'z', -1, -1, width, height, - depth, widthSegments, heightSegments, 5 ); // nz
 
 		// build geometry
 
@@ -13122,7 +13122,7 @@ let BoxGeometry$2 = class BoxGeometry extends BufferGeometry {
 
 					vector[ u ] = 0;
 					vector[ v ] = 0;
-					vector[ w ] = depth > 0 ? 1 : - 1;
+					vector[ w ] = depth > 0 ? 1 : -1;
 
 					// now apply vector to normal buffer
 
@@ -13674,7 +13674,7 @@ class PerspectiveCamera extends Camera {
 	 */
 	getViewBounds( distance, minTarget, maxTarget ) {
 
-		_v3$1.set( - 1, - 1, 0.5 ).applyMatrix4( this.projectionMatrixInverse );
+		_v3$1.set( -1, -1, 0.5 ).applyMatrix4( this.projectionMatrixInverse );
 
 		minTarget.set( _v3$1.x, _v3$1.y ).multiplyScalar( - distance / _v3$1.z );
 
@@ -13789,7 +13789,7 @@ class PerspectiveCamera extends Camera {
 		let top = near * Math.tan( DEG2RAD * 0.5 * this.fov ) / this.zoom;
 		let height = 2 * top;
 		let width = this.aspect * height;
-		let left = - 0.5 * width;
+		let left = -0.5 * width;
 		const view = this.view;
 
 		if ( this.view !== null && this.view.enabled ) {
@@ -13837,7 +13837,7 @@ class PerspectiveCamera extends Camera {
 
 }
 
-const fov = - 90; // negative fov is not an error
+const fov = -90; // negative fov is not an error
 const aspect = 1;
 
 class CubeCamera extends Object3D {
@@ -13894,39 +13894,39 @@ class CubeCamera extends Object3D {
 			cameraPX.lookAt( 1, 0, 0 );
 
 			cameraNX.up.set( 0, 1, 0 );
-			cameraNX.lookAt( - 1, 0, 0 );
+			cameraNX.lookAt( -1, 0, 0 );
 
-			cameraPY.up.set( 0, 0, - 1 );
+			cameraPY.up.set( 0, 0, -1 );
 			cameraPY.lookAt( 0, 1, 0 );
 
 			cameraNY.up.set( 0, 0, 1 );
-			cameraNY.lookAt( 0, - 1, 0 );
+			cameraNY.lookAt( 0, -1, 0 );
 
 			cameraPZ.up.set( 0, 1, 0 );
 			cameraPZ.lookAt( 0, 0, 1 );
 
 			cameraNZ.up.set( 0, 1, 0 );
-			cameraNZ.lookAt( 0, 0, - 1 );
+			cameraNZ.lookAt( 0, 0, -1 );
 
 		} else if ( coordinateSystem === WebGPUCoordinateSystem ) {
 
-			cameraPX.up.set( 0, - 1, 0 );
-			cameraPX.lookAt( - 1, 0, 0 );
+			cameraPX.up.set( 0, -1, 0 );
+			cameraPX.lookAt( -1, 0, 0 );
 
-			cameraNX.up.set( 0, - 1, 0 );
+			cameraNX.up.set( 0, -1, 0 );
 			cameraNX.lookAt( 1, 0, 0 );
 
 			cameraPY.up.set( 0, 0, 1 );
 			cameraPY.lookAt( 0, 1, 0 );
 
-			cameraNY.up.set( 0, 0, - 1 );
-			cameraNY.lookAt( 0, - 1, 0 );
+			cameraNY.up.set( 0, 0, -1 );
+			cameraNY.lookAt( 0, -1, 0 );
 
-			cameraPZ.up.set( 0, - 1, 0 );
+			cameraPZ.up.set( 0, -1, 0 );
 			cameraPZ.lookAt( 0, 0, 1 );
 
-			cameraNZ.up.set( 0, - 1, 0 );
-			cameraNZ.lookAt( 0, 0, - 1 );
+			cameraNZ.up.set( 0, -1, 0 );
+			cameraNZ.lookAt( 0, 0, -1 );
 
 		} else {
 
@@ -14891,10 +14891,10 @@ class Sprite extends Object3D {
 			_geometry = new BufferGeometry();
 
 			const float32Array = new Float32Array( [
-				- 0.5, - 0.5, 0, 0, 0,
-				0.5, - 0.5, 0, 1, 0,
+				-0.5, -0.5, 0, 0, 0,
+				0.5, -0.5, 0, 1, 0,
 				0.5, 0.5, 0, 1, 1,
-				- 0.5, 0.5, 0, 0, 1
+				-0.5, 0.5, 0, 0, 1
 			] );
 
 			const interleavedBuffer = new InterleavedBuffer( float32Array, 5 );
@@ -14945,8 +14945,8 @@ class Sprite extends Object3D {
 
 		const center = this.center;
 
-		transformVertex( _vA.set( - 0.5, - 0.5, 0 ), _mvPosition, center, _worldScale, sin, cos );
-		transformVertex( _vB.set( 0.5, - 0.5, 0 ), _mvPosition, center, _worldScale, sin, cos );
+		transformVertex( _vA.set( -0.5, -0.5, 0 ), _mvPosition, center, _worldScale, sin, cos );
+		transformVertex( _vB.set( 0.5, -0.5, 0 ), _mvPosition, center, _worldScale, sin, cos );
 		transformVertex( _vC.set( 0.5, 0.5, 0 ), _mvPosition, center, _worldScale, sin, cos );
 
 		_uvA.set( 0, 0 );
@@ -14959,7 +14959,7 @@ class Sprite extends Object3D {
 		if ( intersect === null ) {
 
 			// check second triangle
-			transformVertex( _vB.set( - 0.5, 0.5, 0 ), _mvPosition, center, _worldScale, sin, cos );
+			transformVertex( _vB.set( -0.5, 0.5, 0 ), _mvPosition, center, _worldScale, sin, cos );
 			_uvB.set( 0, 1 );
 
 			intersect = raycaster.ray.intersectTriangle( _vA, _vC, _vB, false, _intersectPoint );
@@ -16187,7 +16187,7 @@ class Plane {
 
 	negate() {
 
-		this.constant *= - 1;
+		this.constant *= -1;
 		this.normal.negate();
 
 		return this;
@@ -16524,10 +16524,10 @@ class MultiDrawRenderList {
 
 			pool.push( {
 
-				start: - 1,
-				count: - 1,
-				z: - 1,
-				index: - 1,
+				start: -1,
+				count: -1,
+				z: -1,
+				index: -1,
 
 			} );
 
@@ -16937,7 +16937,7 @@ class BatchedMesh extends Mesh {
 
 	}
 
-	addGeometry( geometry, reservedVertexCount = - 1, reservedIndexCount = - 1 ) {
+	addGeometry( geometry, reservedVertexCount = -1, reservedIndexCount = -1 ) {
 
 		this._initializeGeometry( geometry );
 
@@ -16945,17 +16945,17 @@ class BatchedMesh extends Mesh {
 
 		const geometryInfo = {
 			// geometry information
-			vertexStart: - 1,
-			vertexCount: - 1,
-			reservedVertexCount: - 1,
+			vertexStart: -1,
+			vertexCount: -1,
+			reservedVertexCount: -1,
 
-			indexStart: - 1,
-			indexCount: - 1,
-			reservedIndexCount: - 1,
+			indexStart: -1,
+			indexCount: -1,
+			reservedIndexCount: -1,
 
 			// draw range information
-			start: - 1,
-			count: - 1,
+			start: -1,
+			count: -1,
 
 			// state
 			boundingBox: null,
@@ -16965,19 +16965,19 @@ class BatchedMesh extends Mesh {
 
 		const geometryInfoList = this._geometryInfo;
 		geometryInfo.vertexStart = this._nextVertexStart;
-		geometryInfo.reservedVertexCount = reservedVertexCount === - 1 ? geometry.getAttribute( 'position' ).count : reservedVertexCount;
+		geometryInfo.reservedVertexCount = reservedVertexCount === -1 ? geometry.getAttribute( 'position' ).count : reservedVertexCount;
 
 		const index = geometry.getIndex();
 		const hasIndex = index !== null;
 		if ( hasIndex ) {
 
 			geometryInfo.indexStart = this._nextIndexStart;
-			geometryInfo.reservedIndexCount = reservedIndexCount === - 1 ? index.count : reservedIndexCount;
+			geometryInfo.reservedIndexCount = reservedIndexCount === -1 ? index.count : reservedIndexCount;
 
 		}
 
 		if (
-			geometryInfo.indexStart !== - 1 &&
+			geometryInfo.indexStart !== -1 &&
 			geometryInfo.indexStart + geometryInfo.reservedIndexCount > this._maxIndexCount ||
 			geometryInfo.vertexStart + geometryInfo.reservedVertexCount > this._maxVertexCount
 		) {
@@ -17720,7 +17720,7 @@ class BatchedMesh extends Mesh {
 			// get the camera position in the local frame
 			_matrix$1.copy( this.matrixWorld ).invert();
 			_vector$5.setFromMatrixPosition( camera.matrixWorld ).applyMatrix4( _matrix$1 );
-			_forward.set( 0, 0, - 1 ).transformDirection( camera.matrixWorld ).transformDirection( _matrix$1 );
+			_forward.set( 0, 0, -1 ).transformDirection( camera.matrixWorld ).transformDirection( _matrix$1 );
 
 			for ( let i = 0, l = instanceInfo.length; i < l; i ++ ) {
 
@@ -18922,7 +18922,7 @@ class Curve {
 
 				vec.normalize();
 
-				const theta = Math.acos( clamp( tangents[ i - 1 ].dot( tangents[ i ] ), - 1, 1 ) ); // clamp for floating pt errors
+				const theta = Math.acos( clamp( tangents[ i - 1 ].dot( tangents[ i ] ), -1, 1 ) ); // clamp for floating pt errors
 
 				normals[ i ].applyMatrix4( mat.makeRotationAxis( vec, theta ) );
 
@@ -18936,7 +18936,7 @@ class Curve {
 
 		if ( closed === true ) {
 
-			let theta = Math.acos( clamp( normals[ 0 ].dot( normals[ segments ] ), - 1, 1 ) );
+			let theta = Math.acos( clamp( normals[ 0 ].dot( normals[ segments ] ), -1, 1 ) );
 			theta /= segments;
 
 			if ( tangents[ 0 ].dot( vec.crossVectors( normals[ 0 ], normals[ segments ] ) ) > 0 ) {
@@ -19206,7 +19206,7 @@ function CubicPoly() {
 
 		c0 = x0;
 		c1 = t0;
-		c2 = - 3 * x0 + 3 * x1 - 2 * t0 - t1;
+		c2 = -3 * x0 + 3 * x1 - 2 * t0 - t1;
 		c3 = 2 * x0 - 2 * x1 + t0 + t1;
 
 	}
@@ -19432,7 +19432,7 @@ function CatmullRom( t, p0, p1, p2, p3 ) {
 	const v1 = ( p3 - p1 ) * 0.5;
 	const t2 = t * t;
 	const t3 = t * t2;
-	return ( 2 * p1 - 2 * p2 + v0 + v1 ) * t3 + ( - 3 * p1 + 3 * p2 - 2 * v0 - v1 ) * t2 + v0 * t + p1;
+	return ( 2 * p1 - 2 * p2 + v0 + v1 ) * t3 + ( -3 * p1 + 3 * p2 - 2 * v0 - v1 ) * t2 + v0 * t + p1;
 
 }
 
@@ -20505,7 +20505,7 @@ class Path extends CurvePath {
 
 class LatheGeometry extends BufferGeometry {
 
-	constructor( points = [ new Vector2$1( 0, - 0.5 ), new Vector2$1( 0.5, 0 ), new Vector2$1( 0, 0.5 ) ], segments = 12, phiStart = 0, phiLength = Math.PI * 2 ) {
+	constructor( points = [ new Vector2$1( 0, -0.5 ), new Vector2$1( 0.5, 0 ), new Vector2$1( 0, 0.5 ) ], segments = 12, phiStart = 0, phiLength = Math.PI * 2 ) {
 
 		super();
 
@@ -20976,7 +20976,7 @@ let CylinderGeometry$2 = class CylinderGeometry extends BufferGeometry {
 			let groupCount = 0;
 
 			const radius = ( top === true ) ? radiusTop : radiusBottom;
-			const sign = ( top === true ) ? 1 : - 1;
+			const sign = ( top === true ) ? 1 : -1;
 
 			// first we generate the center vertex data of the cap.
 			// because the geometry needs one set of uvs per face,
@@ -21444,10 +21444,10 @@ class DodecahedronGeometry extends PolyhedronGeometry {
 		const vertices = [
 
 			// (±1, ±1, ±1)
-			- 1, - 1, - 1,	- 1, - 1, 1,
-			- 1, 1, - 1, - 1, 1, 1,
-			1, - 1, - 1, 1, - 1, 1,
-			1, 1, - 1, 1, 1, 1,
+			-1, -1, -1,	-1, -1, 1,
+			-1, 1, -1, -1, 1, 1,
+			1, -1, -1, 1, -1, 1,
+			1, 1, -1, 1, 1, 1,
 
 			// (0, ±1/φ, ±φ)
 			0, - r, - t, 0, - r, t,
@@ -22380,7 +22380,7 @@ function onSegment( p, q, r ) {
 
 function sign( num ) {
 
-	return num > 0 ? 1 : num < 0 ? - 1 : 0;
+	return num > 0 ? 1 : num < 0 ? -1 : 0;
 
 }
 
@@ -22640,7 +22640,7 @@ function addContour( vertices, contour ) {
 
 class ExtrudeGeometry extends BufferGeometry {
 
-	constructor( shapes = new Shape$2( [ new Vector2$1( 0.5, 0.5 ), new Vector2$1( - 0.5, 0.5 ), new Vector2$1( - 0.5, - 0.5 ), new Vector2$1( 0.5, - 0.5 ) ] ), options = {} ) {
+	constructor( shapes = new Shape$2( [ new Vector2$1( 0.5, 0.5 ), new Vector2$1( -0.5, 0.5 ), new Vector2$1( -0.5, -0.5 ), new Vector2$1( 0.5, -0.5 ) ] ), options = {} ) {
 
 		super();
 
@@ -23427,9 +23427,9 @@ class IcosahedronGeometry extends PolyhedronGeometry {
 		const t = ( 1 + Math.sqrt( 5 ) ) / 2;
 
 		const vertices = [
-			- 1, t, 0, 	1, t, 0, 	- 1, - t, 0, 	1, - t, 0,
-			0, - 1, t, 	0, 1, t,	0, - 1, - t, 	0, 1, - t,
-			t, 0, - 1, 	t, 0, 1, 	- t, 0, - 1, 	- t, 0, 1
+			-1, t, 0, 	1, t, 0, 	-1, - t, 0, 	1, - t, 0,
+			0, -1, t, 	0, 1, t,	0, -1, - t, 	0, 1, - t,
+			t, 0, -1, 	t, 0, 1, 	- t, 0, -1, 	- t, 0, 1
 		];
 
 		const indices = [
@@ -23463,8 +23463,8 @@ class OctahedronGeometry extends PolyhedronGeometry {
 	constructor( radius = 1, detail = 0 ) {
 
 		const vertices = [
-			1, 0, 0, 	- 1, 0, 0,	0, 1, 0,
-			0, - 1, 0, 	0, 0, 1,	0, 0, - 1
+			1, 0, 0, 	-1, 0, 0,	0, 1, 0,
+			0, -1, 0, 	0, 0, 1,	0, 0, -1
 		];
 
 		const indices = [
@@ -23709,7 +23709,7 @@ class RingGeometry extends BufferGeometry {
 
 class ShapeGeometry extends BufferGeometry {
 
-	constructor( shapes = new Shape$2( [ new Vector2$1( 0, 0.5 ), new Vector2$1( - 0.5, - 0.5 ), new Vector2$1( 0.5, - 0.5 ) ] ), curveSegments = 12 ) {
+	constructor( shapes = new Shape$2( [ new Vector2$1( 0, 0.5 ), new Vector2$1( -0.5, -0.5 ), new Vector2$1( 0.5, -0.5 ) ] ), curveSegments = 12 ) {
 
 		super();
 
@@ -23949,7 +23949,7 @@ let SphereGeometry$2 = class SphereGeometry extends BufferGeometry {
 
 			} else if ( iy === heightSegments && thetaEnd === Math.PI ) {
 
-				uOffset = - 0.5 / widthSegments;
+				uOffset = -0.5 / widthSegments;
 
 			}
 
@@ -24032,7 +24032,7 @@ class TetrahedronGeometry extends PolyhedronGeometry {
 	constructor( radius = 1, detail = 0 ) {
 
 		const vertices = [
-			1, 1, 1, 	- 1, - 1, 1, 	- 1, 1, - 1, 	1, - 1, - 1
+			1, 1, 1, 	-1, -1, 1, 	-1, 1, -1, 	1, -1, -1
 		];
 
 		const indices = [
@@ -24337,7 +24337,7 @@ class TorusKnotGeometry extends BufferGeometry {
 
 class TubeGeometry extends BufferGeometry {
 
-	constructor( path = new QuadraticBezierCurve3( new Vector3( - 1, - 1, 0 ), new Vector3( - 1, 1, 0 ), new Vector3( 1, 1, 0 ) ), tubularSegments = 64, radius = 1, radialSegments = 8, closed = false ) {
+	constructor( path = new QuadraticBezierCurve3( new Vector3( -1, -1, 0 ), new Vector3( -1, 1, 0 ), new Vector3( 1, 1, 0 ) ), tubularSegments = 64, radius = 1, radialSegments = 8, closed = false ) {
 
 		super();
 
@@ -25878,7 +25878,7 @@ function subclip( sourceClip, name, startFrame, endFrame, fps = 30 ) {
 
 	for ( let i = 0; i < clip.tracks.length; ++ i ) {
 
-		clip.tracks[ i ].shift( - 1 * minStartTime );
+		clip.tracks[ i ].shift( -1 * minStartTime );
 
 	}
 
@@ -26275,10 +26275,10 @@ class CubicInterpolant extends Interpolant {
 
 		super( parameterPositions, sampleValues, sampleSize, resultBuffer );
 
-		this._weightPrev = - 0;
-		this._offsetPrev = - 0;
-		this._weightNext = - 0;
-		this._offsetNext = - 0;
+		this._weightPrev = -0;
+		this._offsetPrev = -0;
+		this._weightNext = -0;
+		this._offsetNext = -0;
 
 		this.DefaultSettings_ = {
 
@@ -26385,8 +26385,8 @@ class CubicInterpolant extends Interpolant {
 		// evaluate polynomials
 
 		const sP = - wP * ppp + 2 * wP * pp - wP * p;
-		const s0 = ( 1 + wP ) * ppp + ( - 1.5 - 2 * wP ) * pp + ( - 0.5 + wP ) * p + 1;
-		const s1 = ( - 1 - wN ) * ppp + ( 1.5 + wN ) * pp + 0.5 * p;
+		const s0 = ( 1 + wP ) * ppp + ( -1.5 - 2 * wP ) * pp + ( -0.5 + wP ) * p + 1;
+		const s1 = ( -1 - wN ) * ppp + ( 1.5 + wN ) * pp + 0.5 * p;
 		const sN = wN * ppp - wN * pp;
 
 		// combine data linearly
@@ -26675,7 +26675,7 @@ class KeyframeTrack {
 
 		}
 
-		while ( to !== - 1 && times[ to ] > endTime ) {
+		while ( to !== -1 && times[ to ] > endTime ) {
 
 			-- to;
 
@@ -27029,7 +27029,7 @@ VectorKeyframeTrack.prototype.ValueTypeName = 'vector';
 
 class AnimationClip {
 
-	constructor( name = '', duration = - 1, tracks = [], blendMode = NormalAnimationBlendMode ) {
+	constructor( name = '', duration = -1, tracks = [], blendMode = NormalAnimationBlendMode ) {
 
 		this.name = name;
 		this.tracks = tracks;
@@ -27130,7 +27130,7 @@ class AnimationClip {
 
 		}
 
-		return new this( name, - 1, tracks );
+		return new this( name, -1, tracks );
 
 	}
 
@@ -27242,7 +27242,7 @@ class AnimationClip {
 		const blendMode = animation.blendMode;
 
 		// automatic length determination in AnimationClip.
-		let duration = animation.length || - 1;
+		let duration = animation.length || -1;
 
 		const hierarchyTracks = animation.hierarchy || [];
 
@@ -27267,7 +27267,7 @@ class AnimationClip {
 
 						for ( let m = 0; m < animationKeys[ k ].morphTargets.length; m ++ ) {
 
-							morphTargetNames[ animationKeys[ k ].morphTargets[ m ] ] = - 1;
+							morphTargetNames[ animationKeys[ k ].morphTargets[ m ] ] = -1;
 
 						}
 
@@ -27632,7 +27632,7 @@ class LoadingManager {
 
 			const index = handlers.indexOf( regex );
 
-			if ( index !== - 1 ) {
+			if ( index !== -1 ) {
 
 				handlers.splice( index, 2 );
 
@@ -28888,13 +28888,13 @@ class PointLightShadow extends LightShadow {
 		];
 
 		this._cubeDirections = [
-			new Vector3( 1, 0, 0 ), new Vector3( - 1, 0, 0 ), new Vector3( 0, 0, 1 ),
-			new Vector3( 0, 0, - 1 ), new Vector3( 0, 1, 0 ), new Vector3( 0, - 1, 0 )
+			new Vector3( 1, 0, 0 ), new Vector3( -1, 0, 0 ), new Vector3( 0, 0, 1 ),
+			new Vector3( 0, 0, -1 ), new Vector3( 0, 1, 0 ), new Vector3( 0, -1, 0 )
 		];
 
 		this._cubeUps = [
 			new Vector3( 0, 1, 0 ), new Vector3( 0, 1, 0 ), new Vector3( 0, 1, 0 ),
-			new Vector3( 0, 1, 0 ), new Vector3( 0, 0, 1 ),	new Vector3( 0, 0, - 1 )
+			new Vector3( 0, 1, 0 ), new Vector3( 0, 0, 1 ),	new Vector3( 0, 0, -1 )
 		];
 
 	}
@@ -28986,7 +28986,7 @@ class PointLight extends Light {
 
 class OrthographicCamera extends Camera {
 
-	constructor( left = - 1, right = 1, top = 1, bottom = - 1, near = 0.1, far = 2000 ) {
+	constructor( left = -1, right = 1, top = 1, bottom = -1, near = 0.1, far = 2000 ) {
 
 		super();
 
@@ -29121,7 +29121,7 @@ class DirectionalLightShadow extends LightShadow {
 
 	constructor() {
 
-		super( new OrthographicCamera( - 5, 5, 5, - 5, 0.5, 500 ) );
+		super( new OrthographicCamera( -5, 5, 5, -5, 0.5, 500 ) );
 
 		this.isDirectionalLightShadow = true;
 
@@ -29909,7 +29909,7 @@ class LoaderUtils {
 
 		const index = url.lastIndexOf( '/' );
 
-		if ( index === - 1 ) return './';
+		if ( index === -1 ) return './';
 
 		return url.slice( 0, index + 1 );
 
@@ -31787,7 +31787,7 @@ class AudioListener extends Object3D {
 
 		this.matrixWorld.decompose( _position$1, _quaternion$1, _scale$1 );
 
-		_orientation$1.set( 0, 0, - 1 ).applyQuaternion( _quaternion$1 );
+		_orientation$1.set( 0, 0, -1 ).applyQuaternion( _quaternion$1 );
 
 		if ( listener.positionX ) {
 
@@ -32913,7 +32913,7 @@ class PropertyBinding {
 
 		const lastDot = results.nodeName && results.nodeName.lastIndexOf( '.' );
 
-		if ( lastDot !== undefined && lastDot !== - 1 ) {
+		if ( lastDot !== undefined && lastDot !== -1 ) {
 
 			const objectName = results.nodeName.substring( lastDot + 1 );
 
@@ -32921,7 +32921,7 @@ class PropertyBinding {
 			// is no way to parse 'foo.bar.baz': 'baz' must be a property, but
 			// 'bar' could be the objectName, or part of a nodeName (which can
 			// include '.' characters).
-			if ( _supportedObjectNames.indexOf( objectName ) !== - 1 ) {
+			if ( _supportedObjectNames.indexOf( objectName ) !== -1 ) {
 
 				results.nodeName = results.nodeName.substring( 0, lastDot );
 				results.objectName = objectName;
@@ -32942,7 +32942,7 @@ class PropertyBinding {
 
 	static findNode( root, nodeName ) {
 
-		if ( nodeName === undefined || nodeName === '' || nodeName === '.' || nodeName === - 1 || nodeName === root.name || nodeName === root.uuid ) {
+		if ( nodeName === undefined || nodeName === '' || nodeName === '.' || nodeName === -1 || nodeName === root.name || nodeName === root.uuid ) {
 
 			return root;
 
@@ -33885,7 +33885,7 @@ class AnimationAction {
 		this._weightInterpolant = null;
 
 		this.loop = LoopRepeat;
-		this._loopCount = - 1;
+		this._loopCount = -1;
 
 		// global mixer time when the action is to be started
 		// it's set back to 'null' upon start of the action
@@ -33937,7 +33937,7 @@ class AnimationAction {
 		this.enabled = true;
 
 		this.time = 0; // restart clip
-		this._loopCount = - 1;// forget previous loops
+		this._loopCount = -1;// forget previous loops
 		this._startTime = null;// forget scheduling
 
 		return this.stopFading().stopWarping();
@@ -34332,7 +34332,7 @@ class AnimationAction {
 
 		if ( deltaTime === 0 ) {
 
-			if ( loopCount === - 1 ) return time;
+			if ( loopCount === -1 ) return time;
 
 			return ( pingPong && ( loopCount & 1 ) === 1 ) ? duration - time : time;
 
@@ -34340,7 +34340,7 @@ class AnimationAction {
 
 		if ( loop === LoopOnce ) {
 
-			if ( loopCount === - 1 ) {
+			if ( loopCount === -1 ) {
 
 				// just started
 
@@ -34374,14 +34374,14 @@ class AnimationAction {
 
 				this._mixer.dispatchEvent( {
 					type: 'finished', action: this,
-					direction: deltaTime < 0 ? - 1 : 1
+					direction: deltaTime < 0 ? -1 : 1
 				} );
 
 			}
 
 		} else { // repetitive Repeat or PingPong
 
-			if ( loopCount === - 1 ) {
+			if ( loopCount === -1 ) {
 
 				// just started
 
@@ -34427,7 +34427,7 @@ class AnimationAction {
 
 					this._mixer.dispatchEvent( {
 						type: 'finished', action: this,
-						direction: deltaTime > 0 ? 1 : - 1
+						direction: deltaTime > 0 ? 1 : -1
 					} );
 
 				} else {
@@ -35383,7 +35383,7 @@ class UniformsGroup extends EventDispatcher {
 
 		const index = this.uniforms.indexOf( uniform );
 
-		if ( index !== - 1 ) this.uniforms.splice( index, 1 );
+		if ( index !== -1 ) this.uniforms.splice( index, 1 );
 
 		return this;
 
@@ -35593,7 +35593,7 @@ class Raycaster {
 		} else if ( camera.isOrthographicCamera ) {
 
 			this.ray.origin.set( coords.x, coords.y, ( camera.near + camera.far ) / ( camera.near - camera.far ) ).unproject( camera ); // set origin in plane of camera
-			this.ray.direction.set( 0, 0, - 1 ).transformDirection( camera.matrixWorld );
+			this.ray.direction.set( 0, 0, -1 ).transformDirection( camera.matrixWorld );
 			this.camera = camera;
 
 		} else {
@@ -35609,7 +35609,7 @@ class Raycaster {
 		_matrix.identity().extractRotation( controller.matrixWorld );
 
 		this.ray.origin.setFromMatrixPosition( controller.matrixWorld );
-		this.ray.direction.set( 0, 0, - 1 ).applyMatrix4( _matrix );
+		this.ray.direction.set( 0, 0, -1 ).applyMatrix4( _matrix );
 
 		return this;
 
@@ -35739,7 +35739,7 @@ class Spherical {
 		} else {
 
 			this.theta = Math.atan2( x, z );
-			this.phi = Math.acos( clamp( y / this.radius, - 1, 1 ) );
+			this.phi = Math.acos( clamp( y / this.radius, -1, 1 ) );
 
 		}
 
@@ -36203,9 +36203,9 @@ class SpotLightHelper extends Object3D {
 		const positions = [
 			0, 0, 0, 	0, 0, 1,
 			0, 0, 0, 	1, 0, 1,
-			0, 0, 0,	- 1, 0, 1,
+			0, 0, 0,	-1, 0, 1,
 			0, 0, 0, 	0, 1, 1,
-			0, 0, 0, 	0, - 1, 1
+			0, 0, 0, 	0, -1, 1
 		];
 
 		for ( let i = 0, j = 1, l = 32; i < l; i ++, j ++ ) {
@@ -36976,7 +36976,7 @@ class CameraHelper extends LineSegments {
 		_camera.projectionMatrixInverse.copy( this.camera.projectionMatrixInverse );
 
 		// Adjust z values based on coordinate system
-		const nearZ = this.camera.coordinateSystem === WebGLCoordinateSystem ? - 1 : 0;
+		const nearZ = this.camera.coordinateSystem === WebGLCoordinateSystem ? -1 : 0;
 
 		// center / target
 		setPoint( 'c', pointMap, geometry, _camera, 0, 0, nearZ );
@@ -36984,34 +36984,34 @@ class CameraHelper extends LineSegments {
 
 		// near
 
-		setPoint( 'n1', pointMap, geometry, _camera, - w, - h, nearZ );
-		setPoint( 'n2', pointMap, geometry, _camera, w, - h, nearZ );
-		setPoint( 'n3', pointMap, geometry, _camera, - w, h, nearZ );
+		setPoint( 'n1', pointMap, geometry, _camera, -1, -1, nearZ );
+		setPoint( 'n2', pointMap, geometry, _camera, w, -1, nearZ );
+		setPoint( 'n3', pointMap, geometry, _camera, -1, h, nearZ );
 		setPoint( 'n4', pointMap, geometry, _camera, w, h, nearZ );
 
 		// far
 
-		setPoint( 'f1', pointMap, geometry, _camera, - w, - h, 1 );
-		setPoint( 'f2', pointMap, geometry, _camera, w, - h, 1 );
-		setPoint( 'f3', pointMap, geometry, _camera, - w, h, 1 );
+		setPoint( 'f1', pointMap, geometry, _camera, -1, -1, 1 );
+		setPoint( 'f2', pointMap, geometry, _camera, w, -1, 1 );
+		setPoint( 'f3', pointMap, geometry, _camera, -1, h, 1 );
 		setPoint( 'f4', pointMap, geometry, _camera, w, h, 1 );
 
 		// up
 
 		setPoint( 'u1', pointMap, geometry, _camera, w * 0.7, h * 1.1, nearZ );
-		setPoint( 'u2', pointMap, geometry, _camera, - w * 0.7, h * 1.1, nearZ );
+		setPoint( 'u2', pointMap, geometry, _camera, -1 * 0.7, h * 1.1, nearZ );
 		setPoint( 'u3', pointMap, geometry, _camera, 0, h * 2, nearZ );
 
 		// cross
 
-		setPoint( 'cf1', pointMap, geometry, _camera, - w, 0, 1 );
+		setPoint( 'cf1', pointMap, geometry, _camera, -1, 0, 1 );
 		setPoint( 'cf2', pointMap, geometry, _camera, w, 0, 1 );
-		setPoint( 'cf3', pointMap, geometry, _camera, 0, - h, 1 );
+		setPoint( 'cf3', pointMap, geometry, _camera, 0, -1, 1 );
 		setPoint( 'cf4', pointMap, geometry, _camera, 0, h, 1 );
 
-		setPoint( 'cn1', pointMap, geometry, _camera, - w, 0, nearZ );
+		setPoint( 'cn1', pointMap, geometry, _camera, -1, 0, nearZ );
 		setPoint( 'cn2', pointMap, geometry, _camera, w, 0, nearZ );
-		setPoint( 'cn3', pointMap, geometry, _camera, 0, - h, nearZ );
+		setPoint( 'cn3', pointMap, geometry, _camera, 0, -1, nearZ );
 		setPoint( 'cn4', pointMap, geometry, _camera, 0, h, nearZ );
 
 		geometry.getAttribute( 'position' ).needsUpdate = true;
@@ -37159,7 +37159,7 @@ class Box3Helper extends LineSegments {
 
 		const indices = new Uint16Array( [ 0, 1, 1, 2, 2, 3, 3, 0, 4, 5, 5, 6, 6, 7, 7, 4, 0, 4, 1, 5, 2, 6, 3, 7 ] );
 
-		const positions = [ 1, 1, 1, - 1, 1, 1, - 1, - 1, 1, 1, - 1, 1, 1, 1, - 1, - 1, 1, - 1, - 1, - 1, - 1, 1, - 1, - 1 ];
+		const positions = [ 1, 1, 1, -1, 1, 1, -1, -1, 1, 1, -1, 1, 1, 1, -1, -1, 1, -1, -1, -1, -1, 1, -1, -1 ];
 
 		const geometry = new BufferGeometry();
 
@@ -37208,7 +37208,7 @@ class PlaneHelper extends Line {
 
 		const color = hex;
 
-		const positions = [ 1, - 1, 0, - 1, 1, 0, - 1, - 1, 0, 1, 1, 0, - 1, 1, 0, - 1, - 1, 0, 1, - 1, 0, 1, 1, 0 ];
+		const positions = [ 1, -1, 0, -1, 1, 0, -1, -1, 0, 1, 1, 0, -1, 1, 0, -1, -1, 0, 1, -1, 0, 1, 1, 0 ];
 
 		const geometry = new BufferGeometry();
 		geometry.setAttribute( 'position', new Float32BufferAttribute( positions, 3 ) );
@@ -37222,7 +37222,7 @@ class PlaneHelper extends Line {
 
 		this.size = size;
 
-		const positions2 = [ 1, 1, 0, - 1, 1, 0, - 1, - 1, 0, 1, 1, 0, - 1, - 1, 0, 1, - 1, 0 ];
+		const positions2 = [ 1, 1, 0, -1, 1, 0, -1, -1, 0, 1, 1, 0, -1, -1, 0, 1, -1, 0 ];
 
 		const geometry2 = new BufferGeometry();
 		geometry2.setAttribute( 'position', new Float32BufferAttribute( positions2, 3 ) );
@@ -37276,7 +37276,7 @@ class ArrowHelper extends Object3D {
 			_lineGeometry.setAttribute( 'position', new Float32BufferAttribute( [ 0, 0, 0, 0, 1, 0 ], 3 ) );
 
 			_coneGeometry = new CylinderGeometry$2( 0, 0.5, 1, 5, 1 );
-			_coneGeometry.translate( 0, - 0.5, 0 );
+			_coneGeometry.translate( 0, -0.5, 0 );
 
 		}
 
@@ -37303,7 +37303,7 @@ class ArrowHelper extends Object3D {
 
 			this.quaternion.set( 0, 0, 0, 1 );
 
-		} else if ( dir.y < - 0.99999 ) {
+		} else if ( dir.y < -0.99999 ) {
 
 			this.quaternion.set( 1, 0, 0, 0 );
 
@@ -37714,7 +37714,7 @@ class Controls extends EventDispatcher {
 
 		this.enabled = true;
 
-		this.state = - 1;
+		this.state = -1;
 
 		this.keys = {};
 		this.mouseButtons = { LEFT: null, MIDDLE: null, RIGHT: null };
@@ -38715,7 +38715,7 @@ const UniformsLib = {
 
 		envMap: { value: null },
 		envMapRotation: { value: /*@__PURE__*/ new Matrix3() },
-		flipEnvMap: { value: - 1 },
+		flipEnvMap: { value: -1 },
 		reflectivity: { value: 1.0 }, // basic, lambert, phong
 		ior: { value: 1.5 }, // physical
 		refractionRatio: { value: 0.98 }, // basic, lambert, phong
@@ -39136,7 +39136,7 @@ const ShaderLib = {
 
 		uniforms: {
 			envMap: { value: null },
-			flipEnvMap: { value: - 1 },
+			flipEnvMap: { value: -1 },
 			backgroundBlurriness: { value: 0 },
 			backgroundIntensity: { value: 1 },
 			backgroundRotation: { value: /*@__PURE__*/ new Matrix3() }
@@ -39151,7 +39151,7 @@ const ShaderLib = {
 
 		uniforms: {
 			tCube: { value: null },
-			tFlip: { value: - 1 },
+			tFlip: { value: -1 },
 			opacity: { value: 1.0 }
 		},
 
@@ -39385,18 +39385,18 @@ function WebGLBackground( renderer, cubemaps, cubeuvmaps, state, objects, alpha,
 			_e1$1.copy( scene.backgroundRotation );
 
 			// accommodate left-handed frame
-			_e1$1.x *= - 1; _e1$1.y *= - 1; _e1$1.z *= - 1;
+			_e1$1.x *= -1; _e1$1.y *= -1; _e1$1.z *= -1;
 
 			if ( background.isCubeTexture && background.isRenderTargetTexture === false ) {
 
 				// environment maps which are not cube render targets or PMREMs follow a different convention
-				_e1$1.y *= - 1;
-				_e1$1.z *= - 1;
+				_e1$1.y *= -1;
+				_e1$1.z *= -1;
 
 			}
 
 			boxMesh.material.uniforms.envMap.value = background;
-			boxMesh.material.uniforms.flipEnvMap.value = ( background.isCubeTexture && background.isRenderTargetTexture === false ) ? - 1 : 1;
+			boxMesh.material.uniforms.flipEnvMap.value = ( background.isCubeTexture && background.isRenderTargetTexture === false ) ? -1 : 1;
 			boxMesh.material.uniforms.backgroundBlurriness.value = scene.backgroundBlurriness;
 			boxMesh.material.uniforms.backgroundIntensity.value = scene.backgroundIntensity;
 			boxMesh.material.uniforms.backgroundRotation.value.setFromMatrix4( _m1$1.makeRotationFromEuler( _e1$1 ) );
@@ -40656,9 +40656,9 @@ const _axisDirections = [
 	/*@__PURE__*/ new Vector3( INV_PHI, 0, PHI ),
 	/*@__PURE__*/ new Vector3( 0, PHI, - INV_PHI ),
 	/*@__PURE__*/ new Vector3( 0, PHI, INV_PHI ),
-	/*@__PURE__*/ new Vector3( - 1, 1, - 1 ),
-	/*@__PURE__*/ new Vector3( 1, 1, - 1 ),
-	/*@__PURE__*/ new Vector3( - 1, 1, 1 ),
+	/*@__PURE__*/ new Vector3( -1, 1, -1 ),
+	/*@__PURE__*/ new Vector3( 1, 1, -1 ),
+	/*@__PURE__*/ new Vector3( -1, 1, 1 ),
 	/*@__PURE__*/ new Vector3( 1, 1, 1 ) ];
 
 /**
@@ -40926,8 +40926,8 @@ class PMREMGenerator {
 		const fov = 90;
 		const aspect = 1;
 		const cubeCamera = new PerspectiveCamera( fov, aspect, near, far );
-		const upSign = [ 1, - 1, 1, 1, 1, 1 ];
-		const forwardSign = [ 1, 1, 1, - 1, - 1, - 1 ];
+		const upSign = [ 1, -1, 1, 1, 1, 1 ];
+		const forwardSign = [ 1, 1, 1, -1, -1, -1 ];
 		const renderer = this._renderer;
 
 		const originalAutoClear = renderer.autoClear;
@@ -41026,7 +41026,7 @@ class PMREMGenerator {
 
 			}
 
-			this._cubemapMaterial.uniforms.flipEnvMap.value = ( texture.isRenderTargetTexture === false ) ? - 1 : 1;
+			this._cubemapMaterial.uniforms.flipEnvMap.value = ( texture.isRenderTargetTexture === false ) ? -1 : 1;
 
 		} else {
 
@@ -41245,7 +41245,7 @@ function _createPlanes( lodMax ) {
 		for ( let face = 0; face < cubeFaces; face ++ ) {
 
 			const x = ( face % 3 ) * 2 / 3 - 1;
-			const y = face > 2 ? 0 : - 1;
+			const y = face > 2 ? 0 : -1;
 			const coordinates = [
 				x, y, 0,
 				x + 2 / 3, y, 0,
@@ -41444,7 +41444,7 @@ function _getCubemapMaterial() {
 
 		uniforms: {
 			'envMap': { value: null },
-			'flipEnvMap': { value: - 1 }
+			'flipEnvMap': { value: -1 }
 		},
 
 		vertexShader: _getCommonVertexShader(),
@@ -45814,18 +45814,18 @@ function WebGLLights( extensions ) {
 		version: 0,
 
 		hash: {
-			directionalLength: - 1,
-			pointLength: - 1,
-			spotLength: - 1,
-			rectAreaLength: - 1,
-			hemiLength: - 1,
+			directionalLength: -1,
+			pointLength: -1,
+			spotLength: -1,
+			rectAreaLength: -1,
+			hemiLength: -1,
 
-			numDirectionalShadows: - 1,
-			numPointShadows: - 1,
-			numSpotShadows: - 1,
-			numSpotMaps: - 1,
+			numDirectionalShadows: -1,
+			numPointShadows: -1,
+			numSpotShadows: -1,
+			numSpotMaps: -1,
 
-			numLightProbes: - 1
+			numLightProbes: -1
 		},
 
 		ambient: [ 0, 0, 0 ],
@@ -46366,7 +46366,7 @@ function WebGLShadowMap( renderer, objects, capabilities ) {
 	fullScreenTri.setAttribute(
 		'position',
 		new BufferAttribute(
-			new Float32Array( [ - 1, - 1, 0.5, 3, - 1, 0.5, - 1, 3, 0.5 ] ),
+			new Float32Array( [ -1, -1, 0.5, 3, -1, 0.5, -1, 3, 0.5 ] ),
 			3
 		)
 	);
@@ -46799,7 +46799,7 @@ function WebGLState( gl, extensions ) {
 				locked = false;
 
 				currentColorMask = null;
-				currentColorClear.set( - 1, 0, 0, 0 ); // set to invalid state
+				currentColorClear.set( -1, 0, 0, 0 ); // set to invalid state
 
 			}
 
@@ -47128,12 +47128,12 @@ function WebGLState( gl, extensions ) {
 	let version = 0;
 	const glVersion = gl.getParameter( gl.VERSION );
 
-	if ( glVersion.indexOf( 'WebGL' ) !== - 1 ) {
+	if ( glVersion.indexOf( 'WebGL' ) !== -1 ) {
 
 		version = parseFloat( /^WebGL (\d)/.exec( glVersion )[ 1 ] );
 		lineWidthAvailable = ( version >= 1.0 );
 
-	} else if ( glVersion.indexOf( 'OpenGL ES' ) !== - 1 ) {
+	} else if ( glVersion.indexOf( 'OpenGL ES' ) !== -1 ) {
 
 		version = parseFloat( /^OpenGL ES (\d)/.exec( glVersion )[ 1 ] );
 		lineWidthAvailable = ( version >= 2.0 );
@@ -50998,7 +50998,7 @@ class WebXRManager extends EventDispatcher {
 
 			const controllerIndex = controllerInputSources.indexOf( event.inputSource );
 
-			if ( controllerIndex === - 1 ) {
+			if ( controllerIndex === -1 ) {
 
 				return;
 
@@ -51286,7 +51286,7 @@ class WebXRManager extends EventDispatcher {
 
 				let controllerIndex = controllerInputSources.indexOf( inputSource );
 
-				if ( controllerIndex === - 1 ) {
+				if ( controllerIndex === -1 ) {
 
 					// Assign input source a controller that currently has no input source
 
@@ -51310,7 +51310,7 @@ class WebXRManager extends EventDispatcher {
 
 					// If all controllers do currently receive input we ignore new ones
 
-					if ( controllerIndex === - 1 ) break;
+					if ( controllerIndex === -1 ) break;
 
 				}
 
@@ -51377,7 +51377,7 @@ class WebXRManager extends EventDispatcher {
 			camera.matrixWorldInverse.copy( camera.matrixWorld ).invert();
 
 			// Check if the projection uses an infinite far plane.
-			if ( projL[ 10 ] === - 1.0 ) {
+			if ( projL[ 10 ] === -1 ) {
 
 				// Use the projection matrix from the left eye.
 				// The camera offset is sufficient to include the view volumes
@@ -51875,7 +51875,7 @@ function WebGLMaterials( renderer, properties ) {
 
 			if ( material.side === BackSide ) {
 
-				uniforms.bumpScale.value *= - 1;
+				uniforms.bumpScale.value *= -1;
 
 			}
 
@@ -51942,19 +51942,19 @@ function WebGLMaterials( renderer, properties ) {
 			_e1.copy( envMapRotation );
 
 			// accommodate left-handed frame
-			_e1.x *= - 1; _e1.y *= - 1; _e1.z *= - 1;
+			_e1.x *= -1; _e1.y *= -1; _e1.z *= -1;
 
 			if ( envMap.isCubeTexture && envMap.isRenderTargetTexture === false ) {
 
 				// environment maps which are not cube render targets or PMREMs follow a different convention
-				_e1.y *= - 1;
-				_e1.z *= - 1;
+				_e1.y *= -1;
+				_e1.z *= -1;
 
 			}
 
 			uniforms.envMapRotation.value.setFromMatrix4( _m1.makeRotationFromEuler( _e1 ) );
 
-			uniforms.flipEnvMap.value = ( envMap.isCubeTexture && envMap.isRenderTargetTexture === false ) ? - 1 : 1;
+			uniforms.flipEnvMap.value = ( envMap.isCubeTexture && envMap.isRenderTargetTexture === false ) ? -1 : 1;
 
 			uniforms.reflectivity.value = material.reflectivity;
 			uniforms.ior.value = material.ior;
@@ -52377,7 +52377,7 @@ function WebGLUniformsGroups( gl, info, capabilities, state ) {
 
 		for ( let i = 0; i < maxBindingPoints; i ++ ) {
 
-			if ( allocatedBindingPoints.indexOf( i ) === - 1 ) {
+			if ( allocatedBindingPoints.indexOf( i ) === -1 ) {
 
 				allocatedBindingPoints.push( i );
 				return i;
@@ -52799,7 +52799,7 @@ class WebGLRenderer {
 		let _currentActiveCubeFace = 0;
 		let _currentActiveMipmapLevel = 0;
 		let _currentRenderTarget = null;
-		let _currentMaterialId = - 1;
+		let _currentMaterialId = -1;
 
 		let _currentCamera = null;
 
@@ -53930,7 +53930,7 @@ class WebGLRenderer {
 			// _gl.finish();
 
 			bindingStates.resetDefaultState();
-			_currentMaterialId = - 1;
+			_currentMaterialId = -1;
 			_currentCamera = null;
 
 			renderStateStack.pop();
@@ -54746,7 +54746,7 @@ class WebGLRenderer {
 
 				m_uniforms.envMap.value = envMap;
 
-				m_uniforms.flipEnvMap.value = ( envMap.isCubeTexture && envMap.isRenderTargetTexture === false ) ? - 1 : 1;
+				m_uniforms.flipEnvMap.value = ( envMap.isCubeTexture && envMap.isRenderTargetTexture === false ) ? -1 : 1;
 
 			}
 
@@ -55055,7 +55055,7 @@ class WebGLRenderer {
 
 			}
 
-			_currentMaterialId = - 1; // reset current material to ensure correct uniform bindings
+			_currentMaterialId = -1; // reset current material to ensure correct uniform bindings
 
 		};
 
@@ -58570,7 +58570,7 @@ class PanelLink extends Interface {
         this.callback = callback;
 
         this.init();
-        this.setValue(this.value);
+        this.setValue(this.value, false);
 
         this.addListeners();
     }
@@ -58579,7 +58579,7 @@ class PanelLink extends Interface {
         this.css({
             position: 'relative',
             width: 'fit-content',
-            height: 20,
+            height: 18,
             lineHeight: 16,
             textTransform: 'uppercase',
             whiteSpace: 'nowrap',
@@ -59003,7 +59003,7 @@ class PanelThumbnail extends Interface {
 
         this.init();
         this.initDragAndDrop();
-        this.setValue(this.value);
+        this.setValue(this.value, false);
 
         this.addListeners();
     }
@@ -61117,7 +61117,7 @@ class Slider extends Interface {
         this.lastOrigin = new Vector2();
 
         this.init();
-        this.setValue(this.value);
+        this.setValue(this.value, false);
 
         this.addListeners();
     }
@@ -61397,7 +61397,7 @@ class ColorPicker extends Interface {
 
         this.init();
         this.initColorRing();
-        this.setValue(this.value);
+        this.setValue(this.value, false);
 
         this.addListeners();
     }
@@ -63359,6 +63359,7 @@ class Point3D extends Group {
         root = document.body,
         container = document.body,
         breakpoint = 1000,
+        headerSnap = false,
         physics = null,
         loader = new TextureLoader$1(),
         uvTexturePath = 'assets/textures/uv.jpg',
@@ -63372,6 +63373,7 @@ class Point3D extends Group {
         this.root = root instanceof Interface ? root : new Interface(root);
         this.container = container instanceof Interface ? container : new Interface(container);
         this.breakpoint = breakpoint;
+        this.headerSnap = headerSnap;
         this.physics = physics;
         this.loader = loader;
         this.uvTexturePath = uvTexturePath;
@@ -63399,6 +63401,7 @@ class Point3D extends Group {
         this.anisotropy = this.renderer.capabilities.getMaxAnisotropy();
         this.uvTexture = null;
         this.windowSnapMargin = 30;
+        this.windowSnapTop = this.headerSnap ? 29 : 0;
         this.openColor = null;
         this.isDragging = false;
         this.enabled = true;
@@ -63877,6 +63880,8 @@ class Point3D extends Group {
                 type: this.type
             });
             this.element.add(this.point);
+
+            this.point.windowSnapTop = 42;
         } else {
             this.reticle = new ReticleCanvas();
             this.reticle.setContext(context);
@@ -63892,11 +63897,14 @@ class Point3D extends Group {
             }
 
             this.point = new Point(this, this.tracker);
+            this.point.info.css({ top: -15 });
             this.point.setData({
                 name: this.name,
                 type: this.type
             });
             this.element.add(this.point);
+
+            this.point.windowSnapTop = 14;
         }
     }
 
@@ -64608,7 +64616,7 @@ class Point3D extends Group {
         this.snapPosition.copy(this.point.originPosition);
         this.snapTarget.copy(this.snapPosition);
 
-        const windowSnapTop = Point3D.windowSnapMargin + 43;
+        const windowSnapTop = Point3D.windowSnapMargin + Point3D.windowSnapTop + this.point.windowSnapTop;
         let windowSnapLeft = -(48 - Point3D.windowSnapMargin);
 
         if (this.point.tracker.locked) {
@@ -64915,7 +64923,7 @@ class RectAreaLightHelper extends Line {
 
 	constructor( light, color ) {
 
-		const positions = [ 1, 1, 0, - 1, 1, 0, - 1, - 1, 0, 1, - 1, 0, 1, 1, 0 ];
+		const positions = [ 1, 1, 0, -1, 1, 0, -1, -1, 0, 1, -1, 0, 1, 1, 0 ];
 
 		const geometry = new BufferGeometry();
 		geometry.setAttribute( 'position', new Float32BufferAttribute( positions, 3 ) );
@@ -64931,7 +64939,7 @@ class RectAreaLightHelper extends Line {
 
 		//
 
-		const positions2 = [ 1, 1, 0, - 1, 1, 0, - 1, - 1, 0, 1, 1, 0, - 1, - 1, 0, 1, - 1, 0 ];
+		const positions2 = [ 1, 1, 0, -1, 1, 0, -1, -1, 0, 1, 1, 0, -1, -1, 0, 1, -1, 0 ];
 
 		const geometry2 = new BufferGeometry();
 		geometry2.setAttribute( 'position', new Float32BufferAttribute( positions2, 3 ) );
@@ -82671,7 +82679,7 @@ void main() {
     vec2 uv = vUv;
 
     // Create large, incidental noise waves
-    float noise = max(0.0, snoise(vec2(uTime, uv.y * 0.3)) - 0.3) * uDistortion;
+    float noise = max(0.0, snoise(vec2(uTime * uSpeed, uv.y * 0.3)) - 0.3) * uDistortion;
 
     // Offset by smaller, constant noise waves
     noise += (snoise(vec2(uTime * 10.0 * uSpeed, uv.y * 2.4)) - 0.5) * uDistortion2;
@@ -90425,9 +90433,9 @@ oimo.collision.narrowphase.detector._BoxBoxDetector.FaceClipper = class oimo_col
 		if(this.numVertices < 4) {
 			return;
 		}
-		let max1 = -1e65536;
+		let max1 = -Infinity;
 		let min1 = 1e65536;
-		let max2 = -1e65536;
+		let max2 = -Infinity;
 		let min2 = 1e65536;
 		let max1V = null;
 		let min1V = null;
@@ -108074,11 +108082,11 @@ oimo.dynamics.constraint.joint.Joint = class oimo_dynamics_constraint_joint_Join
 			maxImp = 0;
 			error = 0;
 		} else if(lower == upper) {
-			minImp = -1e65536;
+			minImp = -Infinity;
 			maxImp = 1e65536;
 			error = diff - lower;
 		} else if(diff < lower) {
-			minImp = -1e65536;
+			minImp = -Infinity;
 			maxImp = 0;
 			error = diff - lower + slop;
 			if(error > 0) {
@@ -108152,11 +108160,11 @@ oimo.dynamics.constraint.joint.Joint = class oimo_dynamics_constraint_joint_Join
 			maxImp = 0;
 			error = 0;
 		} else if(lower == upper) {
-			minImp = -1e65536;
+			minImp = -Infinity;
 			maxImp = 1e65536;
 			error = diff - lower;
 		} else if(diff < lower) {
-			minImp = -1e65536;
+			minImp = -Infinity;
 			maxImp = 0;
 			error = diff - lower + slop;
 			if(error > 0) {
@@ -108738,7 +108746,7 @@ oimo.dynamics.constraint.joint.CylindricalJoint = class oimo_dynamics_constraint
 		row.impulse = impulse;
 		row.rhs = linRhsY;
 		row.cfm = 0;
-		row.minImpulse = -1e65536;
+		row.minImpulse = -Infinity;
 		row.maxImpulse = 1e65536;
 		j = row.jacobian;
 		j.lin1X = this._basis.yX;
@@ -108778,7 +108786,7 @@ oimo.dynamics.constraint.joint.CylindricalJoint = class oimo_dynamics_constraint
 		row1.impulse = impulse1;
 		row1.rhs = linRhsZ;
 		row1.cfm = 0;
-		row1.minImpulse = -1e65536;
+		row1.minImpulse = -Infinity;
 		row1.maxImpulse = 1e65536;
 		j = row1.jacobian;
 		j.lin1X = this._basis.zX;
@@ -108851,7 +108859,7 @@ oimo.dynamics.constraint.joint.CylindricalJoint = class oimo_dynamics_constraint
 		row2.impulse = impulse2;
 		row2.rhs = angRhsY;
 		row2.cfm = 0;
-		row2.minImpulse = -1e65536;
+		row2.minImpulse = -Infinity;
 		row2.maxImpulse = 1e65536;
 		j = row2.jacobian;
 		j.ang1X = this._basis.yX;
@@ -108885,7 +108893,7 @@ oimo.dynamics.constraint.joint.CylindricalJoint = class oimo_dynamics_constraint
 		row3.impulse = impulse3;
 		row3.rhs = angRhsZ;
 		row3.cfm = 0;
-		row3.minImpulse = -1e65536;
+		row3.minImpulse = -Infinity;
 		row3.maxImpulse = 1e65536;
 		j = row3.jacobian;
 		j.ang1X = this._basis.zX;
@@ -110274,7 +110282,7 @@ oimo.dynamics.constraint.joint.PrismaticJoint = class oimo_dynamics_constraint_j
 		row.impulse = impulse;
 		row.rhs = linRhsY;
 		row.cfm = 0;
-		row.minImpulse = -1e65536;
+		row.minImpulse = -Infinity;
 		row.maxImpulse = 1e65536;
 		j = row.jacobian;
 		j.lin1X = this._basis.yX;
@@ -110314,7 +110322,7 @@ oimo.dynamics.constraint.joint.PrismaticJoint = class oimo_dynamics_constraint_j
 		row1.impulse = impulse1;
 		row1.rhs = linRhsZ;
 		row1.cfm = 0;
-		row1.minImpulse = -1e65536;
+		row1.minImpulse = -Infinity;
 		row1.maxImpulse = 1e65536;
 		j = row1.jacobian;
 		j.lin1X = this._basis.zX;
@@ -110354,7 +110362,7 @@ oimo.dynamics.constraint.joint.PrismaticJoint = class oimo_dynamics_constraint_j
 		row2.impulse = impulse2;
 		row2.rhs = angRhsX;
 		row2.cfm = 0;
-		row2.minImpulse = -1e65536;
+		row2.minImpulse = -Infinity;
 		row2.maxImpulse = 1e65536;
 		j = row2.jacobian;
 		j.ang1X = 1;
@@ -110388,7 +110396,7 @@ oimo.dynamics.constraint.joint.PrismaticJoint = class oimo_dynamics_constraint_j
 		row3.impulse = impulse3;
 		row3.rhs = angRhsY;
 		row3.cfm = 0;
-		row3.minImpulse = -1e65536;
+		row3.minImpulse = -Infinity;
 		row3.maxImpulse = 1e65536;
 		j = row3.jacobian;
 		j.ang1X = 0;
@@ -110422,7 +110430,7 @@ oimo.dynamics.constraint.joint.PrismaticJoint = class oimo_dynamics_constraint_j
 		row4.impulse = impulse4;
 		row4.rhs = angRhsZ;
 		row4.cfm = 0;
-		row4.minImpulse = -1e65536;
+		row4.minImpulse = -Infinity;
 		row4.maxImpulse = 1e65536;
 		j = row4.jacobian;
 		j.ang1X = 0;
@@ -111178,7 +111186,7 @@ oimo.dynamics.constraint.joint.RagdollJoint = class oimo_dynamics_constraint_joi
 		row.impulse = impulse;
 		row.rhs = linearRhsX;
 		row.cfm = 0;
-		row.minImpulse = -1e65536;
+		row.minImpulse = -Infinity;
 		row.maxImpulse = 1e65536;
 		let j = row.jacobian;
 		j.lin1X = 1;
@@ -111218,7 +111226,7 @@ oimo.dynamics.constraint.joint.RagdollJoint = class oimo_dynamics_constraint_joi
 		row1.impulse = impulse1;
 		row1.rhs = linearRhsY;
 		row1.cfm = 0;
-		row1.minImpulse = -1e65536;
+		row1.minImpulse = -Infinity;
 		row1.maxImpulse = 1e65536;
 		j = row1.jacobian;
 		j.lin1X = 0;
@@ -111258,7 +111266,7 @@ oimo.dynamics.constraint.joint.RagdollJoint = class oimo_dynamics_constraint_joi
 		row2.impulse = impulse2;
 		row2.rhs = linearRhsZ;
 		row2.cfm = 0;
-		row2.minImpulse = -1e65536;
+		row2.minImpulse = -Infinity;
 		row2.maxImpulse = 1e65536;
 		j = row2.jacobian;
 		j.lin1X = 0;
@@ -111829,7 +111837,7 @@ oimo.dynamics.constraint.joint.RevoluteJoint = class oimo_dynamics_constraint_jo
 		row.impulse = impulse;
 		row.rhs = linearRhsX;
 		row.cfm = 0;
-		row.minImpulse = -1e65536;
+		row.minImpulse = -Infinity;
 		row.maxImpulse = 1e65536;
 		let j = row.jacobian;
 		j.lin1X = 1;
@@ -111869,7 +111877,7 @@ oimo.dynamics.constraint.joint.RevoluteJoint = class oimo_dynamics_constraint_jo
 		row1.impulse = impulse1;
 		row1.rhs = linearRhsY;
 		row1.cfm = 0;
-		row1.minImpulse = -1e65536;
+		row1.minImpulse = -Infinity;
 		row1.maxImpulse = 1e65536;
 		j = row1.jacobian;
 		j.lin1X = 0;
@@ -111909,7 +111917,7 @@ oimo.dynamics.constraint.joint.RevoluteJoint = class oimo_dynamics_constraint_jo
 		row2.impulse = impulse2;
 		row2.rhs = linearRhsZ;
 		row2.cfm = 0;
-		row2.minImpulse = -1e65536;
+		row2.minImpulse = -Infinity;
 		row2.maxImpulse = 1e65536;
 		j = row2.jacobian;
 		j.lin1X = 0;
@@ -111982,7 +111990,7 @@ oimo.dynamics.constraint.joint.RevoluteJoint = class oimo_dynamics_constraint_jo
 		row3.impulse = impulse3;
 		row3.rhs = angRhsY;
 		row3.cfm = 0;
-		row3.minImpulse = -1e65536;
+		row3.minImpulse = -Infinity;
 		row3.maxImpulse = 1e65536;
 		j = row3.jacobian;
 		j.ang1X = this._basis.yX;
@@ -112016,7 +112024,7 @@ oimo.dynamics.constraint.joint.RevoluteJoint = class oimo_dynamics_constraint_jo
 		row4.impulse = impulse4;
 		row4.rhs = angRhsZ;
 		row4.cfm = 0;
-		row4.minImpulse = -1e65536;
+		row4.minImpulse = -Infinity;
 		row4.maxImpulse = 1e65536;
 		j = row4.jacobian;
 		j.ang1X = this._basis.zX;
@@ -112682,7 +112690,7 @@ oimo.dynamics.constraint.joint.SphericalJoint = class oimo_dynamics_constraint_j
 		row.impulse = impulse;
 		row.rhs = linearRhsX;
 		row.cfm = cfm;
-		row.minImpulse = -1e65536;
+		row.minImpulse = -Infinity;
 		row.maxImpulse = 1e65536;
 		let j = row.jacobian;
 		j.lin1X = 1;
@@ -112722,7 +112730,7 @@ oimo.dynamics.constraint.joint.SphericalJoint = class oimo_dynamics_constraint_j
 		row1.impulse = impulse1;
 		row1.rhs = linearRhsY;
 		row1.cfm = cfm;
-		row1.minImpulse = -1e65536;
+		row1.minImpulse = -Infinity;
 		row1.maxImpulse = 1e65536;
 		j = row1.jacobian;
 		j.lin1X = 0;
@@ -112762,7 +112770,7 @@ oimo.dynamics.constraint.joint.SphericalJoint = class oimo_dynamics_constraint_j
 		row2.impulse = impulse2;
 		row2.rhs = linearRhsZ;
 		row2.cfm = cfm;
-		row2.minImpulse = -1e65536;
+		row2.minImpulse = -Infinity;
 		row2.maxImpulse = 1e65536;
 		j = row2.jacobian;
 		j.lin1X = 0;
@@ -112961,7 +112969,7 @@ oimo.dynamics.constraint.joint.UniversalJoint = class oimo_dynamics_constraint_j
 		row.impulse = impulse;
 		row.rhs = linearRhsX;
 		row.cfm = 0;
-		row.minImpulse = -1e65536;
+		row.minImpulse = -Infinity;
 		row.maxImpulse = 1e65536;
 		let j = row.jacobian;
 		j.lin1X = 1;
@@ -113001,7 +113009,7 @@ oimo.dynamics.constraint.joint.UniversalJoint = class oimo_dynamics_constraint_j
 		row1.impulse = impulse1;
 		row1.rhs = linearRhsY;
 		row1.cfm = 0;
-		row1.minImpulse = -1e65536;
+		row1.minImpulse = -Infinity;
 		row1.maxImpulse = 1e65536;
 		j = row1.jacobian;
 		j.lin1X = 0;
@@ -113041,7 +113049,7 @@ oimo.dynamics.constraint.joint.UniversalJoint = class oimo_dynamics_constraint_j
 		row2.impulse = impulse2;
 		row2.rhs = linearRhsZ;
 		row2.cfm = 0;
-		row2.minImpulse = -1e65536;
+		row2.minImpulse = -Infinity;
 		row2.maxImpulse = 1e65536;
 		j = row2.jacobian;
 		j.lin1X = 0;
@@ -113115,7 +113123,7 @@ oimo.dynamics.constraint.joint.UniversalJoint = class oimo_dynamics_constraint_j
 			row.impulse = impulse;
 			row.rhs = angRhsY;
 			row.cfm = 0;
-			row.minImpulse = -1e65536;
+			row.minImpulse = -Infinity;
 			row.maxImpulse = 1e65536;
 			j = row.jacobian;
 			j.ang1X = this._axisYX;
@@ -113646,7 +113654,7 @@ oimo.dynamics.constraint.solver.direct.BoundaryBuilder = class oimo_dynamics_con
 			return;
 		}
 		let row = info.rows[i];
-		let lowerLimitEnabled = row.minImpulse > -1e65536;
+		let lowerLimitEnabled = row.minImpulse > -Infinity;
 		let upperLimitEnabled = row.maxImpulse < 1e65536;
 		if(row.minImpulse == 0 && row.maxImpulse == 0) {
 			let _this = this.bbInfo;
@@ -122127,7 +122135,7 @@ oimo.collision.narrowphase.detector.gjkepa.GjkEpaResultState.EPA_DID_NOT_CONVERG
 oimo.common.Mat3.numCreations = 0;
 oimo.common.Mat4.numCreations = 0;
 oimo.common.MathUtil.POSITIVE_INFINITY = 1e65536;
-oimo.common.MathUtil.NEGATIVE_INFINITY = -1e65536;
+oimo.common.MathUtil.NEGATIVE_INFINITY = -Infinity;
 oimo.common.MathUtil.PI = 3.14159265358979;
 oimo.common.MathUtil.TWO_PI = 6.28318530717958;
 oimo.common.MathUtil.HALF_PI = 1.570796326794895;
@@ -124218,7 +124226,7 @@ class SVGLoader extends Loader {
 
 			const dot = ux * vx + uy * vy;
 			const len = Math.sqrt( ux * ux + uy * uy ) * Math.sqrt( vx * vx + vy * vy );
-			let ang = Math.acos( Math.max( - 1, Math.min( 1, dot / len ) ) ); // floating point precision, slightly over values appear
+			let ang = Math.acos( Math.max( -1, Math.min( 1, dot / len ) ) ); // floating point precision, slightly over values appear
 			if ( ( ux * vy - uy * vx ) < 0 ) ang = - ang;
 			return ang;
 
@@ -124762,7 +124770,7 @@ class SVGLoader extends Loader {
 				'in': 1 / 25.4,
 				'pt': 72 / 25.4,
 				'pc': 6 / 25.4,
-				'px': - 1
+				'px': -1
 			},
 			'cm': {
 				'mm': 10,
@@ -124770,7 +124778,7 @@ class SVGLoader extends Loader {
 				'in': 1 / 2.54,
 				'pt': 72 / 2.54,
 				'pc': 6 / 2.54,
-				'px': - 1
+				'px': -1
 			},
 			'in': {
 				'mm': 25.4,
@@ -124778,7 +124786,7 @@ class SVGLoader extends Loader {
 				'in': 1,
 				'pt': 72,
 				'pc': 6,
-				'px': - 1
+				'px': -1
 			},
 			'pt': {
 				'mm': 25.4 / 72,
@@ -124786,7 +124794,7 @@ class SVGLoader extends Loader {
 				'in': 1 / 72,
 				'pt': 1,
 				'pc': 6 / 72,
-				'px': - 1
+				'px': -1
 			},
 			'pc': {
 				'mm': 25.4 / 6,
@@ -124794,7 +124802,7 @@ class SVGLoader extends Loader {
 				'in': 1 / 6,
 				'pt': 72 / 6,
 				'pc': 1,
-				'px': - 1
+				'px': -1
 			},
 			'px': {
 				'px': 1
@@ -125153,8 +125161,8 @@ class SVGLoader extends Loader {
 
 				if ( isTransformFlipped( m ) ) {
 
-					curve.aStartAngle *= - 1;
-					curve.aEndAngle *= - 1;
+					curve.aStartAngle *= -1;
+					curve.aEndAngle *= -1;
 					curve.aClockwise = ! curve.aClockwise;
 
 				}
@@ -125287,7 +125295,7 @@ class SVGLoader extends Loader {
 				// This case needs to be treated separately to avoid div by 0
 
 				rt1 = 0.5 * rt;
-				rt2 = - 0.5 * rt;
+				rt2 = -0.5 * rt;
 
 			}
 
@@ -125305,7 +125313,7 @@ class SVGLoader extends Loader {
 
 			if ( Math.abs( cs ) > 2 * Math.abs( B ) ) {
 
-				t = - 2 * B / cs;
+				t = -2 * B / cs;
 				sn = 1 / Math.sqrt( 1 + t * t );
 				cs = t * sn;
 
@@ -125316,7 +125324,7 @@ class SVGLoader extends Loader {
 
 			} else {
 
-				t = - 0.5 * cs / B;
+				t = -0.5 * cs / B;
 				cs = 1 / Math.sqrt( 1 + t * t );
 				sn = t * cs;
 
@@ -125714,14 +125722,14 @@ class SVGLoader extends Loader {
 
 		// prepare paths for hole detection
 		let scanlineMinX = BIGNUMBER;
-		let scanlineMaxX = - BIGNUMBER;
+		let scanlineMaxX = -999999999;
 
 		let simplePaths = shapePath.subPaths.map( p => {
 
 			const points = p.getPoints();
-			let maxY = - BIGNUMBER;
+			let maxY = -999999999;
 			let minY = BIGNUMBER;
-			let maxX = - BIGNUMBER;
+			let maxX = -999999999;
 			let minX = BIGNUMBER;
 
 	      	//points.forEach(p => p.y *= -1);
@@ -125769,7 +125777,7 @@ class SVGLoader extends Loader {
 
 			}
 
-			return { curves: p.curves, points: points, isCW: ShapeUtils.isClockWise( points ), identifier: - 1, boundingBox: new Box2( new Vector2$1( minX, minY ), new Vector2$1( maxX, maxY ) ) };
+			return { curves: p.curves, points: points, isCW: ShapeUtils.isClockWise( points ), identifier: -1, boundingBox: new Box2( new Vector2$1( minX, minY ), new Vector2$1( maxX, maxY ) ) };
 
 		} );
 
@@ -126943,7 +126951,7 @@ class GLTFLoader extends Loader {
 
 	register( callback ) {
 
-		if ( this.pluginCallbacks.indexOf( callback ) === - 1 ) {
+		if ( this.pluginCallbacks.indexOf( callback ) === -1 ) {
 
 			this.pluginCallbacks.push( callback );
 
@@ -126955,7 +126963,7 @@ class GLTFLoader extends Loader {
 
 	unregister( callback ) {
 
-		if ( this.pluginCallbacks.indexOf( callback ) !== - 1 ) {
+		if ( this.pluginCallbacks.indexOf( callback ) !== -1 ) {
 
 			this.pluginCallbacks.splice( this.pluginCallbacks.indexOf( callback ), 1 );
 
@@ -127229,7 +127237,7 @@ class GLTFLightsExtension {
 
 			case 'directional':
 				lightNode = new DirectionalLight( color );
-				lightNode.target.position.set( 0, 0, - 1 );
+				lightNode.target.position.set( 0, 0, -1 );
 				lightNode.add( lightNode.target );
 				break;
 
@@ -127247,7 +127255,7 @@ class GLTFLightsExtension {
 				lightDef.spot.outerConeAngle = lightDef.spot.outerConeAngle !== undefined ? lightDef.spot.outerConeAngle : Math.PI / 4.0;
 				lightNode.angle = lightDef.spot.outerConeAngle;
 				lightNode.penumbra = 1.0 - lightDef.spot.innerConeAngle / lightDef.spot.outerConeAngle;
-				lightNode.target.position.set( 0, 0, - 1 );
+				lightNode.target.position.set( 0, 0, -1 );
 				lightNode.add( lightNode.target );
 				break;
 
@@ -128777,7 +128785,7 @@ class GLTFCubicSplineInterpolant extends Interpolant {
 		const offset1 = i1 * stride3;
 		const offset0 = offset1 - stride3;
 
-		const s2 = - 2 * ppp + 3 * pp;
+		const s2 = -2 * ppp + 3 * pp;
 		const s3 = ppp - pp;
 		const s0 = 1 - s2;
 		const s1 = s3 - pp + p;
@@ -129234,9 +129242,9 @@ class GLTFParser {
 		// expensive work of uploading a texture to the GPU off the main thread.
 
 		let isSafari = false;
-		let safariVersion = - 1;
+		let safariVersion = -1;
 		let isFirefox = false;
-		let firefoxVersion = - 1;
+		let firefoxVersion = -1;
 
 		if ( typeof navigator !== 'undefined' ) {
 
@@ -129244,10 +129252,10 @@ class GLTFParser {
 
 			isSafari = /^((?!chrome|android).)*safari/i.test( userAgent ) === true;
 			const safariMatch = userAgent.match( /Version\/(\d+)/ );
-			safariVersion = isSafari && safariMatch ? parseInt( safariMatch[ 1 ], 10 ) : - 1;
+			safariVersion = isSafari && safariMatch ? parseInt( safariMatch[ 1 ], 10 ) : -1;
 
-			isFirefox = userAgent.indexOf( 'Firefox' ) > - 1;
-			firefoxVersion = isFirefox ? userAgent.match( /Firefox\/([0-9]+)\./ )[ 1 ] : - 1;
+			isFirefox = userAgent.indexOf( 'Firefox' ) > -1;
+			firefoxVersion = isFirefox ? userAgent.match( /Firefox\/([0-9]+)\./ )[ 1 ] : -1;
 
 		}
 
@@ -130142,8 +130150,8 @@ class GLTFParser {
 				if ( useDerivativeTangents ) {
 
 					// https://github.com/mrdoob/three.js/issues/11438#issuecomment-507003995
-					if ( cachedMaterial.normalScale ) cachedMaterial.normalScale.y *= - 1;
-					if ( cachedMaterial.clearcoatNormalScale ) cachedMaterial.clearcoatNormalScale.y *= - 1;
+					if ( cachedMaterial.normalScale ) cachedMaterial.normalScale.y *= -1;
+					if ( cachedMaterial.clearcoatNormalScale ) cachedMaterial.clearcoatNormalScale.y *= -1;
 
 				}
 
@@ -131437,7 +131445,7 @@ class WorkerPool {
 		for ( let i = 0; i < this.pool; i ++ )
 			if ( ! ( this.workerStatus & ( 1 << i ) ) ) return i;
 
-		return - 1;
+		return -1;
 
 	}
 
@@ -131478,7 +131486,7 @@ class WorkerPool {
 
 			const workerId = this._getIdleWorker();
 
-			if ( workerId !== - 1 ) {
+			if ( workerId !== -1 ) {
 
 				this._initWorker( workerId );
 				this.workerStatus |= 1 << workerId;
@@ -131507,7 +131515,7 @@ class WorkerPool {
 
 }
 
-const t=0,n=2,g$1=1,u=2,T=0,C$1=1,R=10,it=0,ct=9,yt=15,xt=16,wt=22,Ft=37,Ct=43,te=76,ae=83,ge=97,ue=100,we=103,Ae=109,In=165,Sn=166,pi=1000066e3;class Ii{constructor(){this.vkFormat=0,this.typeSize=1,this.pixelWidth=0,this.pixelHeight=0,this.pixelDepth=0,this.layerCount=0,this.faceCount=1,this.supercompressionScheme=0,this.levels=[],this.dataFormatDescriptor=[{vendorId:0,descriptorType:0,descriptorBlockSize:0,versionNumber:2,colorModel:0,colorPrimaries:1,transferFunction:2,flags:0,texelBlockDimension:[0,0,0,0],bytesPlane:[0,0,0,0,0,0,0,0],samples:[]}],this.keyValue={},this.globalData=null;}}class Si{constructor(t,e,n,i){this._dataView=void 0,this._littleEndian=void 0,this._offset=void 0,this._dataView=new DataView(t.buffer,t.byteOffset+e,n),this._littleEndian=i,this._offset=0;}_nextUint8(){const t=this._dataView.getUint8(this._offset);return this._offset+=1,t}_nextUint16(){const t=this._dataView.getUint16(this._offset,this._littleEndian);return this._offset+=2,t}_nextUint32(){const t=this._dataView.getUint32(this._offset,this._littleEndian);return this._offset+=4,t}_nextUint64(){const t=this._dataView.getUint32(this._offset,this._littleEndian)+2**32*this._dataView.getUint32(this._offset+4,this._littleEndian);return this._offset+=8,t}_nextInt32(){const t=this._dataView.getInt32(this._offset,this._littleEndian);return this._offset+=4,t}_nextUint8Array(t){const e=new Uint8Array(this._dataView.buffer,this._dataView.byteOffset+this._offset,t);return this._offset+=t,e}_skip(t){return this._offset+=t,this}_scan(t,e){void 0===e&&(e=0);const n=this._offset;let i=0;for(;this._dataView.getUint8(this._offset)!==e&&i<t;)i++,this._offset++;return i<t&&this._offset++,new Uint8Array(this._dataView.buffer,this._dataView.byteOffset+n,i)}}const Oi=[171,75,84,88,32,50,48,187,13,10,26,10];function Ti(t){return (new TextDecoder).decode(t)}function Pi(t){const e=new Uint8Array(t.buffer,t.byteOffset,Oi.length);if(e[0]!==Oi[0]||e[1]!==Oi[1]||e[2]!==Oi[2]||e[3]!==Oi[3]||e[4]!==Oi[4]||e[5]!==Oi[5]||e[6]!==Oi[6]||e[7]!==Oi[7]||e[8]!==Oi[8]||e[9]!==Oi[9]||e[10]!==Oi[10]||e[11]!==Oi[11])throw new Error("Missing KTX 2.0 identifier.");const n=new Ii,i=17*Uint32Array.BYTES_PER_ELEMENT,s=new Si(t,Oi.length,i,!0);n.vkFormat=s._nextUint32(),n.typeSize=s._nextUint32(),n.pixelWidth=s._nextUint32(),n.pixelHeight=s._nextUint32(),n.pixelDepth=s._nextUint32(),n.layerCount=s._nextUint32(),n.faceCount=s._nextUint32();const a=s._nextUint32();n.supercompressionScheme=s._nextUint32();const r=s._nextUint32(),o=s._nextUint32(),l=s._nextUint32(),f=s._nextUint32(),h=s._nextUint64(),U=s._nextUint64(),c=new Si(t,Oi.length+i,3*a*8,!0);for(let e=0;e<a;e++)n.levels.push({levelData:new Uint8Array(t.buffer,t.byteOffset+c._nextUint64(),c._nextUint64()),uncompressedByteLength:c._nextUint64()});const _=new Si(t,r,o,!0),p={vendorId:_._skip(4)._nextUint16(),descriptorType:_._nextUint16(),versionNumber:_._nextUint16(),descriptorBlockSize:_._nextUint16(),colorModel:_._nextUint8(),colorPrimaries:_._nextUint8(),transferFunction:_._nextUint8(),flags:_._nextUint8(),texelBlockDimension:[_._nextUint8(),_._nextUint8(),_._nextUint8(),_._nextUint8()],bytesPlane:[_._nextUint8(),_._nextUint8(),_._nextUint8(),_._nextUint8(),_._nextUint8(),_._nextUint8(),_._nextUint8(),_._nextUint8()],samples:[]},g=(p.descriptorBlockSize/4-6)/4;for(let t=0;t<g;t++){const e={bitOffset:_._nextUint16(),bitLength:_._nextUint8(),channelType:_._nextUint8(),samplePosition:[_._nextUint8(),_._nextUint8(),_._nextUint8(),_._nextUint8()],sampleLower:-Infinity,sampleUpper:Infinity};64&e.channelType?(e.sampleLower=_._nextInt32(),e.sampleUpper=_._nextInt32()):(e.sampleLower=_._nextUint32(),e.sampleUpper=_._nextUint32()),p.samples[t]=e;}n.dataFormatDescriptor.length=0,n.dataFormatDescriptor.push(p);const y=new Si(t,l,f,!0);for(;y._offset<f;){const t=y._nextUint32(),e=y._scan(t),i=Ti(e);if(n.keyValue[i]=y._nextUint8Array(t-e.byteLength-1),i.match(/^ktx/i)){const t=Ti(n.keyValue[i]);n.keyValue[i]=t.substring(0,t.lastIndexOf("\0"));}y._skip(t%4?4-t%4:0);}if(U<=0)return n;const x=new Si(t,h,U,!0),u=x._nextUint16(),b=x._nextUint16(),d=x._nextUint32(),w=x._nextUint32(),m=x._nextUint32(),D=x._nextUint32(),B=[];for(let t=0;t<a;t++)B.push({imageFlags:x._nextUint32(),rgbSliceByteOffset:x._nextUint32(),rgbSliceByteLength:x._nextUint32(),alphaSliceByteOffset:x._nextUint32(),alphaSliceByteLength:x._nextUint32()});const L=h+x._offset,v=L+d,A=v+w,k=A+m,V=new Uint8Array(t.buffer,t.byteOffset+L,d),I=new Uint8Array(t.buffer,t.byteOffset+v,w),S=new Uint8Array(t.buffer,t.byteOffset+A,m),F=new Uint8Array(t.buffer,t.byteOffset+k,D);return n.globalData={endpointCount:u,selectorCount:b,imageDescs:B,endpointsData:V,selectorsData:I,tablesData:S,extendedData:F},n}
+const t=0,n=2,g$1=1,u=2,T=0,C$1=1,R=10,it=0,ct=9,yt=15,xt=16,wt=22,Ft=37,Ct=43,te=76,ae=83,ge=97,ue=100,we=103,Ae=109,In=165,Sn=166,pi=1000066e3;class Ii{constructor(){this.vkFormat=0,this.typeSize=1,this.pixelWidth=0,this.pixelHeight=0,this.pixelDepth=0,this.layerCount=0,this.faceCount=1,this.supercompressionScheme=0,this.levels=[],this.dataFormatDescriptor=[{vendorId:0,descriptorType:0,descriptorBlockSize:0,versionNumber:2,colorModel:0,colorPrimaries:1,transferFunction:2,flags:0,texelBlockDimension:[0,0,0,0],bytesPlane:[0,0,0,0,0,0,0,0],samples:[]}],this.keyValue={},this.globalData=null;}}class Si{constructor(t,e,n,i){this._dataView=undefined,this._littleEndian=undefined,this._offset=undefined,this._dataView=new DataView(t.buffer,t.byteOffset+e,n),this._littleEndian=i,this._offset=0;}_nextUint8(){const t=this._dataView.getUint8(this._offset);return this._offset+=1,t}_nextUint16(){const t=this._dataView.getUint16(this._offset,this._littleEndian);return this._offset+=2,t}_nextUint32(){const t=this._dataView.getUint32(this._offset,this._littleEndian);return this._offset+=4,t}_nextUint64(){const t=this._dataView.getUint32(this._offset,this._littleEndian)+2**32*this._dataView.getUint32(this._offset+4,this._littleEndian);return this._offset+=8,t}_nextInt32(){const t=this._dataView.getInt32(this._offset,this._littleEndian);return this._offset+=4,t}_nextUint8Array(t){const e=new Uint8Array(this._dataView.buffer,this._dataView.byteOffset+this._offset,t);return this._offset+=t,e}_skip(t){return this._offset+=t,this}_scan(t,e){ undefined===e&&(e=0);const n=this._offset;let i=0;for(;this._dataView.getUint8(this._offset)!==e&&i<t;)i++,this._offset++;return i<t&&this._offset++,new Uint8Array(this._dataView.buffer,this._dataView.byteOffset+n,i)}}const Oi=[171,75,84,88,32,50,48,187,13,10,26,10];function Ti(t){return (new TextDecoder).decode(t)}function Pi(t){const e=new Uint8Array(t.buffer,t.byteOffset,Oi.length);if(e[0]!==Oi[0]||e[1]!==Oi[1]||e[2]!==Oi[2]||e[3]!==Oi[3]||e[4]!==Oi[4]||e[5]!==Oi[5]||e[6]!==Oi[6]||e[7]!==Oi[7]||e[8]!==Oi[8]||e[9]!==Oi[9]||e[10]!==Oi[10]||e[11]!==Oi[11])throw new Error("Missing KTX 2.0 identifier.");const n=new Ii,i=17*Uint32Array.BYTES_PER_ELEMENT,s=new Si(t,Oi.length,i,true);n.vkFormat=s._nextUint32(),n.typeSize=s._nextUint32(),n.pixelWidth=s._nextUint32(),n.pixelHeight=s._nextUint32(),n.pixelDepth=s._nextUint32(),n.layerCount=s._nextUint32(),n.faceCount=s._nextUint32();const a=s._nextUint32();n.supercompressionScheme=s._nextUint32();const r=s._nextUint32(),o=s._nextUint32(),l=s._nextUint32(),f=s._nextUint32(),h=s._nextUint64(),U=s._nextUint64(),c=new Si(t,Oi.length+i,3*a*8,true);for(let e=0;e<a;e++)n.levels.push({levelData:new Uint8Array(t.buffer,t.byteOffset+c._nextUint64(),c._nextUint64()),uncompressedByteLength:c._nextUint64()});const _=new Si(t,r,o,true),p={vendorId:_._skip(4)._nextUint16(),descriptorType:_._nextUint16(),versionNumber:_._nextUint16(),descriptorBlockSize:_._nextUint16(),colorModel:_._nextUint8(),colorPrimaries:_._nextUint8(),transferFunction:_._nextUint8(),flags:_._nextUint8(),texelBlockDimension:[_._nextUint8(),_._nextUint8(),_._nextUint8(),_._nextUint8()],bytesPlane:[_._nextUint8(),_._nextUint8(),_._nextUint8(),_._nextUint8(),_._nextUint8(),_._nextUint8(),_._nextUint8(),_._nextUint8()],samples:[]},g=(p.descriptorBlockSize/4-6)/4;for(let t=0;t<g;t++){const e={bitOffset:_._nextUint16(),bitLength:_._nextUint8(),channelType:_._nextUint8(),samplePosition:[_._nextUint8(),_._nextUint8(),_._nextUint8(),_._nextUint8()],sampleLower:-Infinity,sampleUpper:Infinity};64&e.channelType?(e.sampleLower=_._nextInt32(),e.sampleUpper=_._nextInt32()):(e.sampleLower=_._nextUint32(),e.sampleUpper=_._nextUint32()),p.samples[t]=e;}n.dataFormatDescriptor.length=0,n.dataFormatDescriptor.push(p);const y=new Si(t,l,f,true);for(;y._offset<f;){const t=y._nextUint32(),e=y._scan(t),i=Ti(e);if(n.keyValue[i]=y._nextUint8Array(t-e.byteLength-1),i.match(/^ktx/i)){const t=Ti(n.keyValue[i]);n.keyValue[i]=t.substring(0,t.lastIndexOf("\0"));}y._skip(t%4?4-t%4:0);}if(U<=0)return n;const x=new Si(t,h,U,true),u=x._nextUint16(),b=x._nextUint16(),d=x._nextUint32(),w=x._nextUint32(),m=x._nextUint32(),D=x._nextUint32(),B=[];for(let t=0;t<a;t++)B.push({imageFlags:x._nextUint32(),rgbSliceByteOffset:x._nextUint32(),rgbSliceByteLength:x._nextUint32(),alphaSliceByteOffset:x._nextUint32(),alphaSliceByteLength:x._nextUint32()});const L=h+x._offset,v=L+d,A=v+w,k=A+m,V=new Uint8Array(t.buffer,t.byteOffset+L,d),I=new Uint8Array(t.buffer,t.byteOffset+v,w),S=new Uint8Array(t.buffer,t.byteOffset+A,m),F=new Uint8Array(t.buffer,t.byteOffset+k,D);return n.globalData={endpointCount:u,selectorCount:b,imageDescs:B,endpointsData:V,selectorsData:I,tablesData:S,extendedData:F},n}
 
 let A,I,B;const g={env:{emscripten_notify_memory_growth:function(A){B=new Uint8Array(I.exports.memory.buffer);}}};class Q{init(){return A||(A="undefined"!=typeof fetch?fetch("data:application/wasm;base64,"+C).then(A=>A.arrayBuffer()).then(A=>WebAssembly.instantiate(A,g)).then(this._init):WebAssembly.instantiate(Buffer.from(C,"base64"),g).then(this._init),A)}_init(A){I=A.instance,g.env.emscripten_notify_memory_growth(0);}decode(A,g=0){if(!I)throw new Error("ZSTDDecoder: Await .init() before decoding.");const Q=A.byteLength,C=I.exports.malloc(Q);B.set(A,C),g=g||Number(I.exports.ZSTD_findDecompressedSize(C,Q));const E=I.exports.malloc(g),i=I.exports.ZSTD_decompress(E,g,C,Q),D=B.slice(E,E+i);return I.exports.free(C),I.exports.free(E),D}}const C="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IAMNACAEQQNxBEADQCACRQ0FIAAgAkF/aiICaiIDIAEgAmotAAA6AAAgA0EDcQ0ACwsgAkEDTQ0AA0AgACACQXxqIgJqIAEgAmooAgA2AgAgAkEDSw0ACwsgAkUNAgNAIAAgAkF/aiICaiABIAJqLQAAOgAAIAINAAsMAgsgAkEDTQ0AIAIhBANAIAMgASgCADYCACABQQRqIQEgA0EEaiEDIARBfGoiBEEDSw0ACyACQQNxIQILIAJFDQADQCADIAEtAAA6AAAgA0EBaiEDIAFBAWohASACQX9qIgINAAsLIAAL8wICAn8BfgJAIAJFDQAgACACaiIDQX9qIAE6AAAgACABOgAAIAJBA0kNACADQX5qIAE6AAAgACABOgABIANBfWogAToAACAAIAE6AAIgAkEHSQ0AIANBfGogAToAACAAIAE6AAMgAkEJSQ0AIABBACAAa0EDcSIEaiIDIAFB/wFxQYGChAhsIgE2AgAgAyACIARrQXxxIgRqIgJBfGogATYCACAEQQlJDQAgAyABNgIIIAMgATYCBCACQXhqIAE2AgAgAkF0aiABNgIAIARBGUkNACADIAE2AhggAyABNgIUIAMgATYCECADIAE2AgwgAkFwaiABNgIAIAJBbGogATYCACACQWhqIAE2AgAgAkFkaiABNgIAIAQgA0EEcUEYciIEayICQSBJDQAgAa0iBUIghiAFhCEFIAMgBGohAQNAIAEgBTcDGCABIAU3AxAgASAFNwMIIAEgBTcDACABQSBqIQEgAkFgaiICQR9LDQALCyAACy8BAn8gACgCBCAAKAIAQQJ0aiICLQACIQMgACACLwEAIAEgAi0AAxAIajYCACADCy8BAn8gACgCBCAAKAIAQQJ0aiICLQACIQMgACACLwEAIAEgAi0AAxAFajYCACADCx8AIAAgASACKAIEEAg2AgAgARAEGiAAIAJBCGo2AgQLCAAgAGdBH3MLugUBDX8jAEEQayIKJAACfyAEQQNNBEAgCkEANgIMIApBDGogAyAEEAsaIAAgASACIApBDGpBBBAVIgBBbCAAEAMbIAAgACAESxsMAQsgAEEAIAEoAgBBAXRBAmoQECENQVQgAygAACIGQQ9xIgBBCksNABogAiAAQQVqNgIAIAMgBGoiAkF8aiEMIAJBeWohDiACQXtqIRAgAEEGaiELQQQh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ASIDNgLE4AEgACgCvOABIQQgACABNgK84AEgACABIAJqNgK44AEgACABIAQgA2tqNgLA4AELpgEBAX8gACAAKALs4QEQFjYCyOABIABCADcD+OABIABCADcDuOABIABBwOABakIANwMAIABBqNAAaiIBQYyAgOAANgIAIABBADYCmOIBIABCADcDiOEBIABCAzcDgOEBIABBrNABakHgEikCADcCACAAQbTQAWpB6BIoAgA2AgAgACABNgIMIAAgAEGYIGo2AgggACAAQaAwajYCBCAAIABBEGo2AgALYQEBf0G4fyEDAkAgAUEDSQ0AIAIgABAhIgFBA3YiADYCCCACIAFBAXE2AgQgAiABQQF2QQNxIgM2AgACQCADQX9qIgFBAksNAAJAIAFBAWsOAgEAAgtBbA8LIAAhAwsgAwsMACAAIAEgAkEAEC4LiAQCA38CfiADEBYhBCAAQQBBKBAQIQAgBCACSwRAIAQPCyABRQRAQX8PCwJAAkAgA0EBRg0AIAEoAAAiBkGo6r5pRg0AQXYhAyAGQXBxQdDUtMIBRw0BQQghAyACQQhJDQEgAEEAQSgQECEAIAEoAAQhASAAQQE2AhQgACABrTcDAEEADwsgASACIAMQLyIDIAJLDQAgACADNgIYQXIhAyABIARqIgVBf2otAAAiAkEIcQ0AIAJBIHEiBkUEQEFwIQMgBS0AACIFQacBSw0BIAVBB3GtQgEgBUEDdkEKaq2GIgdCA4h+IAd8IQggBEEBaiEECyACQQZ2IQMgAkECdiEFAkAgAkEDcUF/aiICQQJLBEBBACECDAELAkACQAJAIAJBAWsOAgECAAsgASAEai0AACECIARBAWohBAwCCyABIARqLwAAIQIgBEECaiEEDAELIAEgBGooAAAhAiAEQQRqIQQLIAVBAXEhBQJ+AkACQAJAIANBf2oiA0ECTQRAIANBAWsOAgIDAQtCfyAGRQ0DGiABIARqMQAADAMLIAEgBGovAACtQoACfAwCCyABIARqKAAArQwBCyABIARqKQAACyEHIAAgBTYCICAAIAI2AhwgACAHNwMAQQAhAyAAQQA2AhQgACAHIAggBhsiBzcDCCAAIAdCgIAIIAdCgIAIVBs+AhALIAMLWwEBf0G4fyEDIAIQFiICIAFNBH8gACACakF/ai0AACIAQQNxQQJ0QaAeaigC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C0Egak8NAQsgByAHKQNoNwMQIAcgBykDYDcDCCAEIA0gB0EIaiAHQdwAaiAPIA4gESAQEB4hCwwBCyACIARqIQggBCAKEAcgAkERTwRAIARBEGohAgNAIAIgCkEQaiIKEAcgAkEQaiICIAhJDQALCyAIIAlrIQIgByATNgJcIAkgCCAOa0sEQCAJIAggEWtLBEBBbCELDAILIBAgAiAOayICaiIKIANqIBBNBEAgCCAKIAMQDxoMAgsgCCAKQQAgAmsQDyEIIAcgAiADaiIDNgJkIAggAmshCCAOIQILIAlBEE8EQCADIAhqIQMDQCAIIAIQByACQRBqIQIgCEEQaiIIIANJDQALDAELAkAgCUEHTQRAIAggAi0AADoAACAIIAItAAE6AAEgCCACLQACOgACIAggAi0AAzoAAyAIQQRqIAIgCUECdCIDQcAeaigCAGoiAhAXIAIgA0HgHmooAgBrIQIgBygCZCEDDAELIAggAhAMCyADQQlJDQAgAyAIaiEDIAhBCGoiCCACQQhqIgJrQQ9MBEADQCAIIAIQDCACQQhqIQIgCEEIaiIIIANJDQAMAgALAAsDQCAIIAIQByACQRBqIQIgCEEQaiIIIANJDQALCyAHQRhqEAQaIAsgDCALEAMiAhshDCAEIAQgC2ogAhshBCAFQX9qIgUNAAsgDBADDQFBbCEMIAdBGGoQBEECSQ0BQQAhCANAIAhBA0cEQCAAIAhBAnQiAmpBrNABaiACIAdqKAJENgIAIAhBAWohCAwBCwsgBygCXCEIC0G6fyEMIA8gCGsiACANIARrSw0AIAQEfyAEIAggABALIABqBUEACyABayEMCyAHQfAAaiQAIAwLkRcCFn8FfiMAQdABayIHJAAgByAAKALw4QEiCDYCvAEgASACaiESIAggACgCgOIBaiETAkACQCAFRQRAIAEhAwwBCyAAKALE4AEhESAAKALA4AEhFSAAKAK84AEhDyAAQQE2AozhAUEAIQgDQCAIQQNHBEAgByAIQQJ0IgJqIAAgAmpBrNABaigCADYCVCAIQQFqIQgMAQsLIAcgETYCZCAHIA82AmAgByABIA9rNgJoQWwhECAHQShqIAMgBBAGEAMNASAFQQQgBUEESBshFyAHQTxqIAdBKGogACgCABATIAdBxABqIAdBKGogACgCCBATIAdBzABqIAdB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IAdB0AFqJAAgEAslACAAQgA3AgAgAEEAOwEIIABBADoACyAAIAE2AgwgACACOgAKC7QFAQN/IwBBMGsiBCQAIABB/wFqIgVBfWohBgJAIAMvAQIEQCAEQRhqIAEgAhAGIgIQAw0BIARBEGogBEEYaiADEBwgBEEIaiAEQRhqIAMQHCAAIQMDQAJAIARBGGoQBCADIAZPckUEQCADIARBEGogBEEYahASOgAAIAMgBEEIaiAEQRhqEBI6AAEgBEEYahAERQ0BIANBAmohAwsgBUF+aiEFAn8DQEG6fyECIAMiASAFSw0FIAEgBEEQaiAEQRhqEBI6AAAgAUEBaiEDIARBGGoQBEEDRgRAQQIhAiAEQQhqDAILIAMgBUsNBSABIARBCGogBEEYahASOgABIAFBAmohA0EDIQIgBEEYahAEQQNHDQALIARBEGoLIQUgAyAFIARBGGoQEjoAACABIAJqIABrIQIMAwsgAyAEQRBqIARBGGoQEjoAAiADIARBCGogBEEYahASOgADIANBBGohAwwAAAsACyAEQRhqIAEgAhAGIgIQAw0AIARBEGogBEEYaiADEBwgBEEIaiAEQRhqIAMQHCAAIQMDQAJAIARBGGoQBCADIAZPckUEQCADIARBEGogBEEYahAROgAAIAMgBEEIaiAEQRhqEBE6AAEgBEEYahAERQ0BIANBAmohAwsgBUF+aiEFAn8DQEG6fyECIAMiASAFSw0EIAEgBEEQaiAEQRhqEBE6AAAgAUEBaiEDIARBGGoQBEEDRgRAQQIhAiAEQQhqDAILIAMgBUsNBCABIARBCGogBEEYahAROgABIAFBAmohA0EDIQIgBEEYahAEQQNHDQALIARBEGoLIQUgAyAFIARBGGoQEToAACABIAJqIABrIQIMAgsgAyAEQRBqIARBGGoQEToAAiADIARBCGogBEEYahAROgADIANBBGohAwwAAAsACyAEQTBqJAAgAgtpAQF/An8CQAJAIAJBB00NACABKAAAQbfIwuF+Rw0AIAAgASgABDYCmOIBQWIgAEEQaiABIAIQPiIDEAMNAhogAEKBgICAEDcDiOEBIAAgASADaiACIANrECoMAQsgACABIAIQKgtBAAsLrQMBBn8jAEGAAWsiAyQAQWIhCAJAIAJBCUkNACAAQZjQAGogAUEIaiIEIAJBeGogAEGY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wOABCwutAgIEfwF+IwBBQGoiBCQAAkACQCACQQhJDQAgASgAAEFwcUHQ1LTCAUcNACABIAIQIiEBIABCADcDCCAAQQA2AgQgACABNgIADAELIARBGGogASACEC0iAxADBEAgACADEBoMAQsgAwRAIABBuH8QGgwBCyACIAQoAjAiA2shAiABIANqIQMDQAJAIAAgAyACIARBCGoQLCIFEAMEfyAFBSACIAVBA2oiBU8NAUG4fwsQGgwCCyAGQQFqIQYgAiAFayECIAMgBWohAyAEKAIMRQ0ACyAEKAI4BEAgAkEDTQRAIABBuH8QGgwCCyADQQRqIQMLIAQoAighAiAEKQMYIQcgAEEANgIEIAAgAyABazYCACAAIAIgBmytIAcgB0J/URs3AwgLIARBQGskAAslAQF/IwBBEGsiAiQAIAIgACABEFEgAigCACEAIAJBEGokACAAC30BBH8jAEGQBGsiBCQAIARB/wE2AggCQCAEQRBqIARBCGogBEEMaiABIAIQFSIGEAMEQCAGIQUMAQtBVCEFIAQoAgwiB0EGSw0AIAMgBEEQaiAEKAIIIAcQQSIFEAMNACAAIAEgBmogAiAGayADEDwhBQsgBEGQBGokACAFC4cBAgJ/An5BABAWIQMCQANAIAEgA08EQAJAIAAoAABBcHFB0NS0wgFGBEAgACABECIiAhADRQ0BQn4PCyAAIAEQVSIEQn1WDQMgBCAFfCIFIARUIQJCfiEEIAINAyAAIAEQUiICEAMNAwsgASACayEBIAAgAmohAAwBCwtCfiAFIAEbIQQLIAQLPwIBfwF+IwBBMGsiAiQAAn5CfiACQQhqIAAgARAtDQAaQgAgAigCHEEBRg0AGiACKQMICyEDIAJBMGokACADC40BAQJ/IwBBMGsiASQAAkAgAEUNACAAKAKI4gENACABIABB/OEBaigCADYCKCABIAApAvThATcDICAAEDAgACgCqOIBIQIgASABKAIoNgIYIAEgASkDIDcDECACIAFBEGoQGyAAQQA2AqjiASABIAEoAig2AgggASABKQMgNwMAIAAgARAbCyABQTBqJAALKgECfyMAQRBrIgAkACAAQQA2AgggAEIANwMAIAAQWCEBIABBEGokACABC4cBAQN/IwBBEGsiAiQAAkAgACgCAEUgACgCBEVzDQAgAiAAKAIINgIIIAIgACkCADcDAAJ/IAIoAgAiAQRAIAIoAghBqOMJIAERBQAMAQtBqOMJECgLIgFFDQAgASAAKQIANwL04QEgAUH84QFqIAAoAgg2AgAgARBZIAEhAwsgAkEQaiQAIAMLywEBAn8jAEEgayIBJAAgAEGBgIDAADYCtOIBIABBADYCiOIBIABBADYC7OEBIABCADcDkOIBIABBADYCpOMJIABBADYC3OIBIABCADcCzOIBIABBADYCvOIBIABBADYCxOABIABCADcCnOIBIABBpOIBakIANwIAIABBrOIBakEANgIAIAFCADcCECABQgA3AhggASABKQMYNwMIIAEgASkDEDcDACABKAIIQQh2QQFxIQIgAEEANgLg4gEgACACNgKM4gEgAUEgaiQAC3YBA38jAEEwayIBJAAgAARAIAEgAEHE0AFqIgIoAgA2AiggASAAKQK80AE3AyAgACgCACEDIAEgAigCADYCGCABIAApArzQATcDECADIAFBEGoQGyABIAEoAig2AgggASABKQMgNwMAIAAgARAbCyABQTBqJAALzAEBAX8gACABKAK00AE2ApjiASAAIAEoAgQiAjYCwOABIAAgAjYCvOABIAAgAiABKAIIaiICNgK44AEgACACNgLE4AEgASgCuNABBEAgAEKBgICAEDcDiOEBIAAgAUGk0ABqNgIMIAAgAUGUIGo2AgggACABQZwwajYCBCAAIAFBDGo2AgAgAEGs0AFqIAFBqNABaigCADYCACAAQbDQAWogAUGs0AFqKAIANgIAIABBtNABaiABQbDQAWooAgA2AgAPCyAAQgA3A4jhAQs7ACACRQRAQbp/DwsgBEUEQEFsDwsgAiAEEGAEQCAAIAEgAiADIAQgBRBhDwsgACABIAIgAyAEIAUQZQtGAQF/IwBBEGsiBSQAIAVBCGogBBAOAn8gBS0ACQRAIAAgASACIAMgBBAyDAELIAAgASACIAMgBBA0CyEAIAVBEGokACAACzQAIAAgAyAEIAUQNiIFEAMEQCAFDwsgBSAESQR/IAEgAiADIAVqIAQgBWsgABA1BUG4fwsLRgEBfyMAQRBrIgUkACAFQQhqIAQQDgJ/IAUtAAkEQCAAIAEgAiADIAQQYgwBCyAAIAEgAiADIAQQNQshACAFQRBqJAAgAAtZAQF/QQ8hAiABIABJBEAgAUEE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";
 
@@ -132056,7 +132064,7 @@ KTX2Loader.BasisWorker = function () {
 					}
 
 					let dst = new Uint8Array( ktx2File.getImageTranscodedSizeInBytes( mip, layer, 0, transcoderFormat ) );
-					const status = ktx2File.transcodeImage( dst, mip, layer, face, transcoderFormat, 0, - 1, - 1 );
+					const status = ktx2File.transcodeImage( dst, mip, layer, face, transcoderFormat, 0, -1, -1 );
 
 					if ( engineType === EngineType.HalfFloatType ) {
 
@@ -132838,7 +132846,7 @@ class DRACOLoader extends Loader {
 
 				this.workerPool.sort( function ( a, b ) {
 
-					return a._taskLoad > b._taskLoad ? - 1 : 1;
+					return a._taskLoad > b._taskLoad ? -1 : 1;
 
 				} );
 
@@ -133010,7 +133018,7 @@ function DRACOWorker() {
 
 				attributeID = decoder.GetAttributeId( dracoGeometry, draco[ attributeIDs[ attributeName ] ] );
 
-				if ( attributeID === - 1 ) continue;
+				if ( attributeID === -1 ) continue;
 
 				attribute = decoder.GetAttribute( dracoGeometry, attributeID );
 
@@ -133113,7 +133121,7 @@ const _v = new Vector3();
 const _twoPI = 2 * Math.PI;
 
 const _STATE = {
-	NONE: - 1,
+	NONE: -1,
 	ROTATE: 0,
 	DOLLY: 1,
 	PAN: 2,
@@ -133541,7 +133549,7 @@ class OrbitControls extends Controls {
 				if ( this.screenSpacePanning ) {
 
 					// position the orbit target in front of the new camera position
-					this.target.set( 0, 0, - 1 )
+					this.target.set( 0, 0, -1 )
 						.transformDirection( this.object.matrix )
 						.multiplyScalar( newRadius )
 						.add( this.object.position );
@@ -133550,7 +133558,7 @@ class OrbitControls extends Controls {
 
 					// get the ray and translation plane to compute target
 					_ray.origin.copy( this.object.position );
-					_ray.direction.set( 0, 0, - 1 ).transformDirection( this.object.matrix );
+					_ray.direction.set( 0, 0, -1 ).transformDirection( this.object.matrix );
 
 					// if the camera is 20 degrees above the horizon then don't adjust the focus target to avoid
 					// extremely large values
@@ -134335,7 +134343,7 @@ function onMouseDown( event ) {
 
 		default:
 
-			mouseAction = - 1;
+			mouseAction = -1;
 
 	}
 

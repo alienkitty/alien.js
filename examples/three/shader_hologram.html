@@ -11,7 +11,7 @@
     <link rel="stylesheet" href="../assets/css/style.css">
 
     <script type="module">
-        import { AdditiveBlending, BloomCompositeMaterial, BlurMaterial, BoxGeometry, ChromaticAberrationMaterial, Color, ColorManagement, DirectionalLight, EdgesGeometry, EnvironmentTextureLoader, GLSL3, Group, HemisphereLight, ImageBitmapLoaderThread, LineBasicMaterial, LineSegments, LinearSRGBColorSpace, LuminosityMaterial, MapControls, MathUtils, Mesh, MeshBasicMaterial, MeshStandardMaterial, NoBlending, OctahedronGeometry, OrthographicCamera, PanelItem, PerspectiveCamera, RawShaderMaterial, RepeatWrapping, Scene, SphereGeometry, TextureLoader, UI, UnrealBloomBlurMaterial, Vector2, VideoGlitchMaterial, WebGLRenderTarget, WebGLRenderer, getFullscreenTriangle, ticker } from '../../build/alien.three.js';
+        import { AdditiveBlending, BloomCompositeMaterial, BlurMaterial, BoxGeometry, ChromaticAberrationMaterial, Color, ColorManagement, DirectionalLight, EdgesGeometry, EnvironmentTextureLoader, GLSL3, Group, HemisphereLight, LineBasicMaterial, LineSegments, LinearSRGBColorSpace, LuminosityMaterial, MapControls, MathUtils, Mesh, MeshBasicMaterial, MeshStandardMaterial, NoBlending, OctahedronGeometry, OrthographicCamera, Panel, PanelItem, PerspectiveCamera, Point3D, RawShaderMaterial, RepeatWrapping, Scene, SphereGeometry, TextureLoader, UI, UnrealBloomBlurMaterial, Vector2, Vector3, VideoGlitchMaterial, WebGLRenderTarget, WebGLRenderer, clearTween, getFullscreenTriangle, getKeyByValue, ticker, tween } from '../../build/alien.three.js';
 
         // Based on https://codepen.io/peterhry/pen/egzjGR
 
@@ -122,9 +122,10 @@
                 ormMap.anisotropy = anisotropy;
 
                 const material = new MeshStandardMaterial({
+                    name: 'Abstract Cube',
                     color: new Color().offsetHSL(0, 0, -0.65),
                     metalness: 0.7,
-                    roughness: 3,
+                    roughness: 0.7,
                     map,
                     metalnessMap: ormMap,
                     roughnessMap: ormMap,
@@ -134,7 +135,7 @@
                     normalScale: new Vector2(1, 1),
                     flatShading: true,
                     polygonOffset: true,
-                    polygonOffsetFactor: 1,
+                    polygonOffsetFactor: 3,
                     polygonOffsetUnits: 1
                 });
 
@@ -146,6 +147,7 @@
                 mesh.rotation.x = MathUtils.degToRad(-45);
                 mesh.rotation.z = MathUtils.degToRad(-45);
                 mesh.layers.set(layers.hologram);
+                mesh.layers.enable(31); // Last layer for `Point3D` raycasting
                 this.add(mesh);
 
                 // Hologram
@@ -156,7 +158,7 @@
 
                 const uniforms = {
                     fresnelColor: { value: new Color(colors.errorColor).offsetHSL(0, 0, 0.25) },
-                    fresnelPower: { value: 1.5 }
+                    fresnelPower: { value: 1 }
                 };
 
                 glowMaterial.onBeforeCompile = shader => {
@@ -224,10 +226,18 @@
 
                 this.mesh = mesh;
                 this.glowMesh = glowMesh;
+                this.wireframe = wireframe;
                 this.uniforms = uniforms;
             }
 
             // Public methods
+
+            setHologramColor = color => {
+                this.glowMesh.material.color.copy(color);
+                this.glowMesh.material.emissive.copy(color);
+                this.wireframe.material.color.copy(color).offsetHSL(0, 0, 0.25);
+                this.uniforms.fresnelColor.value.copy(color).offsetHSL(0, 0, 0.25);
+            };
 
             update = () => {
                 this.mesh.rotation.y -= 0.005;
@@ -280,6 +290,7 @@
                 ormMap.repeat.set(2, 2);
 
                 const material = new MeshStandardMaterial({
+                    name: 'Floating Crystal',
                     color: new Color().offsetHSL(0, 0, -0.65),
                     metalness: 0.7,
                     roughness: 0.7,
@@ -290,7 +301,10 @@
                     aoMapIntensity: 1,
                     normalMap,
                     normalScale: new Vector2(1, 1),
-                    flatShading: true
+                    flatShading: true,
+                    polygonOffset: true,
+                    polygonOffsetFactor: 3,
+                    polygonOffsetUnits: 1
                 });
 
                 // Second channel for aoMap and lightMap
@@ -299,16 +313,108 @@
 
                 const mesh = new Mesh(geometry, material);
                 mesh.scale.set(0.5, 1, 0.5);
+                mesh.layers.set(layers.hologram);
+                mesh.layers.enable(31); // Last layer for `Point3D` raycasting
+                mesh.layers.set(layers.default); // Off
                 this.add(mesh);
 
+                // Hologram
+                const glowMaterial = material.clone();
+                glowMaterial.color = new Color(colors.errorColor);
+                glowMaterial.emissive = new Color(colors.errorColor);
+                glowMaterial.emissiveIntensity = 0.125;
+
+                const uniforms = {
+                    fresnelColor: { value: new Color(colors.errorColor).offsetHSL(0, 0, 0.25) },
+                    fresnelPower: { value: 1 }
+                };
+
+                glowMaterial.onBeforeCompile = shader => {
+                    shader.uniforms = Object.assign(shader.uniforms, uniforms);
+
+                    shader.vertexShader = shader.vertexShader.replace(
+                        'void main() {',
+                        /* glsl */ `
+                        out vec3 vWorldNormal;
+                        out vec3 vViewDirection;
+
+                        void main() {
+                        `
+                    );
+
+                    shader.vertexShader = shader.vertexShader.replace(
+                        '#include <project_vertex>',
+                        /* glsl */ `
+                        #include <project_vertex>
+
+                        vWorldNormal = normalize(modelMatrix * vec4(normal, 0.0)).xyz;
+                        vViewDirection = normalize(cameraPosition - (modelMatrix * vec4(transformed, 1.0)).xyz);
+                        `
+                    );
+
+                    shader.fragmentShader = shader.fragmentShader.replace(
+                        'void main() {',
+                        /* glsl */ `
+                        uniform vec3 fresnelColor;
+                        uniform float fresnelPower;
+
+                        in vec3 vWorldNormal;
+                        in vec3 vViewDirection;
+
+                        ${fresnel}
+
+                        void main() {
+                        `
+                    );
+
+                    shader.fragmentShader = shader.fragmentShader.replace(
+                        'vec3 totalEmissiveRadiance = emissive;',
+                        /* glsl */ `
+                        vec3 totalEmissiveRadiance = emissive;
+
+                        float fresnel = getFresnel(vViewDirection, vWorldNormal, fresnelPower);
+                        totalEmissiveRadiance += (fresnel * fresnelColor) * 0.2;
+                        `
+                    );
+                };
+
+                const glowMesh = new Mesh(geometry, glowMaterial);
+                glowMesh.position.copy(mesh.position);
+                glowMesh.scale.copy(mesh.scale);
+                glowMesh.layers.set(layers.glow);
+                glowMesh.layers.disable(layers.glow); // Off
+                this.add(glowMesh);
+
+                // Wireframe
+                const wireframe = new LineSegments(
+                    new EdgesGeometry(mesh.geometry),
+                    new LineBasicMaterial({ color: new Color(colors.errorColor).offsetHSL(0, 0, 0.25) })
+                );
+                wireframe.layers.set(layers.hologram);
+                wireframe.layers.disable(layers.hologram); // Off
+                glowMesh.add(wireframe);
+
                 this.mesh = mesh;
+                this.glowMesh = glowMesh;
+                this.wireframe = wireframe;
+                this.uniforms = uniforms;
             }
 
             // Public methods
 
+            setHologramColor = color => {
+                this.glowMesh.material.color.copy(color);
+                this.glowMesh.material.emissive.copy(color);
+                this.wireframe.material.color.copy(color).offsetHSL(0, 0, 0.25);
+                this.uniforms.fresnelColor.value.copy(color).offsetHSL(0, 0, 0.25);
+            };
+
             update = time => {
                 this.mesh.position.y = Math.sin(time) * 0.1;
                 this.mesh.rotation.y += 0.01;
+
+                // Update glow mesh
+                this.mesh.matrix.decompose(this.glowMesh.position, this.glowMesh.quaternion, this.glowMesh.scale);
             };
 
             ready = () => this.initMesh();
@@ -358,9 +464,10 @@
                 ormMap.repeat.set(2, 1);
 
                 const material = new MeshStandardMaterial({
+                    name: 'Dark Planet',
                     color: new Color().offsetHSL(0, 0, -0.65),
                     metalness: 0.7,
-                    roughness: 3,
+                    roughness: 2,
                     map,
                     metalnessMap: ormMap,
                     roughnessMap: ormMap,
@@ -369,7 +476,7 @@
                     normalMap,
                     normalScale: new Vector2(3, 3),
                     polygonOffset: true,
-                    polygonOffsetFactor: 1,
+                    polygonOffsetFactor: 3,
                     polygonOffsetUnits: 1
                 });
 
@@ -379,6 +486,7 @@
 
                 const mesh = new Mesh(geometry, material);
                 mesh.layers.set(layers.hologram);
+                mesh.layers.enable(31); // Last layer for `Point3D` raycasting
                 this.add(mesh);
 
                 // Hologram
@@ -389,7 +497,7 @@
 
                 const uniforms = {
                     fresnelColor: { value: new Color(colors.lightColor).offsetHSL(0, 0, 0.25) },
-                    fresnelPower: { value: 1.5 }
+                    fresnelPower: { value: 1 }
                 };
 
                 glowMaterial.onBeforeCompile = shader => {
@@ -457,10 +565,18 @@
 
                 this.mesh = mesh;
                 this.glowMesh = glowMesh;
+                this.wireframe = wireframe;
                 this.uniforms = uniforms;
             }
 
             // Public methods
+
+            setHologramColor = color => {
+                this.glowMesh.material.color.copy(color);
+                this.glowMesh.material.emissive.copy(color);
+                this.wireframe.material.color.copy(color).offsetHSL(0, 0, 0.25);
+                this.uniforms.fresnelColor.value.copy(color).offsetHSL(0, 0, 0.25);
+            };
 
             update = () => {
                 // Counter clockwise rotation
@@ -533,12 +649,120 @@
             static ready = () => this.view.ready();
         }
 
+        class ScenePanelController {
+            static init(view) {
+                this.view = view;
+
+                this.initPanel();
+            }
+
+            static initPanel() {
+                const { darkPlanet, floatingCrystal, abstractCube } = this.view;
+
+                const objects = [darkPlanet, floatingCrystal, abstractCube];
+
+                objects.forEach(object => {
+                    object.point = new Point3D(object.mesh);
+                    object.add(object.point);
+
+                    const hologramOptions = {
+                        Off: false,
+                        On: true
+                    };
+
+                    const colorOptions = {
+                        Light: colors.lightColor,
+                        Error: colors.errorColor
+                    };
+
+                    const hologramItems = [
+                        {
+                            type: 'divider'
+                        },
+                        {
+                            type: 'list',
+                            name: 'Color',
+                            list: colorOptions,
+                            value: getKeyByValue(colorOptions, object.glowMesh.material.color.getHex()),
+                            callback: value => {
+                                object.setHologramColor(new Color(colorOptions[value]));
+
+                                RenderManager.glitchHologram();
+                            }
+                        }
+                    ];
+
+                    const items = [
+                        {
+                            type: 'divider'
+                        },
+                        {
+                            type: 'list',
+                            name: 'Hologram',
+                            list: hologramOptions,
+                            value: getKeyByValue(hologramOptions, object.mesh.layers.isEnabled(layers.hologram)),
+                            callback: (value, item) => {
+                                if (!item.hasContent()) {
+                                    const hologramPanel = new Panel();
+                                    hologramPanel.animateIn(true);
+
+                                    hologramItems.forEach(data => {
+                                        hologramPanel.add(new PanelItem(data));
+                                    });
+
+                                    item.setContent(hologramPanel);
+                                }
+
+                                if (hologramOptions[value]) {
+                                    object.mesh.layers.set(layers.hologram);
+                                    object.glowMesh.layers.set(layers.glow);
+                                    object.wireframe.layers.set(layers.hologram);
+
+                                    item.toggleContent(true);
+
+                                    RenderManager.glitchHologram();
+                                } else {
+                                    object.mesh.layers.set(layers.default);
+                                    object.glowMesh.layers.disable(layers.glow);
+                                    object.wireframe.layers.disable(layers.hologram);
+
+                                    item.toggleContent(false);
+                                }
+
+                                object.mesh.layers.enable(31); // Last layer for `Point3D` raycasting
+                            }
+                        }
+                    ];
+
+                    items.forEach(data => {
+                        object.point.addPanel(new PanelItem(data));
+                    });
+                });
+
+                // Shrink tracker mesh to better match the visual size of the object
+                floatingCrystal.point.mesh.scale.multiply(new Vector3(0.6, 1, 0.6));
+                abstractCube.point.mesh.scale.multiplyScalar(0.9);
+            }
+        }
+
         class PanelController {
-            static init(view, ui) {
+            static init(renderer, scene, camera, view, ui) {
+                this.renderer = renderer;
+                this.scene = scene;
+                this.camera = camera;
                 this.view = view;
                 this.ui = ui;
 
+                this.initControllers();
                 this.initPanel();
+            }
+
+            static initControllers() {
+                Point3D.init(this.renderer, this.scene, this.camera, {
+                    container: this.ui
+                });
+
+                ScenePanelController.init(this.view);
             }
 
             static initPanel() {
@@ -715,6 +939,16 @@
                     this.ui.addPanel(new PanelItem(data));
                 });
             }
+
+            // Public methods
+
+            static update = time => {
+                if (!this.ui) {
+                    return;
+                }
+
+                Point3D.update(time);
+            };
         }
 
         const BlurDirectionX = new Vector2(1, 0);
@@ -731,7 +965,7 @@
                 this.glitchDistortion2 = 0.04;
                 this.glitchSpeed = 0.01;
                 this.blurResolutionScale = 0.25;
-                this.blurAmount = 1.5;
+                this.blurAmount = 1;
 
                 // Unreal bloom
                 this.luminosityThreshold = 0.1;
@@ -743,7 +977,7 @@
                 this.caRedOffset = 0;
                 this.caGreenOffset = 4;
                 this.caBlueOffset = 0;
-                this.caIntensity = 1.5;
+                this.caIntensity = 1.2;
 
                 this.enabled = true;
 
@@ -1039,6 +1273,19 @@
                 renderer.clear();
                 renderer.render(this.screen, this.screenCamera);
             };
+
+            static glitchHologram = () => {
+                clearTween(this.videoGlitchMaterial.uniforms.uDistortion2);
+                clearTween(this.videoGlitchMaterial.uniforms.uSpeed);
+
+                tween(this.videoGlitchMaterial.uniforms.uDistortion2, { value: 0.1 }, 120, 'easeOutCubic', () => {
+                    tween(this.videoGlitchMaterial.uniforms.uDistortion2, { value: this.glitchDistortion2 }, 180, 'easeOutCubic');
+                });
+
+                tween(this.videoGlitchMaterial.uniforms.uSpeed, { value: 1.3 }, 120, 'easeOutCubic', () => {
+                    tween(this.videoGlitchMaterial.uniforms.uSpeed, { value: this.glitchSpeed }, 180, 'easeOutCubic');
+                });
+            };
         }
 
         class WorldController {
@@ -1069,7 +1316,7 @@
                 this.scene = new Scene();
                 this.scene.background = new Color(colors.backgroundColor);
                 this.camera = new PerspectiveCamera(30);
-                this.camera.near = 0.5;
+                this.camera.near = 1;
                 this.camera.far = 40;
                 this.camera.position.set(0, 6, 8);
                 this.camera.lookAt(this.scene.position);
@@ -1085,7 +1332,7 @@
                 this.frame = { value: 0 };
 
                 // Global settings
-                // this.anisotropy = this.renderer.capabilities.getMaxAnisotropy();
+                this.anisotropy = this.renderer.capabilities.getMaxAnisotropy();
             }
 
             static initLights() {
@@ -1098,10 +1345,10 @@
                 this.scene.add(directionalLight);
 
                 // Important: Make sure your lights are on!
-                hemisphereLight.layers.enable(layers.hologram);
-                directionalLight.layers.enable(layers.hologram);
-                hemisphereLight.layers.enable(layers.glow);
-                directionalLight.layers.enable(layers.glow);
+                // hemisphereLight.layers.enable(layers.hologram);
+                // directionalLight.layers.enable(layers.hologram);
+                // hemisphereLight.layers.enable(layers.glow);
+                // directionalLight.layers.enable(layers.glow);
             }
 
             static initLoaders() {
@@ -1109,12 +1356,11 @@
                 this.textureLoader.cache = true;
 
                 this.environmentLoader = new EnvironmentTextureLoader(this.renderer);
-                this.environmentLoader.cache = true;
             }
 
             static async initEnvironment() {
                 this.scene.environment = await this.loadEnvironmentTexture('../assets/textures/env/jewelry_black_contrast.jpg');
-                this.scene.environmentIntensity = 0.5;
+                this.scene.environmentIntensity = 1.2;
             }
 
             static initControls() {
@@ -1169,7 +1415,6 @@
 
         class App {
             static async init() {
-                this.initThread();
                 this.initWorld();
                 this.initViews();
                 this.initControllers();
@@ -1183,10 +1428,6 @@
                 this.initPanel();
 
                 SceneController.animateIn();
-            }
-
-            static initThread() {
-                ImageBitmapLoaderThread.init();
             }
 
             static initWorld() {
@@ -1211,7 +1452,9 @@
             }
 
             static initPanel() {
-                PanelController.init(this.view, this.ui);
+                const { renderer, scene, camera } = WorldController;
+
+                PanelController.init(renderer, scene, camera, this.view, this.ui);
             }
 
             static addListeners() {
@@ -1228,6 +1471,7 @@
                 const dpr = window.devicePixelRatio;
 
                 WorldController.resize(width, height, dpr);
+                SceneController.resize();
                 RenderManager.resize(width, height, dpr);
             };
 
@@ -1235,6 +1479,7 @@
                 WorldController.update(time, delta, frame);
                 SceneController.update(time);
                 RenderManager.update(time, delta, frame);
+                PanelController.update(time);
                 this.ui.update();
             };
         }

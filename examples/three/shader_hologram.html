@@ -158,7 +158,7 @@
 
                 const uniforms = {
                     fresnelColor: { value: new Color(colors.errorColor).offsetHSL(0, 0, 0.25) },
-                    fresnelPower: { value: 1.5 }
+                    fresnelPower: { value: 1 }
                 };
 
                 glowMaterial.onBeforeCompile = shader => {
@@ -325,7 +325,7 @@
 
                 const uniforms = {
                     fresnelColor: { value: new Color(colors.errorColor).offsetHSL(0, 0, 0.25) },
-                    fresnelPower: { value: 1.5 }
+                    fresnelPower: { value: 1 }
                 };
 
                 glowMaterial.onBeforeCompile = shader => {
@@ -494,7 +494,7 @@
 
                 const uniforms = {
                     fresnelColor: { value: new Color(colors.lightColor).offsetHSL(0, 0, 0.25) },
-                    fresnelPower: { value: 1.5 }
+                    fresnelPower: { value: 1 }
                 };
 
                 glowMaterial.onBeforeCompile = shader => {
@@ -958,7 +958,7 @@
                 this.glitchDistortion2 = 0.04;
                 this.glitchSpeed = 0.01;
                 this.blurResolutionScale = 0.25;
-                this.blurAmount = 1.5;
+                this.blurAmount = 1;
 
                 // Unreal bloom
                 this.luminosityThreshold = 0.1;
@@ -970,7 +970,7 @@
                 this.caRedOffset = 0;
                 this.caGreenOffset = 4;
                 this.caBlueOffset = 0;
-                this.caIntensity = 1.5;
+                this.caIntensity = 1.2;
 
                 this.enabled = true;
 

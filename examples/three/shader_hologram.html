@@ -315,6 +315,7 @@
                 mesh.scale.set(0.5, 1, 0.5);
                 mesh.layers.set(layers.hologram);
                 mesh.layers.enable(31); // Last layer for `Point3D` raycasting
+                mesh.layers.set(layers.default); // Off
                 this.add(mesh);
 
                 // Hologram
@@ -381,6 +382,7 @@
                 glowMesh.position.copy(mesh.position);
                 glowMesh.scale.copy(mesh.scale);
                 glowMesh.layers.set(layers.glow);
+                glowMesh.layers.disable(layers.glow); // Off
                 this.add(glowMesh);
 
                 // Wireframe
@@ -389,6 +391,7 @@
                     new LineBasicMaterial({ color: new Color(colors.errorColor).offsetHSL(0, 0, 0.25) })
                 );
                 wireframe.layers.set(layers.hologram);
+                wireframe.layers.disable(layers.hologram); // Off
                 glowMesh.add(wireframe);
 
                 this.mesh = mesh;

@@ -664,24 +664,22 @@
                         On: true
                     };
 
+                    const colorOptions = {
+                        Light: colors.lightColor,
+                        Error: colors.errorColor
+                    };
+
                     const hologramItems = [
                         {
                             type: 'divider'
                         },
                         {
-                            type: 'link',
-                            name: 'Hologram',
-                            value: 'Hologram',
-                            callback: () => {
-                                object.setHologramColor(new Color(colors.lightColor));
-                            }
-                        },
-                        {
-                            type: 'link',
-                            name: 'Error',
-                            value: 'Error',
-                            callback: () => {
-                                object.setHologramColor(new Color(colors.errorColor));
+                            type: 'list',
+                            name: 'Color',
+                            list: colorOptions,
+                            value: getKeyByValue(colorOptions, object.glowMesh.material.color.getHex()),
+                            callback: value => {
+                                object.setHologramColor(new Color(colorOptions[value]));
                             }
                         }
                     ];
@@ -692,6 +690,7 @@
                         },
                         {
                             type: 'list',
+                            name: 'Hologram',
                             list: hologramOptions,
                             value: getKeyByValue(hologramOptions, object.mesh.layers.isEnabled(layers.hologram)),
                             callback: (value, item) => {

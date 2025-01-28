@@ -225,10 +225,18 @@
 
                 this.mesh = mesh;
                 this.glowMesh = glowMesh;
+                this.wireframe = wireframe;
                 this.uniforms = uniforms;
             }
 
             // Public methods
+
+            setColor = color => {
+                this.glowMesh.material.color.copy(color);
+                this.glowMesh.material.emissive.copy(color);
+                this.wireframe.material.color.copy(color).offsetHSL(0, 0, 0.25);
+                this.uniforms.fresnelColor.value.copy(color).offsetHSL(0, 0, 0.25);
+            };
 
             update = () => {
                 this.mesh.rotation.y -= 0.005;
@@ -309,12 +317,12 @@
 
                 // Hologram
                 const glowMaterial = material.clone();
-                glowMaterial.color = new Color(colors.lightColor);
-                glowMaterial.emissive = new Color(colors.lightColor);
+                glowMaterial.color = new Color(colors.errorColor);
+                glowMaterial.emissive = new Color(colors.errorColor);
                 glowMaterial.emissiveIntensity = 0.125;
 
                 const uniforms = {
-                    fresnelColor: { value: new Color(colors.lightColor).offsetHSL(0, 0, 0.25) },
+                    fresnelColor: { value: new Color(colors.errorColor).offsetHSL(0, 0, 0.25) },
                     fresnelPower: { value: 1.5 }
                 };
 
@@ -376,17 +384,25 @@
                 // Wireframe
                 const wireframe = new LineSegments(
                     new EdgesGeometry(mesh.geometry),
-                    new LineBasicMaterial({ color: new Color(colors.lightColor).offsetHSL(0, 0, 0.25) })
+                    new LineBasicMaterial({ color: new Color(colors.errorColor).offsetHSL(0, 0, 0.25) })
                 );
                 wireframe.layers.set(layers.hologram);
                 glowMesh.add(wireframe);
 
                 this.mesh = mesh;
                 this.glowMesh = glowMesh;
+                this.wireframe = wireframe;
                 this.uniforms = uniforms;
             }
 
             // Public methods
+
+            setColor = color => {
+                this.glowMesh.material.color.copy(color);
+                this.glowMesh.material.emissive.copy(color);
+                this.wireframe.material.color.copy(color).offsetHSL(0, 0, 0.25);
+                this.uniforms.fresnelColor.value.copy(color).offsetHSL(0, 0, 0.25);
+            };
 
             update = time => {
                 this.mesh.position.y = Math.sin(time) * 0.1;
@@ -543,10 +559,18 @@
 
                 this.mesh = mesh;
                 this.glowMesh = glowMesh;
+                this.wireframe = wireframe;
                 this.uniforms = uniforms;
             }
 
             // Public methods
+
+            setColor = color => {
+                this.glowMesh.material.color.copy(color);
+                this.glowMesh.material.emissive.copy(color);
+                this.wireframe.material.color.copy(color).offsetHSL(0, 0, 0.25);
+                this.uniforms.fresnelColor.value.copy(color).offsetHSL(0, 0, 0.25);
+            };
 
             update = () => {
                 // Counter clockwise rotation
@@ -644,6 +668,7 @@
                             name: 'Hologram',
                             value: 'Hologram',
                             callback: () => {
+                                object.setColor(new Color(colors.lightColor));
                             }
                         },
                         {
@@ -651,6 +676,7 @@
                             name: 'Error',
                             value: 'Error',
                             callback: () => {
+                                object.setColor(new Color(colors.errorColor));
                             }
                         }
                     ];

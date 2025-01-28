@@ -34,7 +34,7 @@ void main() {
     vec2 uv = vUv;
 
     // Create large, incidental noise waves
-    float noise = max(0.0, snoise(vec2(uTime, uv.y * 0.3)) - 0.3) * uDistortion;
+    float noise = max(0.0, snoise(vec2(uTime * uSpeed, uv.y * 0.3)) - 0.3) * uDistortion;
 
     // Offset by smaller, constant noise waves
     noise += (snoise(vec2(uTime * 10.0 * uSpeed, uv.y * 2.4)) - 0.5) * uDistortion2;

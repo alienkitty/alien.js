@@ -315,16 +315,17 @@
                 const objects = [darkPlanet, floatingCrystal, abstractCube];
 
                 objects.forEach(object => {
-                    const graph = new RadialGraphCanvas({
+                    object.graph = new RadialGraphCanvas({
                         value: Array.from({ length: 10 }, () => Math.random()),
                         start: -45,
+                        graphHeight: 40,
                         precision: 2,
                         lookupPrecision: 200
                     });
 
                     object.point = new Point3D(object.mesh, {
                         type: 'localhost',
-                        graph
+                        graph: object.graph
                     });
                     object.add(object.point);
 
@@ -336,7 +337,7 @@
                             type: 'link',
                             value: 'Update',
                             callback: () => {
-                                graph.setArray(Array.from({ length: 10 }, () => Math.random()));
+                                object.graph.setArray(Array.from({ length: 10 }, () => Math.random()));
                             }
                         }
                     ];
@@ -348,7 +349,7 @@
 
                 // Shrink tracker mesh to better match the visual size of the object
                 floatingCrystal.point.mesh.scale.multiply(new Vector3(0.6, 1, 0.6));
-                abstractCube.point.mesh.scale.multiplyScalar(0.7);
+                abstractCube.point.mesh.scale.multiplyScalar(0.9);
             }
         }
 

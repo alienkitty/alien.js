@@ -211,8 +211,8 @@ class AbstractCube extends Group {
         this.camera.near = 0.5;
         this.camera.far = 40;
         this.camera.position.z = 8;
-        this.camera.lookAt(this.position.x - 1.2, this.position.y, 0);
         this.camera.zoom = 1.5;
+        this.camera.lookAt(this.position.x - 1.2, this.position.y, 0);
         this.camera.matrixAutoUpdate = false;
     }
 
@@ -308,8 +308,8 @@ class FloatingCrystal extends Group {
         this.camera.near = 0.5;
         this.camera.far = 40;
         this.camera.position.z = 8;
-        this.camera.lookAt(this.position.x - 1.3, this.position.y, 0);
         this.camera.zoom = 1.5;
+        this.camera.lookAt(this.position.x - 1.3, this.position.y, 0);
         this.camera.matrixAutoUpdate = false;
     }
 
@@ -419,8 +419,8 @@ class DarkPlanet extends Group {
         this.camera.near = 0.5;
         this.camera.far = 40;
         this.camera.position.z = 8;
-        this.camera.lookAt(this.position.x - 1.4, this.position.y, 0);
         this.camera.zoom = 1.5;
+        this.camera.lookAt(this.position.x - 1.4, this.position.y, 0);
         this.camera.matrixAutoUpdate = false;
     }
 
@@ -1406,7 +1406,7 @@ class CameraController {
         this.ui = ui;
 
         this.progress = 0;
-        this.animatedIn = false;
+        this.isTransitioning = false;
         this.zoomedIn = false;
         this.enabled = false;
     }
@@ -1425,7 +1425,7 @@ class CameraController {
             if (this.next !== this.view) {
                 this.transition();
             } else {
-                this.animatedIn = false;
+                this.isTransitioning = false;
             }
         }, () => {
             lerpCameras(this.worldCamera, next.camera, this.progress);
@@ -1471,8 +1471,8 @@ class CameraController {
             this.zoomedIn = true;
         }
 
-        if (!this.animatedIn) {
-            this.animatedIn = true;
+        if (!this.isTransitioning) {
+            this.isTransitioning = true;
 
             this.transition();
         }
@@ -1484,7 +1484,7 @@ class CameraController {
     };
 
     static update = () => {
-        if (!this.enabled || this.animatedIn) {
+        if (!this.enabled || this.isTransitioning) {
             return;
         }
 

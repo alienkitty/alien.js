@@ -315,7 +315,7 @@
                 const objects = [darkPlanet, floatingCrystal, abstractCube];
 
                 objects.forEach(object => {
-                    const graph = new RadialGraphCanvas({
+                    object.graph = new RadialGraphCanvas({
                         value: Array.from({ length: 10 }, () => Math.random()),
                         start: -45,
                         graphHeight: 40,
@@ -325,7 +325,7 @@
 
                     object.point = new Point3D(object.mesh, {
                         type: 'localhost',
-                        graph
+                        graph: object.graph
                     });
                     object.add(object.point);
 
@@ -337,7 +337,7 @@
                             type: 'link',
                             value: 'Update',
                             callback: () => {
-                                graph.setArray(Array.from({ length: 10 }, () => Math.random()));
+                                object.graph.setArray(Array.from({ length: 10 }, () => Math.random()));
                             }
                         }
                     ];

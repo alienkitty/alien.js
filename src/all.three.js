@@ -14,6 +14,9 @@ export { BufferGeometryLoaderThread } from '@alienkitty/space.js/src/three/loade
 // export { Color } from '@alienkitty/space.js/src/math/Color.js';
 // export { Vector2 } from '@alienkitty/space.js/src/math/Vector2.js';
 
+// Path
+export { SVGPathProperties } from '@alienkitty/space.js/src/path/SVGPathProperties.js';
+
 // Tween
 export * from '@alienkitty/space.js/src/tween/Ticker.js';
 export * from '@alienkitty/space.js/src/tween/BezierEasing.js';
@@ -72,6 +75,7 @@ export { DetailsButton } from '@alienkitty/space.js/src/ui/DetailsButton.js';
 export { MuteButton } from '@alienkitty/space.js/src/ui/MuteButton.js';
 export { AudioButton } from '@alienkitty/space.js/src/ui/AudioButton.js';
 export { AudioButtonInfo } from '@alienkitty/space.js/src/ui/AudioButtonInfo.js';
+export { DividerLine } from '@alienkitty/space.js/src/ui/DividerLine.js';
 export { Info } from '@alienkitty/space.js/src/ui/Info.js';
 export { Title } from '@alienkitty/space.js/src/ui/Title.js';
 export { Link } from '@alienkitty/space.js/src/ui/Link.js';
@@ -80,10 +84,12 @@ export { MenuItem } from '@alienkitty/space.js/src/ui/MenuItem.js';
 export { Thumbnail } from '@alienkitty/space.js/src/ui/Thumbnail.js';
 export { Graph } from '@alienkitty/space.js/src/ui/Graph.js';
 export { GraphSegments } from '@alienkitty/space.js/src/ui/GraphSegments.js';
+export { GraphLabel } from '@alienkitty/space.js/src/ui/GraphLabel.js';
 export { GraphMarker } from '@alienkitty/space.js/src/ui/GraphMarker.js';
 export { RadialGraph } from '@alienkitty/space.js/src/ui/RadialGraph.js';
-export { RadialGraphSegments } from '@alienkitty/space.js/src/ui/RadialGraphSegments.js';
 export { RadialGraphCanvas } from '@alienkitty/space.js/src/ui/RadialGraphCanvas.js';
+export { RadialGraphSegments } from '@alienkitty/space.js/src/ui/RadialGraphSegments.js';
+export { RadialGraphSegmentsCanvas } from '@alienkitty/space.js/src/ui/RadialGraphSegmentsCanvas.js';
 export { RadialGraphTracker } from '@alienkitty/space.js/src/ui/RadialGraphTracker.js';
 export { Meter } from '@alienkitty/space.js/src/ui/Meter.js';
 export { LineCanvas } from '@alienkitty/space.js/src/ui/LineCanvas.js';

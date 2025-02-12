@@ -154,7 +154,7 @@ a:hover, a:focus {
     text-decoration: underline;
 }
 
-input, pre, .info, .target, .panel, .number, .name, .type, .primary, .secondary, .marker {
+input, pre, .info, .target, .panel, .number, .name, .type, .primary, .secondary, .label, .marker {
     font-family: var(--ui-font-family);
     font-weight: var(--ui-font-weight);
     font-size: var(--ui-font-size);

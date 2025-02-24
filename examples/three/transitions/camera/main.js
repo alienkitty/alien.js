@@ -1401,9 +1401,12 @@ class RenderManager {
 class CameraController {
     static init(worldCamera, controlsCamera, controls, ui) {
         this.worldCamera = worldCamera;
-        this.camera = controlsCamera;
+        this.controlsCamera = controlsCamera;
         this.controls = controls;
         this.ui = ui;
+
+        // Default camera
+        this.camera = this.controlsCamera;
 
         this.progress = 0;
         this.isTransitioning = false;
@@ -1412,26 +1415,20 @@ class CameraController {
     }
 
     static transition() {
+        clearTween(this);
+        clearTween(this.timeout);
+
         this.controls.enabled = false;
         Point3D.enabled = false;
 
-        const next = this.next;
-
         this.progress = 0;
+        this.isTransitioning = true;
 
         tween(this, { progress: 1 }, 1000, 'easeInOutSine', () => {
-            this.view = next;
-
-            if (this.next !== this.view) {
-                this.transition();
-            } else {
-                this.isTransitioning = false;
-            }
+            this.isTransitioning = false;
         }, () => {
-            lerpCameras(this.worldCamera, next.camera, this.progress);
+            lerpCameras(this.worldCamera, this.view.camera, this.progress);
         });
-
-        clearTween(this.timeout);
 
         if (this.zoomedIn) {
             this.ui.details.animateOut(() => {
@@ -1464,18 +1461,14 @@ class CameraController {
 
     static setView = view => {
         if (!navigator.maxTouchPoints && (!view || view === this.next)) {
-            this.next = this;
+            this.view = this;
             this.zoomedIn = false;
         } else {
-            this.next = view;
+            this.view = view;
             this.zoomedIn = true;
         }
 
-        if (!this.isTransitioning) {
-            this.isTransitioning = true;
-
-            this.transition();
-        }
+        this.transition();
     };
 
     static resize = (width, height) => {

@@ -36,13 +36,13 @@ const int samples = 20;
 
 void main() {
     vec2 texcoord = vUv;
-    vec2 deltaTextCoord = texcoord - uLightPosition;
-    deltaTextCoord *= 1.0 / float(samples) * uDensity;
+    vec2 deltaTexCoord = texcoord - uLightPosition;
+    deltaTexCoord *= 1.0 / float(samples) * uDensity;
     vec4 color = vec4(0);
     float illuminationDecay = 1.0;
 
     for (int i = 0; i < samples; i++) {
-        texcoord -= ((deltaTextCoord.xy * (1.0 - uSwizzle)) + (deltaTextCoord.xx * uSwizzle)) * uScale;
+        texcoord -= ((deltaTexCoord.xy * (1.0 - uSwizzle)) + (deltaTexCoord.xx * uSwizzle)) * uScale;
         vec4 texel = texture(tMap, texcoord);
         texel *= illuminationDecay * uWeight;
         color += texel;

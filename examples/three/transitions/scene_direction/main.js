@@ -80,9 +80,7 @@ class UIContainer extends Interface {
             flexDirection: 'column',
             alignItems: 'center',
             height: '100%',
-            padding: '55px 0',
-            pointerEvents: 'none',
-            opacity: 0
+            padding: '55px 0'
         });
     }
 
@@ -90,6 +88,10 @@ class UIContainer extends Interface {
         const { data } = router.get(location.pathname);
 
         this.title = new Title(data.title.replace(/[\s.-]+/g, '_'));
+        this.title.css({
+            width: 'fit-content',
+            pointerEvents: 'auto'
+        });
         this.add(this.title);
 
         const next = Data.getNext(data);
@@ -147,10 +149,6 @@ class UIContainer extends Interface {
 
     animateIn = () => {
         this.visible();
-        this.css({
-            pointerEvents: 'auto',
-            opacity: 1
-        });
 
         const duration = 2000;
         const stagger = 175;

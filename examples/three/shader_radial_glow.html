@@ -29,7 +29,6 @@
                     uniforms: {
                         tScene: { value: null },
                         tBloom: { value: null },
-                        tAdd: { value: null },
                         uLightPosition: { value: new Vector2(0.5, 0.5) },
                         uLightColor: { value: new Color(colors.lightColor) },
                         uPower: { value: 1.5 },
@@ -53,7 +52,6 @@
 
                         uniform sampler2D tScene;
                         uniform sampler2D tBloom;
-                        uniform sampler2D tAdd;
                         uniform vec2 uLightPosition;
                         uniform vec3 uLightColor;
                         uniform float uPower;
@@ -563,7 +561,7 @@
                 this.bloomCompositeMaterial.uniforms.tBlur5.value = this.renderTargetsVertical[4].texture;
                 this.bloomCompositeMaterial.uniforms.uBloomFactors.value = this.bloomFactors();
 
-                // Composite materials
+                // Composite material
                 this.compositeMaterial = new CompositeMaterial();
                 this.compositeMaterial.uniforms.uResolution = resolution;
             }
@@ -751,7 +749,7 @@
 
                 this.camera.fov = 75;
                 this.camera.updateProjectionMatrix();
-            };    
+            };
 
             static animateIn = () => {
                 if (isOrbit) {
@@ -796,7 +794,7 @@
                 this.camera = new PerspectiveCamera(30);
                 this.camera.near = 0.5;
                 this.camera.far = 40;
-                this.camera.position.z = 8;
+                this.camera.position.z = 10;
                 this.camera.lookAt(this.scene.position);
 
                 // Global geometries

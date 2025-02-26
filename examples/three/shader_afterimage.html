@@ -26,14 +26,14 @@
             async initMesh() {
                 const { loadTexture, camera } = WorldController;
 
-                const map = await loadTexture('../assets/fonts/Roboto-Bold.png');
+                const map = await loadTexture('fonts/Roboto-Bold.png');
                 map.minFilter = LinearFilter;
                 map.generateMipmaps = false;
 
                 const material = new TextMaterial({ map });
                 material.uniforms.uAlpha.value = 0.94;
 
-                const font = await (await fetch('../assets/fonts/Roboto-Bold.json')).json();
+                const font = await (await fetch('../assets/textures/fonts/Roboto-Bold.json')).json();
 
                 const text = new Text({
                     font,
@@ -106,11 +106,11 @@
 
                 // Textures
                 const [map, normalMap, ormMap] = await Promise.all([
-                    // loadTexture('../assets/textures/uv.jpg'),
-                    loadTexture('../assets/textures/pbr/polished_concrete_basecolor.jpg'),
-                    loadTexture('../assets/textures/pbr/polished_concrete_normal.jpg'),
+                    // loadTexture('uv.jpg'),
+                    loadTexture('pbr/polished_concrete_basecolor.jpg'),
+                    loadTexture('pbr/polished_concrete_normal.jpg'),
                     // https://occlusion-roughness-metalness.glitch.me/
-                    loadTexture('../assets/textures/pbr/polished_concrete_orm.jpg')
+                    loadTexture('pbr/polished_concrete_orm.jpg')
                 ]);
 
                 map.wrapS = RepeatWrapping;
@@ -693,6 +693,7 @@
 
             static initLoaders() {
                 this.textureLoader = new TextureLoader();
+                this.textureLoader.setPath('../assets/textures/');
             }
 
             static addListeners() {

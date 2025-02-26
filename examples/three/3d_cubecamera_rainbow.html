@@ -42,7 +42,7 @@
                     uniforms: {
                         tScene: { value: null },
                         tBloom: { value: null },
-                        tLensDirt: { value: getTexture('../assets/textures/lens_dirt.jpg') },
+                        tLensDirt: { value: getTexture('lens_dirt.jpg') },
                         uDistortion: { value: 0.2 },
                         uMinBright: { value: 0.07 },
                         uBlurBright: { value: 0.4166 },
@@ -213,7 +213,7 @@
                 const { getTexture, hue, resolution, time } = WorldController;
 
                 const material = new SpriteMaterial({
-                    map: getTexture('../assets/textures/particle2.png'),
+                    map: getTexture('particle2.png'),
                     color: new Color(colors.particleColor),
                     transparent: true,
                     blending: AdditiveBlending,
@@ -304,7 +304,7 @@
 
                 const geometry = new IcosahedronGeometry(40, 3);
 
-                const map = await loadTexture('../assets/textures/space.jpg');
+                const map = await loadTexture('space.jpg');
 
                 const material = new MeshBasicMaterial({
                     map,
@@ -784,6 +784,7 @@
 
             static initLoaders() {
                 this.textureLoader = new TextureLoader();
+                this.textureLoader.setPath('../assets/textures/');
             }
 
             static addListeners() {

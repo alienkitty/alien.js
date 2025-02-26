@@ -29,7 +29,7 @@
             async initGeometry() {
                 const { loadBufferGeometry } = WorldController;
 
-                const geometry = await loadBufferGeometry('../assets/geometry/cube.json');
+                const geometry = await loadBufferGeometry('cube.json');
 
                 // Use second set of UVs for cubemap row layout
                 // https://docs.unrealengine.com/4.27/en-US/RenderingAndGraphics/Textures/Cubemaps/CreatingCubemaps/
@@ -41,8 +41,8 @@
             async initMaterial() {
                 const { anisotropy, loadTexture } = WorldController;
 
-                // const map = await loadTexture('../assets/textures/cubemap.jpg');
-                const map = await loadTexture('../assets/textures/cube/cube_basecolor.jpg');
+                // const map = await loadTexture('cubemap.jpg');
+                const map = await loadTexture('cube/cube_basecolor.jpg');
                 map.anisotropy = anisotropy;
 
                 this.material = new BasicMaterial({ map });
@@ -75,14 +75,14 @@
             async initGeometry() {
                 const { loadBufferGeometry } = WorldController;
 
-                this.geometry = await loadBufferGeometry('../assets/geometry/floor.json');
+                this.geometry = await loadBufferGeometry('floor.json');
             }
 
             async initMaterial() {
                 const { anisotropy, loadTexture } = WorldController;
 
-                // const map = await loadTexture('../assets/textures/uv.jpg');
-                const map = await loadTexture('../assets/textures/cube/cube_shadow.jpg');
+                // const map = await loadTexture('uv.jpg');
+                const map = await loadTexture('cube/cube_shadow.jpg');
                 map.anisotropy = anisotropy;
 
                 this.material = new ShadowTextureMaterial({ map });
@@ -202,7 +202,10 @@
 
             static initLoaders() {
                 this.textureLoader = new TextureLoader();
+                this.textureLoader.setPath('../assets/textures/');
+
                 this.bufferGeometryLoader = new BufferGeometryLoader();
+                this.bufferGeometryLoader.setPath('../assets/geometry/');
             }
 
             static initControls() {

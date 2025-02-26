@@ -132,7 +132,10 @@
                 this.edgesMaterial.uniforms.uTexelSize = texelSize;
 
                 // SMAA weights material
-                this.weightsMaterial = new SMAAWeightsMaterial(textureLoader);
+                this.weightsMaterial = new SMAAWeightsMaterial(textureLoader, {
+                    areaTexturePath: 'smaa/area.png',
+                    searchTexturePath: 'smaa/search.png'
+                });
                 this.weightsMaterial.uniforms.uTexelSize = texelSize;
 
                 // SMAA material
@@ -245,7 +248,7 @@
 
             static initLoaders() {
                 this.textureLoader = new TextureLoader();
-                this.textureLoader.setPath('../');
+                this.textureLoader.setPath('../assets/textures/');
             }
 
             static addListeners() {

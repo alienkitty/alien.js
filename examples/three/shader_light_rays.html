@@ -32,7 +32,7 @@
             initViews() {
                 const { time, getTexture } = WorldController;
 
-                const texture = getTexture('../assets/textures/perlin_noise.png');
+                const texture = getTexture('perlin_noise.png');
                 texture.wrapS = RepeatWrapping;
                 texture.wrapT = RepeatWrapping;
                 texture.generateMipmaps = false;
@@ -586,6 +586,7 @@
 
             static initLoaders() {
                 this.textureLoader = new TextureLoader();
+                this.textureLoader.setPath('../assets/textures/');
             }
 
             static addListeners() {

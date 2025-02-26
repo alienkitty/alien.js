@@ -73,10 +73,10 @@
 
                 // Textures
                 const [map, normalMap] = await Promise.all([
-                    // loadTexture('../assets/textures/uv.jpg'),
-                    loadTexture('../assets/textures/pbr/concrete_wet_floor_basecolor.jpg'),
-                    // loadTexture('../assets/textures/waternormals.jpg')
-                    loadTexture('../assets/textures/pbr/concrete_wet_floor_normal.jpg')
+                    // loadTexture('uv.jpg'),
+                    loadTexture('pbr/concrete_wet_floor_basecolor.jpg'),
+                    // loadTexture('waternormals.jpg')
+                    loadTexture('pbr/concrete_wet_floor_normal.jpg')
                 ]);
 
                 map.wrapS = RepeatWrapping;
@@ -592,6 +592,8 @@
 
             static initLoaders() {
                 this.textureLoader = new TextureLoader();
+                this.textureLoader.setPath('../assets/textures/');
+
                 this.svgLoader = new SVGLoader();
             }
 

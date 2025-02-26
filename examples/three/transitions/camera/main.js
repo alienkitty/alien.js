@@ -3,7 +3,6 @@ import { AdditiveBlending, AssetLoader, BasicShadowMap, BloomCompositeMaterial, 
 const isDebug = /[?&]debug/.test(location.search);
 
 const basePath = '/examples/three/transitions/camera';
-const assetPath = '/examples/';
 const breakpoint = 1000;
 
 const layers = {
@@ -117,7 +116,7 @@ class BlurMaterial extends RawShaderMaterial {
     constructor(direction = new Vector2(0.5, 0.5)) {
         const { getTexture } = WorldController;
 
-        const texture = getTexture('assets/textures/blue_noise.png');
+        const texture = getTexture('blue_noise.png');
         texture.wrapS = RepeatWrapping;
         texture.wrapT = RepeatWrapping;
         texture.magFilter = NearestFilter;
@@ -227,11 +226,11 @@ class AbstractCube extends Group {
 
         // Textures
         const [map, normalMap, ormMap] = await Promise.all([
-            // loadTexture('assets/textures/uv.jpg'),
-            loadTexture('assets/textures/pbr/pitted_metal_basecolor.jpg'),
-            loadTexture('assets/textures/pbr/pitted_metal_normal.jpg'),
+            // loadTexture('uv.jpg'),
+            loadTexture('pbr/pitted_metal_basecolor.jpg'),
+            loadTexture('pbr/pitted_metal_normal.jpg'),
             // https://occlusion-roughness-metalness.glitch.me/
-            loadTexture('assets/textures/pbr/pitted_metal_orm.jpg')
+            loadTexture('pbr/pitted_metal_orm.jpg')
         ]);
 
         map.anisotropy = anisotropy;
@@ -324,11 +323,11 @@ class FloatingCrystal extends Group {
 
         // Textures
         const [map, normalMap, ormMap] = await Promise.all([
-            // loadTexture('assets/textures/uv.jpg'),
-            loadTexture('assets/textures/pbr/pitted_metal_basecolor.jpg'),
-            loadTexture('assets/textures/pbr/pitted_metal_normal.jpg'),
+            // loadTexture('uv.jpg'),
+            loadTexture('pbr/pitted_metal_basecolor.jpg'),
+            loadTexture('pbr/pitted_metal_normal.jpg'),
             // https://occlusion-roughness-metalness.glitch.me/
-            loadTexture('assets/textures/pbr/pitted_metal_orm.jpg')
+            loadTexture('pbr/pitted_metal_orm.jpg')
         ]);
 
         map.anisotropy = anisotropy;
@@ -435,11 +434,11 @@ class DarkPlanet extends Group {
 
         // Textures
         const [map, normalMap, ormMap] = await Promise.all([
-            // loadTexture('assets/textures/uv.jpg'),
-            loadTexture('assets/textures/pbr/pitted_metal_basecolor.jpg'),
-            loadTexture('assets/textures/pbr/pitted_metal_normal.jpg'),
+            // loadTexture('uv.jpg'),
+            loadTexture('pbr/pitted_metal_basecolor.jpg'),
+            loadTexture('pbr/pitted_metal_normal.jpg'),
             // https://occlusion-roughness-metalness.glitch.me/
-            loadTexture('assets/textures/pbr/pitted_metal_orm.jpg')
+            loadTexture('pbr/pitted_metal_orm.jpg')
         ]);
 
         map.anisotropy = anisotropy;
@@ -527,7 +526,7 @@ class Floor extends Group {
 
         const geometry = new PlaneGeometry(100, 100);
 
-        const map = await loadTexture('assets/textures/waterdudv.jpg');
+        const map = await loadTexture('waterdudv.jpg');
         map.wrapS = RepeatWrapping;
         map.wrapT = RepeatWrapping;
         map.repeat.set(6, 3);
@@ -1041,7 +1040,7 @@ class RenderManager {
     }
 
     static initRenderer() {
-        const { screenTriangle, textureLoader, resolution, time, getTexture } = WorldController;
+        const { screenTriangle, resolution, time, textureLoader, getTexture } = WorldController;
 
         // Manually clear
         this.renderer.autoClear = false;
@@ -1082,7 +1081,9 @@ class RenderManager {
         });
 
         // Motion blur composite material
-        this.motionBlurCompositeMaterial = new MotionBlurCompositeMaterial(textureLoader);
+        this.motionBlurCompositeMaterial = new MotionBlurCompositeMaterial(textureLoader, {
+            blueNoisePath: 'blue_noise.png'
+        });
         this.motionBlurCompositeMaterial.uniforms.tVelocity.value = this.drawBuffers.renderTarget.textures[1];
 
         // Gaussian blur materials
@@ -1133,8 +1134,8 @@ class RenderManager {
 
         // Debug materials
         this.blackoutMaterial = new MeshBasicMaterial({ color: 0x000000 });
-        this.matcap1Material = new MeshMatcapMaterial({ matcap: getTexture('assets/textures/matcaps/040full.jpg') });
-        this.matcap2Material = new MeshMatcapMaterial({ matcap: getTexture('assets/textures/matcaps/defaultwax.jpg') });
+        this.matcap1Material = new MeshMatcapMaterial({ matcap: getTexture('matcaps/040full.jpg') });
+        this.matcap2Material = new MeshMatcapMaterial({ matcap: getTexture('matcaps/defaultwax.jpg') });
         this.normalMaterial = new NormalMaterial();
         this.depthMaterial = new DepthMaterial();
         this.copyMaterial = new CopyMaterial();
@@ -1554,15 +1555,15 @@ class WorldController {
 
     static initLoaders() {
         this.textureLoader = new TextureLoader();
+        this.textureLoader.setPath('/examples/assets/textures/');
         this.textureLoader.cache = true;
-        this.textureLoader.setPath(assetPath);
 
         this.environmentLoader = new EnvironmentTextureLoader(this.renderer);
-        this.environmentLoader.setPath(assetPath);
+        this.environmentLoader.setPath('/examples/assets/textures/env/');
     }
 
     static async initEnvironment() {
-        this.scene.environment = await this.loadEnvironmentTexture('assets/textures/env/jewelry_black_contrast.jpg');
+        this.scene.environment = await this.loadEnvironmentTexture('jewelry_black_contrast.jpg');
         this.scene.environmentIntensity = 1.2;
     }
 
@@ -1648,7 +1649,7 @@ class App {
 
     static initLoader() {
         this.assetLoader = new AssetLoader();
-        this.assetLoader.setPath('/examples/three/');
+        this.assetLoader.setPath('/examples/three/transitions/');
     }
 
     static initStage() {
@@ -1662,7 +1663,7 @@ class App {
     }
 
     static async loadData() {
-        const data = await this.assetLoader.loadData('transitions/data.json');
+        const data = await this.assetLoader.loadData('data.json');
 
         Data.init(data);
     }

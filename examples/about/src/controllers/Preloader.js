@@ -28,10 +28,11 @@ export class Preloader {
         this.view.animateIn();
 
         const bufferLoader = new BufferLoader();
+        bufferLoader.setPath('assets/sounds/');
         bufferLoader.loadAll([
-            'assets/sounds/bass_drum.mp3',
-            'assets/sounds/deep_spacy_loop.mp3',
-            'assets/sounds/water_loop.mp3'
+            'bass_drum.mp3',
+            'deep_spacy_loop.mp3',
+            'water_loop.mp3'
         ]);
 
         this.loader = new MultiLoader();

@@ -23,7 +23,7 @@
 
                 // Sketchfab model
                 // https://sbtron.github.io/makeglb/
-                const model = await loadGLTF('../assets/gltf/crystal.glb');
+                const model = await loadGLTF('crystal.glb');
                 model.scale.setScalar(0.01);
                 // model.updateMatrixWorld(); // Needed for Point3D
 
@@ -577,12 +577,17 @@
 
             static initLoaders() {
                 this.textureLoader = new TextureLoader();
+                this.textureLoader.setPath('../assets/textures/');
+
                 this.environmentLoader = new EnvironmentTextureLoader(this.renderer);
+                this.environmentLoader.setPath('../assets/textures/env/');
+
                 this.gltfLoader = new GLTFLoader();
+                this.gltfLoader.setPath('../assets/gltf/');
             }
 
             static async initEnvironment() {
-                this.scene.environment = await this.loadEnvironmentTexture('../assets/textures/env/jewelry_black_contrast.jpg');
+                this.scene.environment = await this.loadEnvironmentTexture('jewelry_black_contrast.jpg');
                 this.scene.environmentRotation.z = MathUtils.degToRad(100);
                 this.scene.environmentIntensity = 5;
             }

@@ -143,7 +143,7 @@ AudioMicro
 
     static initAudio() {
         WebAudio.init({ sampleRate: 48000 });
-        WebAudio.load(this.loader.filter(path => /sounds/.test(path)));
+        WebAudio.load(this.loader.files);
 
         AudioController.init(this.ui);
     }

@@ -47,7 +47,7 @@
             async initMesh() {
                 const { loadBufferGeometry } = WorldController;
 
-                const geometry = await loadBufferGeometry('../assets/geometry/polyhedron.json');
+                const geometry = await loadBufferGeometry('polyhedron.json');
 
                 const material = new ColorLightingMaterial({
                     color: new Color(0.2, 0.8, 1.0),
@@ -348,12 +348,17 @@
 
             static initLoaders() {
                 this.textureLoader = new TextureLoader();
+                this.textureLoader.setPath('../assets/textures/');
+
                 this.environmentLoader = new EnvironmentTextureLoader(this.renderer);
+                this.environmentLoader.setPath('../assets/textures/env/');
+
                 this.bufferGeometryLoader = new BufferGeometryLoader();
+                this.bufferGeometryLoader.setPath('../assets/geometry/');
             }
 
             static async initEnvironment() {
-                this.scene.environment = await this.loadEnvironmentTexture('../assets/textures/env/jewelry_black_contrast.jpg');
+                this.scene.environment = await this.loadEnvironmentTexture('jewelry_black_contrast.jpg');
                 this.scene.environmentIntensity = 0.5;
             }
 

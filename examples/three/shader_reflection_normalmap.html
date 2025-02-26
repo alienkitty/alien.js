@@ -71,7 +71,7 @@
 
                 const geometry = new PlaneGeometry(100, 100);
 
-                const normalMap = await loadTexture('../assets/textures/pbr/polished_concrete_normal.jpg');
+                const normalMap = await loadTexture('pbr/polished_concrete_normal.jpg');
                 normalMap.wrapS = RepeatWrapping;
                 normalMap.wrapT = RepeatWrapping;
                 normalMap.repeat.set(8, 8);
@@ -635,6 +635,8 @@
 
             static initLoaders() {
                 this.textureLoader = new TextureLoader();
+                this.textureLoader.setPath('../assets/textures/');
+
                 this.svgLoader = new SVGLoader();
             }
 

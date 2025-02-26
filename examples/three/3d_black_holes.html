@@ -106,7 +106,7 @@
             constructor() {
                 const { getTexture } = WorldController;
 
-                const texture = getTexture('../assets/textures/blue_noise.png');
+                const texture = getTexture('blue_noise.png');
                 texture.wrapS = RepeatWrapping;
                 texture.wrapT = RepeatWrapping;
                 texture.magFilter = NearestFilter;
@@ -208,12 +208,12 @@
 
                 // Textures
                 const [map, normalMap, ormMap, thicknessMap] = await Promise.all([
-                    // loadTexture('../assets/textures/uv.jpg'),
-                    loadTexture('../assets/textures/pbr/pitted_metal_basecolor.jpg'),
-                    loadTexture('../assets/textures/pbr/pitted_metal_normal.jpg'),
+                    // loadTexture('uv.jpg'),
+                    loadTexture('pbr/pitted_metal_basecolor.jpg'),
+                    loadTexture('pbr/pitted_metal_normal.jpg'),
                     // https://occlusion-roughness-metalness.glitch.me/
-                    loadTexture('../assets/textures/pbr/pitted_metal_orm.jpg'),
-                    loadTexture('../assets/textures/pbr/pitted_metal_height.jpg')
+                    loadTexture('pbr/pitted_metal_orm.jpg'),
+                    loadTexture('pbr/pitted_metal_height.jpg')
                 ]);
 
                 map.anisotropy = anisotropy;
@@ -304,12 +304,12 @@
 
                 // Textures
                 const [map, normalMap, ormMap, envMap] = await Promise.all([
-                    // loadTexture('../assets/textures/uv.jpg'),
-                    loadTexture('../assets/textures/pbr/pitted_metal_basecolor.jpg'),
-                    loadTexture('../assets/textures/pbr/pitted_metal_normal.jpg'),
+                    // loadTexture('uv.jpg'),
+                    loadTexture('pbr/pitted_metal_basecolor.jpg'),
+                    loadTexture('pbr/pitted_metal_normal.jpg'),
                     // https://occlusion-roughness-metalness.glitch.me/
-                    loadTexture('../assets/textures/pbr/pitted_metal_orm.jpg'),
-                    loadEnvironmentTexture('../assets/textures/env/jewelry_black_contrast.jpg')
+                    loadTexture('pbr/pitted_metal_orm.jpg'),
+                    loadEnvironmentTexture('jewelry_black_contrast.jpg')
                 ]);
 
                 map.anisotropy = anisotropy;
@@ -750,7 +750,7 @@
             }
 
             static initRenderer() {
-                const { screenTriangle, aspect, getTexture } = WorldController;
+                const { screenTriangle, aspect, textureLoader, getTexture } = WorldController;
 
                 // Manually clear
                 this.renderer.autoClear = false;
@@ -804,7 +804,9 @@
                 });
 
                 // Motion blur composite material
-                this.motionBlurCompositeMaterial = new MotionBlurCompositeMaterial();
+                this.motionBlurCompositeMaterial = new MotionBlurCompositeMaterial(textureLoader, {
+                    blueNoisePath: 'blue_noise.png'
+                });
                 this.motionBlurCompositeMaterial.uniforms.tVelocity.value = this.drawBuffers.renderTarget.textures[1];
 
                 // Occlusion materials
@@ -857,8 +859,8 @@
                 this.compositeMaterial.uniforms.uBloomDistortion.value = this.bloomDistortion;
 
                 // Debug materials
-                this.matcap1Material = new MeshMatcapMaterial({ matcap: getTexture('../assets/textures/matcaps/040full.jpg') });
-                this.matcap2Material = new MeshMatcapMaterial({ matcap: getTexture('../assets/textures/matcaps/defaultwax.jpg') });
+                this.matcap1Material = new MeshMatcapMaterial({ matcap: getTexture('matcaps/040full.jpg') });
+                this.matcap2Material = new MeshMatcapMaterial({ matcap: getTexture('matcaps/defaultwax.jpg') });
                 this.normalMaterial = new NormalMaterial();
                 this.depthMaterial = new DepthMaterial();
                 this.copyMaterial = new CopyMaterial();
@@ -1306,11 +1308,14 @@
 
             static initLoaders() {
                 this.textureLoader = new TextureLoader();
+                this.textureLoader.setPath('../assets/textures/');
+
                 this.environmentLoader = new EnvironmentTextureLoader(this.renderer);
+                this.environmentLoader.setPath('../assets/textures/env/');
             }
 
             static async initEnvironment() {
-                this.scene.environment = await this.loadEnvironmentTexture('../assets/textures/env/jewelry_black_contrast.jpg');
+                this.scene.environment = await this.loadEnvironmentTexture('jewelry_black_contrast.jpg');
                 this.scene.environmentRotation.x = MathUtils.degToRad(-45);
                 this.scene.environmentRotation.y = MathUtils.degToRad(-25);
                 this.scene.environmentIntensity = 1.2;

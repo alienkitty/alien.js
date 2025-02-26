@@ -2,7 +2,6 @@ import { AssetLoader, BloomCompositeMaterial, BlurMaterial, BoxGeometry, Color, 
 
 const isDebug = /[?&]debug/.test(location.search);
 
-const assetPath = '/examples/';
 const breakpoint = 1000;
 
 class Data {
@@ -190,11 +189,11 @@ class AbstractCube extends Group {
 
         // Textures
         const [map, normalMap, ormMap] = await Promise.all([
-            // loadTexture('assets/textures/uv.jpg'),
-            loadTexture('assets/textures/pbr/pitted_metal_basecolor.jpg'),
-            loadTexture('assets/textures/pbr/pitted_metal_normal.jpg'),
+            // loadTexture('uv.jpg'),
+            loadTexture('pbr/pitted_metal_basecolor.jpg'),
+            loadTexture('pbr/pitted_metal_normal.jpg'),
             // https://occlusion-roughness-metalness.glitch.me/
-            loadTexture('assets/textures/pbr/pitted_metal_orm.jpg')
+            loadTexture('pbr/pitted_metal_orm.jpg')
         ]);
 
         map.anisotropy = anisotropy;
@@ -252,11 +251,11 @@ class FloatingCrystal extends Group {
 
         // Textures
         const [map, normalMap, ormMap] = await Promise.all([
-            // loadTexture('assets/textures/uv.jpg'),
-            loadTexture('assets/textures/pbr/pitted_metal_basecolor.jpg'),
-            loadTexture('assets/textures/pbr/pitted_metal_normal.jpg'),
+            // loadTexture('uv.jpg'),
+            loadTexture('pbr/pitted_metal_basecolor.jpg'),
+            loadTexture('pbr/pitted_metal_normal.jpg'),
             // https://occlusion-roughness-metalness.glitch.me/
-            loadTexture('assets/textures/pbr/pitted_metal_orm.jpg')
+            loadTexture('pbr/pitted_metal_orm.jpg')
         ]);
 
         map.anisotropy = anisotropy;
@@ -328,11 +327,11 @@ class DarkPlanet extends Group {
 
         // Textures
         const [map, normalMap, ormMap] = await Promise.all([
-            // loadTexture('assets/textures/uv.jpg'),
-            loadTexture('assets/textures/pbr/pitted_metal_basecolor.jpg'),
-            loadTexture('assets/textures/pbr/pitted_metal_normal.jpg'),
+            // loadTexture('uv.jpg'),
+            loadTexture('pbr/pitted_metal_basecolor.jpg'),
+            loadTexture('pbr/pitted_metal_normal.jpg'),
             // https://occlusion-roughness-metalness.glitch.me/
-            loadTexture('assets/textures/pbr/pitted_metal_orm.jpg')
+            loadTexture('pbr/pitted_metal_orm.jpg')
         ]);
 
         map.anisotropy = anisotropy;
@@ -932,14 +931,14 @@ class WorldController {
 
     static initLoaders() {
         this.textureLoader = new TextureLoader();
-        this.textureLoader.setPath(assetPath);
+        this.textureLoader.setPath('/examples/assets/textures/');
 
         this.environmentLoader = new EnvironmentTextureLoader(this.renderer);
-        this.environmentLoader.setPath(assetPath);
+        this.environmentLoader.setPath('/examples/assets/textures/env/');
     }
 
     static async initEnvironment() {
-        this.scene.environment = await this.loadEnvironmentTexture('assets/textures/env/jewelry_black_contrast.jpg');
+        this.scene.environment = await this.loadEnvironmentTexture('jewelry_black_contrast.jpg');
         this.scene.environmentIntensity = 1.2;
     }
 
@@ -1024,7 +1023,7 @@ class App {
 
     static initLoader() {
         this.assetLoader = new AssetLoader();
-        this.assetLoader.setPath('/examples/three/');
+        this.assetLoader.setPath('/examples/three/transitions/');
     }
 
     static initStage() {
@@ -1038,7 +1037,7 @@ class App {
     }
 
     static async loadData() {
-        const data = await this.assetLoader.loadData('transitions/data.json');
+        const data = await this.assetLoader.loadData('data.json');
 
         Data.init(data);
     }

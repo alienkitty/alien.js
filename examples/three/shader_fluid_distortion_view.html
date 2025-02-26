@@ -230,11 +230,11 @@
 
                 // Textures
                 const [map, normalMap, ormMap] = await Promise.all([
-                    // loadTexture('../assets/textures/uv.jpg'),
-                    loadTexture('../assets/textures/pbr/polished_concrete_basecolor.jpg'),
-                    loadTexture('../assets/textures/pbr/polished_concrete_normal.jpg'),
+                    // loadTexture('uv.jpg'),
+                    loadTexture('pbr/polished_concrete_basecolor.jpg'),
+                    loadTexture('pbr/polished_concrete_normal.jpg'),
                     // https://occlusion-roughness-metalness.glitch.me/
-                    loadTexture('../assets/textures/pbr/polished_concrete_orm.jpg')
+                    loadTexture('pbr/polished_concrete_orm.jpg')
                 ]);
 
                 map.wrapS = RepeatWrapping;
@@ -929,6 +929,8 @@
 
             static initLoaders() {
                 this.textureLoader = new TextureLoader();
+                this.textureLoader.setPath('../assets/textures/');
+
                 this.svgLoader = new SVGLoader();
             }
 

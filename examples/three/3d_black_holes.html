@@ -1136,8 +1136,6 @@
                 scene.background = null;
                 renderer.setClearColor(this.clearColor, 1);
 
-                camera.layers.set(layers.default);
-
                 // Debug override material passes (render to screen)
                 if (this.display === DisplayOptions.Depth) {
                     scene.overrideMaterial = this.depthMaterial;

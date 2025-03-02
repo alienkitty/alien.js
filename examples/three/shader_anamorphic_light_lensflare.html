@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
 
-    <title>Lens Flare Shader — Alien.js</title>
+    <title>Fast Anamorphic Light Shader — Alien.js</title>
 
     <link rel="preconnect" href="https://fonts.gstatic.com">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto+Mono">
@@ -381,10 +381,10 @@
                     },
                     {
                         type: 'slider',
-                        name: 'ScaleX',
+                        name: 'Scale X',
                         min: -2,
                         max: 2,
-                        step: 0.02,
+                        step: 0.01,
                         value: vlMaterial.uniforms.uScale.value.x,
                         callback: value => {
                             vlMaterial.uniforms.uScale.value.x = value;
@@ -392,10 +392,10 @@
                     },
                     {
                         type: 'slider',
-                        name: 'ScaleY',
+                        name: 'Scale Y',
                         min: -2,
                         max: 2,
-                        step: 0.02,
+                        step: 0.01,
                         value: vlMaterial.uniforms.uScale.value.y,
                         callback: value => {
                             vlMaterial.uniforms.uScale.value.y = value;
@@ -406,7 +406,7 @@
                         name: 'Swizzle',
                         min: -2,
                         max: 2,
-                        step: 0.02,
+                        step: 0.01,
                         value: vlMaterial.uniforms.uSwizzle.value,
                         callback: value => {
                             vlMaterial.uniforms.uSwizzle.value = value;
@@ -472,7 +472,7 @@
                     },
                     {
                         type: 'slider',
-                        name: 'ScaleX',
+                        name: 'Scale X',
                         min: 0,
                         max: 4,
                         step: 0.02,
@@ -483,7 +483,7 @@
                     },
                     {
                         type: 'slider',
-                        name: 'ScaleY',
+                        name: 'Scale Y',
                         min: 0,
                         max: 4,
                         step: 0.02,

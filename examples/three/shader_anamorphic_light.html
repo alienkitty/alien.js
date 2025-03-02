@@ -358,10 +358,10 @@
                     },
                     {
                         type: 'slider',
-                        name: 'ScaleX',
+                        name: 'Scale X',
                         min: -2,
                         max: 2,
-                        step: 0.02,
+                        step: 0.01,
                         value: vlMaterial.uniforms.uScale.value.x,
                         callback: value => {
                             vlMaterial.uniforms.uScale.value.x = value;
@@ -369,10 +369,10 @@
                     },
                     {
                         type: 'slider',
-                        name: 'ScaleY',
+                        name: 'Scale Y',
                         min: -2,
                         max: 2,
-                        step: 0.02,
+                        step: 0.01,
                         value: vlMaterial.uniforms.uScale.value.y,
                         callback: value => {
                             vlMaterial.uniforms.uScale.value.y = value;
@@ -383,7 +383,7 @@
                         name: 'Swizzle',
                         min: -2,
                         max: 2,
-                        step: 0.02,
+                        step: 0.01,
                         value: vlMaterial.uniforms.uSwizzle.value,
                         callback: value => {
                             vlMaterial.uniforms.uSwizzle.value = value;

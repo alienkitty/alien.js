@@ -70,11 +70,10 @@
                             FragColor.rgb += texture(tBloom, vUv).rgb;
 
                             // Radial gradient for fake volumetric light
-                            vec2 uv = vUv - 0.5;
+                            vec2 uv = vUv - uLightPosition;
                             uv.x *= uResolution.x / uResolution.y;
-                            uv += 0.5;
 
-                            float amount = length(uv - uLightPosition);
+                            float amount = length(uv);
                             amount = pow(amount, uPower);
                             amount *= 1.0 - uAmount;
 

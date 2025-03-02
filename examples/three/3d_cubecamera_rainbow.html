@@ -43,14 +43,15 @@
                         tScene: { value: null },
                         tBloom: { value: null },
                         tLensDirt: { value: getTexture('lens_dirt.jpg') },
-                        uDistortion: { value: 0.2 },
-                        uMinBright: { value: 0.07 },
-                        uBlurBright: { value: 0.4166 },
                         uLightColor: { value: new Color(colors.lightColor) },
                         uColor: { value: scene.background },
+                        uDistortion: { value: 0.2 },
+                        uBloomReduction: { value: 0.07 },
+                        uBloomBoost: { value: 0.4166 },
+                        uBloomClamp: { value: 1 },
                         uHue: { value: 0 },
-                        uBoost: { value: 1 },
                         uReduction: { value: 1.2 },
+                        uBoost: { value: 1 },
                         uLensDirt: { value: true },
                         uDebug: { value: isDebug },
                         uResolution: { value: new Vector2() },
@@ -74,14 +75,15 @@
                         uniform sampler2D tScene;
                         uniform sampler2D tBloom;
                         uniform sampler2D tLensDirt;
-                        uniform float uDistortion;
-                        uniform float uMinBright;
-                        uniform float uBlurBright;
                         uniform vec3 uLightColor;
                         uniform vec3 uColor;
+                        uniform float uDistortion;
+                        uniform float uBloomReduction;
+                        uniform float uBloomBoost;
+                        uniform float uBloomClamp;
                         uniform float uHue;
-                        uniform float uBoost;
                         uniform float uReduction;
+                        uniform float uBoost;
                         uniform bool uLensDirt;
                         uniform bool uDebug;
                         uniform vec2 uResolution;
@@ -113,11 +115,13 @@
                             color += getRGB(tScene, vUv, 0.1, 0.002 * uDistortion);
 
                             vec4 bloom = texture(tBloom, vUv);
-                            bloom.x = max(0.0, bloom.x - uMinBright);
-                            bloom.y = max(0.0, bloom.y - uMinBright);
-                            bloom.z = max(0.0, bloom.z - uMinBright);
+                            bloom.r = max(0.0, bloom.r - uBloomReduction);
+                            bloom.g = max(0.0, bloom.g - uBloomReduction);
+                            bloom.b = max(0.0, bloom.b - uBloomReduction);
+                            bloom.rgb *= uBloomBoost;
+                            bloom = clamp(bloom, 0.0, uBloomClamp);
 
-                            color.rgb += bloom.rgb * uBlurBright;
+                            color.rgb += bloom.rgb;
 
                             // Blend overlay noise lighting
                             float noise = noise(vUv + uTime * 0.06);
@@ -441,17 +445,6 @@
                     },
                     {
                         type: 'slider',
-                        name: 'Boost',
-                        min: 0,
-                        max: 2,
-                        step: 0.01,
-                        value: compositeMaterial.uniforms.uBoost.value,
-                        callback: value => {
-                            compositeMaterial.uniforms.uBoost.value = value;
-                        }
-                    },
-                    {
-                        type: 'slider',
                         name: 'Reduce',
                         min: 0,
                         max: 2,
@@ -459,6 +452,17 @@
                         value: compositeMaterial.uniforms.uReduction.value,
                         callback: value => {
                             compositeMaterial.uniforms.uReduction.value = value;
+                        }
+                    },
+                    {
+                        type: 'slider',
+                        name: 'Boost',
+                        min: 0,
+                        max: 2,
+                        step: 0.01,
+                        value: compositeMaterial.uniforms.uBoost.value,
+                        callback: value => {
+                            compositeMaterial.uniforms.uBoost.value = value;
                         }
                     },
                     {
@@ -490,20 +494,31 @@
                         min: 0,
                         max: 1,
                         step: 0.01,
-                        value: compositeMaterial.uniforms.uMinBright.value,
+                        value: compositeMaterial.uniforms.uBloomReduction.value,
                         callback: value => {
-                            compositeMaterial.uniforms.uMinBright.value = value;
+                            compositeMaterial.uniforms.uBloomReduction.value = value;
                         }
                     },
                     {
                         type: 'slider',
-                        name: 'Bright',
+                        name: 'Boost',
+                        min: 0,
+                        max: 10,
+                        step: 0.1,
+                        value: compositeMaterial.uniforms.uBloomBoost.value,
+                        callback: value => {
+                            compositeMaterial.uniforms.uBloomBoost.value = value;
+                        }
+                    },
+                    {
+                        type: 'slider',
+                        name: 'Clamp',
                         min: 0,
                         max: 1,
                         step: 0.01,
-                        value: compositeMaterial.uniforms.uBlurBright.value,
+                        value: compositeMaterial.uniforms.uBloomClamp.value,
                         callback: value => {
-                            compositeMaterial.uniforms.uBlurBright.value = value;
+                            compositeMaterial.uniforms.uBloomClamp.value = value;
                         }
                     },
                     {

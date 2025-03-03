@@ -29,8 +29,8 @@
                         tBloom: { value: null },
                         uBloomDistortion: { value: 1.5 },
                         uGrainAmount: { value: 0.1 },
-                        uBoost: { value: 1.1 },
                         uReduction: { value: 0.9 },
+                        uBoost: { value: 1.1 },
                         uTime: time
                     },
                     vertexShader: /* glsl */ `
@@ -52,8 +52,8 @@
                         uniform sampler2D tBloom;
                         uniform float uBloomDistortion;
                         uniform float uGrainAmount;
-                        uniform float uBoost;
                         uniform float uReduction;
+                        uniform float uBoost;
                         uniform float uTime;
 
                         in vec2 vUv;
@@ -180,17 +180,6 @@
                     },
                     {
                         type: 'slider',
-                        name: 'Boost',
-                        min: 0,
-                        max: 2,
-                        step: 0.01,
-                        value: compositeMaterial.uniforms.uBoost.value,
-                        callback: value => {
-                            compositeMaterial.uniforms.uBoost.value = value;
-                        }
-                    },
-                    {
-                        type: 'slider',
                         name: 'Reduce',
                         min: 0,
                         max: 2,
@@ -198,6 +187,17 @@
                         value: compositeMaterial.uniforms.uReduction.value,
                         callback: value => {
                             compositeMaterial.uniforms.uReduction.value = value;
+                        }
+                    },
+                    {
+                        type: 'slider',
+                        name: 'Boost',
+                        min: 0,
+                        max: 2,
+                        step: 0.01,
+                        value: compositeMaterial.uniforms.uBoost.value,
+                        callback: value => {
+                            compositeMaterial.uniforms.uBoost.value = value;
                         }
                     },
                     {
@@ -279,8 +279,8 @@
 
                 // Film grain and vignetting
                 this.grainAmount = 0.1;
-                this.boost = 1.1;
                 this.reduction = 0.9;
+                this.boost = 1.1;
 
                 // Unreal bloom
                 this.luminosityThreshold = 0.1;
@@ -347,8 +347,8 @@
                 this.compositeMaterial = new CompositeMaterial();
                 this.compositeMaterial.uniforms.uBloomDistortion.value = this.bloomDistortion;
                 this.compositeMaterial.uniforms.uGrainAmount.value = this.grainAmount;
-                this.compositeMaterial.uniforms.uBoost.value = this.boost;
                 this.compositeMaterial.uniforms.uReduction.value = this.reduction;
+                this.compositeMaterial.uniforms.uBoost.value = this.boost;
             }
 
             static bloomFactors() {

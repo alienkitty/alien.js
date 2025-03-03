@@ -42,7 +42,7 @@
                         tLensDirt: { value: getTexture('lens_dirt.jpg') },
                         uLightColor: { value: new Color(colors.lightColor) },
                         uColor: { value: new Color(colors.backgroundColor) },
-                        uDistortion: { value: 0.2 },
+                        uRGBAmount: { value: 0.2 },
                         uBloomReduction: { value: 0.07 },
                         uBloomBoost: { value: 0.4166 },
                         uBloomClamp: { value: 1 },
@@ -73,7 +73,7 @@
                         uniform sampler2D tLensDirt;
                         uniform vec3 uLightColor;
                         uniform vec3 uColor;
-                        uniform float uDistortion;
+                        uniform float uRGBAmount;
                         uniform float uBloomReduction;
                         uniform float uBloomBoost;
                         uniform float uBloomClamp;
@@ -99,7 +99,7 @@
                             // Linear gradient
                             vec4 color = vec4(mix(uColor, vec3(0.0), smoothstep(0.0, 0.6, vUv.y)), 1.0);
 
-                            color += getRGB(tScene, vUv, 0.1, 0.002 * uDistortion);
+                            color += getRGB(tScene, vUv, 0.1, 0.002 * uRGBAmount);
 
                             vec4 bloom = texture(tBloom, vUv);
                             bloom.r = max(0.0, bloom.r - uBloomReduction);
@@ -393,9 +393,9 @@
                         min: 0,
                         max: 10,
                         step: 0.1,
-                        value: compositeMaterial.uniforms.uDistortion.value,
+                        value: compositeMaterial.uniforms.uRGBAmount.value,
                         callback: value => {
-                            compositeMaterial.uniforms.uDistortion.value = value;
+                            compositeMaterial.uniforms.uRGBAmount.value = value;
                         }
                     },
                     {

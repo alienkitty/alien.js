@@ -57,7 +57,7 @@ class CompositeMaterial extends RawShaderMaterial {
                 uFocus: { value: 0.5 },
                 uRotation: { value: 0 },
                 uBlurAmount: { value: 1 },
-                uDistortion: { value: 1.5 }
+                uRGBAmount: { value: 1.5 }
             },
             vertexShader: /* glsl */ `
                 in vec3 position;
@@ -78,7 +78,7 @@ class CompositeMaterial extends RawShaderMaterial {
                 uniform float uFocus;
                 uniform float uRotation;
                 uniform float uBlurAmount;
-                uniform float uDistortion;
+                uniform float uRGBAmount;
 
                 in vec2 vUv;
 
@@ -94,7 +94,7 @@ class CompositeMaterial extends RawShaderMaterial {
                     float t = smootherstep(0.0, 1.0, d);
 
                     float angle = length(vUv - 0.5);
-                    float amount = 0.002 * uDistortion * uBlurAmount * t;
+                    float amount = 0.002 * uRGBAmount * uBlurAmount * t;
 
                     FragColor += getRGB(tScene, vUv, angle, amount);
 
@@ -931,9 +931,9 @@ class PanelController {
                 min: 0,
                 max: 10,
                 step: 0.1,
-                value: compositeMaterial.uniforms.uDistortion.value,
+                value: compositeMaterial.uniforms.uRGBAmount.value,
                 callback: value => {
-                    compositeMaterial.uniforms.uDistortion.value = value;
+                    compositeMaterial.uniforms.uRGBAmount.value = value;
                 }
             },
             {

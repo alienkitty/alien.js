@@ -127,7 +127,7 @@ class CompositeMaterial extends RawShaderMaterial {
             uniforms: {
                 tScene: { value: null },
                 uColor: { value: new Color(0x060606) },
-                uDistortion: { value: 1.5 },
+                uRGBAmount: { value: 1.5 },
                 uOpacity: { value: 0 }
             },
             vertexShader: /* glsl */ `
@@ -147,7 +147,7 @@ class CompositeMaterial extends RawShaderMaterial {
 
                 uniform sampler2D tScene;
                 uniform vec3 uColor;
-                uniform float uDistortion;
+                uniform float uRGBAmount;
                 uniform float uOpacity;
 
                 in vec2 vUv;
@@ -158,7 +158,7 @@ class CompositeMaterial extends RawShaderMaterial {
                 ${dither}
 
                 void main() {
-                    FragColor = getRGB(tScene, vUv, 0.1, 0.002 * uDistortion * (1.0 - uOpacity));
+                    FragColor = getRGB(tScene, vUv, 0.1, 0.002 * uRGBAmount * (1.0 - uOpacity));
 
                     FragColor.rgb = mix(uColor, FragColor.rgb, uOpacity);
 

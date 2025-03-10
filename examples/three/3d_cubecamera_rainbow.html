@@ -214,7 +214,7 @@
             }
 
             initSprites() {
-                const { getTexture, hue, resolution, time } = WorldController;
+                const { getTexture, hue, resolution } = WorldController;
 
                 const material = new SpriteMaterial({
                     map: getTexture('particle2.png'),
@@ -227,14 +227,12 @@
                 material.onBeforeCompile = shader => {
                     shader.uniforms.hue = hue;
                     shader.uniforms.resolution = resolution;
-                    shader.uniforms.time = time;
 
                     shader.fragmentShader = shader.fragmentShader.replace(
                         'void main() {',
                         /* glsl */ `
                         uniform float hue;
                         uniform vec2 resolution;
-                        uniform float time;
 
                         ${hsv2rgbSmooth}
                         ${rgb2hsv}

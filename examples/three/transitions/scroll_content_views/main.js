@@ -782,11 +782,10 @@ class RenderManager {
             depthBuffer: false
         });
 
+        this.renderTargetBright = this.renderTarget.clone();
         this.renderTargetsHorizontal = [];
         this.renderTargetsVertical = [];
         this.nMips = 5;
-
-        this.renderTargetBright = this.renderTarget.clone();
 
         for (let i = 0, l = this.nMips; i < l; i++) {
             this.renderTargetsHorizontal.push(this.renderTarget.clone());

@@ -94,8 +94,8 @@ Space.js
                     {
                         title: 'Fonts',
                         content: /* html */ `
-Roboto Mono
-<br>D-DIN
+Roboto
+<br>Roboto Mono
 <br>Gothic A1
                         `
                     },

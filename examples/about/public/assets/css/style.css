@@ -1,7 +1,19 @@
 @font-face {
-    font-family: 'D-DIN';
-    src: url(../fonts/D-DIN.woff2) format('woff2');
-    font-weight: 400;
+    font-family: 'Roboto';
+    src: url(../fonts/Roboto-Thin.woff2) format('woff2');
+    font-weight: 100;
+}
+
+@font-face {
+    font-family: 'Roboto';
+    src: url(../fonts/Roboto-Light.woff2) format('woff2');
+    font-weight: 300;
+}
+
+@font-face {
+    font-family: 'Roboto Mono';
+    src: url(../fonts/RobotoMono-Medium.woff2) format('woff2');
+    font-weight: 500;
 }
 
 @font-face {
@@ -14,12 +26,6 @@
     font-family: 'Gothic A1';
     src: url(../fonts/GothicA1-Bold.woff2) format('woff2');
     font-weight: 700;
-}
-
-@font-face {
-    font-family: 'Roboto Mono';
-    src: url(../fonts/RobotoMono-Medium.woff2) format('woff2');
-    font-weight: 500;
 }
 
 :root {
@@ -107,8 +113,7 @@ body {
     letter-spacing: normal;
     background-color: var(--bg-color);
     color: var(--ui-color);
-    -moz-osx-font-smoothing: grayscale;
-    -webkit-font-smoothing: antialiased;
+    text-rendering: geometricPrecision;
     -webkit-tap-highlight-color: transparent;
 }
 
@@ -131,9 +136,9 @@ canvas {
 
 h1 {
     margin: 0 0 10px -1px;
-    font-family: 'D-DIN', sans-serif;
-    font-weight: 400;
-    font-size: 24px;
+    font-family: 'Roboto', sans-serif;
+    font-weight: 300;
+    font-size: 23px;
     line-height: 1;
     letter-spacing: normal;
     text-transform: uppercase;
@@ -160,8 +165,6 @@ input, pre, .info, .target, .panel, .number, .name, .type, .primary, .secondary,
     font-size: var(--ui-font-size);
     line-height: var(--ui-line-height);
     letter-spacing: var(--ui-letter-spacing);
-    -moz-osx-font-smoothing: auto;
-    -webkit-font-smoothing: auto;
 }
 
 .title .name {
@@ -178,6 +181,7 @@ input, pre, .info, .target, .panel, .number, .name, .type, .primary, .secondary,
     font-size: var(--ui-caption-font-size);
     line-height: var(--ui-caption-line-height);
     letter-spacing: var(--ui-caption-letter-spacing);
+    text-rendering: auto;
 }
 
 .link, .menu .item {
@@ -227,8 +231,6 @@ input, pre, .info, .target, .panel, .number, .name, .type, .primary, .secondary,
     font-size: var(--ui-info-font-size);
     line-height: var(--ui-info-line-height);
     letter-spacing: var(--ui-info-letter-spacing);
-    -moz-osx-font-smoothing: grayscale;
-    -webkit-font-smoothing: antialiased;
 }
 
 .trackers {

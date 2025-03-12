@@ -43,8 +43,8 @@ export class DrawBuffers {
 
         // Render targets
         this.renderTarget = new WebGLRenderTarget(1, 1, {
-            count: 2,
-            type: HalfFloatType
+            type: HalfFloatType,
+            count: 2
         });
     }
 

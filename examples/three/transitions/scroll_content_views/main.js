@@ -707,7 +707,7 @@ class PanelController {
                 name: 'Zoom',
                 min: 0,
                 max: 100,
-                step: 0.2,
+                step: 0.1,
                 value: transitionMaterial.uniforms.uZoom.value,
                 callback: value => {
                     transitionMaterial.uniforms.uZoom.value = value;

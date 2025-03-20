@@ -66,7 +66,7 @@ export class App {
                 content: [
                     {
                         content: /* html */ `
-A fluid shader tribute to Mr.doob’s Multiuser Sketchpad from 2010. Multiuser Fluid is an experiment to combine UI and data visualization elements in a multiuser environment.
+<p>A fluid shader tribute to Mr.doob’s Multiuser Sketchpad from 2010. Multiuser Fluid is an experiment to combine UI and data visualization elements in a multiuser environment.</p>
                         `,
                         links: [
                             {

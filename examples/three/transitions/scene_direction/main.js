@@ -662,25 +662,26 @@ class SceneController {
     // Event handlers
 
     static onPopState = () => {
-        const view = this.getView();
-
-        RenderManager.setView(view, Data.pageDirection);
-    };
-
-    // Public methods
-
-    static getView = () => {
         const { data } = router.get(location.pathname);
+
+        let view;
 
         switch (data.path) {
             case '/dark_planet':
-                return this.view.darkPlanet;
+                view = this.view.darkPlanet;
+                break;
             case '/floating_crystal':
-                return this.view.floatingCrystal;
+                view = this.view.floatingCrystal;
+                break;
             case '/abstract_cube':
-                return this.view.abstractCube;
+                view = this.view.abstractCube;
+                break;
         }
+
+        RenderManager.setView(view);
     };
+
+    // Public methods
 
     static resize = (width, height, dpr) => {
         this.view.resize(width, height, dpr);

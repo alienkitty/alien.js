@@ -27,7 +27,6 @@ class Page {
 class Data {
     static init({ pages }) {
         this.pages = pages;
-        this.pageIndex = 0;
     }
 
     // Public methods
@@ -694,25 +693,26 @@ class SceneController {
     // Event handlers
 
     static onPopState = () => {
-        const view = this.getView();
+        const { data } = router.get(location.pathname);
+
+        let view;
+
+        switch (data.path) {
+            case '/dark_planet':
+                view = this.view.darkPlanet;
+                break;
+            case '/floating_crystal':
+                view = this.view.floatingCrystal;
+                break;
+            case '/abstract_cube':
+                view = this.view.abstractCube;
+                break;
+        }
 
         CameraController.setView(view);
     };
 
     // Public methods
-
-    static getView = () => {
-        const { data } = router.get(location.pathname);
-
-        switch (data.path) {
-            case '/dark_planet':
-                return this.view.darkPlanet;
-            case '/floating_crystal':
-                return this.view.floatingCrystal;
-            case '/abstract_cube':
-                return this.view.abstractCube;
-        }
-    };
 
     static resize = (width, height, dpr) => {
         this.view.resize(width, height, dpr);
@@ -1682,7 +1682,6 @@ class App {
             };
 
             Data.pages.push(home);
-            Data.pageIndex = Data.pages.length - 1;
         } else {
             home = Data.pages[0]; // Dark Planet
         }

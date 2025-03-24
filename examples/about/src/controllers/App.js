@@ -163,7 +163,7 @@ AudioMicro
     // Event handlers
 
     static onUsers = e => {
-        this.ui.detailsButton.setData({ count: e.length });
+        this.ui.detailsButton.setData({ number: e.length });
     };
 
     static onDetails = ({ open }) => {

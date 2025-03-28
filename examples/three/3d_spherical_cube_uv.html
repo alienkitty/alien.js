@@ -21,7 +21,7 @@
             async initGeometry() {
                 const { loadBufferGeometry } = WorldController;
 
-                const geometry = await loadBufferGeometry('../assets/geometry/spherical_cube.json');
+                const geometry = await loadBufferGeometry('spherical_cube.json');
 
                 // Use second set of UVs for cubemap row layout
                 // https://docs.unrealengine.com/4.27/en-US/RenderingAndGraphics/Textures/Cubemaps/CreatingCubemaps/
@@ -33,7 +33,7 @@
             async initMaterial() {
                 const { anisotropy, loadTexture } = WorldController;
 
-                const map = await loadTexture('../assets/textures/cubemap.jpg');
+                const map = await loadTexture('cubemap.jpg');
                 map.anisotropy = anisotropy;
 
                 this.material = new BasicMaterial({ map });
@@ -147,7 +147,10 @@
 
             static initLoaders() {
                 this.textureLoader = new TextureLoader();
+                this.textureLoader.setPath('../assets/textures/');
+
                 this.bufferGeometryLoader = new BufferGeometryLoader();
+                this.bufferGeometryLoader.setPath('../assets/geometry/');
             }
 
             static initControls() {

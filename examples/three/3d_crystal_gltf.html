@@ -23,7 +23,7 @@
 
                 // Sketchfab model
                 // https://sbtron.github.io/makeglb/
-                const model = await loadGLTF('../assets/gltf/crystal.glb');
+                const model = await loadGLTF('crystal.glb');
                 model.scale.setScalar(0.01);
                 // model.updateMatrixWorld(); // Needed for Point3D
 
@@ -358,7 +358,7 @@
                 this.luminositySmoothing = 1;
                 this.bloomStrength = 0.3;
                 this.bloomRadius = 0.2;
-                this.bloomDistortion = 1.2;
+                this.bloomDistortion = 1;
 
                 this.enabled = true;
 
@@ -381,11 +381,10 @@
                     depthBuffer: false
                 });
 
+                this.renderTargetBright = this.renderTarget.clone();
                 this.renderTargetsHorizontal = [];
                 this.renderTargetsVertical = [];
                 this.nMips = 5;
-
-                this.renderTargetBright = this.renderTarget.clone();
 
                 for (let i = 0, l = this.nMips; i < l; i++) {
                     this.renderTargetsHorizontal.push(this.renderTarget.clone());
@@ -577,12 +576,17 @@
 
             static initLoaders() {
                 this.textureLoader = new TextureLoader();
+                this.textureLoader.setPath('../assets/textures/');
+
                 this.environmentLoader = new EnvironmentTextureLoader(this.renderer);
+                this.environmentLoader.setPath('../assets/textures/env/');
+
                 this.gltfLoader = new GLTFLoader();
+                this.gltfLoader.setPath('../assets/gltf/');
             }
 
             static async initEnvironment() {
-                this.scene.environment = await this.loadEnvironmentTexture('../assets/textures/env/jewelry_black_contrast.jpg');
+                this.scene.environment = await this.loadEnvironmentTexture('jewelry_black_contrast.jpg');
                 this.scene.environmentRotation.z = MathUtils.degToRad(100);
                 this.scene.environmentIntensity = 5;
             }

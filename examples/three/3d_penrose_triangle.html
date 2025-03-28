@@ -158,7 +158,7 @@
                 this.luminositySmoothing = 1;
                 this.bloomStrength = 0.3;
                 this.bloomRadius = 0.2;
-                this.bloomDistortion = 1.2;
+                this.bloomDistortion = 1;
 
                 this.enabled = true;
 
@@ -178,11 +178,10 @@
                     depthBuffer: false
                 });
 
+                this.renderTargetBright = this.renderTarget.clone();
                 this.renderTargetsHorizontal = [];
                 this.renderTargetsVertical = [];
                 this.nMips = 5;
-
-                this.renderTargetBright = this.renderTarget.clone();
 
                 for (let i = 0, l = this.nMips; i < l; i++) {
                     this.renderTargetsHorizontal.push(this.renderTarget.clone());

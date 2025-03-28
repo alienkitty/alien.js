@@ -3,7 +3,6 @@ import { AdditiveBlending, AssetLoader, BasicShadowMap, BloomCompositeMaterial, 
 const isDebug = /[?&]debug/.test(location.search);
 
 const basePath = '/examples/three/transitions/camera';
-const assetPath = '/examples/';
 const breakpoint = 1000;
 
 const layers = {
@@ -28,7 +27,6 @@ class Page {
 class Data {
     static init({ pages }) {
         this.pages = pages;
-        this.pageIndex = 0;
     }
 
     // Public methods
@@ -58,7 +56,7 @@ class CompositeMaterial extends RawShaderMaterial {
                 uFocus: { value: 0.5 },
                 uRotation: { value: 0 },
                 uBlurAmount: { value: 1 },
-                uDistortion: { value: 1.5 }
+                uRGBAmount: { value: 1.5 }
             },
             vertexShader: /* glsl */ `
                 in vec3 position;
@@ -79,7 +77,7 @@ class CompositeMaterial extends RawShaderMaterial {
                 uniform float uFocus;
                 uniform float uRotation;
                 uniform float uBlurAmount;
-                uniform float uDistortion;
+                uniform float uRGBAmount;
 
                 in vec2 vUv;
 
@@ -95,7 +93,7 @@ class CompositeMaterial extends RawShaderMaterial {
                     float t = smootherstep(0.0, 1.0, d);
 
                     float angle = length(vUv - 0.5);
-                    float amount = 0.002 * uDistortion * uBlurAmount * t;
+                    float amount = 0.002 * uRGBAmount * uBlurAmount * t;
 
                     FragColor += getRGB(tScene, vUv, angle, amount);
 
@@ -117,7 +115,7 @@ class BlurMaterial extends RawShaderMaterial {
     constructor(direction = new Vector2(0.5, 0.5)) {
         const { getTexture } = WorldController;
 
-        const texture = getTexture('assets/textures/blue_noise.png');
+        const texture = getTexture('blue_noise.png');
         texture.wrapS = RepeatWrapping;
         texture.wrapT = RepeatWrapping;
         texture.magFilter = NearestFilter;
@@ -211,8 +209,8 @@ class AbstractCube extends Group {
         this.camera.near = 0.5;
         this.camera.far = 40;
         this.camera.position.z = 8;
-        this.camera.lookAt(this.position.x - 1.2, this.position.y, 0);
         this.camera.zoom = 1.5;
+        this.camera.lookAt(this.position.x - 1.2, this.position.y, 0);
         this.camera.matrixAutoUpdate = false;
     }
 
@@ -227,11 +225,11 @@ class AbstractCube extends Group {
 
         // Textures
         const [map, normalMap, ormMap] = await Promise.all([
-            // loadTexture('assets/textures/uv.jpg'),
-            loadTexture('assets/textures/pbr/pitted_metal_basecolor.jpg'),
-            loadTexture('assets/textures/pbr/pitted_metal_normal.jpg'),
+            // loadTexture('uv.jpg'),
+            loadTexture('pbr/pitted_metal_basecolor.jpg'),
+            loadTexture('pbr/pitted_metal_normal.jpg'),
             // https://occlusion-roughness-metalness.glitch.me/
-            loadTexture('assets/textures/pbr/pitted_metal_orm.jpg')
+            loadTexture('pbr/pitted_metal_orm.jpg')
         ]);
 
         map.anisotropy = anisotropy;
@@ -308,8 +306,8 @@ class FloatingCrystal extends Group {
         this.camera.near = 0.5;
         this.camera.far = 40;
         this.camera.position.z = 8;
-        this.camera.lookAt(this.position.x - 1.3, this.position.y, 0);
         this.camera.zoom = 1.5;
+        this.camera.lookAt(this.position.x - 1.3, this.position.y, 0);
         this.camera.matrixAutoUpdate = false;
     }
 
@@ -324,11 +322,11 @@ class FloatingCrystal extends Group {
 
         // Textures
         const [map, normalMap, ormMap] = await Promise.all([
-            // loadTexture('assets/textures/uv.jpg'),
-            loadTexture('assets/textures/pbr/pitted_metal_basecolor.jpg'),
-            loadTexture('assets/textures/pbr/pitted_metal_normal.jpg'),
+            // loadTexture('uv.jpg'),
+            loadTexture('pbr/pitted_metal_basecolor.jpg'),
+            loadTexture('pbr/pitted_metal_normal.jpg'),
             // https://occlusion-roughness-metalness.glitch.me/
-            loadTexture('assets/textures/pbr/pitted_metal_orm.jpg')
+            loadTexture('pbr/pitted_metal_orm.jpg')
         ]);
 
         map.anisotropy = anisotropy;
@@ -419,8 +417,8 @@ class DarkPlanet extends Group {
         this.camera.near = 0.5;
         this.camera.far = 40;
         this.camera.position.z = 8;
-        this.camera.lookAt(this.position.x - 1.4, this.position.y, 0);
         this.camera.zoom = 1.5;
+        this.camera.lookAt(this.position.x - 1.4, this.position.y, 0);
         this.camera.matrixAutoUpdate = false;
     }
 
@@ -435,11 +433,11 @@ class DarkPlanet extends Group {
 
         // Textures
         const [map, normalMap, ormMap] = await Promise.all([
-            // loadTexture('assets/textures/uv.jpg'),
-            loadTexture('assets/textures/pbr/pitted_metal_basecolor.jpg'),
-            loadTexture('assets/textures/pbr/pitted_metal_normal.jpg'),
+            // loadTexture('uv.jpg'),
+            loadTexture('pbr/pitted_metal_basecolor.jpg'),
+            loadTexture('pbr/pitted_metal_normal.jpg'),
             // https://occlusion-roughness-metalness.glitch.me/
-            loadTexture('assets/textures/pbr/pitted_metal_orm.jpg')
+            loadTexture('pbr/pitted_metal_orm.jpg')
         ]);
 
         map.anisotropy = anisotropy;
@@ -527,7 +525,7 @@ class Floor extends Group {
 
         const geometry = new PlaneGeometry(100, 100);
 
-        const map = await loadTexture('assets/textures/waterdudv.jpg');
+        const map = await loadTexture('waterdudv.jpg');
         map.wrapS = RepeatWrapping;
         map.wrapT = RepeatWrapping;
         map.repeat.set(6, 3);
@@ -695,25 +693,26 @@ class SceneController {
     // Event handlers
 
     static onPopState = () => {
-        const view = this.getView();
+        const { data } = router.get(location.pathname);
+
+        let view;
+
+        switch (data.path) {
+            case '/dark_planet':
+                view = this.view.darkPlanet;
+                break;
+            case '/floating_crystal':
+                view = this.view.floatingCrystal;
+                break;
+            case '/abstract_cube':
+                view = this.view.abstractCube;
+                break;
+        }
 
         CameraController.setView(view);
     };
 
     // Public methods
-
-    static getView = () => {
-        const { data } = router.get(location.pathname);
-
-        switch (data.path) {
-            case '/dark_planet':
-                return this.view.darkPlanet;
-            case '/floating_crystal':
-                return this.view.floatingCrystal;
-            case '/abstract_cube':
-                return this.view.abstractCube;
-        }
-    };
 
     static resize = (width, height, dpr) => {
         this.view.resize(width, height, dpr);
@@ -932,9 +931,9 @@ class PanelController {
                 min: 0,
                 max: 10,
                 step: 0.1,
-                value: compositeMaterial.uniforms.uDistortion.value,
+                value: compositeMaterial.uniforms.uRGBAmount.value,
                 callback: value => {
-                    compositeMaterial.uniforms.uDistortion.value = value;
+                    compositeMaterial.uniforms.uRGBAmount.value = value;
                 }
             },
             {
@@ -1041,7 +1040,7 @@ class RenderManager {
     }
 
     static initRenderer() {
-        const { screenTriangle, textureLoader, resolution, time, getTexture } = WorldController;
+        const { screenTriangle, resolution, time, textureLoader, getTexture } = WorldController;
 
         // Manually clear
         this.renderer.autoClear = false;
@@ -1063,11 +1062,10 @@ class RenderManager {
         this.renderTargetB = this.renderTargetA.clone();
         this.renderTargetC = this.renderTargetA.clone();
 
+        this.renderTargetBright = this.renderTargetA.clone();
         this.renderTargetsHorizontal = [];
         this.renderTargetsVertical = [];
         this.nMips = 5;
-
-        this.renderTargetBright = this.renderTargetA.clone();
 
         for (let i = 0, l = this.nMips; i < l; i++) {
             this.renderTargetsHorizontal.push(this.renderTargetA.clone());
@@ -1082,7 +1080,9 @@ class RenderManager {
         });
 
         // Motion blur composite material
-        this.motionBlurCompositeMaterial = new MotionBlurCompositeMaterial(textureLoader);
+        this.motionBlurCompositeMaterial = new MotionBlurCompositeMaterial(textureLoader, {
+            blueNoisePath: 'blue_noise.png'
+        });
         this.motionBlurCompositeMaterial.uniforms.tVelocity.value = this.drawBuffers.renderTarget.textures[1];
 
         // Gaussian blur materials
@@ -1133,8 +1133,8 @@ class RenderManager {
 
         // Debug materials
         this.blackoutMaterial = new MeshBasicMaterial({ color: 0x000000 });
-        this.matcap1Material = new MeshMatcapMaterial({ matcap: getTexture('assets/textures/matcaps/040full.jpg') });
-        this.matcap2Material = new MeshMatcapMaterial({ matcap: getTexture('assets/textures/matcaps/defaultwax.jpg') });
+        this.matcap1Material = new MeshMatcapMaterial({ matcap: getTexture('matcaps/040full.jpg') });
+        this.matcap2Material = new MeshMatcapMaterial({ matcap: getTexture('matcaps/defaultwax.jpg') });
         this.normalMaterial = new NormalMaterial();
         this.depthMaterial = new DepthMaterial();
         this.copyMaterial = new CopyMaterial();
@@ -1401,37 +1401,34 @@ class RenderManager {
 class CameraController {
     static init(worldCamera, controlsCamera, controls, ui) {
         this.worldCamera = worldCamera;
-        this.camera = controlsCamera;
+        this.controlsCamera = controlsCamera;
         this.controls = controls;
         this.ui = ui;
 
+        // Default camera
+        this.camera = this.controlsCamera;
+
         this.progress = 0;
-        this.animatedIn = false;
+        this.isTransitioning = false;
         this.zoomedIn = false;
         this.enabled = false;
     }
 
     static transition() {
+        clearTween(this);
+        clearTween(this.timeout);
+
         this.controls.enabled = false;
         Point3D.enabled = false;
 
-        const next = this.next;
-
         this.progress = 0;
+        this.isTransitioning = true;
 
         tween(this, { progress: 1 }, 1000, 'easeInOutSine', () => {
-            this.view = next;
-
-            if (this.next !== this.view) {
-                this.transition();
-            } else {
-                this.animatedIn = false;
-            }
+            this.isTransitioning = false;
         }, () => {
-            lerpCameras(this.worldCamera, next.camera, this.progress);
+            lerpCameras(this.worldCamera, this.view.camera, this.progress);
         });
-
-        clearTween(this.timeout);
 
         if (this.zoomedIn) {
             this.ui.details.animateOut(() => {
@@ -1464,18 +1461,14 @@ class CameraController {
 
     static setView = view => {
         if (!navigator.maxTouchPoints && (!view || view === this.next)) {
-            this.next = this;
+            this.view = this;
             this.zoomedIn = false;
         } else {
-            this.next = view;
+            this.view = view;
             this.zoomedIn = true;
         }
 
-        if (!this.animatedIn) {
-            this.animatedIn = true;
-
-            this.transition();
-        }
+        this.transition();
     };
 
     static resize = (width, height) => {
@@ -1484,7 +1477,7 @@ class CameraController {
     };
 
     static update = () => {
-        if (!this.enabled || this.animatedIn) {
+        if (!this.enabled || this.isTransitioning) {
             return;
         }
 
@@ -1561,15 +1554,15 @@ class WorldController {
 
     static initLoaders() {
         this.textureLoader = new TextureLoader();
+        this.textureLoader.setPath('/examples/assets/textures/');
         this.textureLoader.cache = true;
-        this.textureLoader.setPath(assetPath);
 
         this.environmentLoader = new EnvironmentTextureLoader(this.renderer);
-        this.environmentLoader.setPath(assetPath);
+        this.environmentLoader.setPath('/examples/assets/textures/env/');
     }
 
     static async initEnvironment() {
-        this.scene.environment = await this.loadEnvironmentTexture('assets/textures/env/jewelry_black_contrast.jpg');
+        this.scene.environment = await this.loadEnvironmentTexture('jewelry_black_contrast.jpg');
         this.scene.environmentIntensity = 1.2;
     }
 
@@ -1655,7 +1648,7 @@ class App {
 
     static initLoader() {
         this.assetLoader = new AssetLoader();
-        this.assetLoader.setPath('/examples/three/');
+        this.assetLoader.setPath('/examples/three/transitions/');
     }
 
     static initStage() {
@@ -1669,7 +1662,7 @@ class App {
     }
 
     static async loadData() {
-        const data = await this.assetLoader.loadData('transitions/data.json');
+        const data = await this.assetLoader.loadData('data.json');
 
         Data.init(data);
     }
@@ -1689,7 +1682,6 @@ class App {
             };
 
             Data.pages.push(home);
-            Data.pageIndex = Data.pages.length - 1;
         } else {
             home = Data.pages[0]; // Dark Planet
         }
@@ -1715,7 +1707,7 @@ class App {
                 content: [
                     {
                         content: /* html */ `
-Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
+<p>Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.</p>
                         `,
                         links: [
                             {

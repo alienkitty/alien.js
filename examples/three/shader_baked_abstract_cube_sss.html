@@ -46,7 +46,7 @@
             async initGeometry() {
                 const { loadBufferGeometry } = WorldController;
 
-                this.geometry = await loadBufferGeometry('../assets/geometry/abstract_cube.json');
+                this.geometry = await loadBufferGeometry('abstract_cube.json');
             }
 
             async initMaterial() {
@@ -54,12 +54,12 @@
 
                 // Textures
                 const [map, normalMap, ormMap, thicknessMap] = await Promise.all([
-                    // loadTexture('../assets/textures/uv.jpg'),
-                    loadTexture('../assets/textures/pbr/pitted_metal_basecolor.jpg'),
-                    loadTexture('../assets/textures/pbr/pitted_metal_normal.jpg'),
+                    // loadTexture('uv.jpg'),
+                    loadTexture('pbr/pitted_metal_basecolor.jpg'),
+                    loadTexture('pbr/pitted_metal_normal.jpg'),
                     // https://occlusion-roughness-metalness.glitch.me/
-                    loadTexture('../assets/textures/pbr/pitted_metal_orm.jpg'),
-                    loadTexture('../assets/textures/abstract_cube/abstract_cube_thickness.jpg')
+                    loadTexture('pbr/pitted_metal_orm.jpg'),
+                    loadTexture('abstract_cube/abstract_cube_thickness.jpg')
                 ]);
 
                 map.anisotropy = anisotropy;
@@ -170,7 +170,7 @@
 
                 const geometry = new PlaneGeometry(100, 100);
 
-                const map = await loadTexture('../assets/textures/waterdudv.jpg');
+                const map = await loadTexture('waterdudv.jpg');
                 map.wrapS = RepeatWrapping;
                 map.wrapT = RepeatWrapping;
                 map.repeat.set(6, 6);
@@ -334,7 +334,7 @@
                         name: 'Ambient',
                         min: 0,
                         max: 5,
-                        step: 0.05,
+                        step: 0.01,
                         value: abstractCube.uniforms.thicknessAmbient.value,
                         callback: value => {
                             abstractCube.uniforms.thicknessAmbient.value = value;
@@ -345,7 +345,7 @@
                         name: 'Atten',
                         min: 0,
                         max: 5,
-                        step: 0.05,
+                        step: 0.01,
                         value: abstractCube.uniforms.thicknessAttenuation.value,
                         callback: value => {
                             abstractCube.uniforms.thicknessAttenuation.value = value;
@@ -455,7 +455,7 @@
                 this.luminositySmoothing = 1;
                 this.bloomStrength = 0.3;
                 this.bloomRadius = 0.2;
-                this.bloomDistortion = 1.2;
+                this.bloomDistortion = 1;
 
                 this.enabled = true;
 
@@ -475,11 +475,10 @@
                     depthBuffer: false
                 });
 
+                this.renderTargetBright = this.renderTarget.clone();
                 this.renderTargetsHorizontal = [];
                 this.renderTargetsVertical = [];
                 this.nMips = 5;
-
-                this.renderTargetBright = this.renderTarget.clone();
 
                 for (let i = 0, l = this.nMips; i < l; i++) {
                     this.renderTargetsHorizontal.push(this.renderTarget.clone());
@@ -723,12 +722,17 @@
 
             static initLoaders() {
                 this.textureLoader = new TextureLoader();
+                this.textureLoader.setPath('../assets/textures/');
+
                 this.environmentLoader = new EnvironmentTextureLoader(this.renderer);
+                this.environmentLoader.setPath('../assets/textures/env/');
+
                 this.bufferGeometryLoader = new BufferGeometryLoader();
+                this.bufferGeometryLoader.setPath('../assets/geometry/');
             }
 
             static async initEnvironment() {
-                this.scene.environment = await this.loadEnvironmentTexture('../assets/textures/env/jewelry_black_contrast.jpg');
+                this.scene.environment = await this.loadEnvironmentTexture('jewelry_black_contrast.jpg');
                 this.scene.environmentIntensity = 1.2;
             }
 

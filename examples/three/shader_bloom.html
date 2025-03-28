@@ -20,8 +20,9 @@
                     uniforms: {
                         tScene: { value: null },
                         tBloom: { value: null },
-                        uMinBright: { value: 0.1247 },
-                        uBlurBright: { value: 0.4166 }
+                        uBloomReduction: { value: 0.07 },
+                        uBloomBoost: { value: 0.4 },
+                        uBloomClamp: { value: 1 }
                     },
                     vertexShader: /* glsl */ `
                         in vec3 position;
@@ -40,8 +41,9 @@
 
                         uniform sampler2D tScene;
                         uniform sampler2D tBloom;
-                        uniform float uMinBright;
-                        uniform float uBlurBright;
+                        uniform float uBloomReduction;
+                        uniform float uBloomBoost;
+                        uniform float uBloomClamp;
 
                         in vec2 vUv;
 
@@ -50,12 +52,14 @@
                         void main() {
                             FragColor = texture(tScene, vUv);
 
-                            vec3 bloom = texture(tBloom, vUv).rgb;
-                            bloom.x = max(0.0, bloom.x - uMinBright);
-                            bloom.y = max(0.0, bloom.y - uMinBright);
-                            bloom.z = max(0.0, bloom.z - uMinBright);
+                            vec4 bloom = texture(tBloom, vUv);
+                            bloom.r = max(0.0, bloom.r - uBloomReduction);
+                            bloom.g = max(0.0, bloom.g - uBloomReduction);
+                            bloom.b = max(0.0, bloom.b - uBloomReduction);
+                            bloom.rgb *= uBloomBoost;
+                            bloom = clamp(bloom, 0.0, uBloomClamp);
 
-                            FragColor.rgb += bloom * uBlurBright;
+                            FragColor.rgb += bloom.rgb;
                         }
                     `,
                     blending: NoBlending,
@@ -146,20 +150,31 @@
                         min: 0,
                         max: 1,
                         step: 0.01,
-                        value: compositeMaterial.uniforms.uMinBright.value,
+                        value: compositeMaterial.uniforms.uBloomReduction.value,
                         callback: value => {
-                            compositeMaterial.uniforms.uMinBright.value = value;
+                            compositeMaterial.uniforms.uBloomReduction.value = value;
                         }
                     },
                     {
                         type: 'slider',
-                        name: 'Bright',
+                        name: 'Boost',
+                        min: 0,
+                        max: 10,
+                        step: 0.1,
+                        value: compositeMaterial.uniforms.uBloomBoost.value,
+                        callback: value => {
+                            compositeMaterial.uniforms.uBloomBoost.value = value;
+                        }
+                    },
+                    {
+                        type: 'slider',
+                        name: 'Clamp',
                         min: 0,
                         max: 1,
                         step: 0.01,
-                        value: compositeMaterial.uniforms.uBlurBright.value,
+                        value: compositeMaterial.uniforms.uBloomClamp.value,
                         callback: value => {
-                            compositeMaterial.uniforms.uBlurBright.value = value;
+                            compositeMaterial.uniforms.uBloomClamp.value = value;
                         }
                     }
                 ];
@@ -179,8 +194,11 @@
                 this.scene = scene;
                 this.camera = camera;
 
+                this.bloomReduction = 0.07;
+                this.bloomBoost = 0.4;
+                this.bloomClamp = 1;
                 this.blurResolutionScale = 0.25;
-                this.blurAmount = 1.5;
+                this.blurAmount = 3;
                 this.enabled = true;
 
                 this.initRenderer();
@@ -220,6 +238,9 @@
 
                 // Composite material
                 this.compositeMaterial = new CompositeMaterial();
+                this.compositeMaterial.uniforms.uBloomReduction.value = this.bloomReduction;
+                this.compositeMaterial.uniforms.uBloomBoost.value = this.bloomBoost;
+                this.compositeMaterial.uniforms.uBloomClamp.value = this.bloomClamp;
             }
 
             // Public methods

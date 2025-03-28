@@ -43,12 +43,12 @@
 
                 // Textures
                 const [map, normalMap, ormMap, thicknessMap] = await Promise.all([
-                    // loadTexture('../assets/textures/uv.jpg'),
-                    loadTexture('../assets/textures/pbr/pitted_metal_basecolor.jpg'),
-                    loadTexture('../assets/textures/pbr/pitted_metal_normal.jpg'),
+                    // loadTexture('uv.jpg'),
+                    loadTexture('pbr/pitted_metal_basecolor.jpg'),
+                    loadTexture('pbr/pitted_metal_normal.jpg'),
                     // https://occlusion-roughness-metalness.glitch.me/
-                    loadTexture('../assets/textures/pbr/pitted_metal_orm.jpg'),
-                    loadTexture('../assets/textures/pbr/pitted_metal_height.jpg')
+                    loadTexture('pbr/pitted_metal_orm.jpg'),
+                    loadTexture('pbr/pitted_metal_height.jpg')
                 ]);
 
                 map.anisotropy = anisotropy;
@@ -121,11 +121,11 @@
 
                 // Textures
                 const [map, normalMap, ormMap] = await Promise.all([
-                    // loadTexture('../assets/textures/uv.jpg'),
-                    loadTexture('../assets/textures/pbr/pitted_metal_basecolor.jpg'),
-                    loadTexture('../assets/textures/pbr/pitted_metal_normal.jpg'),
+                    // loadTexture('uv.jpg'),
+                    loadTexture('pbr/pitted_metal_basecolor.jpg'),
+                    loadTexture('pbr/pitted_metal_normal.jpg'),
                     // https://occlusion-roughness-metalness.glitch.me/
-                    loadTexture('../assets/textures/pbr/pitted_metal_orm.jpg')
+                    loadTexture('pbr/pitted_metal_orm.jpg')
                 ]);
 
                 map.anisotropy = anisotropy;
@@ -273,7 +273,7 @@
                         name: 'Speed',
                         min: 0,
                         max: 100,
-                        step: 0.2,
+                        step: 0.1,
                         value: params.speed,
                         callback: value => {
                             params.speed = value;
@@ -398,7 +398,7 @@
                 this.luminositySmoothing = 1;
                 this.bloomStrength = 0.3;
                 this.bloomRadius = 0.2;
-                this.bloomDistortion = 1.2;
+                this.bloomDistortion = 1;
 
                 // Debug
                 this.display = DisplayOptions.Default;
@@ -430,11 +430,10 @@
 
                 this.renderTargetB = this.renderTargetA.clone();
 
+                this.renderTargetBright = this.renderTargetA.clone();
                 this.renderTargetsHorizontal = [];
                 this.renderTargetsVertical = [];
                 this.nMips = 5;
-
-                this.renderTargetBright = this.renderTargetA.clone();
 
                 for (let i = 0, l = this.nMips; i < l; i++) {
                     this.renderTargetsHorizontal.push(this.renderTargetA.clone());
@@ -447,7 +446,7 @@
                 this.motionBlur = new MotionBlur(this.renderer, this.scene, this.camera, layers.velocity);
 
                 this.motionBlurCompositeMaterial = new MotionBlurCompositeMaterial(textureLoader, {
-                    blueNoisePath: '../assets/textures/blue_noise.png'
+                    blueNoisePath: 'blue_noise.png'
                 });
                 this.motionBlurCompositeMaterial.uniforms.tVelocity.value = this.motionBlur.renderTarget.texture;
 
@@ -480,8 +479,8 @@
 
                 // Debug materials
                 this.blackoutMaterial = new MeshBasicMaterial({ color: 0x000000 });
-                this.matcap1Material = new MeshMatcapMaterial({ matcap: getTexture('../assets/textures/matcaps/040full.jpg') });
-                this.matcap2Material = new MeshMatcapMaterial({ matcap: getTexture('../assets/textures/matcaps/defaultwax.jpg') });
+                this.matcap1Material = new MeshMatcapMaterial({ matcap: getTexture('matcaps/040full.jpg') });
+                this.matcap2Material = new MeshMatcapMaterial({ matcap: getTexture('matcaps/defaultwax.jpg') });
                 this.normalMaterial = new NormalMaterial();
                 this.depthMaterial = new DepthMaterial();
             }
@@ -747,11 +746,14 @@
 
             static initLoaders() {
                 this.textureLoader = new TextureLoader();
+                this.textureLoader.setPath('../assets/textures/');
+
                 this.environmentLoader = new EnvironmentTextureLoader(this.renderer);
+                this.environmentLoader.setPath('../assets/textures/env/');
             }
 
             static async initEnvironment() {
-                this.scene.environment = await this.loadEnvironmentTexture('../assets/textures/env/jewelry_black_contrast.jpg');
+                this.scene.environment = await this.loadEnvironmentTexture('jewelry_black_contrast.jpg');
                 this.scene.environmentIntensity = 0.5;
             }
 

@@ -29,7 +29,6 @@
                     uniforms: {
                         tScene: { value: null },
                         tBloom: { value: null },
-                        tAdd: { value: null },
                         uLightPosition: { value: new Vector2(0.5, 0.5) },
                         uLightColor: { value: new Color(colors.lightColor) },
                         uPower: { value: 1.5 },
@@ -53,7 +52,6 @@
 
                         uniform sampler2D tScene;
                         uniform sampler2D tBloom;
-                        uniform sampler2D tAdd;
                         uniform vec2 uLightPosition;
                         uniform vec3 uLightColor;
                         uniform float uPower;
@@ -72,11 +70,10 @@
                             FragColor.rgb += texture(tBloom, vUv).rgb;
 
                             // Radial gradient for fake volumetric light
-                            vec2 uv = vUv - 0.5;
+                            vec2 uv = vUv - uLightPosition;
                             uv.x *= uResolution.x / uResolution.y;
-                            uv += 0.5;
 
-                            float amount = length(uv - uLightPosition);
+                            float amount = length(uv);
                             amount = pow(amount, uPower);
                             amount *= 1.0 - uAmount;
 
@@ -112,11 +109,11 @@
 
                 // Textures
                 const [map, normalMap, ormMap] = await Promise.all([
-                    // loadTexture('../assets/textures/uv.jpg'),
-                    loadTexture('../assets/textures/pbr/pitted_metal_basecolor.jpg'),
-                    loadTexture('../assets/textures/pbr/pitted_metal_normal.jpg'),
+                    // loadTexture('uv.jpg'),
+                    loadTexture('pbr/pitted_metal_basecolor.jpg'),
+                    loadTexture('pbr/pitted_metal_normal.jpg'),
                     // https://occlusion-roughness-metalness.glitch.me/
-                    loadTexture('../assets/textures/pbr/pitted_metal_orm.jpg')
+                    loadTexture('pbr/pitted_metal_orm.jpg')
                 ]);
 
                 map.anisotropy = anisotropy;
@@ -424,7 +421,7 @@
                         name: 'Power',
                         min: 0,
                         max: 6,
-                        step: 0.05,
+                        step: 0.01,
                         value: compositeMaterial.uniforms.uPower.value,
                         callback: value => {
                             compositeMaterial.uniforms.uPower.value = value;
@@ -527,11 +524,10 @@
                     depthBuffer: false
                 });
 
+                this.renderTargetBright = this.renderTarget.clone();
                 this.renderTargetsHorizontal = [];
                 this.renderTargetsVertical = [];
                 this.nMips = 5;
-
-                this.renderTargetBright = this.renderTarget.clone();
 
                 for (let i = 0, l = this.nMips; i < l; i++) {
                     this.renderTargetsHorizontal.push(this.renderTarget.clone());
@@ -563,7 +559,7 @@
                 this.bloomCompositeMaterial.uniforms.tBlur5.value = this.renderTargetsVertical[4].texture;
                 this.bloomCompositeMaterial.uniforms.uBloomFactors.value = this.bloomFactors();
 
-                // Composite materials
+                // Composite material
                 this.compositeMaterial = new CompositeMaterial();
                 this.compositeMaterial.uniforms.uResolution = resolution;
             }
@@ -751,7 +747,7 @@
 
                 this.camera.fov = 75;
                 this.camera.updateProjectionMatrix();
-            };    
+            };
 
             static animateIn = () => {
                 if (isOrbit) {
@@ -796,7 +792,7 @@
                 this.camera = new PerspectiveCamera(30);
                 this.camera.near = 0.5;
                 this.camera.far = 40;
-                this.camera.position.z = 8;
+                this.camera.position.z = 10;
                 this.camera.lookAt(this.scene.position);
 
                 // Global geometries
@@ -825,13 +821,14 @@
 
             static initLoaders() {
                 this.textureLoader = new TextureLoader();
-                this.textureLoader.cache = true;
+                this.textureLoader.setPath('../assets/textures/');
 
                 this.environmentLoader = new EnvironmentTextureLoader(this.renderer);
+                this.environmentLoader.setPath('../assets/textures/env/');
             }
 
             static async initEnvironment() {
-                this.scene.environment = await this.loadEnvironmentTexture('../assets/textures/env/jewelry_black_contrast.jpg');
+                this.scene.environment = await this.loadEnvironmentTexture('jewelry_black_contrast.jpg');
                 this.scene.environmentIntensity = 1.2;
             }
 

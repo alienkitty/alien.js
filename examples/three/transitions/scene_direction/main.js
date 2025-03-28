@@ -1,7 +1,6 @@
 import { AssetLoader, BloomCompositeMaterial, BoxGeometry, Color, ColorManagement, Component, DirectionalLight, EnvironmentTextureLoader, GLSL3, Group, HemisphereLight, IcosahedronGeometry, ImageBitmapLoaderThread, Interface, LinearSRGBColorSpace, Link, LuminosityMaterial, MathUtils, Mesh, MeshStandardMaterial, NoBlending, OctahedronGeometry, OrthographicCamera, PanelItem, PerspectiveCamera, RawShaderMaterial, RepeatWrapping, Scene, SceneCompositeMaterial, Stage, TextureLoader, Title, UI, UnrealBloomBlurMaterial, Vector2, WebGLRenderTarget, WebGLRenderer, clearTween, delayedCall, getFullscreenTriangle, router, ticker, tween } from '../../../../build/alien.three.js';
 
 const basePath = '/examples/three/transitions/scene_direction';
-const assetPath = '/examples/';
 const breakpoint = 1000;
 
 class Page {
@@ -80,9 +79,7 @@ class UIContainer extends Interface {
             flexDirection: 'column',
             alignItems: 'center',
             height: '100%',
-            padding: '55px 0',
-            pointerEvents: 'none',
-            opacity: 0
+            padding: '55px 0'
         });
     }
 
@@ -90,6 +87,10 @@ class UIContainer extends Interface {
         const { data } = router.get(location.pathname);
 
         this.title = new Title(data.title.replace(/[\s.-]+/g, '_'));
+        this.title.css({
+            width: 'fit-content',
+            pointerEvents: 'auto'
+        });
         this.add(this.title);
 
         const next = Data.getNext(data);
@@ -147,10 +148,6 @@ class UIContainer extends Interface {
 
     animateIn = () => {
         this.visible();
-        this.css({
-            pointerEvents: 'auto',
-            opacity: 1
-        });
 
         const duration = 2000;
         const stagger = 175;
@@ -271,7 +268,7 @@ class RenderScene {
     async initEnvironment() {
         const { loadEnvironmentTexture } = WorldController;
 
-        this.scene.environment = await loadEnvironmentTexture('assets/textures/env/jewelry_black_contrast.jpg');
+        this.scene.environment = await loadEnvironmentTexture('jewelry_black_contrast.jpg');
         this.scene.environmentIntensity = 1.2;
     }
 
@@ -313,11 +310,11 @@ class AbstractCube extends Group {
 
         // Textures
         const [map, normalMap, ormMap] = await Promise.all([
-            // loadTexture('assets/textures/uv.jpg'),
-            loadTexture('assets/textures/pbr/pitted_metal_basecolor.jpg'),
-            loadTexture('assets/textures/pbr/pitted_metal_normal.jpg'),
+            // loadTexture('uv.jpg'),
+            loadTexture('pbr/pitted_metal_basecolor.jpg'),
+            loadTexture('pbr/pitted_metal_normal.jpg'),
             // https://occlusion-roughness-metalness.glitch.me/
-            loadTexture('assets/textures/pbr/pitted_metal_orm.jpg')
+            loadTexture('pbr/pitted_metal_orm.jpg')
         ]);
 
         map.anisotropy = anisotropy;
@@ -411,11 +408,11 @@ class FloatingCrystal extends Group {
 
         // Textures
         const [map, normalMap, ormMap] = await Promise.all([
-            // loadTexture('assets/textures/uv.jpg'),
-            loadTexture('assets/textures/pbr/pitted_metal_basecolor.jpg'),
-            loadTexture('assets/textures/pbr/pitted_metal_normal.jpg'),
+            // loadTexture('uv.jpg'),
+            loadTexture('pbr/pitted_metal_basecolor.jpg'),
+            loadTexture('pbr/pitted_metal_normal.jpg'),
             // https://occlusion-roughness-metalness.glitch.me/
-            loadTexture('assets/textures/pbr/pitted_metal_orm.jpg')
+            loadTexture('pbr/pitted_metal_orm.jpg')
         ]);
 
         map.anisotropy = anisotropy;
@@ -523,11 +520,11 @@ class DarkPlanet extends Group {
 
         // Textures
         const [map, normalMap, ormMap] = await Promise.all([
-            // loadTexture('assets/textures/uv.jpg'),
-            loadTexture('assets/textures/pbr/pitted_metal_basecolor.jpg'),
-            loadTexture('assets/textures/pbr/pitted_metal_normal.jpg'),
+            // loadTexture('uv.jpg'),
+            loadTexture('pbr/pitted_metal_basecolor.jpg'),
+            loadTexture('pbr/pitted_metal_normal.jpg'),
             // https://occlusion-roughness-metalness.glitch.me/
-            loadTexture('assets/textures/pbr/pitted_metal_orm.jpg')
+            loadTexture('pbr/pitted_metal_orm.jpg')
         ]);
 
         map.anisotropy = anisotropy;
@@ -665,25 +662,26 @@ class SceneController {
     // Event handlers
 
     static onPopState = () => {
-        const view = this.getView();
-
-        RenderManager.setView(view, Data.pageDirection);
-    };
-
-    // Public methods
-
-    static getView = () => {
         const { data } = router.get(location.pathname);
+
+        let view;
 
         switch (data.path) {
             case '/dark_planet':
-                return this.view.darkPlanet;
+                view = this.view.darkPlanet;
+                break;
             case '/floating_crystal':
-                return this.view.floatingCrystal;
+                view = this.view.floatingCrystal;
+                break;
             case '/abstract_cube':
-                return this.view.abstractCube;
+                view = this.view.abstractCube;
+                break;
         }
+
+        RenderManager.setView(view);
     };
+
+    // Public methods
 
     static resize = (width, height, dpr) => {
         this.view.resize(width, height, dpr);
@@ -783,7 +781,7 @@ class PanelController {
                 name: 'Zoom',
                 min: 0,
                 max: 100,
-                step: 0.2,
+                step: 0.1,
                 value: transitionMaterial.uniforms.uZoom.value,
                 callback: value => {
                     transitionMaterial.uniforms.uZoom.value = value;
@@ -839,11 +837,10 @@ class RenderManager {
             depthBuffer: false
         });
 
+        this.renderTargetBright = this.renderTarget.clone();
         this.renderTargetsHorizontal = [];
         this.renderTargetsVertical = [];
         this.nMips = 5;
-
-        this.renderTargetBright = this.renderTarget.clone();
 
         for (let i = 0, l = this.nMips; i < l; i++) {
             this.renderTargetsHorizontal.push(this.renderTarget.clone());
@@ -1059,10 +1056,10 @@ class WorldController {
 
     static initLoaders() {
         this.textureLoader = new TextureLoader();
-        this.textureLoader.setPath(assetPath);
+        this.textureLoader.setPath('/examples/assets/textures/');
 
         this.environmentLoader = new EnvironmentTextureLoader(this.renderer);
-        this.environmentLoader.setPath(assetPath);
+        this.environmentLoader.setPath('/examples/assets/textures/env/');
     }
 
     static addListeners() {
@@ -1138,7 +1135,7 @@ class App {
 
     static initLoader() {
         this.assetLoader = new AssetLoader();
-        this.assetLoader.setPath('/examples/three/');
+        this.assetLoader.setPath('/examples/three/transitions/');
     }
 
     static initStage() {
@@ -1152,7 +1149,7 @@ class App {
     }
 
     static async loadData() {
-        const data = await this.assetLoader.loadData('transitions/data.json');
+        const data = await this.assetLoader.loadData('data.json');
 
         Data.init(data);
     }

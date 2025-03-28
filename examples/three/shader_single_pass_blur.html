@@ -11,7 +11,7 @@
     <link rel="stylesheet" href="../assets/css/style.css">
 
     <script type="module">
-        import { Color, ColorManagement, CopyMaterial, DirectionalLight, Group, HemisphereLight, LinearSRGBColorSpace, Mesh, MeshStandardMaterial, OrthographicCamera, PanelItem, PerspectiveCamera, Scene, SinglePassBlurMaterial, SphereGeometry, TextureLoader, UI, Vector2, WebGLRenderTarget, WebGLRenderer, getFullscreenTriangle, ticker } from '../../build/alien.three.js';
+        import { Color, ColorManagement, CopyMaterial, DirectionalLight, Group, HemisphereLight, LinearSRGBColorSpace, Mesh, MeshStandardMaterial, OrthographicCamera, PanelItem, PerspectiveCamera, Scene, SinglePassBlurMaterial, SphereGeometry, UI, Vector2, WebGLRenderTarget, WebGLRenderer, getFullscreenTriangle, ticker } from '../../build/alien.three.js';
 
         import periodic3d from '../../src/shaders/modules/noise/periodic3d.glsl.js';
 
@@ -182,7 +182,6 @@
             static init() {
                 this.initWorld();
                 this.initLights();
-                this.initLoaders();
 
                 this.addListeners();
             }
@@ -226,11 +225,6 @@
                 const light = new DirectionalLight(0xffffff, 2);
                 light.position.set(1, 1, 1);
                 this.scene.add(light);
-            }
-
-            static initLoaders() {
-                this.textureLoader = new TextureLoader();
-                this.textureLoader.setPath('../');
             }
 
             static addListeners() {

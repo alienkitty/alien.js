@@ -16,8 +16,8 @@
         // Based on https://www.youtube.com/watch?v=0D-J_Lbxeeg by akella
 
         const colors = {
-            backgroundColor: 0x010204,
-            lightColor: 0x323850
+            backgroundColor: 0x060606,
+            lightColor: 0x3b5b89
         };
 
         import smootherstep from '../../src/shaders/modules/smootherstep/smootherstep.glsl.js';
@@ -32,7 +32,7 @@
             initViews() {
                 const { time, getTexture } = WorldController;
 
-                const texture = getTexture('../assets/textures/perlin_noise.png');
+                const texture = getTexture('perlin_noise.png');
                 texture.wrapS = RepeatWrapping;
                 texture.wrapT = RepeatWrapping;
                 texture.generateMipmaps = false;
@@ -382,11 +382,10 @@
 
                 this.renderTargetB = this.renderTargetA.clone();
 
+                this.renderTargetBright = this.renderTargetA.clone();
                 this.renderTargetsHorizontal = [];
                 this.renderTargetsVertical = [];
                 this.nMips = 5;
-
-                this.renderTargetBright = this.renderTargetA.clone();
 
                 for (let i = 0, l = this.nMips; i < l; i++) {
                     this.renderTargetsHorizontal.push(this.renderTargetA.clone());
@@ -586,6 +585,7 @@
 
             static initLoaders() {
                 this.textureLoader = new TextureLoader();
+                this.textureLoader.setPath('../assets/textures/');
             }
 
             static addListeners() {

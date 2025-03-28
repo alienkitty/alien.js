@@ -49,12 +49,12 @@
 
                 // Textures
                 const [map, normalMap, ormMap, thicknessMap] = await Promise.all([
-                    // loadTexture('../assets/textures/uv.jpg'),
-                    loadTexture('../assets/textures/pbr/pitted_metal_basecolor.jpg'),
-                    loadTexture('../assets/textures/pbr/pitted_metal_normal.jpg'),
+                    // loadTexture('uv.jpg'),
+                    loadTexture('pbr/pitted_metal_basecolor.jpg'),
+                    loadTexture('pbr/pitted_metal_normal.jpg'),
                     // https://occlusion-roughness-metalness.glitch.me/
-                    loadTexture('../assets/textures/pbr/pitted_metal_orm.jpg'),
-                    loadTexture('../assets/textures/pbr/pitted_metal_height.jpg')
+                    loadTexture('pbr/pitted_metal_orm.jpg'),
+                    loadTexture('pbr/pitted_metal_height.jpg')
                 ]);
 
                 map.anisotropy = anisotropy;
@@ -175,12 +175,12 @@
 
                 // Textures
                 const [map, normalMap, ormMap, thicknessMap] = await Promise.all([
-                    // loadTexture('../assets/textures/uv.jpg'),
-                    loadTexture('../assets/textures/pbr/pitted_metal_basecolor.jpg'),
-                    loadTexture('../assets/textures/pbr/pitted_metal_normal.jpg'),
+                    // loadTexture('uv.jpg'),
+                    loadTexture('pbr/pitted_metal_basecolor.jpg'),
+                    loadTexture('pbr/pitted_metal_normal.jpg'),
                     // https://occlusion-roughness-metalness.glitch.me/
-                    loadTexture('../assets/textures/pbr/pitted_metal_orm.jpg'),
-                    loadTexture('../assets/textures/pbr/pitted_metal_height.jpg')
+                    loadTexture('pbr/pitted_metal_orm.jpg'),
+                    loadTexture('pbr/pitted_metal_height.jpg')
                 ]);
 
                 map.anisotropy = anisotropy;
@@ -428,7 +428,7 @@
                         name: 'Ambient',
                         min: 0,
                         max: 5,
-                        step: 0.05,
+                        step: 0.01,
                         value: sphere.uniforms.thicknessAmbient.value,
                         callback: value => {
                             sphere.uniforms.thicknessAmbient.value = value;
@@ -439,7 +439,7 @@
                         name: 'Atten',
                         min: 0,
                         max: 5,
-                        step: 0.05,
+                        step: 0.01,
                         value: sphere.uniforms.thicknessAttenuation.value,
                         callback: value => {
                             sphere.uniforms.thicknessAttenuation.value = value;
@@ -578,11 +578,10 @@
                 this.renderTargetBlurA = this.renderTarget.clone();
                 this.renderTargetBlurB = this.renderTarget.clone();
 
+                this.renderTargetBright = this.renderTarget.clone();
                 this.renderTargetsHorizontal = [];
                 this.renderTargetsVertical = [];
                 this.nMips = 5;
-
-                this.renderTargetBright = this.renderTarget.clone();
 
                 for (let i = 0, l = this.nMips; i < l; i++) {
                     this.renderTargetsHorizontal.push(this.renderTarget.clone());
@@ -920,11 +919,14 @@
 
             static initLoaders() {
                 this.textureLoader = new TextureLoader();
+                this.textureLoader.setPath('../assets/textures/');
+
                 this.environmentLoader = new EnvironmentTextureLoader(this.renderer);
+                this.environmentLoader.setPath('../assets/textures/env/');
             }
 
             static async initEnvironment() {
-                this.scene.environment = await this.loadEnvironmentTexture('../assets/textures/env/jewelry_black_contrast.jpg');
+                this.scene.environment = await this.loadEnvironmentTexture('jewelry_black_contrast.jpg');
                 this.scene.environmentIntensity = 1.2;
             }
 

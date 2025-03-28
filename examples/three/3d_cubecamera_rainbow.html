@@ -42,15 +42,16 @@
                     uniforms: {
                         tScene: { value: null },
                         tBloom: { value: null },
-                        tLensDirt: { value: getTexture('../assets/textures/lens_dirt.jpg') },
-                        uDistortion: { value: 0.2 },
-                        uMinBright: { value: 0.07 },
-                        uBlurBright: { value: 0.4166 },
+                        tLensDirt: { value: getTexture('lens_dirt.jpg') },
                         uLightColor: { value: new Color(colors.lightColor) },
                         uColor: { value: scene.background },
+                        uRGBAmount: { value: 0.2 },
+                        uBloomReduction: { value: 0.07 },
+                        uBloomBoost: { value: 0.4 },
+                        uBloomClamp: { value: 1 },
                         uHue: { value: 0 },
-                        uBoost: { value: 1 },
                         uReduction: { value: 1.2 },
+                        uBoost: { value: 1 },
                         uLensDirt: { value: true },
                         uDebug: { value: isDebug },
                         uResolution: { value: new Vector2() },
@@ -74,14 +75,15 @@
                         uniform sampler2D tScene;
                         uniform sampler2D tBloom;
                         uniform sampler2D tLensDirt;
-                        uniform float uDistortion;
-                        uniform float uMinBright;
-                        uniform float uBlurBright;
                         uniform vec3 uLightColor;
                         uniform vec3 uColor;
+                        uniform float uRGBAmount;
+                        uniform float uBloomReduction;
+                        uniform float uBloomBoost;
+                        uniform float uBloomClamp;
                         uniform float uHue;
-                        uniform float uBoost;
                         uniform float uReduction;
+                        uniform float uBoost;
                         uniform bool uLensDirt;
                         uniform bool uDebug;
                         uniform vec2 uResolution;
@@ -110,14 +112,16 @@
                             // Linear gradient
                             vec4 color = vec4(mix(rgb, vec3(0.0), smoothstep(0.0, 0.6, vUv.y)), 1.0);
 
-                            color += getRGB(tScene, vUv, 0.1, 0.002 * uDistortion);
+                            color += getRGB(tScene, vUv, 0.1, 0.002 * uRGBAmount);
 
                             vec4 bloom = texture(tBloom, vUv);
-                            bloom.x = max(0.0, bloom.x - uMinBright);
-                            bloom.y = max(0.0, bloom.y - uMinBright);
-                            bloom.z = max(0.0, bloom.z - uMinBright);
+                            bloom.r = max(0.0, bloom.r - uBloomReduction);
+                            bloom.g = max(0.0, bloom.g - uBloomReduction);
+                            bloom.b = max(0.0, bloom.b - uBloomReduction);
+                            bloom.rgb *= uBloomBoost;
+                            bloom = clamp(bloom, 0.0, uBloomClamp);
 
-                            color.rgb += bloom.rgb * uBlurBright;
+                            color.rgb += bloom.rgb;
 
                             // Blend overlay noise lighting
                             float noise = noise(vUv + uTime * 0.06);
@@ -137,7 +141,7 @@
 
                             color = blendOverlay(base, blend, 1.0);
 
-                            // Blend soft light with background color
+                            // Blend soft light background color
                             base = color;
                             blend = vec4(rgb, 1.0);
 
@@ -210,10 +214,10 @@
             }
 
             initSprites() {
-                const { getTexture, hue, resolution, time } = WorldController;
+                const { getTexture, hue, resolution } = WorldController;
 
                 const material = new SpriteMaterial({
-                    map: getTexture('../assets/textures/particle2.png'),
+                    map: getTexture('particle2.png'),
                     color: new Color(colors.particleColor),
                     transparent: true,
                     blending: AdditiveBlending,
@@ -223,14 +227,12 @@
                 material.onBeforeCompile = shader => {
                     shader.uniforms.hue = hue;
                     shader.uniforms.resolution = resolution;
-                    shader.uniforms.time = time;
 
                     shader.fragmentShader = shader.fragmentShader.replace(
                         'void main() {',
                         /* glsl */ `
                         uniform float hue;
                         uniform vec2 resolution;
-                        uniform float time;
 
                         ${hsv2rgbSmooth}
                         ${rgb2hsv}
@@ -304,7 +306,7 @@
 
                 const geometry = new IcosahedronGeometry(40, 3);
 
-                const map = await loadTexture('../assets/textures/space.jpg');
+                const map = await loadTexture('space.jpg');
 
                 const material = new MeshBasicMaterial({
                     map,
@@ -434,20 +436,9 @@
                         min: 0,
                         max: 10,
                         step: 0.1,
-                        value: compositeMaterial.uniforms.uDistortion.value,
+                        value: compositeMaterial.uniforms.uRGBAmount.value,
                         callback: value => {
-                            compositeMaterial.uniforms.uDistortion.value = value;
-                        }
-                    },
-                    {
-                        type: 'slider',
-                        name: 'Boost',
-                        min: 0,
-                        max: 2,
-                        step: 0.01,
-                        value: compositeMaterial.uniforms.uBoost.value,
-                        callback: value => {
-                            compositeMaterial.uniforms.uBoost.value = value;
+                            compositeMaterial.uniforms.uRGBAmount.value = value;
                         }
                     },
                     {
@@ -459,6 +450,17 @@
                         value: compositeMaterial.uniforms.uReduction.value,
                         callback: value => {
                             compositeMaterial.uniforms.uReduction.value = value;
+                        }
+                    },
+                    {
+                        type: 'slider',
+                        name: 'Boost',
+                        min: 0,
+                        max: 2,
+                        step: 0.01,
+                        value: compositeMaterial.uniforms.uBoost.value,
+                        callback: value => {
+                            compositeMaterial.uniforms.uBoost.value = value;
                         }
                     },
                     {
@@ -490,20 +492,31 @@
                         min: 0,
                         max: 1,
                         step: 0.01,
-                        value: compositeMaterial.uniforms.uMinBright.value,
+                        value: compositeMaterial.uniforms.uBloomReduction.value,
                         callback: value => {
-                            compositeMaterial.uniforms.uMinBright.value = value;
+                            compositeMaterial.uniforms.uBloomReduction.value = value;
                         }
                     },
                     {
                         type: 'slider',
-                        name: 'Bright',
+                        name: 'Boost',
+                        min: 0,
+                        max: 10,
+                        step: 0.1,
+                        value: compositeMaterial.uniforms.uBloomBoost.value,
+                        callback: value => {
+                            compositeMaterial.uniforms.uBloomBoost.value = value;
+                        }
+                    },
+                    {
+                        type: 'slider',
+                        name: 'Clamp',
                         min: 0,
                         max: 1,
                         step: 0.01,
-                        value: compositeMaterial.uniforms.uBlurBright.value,
+                        value: compositeMaterial.uniforms.uBloomClamp.value,
                         callback: value => {
-                            compositeMaterial.uniforms.uBlurBright.value = value;
+                            compositeMaterial.uniforms.uBloomClamp.value = value;
                         }
                     },
                     {
@@ -784,6 +797,7 @@
 
             static initLoaders() {
                 this.textureLoader = new TextureLoader();
+                this.textureLoader.setPath('../assets/textures/');
             }
 
             static addListeners() {

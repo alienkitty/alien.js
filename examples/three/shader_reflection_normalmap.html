@@ -71,7 +71,7 @@
 
                 const geometry = new PlaneGeometry(100, 100);
 
-                const normalMap = await loadTexture('../assets/textures/pbr/polished_concrete_normal.jpg');
+                const normalMap = await loadTexture('pbr/polished_concrete_normal.jpg');
                 normalMap.wrapS = RepeatWrapping;
                 normalMap.wrapT = RepeatWrapping;
                 normalMap.repeat.set(8, 8);
@@ -356,7 +356,7 @@
                 this.luminositySmoothing = 1;
                 this.bloomStrength = 0.3;
                 this.bloomRadius = 0.2;
-                this.bloomDistortion = 1.2;
+                this.bloomDistortion = 1;
 
                 this.enabled = true;
 
@@ -376,11 +376,10 @@
                     depthBuffer: false
                 });
 
+                this.renderTargetBright = this.renderTarget.clone();
                 this.renderTargetsHorizontal = [];
                 this.renderTargetsVertical = [];
                 this.nMips = 5;
-
-                this.renderTargetBright = this.renderTarget.clone();
 
                 for (let i = 0, l = this.nMips; i < l; i++) {
                     this.renderTargetsHorizontal.push(this.renderTarget.clone());
@@ -635,6 +634,8 @@
 
             static initLoaders() {
                 this.textureLoader = new TextureLoader();
+                this.textureLoader.setPath('../assets/textures/');
+
                 this.svgLoader = new SVGLoader();
             }
 

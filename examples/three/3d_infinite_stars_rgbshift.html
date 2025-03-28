@@ -101,7 +101,7 @@
                 const material = new RawShaderMaterial({
                     glslVersion: GLSL3,
                     uniforms: {
-                        tMap: { value: getTexture('../assets/textures/particle2.png') },
+                        tMap: { value: getTexture('particle2.png') },
                         uScale: { value: window.devicePixelRatio / 2 },
                         uAlpha: { value: 1 },
                         uCameraNear: { value: camera.near },
@@ -307,11 +307,10 @@
 
                 this.renderTargetB = this.renderTargetA.clone();
 
+                this.renderTargetBright = this.renderTargetA.clone();
                 this.renderTargetsHorizontal = [];
                 this.renderTargetsVertical = [];
                 this.nMips = 5;
-
-                this.renderTargetBright = this.renderTargetA.clone();
 
                 for (let i = 0, l = this.nMips; i < l; i++) {
                     this.renderTargetsHorizontal.push(this.renderTargetA.clone());
@@ -520,6 +519,7 @@
 
             static initLoaders() {
                 this.textureLoader = new TextureLoader();
+                this.textureLoader.setPath('../assets/textures/');
             }
 
             static initControls() {

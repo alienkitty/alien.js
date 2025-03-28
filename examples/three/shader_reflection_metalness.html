@@ -73,11 +73,11 @@
 
                 // Textures
                 const [map, normalMap, ormMap] = await Promise.all([
-                    // loadTexture('../assets/textures/uv.jpg'),
-                    loadTexture('../assets/textures/pbr/concrete_wet_floor_basecolor.jpg'),
-                    loadTexture('../assets/textures/pbr/concrete_wet_floor_normal.jpg'),
+                    // loadTexture('uv.jpg'),
+                    loadTexture('pbr/concrete_wet_floor_basecolor.jpg'),
+                    loadTexture('pbr/concrete_wet_floor_normal.jpg'),
                     // https://occlusion-roughness-metalness.glitch.me/
-                    loadTexture('../assets/textures/pbr/concrete_wet_floor_orm.jpg')
+                    loadTexture('pbr/concrete_wet_floor_orm.jpg')
                 ]);
 
                 map.wrapS = RepeatWrapping;
@@ -350,7 +350,7 @@
                 this.luminositySmoothing = 1;
                 this.bloomStrength = 0.3;
                 this.bloomRadius = 0.2;
-                this.bloomDistortion = 1.2;
+                this.bloomDistortion = 1;
 
                 this.enabled = true;
 
@@ -370,11 +370,10 @@
                     depthBuffer: false
                 });
 
+                this.renderTargetBright = this.renderTarget.clone();
                 this.renderTargetsHorizontal = [];
                 this.renderTargetsVertical = [];
                 this.nMips = 5;
-
-                this.renderTargetBright = this.renderTarget.clone();
 
                 for (let i = 0, l = this.nMips; i < l; i++) {
                     this.renderTargetsHorizontal.push(this.renderTarget.clone());
@@ -630,14 +629,16 @@
 
             static initLoaders() {
                 this.textureLoader = new TextureLoader();
-                this.textureLoader.cache = true;
+                this.textureLoader.setPath('../assets/textures/');
 
                 this.environmentLoader = new EnvironmentTextureLoader(this.renderer);
+                this.environmentLoader.setPath('../assets/textures/env/');
+
                 this.svgLoader = new SVGLoader();
             }
 
             static async initEnvironment() {
-                this.scene.environment = await this.loadEnvironmentTexture('../assets/textures/env/arches_pinetree.jpg');
+                this.scene.environment = await this.loadEnvironmentTexture('arches_pinetree.jpg');
                 this.scene.environmentIntensity = 1.2;
             }
 

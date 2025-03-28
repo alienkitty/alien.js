@@ -27,8 +27,8 @@
 
                 const geometry = new SphereGeometry(1, 80, 80);
 
-                const matcap = await loadTexture('../assets/textures/matcaps/040full.jpg');
-                // const matcap = await loadTexture('../assets/textures/matcaps/defaultwax.jpg');
+                const matcap = await loadTexture('matcaps/040full.jpg');
+                // const matcap = await loadTexture('matcaps/defaultwax.jpg');
 
                 const material = new MeshMatcapMaterial({ matcap });
 
@@ -137,7 +137,9 @@
 
             static initLoaders() {
                 this.assetLoader = new AssetLoader();
+
                 this.textureLoader = new TextureLoader();
+                this.textureLoader.setPath('../assets/textures/');
             }
 
             static addListeners() {

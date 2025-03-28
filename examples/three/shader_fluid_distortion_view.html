@@ -230,11 +230,11 @@
 
                 // Textures
                 const [map, normalMap, ormMap] = await Promise.all([
-                    // loadTexture('../assets/textures/uv.jpg'),
-                    loadTexture('../assets/textures/pbr/polished_concrete_basecolor.jpg'),
-                    loadTexture('../assets/textures/pbr/polished_concrete_normal.jpg'),
+                    // loadTexture('uv.jpg'),
+                    loadTexture('pbr/polished_concrete_basecolor.jpg'),
+                    loadTexture('pbr/polished_concrete_normal.jpg'),
                     // https://occlusion-roughness-metalness.glitch.me/
-                    loadTexture('../assets/textures/pbr/polished_concrete_orm.jpg')
+                    loadTexture('pbr/polished_concrete_orm.jpg')
                 ]);
 
                 map.wrapS = RepeatWrapping;
@@ -649,7 +649,7 @@
                 this.luminositySmoothing = 1;
                 this.bloomStrength = 0.3;
                 this.bloomRadius = 0.2;
-                this.bloomDistortion = 1.2;
+                this.bloomDistortion = 1;
 
                 this.enabled = true;
 
@@ -669,11 +669,10 @@
                     depthBuffer: false
                 });
 
+                this.renderTargetBright = this.renderTarget.clone();
                 this.renderTargetsHorizontal = [];
                 this.renderTargetsVertical = [];
                 this.nMips = 5;
-
-                this.renderTargetBright = this.renderTarget.clone();
 
                 for (let i = 0, l = this.nMips; i < l; i++) {
                     this.renderTargetsHorizontal.push(this.renderTarget.clone());
@@ -929,6 +928,8 @@
 
             static initLoaders() {
                 this.textureLoader = new TextureLoader();
+                this.textureLoader.setPath('../assets/textures/');
+
                 this.svgLoader = new SVGLoader();
             }
 

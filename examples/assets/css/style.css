@@ -83,8 +83,7 @@ body {
     letter-spacing: normal;
     background-color: var(--bg-color);
     color: var(--ui-color);
-    -moz-osx-font-smoothing: grayscale;
-    -webkit-font-smoothing: antialiased;
+    text-rendering: geometricPrecision;
     -webkit-tap-highlight-color: transparent;
 }
 
@@ -106,7 +105,7 @@ canvas {
 }
 
 h1 {
-    margin: 0 0 10px -1px;
+    margin-left: -1px;
     font-family: 'Roboto', sans-serif;
     font-weight: 300;
     font-size: 23px;
@@ -130,14 +129,12 @@ a:hover, a:focus {
     text-decoration: underline;
 }
 
-input, pre, .info, .target, .panel, .number, .name, .type, .primary, .secondary, .marker {
+input, pre, .info, .target, .panel, .number, .name, .type, .primary, .secondary, .label, .marker {
     font-family: var(--ui-font-family);
     font-weight: var(--ui-font-weight);
     font-size: var(--ui-font-size);
     line-height: var(--ui-line-height);
     letter-spacing: var(--ui-letter-spacing);
-    -moz-osx-font-smoothing: auto;
-    -webkit-font-smoothing: auto;
 }
 
 .title .name {
@@ -154,6 +151,7 @@ input, pre, .info, .target, .panel, .number, .name, .type, .primary, .secondary,
     font-size: var(--ui-caption-font-size);
     line-height: var(--ui-caption-line-height);
     letter-spacing: var(--ui-caption-letter-spacing);
+    text-rendering: auto;
 }
 
 .link, .menu .item {
@@ -203,8 +201,6 @@ input, pre, .info, .target, .panel, .number, .name, .type, .primary, .secondary,
     font-size: var(--ui-info-font-size);
     line-height: var(--ui-info-line-height);
     letter-spacing: var(--ui-info-letter-spacing);
-    -moz-osx-font-smoothing: grayscale;
-    -webkit-font-smoothing: antialiased;
 }
 
 .trackers {

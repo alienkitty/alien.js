@@ -811,16 +811,6 @@ class PanelController {
     static initPanel() {
         const { drawBuffers, hBlurMaterial, vBlurMaterial, luminosityMaterial, bloomCompositeMaterial, compositeMaterial } = RenderManager;
 
-        const animateOptions = {
-            Off: false,
-            Animate: true
-        };
-
-        const debugOptions = {
-            Off: false,
-            Debug: true
-        };
-
         const items = [
             {
                 name: 'FPS'
@@ -840,6 +830,15 @@ class PanelController {
                 type: 'divider'
             },
             {
+                type: 'toggle',
+                name: 'Animate',
+                value: params.animate,
+                callback: value => {
+                    params.animate = value;
+                    drawBuffers.saveState = params.animate;
+                }
+            },
+            {
                 type: 'slider',
                 name: 'Speed',
                 min: 0,
@@ -848,15 +847,6 @@ class PanelController {
                 value: params.speed,
                 callback: value => {
                     params.speed = value;
-                }
-            },
-            {
-                type: 'list',
-                list: animateOptions,
-                value: getKeyByValue(animateOptions, params.animate),
-                callback: value => {
-                    params.animate = animateOptions[value];
-                    drawBuffers.saveState = params.animate;
                 }
             },
             {
@@ -937,11 +927,11 @@ class PanelController {
                 }
             },
             {
-                type: 'list',
-                list: debugOptions,
-                value: getKeyByValue(debugOptions, vBlurMaterial.uniforms.uDebug.value),
+                type: 'toggle',
+                name: 'Debug',
+                value: vBlurMaterial.uniforms.uDebug.value,
                 callback: value => {
-                    vBlurMaterial.uniforms.uDebug.value = debugOptions[value];
+                    vBlurMaterial.uniforms.uDebug.value = value;
                 }
             },
             {

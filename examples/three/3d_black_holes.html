@@ -443,11 +443,6 @@
             static initPanel() {
                 const { drawBuffers, fluid, vlMaterial, luminosityMaterial, bloomCompositeMaterial, compositeMaterial } = RenderManager;
 
-                const animateOptions = {
-                    Off: false,
-                    Animate: true
-                };
-
                 const items = [
                     {
                         name: 'FPS'
@@ -467,6 +462,15 @@
                         type: 'divider'
                     },
                     {
+                        type: 'toggle',
+                        name: 'Animate',
+                        value: params.animate,
+                        callback: value => {
+                            params.animate = value;
+                            drawBuffers.saveState = params.animate;
+                        }
+                    },
+                    {
                         type: 'slider',
                         name: 'Speed',
                         min: 0,
@@ -475,15 +479,6 @@
                         value: params.speed,
                         callback: value => {
                             params.speed = value;
-                        }
-                    },
-                    {
-                        type: 'list',
-                        list: animateOptions,
-                        value: getKeyByValue(animateOptions, params.animate),
-                        callback: value => {
-                            params.animate = animateOptions[value];
-                            drawBuffers.saveState = params.animate;
                         }
                     },
                     {

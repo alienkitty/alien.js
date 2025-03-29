@@ -402,16 +402,6 @@
                     Post: true
                 };
 
-                const debugOptions = {
-                    Off: false,
-                    Debug: true
-                };
-
-                const dirtOptions = {
-                    Off: false,
-                    Dirt: true
-                };
-
                 const items = [
                     {
                         name: 'FPS'
@@ -464,11 +454,11 @@
                         }
                     },
                     {
-                        type: 'list',
-                        list: debugOptions,
-                        value: getKeyByValue(debugOptions, compositeMaterial.uniforms.uDebug.value),
+                        type: 'toggle',
+                        name: 'Debug',
+                        value: compositeMaterial.uniforms.uDebug.value,
                         callback: value => {
-                            compositeMaterial.uniforms.uDebug.value = debugOptions[value];
+                            compositeMaterial.uniforms.uDebug.value = value;
                         }
                     },
                     {
@@ -520,11 +510,11 @@
                         }
                     },
                     {
-                        type: 'list',
-                        list: dirtOptions,
-                        value: getKeyByValue(dirtOptions, compositeMaterial.uniforms.uLensDirt.value),
+                        type: 'toggle',
+                        name: 'Dirt',
+                        value: compositeMaterial.uniforms.uLensDirt.value,
                         callback: value => {
-                            compositeMaterial.uniforms.uLensDirt.value = dirtOptions[value];
+                            compositeMaterial.uniforms.uLensDirt.value = value;
                         }
                     }
                 ];

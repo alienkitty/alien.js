@@ -22,8 +22,12 @@
 
     <script type="module">
         import { Camera, Color, Mesh, Program, RenderTarget, Renderer, Sphere, Transform, Triangle, Vec2 } from 'ogl';
-        import { PanelItem, UI, getKeyByValue, ticker } from '@alienkitty/space.js';
+        import { PanelItem, UI, ticker } from '@alienkitty/space.js';
         import { FXAAProgram } from '@alienkitty/alien.js/ogl';
+
+        const params = {
+            animate: true
+        };
 
         const colors = {
             backgroundColor: new Color('#060606')
@@ -102,11 +106,6 @@
             }
 
             static initPanel() {
-                const postOptions = {
-                    Off: false,
-                    FXAA: true
-                };
-
                 const items = [
                     {
                         name: 'FPS'
@@ -115,11 +114,19 @@
                         type: 'divider'
                     },
                     {
-                        type: 'list',
-                        list: postOptions,
-                        value: getKeyByValue(postOptions, RenderManager.enabled),
+                        type: 'toggle',
+                        name: 'Animate',
+                        value: params.animate,
                         callback: value => {
-                            RenderManager.enabled = postOptions[value];
+                            params.animate = value;
+                        }
+                    },
+                    {
+                        type: 'toggle',
+                        name: 'FXAA',
+                        value: RenderManager.enabled,
+                        callback: value => {
+                            RenderManager.enabled = value;
                         }
                     }
                 ];
@@ -255,7 +262,10 @@
             };
 
             static update = (time, delta, frame) => {
-                this.time.value = time;
+                if (params.animate) {
+                    this.time.value = time;
+                }
+
                 this.frame.value = frame;
             };
         }

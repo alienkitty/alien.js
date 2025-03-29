@@ -11,7 +11,7 @@
     <link rel="stylesheet" href="../assets/css/style.css">
 
     <script type="module">
-        import { AdditiveBlending, BloomCompositeMaterial, BufferGeometry, Color, ColorManagement, CopyMaterial, DepthTexture, DirectionalLight, EnvironmentTextureLoader, Float32BufferAttribute, GLSL3, Group, HemisphereLight, ImageBitmapLoaderThread, LinearSRGBColorSpace, LuminosityMaterial, MathUtils, Mesh, MeshStandardMaterial, NoBlending, OrbitControls, OrthographicCamera, PanelItem, PerspectiveCamera, Points, RawShaderMaterial, RepeatWrapping, Scene, SphereGeometry, TextureLoader, UI, UnrealBloomBlurMaterial, Vector2, WebGLRenderTarget, WebGLRenderer, getFullscreenTriangle, getKeyByValue, ticker } from '../../build/alien.three.js';
+        import { AdditiveBlending, BloomCompositeMaterial, BufferGeometry, Color, ColorManagement, CopyMaterial, DepthTexture, DirectionalLight, EnvironmentTextureLoader, Float32BufferAttribute, GLSL3, Group, HemisphereLight, ImageBitmapLoaderThread, LinearSRGBColorSpace, LuminosityMaterial, MathUtils, Mesh, MeshStandardMaterial, NoBlending, OrbitControls, OrthographicCamera, PanelItem, PerspectiveCamera, Points, RawShaderMaterial, RepeatWrapping, Scene, SphereGeometry, TextureLoader, UI, UnrealBloomBlurMaterial, Vector2, WebGLRenderTarget, WebGLRenderer, getFullscreenTriangle, ticker } from '../../build/alien.three.js';
 
         const isDebug = /[?&]debug/.test(location.search);
 
@@ -404,11 +404,6 @@
             static initPanel() {
                 const { bokehBlurMaterial1, bokehBlurMaterial2, luminosityMaterial, bloomCompositeMaterial } = RenderManager;
 
-                const debugOptions = {
-                    Off: false,
-                    Debug: true
-                };
-
                 const items = [
                     {
                         name: 'FPS'
@@ -441,11 +436,11 @@
                         }
                     },
                     {
-                        type: 'list',
-                        list: debugOptions,
-                        value: getKeyByValue(debugOptions, bokehBlurMaterial2.uniforms.uDebug.value),
+                        type: 'toggle',
+                        name: 'Debug',
+                        value: bokehBlurMaterial2.uniforms.uDebug.value,
                         callback: value => {
-                            bokehBlurMaterial2.uniforms.uDebug.value = debugOptions[value];
+                            bokehBlurMaterial2.uniforms.uDebug.value = value;
                         }
                     },
                     {

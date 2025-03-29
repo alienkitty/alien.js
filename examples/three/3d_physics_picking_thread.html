@@ -11,7 +11,7 @@
     <link rel="stylesheet" href="../assets/css/style.css">
 
     <script type="module">
-        import { BasicShadowMap, BloomCompositeMaterial, BoxGeometry, BufferLoader, Color, ColorManagement, DirectionalLight, EnvironmentTextureLoader, EventEmitter, Group, HemisphereLight, IcosahedronGeometry, ImageBitmapLoaderThread, LinearSRGBColorSpace, LuminosityMaterial, MathUtils, Mesh, MeshBasicMaterial, MeshPhongMaterial, MeshStandardMaterial, OimoPhysicsBuffer, OimoPhysicsController, OrthographicCamera, PanelItem, PerspectiveCamera, PlaneGeometry, PointLight, Raycaster, Reflector, RepeatWrapping, Scene, SceneCompositeDistortionMaterial, ShaderChunk, ShadowMaterial, Sound3D, SphereGeometry, TextureLoader, Thread, UI, UnrealBloomBlurMaterial, Vector2, Vector3, WebAudio, WebGLRenderTarget, WebGLRenderer, delayedCall, getFullscreenTriangle, getKeyByValue, ticker } from '../../build/alien.three.js';
+        import { BasicShadowMap, BloomCompositeMaterial, BoxGeometry, BufferLoader, Color, ColorManagement, DirectionalLight, EnvironmentTextureLoader, EventEmitter, Group, HemisphereLight, IcosahedronGeometry, ImageBitmapLoaderThread, LinearSRGBColorSpace, LuminosityMaterial, MathUtils, Mesh, MeshBasicMaterial, MeshPhongMaterial, MeshStandardMaterial, OimoPhysicsBuffer, OimoPhysicsController, OrthographicCamera, PanelItem, PerspectiveCamera, PlaneGeometry, PointLight, Raycaster, Reflector, RepeatWrapping, Scene, SceneCompositeDistortionMaterial, ShaderChunk, ShadowMaterial, Sound3D, SphereGeometry, TextureLoader, Thread, UI, UnrealBloomBlurMaterial, Vector2, Vector3, WebAudio, WebGLRenderTarget, WebGLRenderer, delayedCall, getFullscreenTriangle, ticker } from '../../build/alien.three.js';
 
         const isDebug = /[?&]debug/.test(location.search);
 
@@ -780,11 +780,6 @@
                 const vector3 = new Vector3();
                 const gravity = new Vector3(0, -9.81, 0);
 
-                const physicsOptions = {
-                    Off: false,
-                    Physics: true
-                };
-
                 const items = [
                     {
                         name: 'FPS'
@@ -793,11 +788,11 @@
                         type: 'divider'
                     },
                     {
-                        type: 'list',
-                        list: physicsOptions,
-                        value: getKeyByValue(physicsOptions, SceneController.enabled),
+                        type: 'toggle',
+                        name: 'Physics',
+                        value: SceneController.enabled,
                         callback: value => {
-                            SceneController.enabled = physicsOptions[value];
+                            SceneController.enabled = value;
 
                             // Reset
                             vector3.set(0, 0, 0);

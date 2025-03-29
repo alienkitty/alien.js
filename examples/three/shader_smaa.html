@@ -11,7 +11,11 @@
     <link rel="stylesheet" href="../assets/css/style.css">
 
     <script type="module">
-        import { Color, ColorManagement, DirectionalLight, Group, HemisphereLight, LinearSRGBColorSpace, Mesh, MeshStandardMaterial, OrthographicCamera, PanelItem, PerspectiveCamera, SMAABlendMaterial, SMAAEdgesMaterial, SMAAWeightsMaterial, Scene, SphereGeometry, TextureLoader, UI, Vector2, WebGLRenderTarget, WebGLRenderer, getFullscreenTriangle, getKeyByValue, ticker } from '../../build/alien.three.js';
+        import { Color, ColorManagement, DirectionalLight, Group, HemisphereLight, LinearSRGBColorSpace, Mesh, MeshStandardMaterial, OrthographicCamera, PanelItem, PerspectiveCamera, SMAABlendMaterial, SMAAEdgesMaterial, SMAAWeightsMaterial, Scene, SphereGeometry, TextureLoader, UI, Vector2, WebGLRenderTarget, WebGLRenderer, getFullscreenTriangle, ticker } from '../../build/alien.three.js';
+
+        const params = {
+            animate: true
+        };
 
         import periodic3d from '../../src/shaders/modules/noise/periodic3d.glsl.js';
 
@@ -67,11 +71,6 @@
             }
 
             static initPanel() {
-                const postOptions = {
-                    Off: false,
-                    SMAA: true
-                };
-
                 const items = [
                     {
                         name: 'FPS'
@@ -80,11 +79,19 @@
                         type: 'divider'
                     },
                     {
-                        type: 'list',
-                        list: postOptions,
-                        value: getKeyByValue(postOptions, RenderManager.enabled),
+                        type: 'toggle',
+                        name: 'Animate',
+                        value: params.animate,
                         callback: value => {
-                            RenderManager.enabled = postOptions[value];
+                            params.animate = value;
+                        }
+                    },
+                    {
+                        type: 'toggle',
+                        name: 'SMAA',
+                        value: RenderManager.enabled,
+                        callback: value => {
+                            RenderManager.enabled = value;
                         }
                     }
                 ];
@@ -282,7 +289,10 @@
             };
 
             static update = (time, delta, frame) => {
-                this.time.value = time;
+                if (params.animate) {
+                    this.time.value = time;
+                }
+
                 this.frame.value = frame;
             };
         }

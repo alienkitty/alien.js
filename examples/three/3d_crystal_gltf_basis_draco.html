@@ -14,7 +14,7 @@
         // npx @gltf-transform/cli etc1s crystal.glb crystal-basis.glb
         // npx @gltf-transform/cli draco crystal-basis.glb crystal-basis-draco.glb
 
-        import { BloomCompositeMaterial, Color, ColorManagement, DRACOLoader, DirectionalLight, EnvironmentTextureLoader, GLTFLoader, Group, HemisphereLight, KTX2Loader, LightOptions, LightPanelController, LinearSRGBColorSpace, LuminosityMaterial, MathUtils, Mesh, MeshPhysicalMaterial, OrbitControls, OrthographicCamera, Panel, PanelItem, PerspectiveCamera, PhysicalMaterialPanel, Scene, SceneCompositeDistortionMaterial, ScenePanel, TextureLoader, UI, UnrealBloomBlurMaterial, Vector2, WebGLRenderTarget, WebGLRenderer, getFullscreenTriangle, getKeyByLight, getKeyByValue, ticker } from '../../build/alien.three.js';
+        import { BackgroundPanel, BloomCompositeMaterial, Color, ColorManagement, DRACOLoader, DirectionalLight, EnvironmentPanel, EnvironmentTextureLoader, GLTFLoader, Group, HemisphereLight, KTX2Loader, LightOptions, LightPanelController, LinearSRGBColorSpace, LuminosityMaterial, MathUtils, Mesh, MeshPhysicalMaterial, OrbitControls, OrthographicCamera, Panel, PanelItem, PerspectiveCamera, PhysicalMaterialPanel, Scene, SceneCompositeDistortionMaterial, TextureLoader, UI, UnrealBloomBlurMaterial, Vector2, WebGLRenderTarget, WebGLRenderer, getFullscreenTriangle, getKeyByLight, getKeyByValue, ticker } from '../../build/alien.three.js';
 
         class Crystal extends Group {
             constructor() {
@@ -264,7 +264,8 @@
                 const { crystal } = this.view;
 
                 const sceneOptions = {
-                    Scene: ScenePanel,
+                    BG: BackgroundPanel,
+                    Env: EnvironmentPanel,
                     Post: PostPanel
                 };
 
@@ -311,14 +312,31 @@
                     {
                         type: 'list',
                         list: sceneOptions,
-                        value: 'Scene',
+                        value: 'BG',
                         callback: (value, item) => {
                             switch (value) {
-                                case 'Scene':
-                                case 'Post': {
+                                case 'BG': {
                                     const ScenePanel = sceneOptions[value];
 
                                     const scenePanel = new ScenePanel(this.scene, this.ui);
+                                    scenePanel.animateIn(true);
+
+                                    item.setContent(scenePanel);
+                                    break;
+                                }
+                                case 'Env': {
+                                    const ScenePanel = sceneOptions[value];
+
+                                    const scenePanel = new ScenePanel(this.scene);
+                                    scenePanel.animateIn(true);
+
+                                    item.setContent(scenePanel);
+                                    break;
+                                }
+                                case 'Post': {
+                                    const ScenePanel = sceneOptions[value];
+
+                                    const scenePanel = new ScenePanel();
                                     scenePanel.animateIn(true);
 
                                     item.setContent(scenePanel);

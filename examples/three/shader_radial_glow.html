@@ -11,7 +11,7 @@
     <link rel="stylesheet" href="../assets/css/style.css">
 
     <script type="module">
-        import { BloomCompositeMaterial, Color, ColorManagement, DirectionalLight, EnvironmentTextureLoader, GLSL3, Group, HemisphereLight, IcosahedronGeometry, LightOptions, LightPanelController, LinearSRGBColorSpace, LuminosityMaterial, MaterialPanelController, MathUtils, Mesh, MeshStandardMaterial, NoBlending, OrbitControls, OrthographicCamera, Panel, PanelItem, PerspectiveCamera, Point3D, RawShaderMaterial, RepeatWrapping, Scene, ScenePanel, TextureLoader, UI, UnrealBloomBlurMaterial, Vector2, Vector3, WebGLRenderTarget, WebGLRenderer, getFullscreenTriangle, getKeyByLight, getKeyByValue, ticker, tween } from '../../build/alien.three.js';
+        import { BackgroundPanel, BloomCompositeMaterial, Color, ColorManagement, DirectionalLight, EnvironmentPanel, EnvironmentTextureLoader, GLSL3, Group, HemisphereLight, IcosahedronGeometry, LightOptions, LightPanelController, LinearSRGBColorSpace, LuminosityMaterial, MaterialPanelController, MathUtils, Mesh, MeshStandardMaterial, NoBlending, OrbitControls, OrthographicCamera, Panel, PanelItem, PerspectiveCamera, Point3D, RawShaderMaterial, RepeatWrapping, Scene, TextureLoader, UI, UnrealBloomBlurMaterial, Vector2, Vector3, WebGLRenderTarget, WebGLRenderer, getFullscreenTriangle, getKeyByLight, getKeyByValue, ticker, tween } from '../../build/alien.three.js';
 
         const isOrbit = /[?&]orbit/.test(location.search);
 
@@ -388,7 +388,8 @@
                 const { compositeMaterial } = RenderManager;
 
                 const sceneOptions = {
-                    Scene: ScenePanel,
+                    BG: BackgroundPanel,
+                    Env: EnvironmentPanel,
                     Post: PostPanel
                 };
 
@@ -444,14 +445,31 @@
                     {
                         type: 'list',
                         list: sceneOptions,
-                        value: 'Scene',
+                        value: 'BG',
                         callback: (value, item) => {
                             switch (value) {
-                                case 'Scene':
-                                case 'Post': {
+                                case 'BG': {
                                     const ScenePanel = sceneOptions[value];
 
                                     const scenePanel = new ScenePanel(this.scene, this.ui);
+                                    scenePanel.animateIn(true);
+
+                                    item.setContent(scenePanel);
+                                    break;
+                                }
+                                case 'Env': {
+                                    const ScenePanel = sceneOptions[value];
+
+                                    const scenePanel = new ScenePanel(this.scene);
+                                    scenePanel.animateIn(true);
+
+                                    item.setContent(scenePanel);
+                                    break;
+                                }
+                                case 'Post': {
+                                    const ScenePanel = sceneOptions[value];
+
+                                    const scenePanel = new ScenePanel();
                                     scenePanel.animateIn(true);
 
                                     item.setContent(scenePanel);

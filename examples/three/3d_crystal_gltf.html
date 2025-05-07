@@ -11,7 +11,7 @@
     <link rel="stylesheet" href="../assets/css/style.css">
 
     <script type="module">
-        import { BloomCompositeMaterial, Color, ColorManagement, DirectionalLight, EnvironmentTextureLoader, GLTFLoader, Group, HemisphereLight, LightOptions, LightPanelController, LinearSRGBColorSpace, LuminosityMaterial, MathUtils, Mesh, MeshPhysicalMaterial, OrbitControls, OrthographicCamera, Panel, PanelItem, PerspectiveCamera, PhysicalMaterialPanel, Scene, SceneCompositeDistortionMaterial, ScenePanel, TextureLoader, UI, UnrealBloomBlurMaterial, Vector2, WebGLRenderTarget, WebGLRenderer, getFullscreenTriangle, getKeyByLight, getKeyByValue, ticker } from '../../build/alien.three.js';
+        import { BackgroundPanel, BloomCompositeMaterial, Color, ColorManagement, DirectionalLight, EnvironmentPanel, EnvironmentTextureLoader, GLTFLoader, Group, HemisphereLight, LightOptions, LightPanelController, LinearSRGBColorSpace, LuminosityMaterial, MathUtils, Mesh, MeshPhysicalMaterial, OrbitControls, OrthographicCamera, Panel, PanelItem, PerspectiveCamera, PhysicalMaterialPanel, Scene, SceneCompositeDistortionMaterial, TextureLoader, UI, UnrealBloomBlurMaterial, Vector2, WebGLRenderTarget, WebGLRenderer, getFullscreenTriangle, getKeyByLight, getKeyByValue, ticker } from '../../build/alien.three.js';
 
         class Crystal extends Group {
             constructor() {
@@ -261,7 +261,8 @@
                 const { crystal } = this.view;
 
                 const sceneOptions = {
-                    Scene: ScenePanel,
+                    BG: BackgroundPanel,
+                    Env: EnvironmentPanel,
                     Post: PostPanel
                 };
 
@@ -308,14 +309,31 @@
                     {
                         type: 'list',
                         list: sceneOptions,
-                        value: 'Scene',
+                        value: 'BG',
                         callback: (value, item) => {
                             switch (value) {
-                                case 'Scene':
-                                case 'Post': {
+                                case 'BG': {
                                     const ScenePanel = sceneOptions[value];
 
                                     const scenePanel = new ScenePanel(this.scene, this.ui);
+                                    scenePanel.animateIn(true);
+
+                                    item.setContent(scenePanel);
+                                    break;
+                                }
+                                case 'Env': {
+                                    const ScenePanel = sceneOptions[value];
+
+                                    const scenePanel = new ScenePanel(this.scene);
+                                    scenePanel.animateIn(true);
+
+                                    item.setContent(scenePanel);
+                                    break;
+                                }
+                                case 'Post': {
+                                    const ScenePanel = sceneOptions[value];
+
+                                    const scenePanel = new ScenePanel();
                                     scenePanel.animateIn(true);
 
                                     item.setContent(scenePanel);

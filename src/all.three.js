@@ -5,11 +5,13 @@ export { BufferLoader } from '@alienkitty/space.js/src/loaders/BufferLoader.js';
 export { MultiLoader } from '@alienkitty/space.js/src/loaders/MultiLoader.js';
 export { ImageBitmapLoader } from '@alienkitty/space.js/src/loaders/ImageBitmapLoader.js';
 export { ImageBitmapLoaderThread } from '@alienkitty/space.js/src/loaders/ImageBitmapLoaderThread.js';
+export * from '@alienkitty/space.js/src/loaders/FileUtils.js';
 export { TextureLoader } from '@alienkitty/space.js/src/three/loaders/TextureLoader.js';
 export { CubeTextureLoader } from '@alienkitty/space.js/src/three/loaders/CubeTextureLoader.js';
 export { EnvironmentTextureLoader } from '@alienkitty/space.js/src/three/loaders/EnvironmentTextureLoader.js';
 export { BufferGeometryLoader } from '@alienkitty/space.js/src/three/loaders/BufferGeometryLoader.js';
 export { BufferGeometryLoaderThread } from '@alienkitty/space.js/src/three/loaders/BufferGeometryLoaderThread.js';
+export * from '@alienkitty/space.js/src/three/loaders/TextureFileUtils.js';
 
 // Math
 // export { Color } from '@alienkitty/space.js/src/math/Color.js';

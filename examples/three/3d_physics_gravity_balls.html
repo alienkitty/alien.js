@@ -578,9 +578,9 @@
                                 item.setContent(defaultPanel);
                             }
 
-                            RenderManager.display = DisplayOptions[value];
+                            RenderManager.display = DisplayOptions.get(value);
 
-                            if (RenderManager.display === DisplayOptions.Default) {
+                            if (RenderManager.display === DisplayOptions.get('Default')) {
                                 item.toggleContent(true);
                             } else {
                                 item.toggleContent(false);
@@ -886,8 +886,8 @@
                 this.bloomRadius = 0.2;
 
                 // Debug
-                DisplayOptions.Light = 8;
-                this.display = DisplayOptions.Default;
+                DisplayOptions.set('Light', 8);
+                this.display = DisplayOptions.get('Default');
 
                 this.enabled = true;
 
@@ -1113,7 +1113,7 @@
 
                 this.drawBuffers.update();
 
-                if (this.display === DisplayOptions.Velocity) {
+                if (this.display === DisplayOptions.get('Velocity')) {
                     // Debug pass (render to screen)
                     this.copyMaterial.uniforms.tMap.value = this.drawBuffers.renderTarget.textures[1];
                     this.screen.material = this.copyMaterial;
@@ -1162,7 +1162,7 @@
                 this.setLightPosition();
                 this.screen.material = this.vlMaterial;
 
-                if (this.display === DisplayOptions.Light) {
+                if (this.display === DisplayOptions.get('Light')) {
                     // Debug pass (render to screen)
                     renderer.setRenderTarget(null);
                     renderer.clear();
@@ -1182,7 +1182,7 @@
                 renderer.setClearColor(this.clearColor, 1);
 
                 // Debug override material passes (render to screen)
-                if (this.display === DisplayOptions.Depth) {
+                if (this.display === DisplayOptions.get('Depth')) {
                     scene.traverseVisible(object => {
                         if (object.material) {
                             this.originalMaterials.set(object, object.material);
@@ -1201,7 +1201,7 @@
 
                     this.restoreRendererState();
                     return;
-                } else if (this.display === DisplayOptions.Geometry) {
+                } else if (this.display === DisplayOptions.get('Geometry')) {
                     scene.traverseVisible(object => {
                         if (object.material) {
                             this.originalMaterials.set(object, object.material);
@@ -1220,14 +1220,14 @@
 
                     this.restoreRendererState();
                     return;
-                } else if (this.display === DisplayOptions.Matcap1) {
+                } else if (this.display === DisplayOptions.get('Matcap1')) {
                     scene.overrideMaterial = this.matcap1Material;
                     renderer.setRenderTarget(null);
                     renderer.clear();
                     renderer.render(scene, camera);
                     this.restoreRendererState();
                     return;
-                } else if (this.display === DisplayOptions.Matcap2) {
+                } else if (this.display === DisplayOptions.get('Matcap2')) {
                     scene.overrideMaterial = this.matcap2Material;
                     renderer.setRenderTarget(null);
                     renderer.clear();
@@ -1246,7 +1246,7 @@
                 // Extract bright areas
                 this.luminosityMaterial.uniforms.tMap.value = renderTargetB.texture;
 
-                if (this.display === DisplayOptions.Luma) {
+                if (this.display === DisplayOptions.get('Luma')) {
                     // Debug pass (render to screen)
                     this.screen.material = this.blackoutMaterial;
                     renderer.setRenderTarget(null);
@@ -1289,7 +1289,7 @@
                 // Composite all the mips
                 this.screen.material = this.bloomCompositeMaterial;
 
-                if (this.display === DisplayOptions.Bloom) {
+                if (this.display === DisplayOptions.get('Bloom')) {
                     // Debug pass (render to screen)
                     renderer.setRenderTarget(null);
                     renderer.clear();

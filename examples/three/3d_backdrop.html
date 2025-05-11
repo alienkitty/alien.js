@@ -201,10 +201,10 @@
             static initPanel() {
                 const { luminosityMaterial, bloomCompositeMaterial, compositeMaterial } = RenderManager;
 
-                const postOptions = {
-                    Off: false,
-                    Post: true
-                };
+                const postOptions = new Map([
+                    ['Off', false],
+                    ['Post', true]
+                ]);
 
                 const toneMappingItems = [
                     {
@@ -344,7 +344,7 @@
                                 item.setContent(postPanel);
                             }
 
-                            RenderManager.enabled = postOptions[value];
+                            RenderManager.enabled = postOptions.get(value);
 
                             if (RenderManager.enabled) {
                                 item.toggleContent(true);

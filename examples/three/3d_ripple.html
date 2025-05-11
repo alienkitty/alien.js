@@ -366,7 +366,7 @@
                         list: WireframeOptions,
                         value: getKeyByValue(WireframeOptions, mesh.material.wireframe),
                         callback: value => {
-                            mesh.material.wireframe = WireframeOptions[value];
+                            mesh.material.wireframe = WireframeOptions.get(value);
 
                             if (mesh.material.wireframe) {
                                 mesh.material.map = null;

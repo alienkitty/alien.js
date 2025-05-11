@@ -354,10 +354,10 @@
             static initPanel() {
                 const { hBlurMaterial, vBlurMaterial, compositeMaterial } = RenderManager;
 
-                const postOptions = {
-                    Off: false,
-                    Post: true
-                };
+                const postOptions = new Map([
+                    ['Off', false],
+                    ['Post', true]
+                ]);
 
                 const items = [
                     {
@@ -371,7 +371,7 @@
                         list: postOptions,
                         value: getKeyByValue(postOptions, RenderManager.enabled),
                         callback: value => {
-                            RenderManager.enabled = postOptions[value];
+                            RenderManager.enabled = postOptions.get(value);
                         }
                     },
                     {

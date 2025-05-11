@@ -136,10 +136,10 @@
             initPanel() {
                 const { luminosityMaterial, bloomCompositeMaterial, compositeMaterial } = RenderManager;
 
-                const postOptions = {
-                    Off: false,
-                    On: true
-                };
+                const postOptions = new Map([
+                    ['Off', false],
+                    ['Post', true]
+                ]);
 
                 const postItems = [
                     {
@@ -225,7 +225,7 @@
                                 item.setContent(postPanel);
                             }
 
-                            RenderManager.enabled = postOptions[value];
+                            RenderManager.enabled = postOptions.get(value);
 
                             if (RenderManager.enabled) {
                                 item.toggleContent(true);
@@ -263,17 +263,17 @@
             static initPanel() {
                 const { crystal } = this.view;
 
-                const sceneOptions = {
-                    BG: BackgroundPanel,
-                    Env: EnvironmentPanel,
-                    Post: PostPanel
-                };
+                const sceneOptions = new Map([
+                    ['BG', BackgroundPanel],
+                    ['Env', EnvironmentPanel],
+                    ['Post', PostPanel]
+                ]);
 
                 this.scene.traverse(object => {
                     if (object.isLight) {
                         const key = getKeyByLight(LightOptions, object);
 
-                        sceneOptions[key] = [object, LightOptions[key][1]];
+                        sceneOptions.set(key, [object, LightOptions.get(key)[1]]);
 
                         this.lights.push(object);
                     }
@@ -316,7 +316,7 @@
                         callback: (value, item) => {
                             switch (value) {
                                 case 'BG': {
-                                    const ScenePanel = sceneOptions[value];
+                                    const ScenePanel = sceneOptions.get(value);
 
                                     const scenePanel = new ScenePanel(this.scene, this.ui);
                                     scenePanel.animateIn(true);
@@ -325,7 +325,7 @@
                                     break;
                                 }
                                 case 'Env': {
-                                    const ScenePanel = sceneOptions[value];
+                                    const ScenePanel = sceneOptions.get(value);
 
                                     const scenePanel = new ScenePanel(this.scene);
                                     scenePanel.animateIn(true);
@@ -334,7 +334,7 @@
                                     break;
                                 }
                                 case 'Post': {
-                                    const ScenePanel = sceneOptions[value];
+                                    const ScenePanel = sceneOptions.get(value);
 
                                     const scenePanel = new ScenePanel();
                                     scenePanel.animateIn(true);
@@ -343,7 +343,7 @@
                                     break;
                                 }
                                 default: {
-                                    const [light, LightPanel] = sceneOptions[value];
+                                    const [light, LightPanel] = sceneOptions.get(value);
 
                                     const lightPanel = new LightPanel(LightPanelController, light);
                                     lightPanel.animateIn(true);

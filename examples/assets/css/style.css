@@ -119,6 +119,7 @@ p {
 }
 
 a {
+    display: inline-block;
     color: var(--ui-color);
     text-decoration: none;
     text-underline-offset: 3px;

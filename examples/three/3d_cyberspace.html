@@ -11,7 +11,7 @@
     <link rel="stylesheet" href="../assets/css/style.css">
 
     <script type="module">
-        import { AdditiveBlending, BloomCompositeMaterial, BoxGeometry, BufferGeometry, Color, ColorManagement, CopyMaterial, Float32BufferAttribute, GLSL3, Group, LinearSRGBColorSpace, LuminosityMaterial, MathUtils, Mesh, MeshBasicMaterial, NoBlending, OrbitControls, OrthographicCamera, PanelItem, PerspectiveCamera, Point3D, Points, RawShaderMaterial, Scene, ShaderMaterial, TextureLoader, UI, UnrealBloomBlurMaterial, Vector2, Vector3, WebGLRenderTarget, WebGLRenderer, getFullscreenTriangle, ticker } from '../../build/alien.three.js';
+        import { AdditiveBlending, BloomCompositeMaterial, BufferGeometry, Color, ColorManagement, CopyMaterial, Float32BufferAttribute, GLSL3, Group, LinearSRGBColorSpace, LuminosityMaterial, MathUtils, Mesh, NoBlending, OrbitControls, OrthographicCamera, PanelItem, PerspectiveCamera, Point3D, Points, RawShaderMaterial, Scene, TextureLoader, UI, UnrealBloomBlurMaterial, Vector2, Vector3, WebGLRenderTarget, WebGLRenderer, getFullscreenTriangle, ticker } from '../../build/alien.three.js';
 
         const isDebug = /[?&]debug/.test(location.search);
 
@@ -85,16 +85,6 @@
             }
         }
 
-        class Star {
-            constructor() {
-                this.mag = 0;
-                this.absMag = 0;
-                this.color = new Color();
-                this.position = new Vector3();
-                // this.particle = null;
-            }
-        }
-
         class Stars extends Group {
             constructor() {
                 super();
@@ -103,22 +93,10 @@
             }
 
             async initPoints() {
-                const { camera, getTexture, resolution, time } = WorldController;
+                const { camera, resolution, time } = WorldController;
 
-                // Stars
                 const stars = await this.loadData();
-                console.log('initPoints', stars);
-                /* let stars = (await Promise.all([
-                    this.loadStars('../assets/stars/stars.0.bin'),
-                    // this.loadStars('../assets/stars/stars.1.bin'),
-                    // this.loadStars('../assets/stars/stars.2.bin'),
-                    // this.loadStars('../assets/stars/stars.3.bin'),
-                    // this.loadStars('../assets/stars/stars.4.bin'),
-                    // this.loadStars('../assets/stars/stars.5.bin')
-                ]));
-                console.log('initPoints', stars);
-                console.log('initPoints', stars.flat());
-                stars = stars.flat(); */
+                // console.log('initPoints', stars);
 
                 const vertices = [];
                 const colors = [];
@@ -132,14 +110,7 @@
                     colors[4 * i + 0] = star.color.r;
                     colors[4 * i + 1] = star.color.g;
                     colors[4 * i + 2] = star.color.b;
-                    // colors[4 * i + 3] = star.alpha;
-                    // colors[4 * i + 0] = star.color.r * MathUtils.mapLinear(star.alpha, 0, 1, 0, 1);
-                    // colors[4 * i + 1] = star.color.g * MathUtils.mapLinear(star.alpha, 0, 1, 0, 1);
-                    // colors[4 * i + 2] = star.color.b * MathUtils.mapLinear(star.alpha, 0, 1, 0, 1);
-                    // colors[4 * i + 3] = MathUtils.mapLinear(star.alpha, 0, 1, 0.25, 1);
                     colors[4 * i + 3] = star.alpha;
-                    // colors[4 * i + 3] = 1;
-                    // colors[4 * i + 3] = star.absMag;
                     indices[i] = i;
                 }
 
@@ -154,14 +125,12 @@
                         uScale: { value: window.devicePixelRatio / 2 },
                         uAlpha: { value: 1 },
                         uCameraNear: { value: camera.near },
-                        uCameraFar: { value: 1200 },
                         // uCameraFar: { value: camera.far },
+                        uCameraFar: { value: 1200 },
                         uResolution: resolution,
                         uTime: time
                     },
                     vertexShader: /* glsl */ `
-                        // #define PI 3.1415926538
-
                         in vec3 position;
                         in vec4 color;
 
@@ -170,42 +139,6 @@
                         uniform mat4 projectionMatrix;
                         uniform vec3 cameraPosition;
 
-                        /* #define PI 3.1415926538
-
-                        in vec4 color;
-                        out vec4 fColor;
-
-                        uniform float resolutionFactor;
-
-                        out float depth;
-
-                        // Returns the watts per km^2.
-                        float absoluteMagnitudeToFlux(float absoluteMagnitude, float distance) {
-                            float luminosityInWatts = 3.0128e28 * pow(10.0, absoluteMagnitude / -2.5);
-                            return luminosityInWatts / (4.0 * PI * distance * distance);
-                        }
-
-                        void main() {
-                            vec4 viewPosition = modelViewMatrix * vec4(position, 1.0);
-                            gl_Position = projectionMatrix * viewPosition;
-                            gl_Position.w = viewPosition.y;
-                            fColor = color;
-
-                            // Get the flux and brightness of the star at the camera's point.
-                            float absMag = color.a;
-                            float distance = length(viewPosition);
-                            float flux = absoluteMagnitudeToFlux(absMag, distance);
-                            float brightness = 2.0 * log(1.0 + flux * 1e4);
-
-                            // Adjust the color and size so that it is visually pleasing.
-                            fColor.a = clamp(brightness * resolutionFactor, 0.05, 1.0);
-                            gl_PointSize = clamp(brightness * 4.0 * resolutionFactor, 5.0, 24.0);
-
-                            // If it is too close, fade the star.
-                            fColor.a = mix(0.0, fColor.a, clamp((distance - 1.0e12) / 9.0e12, 0.0, 1.0));
-
-                            depth = gl_Position.w;
-                        } */
                         uniform float uScale;
                         uniform float uCameraNear;
                         uniform float uCameraFar;
@@ -213,12 +146,6 @@
 
                         out vec4 vColor;
                         out float vFade;
-
-                        // Returns the watts per km^2.
-                        // float absoluteMagnitudeToFlux(float absoluteMagnitude, float distance) {
-                        //     float luminosityInWatts = 3.0128e28 * pow(10.0, absoluteMagnitude / -2.5);
-                        //     return luminosityInWatts / (4.0 * PI * distance * distance);
-                        // }
 
                         void main() {
                             vColor = color;
@@ -231,47 +158,12 @@
                             float linearDepth = 1.0 / (uCameraFar - uCameraNear);
                             float linearPos = length(cameraPosition - worldPosition) * linearDepth;
 
-                            // Get the flux and brightness of the star at the camera's point.
-                            // float absMag = color.a;
-                            // float distance = length(mvPosition);
-                            // float flux = absoluteMagnitudeToFlux(absMag, distance);
-                            // float brightness = 2.0 * log(1.0 + flux * 1e4);
-
-                            // Adjust the color and size so that it is visually pleasing.
-                            // vColor.a = clamp(brightness * uScale, 0.05, 1.0);
-                            // gl_PointSize = clamp(brightness * 4.0 * uScale, 5.0, 24.0);
-
-                            // If it is too close, fade the star.
-                            // vColor.a = mix(0.0, vColor.a, clamp((distance - 1.0e12) / 9.0e12, 0.0, 1.0));
-
                             vFade = clamp(1.0 - linearPos, 0.0, 1.0);
-                            // vFade *= smoothstep(0.01, 0.02, linearPos);
-                            // vFade = 1.0;
                         }
                     `,
                     fragmentShader: /* glsl */ `
                         precision highp float;
 
-                        /* in vec4 fColor;
-
-                        uniform float invertDepth;
-                        uniform float nearDistance;
-                        uniform float midDistance;
-                        in float depth;
-
-                        out vec4 FragColor;
-
-                        void main(void) {
-                            float distanceFromEdge = clamp(1.0 - 2.0 * length(gl_PointCoord - vec2(0.5, 0.5)), 0.0, 1.0);
-                            float a = pow(distanceFromEdge, 5.0);
-                            FragColor.rgb = fColor.rgb;
-                            FragColor.a = fColor.a * a;
-
-                            float logFactor = 0.01254291648; // 1 / log2(1 + 1e24)
-                            float nearFactor = 0.5 * (depth - nearDistance) / (midDistance - nearDistance);
-                            float farFactor = 0.5 * (1.0 + log2(1.0 + depth - midDistance) * logFactor);
-                            gl_FragDepth = (1.0 - 2.0 * invertDepth) * (depth >= midDistance ? farFactor : nearFactor) + invertDepth;
-                        } */
                         uniform float uAlpha;
                         uniform float uCameraNear;
                         uniform float uCameraFar;
@@ -297,21 +189,19 @@
                 });
 
                 const points = new Points(geometry, material);
-                // points.matrixAutoUpdate = false;
-                // points.frustumCulled = false;
-                // points.visible = false;
+                points.matrixAutoUpdate = false;
+                points.frustumCulled = false;
                 points.renderOrder = -1; // Render first (default is 0)
                 points.userData.data = stars;
                 this.add(points);
 
-                this.material = material;
                 this.points = points;
             }
 
             async loadData() {
                 const buffer = await (await fetch('https://data.cyberspace.app/cyberspace_names.bin')).arrayBuffer();
                 const data = new DataView(buffer);
-                console.log('loadData', data);
+                // console.log('loadData', data);
                 let offset = 0;
 
                 const length = data.getUint32(offset, true); offset += 4;
@@ -335,44 +225,7 @@
                 return stars;
             }
 
-            async loadStars(path) {
-                const buffer = await (await fetch(path)).arrayBuffer();
-                const data = new DataView(buffer);
-                console.log('loadStars', data);
-                let offset = 0;
-
-                const length = data.getInt32(offset, true); offset += 4;
-                const stars = [];
-
-                for (let i = 0; i < length; i++) {
-                    const star = new Star();
-                    star.mag = data.getFloat32(offset, true); offset += 4;
-                    star.absMag = data.getFloat32(offset, true); offset += 4;
-                    star.color.r = data.getUint8(offset) / 255; offset += 1;
-                    star.color.g = data.getUint8(offset) / 255; offset += 1;
-                    star.color.b = data.getUint8(offset) / 255; offset += 1;
-                    console.log(star.color.getHexString());
-                    // star.color.div(star.color, star.color.max());
-                    star.color.r = star.color.r / Math.max(star.color.r, star.color.g, star.color.b);
-                    star.color.g = star.color.g / Math.max(star.color.r, star.color.g, star.color.b);
-                    star.color.b = star.color.b / Math.max(star.color.r, star.color.g, star.color.b);
-                    star.position.x = data.getFloat32(offset, true) / 9e12; offset += 4;
-                    star.position.y = -data.getFloat32(offset, true) / 9e12; offset += 4;
-                    star.position.z = data.getFloat32(offset, true) / 9e12; offset += 4;
-                    stars.push(star);
-                }
-
-                return stars;
-            }
-
             // Public methods
-
-            resize = (width, height, dpr) => {
-                // const scale = Math.sqrt(Math.max(width, height) * dpr) / 60;
-                // console.log('resize', width, height, dpr, scale);
-
-                // this.material.uniforms.resolutionFactor.value = scale;
-            };
 
             ready = () => this.initPoints();
         }
@@ -414,7 +267,7 @@
                     object.point = new Point3D(object.points, {
                         name: 'Dark Planet',
                         type: '',
-                        // noTracker: true
+                        noTracker: true
                     });
                     object.add(object.point);
                 });
@@ -566,11 +419,10 @@
         const BlurDirectionY = new Vector2(0, 1);
 
         class RenderManager {
-            static init(renderer, scene, camera, stars) {
+            static init(renderer, scene, camera) {
                 this.renderer = renderer;
                 this.scene = scene;
                 this.camera = camera;
-                this.stars = stars;
 
                 // Unreal bloom
                 // this.luminosityThreshold = 0.1;
@@ -639,10 +491,6 @@
 
                 // Blend it additively
                 this.bloomCompositeMaterial.blending = AdditiveBlending;
-
-                // Stars scene
-                // this.starsScene = new Scene();
-                // this.starsScene.add(this.stars);
 
                 // Copy material
                 this.copyMaterial = new CopyMaterial();
@@ -754,10 +602,6 @@
                 renderer.setRenderTarget(renderTargetB);
                 renderer.render(this.screen, this.screenCamera);
 
-                // Stars scene
-                // renderer.setRenderTarget(renderTargetB);
-                // renderer.render(this.starsScene, camera);
-
                 // Composite pass (render to screen)
                 this.compositeMaterial.uniforms.tMap.value = renderTargetB.texture;
                 this.screen.material = this.compositeMaterial;
@@ -792,7 +636,6 @@
                 // 3D scene
                 this.scene = new Scene();
                 this.scene.background = new Color(0x000000);
-                // this.camera = new PerspectiveCamera(75);
                 this.camera = new PerspectiveCamera(30);
                 this.camera.near = 0.1;
                 this.camera.far = 10000;
@@ -909,8 +752,6 @@
             }
 
             static initViews() {
-                const { camera } = WorldController;
-
                 this.view = new SceneView();
                 WorldController.scene.add(this.view);
 
@@ -922,7 +763,7 @@
             static initControllers() {
                 const { renderer, scene, camera } = WorldController;
 
-                RenderManager.init(renderer, scene, camera, this.stars);
+                RenderManager.init(renderer, scene, camera);
             }
 
             static initPanel() {
@@ -945,13 +786,11 @@
                 const dpr = window.devicePixelRatio;
 
                 WorldController.resize(width, height, dpr);
-                // this.stars.resize(width, height, dpr);
                 RenderManager.resize(width, height, dpr);
             };
 
             static onUpdate = (time, delta, frame) => {
                 WorldController.update(time, delta, frame);
-                // this.stars.update(time, delta, frame);
                 RenderManager.update(time, delta, frame);
                 PanelController.update(time);
                 this.ui.update();

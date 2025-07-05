@@ -163,15 +163,14 @@
                             p.z += snoise(position.zxy + uTime * 0.02);
 
                             vec4 mvPosition = modelViewMatrix * vec4(p, 1.0);
-
-                            gl_PointSize = uScale * (150.0 / -mvPosition.z);
                             gl_Position = projectionMatrix * mvPosition;
+                            gl_PointSize = uScale * (150.0 / -mvPosition.z);
 
                             vec3 worldPosition = (modelMatrix * vec4(p, 1.0)).xyz;
                             float linearDepth = 1.0 / (uCameraFar - uCameraNear);
                             float linearPos = length(cameraPosition - worldPosition) * linearDepth;
 
-                            vFade = 1.0 - linearPos * 0.75;
+                            vFade = clamp(1.0 - linearPos * 0.75, 0.0, 1.0);
                             vFade *= smoothstep(0.09, 0.13, linearPos);
                         }
                     `,
@@ -699,6 +698,11 @@
                 this.controls.update();
             };
 
+            static ready = () => Promise.all([
+                this.textureLoader.ready(),
+                this.environmentLoader.ready()
+            ]);
+
             // Global handlers
 
             static getTexture = (path, callback) => this.textureLoader.load(path, callback);
@@ -717,6 +721,8 @@
 
                 this.addListeners();
                 this.onResize();
+
+                await WorldController.ready();
 
                 this.initPanel();
             }

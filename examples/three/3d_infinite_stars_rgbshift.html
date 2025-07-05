@@ -15,9 +15,6 @@
 
         const isDebug = /[?&]debug/.test(location.search);
 
-        // Based on https://github.com/OGRECave/ogre/blob/master/Samples/Media/materials/programs/GLSL/Radial_Blur_FP.glsl
-        // Based on https://stackoverflow.com/questions/4579020/how-do-i-use-a-glsl-shader-to-apply-a-radial-blur-to-an-entire-scene
-
         import blur from '../../src/shaders/modules/blur/radial-blur8-rgbshift.glsl.js';
         import dither from '../../src/shaders/modules/dither/dither.glsl.js';
 
@@ -94,7 +91,7 @@
 
                 const vertices = [];
 
-                for (let i = 0; i < this.numParticles; i++) {
+                for (let i = 0, l = this.numParticles; i < l; i++) {
                     vertices[i * 3 + 0] = MathUtils.randFloatSpread(this.blockSize / 2);
                     vertices[i * 3 + 1] = MathUtils.randFloatSpread(this.blockSize / 2);
                     vertices[i * 3 + 2] = -this.blockSize / 2 + MathUtils.randFloatSpread(this.blockSize);
@@ -163,14 +160,12 @@
                     `,
                     transparent: true,
                     blending: AdditiveBlending,
-                    depthTest: false,
                     depthWrite: false
                 });
 
                 const points = new Points(geometry, material);
+                points.renderOrder = -1; // Render first (default is 0)
                 this.add(points);
-
-                this.material = material;
 
                 if (isDebug) {
                     const wireframe = new Mesh(
@@ -187,10 +182,9 @@
         }
 
         class InfiniteStars extends Group {
-            constructor(camera, numParticles, blockSize, zSpeed) {
+            constructor(numParticles, blockSize, zSpeed) {
                 super();
 
-                this.camera = camera;
                 this.numParticles = numParticles;
                 this.blockSize = blockSize;
                 this.zSpeed = zSpeed / 100;
@@ -230,22 +224,32 @@
             constructor() {
                 super();
 
-                this.initMesh();
+                this.initViews();
             }
 
-            async initMesh() {
+            initViews() {
+                this.stars = new InfiniteStars(1000, 40, isDebug ? 0.4 * 16 : 0.4);
+                this.add(this.stars);
             }
+
+            // Public methods
+
+            update = () => {
+                this.stars.update();
+            };
         }
 
         class PanelController {
-            static init(stars, ui) {
-                this.stars = stars;
+            static init(view, ui) {
+                this.view = view;
                 this.ui = ui;
 
                 this.initPanel();
             }
 
             static initPanel() {
+                const { stars } = this.view;
+
                 const items = [
                     {
                         name: 'FPS'
@@ -259,9 +263,9 @@
                         min: 0,
                         max: 10,
                         step: 0.1,
-                        value: this.stars.zSpeed * 100,
+                        value: stars.zSpeed * 100,
                         callback: value => {
-                            this.stars.zSpeed = value / 100;
+                            stars.zSpeed = value / 100;
                         }
                     }
                 ];
@@ -276,11 +280,10 @@
         const BlurDirectionY = new Vector2(0, 1);
 
         class RenderManager {
-            static init(renderer, scene, camera, stars) {
+            static init(renderer, scene, camera) {
                 this.renderer = renderer;
                 this.scene = scene;
                 this.camera = camera;
-                this.stars = stars;
 
                 // Unreal bloom
                 this.luminosityThreshold = 0.1;
@@ -348,10 +351,6 @@
 
                 // Blend it additively
                 this.bloomCompositeMaterial.blending = AdditiveBlending;
-
-                // Stars scene
-                this.starsScene = new Scene();
-                this.starsScene.add(this.stars);
 
                 // Copy material
                 this.copyMaterial = new CopyMaterial();
@@ -462,10 +461,6 @@
                 this.screen.material = this.bloomCompositeMaterial;
                 renderer.setRenderTarget(renderTargetB);
                 renderer.render(this.screen, this.screenCamera);
-
-                // Stars scene
-                renderer.setRenderTarget(renderTargetB);
-                renderer.render(this.starsScene, camera);
 
                 // Composite pass (render to screen)
                 this.compositeMaterial.uniforms.tMap.value = renderTargetB.texture;
@@ -600,12 +595,8 @@
             }
 
             static initViews() {
-                const { camera } = WorldController;
-
                 this.view = new SceneView();
                 WorldController.scene.add(this.view);
-
-                this.stars = new InfiniteStars(camera, 1000, 40, isDebug ? 0.4 * 16 : 0.4);
 
                 this.ui = new UI({ fps: true });
                 this.ui.animateIn();
@@ -615,11 +606,11 @@
             static initControllers() {
                 const { renderer, scene, camera } = WorldController;
 
-                RenderManager.init(renderer, scene, camera, this.stars);
+                RenderManager.init(renderer, scene, camera);
             }
 
             static initPanel() {
-                PanelController.init(this.stars, this.ui);
+                PanelController.init(this.view, this.ui);
             }
 
             static addListeners() {
@@ -641,7 +632,7 @@
 
             static onUpdate = (time, delta, frame) => {
                 WorldController.update(time, delta, frame);
-                this.stars.update(time, delta, frame);
+                this.view.update(time, delta, frame);
                 RenderManager.update(time, delta, frame);
                 this.ui.update();
             };

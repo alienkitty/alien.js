@@ -11,7 +11,7 @@
     <link rel="stylesheet" href="../assets/css/style.css">
 
     <script type="module">
-        import { AdditiveBlending, BloomCompositeMaterial, BufferGeometry, Color, ColorManagement, CopyMaterial, Float32BufferAttribute, Flowmap, GLSL3, Group, LinearSRGBColorSpace, LuminosityMaterial, MathUtils, Mesh, NoBlending, OrbitControls, OrthographicCamera, PanelItem, PerspectiveCamera, Point3D, Points, RawShaderMaterial, Scene, TextureLoader, UI, UnrealBloomBlurMaterial, Vector2, Vector3, WebGLRenderTarget, WebGLRenderer, getFullscreenTriangle, ticker } from '../../build/alien.three.js';
+        import { AdditiveBlending, BloomCompositeMaterial, BufferGeometry, Color, ColorManagement, CopyMaterial, Float32BufferAttribute, Fluid, GLSL3, Group, LinearSRGBColorSpace, LuminosityMaterial, MathUtils, Mesh, NoBlending, OrbitControls, OrthographicCamera, PanelItem, PerspectiveCamera, Point3D, Points, RawShaderMaterial, Scene, TextureLoader, UI, UnrealBloomBlurMaterial, Vector2, Vector3, WebGLRenderTarget, WebGLRenderer, getFullscreenTriangle, ticker } from '../../build/alien.three.js';
 
         const isDebug = /[?&]debug/.test(location.search);
 
@@ -24,7 +24,7 @@
                     glslVersion: GLSL3,
                     uniforms: {
                         tMap: { value: null },
-                        tFlow: { value: null },
+                        tFluid: { value: null },
                         uBlurDist: { value: 1 },
                         uBlurAmount: { value: 2.2 },
                         uRGBAmount: { value: 1.1 }
@@ -45,7 +45,7 @@
                         precision highp float;
 
                         uniform sampler2D tMap;
-                        uniform sampler2D tFlow;
+                        uniform sampler2D tFluid;
                         uniform float uBlurDist;
                         uniform float uBlurAmount;
                         uniform float uRGBAmount;
@@ -58,12 +58,8 @@
                         ${dither}
 
                         void main() {
-                            // R and G values are velocity in the X and Y direction
-                            // B value is the velocity length
-                            vec3 flow = texture(tFlow, vUv).rgb;
-
-                            // Use flow to adjust the UV lookup of a texture
-                            // vec2 uv = vUv - flow.rg * 0.05;
+                            vec3 fluid = texture(tFluid, vUv).rgb;
+                            // vec2 uv = vUv - fluid.rg * 0.0002;
                             vec2 uv = vUv;
 
                             vec2 dir = 0.5 - vUv;
@@ -132,7 +128,7 @@
                 const material = new RawShaderMaterial({
                     glslVersion: GLSL3,
                     uniforms: {
-                        tFlow: { value: null },
+                        tFluid: { value: null },
                         uScale: { value: window.devicePixelRatio / 2 },
                         uAlpha: { value: 1 },
                         uCameraNear: { value: camera.near },
@@ -150,7 +146,7 @@
                         uniform mat4 projectionMatrix;
                         uniform vec3 cameraPosition;
 
-                        uniform sampler2D tFlow;
+                        uniform sampler2D tFluid;
                         uniform float uScale;
                         uniform float uCameraNear;
                         uniform float uCameraFar;
@@ -170,10 +166,8 @@
                             vec2 screenUv = gl_Position.xy / gl_Position.w;
                             screenUv = screenUv * 0.5 + 0.5;
 
-                            // R and G values are velocity in the X and Y direction
-                            // B value is the velocity length
-                            vec3 flow = texture(tFlow, screenUv).rgb;
-                            gl_Position.xy += flow.rg;
+                            vec3 fluid = texture(tFluid, screenUv).rgb;
+                            gl_Position.xy += fluid.rg * 0.002;
 
                             vec3 worldPosition = (modelMatrix * vec4(position, 1.0)).xyz;
                             float linearDepth = 1.0 / (uCameraFar - uCameraNear);
@@ -459,10 +453,7 @@
                 this.width = 1;
                 this.height = 1;
 
-                // Flowmap
-                this.mouse = new Vector2(-1, -1);
-                this.velocity = new Vector2();
-                this.lastTime = null;
+                // Fluid simulation
                 this.lastMouse = new Vector2();
 
                 // Unreal bloom
@@ -509,9 +500,11 @@
 
                 this.renderTargetA.depthBuffer = true;
 
-                // Flowmap
-                this.flowmap = new Flowmap(this.renderer);
-                this.flowmap.material.uniforms.uAspect = aspect;
+                // Fluid simulation
+                this.fluid = new Fluid(this.renderer, {
+                    curlStrength: 0
+                });
+                this.fluid.splatMaterial.uniforms.uAspect = aspect;
 
                 // Luminosity high pass material
                 this.luminosityMaterial = new LuminosityMaterial();
@@ -543,11 +536,11 @@
                 this.copyMaterial = new CopyMaterial();
 
                 // Stars scene
-                this.view.stars.material.uniforms.tFlow = this.flowmap.uniform;
+                this.view.stars.material.uniforms.tFluid = this.fluid.uniform;
 
                 // Composite material
                 this.compositeMaterial = new CompositeMaterial();
-                this.compositeMaterial.uniforms.tFlow = this.flowmap.uniform;
+                this.compositeMaterial.uniforms.tFluid = this.fluid.uniform;
             }
 
             static bloomFactors() {
@@ -583,15 +576,9 @@
                     y: clientY
                 };
 
-                // Get mouse value in 0 to 1 range, with Y flipped
-                this.mouse.set(
-                    event.x / this.width,
-                    1 - event.y / this.height
-                );
-
-                // Calculate velocity
-                if (!this.lastTime) {
-                    this.lastTime = performance.now();
+                // First input
+                if (!this.lastMouse.isInit) {
+                    this.lastMouse.isInit = true;
                     this.lastMouse.copy(event);
                 }
 
@@ -600,17 +587,17 @@
 
                 this.lastMouse.copy(event);
 
-                const time = performance.now();
-
-                // Avoid dividing by 0
-                const delta = Math.max(14, time - this.lastTime);
-                this.lastTime = time;
-
-                this.velocity.x = deltaX / delta;
-                this.velocity.y = deltaY / delta;
-
-                // Flag update to prevent hanging velocity values when not moving
-                this.velocity.needsUpdate = true;
+                // Add if the mouse is moving
+                if (Math.abs(deltaX) || Math.abs(deltaY)) {
+                    // Update fluid simulation inputs
+                    this.fluid.splats.push({
+                        // Get mouse value in 0 to 1 range, with Y flipped
+                        x: event.x / this.width,
+                        y: 1 - event.y / this.height,
+                        dx: deltaX * 5,
+                        dy: deltaY * -5
+                    });
+                }
             };
 
             static onPointerUp = e => {
@@ -667,20 +654,8 @@
                 const renderTargetsHorizontal = this.renderTargetsHorizontal;
                 const renderTargetsVertical = this.renderTargetsVertical;
 
-                // Reset velocity when mouse not moving
-                if (!this.velocity.needsUpdate) {
-                    this.mouse.set(-1, -1);
-                    this.velocity.set(0, 0);
-                    this.lastTime = null;
-                }
-                this.velocity.needsUpdate = false;
-
-                // Update flowmap inputs
-                this.flowmap.mouse.copy(this.mouse);
-
-                // Ease velocity input, slower when fading out
-                this.flowmap.velocity.lerp(this.velocity, this.velocity.length() ? 0.5 : 0.1);
-                this.flowmap.update();
+                // Perform all of the fluid simulation renders
+                this.fluid.update();
 
                 // Scene pass
                 renderer.setRenderTarget(renderTargetA);

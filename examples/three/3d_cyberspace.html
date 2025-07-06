@@ -11,7 +11,7 @@
     <link rel="stylesheet" href="../assets/css/style.css">
 
     <script type="module">
-        import { AdditiveBlending, BloomCompositeMaterial, BufferGeometry, Color, ColorManagement, CopyMaterial, Float32BufferAttribute, Fluid, GLSL3, Group, LinearSRGBColorSpace, LuminosityMaterial, MathUtils, Mesh, NoBlending, OrbitControls, OrthographicCamera, PanelItem, PerspectiveCamera, Point3D, Points, RawShaderMaterial, Scene, TextureLoader, UI, UnrealBloomBlurMaterial, Vector2, Vector3, WebGLRenderTarget, WebGLRenderer, getFullscreenTriangle, ticker } from '../../build/alien.three.js';
+        import { AdditiveBlending, BloomCompositeMaterial, BufferGeometry, Color, ColorManagement, CopyMaterial, Float32BufferAttribute, GLSL3, Group, LinearSRGBColorSpace, LuminosityMaterial, MathUtils, Mesh, NoBlending, OrbitControls, OrthographicCamera, PanelItem, PerspectiveCamera, Point3D, Points, RawShaderMaterial, Scene, TextureLoader, UI, UnrealBloomBlurMaterial, Vector2, Vector3, WebGLRenderTarget, WebGLRenderer, getFullscreenTriangle, ticker } from '../../build/alien.three.js';
 
         const isDebug = /[?&]debug/.test(location.search);
 
@@ -24,7 +24,6 @@
                     glslVersion: GLSL3,
                     uniforms: {
                         tMap: { value: null },
-                        tFluid: { value: null },
                         uBlurDist: { value: 1 },
                         uBlurAmount: { value: 2.2 },
                         uRGBAmount: { value: 1.1 }
@@ -45,7 +44,6 @@
                         precision highp float;
 
                         uniform sampler2D tMap;
-                        uniform sampler2D tFluid;
                         uniform float uBlurDist;
                         uniform float uBlurAmount;
                         uniform float uRGBAmount;
@@ -58,17 +56,13 @@
                         ${dither}
 
                         void main() {
-                            vec3 fluid = texture(tFluid, vUv).rgb;
-                            // vec2 uv = vUv - fluid.rg * 0.0002;
-                            vec2 uv = vUv;
-
                             vec2 dir = 0.5 - vUv;
                             float dist = length(dir);
                             dist = clamp(smoothstep(0.4, 1.0, dist), 0.0, 1.0);
                             float angle = atan(dir.y, dir.x);
-                            float amount = 0.002 * dist * uRGBAmount + fluid.b * 0.001;
+                            float amount = 0.002 * dist * uRGBAmount;
 
-                            FragColor = radialBlurRGB(tMap, uv, 0.1 * dist * uBlurDist, uBlurAmount, angle, amount);
+                            FragColor = radialBlurRGB(tMap, vUv, 0.1 * dist * uBlurDist, uBlurAmount, angle, amount);
 
                             FragColor.rgb = dither(FragColor.rgb);
                             FragColor.a = 1.0;
@@ -128,7 +122,6 @@
                 const material = new RawShaderMaterial({
                     glslVersion: GLSL3,
                     uniforms: {
-                        tFluid: { value: null },
                         uScale: { value: window.devicePixelRatio / 2 },
                         uAlpha: { value: 1 },
                         uCameraNear: { value: camera.near },
@@ -146,7 +139,6 @@
                         uniform mat4 projectionMatrix;
                         uniform vec3 cameraPosition;
 
-                        uniform sampler2D tFluid;
                         uniform float uScale;
                         uniform float uCameraNear;
                         uniform float uCameraFar;
@@ -161,13 +153,6 @@
                             vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
                             gl_Position = projectionMatrix * mvPosition;
                             gl_PointSize = 11.0 * uScale;
-
-                            // Get vertex position in screen space coordinates
-                            vec2 screenUv = gl_Position.xy / gl_Position.w;
-                            screenUv = screenUv * 0.5 + 0.5;
-
-                            vec3 fluid = texture(tFluid, screenUv).rgb;
-                            gl_Position.xy += fluid.rg * 0.002;
 
                             vec3 worldPosition = (modelMatrix * vec4(position, 1.0)).xyz;
                             float linearDepth = 1.0 / (uCameraFar - uCameraNear);
@@ -331,80 +316,11 @@
             }
 
             static initPanel() {
-                const { fluid, luminosityMaterial, bloomCompositeMaterial, compositeMaterial } = RenderManager;
+                const { luminosityMaterial, bloomCompositeMaterial, compositeMaterial } = RenderManager;
 
                 const items = [
                     {
                         name: 'FPS'
-                    },
-                    {
-                        type: 'divider'
-                    },
-                    {
-                        type: 'slider',
-                        name: 'Iterate',
-                        min: 0,
-                        max: 10,
-                        step: 1,
-                        value: fluid.iterations,
-                        callback: value => {
-                            fluid.iterations = value;
-                        }
-                    },
-                    {
-                        type: 'slider',
-                        name: 'Density',
-                        min: 0,
-                        max: 1,
-                        step: 0.01,
-                        value: fluid.densityDissipation,
-                        callback: value => {
-                            fluid.densityDissipation = value;
-                        }
-                    },
-                    {
-                        type: 'slider',
-                        name: 'Velocity',
-                        min: 0,
-                        max: 1,
-                        step: 0.01,
-                        value: fluid.velocityDissipation,
-                        callback: value => {
-                            fluid.velocityDissipation = value;
-                        }
-                    },
-                    {
-                        type: 'slider',
-                        name: 'Pressure',
-                        min: 0,
-                        max: 1,
-                        step: 0.01,
-                        value: fluid.pressureDissipation,
-                        callback: value => {
-                            fluid.pressureDissipation = value;
-                        }
-                    },
-                    {
-                        type: 'slider',
-                        name: 'Curl',
-                        min: 0,
-                        max: 50,
-                        step: 0.1,
-                        value: fluid.curlStrength,
-                        callback: value => {
-                            fluid.curlStrength = value;
-                        }
-                    },
-                    {
-                        type: 'slider',
-                        name: 'Radius',
-                        min: 0,
-                        max: 1,
-                        step: 0.01,
-                        value: fluid.radius,
-                        callback: value => {
-                            fluid.radius = value;
-                        }
                     },
                     {
                         type: 'divider'
@@ -513,17 +429,10 @@
         const BlurDirectionY = new Vector2(0, 1);
 
         class RenderManager {
-            static init(renderer, scene, camera, view) {
+            static init(renderer, scene, camera) {
                 this.renderer = renderer;
                 this.scene = scene;
                 this.camera = camera;
-                this.view = view;
-
-                this.width = 1;
-                this.height = 1;
-
-                // Fluid simulation
-                this.lastMouse = new Vector2();
 
                 // Unreal bloom
                 // this.luminosityThreshold = 0.1;
@@ -535,12 +444,10 @@
                 this.enabled = true;
 
                 this.initRenderer();
-
-                this.addListeners();
             }
 
             static initRenderer() {
-                const { screenTriangle, aspect } = WorldController;
+                const { screenTriangle } = WorldController;
 
                 // Manually clear
                 this.renderer.autoClear = false;
@@ -568,13 +475,6 @@
                 }
 
                 this.renderTargetA.depthBuffer = true;
-
-                // Fluid simulation
-                this.fluid = new Fluid(this.renderer, {
-                    curlStrength: 0,
-                    radius: 1
-                });
-                this.fluid.splatMaterial.uniforms.uAspect = aspect;
 
                 // Luminosity high pass material
                 this.luminosityMaterial = new LuminosityMaterial();
@@ -605,12 +505,8 @@
                 // Copy material
                 this.copyMaterial = new CopyMaterial();
 
-                // Stars scene
-                this.view.stars.material.uniforms.tFluid = this.fluid.uniform;
-
                 // Composite material
                 this.compositeMaterial = new CompositeMaterial();
-                this.compositeMaterial.uniforms.tFluid = this.fluid.uniform;
             }
 
             static bloomFactors() {
@@ -624,62 +520,9 @@
                 return bloomFactors;
             }
 
-            static addListeners() {
-                window.addEventListener('pointerdown', this.onPointerDown);
-                window.addEventListener('pointermove', this.onPointerMove);
-                window.addEventListener('pointerup', this.onPointerUp);
-            }
-
-            // Event handlers
-
-            static onPointerDown = e => {
-                this.onPointerMove(e);
-            };
-
-            static onPointerMove = ({ clientX, clientY }) => {
-                if (!this.enabled) {
-                    return;
-                }
-
-                const event = {
-                    x: clientX,
-                    y: clientY
-                };
-
-                // First input
-                if (!this.lastMouse.isInit) {
-                    this.lastMouse.isInit = true;
-                    this.lastMouse.copy(event);
-                }
-
-                const deltaX = event.x - this.lastMouse.x;
-                const deltaY = event.y - this.lastMouse.y;
-
-                this.lastMouse.copy(event);
-
-                // Add if the mouse is moving
-                if (Math.abs(deltaX) || Math.abs(deltaY)) {
-                    // Update fluid simulation inputs
-                    this.fluid.splats.push({
-                        // Get mouse value in 0 to 1 range, with Y flipped
-                        x: event.x / this.width,
-                        y: 1 - event.y / this.height,
-                        dx: deltaX * 5,
-                        dy: deltaY * -5
-                    });
-                }
-            };
-
-            static onPointerUp = e => {
-                this.onPointerMove(e);
-            };
-
             // Public methods
 
             static resize = (width, height, dpr) => {
-                this.width = width;
-                this.height = height;
-
                 this.renderer.setPixelRatio(dpr);
                 this.renderer.setSize(width, height);
 
@@ -723,9 +566,6 @@
                 const renderTargetBright = this.renderTargetBright;
                 const renderTargetsHorizontal = this.renderTargetsHorizontal;
                 const renderTargetsVertical = this.renderTargetsVertical;
-
-                // Perform all of the fluid simulation renders
-                this.fluid.update();
 
                 // Scene pass
                 renderer.setRenderTarget(renderTargetA);
@@ -910,14 +750,13 @@
             static async init() {
                 this.initWorld();
                 this.initViews();
-
-                await this.view.ready();
-                await WorldController.ready();
-
                 this.initControllers();
 
                 this.addListeners();
                 this.onResize();
+
+                await this.view.ready();
+                await WorldController.ready();
 
                 this.initPanel();
             }
@@ -939,7 +778,7 @@
             static initControllers() {
                 const { renderer, scene, camera } = WorldController;
 
-                RenderManager.init(renderer, scene, camera, this.view);
+                RenderManager.init(renderer, scene, camera);
             }
 
             static initPanel() {

@@ -265,8 +265,9 @@
 
                 objects.forEach(object => {
                     object.point = new Point3D(object.points, {
-                        name: 'Dark Planet',
+                        name: '',
                         type: '',
+                        noLine: true,
                         noTracker: true
                     });
                     object.add(object.point);
@@ -274,13 +275,21 @@
             }
 
             static addListeners() {
+                Point3D.events.on('hover', this.onHover);
                 Point3D.events.on('click', this.onClick);
             }
 
             // Event handlers
 
-            static onClick = ({ target }) => {
-                console.log('onClick', target);
+            static onHover = ({ type, index, target }) => {
+                console.log('onHover', type, index, target, Array.isArray(target.object.userData.data) && target.object.userData.data[index]);
+                if (Array.isArray(target.object.userData.data)) {
+                    target.setData({ name: target.object.userData.data[index].name });
+                }
+            };
+
+            static onClick = ({ index, target }) => {
+                console.log('onClick', index, target, Array.isArray(target.object.userData.data) && target.object.userData.data[index]);
             };
         }
 
@@ -641,6 +650,8 @@
                 this.camera.far = 10000;
                 this.camera.position.z = 530;
                 this.camera.lookAt(this.scene.position);
+                this.cameraWorldPosition = new Vector3();
+                this.worldPosition = new Vector3();
 
                 // Global geometries
                 this.screenTriangle = getFullscreenTriangle();
@@ -670,6 +681,7 @@
                 // this.controls.panSpeed = 0.01;
                 // this.controls.autoRotate = true;
                 // this.controls.autoRotateSpeed = 0.1;
+                this.controls.minDistance = 0.2;
 
                 // https://discourse.threejs.org/t/solved-rotate-camera-to-face-point-on-sphere/1676
                 const point = new Vector3(
@@ -699,12 +711,6 @@
                 this.camera.aspect = width / height;
                 this.camera.updateProjectionMatrix();
 
-                /* if (width < height) {
-                    this.camera.position.z = 10;
-                } else {
-                    this.camera.position.z = 8;
-                } */
-
                 width = Math.round(width * dpr);
                 height = Math.round(height * dpr);
 
@@ -718,6 +724,14 @@
                 this.frame.value = frame;
 
                 this.controls.update();
+
+                if (Point3D.points && Point3D.points.length) {
+                    this.cameraWorldPosition.setFromMatrixPosition(this.camera.matrixWorld);
+                    this.worldPosition.setFromMatrixPosition(Point3D.points[0].mesh.matrixWorld);
+
+                    Point3D.raycaster.params.Points.threshold = MathUtils.clamp(MathUtils.mapLinear(this.cameraWorldPosition.distanceTo(this.worldPosition), 0.1, 30, 0.005, 0.1), 0.005, 0.1);
+                    Point3D.points[0].mesh.scale.setScalar(Point3D.raycaster.params.Points.threshold);
+                }
             };
 
             static ready = () => Promise.all([

@@ -63,7 +63,8 @@
                             vec3 flow = texture(tFlow, vUv).rgb;
 
                             // Use flow to adjust the UV lookup of a texture
-                            vec2 uv = vUv - flow.rg * 0.05;
+                            // vec2 uv = vUv - flow.rg * 0.05;
+                            vec2 uv = vUv;
 
                             vec2 dir = 0.5 - vUv;
                             float dist = length(dir);
@@ -131,6 +132,7 @@
                 const material = new RawShaderMaterial({
                     glslVersion: GLSL3,
                     uniforms: {
+                        tFlow: { value: null },
                         uScale: { value: window.devicePixelRatio / 2 },
                         uAlpha: { value: 1 },
                         uCameraNear: { value: camera.near },
@@ -148,6 +150,7 @@
                         uniform mat4 projectionMatrix;
                         uniform vec3 cameraPosition;
 
+                        uniform sampler2D tFlow;
                         uniform float uScale;
                         uniform float uCameraNear;
                         uniform float uCameraFar;
@@ -162,6 +165,15 @@
                             vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
                             gl_Position = projectionMatrix * mvPosition;
                             gl_PointSize = 11.0 * uScale;
+
+                            // Get vertex position in screen space coordinates
+                            vec2 screenUv = gl_Position.xy / gl_Position.w;
+                            screenUv = screenUv * 0.5 + 0.5;
+
+                            // R and G values are velocity in the X and Y direction
+                            // B value is the velocity length
+                            vec3 flow = texture(tFlow, screenUv).rgb;
+                            gl_Position.xy += flow.rg;
 
                             vec3 worldPosition = (modelMatrix * vec4(position, 1.0)).xyz;
                             float linearDepth = 1.0 / (uCameraFar - uCameraNear);
@@ -205,6 +217,7 @@
                 this.add(points);
 
                 this.points = points;
+                this.material = material;
             }
 
             async loadData() {
@@ -437,10 +450,11 @@
         const BlurDirectionY = new Vector2(0, 1);
 
         class RenderManager {
-            static init(renderer, scene, camera) {
+            static init(renderer, scene, camera, view) {
                 this.renderer = renderer;
                 this.scene = scene;
                 this.camera = camera;
+                this.view = view;
 
                 this.width = 1;
                 this.height = 1;
@@ -527,6 +541,9 @@
 
                 // Copy material
                 this.copyMaterial = new CopyMaterial();
+
+                // Stars scene
+                this.view.stars.material.uniforms.tFlow = this.flowmap.uniform;
 
                 // Composite material
                 this.compositeMaterial = new CompositeMaterial();
@@ -848,13 +865,14 @@
             static async init() {
                 this.initWorld();
                 this.initViews();
+
+                await this.view.ready();
+                await WorldController.ready();
+
                 this.initControllers();
 
                 this.addListeners();
                 this.onResize();
-
-                await this.view.ready();
-                await WorldController.ready();
 
                 this.initPanel();
             }
@@ -876,7 +894,7 @@
             static initControllers() {
                 const { renderer, scene, camera } = WorldController;
 
-                RenderManager.init(renderer, scene, camera);
+                RenderManager.init(renderer, scene, camera, this.view);
             }
 
             static initPanel() {

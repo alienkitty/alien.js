@@ -331,11 +331,80 @@
             }
 
             static initPanel() {
-                const { luminosityMaterial, bloomCompositeMaterial, compositeMaterial } = RenderManager;
+                const { fluid, luminosityMaterial, bloomCompositeMaterial, compositeMaterial } = RenderManager;
 
                 const items = [
                     {
                         name: 'FPS'
+                    },
+                    {
+                        type: 'divider'
+                    },
+                    {
+                        type: 'slider',
+                        name: 'Iterate',
+                        min: 0,
+                        max: 10,
+                        step: 1,
+                        value: fluid.iterations,
+                        callback: value => {
+                            fluid.iterations = value;
+                        }
+                    },
+                    {
+                        type: 'slider',
+                        name: 'Density',
+                        min: 0,
+                        max: 1,
+                        step: 0.01,
+                        value: fluid.densityDissipation,
+                        callback: value => {
+                            fluid.densityDissipation = value;
+                        }
+                    },
+                    {
+                        type: 'slider',
+                        name: 'Velocity',
+                        min: 0,
+                        max: 1,
+                        step: 0.01,
+                        value: fluid.velocityDissipation,
+                        callback: value => {
+                            fluid.velocityDissipation = value;
+                        }
+                    },
+                    {
+                        type: 'slider',
+                        name: 'Pressure',
+                        min: 0,
+                        max: 1,
+                        step: 0.01,
+                        value: fluid.pressureDissipation,
+                        callback: value => {
+                            fluid.pressureDissipation = value;
+                        }
+                    },
+                    {
+                        type: 'slider',
+                        name: 'Curl',
+                        min: 0,
+                        max: 50,
+                        step: 0.1,
+                        value: fluid.curlStrength,
+                        callback: value => {
+                            fluid.curlStrength = value;
+                        }
+                    },
+                    {
+                        type: 'slider',
+                        name: 'Radius',
+                        min: 0,
+                        max: 1,
+                        step: 0.01,
+                        value: fluid.radius,
+                        callback: value => {
+                            fluid.radius = value;
+                        }
                     },
                     {
                         type: 'divider'

@@ -66,7 +66,7 @@
                             float dist = length(dir);
                             dist = clamp(smoothstep(0.4, 1.0, dist), 0.0, 1.0);
                             float angle = atan(dir.y, dir.x);
-                            float amount = 0.002 * dist * uRGBAmount;
+                            float amount = 0.002 * dist * uRGBAmount + fluid.b * 0.001;
 
                             FragColor = radialBlurRGB(tMap, uv, 0.1 * dist * uBlurDist, uBlurAmount, angle, amount);
 
@@ -571,7 +571,8 @@
 
                 // Fluid simulation
                 this.fluid = new Fluid(this.renderer, {
-                    curlStrength: 0
+                    curlStrength: 0,
+                    radius: 1
                 });
                 this.fluid.splatMaterial.uniforms.uAspect = aspect;
 

@@ -11,9 +11,55 @@
     <link rel="stylesheet" href="../assets/css/style.css">
 
     <script type="module">
-        import { AdditiveBlending, BloomCompositeMaterial, BufferGeometry, Color, ColorManagement, CopyMaterial, Float32BufferAttribute, GLSL3, Group, LinearSRGBColorSpace, LuminosityMaterial, MathUtils, Mesh, NoBlending, OrbitControls, OrthographicCamera, PanelItem, PerspectiveCamera, Point3D, Points, RawShaderMaterial, Scene, TextureLoader, UI, UnrealBloomBlurMaterial, Vector2, Vector3, WebGLRenderTarget, WebGLRenderer, getFullscreenTriangle, ticker } from '../../build/alien.three.js';
+        import { AdditiveBlending, AssetLoader, BloomCompositeMaterial, BufferGeometry, Color, ColorManagement, CopyMaterial, Float32BufferAttribute, GLSL3, Group, LinearSRGBColorSpace, LuminosityMaterial, MathUtils, Mesh, NoBlending, OrbitControls, OrthographicCamera, PanelItem, PerspectiveCamera, Point3D, Points, RawShaderMaterial, Scene, TextureLoader, UI, UnrealBloomBlurMaterial, Vector2, Vector3, WebGLRenderTarget, WebGLRenderer, getFullscreenTriangle, ticker } from '../../build/alien.three.js';
 
         const isDebug = /[?&]debug/.test(location.search);
+
+        class CyberspaceStar {
+            constructor() {
+                this.id = 0;
+                this.name = '';
+                this.position = new Vector3();
+                this.color = new Color();
+                this.alpha = 1;
+            }
+        }
+
+        class Data {
+            static init(buffer, geoip) {
+                const view = new DataView(buffer);
+                const decoder = new TextDecoder();
+                let offset = 0;
+
+                const length = view.getUint32(offset, true); offset += 4;
+                const stars = [];
+
+                for (let i = 0; i < length; i++) {
+                    const star = new CyberspaceStar();
+                    star.id = view.getUint32(offset, true); offset += 4;
+                    star.name = decoder.decode(view.buffer.slice(offset, offset + 32)).replace(/\0/g, '') || 'Unknown'; offset += 32;
+                    star.position.x = view.getFloat32(offset, true) * 500; offset += 4;
+                    star.position.y = view.getFloat32(offset, true) * 500; offset += 4;
+                    star.position.z = view.getFloat32(offset, true) * 500; offset += 4;
+                    star.color.r = view.getUint8(offset) / 255; offset += 1;
+                    star.color.g = view.getUint8(offset) / 255; offset += 1;
+                    star.color.b = view.getUint8(offset) / 255; offset += 1;
+                    // star.alpha = view.getUint8(offset) / 255; offset += 1;
+                    star.alpha = MathUtils.mapLinear(view.getUint8(offset) / 255, 0, 1, 0.25, 1); offset += 1;
+                    stars.push(star);
+
+                    if (star.id === geoip.geoname_id) {
+                        console.log('init', star);
+                        this.id = star.id;
+                        this.point = star.position.clone();
+                    }
+                }
+
+                this.stars = stars;
+                this.geoip = geoip;
+                console.log('init', view, this.stars, this.geoip);
+            }
+        }
 
         import blur from '../../src/shaders/modules/blur/radial-blur8-rgbshift.glsl.js';
         import dither from '../../src/shaders/modules/dither/dither.glsl.js';
@@ -75,35 +121,22 @@
             }
         }
 
-        class CyberspaceStar {
-            constructor() {
-                this.id = 0;
-                this.name = '';
-                this.position = new Vector3();
-                this.color = new Color();
-                this.alpha = 1;
-            }
-        }
-
         class Stars extends Group {
             constructor() {
                 super();
 
-                this.decoder = new TextDecoder();
+                this.initPoints();
             }
 
-            async initPoints() {
+            initPoints() {
                 const { camera, resolution, time } = WorldController;
-
-                const stars = await this.loadData();
-                // console.log('initPoints', stars);
 
                 const vertices = [];
                 const colors = [];
                 const indices = [];
 
-                for (let i = 0, l = stars.length; i < l; i++) {
-                    const star = stars[i];
+                for (let i = 0, l = Data.stars.length; i < l; i++) {
+                    const star = Data.stars[i];
                     vertices[3 * i + 0] = star.position.x;
                     vertices[3 * i + 1] = star.position.y;
                     vertices[3 * i + 2] = star.position.z;
@@ -192,43 +225,11 @@
                 points.matrixAutoUpdate = false;
                 points.frustumCulled = false;
                 points.renderOrder = -1; // Render first (default is 0)
-                points.userData.data = stars;
                 this.add(points);
 
                 this.points = points;
                 this.material = material;
             }
-
-            async loadData() {
-                const buffer = await (await fetch('https://data.cyberspace.app/cyberspace_names.bin')).arrayBuffer();
-                const data = new DataView(buffer);
-                // console.log('loadData', data);
-                let offset = 0;
-
-                const length = data.getUint32(offset, true); offset += 4;
-                const stars = [];
-
-                for (let i = 0; i < length; i++) {
-                    const star = new CyberspaceStar();
-                    star.id = data.getUint32(offset, true); offset += 4;
-                    star.name = this.decoder.decode(data.buffer.slice(offset, offset + 32)).replace(/\0/g, '') || 'Unknown'; offset += 32;
-                    star.position.x = data.getFloat32(offset, true) * 500; offset += 4;
-                    star.position.y = data.getFloat32(offset, true) * 500; offset += 4;
-                    star.position.z = data.getFloat32(offset, true) * 500; offset += 4;
-                    star.color.r = data.getUint8(offset) / 255; offset += 1;
-                    star.color.g = data.getUint8(offset) / 255; offset += 1;
-                    star.color.b = data.getUint8(offset) / 255; offset += 1;
-                    // star.alpha = data.getUint8(offset) / 255; offset += 1;
-                    star.alpha = MathUtils.mapLinear(data.getUint8(offset) / 255, 0, 1, 0.25, 1); offset += 1;
-                    stars.push(star);
-                }
-
-                return stars;
-            }
-
-            // Public methods
-
-            ready = () => this.initPoints();
         }
 
         class SceneView extends Group {
@@ -242,12 +243,6 @@
                 this.stars = new Stars();
                 this.add(this.stars);
             }
-
-            // Public methods
-
-            ready = () => Promise.all([
-                this.stars.ready()
-            ]);
         }
 
         class ScenePanelController {
@@ -283,14 +278,12 @@
             // Event handlers
 
             static onHover = ({ type, index, target }) => {
-                console.log('onHover', type, index, target, Array.isArray(target.object.userData.data) && target.object.userData.data[index]);
-                if (Array.isArray(target.object.userData.data)) {
-                    target.setData({ name: target.object.userData.data[index].name });
-                }
+                console.log('onHover', type, index, target, Data.stars[index]);
+                target.setData({ name: Data.stars[index].name });
             };
 
             static onClick = ({ index, target }) => {
-                console.log('onClick', index, target, Array.isArray(target.object.userData.data) && target.object.userData.data[index]);
+                console.log('onClick', index, target, Data.stars[index]);
             };
         }
 
@@ -683,17 +676,6 @@
                 // this.controls.autoRotate = true;
                 // this.controls.autoRotateSpeed = 0.1;
                 this.controls.minDistance = 0.2;
-
-                // https://discourse.threejs.org/t/solved-rotate-camera-to-face-point-on-sphere/1676
-                const point = new Vector3(
-                    -0.7597491048133722 * 500,
-                    0.6312493579409182 * 500,
-                    0.16856727138800318 * 500
-                );
-                const camDistance = this.camera.position.length();
-
-                this.camera.position.copy(point).normalize().multiplyScalar(camDistance);
-                this.controls.target.copy(point);
             }
 
             static addListeners() {
@@ -707,6 +689,14 @@
             };
 
             // Public methods
+
+            static setPoint(point) {
+                // https://discourse.threejs.org/t/solved-rotate-camera-to-face-point-on-sphere/1676
+                const camDistance = this.camera.position.length();
+
+                this.camera.position.copy(point).normalize().multiplyScalar(camDistance);
+                this.controls.target.copy(point);
+            }
 
             static resize = (width, height, dpr) => {
                 this.camera.aspect = width / height;
@@ -748,22 +738,39 @@
 
         class App {
             static async init() {
+                this.initLoader();
                 this.initWorld();
+
+                await this.loadData();
+
                 this.initViews();
                 this.initControllers();
 
                 this.addListeners();
                 this.onResize();
 
-                await this.view.ready();
                 await WorldController.ready();
 
                 this.initPanel();
             }
 
+            static initLoader() {
+                this.assetLoader = new AssetLoader();
+            }
+
             static initWorld() {
                 WorldController.init();
                 document.body.appendChild(WorldController.element);
+            }
+
+            static async loadData() {
+                const [buffer, geoip] = await this.assetLoader.loadAllAsync([
+                    'https://cdn.cyberspace.app/cyberspace_names.bin',
+                    'https://api.cyberspace.app/geoip'
+                ]);
+
+                Data.init(buffer, geoip);
+                WorldController.setPoint(Data.point);
             }
 
             static initViews() {

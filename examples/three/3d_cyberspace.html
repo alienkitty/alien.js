@@ -11,7 +11,7 @@
     <link rel="stylesheet" href="../assets/css/style.css">
 
     <script type="module">
-        import { AdditiveBlending, AssetLoader, BloomCompositeMaterial, BufferGeometry, Color, ColorManagement, CopyMaterial, Float32BufferAttribute, GLSL3, Group, LinearSRGBColorSpace, LuminosityMaterial, MathUtils, Mesh, NoBlending, OrbitControls, OrthographicCamera, PanelItem, PerspectiveCamera, Point3D, Points, RawShaderMaterial, Scene, TextureLoader, UI, UnrealBloomBlurMaterial, Vector2, Vector3, WebGLRenderTarget, WebGLRenderer, getFullscreenTriangle, ticker } from '../../build/alien.three.js';
+        import { AdditiveBlending, AssetLoader, BloomCompositeMaterial, BufferGeometry, Color, ColorManagement, CopyMaterial, Float32BufferAttribute, GLSL3, Group, LinearSRGBColorSpace, LuminosityMaterial, MathUtils, Mesh, NoBlending, OrbitControls, OrthographicCamera, PanelItem, PerspectiveCamera, Point3D, Points, RawShaderMaterial, Scene, TextureLoader, UI, UnrealBloomBlurMaterial, Vector2, Vector3, WebGLRenderTarget, WebGLRenderer, clearTween, delayedCall, getFullscreenTriangle, ticker } from '../../build/alien.three.js';
 
         const isDebug = /[?&]debug/.test(location.search);
 
@@ -49,7 +49,6 @@
                     stars.push(star);
 
                     if (star.id === geoip.geoname_id) {
-                        console.log('init', star);
                         this.id = star.id;
                         this.point = star.position.clone();
                     }
@@ -57,7 +56,6 @@
 
                 this.stars = stars;
                 this.geoip = geoip;
-                console.log('init', view, this.stars, this.geoip);
             }
         }
 
@@ -159,7 +157,7 @@
                         uAlpha: { value: 1 },
                         uCameraNear: { value: camera.near },
                         // uCameraFar: { value: camera.far },
-                        uCameraFar: { value: 1200 },
+                        uCameraFar: { value: 1150 },
                         uResolution: resolution,
                         uTime: time
                     },
@@ -264,7 +262,7 @@
                         name: '',
                         type: '',
                         noLine: true,
-                        noTracker: true
+                        noPoint: true
                     });
                     object.add(object.point);
                 });
@@ -279,11 +277,14 @@
 
             static onHover = ({ type, index, target }) => {
                 console.log('onHover', type, index, target, Data.stars[index]);
-                target.setData({ name: Data.stars[index].name });
+                target.setData({ primary: Data.stars[index].name });
             };
 
             static onClick = ({ index, target }) => {
                 console.log('onClick', index, target, Data.stars[index]);
+                target.setData({ index, primary: Data.stars[index].name }); // Set label on instance
+                target.setData({ primary: '' });
+                // WorldController.setPoint(Data.stars[index].position);
             };
         }
 
@@ -616,6 +617,9 @@
 
         class WorldController {
             static init() {
+                this.pointThreshold = 0.1;
+                this.isDown = false;
+
                 this.initWorld();
                 this.initLoaders();
                 this.initControls();
@@ -644,8 +648,6 @@
                 this.camera.far = 10000;
                 this.camera.position.z = 530;
                 this.camera.lookAt(this.scene.position);
-                this.cameraWorldPosition = new Vector3();
-                this.worldPosition = new Vector3();
 
                 // Global geometries
                 this.screenTriangle = getFullscreenTriangle();
@@ -680,12 +682,34 @@
 
             static addListeners() {
                 this.renderer.domElement.addEventListener('touchstart', this.onTouchStart);
+                this.controls.addEventListener('change', this.onChange);
+                this.controls.addEventListener('start', this.onInteraction);
+                this.controls.addEventListener('end', this.onInteraction);
             }
 
             // Event handlers
 
             static onTouchStart = e => {
                 e.preventDefault();
+            };
+
+            static onChange = () => {
+                if (this.isDown) {
+                    Point3D.hoverEnabled = false;
+                }
+            };
+
+            static onInteraction = ({ type }) => {
+                clearTween(this.timeout);
+
+                if (type === 'start') {
+                    this.isDown = true;
+                } else {
+                    this.timeout = delayedCall(300, () => {
+                        this.isDown = false;
+                        Point3D.hoverEnabled = true;
+                    });
+                }
             };
 
             // Public methods
@@ -717,10 +741,12 @@
                 this.controls.update();
 
                 if (Point3D.points && Point3D.points.length) {
-                    this.cameraWorldPosition.setFromMatrixPosition(this.camera.matrixWorld);
-                    this.worldPosition.setFromMatrixPosition(Point3D.points[0].mesh.matrixWorld);
+                    Point3D.raycaster.params.Points.threshold = MathUtils.clamp(
+                        MathUtils.mapLinear(this.controls.getDistance(), this.controls.minDistance, 30, 0.005, this.pointThreshold),
+                        0.005,
+                        4
+                    );
 
-                    Point3D.raycaster.params.Points.threshold = MathUtils.clamp(MathUtils.mapLinear(this.cameraWorldPosition.distanceTo(this.worldPosition), 0.1, 30, 0.005, 0.1), 0.005, 0.1);
                     Point3D.points[0].mesh.scale.setScalar(Point3D.raycaster.params.Points.threshold);
                 }
             };

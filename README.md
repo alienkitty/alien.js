@@ -95,6 +95,7 @@ const program = new FXAAProgram(gl);
 [crystal gltf](https://alien.js.org/examples/three/3d_crystal_gltf_basis_draco.html) (ktx2 basis and draco compressed)  
 [cubecamera](https://alien.js.org/examples/three/3d_cubecamera.html) (orbit camera, [debug](https://alien.js.org/examples/three/3d_cubecamera.html?debug))  
 [cubecamera rainbow](https://alien.js.org/examples/three/3d_cubecamera_rainbow.html) (orbit camera, [debug](https://alien.js.org/examples/three/3d_cubecamera_rainbow.html?debug))  
+[wobble](https://alien.js.org/examples/three/3d_wobble.html)  
 [camera wobble](https://alien.js.org/examples/three/3d_camera_wobble.html)  
 [input manager](https://alien.js.org/examples/three/3d_input_manager.html)  
 [panel tracking](https://alien.js.org/examples/three/3d_panel_tracking.html) ([debug](https://alien.js.org/examples/three/3d_panel_tracking.html?debug))  

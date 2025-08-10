@@ -59,6 +59,7 @@ export class OimoPhysicsController {
 
             for (let i = 0; i < shapes.length; i++) {
                 const { position, quaternion, scale, geometry } = shapes[i];
+
                 object.shapes.push(this.getObject(position, quaternion, scale, geometry, { name: `${object.name}_${i}` }));
             }
         } else if (geometry !== undefined) {

@@ -7,7 +7,6 @@
  */
 
 import { Group, Matrix4, Quaternion, Vector3 } from 'three';
-
 import { oimo } from 'oimophysics';
 
 // Dynamics

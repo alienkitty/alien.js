@@ -65,7 +65,7 @@ export class Flowmap {
     } = {}) {
         this.renderer = renderer;
 
-        this.mouse = new Vector2();
+        this.mouse = new Vector2(-1, -1);
         this.velocity = new Vector2();
 
         // Render targets

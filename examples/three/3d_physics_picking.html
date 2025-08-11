@@ -829,7 +829,7 @@
                 this.raycaster = new Raycaster();
                 this.raycaster.layers.set(layers.picking);
 
-                this.mouse = new Vector2();
+                this.mouse = new Vector2(-1, -1);
                 this.hover = null;
                 this.selected = null;
                 this.body = null;
@@ -974,7 +974,7 @@
             static init(camera) {
                 this.camera = camera;
 
-                this.mouse = new Vector2();
+                this.mouse = new Vector2(-1, -1);
                 this.lookAt = new Vector3(0, 0, -2);
                 this.origin = new Vector3();
                 this.target = new Vector3();

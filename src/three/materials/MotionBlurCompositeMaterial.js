@@ -1,5 +1,6 @@
 import { GLSL3, NearestFilter, NoBlending, RawShaderMaterial, RepeatWrapping, TextureLoader, Vector2 } from 'three';
 
+// eslint-disable-next-line sort-imports
 import { vertexShader, fragmentShader } from '../../shaders/MotionBlurCompositeShader.js';
 
 /**

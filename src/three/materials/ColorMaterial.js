@@ -1,5 +1,6 @@
 import { Color, GLSL3, RawShaderMaterial } from 'three';
 
+// eslint-disable-next-line sort-imports
 import { vertexShader, fragmentShader } from '../../shaders/ColorShader.js';
 
 /**

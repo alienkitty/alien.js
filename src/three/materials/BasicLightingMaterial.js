@@ -1,5 +1,6 @@
 import { GLSL3, Matrix3, RawShaderMaterial, Vector3 } from 'three';
 
+// eslint-disable-next-line sort-imports
 import { vertexShader, fragmentShader } from '../../shaders/BasicLightingShader.js';
 
 /**

@@ -1,5 +1,6 @@
 import { AdditiveBlending, GLSL3, RawShaderMaterial, Vector2 } from 'three';
 
+// eslint-disable-next-line sort-imports
 import { vertexShader, fragmentShader } from '../../shaders/LensflareShader.js';
 
 /**

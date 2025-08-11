@@ -123,6 +123,9 @@ export { Magnetic } from '@alienkitty/space.js/src/extras/Magnetic.js';
 // Three
 export * from './three/materials/Materials.js';
 export { Wobble } from './three/utils/Wobble.js';
+export { HalfEdgeMap } from './three/utils/HalfEdgeMap.js';
+export * from './three/utils/SurfaceWalker.js';
+export * from './three/utils/MeshPointsGenerator.js';
 export { Flowmap } from './three/utils/Flowmap.js';
 export { Fluid } from './three/utils/Fluid.js';
 export { Reflector } from './three/utils/Reflector.js';

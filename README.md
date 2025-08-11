@@ -204,7 +204,7 @@ Clone this repository and install its dependencies:
 ```sh
 git clone https://github.com/alienkitty/alien.js
 cd alien.js
-npm i three saharan/OimoPhysics
+npm i three three-mesh-bvh saharan/OimoPhysics
 cd examples
 npm i
 npm run build

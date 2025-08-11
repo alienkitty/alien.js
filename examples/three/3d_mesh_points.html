@@ -11,7 +11,7 @@
     <link rel="stylesheet" href="../assets/css/style.css">
 
     <script type="module">
-        import { BloomCompositeMaterial, Color, ColorManagement, DirectionalLight, EnvironmentTextureLoader, Group, HemisphereLight, IcosahedronGeometry, ImageBitmapLoaderThread, InstancedMesh, LinearSRGBColorSpace, LuminosityMaterial, MathUtils, Matrix4, Mesh, MeshBasicMaterial, MeshPointsGenerator, MeshStandardMaterial, OrbitControls, OrthographicCamera, PanelItem, PerspectiveCamera, PlaneGeometry, PointLight, Raycaster, Reflector, ReflectorDudvMaterial, RepeatWrapping, Scene, SceneCompositeDistortionMaterial, ShaderChunk, SphereGeometry, SurfacePoint, SurfaceWalker, TextureLoader, UI, UnrealBloomBlurMaterial, Vector2, Vector3, WebGLRenderTarget, WebGLRenderer, Wobble, getFullscreenTriangle, ticker } from '../../build/alien.three.js';
+        import { BloomCompositeMaterial, Color, ColorManagement, DirectionalLight, EnvironmentTextureLoader, Fog, Group, HemisphereLight, IcosahedronGeometry, ImageBitmapLoaderThread, InstancedMesh, LinearSRGBColorSpace, LuminosityMaterial, MathUtils, Matrix4, Mesh, MeshBasicMaterial, MeshPointsGenerator, MeshStandardMaterial, OrbitControls, OrthographicCamera, PanelItem, PerspectiveCamera, PlaneGeometry, PointLight, Raycaster, Reflector, ReflectorDudvMaterial, RepeatWrapping, Scene, SceneCompositeDistortionMaterial, ShaderChunk, SphereGeometry, SurfacePoint, SurfaceWalker, TextureLoader, UI, UnrealBloomBlurMaterial, Vector2, Vector3, WebGLRenderTarget, WebGLRenderer, Wobble, getFullscreenTriangle, ticker } from '../../build/alien.three.js';
 
         const count = parseInt(location.search.slice(1), 10) || 1000;
 
@@ -66,6 +66,7 @@
                 mesh.material.polygonOffset = true;
                 mesh.material.polygonOffsetUnits = 10;
                 mesh.material.polygonOffsetFactor = 10;
+                mesh.visible = false;
                 this.add(mesh);
 
                 const surf = new SurfaceWalker(mesh.geometry);
@@ -507,6 +508,7 @@
                 // 3D scene
                 this.scene = new Scene();
                 this.scene.background = new Color(0x060606);
+                this.scene.fog = new Fog(this.scene.background, 1, 2);
                 this.camera = new PerspectiveCamera(30);
                 this.camera.near = 0.5;
                 this.camera.far = 40;
@@ -582,6 +584,10 @@
                 this.frame.value = frame;
 
                 this.controls.update();
+
+                const camDist = this.camera.position.length();
+                this.scene.fog.near = camDist - 1.5;
+                this.scene.fog.far = camDist + 2.5;
             };
 
             static ready = () => Promise.all([

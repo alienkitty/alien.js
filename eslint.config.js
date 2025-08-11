@@ -44,7 +44,7 @@ export default [
       'quotes': ['error', 'single'],
       'semi-spacing': ['error', { 'before': false, 'after': true }],
       'semi': ['error', 'always'],
-      'sort-imports': ['warn', { 'ignoreDeclarationSort': true }],
+      'sort-imports': ['error', { 'ignoreDeclarationSort': true }],
       'space-before-blocks': ['error', 'always'],
       'space-before-function-paren': ['error', { 'anonymous': 'always', 'named': 'never', 'asyncArrow': 'always' }],
       'space-in-parens': ['error', 'never'],

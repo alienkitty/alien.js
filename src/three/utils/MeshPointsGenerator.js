@@ -157,35 +157,31 @@ function generatePointsProxyGeometry(points) {
     return geometry;
 }
 
-const temp = new Vector3();
-
 export class PointsBVH extends MeshBVH {
     constructor(points, options) {
         super(generatePointsProxyGeometry(points), options);
+
+        this.v = new Vector3();
     }
 
     queryBallPoint(point, dist) {
         const results = [];
         const distSq = dist * dist;
-        const geometry = this.geometry;
-        const index = geometry.index;
 
-        this.shapecast(
-            {
-                intersectsBounds: box => {
-                    const closestPoint = temp.copy(point).clamp(box.min, box.max);
+        this.shapecast({
+            intersectsBounds: box => {
+                const closestPoint = this.v.copy(point).clamp(box.min, box.max);
 
-                    return point.distanceToSquared(closestPoint) < distSq;
-                },
-                intersectsTriangle: (tri, triIndex) => {
-                    if (tri.a.distanceToSquared(point) < distSq) {
-                        results.push(index.getX(3 * triIndex));
-                    }
-
-                    return false;
+                return point.distanceToSquared(closestPoint) < distSq;
+            },
+            intersectsTriangle: (tri, triIndex) => {
+                if (tri.a.distanceToSquared(point) < distSq) {
+                    results.push(this.geometry.index.getX(3 * triIndex));
                 }
+
+                return false;
             }
-        );
+        });
 
         return results;
     }

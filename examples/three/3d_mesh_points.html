@@ -11,7 +11,7 @@
     <link rel="stylesheet" href="../assets/css/style.css">
 
     <script type="module">
-        import { BloomCompositeMaterial, Color, ColorManagement, DirectionalLight, EnvironmentTextureLoader, Group, HemisphereLight, IcosahedronGeometry, ImageBitmapLoaderThread, InstancedMesh, LinearSRGBColorSpace, LuminosityMaterial, MathUtils, Matrix4, Mesh, MeshBasicMaterial, MeshPointsGenerator, MeshStandardMaterial, OrbitControls, OrthographicCamera, PanelItem, PerspectiveCamera, PlaneGeometry, PointLight, Reflector, ReflectorDudvMaterial, RepeatWrapping, Scene, SceneCompositeDistortionMaterial, ShaderChunk, SphereGeometry, SurfacePoint, SurfaceWalker, TextureLoader, UI, UnrealBloomBlurMaterial, Vector2, Vector3, WebGLRenderTarget, WebGLRenderer, Wobble, getFullscreenTriangle, ticker } from '../../build/alien.three.js';
+        import { BloomCompositeMaterial, Color, ColorManagement, DirectionalLight, EnvironmentTextureLoader, Group, HemisphereLight, IcosahedronGeometry, ImageBitmapLoaderThread, InstancedMesh, LinearSRGBColorSpace, LuminosityMaterial, MathUtils, Matrix4, Mesh, MeshBasicMaterial, MeshPointsGenerator, MeshStandardMaterial, OrbitControls, OrthographicCamera, PanelItem, PerspectiveCamera, PlaneGeometry, PointLight, Raycaster, Reflector, ReflectorDudvMaterial, RepeatWrapping, Scene, SceneCompositeDistortionMaterial, ShaderChunk, SphereGeometry, SurfacePoint, SurfaceWalker, TextureLoader, UI, UnrealBloomBlurMaterial, Vector2, Vector3, WebGLRenderTarget, WebGLRenderer, Wobble, getFullscreenTriangle, ticker } from '../../build/alien.three.js';
 
         const count = parseInt(location.search.slice(1), 10) || 1000;
 
@@ -42,7 +42,13 @@
             constructor() {
                 super();
 
+                this.raycaster = new Raycaster();
+                this.mouse = new Vector2(-1, -1);
+                this.delta = new Vector3();
+
                 this.initLight();
+
+                this.addListeners();
             }
 
             initLight() {
@@ -51,11 +57,11 @@
             }
 
             async initMesh() {
-                const { anisotropy, loadTexture } = WorldController;
+                const { camera, anisotropy, loadTexture } = WorldController;
 
                 const mesh = new Mesh(new SphereGeometry());
-                mesh.material.color.set(0x111111);
-                mesh.material.opacity = 0.5;
+                mesh.material.color.set(0x060606);
+                mesh.material.opacity = 0.8;
                 mesh.material.transparent = true;
                 mesh.material.polygonOffset = true;
                 mesh.material.polygonOffsetUnits = 10;
@@ -73,36 +79,94 @@
                 const points = pointsGenerator.generate(faceIndices);
 
                 const vectors = new Array(points.length).fill().map(() => new Vector3());
+                const surfacePoints = new Array(points.length).fill().map(() => new SurfacePoint());
                 const spheres = new InstancedSpheres(new MeshBasicMaterial(), count);
                 const targetDistance = pointsGenerator.getTargetDistance();
                 this.add(spheres);
 
+                this.camera = camera;
+                this.mesh = mesh;
                 this.surf = surf;
                 this.faceIndices = faceIndices;
                 this.points = points;
                 this.vectors = vectors;
+                this.surfacePoints = surfacePoints;
                 this.spheres = spheres;
+                this.targetDistance = targetDistance;
             }
+
+            addListeners() {
+                window.addEventListener('pointermove', this.onPointerMove);
+            }
+
+            // Event handlers
+
+            onPointerMove = ({ clientX, clientY }) => {
+                this.mouse.x = (clientX / document.documentElement.clientWidth) * 2 - 1;
+                this.mouse.y = 1 - (clientY / document.documentElement.clientHeight) * 2;
+            };
 
             // Public methods
 
             update = (time, delta) => {
-                this.vectors.forEach(v => v.setScalar(0));
+                this.raycaster.setFromCamera(this.mouse, this.camera);
 
-                this.points.forEach((p, i) => {
-                    this.vectors[i].multiplyScalar(2 * delta);
+                const hit = this.raycaster.intersectObject(this.mesh)[0];
 
-                    const surfacePoint = new SurfacePoint();
+                if (hit) {
+                    const point = hit.point;
+
+                    for (let i = 0, l = this.points.length; i < l; i++) {
+                        const p = this.points[i];
+                        const v = this.vectors[i];
+                        this.delta.subVectors(p, point);
+
+                        const lenDiff = Math.max(0, this.targetDistance * 4.5 - this.delta.length());
+                        this.delta.normalize().multiplyScalar(lenDiff);
+
+                        v.copy(this.delta).multiplyScalar(5);
+                    }
+                }
+
+                for (let i = 0, l = this.points.length; i < l; i++) {
+                    for (let j = i + 1; j < l; j++) {
+                        const p1 = this.points[i];
+                        const p2 = this.points[j];
+                        this.delta.subVectors(p1, p2);
+
+                        const falloffDist = this.targetDistance * 2.5;
+
+                        if (this.delta.length() > falloffDist) {
+                            continue;
+                        }
+
+                        const lenDiff = Math.max(0, falloffDist - this.delta.length());
+                        this.delta.normalize().multiplyScalar(lenDiff);
+
+                        const v1 = this.vectors[i];
+                        const v2 = this.vectors[j];
+
+                        v1.add(this.delta);
+                        v2.sub(this.delta);
+                    }
+                }
+
+                for (let i = 0, l = this.points.length; i < l; i++) {
+                    const p = this.points[i];
+                    const v = this.vectors[i];
+                    const surfacePoint = this.surfacePoints[i];
+                    v.multiplyScalar(delta * 0.001 * 2);
+
                     surfacePoint.copy(p);
                     surfacePoint.index = this.faceIndices[i];
 
-                    this.surf.movePoint(surfacePoint, this.vectors[i], surfacePoint);
+                    this.surf.movePoint(surfacePoint, v, surfacePoint);
                     this.faceIndices[i] = surfacePoint.index;
 
                     p.copy(surfacePoint);
 
                     this.spheres.setPosition(i, p, 0.01);
-                });
+                }
             };
 
             ready = () => this.initMesh();

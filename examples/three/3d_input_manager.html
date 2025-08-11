@@ -488,6 +488,8 @@
                 this.camera = camera;
 
                 this.raycaster = new Raycaster();
+                this.raycastInterval = 1 / 10; // 10 frames per second
+                this.lastRaycast = 0;
 
                 this.objects = [];
                 this.mouse = new Vector2(-1, -1);
@@ -497,8 +499,6 @@
                 this.click = null;
                 this.lastTime = 0;
                 this.lastMouse = new Vector2();
-                this.raycastInterval = 1 / 10; // 10 frames per second
-                this.lastRaycast = 0;
                 this.enabled = true;
 
                 this.addListeners();
@@ -547,10 +547,10 @@
 
                 this.raycaster.setFromCamera(this.coords, this.camera);
 
-                const intersection = this.raycaster.intersectObjects(this.objects);
+                const hit = this.raycaster.intersectObjects(this.objects)[0];
 
-                if (intersection.length) {
-                    let object = intersection[0].object;
+                if (hit) {
+                    let object = hit.object;
 
                     if (object.parent.isGroup) {
                         object = object.parent;

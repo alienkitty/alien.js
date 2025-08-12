@@ -309,6 +309,28 @@
                         }
                     },
                     {
+                        type: 'slider',
+                        name: 'Near',
+                        min: 0,
+                        max: 40,
+                        step: 0.1,
+                        value: motionBlur.cameraNear,
+                        callback: value => {
+                            motionBlur.cameraNear = value;
+                        }
+                    },
+                    {
+                        type: 'slider',
+                        name: 'Far',
+                        min: 0,
+                        max: 40,
+                        step: 0.1,
+                        value: motionBlur.cameraFar,
+                        callback: value => {
+                            motionBlur.cameraFar = value;
+                        }
+                    },
+                    {
                         type: 'divider'
                     },
                     {

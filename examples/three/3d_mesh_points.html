@@ -641,6 +641,28 @@
                         }
                     },
                     {
+                        type: 'slider',
+                        name: 'Near',
+                        min: 0,
+                        max: 40,
+                        step: 0.1,
+                        value: drawBuffers.cameraNear,
+                        callback: value => {
+                            drawBuffers.cameraNear = value;
+                        }
+                    },
+                    {
+                        type: 'slider',
+                        name: 'Far',
+                        min: 0,
+                        max: 40,
+                        step: 0.1,
+                        value: drawBuffers.cameraFar,
+                        callback: value => {
+                            drawBuffers.cameraFar = value;
+                        }
+                    },
+                    {
                         type: 'divider'
                     },
                     {

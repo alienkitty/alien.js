@@ -105,9 +105,9 @@
                                 if (uv.y < 1.0 && uv.x < 1.0) {
                                     FragColor.rgb = vec3(texture(tPosition, mod(uv, 1.0)).a);
                                 } else if (uv.y < 2.0 && uv.x < 1.0) {
-                                    FragColor.rgb = texture(tVelocity, mod(uv, 1.0)).rgb;
-                                } else if (uv.y < 3.0 && uv.x < 1.0) {
                                     FragColor.rgb = texture(tPosition, mod(uv, 1.0)).rgb;
+                                } else if (uv.y < 3.0 && uv.x < 1.0) {
+                                    FragColor.rgb = texture(tVelocity, mod(uv, 1.0)).rgb;
                                 } else if (uv.y < 4.0 && uv.x < 1.0) {
                                     FragColor.rgb = texture(tScene, mod(uv, 1.0)).rgb;
                                 } else if (uv.y < 5.0 && uv.x < 1.0) {

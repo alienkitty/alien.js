@@ -10,20 +10,13 @@ export class NormalMaterial extends RawShaderMaterial {
     constructor({
         instancing = false
     } = {}) {
-        const parameters = {
+        super({
             glslVersion: GLSL3,
             defines: {
+                USE_INSTANCING: instancing
             },
             vertexShader,
             fragmentShader
-        };
-
-        if (instancing) {
-            parameters.defines = Object.assign(parameters.defines, {
-                USE_INSTANCING: ''
-            });
-        }
-
-        super(parameters);
+        });
     }
 }

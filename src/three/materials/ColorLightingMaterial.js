@@ -14,9 +14,10 @@ export class ColorLightingMaterial extends RawShaderMaterial {
         lightIntensity = 0.25,
         instancing = false
     } = {}) {
-        const parameters = {
+        super({
             glslVersion: GLSL3,
             defines: {
+                USE_INSTANCING: instancing
             },
             uniforms: {
                 uColor: { value: color instanceof Color ? color : new Color(color) },
@@ -27,14 +28,6 @@ export class ColorLightingMaterial extends RawShaderMaterial {
             vertexShader,
             fragmentShader,
             transparent: true
-        };
-
-        if (instancing) {
-            parameters.defines = Object.assign(parameters.defines, {
-                USE_INSTANCING: ''
-            });
-        }
-
-        super(parameters);
+        });
     }
 }

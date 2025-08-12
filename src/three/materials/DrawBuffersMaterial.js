@@ -10,9 +10,10 @@ export class DrawBuffersMaterial extends RawShaderMaterial {
     constructor({
         instancing = false
     } = {}) {
-        const parameters = {
+        super({
             glslVersion: GLSL3,
             defines: {
+                USE_INSTANCING: instancing
             },
             uniforms: {
                 uPrevModelViewMatrix: { value: new Matrix4() },
@@ -22,14 +23,6 @@ export class DrawBuffersMaterial extends RawShaderMaterial {
             },
             vertexShader,
             fragmentShader
-        };
-
-        if (instancing) {
-            parameters.defines = Object.assign(parameters.defines, {
-                USE_INSTANCING: ''
-            });
-        }
-
-        super(parameters);
+        });
     }
 }

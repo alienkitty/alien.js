@@ -10,23 +10,16 @@ export class DiscardMaterial extends RawShaderMaterial {
     constructor({
         instancing = false
     } = {}) {
-        const parameters = {
+        super({
             glslVersion: GLSL3,
             defines: {
+                USE_INSTANCING: instancing
             },
             vertexShader,
             fragmentShader,
             blending: NoBlending,
             depthTest: false,
             depthWrite: false
-        };
-
-        if (instancing) {
-            parameters.defines = Object.assign(parameters.defines, {
-                USE_INSTANCING: ''
-            });
-        }
-
-        super(parameters);
+        });
     }
 }

@@ -11,7 +11,7 @@
     <link rel="stylesheet" href="../assets/css/style.css">
 
     <script type="module">
-        import { BloomCompositeMaterial, Color, ColorManagement, DirectionalLight, EnvironmentTextureLoader, Fog, Group, HemisphereLight, IcosahedronGeometry, ImageBitmapLoaderThread, InstancedMesh, LinearSRGBColorSpace, LuminosityMaterial, MathUtils, Matrix4, Mesh, MeshBasicMaterial, MeshPhongMaterial, MeshPointsGenerator, MeshStandardMaterial, OrbitControls, OrthographicCamera, PanelItem, PerspectiveCamera, PlaneGeometry, PointLight, Raycaster, Reflector, ReflectorDudvMaterial, RepeatWrapping, Scene, SceneCompositeDistortionMaterial, ShaderChunk, SphereGeometry, SurfacePoint, SurfaceWalker, TextureLoader, UI, UnrealBloomBlurMaterial, Vector2, Vector3, WebGLRenderTarget, WebGLRenderer, Wobble, getFullscreenTriangle, ticker } from '../../build/alien.three.js';
+        import { BloomCompositeMaterial, Color, ColorManagement, DirectionalLight, EnvironmentTextureLoader, Fog, Group, HemisphereLight, IcosahedronGeometry, ImageBitmapLoaderThread, InstancedMesh, LinearSRGBColorSpace, LuminosityMaterial, MathUtils, Matrix4, Mesh, MeshPointsGenerator, MeshStandardMaterial, OrbitControls, OrthographicCamera, PanelItem, PerspectiveCamera, PointLight, Raycaster, RepeatWrapping, Scene, SceneCompositeDistortionMaterial, ShaderChunk, SphereGeometry, SurfacePoint, SurfaceWalker, TextureLoader, UI, UnrealBloomBlurMaterial, Vector2, Vector3, WebGLRenderTarget, WebGLRenderer, getFullscreenTriangle, ticker } from '../../build/alien.three.js';
 
         const count = parseInt(location.search.slice(1), 10) || 1000;
 
@@ -30,9 +30,13 @@
                 super();
 
                 this.raycaster = new Raycaster();
+
                 this.mouse = new Vector2(-1, -1);
                 this.delta = new Vector3();
                 this.matrix = new Matrix4();
+
+                this.targetDistanceMultiplier = MathUtils.mapLinear(count, 10, 1000, 1, 4.5);
+                this.falloffDistanceMultiplier = MathUtils.mapLinear(count, 10, 1000, 1, 2.5);
 
                 this.addListeners();
             }
@@ -156,13 +160,11 @@
                 const surf = new SurfaceWalker(mesh.geometry);
 
                 const pointsGenerator = new MeshPointsGenerator(mesh);
-                // pointsGenerator.sampler.randomFunction = Math.random;
                 pointsGenerator.sampleCount = count;
                 pointsGenerator.build();
 
                 const faceIndices = [];
                 const points = pointsGenerator.generate(faceIndices);
-
                 const vectors = new Array(points.length).fill().map(() => new Vector3());
                 const surfacePoints = new Array(points.length).fill().map(() => new SurfacePoint());
                 const spheres = new InstancedMesh(geometry, material, count);
@@ -210,7 +212,7 @@
                         const v = this.vectors[i];
                         this.delta.subVectors(p, point);
 
-                        const lenDiff = Math.max(0, this.targetDistance * MathUtils.mapLinear(count, 10, 1000, 1, 4.5) - this.delta.length());
+                        const lenDiff = Math.max(0, this.targetDistance * this.targetDistanceMultiplier - this.delta.length());
                         this.delta.normalize().multiplyScalar(lenDiff);
 
                         v.copy(this.delta).multiplyScalar(5);
@@ -223,13 +225,13 @@
                         const p2 = this.points[j];
                         this.delta.subVectors(p1, p2);
 
-                        const falloffDist = this.targetDistance * MathUtils.mapLinear(count, 10, 1000, 1, 2.5);
+                        const falloffDistance = this.targetDistance * this.falloffDistanceMultiplier;
 
-                        if (this.delta.length() > falloffDist) {
+                        if (this.delta.length() > falloffDistance) {
                             continue;
                         }
 
-                        const lenDiff = Math.max(0, falloffDist - this.delta.length());
+                        const lenDiff = Math.max(0, falloffDistance - this.delta.length());
                         this.delta.normalize().multiplyScalar(lenDiff);
 
                         const v1 = this.vectors[i];
@@ -384,7 +386,7 @@
 
             // Public methods
 
-            update = time => {
+            update = () => {
             };
 
             ready = () => this.initMesh();
@@ -409,9 +411,6 @@
 
             // Public methods
 
-            resize = (width, height) => {
-            };
-
             update = (time, delta) => {
                 this.sphere.update(time, delta);
             };
@@ -428,10 +427,6 @@
             }
 
             // Public methods
-
-            static resize = (width, height) => {
-                this.view.resize(width, height);
-            };
 
             static update = (time, delta) => {
                 if (!this.view.visible) {
@@ -729,10 +724,10 @@
                 // 3D scene
                 this.scene = new Scene();
                 this.scene.background = new Color(0x060606);
-                // this.scene.fog = new Fog(this.scene.background, 1, 2);
+                this.scene.fog = new Fog(this.scene.background, 1, 2);
                 this.camera = new PerspectiveCamera(30);
                 this.camera.near = 0.5;
-                this.camera.far = 40;
+                this.camera.far = 1000;
                 this.camera.position.z = 3.5;
                 this.camera.lookAt(this.scene.position);
 
@@ -806,9 +801,9 @@
 
                 this.controls.update();
 
-                // const camDist = this.camera.position.length();
-                // this.scene.fog.near = camDist - 1.5;
-                // this.scene.fog.far = camDist + 2.5;
+                const cameraDistance = this.camera.position.length();
+                this.scene.fog.near = cameraDistance - 1.5;
+                this.scene.fog.far = cameraDistance + 4.5;
             };
 
             static ready = () => Promise.all([
@@ -886,7 +881,6 @@
                 const dpr = window.devicePixelRatio;
 
                 WorldController.resize(width, height, dpr);
-                SceneController.resize(width, height);
                 RenderManager.resize(width, height, dpr);
             };
 

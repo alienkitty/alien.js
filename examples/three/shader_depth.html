@@ -47,7 +47,7 @@
                             float linearDepth = 1.0 / uAperture;
                             float linearPos = length(cameraPosition - position) * linearDepth;
 
-                            vColor = vec3(1.0 - linearPos);
+                            vColor = vec3(clamp(1.0 - linearPos, 0.0, 1.0));
 
                             float f = 0.05 * pnoise(vec3(2.0 * normal + uTime), vec3(10.0));
 
@@ -192,7 +192,7 @@
                 this.scene.background = new Color(0x060606);
                 this.camera = new PerspectiveCamera(30);
                 this.camera.near = 0.5;
-                this.camera.far = 40;
+                this.camera.far = 100;
                 this.camera.position.z = 8;
                 this.camera.lookAt(this.scene.position);
 

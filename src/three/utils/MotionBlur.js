@@ -16,7 +16,9 @@ export class MotionBlur {
     constructor(renderer, scene, camera, channel, {
         interpolateGeometry = 1,
         smearIntensity = 1,
-        cameraBlur = true
+        cameraBlur = true,
+        cameraNear = null,
+        cameraFar = null
     } = {}) {
         this.renderer = renderer;
         this.scene = scene;
@@ -26,6 +28,8 @@ export class MotionBlur {
         this.interpolateGeometry = interpolateGeometry;
         this.smearIntensity = smearIntensity;
         this.cameraBlur = cameraBlur;
+        this.cameraNear = cameraNear;
+        this.cameraFar = cameraFar;
 
         this.prevProjectionMatrix = new Matrix4();
         this.prevMatrixWorldInverse = new Matrix4();
@@ -102,9 +106,16 @@ export class MotionBlur {
                 if (object.isInstancedMesh) {
                     object.prevInstanceMatrix = new InstancedBufferAttribute(new Float32Array(object.instanceMatrix.array), 16);
                     object.geometry.setAttribute('instancePrevMatrix', object.prevInstanceMatrix);
-                    object.velocityMaterial = new MotionBlurVelocityMaterial({ instancing: true });
+                    object.velocityMaterial = new MotionBlurVelocityMaterial({
+                        cameraNear: this.cameraNear,
+                        cameraFar: this.cameraFar,
+                        instancing: true
+                    });
                 } else {
-                    object.velocityMaterial = new MotionBlurVelocityMaterial();
+                    object.velocityMaterial = new MotionBlurVelocityMaterial({
+                        cameraNear: this.cameraNear,
+                        cameraFar: this.cameraFar
+                    });
                 }
 
                 object.velocityInitialized = true;
@@ -115,6 +126,8 @@ export class MotionBlur {
             object.velocityMaterial.uniforms.uPrevModelViewMatrix.value.multiplyMatrices(this.cameraBlur ? this.prevMatrixWorldInverse : this.camera.matrixWorldInverse, object.prevMatrixWorld);
             object.velocityMaterial.uniforms.uInterpolateGeometry.value = this.interpolateGeometry;
             object.velocityMaterial.uniforms.uSmearIntensity.value = this.smearIntensity;
+            object.velocityMaterial.uniforms.uCameraNear.value = this.cameraNear;
+            object.velocityMaterial.uniforms.uCameraFar.value = this.cameraFar;
             object.material = object.velocityMaterial;
         }
     };

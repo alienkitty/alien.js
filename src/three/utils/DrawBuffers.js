@@ -19,7 +19,9 @@ export class DrawBuffers {
     constructor(renderer, scene, camera, channel, {
         interpolateGeometry = 1,
         smearIntensity = 1,
-        cameraBlur = true
+        cameraBlur = true,
+        cameraNear = null,
+        cameraFar = null
     } = {}) {
         this.renderer = renderer;
         this.scene = scene;
@@ -29,6 +31,8 @@ export class DrawBuffers {
         this.interpolateGeometry = interpolateGeometry;
         this.smearIntensity = smearIntensity;
         this.cameraBlur = cameraBlur;
+        this.cameraNear = cameraNear;
+        this.cameraFar = cameraFar;
 
         this.prevProjectionMatrix = new Matrix4();
         this.prevMatrixWorldInverse = new Matrix4();
@@ -106,9 +110,16 @@ export class DrawBuffers {
                 if (object.isInstancedMesh) {
                     object.prevInstanceMatrix = new InstancedBufferAttribute(new Float32Array(object.instanceMatrix.array), 16);
                     object.geometry.setAttribute('instancePrevMatrix', object.prevInstanceMatrix);
-                    object.drawBuffersMaterial = new DrawBuffersMaterial({ instancing: true });
+                    object.drawBuffersMaterial = new DrawBuffersMaterial({
+                        cameraNear: this.cameraNear,
+                        cameraFar: this.cameraFar,
+                        instancing: true
+                    });
                 } else {
-                    object.drawBuffersMaterial = new DrawBuffersMaterial();
+                    object.drawBuffersMaterial = new DrawBuffersMaterial({
+                        cameraNear: this.cameraNear,
+                        cameraFar: this.cameraFar
+                    });
                 }
 
                 object.drawBuffersInitialized = true;
@@ -119,6 +130,8 @@ export class DrawBuffers {
             object.drawBuffersMaterial.uniforms.uPrevModelViewMatrix.value.multiplyMatrices(this.cameraBlur ? this.prevMatrixWorldInverse : this.camera.matrixWorldInverse, object.prevMatrixWorld);
             object.drawBuffersMaterial.uniforms.uInterpolateGeometry.value = this.interpolateGeometry;
             object.drawBuffersMaterial.uniforms.uSmearIntensity.value = this.smearIntensity;
+            object.drawBuffersMaterial.uniforms.uCameraNear.value = this.cameraNear;
+            object.drawBuffersMaterial.uniforms.uCameraFar.value = this.cameraFar;
             object.material = object.drawBuffersMaterial;
         }
     };

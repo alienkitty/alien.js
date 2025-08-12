@@ -938,7 +938,9 @@
 
                 // G-Buffer
                 this.drawBuffers = new DrawBuffers(this.renderer, this.scene, this.camera, layers.buffers, {
-                    cameraBlur: false
+                    cameraBlur: false,
+                    cameraNear: this.camera.near,
+                    cameraFar: this.camera.position.z
                 });
 
                 // Motion blur composite material

@@ -51,6 +51,11 @@ precision highp float;
 
 uniform float uSmearIntensity;
 
+#ifdef USE_CAMERA_DEPTH
+    uniform float uCameraNear;
+    uniform float uCameraFar;
+#endif
+
 in vec4 vPrevPosition;
 in vec4 vNewPosition;
 
@@ -68,5 +73,13 @@ void main() {
 
     vec3 vel = pos1 - pos0;
     FragColor = vec4(vel * uSmearIntensity, 1.0);
+
+    // Limit velocities by depth
+    #ifdef USE_CAMERA_DEPTH
+        float depth = gl_FragCoord.z / gl_FragCoord.w;
+        float depthFactor = smoothstep(uCameraNear, uCameraFar, depth);
+
+        FragColor.rgb *= 1.0 - depthFactor;
+    #endif
 }
 `;

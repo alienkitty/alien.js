@@ -438,7 +438,12 @@
                 this.renderTargetA.depthBuffer = true;
 
                 // Motion blur
-                this.motionBlur = new MotionBlur(this.renderer, this.scene, this.camera, layers.velocity);
+                this.motionBlur = new MotionBlur(this.renderer, this.scene, this.camera, layers.velocity, {
+                    // defaults
+                    cameraBlur: true,
+                    cameraNear: this.camera.near,
+                    cameraFar: this.camera.far
+                });
 
                 this.motionBlurCompositeMaterial = new MotionBlurCompositeMaterial(textureLoader, {
                     blueNoisePath: 'blue_noise.png'

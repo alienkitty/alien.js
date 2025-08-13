@@ -372,8 +372,10 @@
                     this.matrix.makeTranslation(p).scale(this.v);
 
                     this.spheres.setMatrixAt(i, this.matrix);
-                    this.spheres.instanceMatrix.needsUpdate = true;
                 }
+
+                this.spheres.instanceMatrix.needsUpdate = true;
+                this.spheres.computeBoundingSphere();
             };
 
             ready = () => this.initMesh();

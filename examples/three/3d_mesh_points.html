@@ -140,7 +140,7 @@
                 this.matrix = new Matrix4();
 
                 this.targetDistanceMultiplier = MathUtils.mapLinear(count, 10, 1000, 1, 4.5);
-                this.falloffDistanceMultiplier = MathUtils.mapLinear(count, 10, 1000, 1, 2.5);
+                this.falloffDistanceMultiplier = MathUtils.mapLinear(count, 10, 1000, 2, 2.5);
 
                 this.addListeners();
             }
@@ -275,9 +275,9 @@
                 const spheres = new InstancedMesh(geometry, material, count);
                 spheres.instanceMatrix.setUsage(DynamicDrawUsage); // Will be updated every frame
                 spheres.layers.enable(layers.buffers);
+                this.add(spheres);
 
                 const targetDistance = pointsGenerator.getTargetDistance();
-                this.add(spheres);
 
                 this.camera = camera;
                 this.uniforms = uniforms;
@@ -897,15 +897,15 @@
 
                 // Volumetric light and lens flare
                 this.lightPosition = new Vector3();
-                this.vlExposure = 0.15;
-                this.vlDecay = 0.96;
+                this.vlExposure = 0.1;
+                this.vlDecay = 1;
                 this.vlDensity = 1;
-                this.vlWeight = 0.1;
-                this.vlClamp = 0.15;
+                this.vlWeight = 0.4;
+                this.vlClamp = 1;
                 this.lensflareScale = new Vector2(2.5, 2.5);
-                this.lensflareExposure = 0.05;
+                this.lensflareExposure = 0.1;
                 this.lensflareClamp = 1;
-                this.blurResolutionScale = 0.5;
+                this.blurResolutionScale = 0.25;
                 this.blurAmount = 2.5;
 
                 // Unreal bloom
@@ -1136,6 +1136,10 @@
                 const renderTargetBright = this.renderTargetBright;
                 const renderTargetsHorizontal = this.renderTargetsHorizontal;
                 const renderTargetsVertical = this.renderTargetsVertical;
+
+                // Keep camera focus on centre
+                const cameraDistance = camera.position.length();
+                this.drawBuffers.cameraFar = cameraDistance;
 
                 // Renderer state
                 this.rendererState();

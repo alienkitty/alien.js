@@ -137,10 +137,13 @@
 
                 this.mouse = new Vector2();
                 this.delta = new Vector3();
+
+                this.v = new Vector3();
                 this.matrix = new Matrix4();
 
                 this.targetDistanceMultiplier = MathUtils.mapLinear(count, 10, 1000, 1, 4.5);
                 this.falloffDistanceMultiplier = MathUtils.mapLinear(count, 10, 1000, 2, 2.5);
+                this.radius = 0.025;
 
                 this.addListeners();
             }
@@ -148,7 +151,7 @@
             async initMesh() {
                 const { camera, anisotropy, loadTexture } = WorldController;
 
-                const geometry = new IcosahedronGeometry(0.025, 6);
+                const geometry = new IcosahedronGeometry(1, 6);
 
                 // Second set of UVs for aoMap and lightMap
                 // https://threejs.org/docs/#api/en/materials/MeshStandardMaterial.aoMap
@@ -365,7 +368,8 @@
 
                     p.copy(surfacePoint);
 
-                    this.matrix.makeTranslation(p);
+                    this.v.setScalar(this.radius);
+                    this.matrix.makeTranslation(p).scale(this.v);
 
                     this.spheres.setMatrixAt(i, this.matrix);
                     this.spheres.instanceMatrix.needsUpdate = true;
@@ -616,6 +620,17 @@
                         value: getKeyByValue(colorOptions, star.occMesh.material.color.getHex()),
                         callback: value => {
                             star.setColor(new Color(colorOptions.get(value)));
+                        }
+                    },
+                    {
+                        type: 'slider',
+                        name: 'Point',
+                        min: 0,
+                        max: 10,
+                        step: 0.1,
+                        value: 1,
+                        callback: value => {
+                            sphere.radius = 0.025 * value;
                         }
                     },
                     {

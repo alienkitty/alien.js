@@ -498,15 +498,13 @@
                 occMesh.material = new MeshBasicMaterial({ color: colors.lightColor });
                 occMesh.layers.set(layers.occlusion);
                 this.add(occMesh);
-
-                this.mesh = mesh;
             }
 
             // Public methods
 
             update = () => {
                 // Counter clockwise rotation
-                this.mesh.rotation.y += 0.25;
+                this.rotation.y += 0.25;
             };
 
             ready = () => this.initMesh();

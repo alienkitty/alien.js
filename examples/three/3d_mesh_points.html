@@ -25,10 +25,10 @@
 
         // https://en.wikipedia.org/wiki/List_of_brightest_stars
         const colors = {
-            lightColor: 0xf44336
-            // lightColor: 0xffbd6f // M-type star
-            // lightColor: 0x9bb0ff // O-type star
-            // lightColor: 0xd88fff // Wolf–Rayet star
+            lightColor1: 0xf44336,
+            lightColor2: 0xffbd6f, // M-type star
+            lightColor3: 0x9bb0ff, // O-type star
+            lightColor4: 0xd88fff  // Wolf–Rayet star
         };
 
         // Based on https://threejs.org/examples/#webgl_multiple_rendertargets by takahirox
@@ -383,8 +383,10 @@
             }
 
             initLight() {
-                const light = new PointLight(colors.lightColor, 3, 4.4, 0);
+                const light = new PointLight(colors.lightColor1, 3, 4.4, 0);
                 this.add(light);
+
+                this.light = light;
             }
 
             async initMesh() {
@@ -495,12 +497,19 @@
 
                 // Occlusion mesh
                 const occMesh = mesh.clone();
-                occMesh.material = new MeshBasicMaterial({ color: colors.lightColor });
+                occMesh.material = new MeshBasicMaterial({ color: colors.lightColor1 });
                 occMesh.layers.set(layers.occlusion);
                 this.add(occMesh);
+
+                this.occMesh = occMesh;
             }
 
             // Public methods
+
+            setColor = color => {
+                this.occMesh.material.color.copy(color);
+                this.light.color.copy(color);
+            };
 
             update = () => {
                 // Counter clockwise rotation
@@ -573,7 +582,14 @@
             static initPanel() {
                 const { drawBuffers, vlMaterial, luminosityMaterial, bloomCompositeMaterial, compositeMaterial } = RenderManager;
 
-                const { sphere } = this.view;
+                const { star, sphere } = this.view;
+
+                const colorOptions = new Map([
+                    ['Light 1', colors.lightColor1],
+                    ['Light 2', colors.lightColor2],
+                    ['Light 3', colors.lightColor3],
+                    ['Light 4', colors.lightColor4]
+                ]);
 
                 const defaultItems = [
                     {
@@ -589,6 +605,18 @@
                 const items = [
                     {
                         name: 'FPS'
+                    },
+                    {
+                        type: 'divider'
+                    },
+                    {
+                        type: 'list',
+                        name: 'Color',
+                        list: colorOptions,
+                        value: getKeyByValue(colorOptions, star.occMesh.material.color.getHex()),
+                        callback: value => {
+                            star.setColor(new Color(colorOptions.get(value)));
+                        }
                     },
                     {
                         type: 'divider'

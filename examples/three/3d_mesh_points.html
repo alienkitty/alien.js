@@ -498,11 +498,15 @@
                 occMesh.material = new MeshBasicMaterial({ color: colors.lightColor });
                 occMesh.layers.set(layers.occlusion);
                 this.add(occMesh);
+
+                this.mesh = mesh;
             }
 
             // Public methods
 
             update = () => {
+                // Counter clockwise rotation
+                this.mesh.rotation.y += 0.25;
             };
 
             ready = () => this.initMesh();
@@ -528,6 +532,7 @@
             // Public methods
 
             update = (time, delta) => {
+                this.star.update();
                 this.sphere.update(time, delta);
             };
 
@@ -960,7 +965,8 @@
 
                 // G-Buffer
                 this.drawBuffers = new DrawBuffers(this.renderer, this.scene, this.camera, layers.buffers, {
-                    cameraBlur: false,
+                    interpolateGeometry: 0.1,
+                    cameraBlur: true,
                     cameraNear: this.camera.near,
                     cameraFar: this.camera.position.z
                 });

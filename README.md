@@ -103,6 +103,7 @@ const program = new FXAAProgram(gl);
 [backdrop](https://alien.js.org/examples/three/3d_backdrop.html)  
 [infinite stars](https://alien.js.org/examples/three/3d_infinite_stars_rgbshift.html) (RGB shift, [debug](https://alien.js.org/examples/three/3d_infinite_stars_rgbshift.html?debug))  
 [cyberspace](https://alien.js.org/examples/three/3d_cyberspace.html) (RGB shift, [debug](https://alien.js.org/examples/three/3d_cyberspace.html?debug))  
+[mesh points](https://alien.js.org/examples/three/3d_mesh_points.html) (motion blur, SSS, volumetric light with lens flare, [debug](https://alien.js.org/examples/three/3d_mesh_points.html?debug))  
 [black holes](https://alien.js.org/examples/three/3d_black_holes.html) (per-object motion blur, volumetric light and fluid sim, [debug](https://alien.js.org/examples/three/3d_black_holes.html?debug), [orbit controls](https://alien.js.org/examples/three/3d_black_holes.html?orbit))  
 [stripe gradient](https://alien.js.org/examples/three/3d_stripe_gradient.html) ([akella version](https://www.youtube.com/watch?v=LW9d2cqIHb4))  
 

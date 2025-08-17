@@ -138,12 +138,13 @@
                 this.mouse = new Vector2();
                 this.delta = new Vector3();
 
-                this.v = new Vector3();
-                this.matrix = new Matrix4();
-
+                this.radius = 2;
+                this.pointSize = 0.025;
                 this.targetDistanceMultiplier = MathUtils.mapLinear(count, 10, 1000, 1, 4.5);
                 this.falloffDistanceMultiplier = MathUtils.mapLinear(count, 10, 1000, 2, 2.5);
-                this.radius = 0.025;
+
+                this.v = new Vector3();
+                this.matrix = new Matrix4();
 
                 this.addListeners();
             }
@@ -254,7 +255,7 @@
                     );
                 };
 
-                const mesh = new Mesh(new SphereGeometry(2));
+                const mesh = new Mesh(new SphereGeometry(this.radius));
                 mesh.material.color.set(0x060606);
                 mesh.material.opacity = 0.8;
                 mesh.material.transparent = true;
@@ -368,7 +369,7 @@
 
                     p.copy(surfacePoint);
 
-                    this.v.setScalar(this.radius);
+                    this.v.setScalar(this.pointSize);
                     this.matrix.makeTranslation(p).scale(this.v);
 
                     this.spheres.setMatrixAt(i, this.matrix);
@@ -632,7 +633,7 @@
                         step: 0.1,
                         value: 1,
                         callback: value => {
-                            sphere.radius = 0.025 * value;
+                            sphere.pointSize = 0.025 * value;
                         }
                     },
                     {
@@ -1009,9 +1010,8 @@
                 // G-Buffer
                 this.drawBuffers = new DrawBuffers(this.renderer, this.scene, this.camera, layers.buffers, {
                     interpolateGeometry: 0.1,
-                    cameraBlur: true,
                     cameraNear: this.camera.near,
-                    cameraFar: this.camera.position.z
+                    cameraFar: this.camera.position.length() // Focus on centre
                 });
 
                 // Motion blur composite material
@@ -1183,8 +1183,7 @@
                 const renderTargetsVertical = this.renderTargetsVertical;
 
                 // Keep camera focus on centre
-                const cameraDistance = camera.position.length();
-                this.drawBuffers.cameraFar = cameraDistance;
+                this.drawBuffers.cameraFar = camera.position.length();
 
                 // Renderer state
                 this.rendererState();

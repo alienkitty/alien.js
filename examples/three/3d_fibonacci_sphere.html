@@ -16,6 +16,7 @@
         const isDebug = /[?&]debug/.test(location.search);
 
         const count = parseInt(location.search.slice(1), 10) || 1000;
+        const maxPoints = 3000;
 
         const layers = {
             default: 0,
@@ -127,10 +128,14 @@
             }
         }
 
+        // Based on https://stackoverflow.com/questions/60578028/how-can-i-achieve-an-even-distribution-of-sprites-across-the-surface-of-a-sphere/60579136#60579136
+
         class Sphere extends Group {
             constructor() {
                 super();
 
+                this.points = [];
+                this.numPoints = count;
                 this.radius = 2;
                 this.pointSize = 0.025;
 
@@ -244,40 +249,51 @@
                     );
                 };
 
-                // Based on https://stackoverflow.com/questions/60578028/how-can-i-achieve-an-even-distribution-of-sprites-across-the-surface-of-a-sphere/60579136#60579136
-
-                const points = [];
-
-                const spheres = new InstancedMesh(geometry, material, count);
+                const spheres = new InstancedMesh(geometry, material, maxPoints);
                 spheres.instanceMatrix.setUsage(DynamicDrawUsage); // Will be updated every frame
                 spheres.layers.enable(layers.buffers);
                 this.add(spheres);
 
-                for (let i = 0; i < spheres.count; i++) {
-                    points[i] = getFibonacciSphere(spheres.count, i, this.radius);
+                // Start with a scale of 0 for all possible points
+                for (let i = 0; i < maxPoints; i++) {
+                    this.v.setScalar(0);
+                    this.matrix.scale(this.v);
 
-                    this.matrix.setPosition(points[i]);
                     spheres.setMatrixAt(i, this.matrix);
                 }
 
-                spheres.computeBoundingSphere();
-
                 this.uniforms = uniforms;
-                this.points = points;
                 this.spheres = spheres;
+
+                this.initSphere();
+            }
+
+            initSphere() {
+                for (let i = 0, l = this.numPoints; i < l; i++) {
+                    this.points[i] = getFibonacciSphere(this.numPoints, i, this.radius);
+                }
+
+                // https://discourse.threejs.org/t/is-it-possible-to-optimize-instances-add-remove-instance-dynamically/44594/2
+                this.spheres.count = this.numPoints;
             }
 
             // Public methods
 
+            addPoints = () => {
+                this.numPoints = Math.min(++this.numPoints, maxPoints);
+
+                this.initSphere();
+            };
+
             update = () => {
+                this.addPoints();
+
                 // Counter clockwise rotation
                 this.spheres.rotation.y += 0.0003;
 
-                for (let i = 0, l = this.points.length; i < l; i++) {
-                    const p = this.points[i];
-
-                    this.v.setScalar(this.radius);
-                    this.matrix.makeTranslation(p).scale(this.v);
+                for (let i = 0, l = this.spheres.count; i < l; i++) {
+                    this.v.setScalar(this.pointSize);
+                    this.matrix.makeTranslation(this.points[i]).scale(this.v);
 
                     this.spheres.setMatrixAt(i, this.matrix);
                 }
@@ -1336,7 +1352,7 @@
                 this.camera = new PerspectiveCamera(30);
                 this.camera.near = 0.5;
                 this.camera.far = 1000;
-                this.camera.position.z = 3.5;
+                this.camera.position.set(0, 3.5, 0);
                 this.camera.lookAt(this.scene.position);
 
                 // Global geometries

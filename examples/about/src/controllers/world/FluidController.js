@@ -270,7 +270,7 @@ export class FluidController {
                     pointer.delta.subVectors(pointer.mouse, pointer.last);
                     pointer.last.copy(pointer.mouse);
 
-                    const distance = Math.min(10, pointer.delta.length()) / 10;
+                    const distance = Math.min(pointer.delta.length(), 10) / 10;
 
                     const i = pointer.id === 'main' ? Number(store.id) : Number(pointer.id);
 

@@ -32,6 +32,10 @@
             lightColor4: 0xd88fff  // Wolf–Rayet star
         };
 
+        const store = {
+            viewIndex: 0
+        };
+
         // Based on https://threejs.org/examples/#webgl_multiple_rendertargets by takahirox
         // Based on https://oframe.github.io/ogl/examples/?src=mrt.html by gordonnl
         // Based on https://github.com/gkjohnson/threejs-sandbox/tree/master/motionBlurPass
@@ -502,7 +506,8 @@
         }
 
         class PanelController {
-            static init(view, ui) {
+            static init(camera, view, ui) {
+                this.camera = camera;
                 this.view = view;
                 this.ui = ui;
 
@@ -513,6 +518,11 @@
                 const { drawBuffers, vlMaterial, luminosityMaterial, bloomCompositeMaterial, compositeMaterial } = RenderManager;
 
                 const { star, sphere } = this.view;
+
+                const viewOptions = new Map([
+                    ['OBL', 0],
+                    ['POL', 1]
+                ]);
 
                 const colorOptions = new Map([
                     ['Light 1', colors.lightColor1],
@@ -538,6 +548,22 @@
                     },
                     {
                         type: 'divider'
+                    },
+                    {
+                        type: 'list',
+                        name: 'View',
+                        list: viewOptions,
+                        value: getKeyByValue(viewOptions, store.viewIndex),
+                        callback: value => {
+                            switch (value) {
+                                case 'OBL': // Oblique camera
+                                    this.camera.position.set(0, 0, 3.5);
+                                    break;
+                                case 'POL': // Polar camera
+                                    this.camera.position.set(0, 3.5, 0);
+                                    break;
+                            }
+                        }
                     },
                     {
                         type: 'list',
@@ -1352,7 +1378,7 @@
                 this.camera = new PerspectiveCamera(30);
                 this.camera.near = 0.5;
                 this.camera.far = 1000;
-                this.camera.position.set(0, 3.5, 0);
+                this.camera.position.z = 3.5;
                 this.camera.lookAt(this.scene.position);
 
                 // Global geometries
@@ -1446,6 +1472,9 @@
 
         class App {
             static async init() {
+                const params = new URL(location.href).searchParams;
+                store.viewIndex = params.has('view') ? Number(params.get('view')) - 1 : 0;
+
                 this.initThread();
                 this.initWorld();
                 this.initViews();
@@ -1488,7 +1517,9 @@
             }
 
             static initPanel() {
-                PanelController.init(this.view, this.ui);
+                const { camera } = WorldController;
+
+                PanelController.init(camera, this.view, this.ui);
             }
 
             static addListeners() {

@@ -13,7 +13,8 @@
     <script type="module">
         import { AdditiveBlending, BloomCompositeMaterial, BlurMaterial, Color, ColorManagement, CopyMaterial, DepthMaterial, DirectionalLight, DisplayOptions, DrawBuffers, DynamicDrawUsage, EnvironmentTextureLoader, Fog, GLSL3, Group, HemisphereLight, IcosahedronGeometry, ImageBitmapLoaderThread, InstancedMesh, LinearSRGBColorSpace, LuminosityMaterial, MathUtils, Matrix4, Mesh, MeshBasicMaterial, MeshMatcapMaterial, MeshStandardMaterial, MotionBlurCompositeMaterial, NoBlending, NormalMaterial, OrbitControls, OrthographicCamera, Panel, PanelItem, PerspectiveCamera, PointLight, RawShaderMaterial, RepeatWrapping, Scene, ShaderChunk, TextureLoader, UI, UnrealBloomBlurMaterial, Vector2, Vector3, VolumetricLightLensflareMaterial, WebGLRenderTarget, WebGLRenderer, getFibonacciSphere, getFullscreenTriangle, getKeyByValue, ticker } from '../../build/alien.three.js';
 
-        const isDebug = /[?&]debug/.test(location.search);
+        const searchParams = new URL(location.href).searchParams;
+        const isDebug = searchParams.has('debug');
 
         const count = parseInt(location.search.slice(1), 10) || 1000;
         const maxPoints = 3000;
@@ -24,16 +25,17 @@
             occlusion: 2
         };
 
+        const params = {
+            viewIndex: searchParams.has('view') ? Number(searchParams.get('view')) - 1 : 0,
+            addPoints: searchParams.has('add')
+        };
+
         // https://en.wikipedia.org/wiki/List_of_brightest_stars
         const colors = {
             lightColor1: 0xf44336,
             lightColor2: 0xffbd6f, // M-type star
             lightColor3: 0x9bb0ff, // O-type star
             lightColor4: 0xd88fff  // Wolf–Rayet star
-        };
-
-        const store = {
-            viewIndex: 0
         };
 
         // Based on https://threejs.org/examples/#webgl_multiple_rendertargets by takahirox
@@ -290,7 +292,9 @@
             };
 
             update = () => {
-                this.addPoints();
+                if (params.addPoints) {
+                    this.addPoints();
+                }
 
                 // Counter clockwise rotation
                 this.spheres.rotation.y += 0.0003;
@@ -553,7 +557,7 @@
                         type: 'list',
                         name: 'View',
                         list: viewOptions,
-                        value: getKeyByValue(viewOptions, store.viewIndex),
+                        value: getKeyByValue(viewOptions, params.viewIndex),
                         callback: value => {
                             switch (value) {
                                 case 'OBL': // Oblique camera
@@ -583,6 +587,14 @@
                         value: 1,
                         callback: value => {
                             sphere.pointSize = 0.025 * value;
+                        }
+                    },
+                    {
+                        type: 'toggle',
+                        name: 'Add',
+                        value: params.addPoints,
+                        callback: value => {
+                            params.addPoints = value;
                         }
                     },
                     {
@@ -1472,9 +1484,6 @@
 
         class App {
             static async init() {
-                const params = new URL(location.href).searchParams;
-                store.viewIndex = params.has('view') ? Number(params.get('view')) - 1 : 0;
-
                 this.initThread();
                 this.initWorld();
                 this.initViews();

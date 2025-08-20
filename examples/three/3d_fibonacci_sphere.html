@@ -19,6 +19,14 @@
         const count = parseInt(location.search.slice(1), 10) || 1000;
         const maxPoints = 3000;
 
+        // https://en.wikipedia.org/wiki/List_of_brightest_stars
+        const colors = {
+            lightColor1: 0xf44336,
+            lightColor2: 0xffbd6f, // M-type star
+            lightColor3: 0x9bb0ff, // O-type star
+            lightColor4: 0xd88fff  // Wolf–Rayet star
+        };
+
         const layers = {
             default: 0,
             buffers: 1,
@@ -28,14 +36,6 @@
         const params = {
             viewIndex: searchParams.has('view') ? Number(searchParams.get('view')) - 1 : 0,
             addPoints: searchParams.has('add')
-        };
-
-        // https://en.wikipedia.org/wiki/List_of_brightest_stars
-        const colors = {
-            lightColor1: 0xf44336,
-            lightColor2: 0xffbd6f, // M-type star
-            lightColor3: 0x9bb0ff, // O-type star
-            lightColor4: 0xd88fff  // Wolf–Rayet star
         };
 
         // Based on https://threejs.org/examples/#webgl_multiple_rendertargets by takahirox

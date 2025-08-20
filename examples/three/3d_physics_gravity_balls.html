@@ -17,14 +17,14 @@
 
         const count = parseInt(location.search.slice(1), 10) || 100;
 
+        const colors = {
+            lightColor: 0xf44336
+        };
+
         const layers = {
             default: 0,
             buffers: 1,
             occlusion: 2
-        };
-
-        const colors = {
-            lightColor: 0xf44336
         };
 
         // Based on https://threejs.org/examples/#webgl_multiple_rendertargets by takahirox

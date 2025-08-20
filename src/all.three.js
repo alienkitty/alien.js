@@ -123,9 +123,6 @@ export { Magnetic } from '@alienkitty/space.js/src/extras/Magnetic.js';
 // Three
 export * from './three/materials/Materials.js';
 export { Wobble } from './three/utils/Wobble.js';
-export { HalfEdgeMap } from './three/utils/HalfEdgeMap.js';
-export * from './three/utils/SurfaceWalker.js';
-export * from './three/utils/MeshPointsGenerator.js';
 export { Flowmap } from './three/utils/Flowmap.js';
 export { Fluid } from './three/utils/Fluid.js';
 export { Reflector } from './three/utils/Reflector.js';
@@ -133,6 +130,11 @@ export { MotionBlur } from './three/utils/MotionBlur.js';
 export { DrawBuffers } from './three/utils/DrawBuffers.js';
 export { SoftShadows } from './three/utils/SoftShadows.js';
 export { Text } from './three/utils/Text.js';
+
+// Mesh BVH
+export { HalfEdgeMap } from './three/utils/HalfEdgeMap.js';
+export * from './three/utils/SurfaceWalker.js';
+export * from './three/utils/MeshPointsGenerator.js';
 
 // Physics
 export { OimoPhysics, RigidBodyConfig, RigidBodyType, SphericalJointConfig, UniversalJointConfig } from './three/utils/physics/OimoPhysics.js';

@@ -82,7 +82,7 @@ void main() {
         vec4 reflectColor = textureProj(tReflect, vCoord);
     #endif
 
-    // Fresnel term
+    // Fresnel
     vec3 toEye = normalize(vToEye);
     float theta = max(dot(toEye, normal), 0.0);
     float reflectance = uReflectivity + (1.0 - uReflectivity) * pow((1.0 - theta), 5.0);

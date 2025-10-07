@@ -200,7 +200,7 @@
                         vec2 reflectUv = reflectCoord.xy + reflectCoord.z * reflectNormal.xz * 0.05;
                         vec4 reflectColor = texture2D(reflectMap, reflectUv);
 
-                        // Fresnel term
+                        // Fresnel
                         vec3 toEye = normalize(vToEye);
                         float theta = max(dot(toEye, normal), 0.0);
                         float reflectance = pow((1.0 - theta), 5.0);

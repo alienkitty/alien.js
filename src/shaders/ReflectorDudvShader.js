@@ -64,7 +64,7 @@ void main() {
 
     FragColor = color * mix(0.6, 0.75, dudv.g);
 
-    // Fresnel term
+    // Fresnel
     vec3 toEye = normalize(vToEye);
     float theta = max(dot(toEye, vNormal), 0.0);
     float reflectance = uReflectivity + (1.0 - uReflectivity) * pow((1.0 - theta), 5.0);

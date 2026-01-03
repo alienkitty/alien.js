@@ -71,7 +71,7 @@ export class App {
                         links: [
                             {
                                 title: 'Mr.doob’s Multiuser Sketchpad',
-                                link: 'https://multiuser-sketchpad.glitch.me/'
+                                link: 'https://mrdoob.com/projects/multiuserpad/'
                             },
                             {
                                 title: 'David A Roberts’ Single-pass Fluid Solver',

@@ -267,7 +267,7 @@ class AbstractCube extends Group {
             // loadTexture('uv.jpg'),
             loadTexture('pbr/pitted_metal_basecolor.jpg'),
             loadTexture('pbr/pitted_metal_normal.jpg'),
-            // https://occlusion-roughness-metalness.glitch.me/
+            // https://occlusion-roughness-metalness.cyberspace.app/
             loadTexture('pbr/pitted_metal_orm.jpg')
         ]);
 
@@ -365,7 +365,7 @@ class FloatingCrystal extends Group {
             // loadTexture('uv.jpg'),
             loadTexture('pbr/pitted_metal_basecolor.jpg'),
             loadTexture('pbr/pitted_metal_normal.jpg'),
-            // https://occlusion-roughness-metalness.glitch.me/
+            // https://occlusion-roughness-metalness.cyberspace.app/
             loadTexture('pbr/pitted_metal_orm.jpg')
         ]);
 
@@ -477,7 +477,7 @@ class DarkPlanet extends Group {
             // loadTexture('uv.jpg'),
             loadTexture('pbr/pitted_metal_basecolor.jpg'),
             loadTexture('pbr/pitted_metal_normal.jpg'),
-            // https://occlusion-roughness-metalness.glitch.me/
+            // https://occlusion-roughness-metalness.cyberspace.app/
             loadTexture('pbr/pitted_metal_orm.jpg')
         ]);
 

@@ -188,16 +188,16 @@ const program = new FXAAProgram(gl);
 [cubemap uv](https://alien.js.org/examples/three/3d_cubemap_uv.html) (texture and buffer geometry loader thread)  
 [instancing](https://alien.js.org/examples/three/3d_physics_instancing_thread.html) (physics thread)  
 [picking](https://alien.js.org/examples/three/3d_physics_picking_thread.html) (physics thread)  
-[multiuser blocks](https://multiuser-blocks.glitch.me/) (websocket thread, [glitch](https://glitch.com/edit/#!/multiuser-blocks))  
-[multiuser balls](https://multiuser-balls.glitch.me/) (websocket thread, [glitch](https://glitch.com/edit/#!/multiuser-balls))  
+[multiuser blocks](https://multiuser-blocks.cyberspace.app/) (websocket thread, [github](https://github.com/pschroen/multiuser-blocks))  
+[multiuser balls](https://multiuser-balls.cyberspace.app/) (websocket thread, [github](https://github.com/pschroen/multiuser-balls))  
 
 #### websockets
 
-[json](https://hello-websockets-json.glitch.me/) ([glitch](https://glitch.com/edit/#!/hello-websockets-json))  
-[binary](https://hello-websockets-binary.glitch.me/) ([glitch](https://glitch.com/edit/#!/hello-websockets-binary))  
-[multiuser fluid](https://multiuser-fluid.glitch.me/) (binary, [glitch](https://glitch.com/edit/#!/multiuser-fluid))  
-[multiuser blocks](https://multiuser-blocks.glitch.me/) (binary, [glitch](https://glitch.com/edit/#!/multiuser-blocks))  
-[multiuser balls](https://multiuser-balls.glitch.me/) (binary, [glitch](https://glitch.com/edit/#!/multiuser-balls))  
+[json](https://hello-websockets-json.cyberspace.app/) ([github](https://github.com/pschroen/hello-websockets-json))  
+[binary](https://hello-websockets-binary.cyberspace.app/) ([github](https://github.com/pschroen/hello-websockets-binary))  
+[multiuser fluid](https://multiuser-fluid.cyberspace.app/) (binary, [github](https://github.com/pschroen/multiuser-fluid))  
+[multiuser blocks](https://multiuser-blocks.cyberspace.app/) (binary, [github](https://github.com/pschroen/multiuser-blocks))  
+[multiuser balls](https://multiuser-balls.cyberspace.app/) (binary, [github](https://github.com/pschroen/multiuser-balls))  
 
 ### Getting started
 

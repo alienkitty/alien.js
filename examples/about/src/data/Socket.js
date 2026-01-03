@@ -23,7 +23,7 @@ export class Socket extends EventEmitter {
     }
 
     init() {
-        this.server = 'wss://multiuser-fluid.glitch.me';
+        this.server = 'wss://multiuser-fluid.cyberspace.app';
 
         this.connect();
     }

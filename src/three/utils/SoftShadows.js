@@ -63,7 +63,7 @@ export class SoftShadows {
                 int numBlockers = 0;
 
                 for (int i = 0; i < BLOCKER_SEARCH_NUM_SAMPLES; i++) {
-                    float shadowMapDepth = unpackRGBAToDepth(texture2D(shadowMap, uv + poissonDisk[i] * searchRadius));
+                    float shadowMapDepth = texture(shadowMap, uv + poissonDisk[i] * searchRadius).r;
                     if (shadowMapDepth < zReceiver) {
                         blockerDepthSum += shadowMapDepth;
                         numBlockers++;
@@ -80,13 +80,13 @@ export class SoftShadows {
                 float depth;
                 #pragma unroll_loop_start
                 for (int i = 0; i < NUM_SAMPLES; i++) {
-                    depth = unpackRGBAToDepth(texture2D(shadowMap, uv + poissonDisk[i] * filterRadius));
+                    depth = texture(shadowMap, uv + poissonDisk[i] * filterRadius).r;
                     if (zReceiver <= depth) sum += 1.0;
                 }
                 #pragma unroll_loop_end
                 #pragma unroll_loop_start
                 for (int i = 0; i < NUM_SAMPLES; i++) {
-                    depth = unpackRGBAToDepth(texture2D(shadowMap, uv + -poissonDisk[i].yx * filterRadius));
+                    depth = texture(shadowMap, uv + -poissonDisk[i].yx * filterRadius).r;
                     if (zReceiver <= depth) sum += 1.0;
                 }
                 #pragma unroll_loop_end
@@ -116,11 +116,11 @@ export class SoftShadows {
         );
 
         shader = shader.replace(
-            '#if defined( SHADOWMAP_TYPE_PCF )',
+            '\t\t\tif ( frustumTest ) {\n\t\t\t\tfloat depth = texture2D( shadowMap, shadowCoord.xy ).r;',
             /* glsl */ `
-            return PCSS(shadowMap, shadowCoord);
-
-            #if defined( SHADOWMAP_TYPE_PCF )
+            if ( frustumTest ) {
+                return PCSS(shadowMap, shadowCoord);
+                float depth = texture2D( shadowMap, shadowCoord.xy ).r;
             `
         );
 

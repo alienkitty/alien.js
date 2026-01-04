@@ -1374,6 +1374,7 @@ class RenderManager {
     };
 
     static zoomIn = () => {
+        clearTween(this);
         clearTween(this.timeout);
 
         this.timeout = delayedCall(300, () => {
@@ -1382,6 +1383,7 @@ class RenderManager {
     };
 
     static zoomOut = () => {
+        clearTween(this);
         clearTween(this.timeout);
 
         tween(this, { blurAmount: 0 }, 300, 'linear');

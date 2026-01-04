@@ -97,7 +97,7 @@
             }
 
             initMesh() {
-                const material = new MeshStandardMaterial({ metalness: 1 });
+                const material = new MeshStandardMaterial();
 
                 // Penrose triangle geometry
                 const bottomBox = new BoxGeometry(50, 50, 300);
@@ -491,7 +491,7 @@
             }
 
             static initLights() {
-                const light = new DirectionalLight(0xffffff, 7);
+                const light = new DirectionalLight(0xffffff, 3);
                 light.position.set(60, 100, 20);
                 this.scene.add(light);
             }

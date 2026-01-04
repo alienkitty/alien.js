@@ -322,8 +322,8 @@ class AbstractCube extends Group {
         ormMap.anisotropy = anisotropy;
 
         const material = new MeshStandardMaterial({
-            color: new Color().offsetHSL(0, 0, -0.65),
-            metalness: 0.7,
+            color: new Color().offsetHSL(0, 0, -0.8),
+            metalness: 0.5,
             roughness: 0.7,
             map,
             metalnessMap: ormMap,
@@ -431,8 +431,8 @@ class FloatingCrystal extends Group {
         ormMap.repeat.set(2, 2);
 
         const material = new MeshStandardMaterial({
-            color: new Color().offsetHSL(0, 0, -0.65),
-            metalness: 0.7,
+            color: new Color().offsetHSL(0, 0, -0.8),
+            metalness: 0.5,
             roughness: 0.7,
             map,
             metalnessMap: ormMap,
@@ -543,8 +543,8 @@ class DarkPlanet extends Group {
         ormMap.repeat.set(2, 1);
 
         const material = new MeshStandardMaterial({
-            color: new Color().offsetHSL(0, 0, -0.65),
-            metalness: 0.7,
+            color: new Color().offsetHSL(0, 0, -0.8),
+            metalness: 0.5,
             roughness: 2,
             map,
             metalnessMap: ormMap,

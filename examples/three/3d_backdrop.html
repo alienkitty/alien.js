@@ -19,7 +19,7 @@
     </style>
 
     <script type="module">
-        import { AmbientLight, BasicShadowMap, BloomCompositeMaterial, Color, ColorManagement, DirectionalLight, Easing, EnvironmentTextureLoader, GLSL3, Group, HemisphereLight, IcosahedronGeometry, LightPanelController, LinearSRGBColorSpace, LuminosityMaterial, MathUtils, Mesh, MeshStandardMaterial, NoBlending, OrbitControls, OrthographicCamera, Panel, PanelItem, PerspectiveCamera, PlaneGeometry, RawShaderMaterial, Scene, SoftShadows, TextureLoader, UI, UnrealBloomBlurMaterial, Vector2, WebGLRenderTarget, WebGLRenderer, getFullscreenTriangle, getKeyByValue, ticker } from '../../build/alien.three.js';
+        import { BasicShadowMap, BloomCompositeMaterial, Color, ColorManagement, DirectionalLight, Easing, EnvironmentTextureLoader, GLSL3, Group, HemisphereLight, IcosahedronGeometry, LightPanelController, LinearSRGBColorSpace, LuminosityMaterial, MathUtils, Mesh, MeshStandardMaterial, NoBlending, OrbitControls, OrthographicCamera, Panel, PanelItem, PerspectiveCamera, PlaneGeometry, RawShaderMaterial, Scene, SoftShadows, TextureLoader, UI, UnrealBloomBlurMaterial, Vector2, WebGLRenderTarget, WebGLRenderer, getFullscreenTriangle, getKeyByValue, ticker } from '../../build/alien.three.js';
 
         // Based on https://github.com/mrdoob/three.js/blob/dev/examples/jsm/shaders/ACESFilmicToneMappingShader.js by WestLangley
         // Based on https://github.com/mrdoob/three.js/blob/dev/examples/jsm/shaders/GammaCorrectionShader.js by WestLangley
@@ -107,7 +107,7 @@
                 const material = new MeshStandardMaterial({
                     color: 0xefefef,
                     metalness: 0.6,
-                    roughness: 0.9,
+                    roughness: 1,
                     dithering: true
                 });
 
@@ -160,7 +160,7 @@
                 const material = new MeshStandardMaterial({
                     color: 0xefefef,
                     metalness: 0.6,
-                    roughness: 0.9,
+                    roughness: 1,
                     dithering: true
                 });
 
@@ -201,20 +201,24 @@
             static initPanel() {
                 const { luminosityMaterial, bloomCompositeMaterial, compositeMaterial } = RenderManager;
 
-                const postOptions = {
-                    Off: false,
-                    Post: true
-                };
+                const postOptions = new Map([
+                    ['Off', false],
+                    ['Post', true]
+                ]);
 
-                const toneMappingOptions = {
-                    Off: false,
-                    Tone: true
-                };
-
-                const gammaOptions = {
-                    Off: false,
-                    Gamma: true
-                };
+                const toneMappingItems = [
+                    {
+                        type: 'slider',
+                        name: 'Exp',
+                        min: 0,
+                        max: 2,
+                        step: 0.01,
+                        value: compositeMaterial.uniforms.uExposure.value,
+                        callback: value => {
+                            compositeMaterial.uniforms.uExposure.value = value;
+                        }
+                    }
+                ];
 
                 const postItems = [
                     {
@@ -281,33 +285,36 @@
                         type: 'divider'
                     },
                     {
-                        type: 'list',
-                        list: toneMappingOptions,
-                        value: getKeyByValue(toneMappingOptions, compositeMaterial.uniforms.uToneMapping.value),
-                        callback: value => {
-                            compositeMaterial.uniforms.uToneMapping.value = toneMappingOptions[value];
+                        type: 'toggle',
+                        name: 'Tone',
+                        value: compositeMaterial.uniforms.uToneMapping.value,
+                        callback: (value, item) => {
+                            if (!item.hasContent()) {
+                                const toneMappingPanel = new Panel();
+                                toneMappingPanel.animateIn(true);
+
+                                toneMappingItems.forEach(data => {
+                                    toneMappingPanel.add(new PanelItem(data));
+                                });
+
+                                item.setContent(toneMappingPanel);
+                            }
+
+                            compositeMaterial.uniforms.uToneMapping.value = value;
+
+                            if (value) {
+                                item.toggleContent(true);
+                            } else {
+                                item.toggleContent(false);
+                            }
                         }
                     },
                     {
-                        type: 'slider',
-                        name: 'Exp',
-                        min: 0,
-                        max: 2,
-                        step: 0.01,
-                        value: compositeMaterial.uniforms.uExposure.value,
+                        type: 'toggle',
+                        name: 'Gamma',
+                        value: compositeMaterial.uniforms.uGamma.value,
                         callback: value => {
-                            compositeMaterial.uniforms.uExposure.value = value;
-                        }
-                    },
-                    {
-                        type: 'divider'
-                    },
-                    {
-                        type: 'list',
-                        list: gammaOptions,
-                        value: getKeyByValue(gammaOptions, compositeMaterial.uniforms.uGamma.value),
-                        callback: value => {
-                            compositeMaterial.uniforms.uGamma.value = gammaOptions[value];
+                            compositeMaterial.uniforms.uGamma.value = value;
                         }
                     }
                 ];
@@ -337,7 +344,7 @@
                                 item.setContent(postPanel);
                             }
 
-                            RenderManager.enabled = postOptions[value];
+                            RenderManager.enabled = postOptions.get(value);
 
                             if (RenderManager.enabled) {
                                 item.toggleContent(true);
@@ -374,7 +381,7 @@
                 this.camera = camera;
 
                 // Unreal bloom
-                this.luminosityThreshold = 0.75;
+                this.luminosityThreshold = 0.9;
                 this.luminositySmoothing = 1;
                 this.bloomStrength = 0.3;
                 this.bloomRadius = 0.2;
@@ -598,11 +605,9 @@
             }
 
             static initLights() {
-                this.scene.add(new AmbientLight(0xffffff, 0.2));
-
                 this.scene.add(new HemisphereLight(0x606060, 0x404040, 3));
 
-                const directionalLight1 = new DirectionalLight(0xffffff, 0.8);
+                const directionalLight1 = new DirectionalLight(0xffffff, 0.5);
                 directionalLight1.position.set(5, 5, 5);
                 directionalLight1.castShadow = true;
                 directionalLight1.shadow.mapSize.width = 1024;
@@ -611,7 +616,7 @@
                 directionalLight1.shadow.camera.far = 20;
                 this.scene.add(directionalLight1);
 
-                const directionalLight2 = new DirectionalLight();
+                const directionalLight2 = new DirectionalLight(0xffffff, 0.8);
                 directionalLight2.position.set(-3, 4, 1);
                 directionalLight2.castShadow = true;
                 directionalLight2.shadow.mapSize.width = 1024;

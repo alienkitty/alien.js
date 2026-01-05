@@ -52,7 +52,7 @@
                     // loadTexture('uv.jpg'),
                     loadTexture('pbr/pitted_metal_basecolor.jpg'),
                     loadTexture('pbr/pitted_metal_normal.jpg'),
-                    // https://occlusion-roughness-metalness.glitch.me/
+                    // https://occlusion-roughness-metalness.cyberspace.app/
                     loadTexture('pbr/pitted_metal_orm.jpg'),
                     loadTexture('pbr/pitted_metal_height.jpg')
                 ]);
@@ -79,7 +79,7 @@
 
                 const material = new MeshStandardMaterial({
                     color: new Color(colors.lightColor),
-                    metalness: 0.7,
+                    metalness: 0.5,
                     roughness: 2,
                     map,
                     metalnessMap: ormMap,
@@ -180,7 +180,7 @@
                     // loadTexture('uv.jpg'),
                     loadTexture('pbr/pitted_metal_basecolor.jpg'),
                     loadTexture('pbr/pitted_metal_normal.jpg'),
-                    // https://occlusion-roughness-metalness.glitch.me/
+                    // https://occlusion-roughness-metalness.cyberspace.app/
                     loadTexture('pbr/pitted_metal_orm.jpg'),
                     loadTexture('pbr/pitted_metal_height.jpg')
                 ]);
@@ -206,8 +206,8 @@
                 thicknessMap.repeat.set(2, 1);
 
                 const material = new MeshStandardMaterial({
-                    color: new Color().offsetHSL(0, 0, -0.65),
-                    metalness: 0.7,
+                    color: new Color().offsetHSL(0, 0, -0.8),
+                    metalness: 0.5,
                     roughness: 2,
                     map,
                     metalnessMap: ormMap,
@@ -227,9 +227,9 @@
 
                 const uniforms = {
                     thicknessMap: { value: thicknessMap },
-                    thicknessDistortion: { value: 0.185 },
+                    thicknessDistortion: { value: 0.1 },
                     thicknessAmbient: { value: 0 },
-                    thicknessAttenuation: { value: 1 },
+                    thicknessAttenuation: { value: 0.5 },
                     thicknessPower: { value: 20 },
                     thicknessScale: { value: 16 }
                 };

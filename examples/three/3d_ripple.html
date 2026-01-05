@@ -269,7 +269,7 @@
             static init(view) {
                 this.view = view;
 
-                this.mouse = new Vector2();
+                this.mouse = new Vector2(-1, -1);
                 this.last = new Vector2();
                 this.delta = new Vector2();
                 this.mouse.set(document.documentElement.clientWidth / 2, document.documentElement.clientHeight / 2);
@@ -366,7 +366,7 @@
                         list: WireframeOptions,
                         value: getKeyByValue(WireframeOptions, mesh.material.wireframe),
                         callback: value => {
-                            mesh.material.wireframe = WireframeOptions[value];
+                            mesh.material.wireframe = WireframeOptions.get(value);
 
                             if (mesh.material.wireframe) {
                                 mesh.material.map = null;

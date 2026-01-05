@@ -24,8 +24,8 @@
                 const geometry = new BoxGeometry();
 
                 const material = new MeshStandardMaterial({
-                    color: new Color().offsetHSL(0, 0, -0.65),
-                    metalness: 0.7,
+                    color: new Color().offsetHSL(0, 0, -0.8),
+                    metalness: 0.5,
                     roughness: 0.7,
                     flatShading: true
                 });
@@ -72,8 +72,8 @@
                 const geometry = new OctahedronGeometry();
 
                 const material = new MeshStandardMaterial({
-                    color: new Color().offsetHSL(0, 0, -0.65),
-                    metalness: 0.7,
+                    color: new Color().offsetHSL(0, 0, -0.8),
+                    metalness: 0.5,
                     roughness: 0.7,
                     flatShading: true
                 });
@@ -123,8 +123,8 @@
                 const geometry = new IcosahedronGeometry(0.6, 12);
 
                 const material = new MeshStandardMaterial({
-                    color: new Color().offsetHSL(0, 0, -0.65),
-                    metalness: 0.7,
+                    color: new Color().offsetHSL(0, 0, -0.8),
+                    metalness: 0.5,
                     roughness: 1
                 });
 
@@ -488,17 +488,17 @@
                 this.camera = camera;
 
                 this.raycaster = new Raycaster();
+                this.raycastInterval = 1 / 10; // 10 frames per second
+                this.lastRaycast = 0;
 
                 this.objects = [];
                 this.mouse = new Vector2(-1, -1);
                 this.delta = new Vector2();
-                this.coords = new Vector2(-2, 2);
+                this.coords = new Vector2(-1, -1);
                 this.hover = null;
                 this.click = null;
                 this.lastTime = 0;
                 this.lastMouse = new Vector2();
-                this.raycastInterval = 1 / 10; // 10 frames per second
-                this.lastRaycast = 0;
                 this.enabled = true;
 
                 this.addListeners();
@@ -547,10 +547,10 @@
 
                 this.raycaster.setFromCamera(this.coords, this.camera);
 
-                const intersection = this.raycaster.intersectObjects(this.objects);
+                const hit = this.raycaster.intersectObjects(this.objects)[0];
 
-                if (intersection.length) {
-                    let object = intersection[0].object;
+                if (hit) {
+                    let object = hit.object;
 
                     if (object.parent.isGroup) {
                         object = object.parent;

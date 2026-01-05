@@ -228,7 +228,7 @@ class AbstractCube extends Group {
             // loadTexture('uv.jpg'),
             loadTexture('pbr/pitted_metal_basecolor.jpg'),
             loadTexture('pbr/pitted_metal_normal.jpg'),
-            // https://occlusion-roughness-metalness.glitch.me/
+            // https://occlusion-roughness-metalness.cyberspace.app/
             loadTexture('pbr/pitted_metal_orm.jpg')
         ]);
 
@@ -238,8 +238,8 @@ class AbstractCube extends Group {
 
         const material = new MeshStandardMaterial({
             name: 'Abstract Cube',
-            color: new Color().offsetHSL(0, 0, -0.65),
-            metalness: 0.7,
+            color: new Color().offsetHSL(0, 0, -0.8),
+            metalness: 0.5,
             roughness: 0.7,
             map,
             metalnessMap: ormMap,
@@ -325,7 +325,7 @@ class FloatingCrystal extends Group {
             // loadTexture('uv.jpg'),
             loadTexture('pbr/pitted_metal_basecolor.jpg'),
             loadTexture('pbr/pitted_metal_normal.jpg'),
-            // https://occlusion-roughness-metalness.glitch.me/
+            // https://occlusion-roughness-metalness.cyberspace.app/
             loadTexture('pbr/pitted_metal_orm.jpg')
         ]);
 
@@ -346,8 +346,8 @@ class FloatingCrystal extends Group {
 
         const material = new MeshStandardMaterial({
             name: 'Floating Crystal',
-            color: new Color().offsetHSL(0, 0, -0.65),
-            metalness: 0.7,
+            color: new Color().offsetHSL(0, 0, -0.8),
+            metalness: 0.5,
             roughness: 0.7,
             map,
             metalnessMap: ormMap,
@@ -436,7 +436,7 @@ class DarkPlanet extends Group {
             // loadTexture('uv.jpg'),
             loadTexture('pbr/pitted_metal_basecolor.jpg'),
             loadTexture('pbr/pitted_metal_normal.jpg'),
-            // https://occlusion-roughness-metalness.glitch.me/
+            // https://occlusion-roughness-metalness.cyberspace.app/
             loadTexture('pbr/pitted_metal_orm.jpg')
         ]);
 
@@ -457,8 +457,8 @@ class DarkPlanet extends Group {
 
         const material = new MeshStandardMaterial({
             name: 'Dark Planet',
-            color: new Color().offsetHSL(0, 0, -0.65),
-            metalness: 0.7,
+            color: new Color().offsetHSL(0, 0, -0.8),
+            metalness: 0.5,
             roughness: 2,
             map,
             metalnessMap: ormMap,
@@ -811,16 +811,6 @@ class PanelController {
     static initPanel() {
         const { drawBuffers, hBlurMaterial, vBlurMaterial, luminosityMaterial, bloomCompositeMaterial, compositeMaterial } = RenderManager;
 
-        const animateOptions = {
-            Off: false,
-            Animate: true
-        };
-
-        const debugOptions = {
-            Off: false,
-            Debug: true
-        };
-
         const items = [
             {
                 name: 'FPS'
@@ -833,11 +823,20 @@ class PanelController {
                 list: DisplayOptions,
                 value: getKeyByValue(DisplayOptions, RenderManager.display),
                 callback: value => {
-                    RenderManager.display = DisplayOptions[value];
+                    RenderManager.display = DisplayOptions.get(value);
                 }
             },
             {
                 type: 'divider'
+            },
+            {
+                type: 'toggle',
+                name: 'Animate',
+                value: params.animate,
+                callback: value => {
+                    params.animate = value;
+                    drawBuffers.saveState = params.animate;
+                }
             },
             {
                 type: 'slider',
@@ -848,15 +847,6 @@ class PanelController {
                 value: params.speed,
                 callback: value => {
                     params.speed = value;
-                }
-            },
-            {
-                type: 'list',
-                list: animateOptions,
-                value: getKeyByValue(animateOptions, params.animate),
-                callback: value => {
-                    params.animate = animateOptions[value];
-                    drawBuffers.saveState = params.animate;
                 }
             },
             {
@@ -937,11 +927,11 @@ class PanelController {
                 }
             },
             {
-                type: 'list',
-                list: debugOptions,
-                value: getKeyByValue(debugOptions, vBlurMaterial.uniforms.uDebug.value),
+                type: 'toggle',
+                name: 'Debug',
+                value: vBlurMaterial.uniforms.uDebug.value,
                 callback: value => {
-                    vBlurMaterial.uniforms.uDebug.value = debugOptions[value];
+                    vBlurMaterial.uniforms.uDebug.value = value;
                 }
             },
             {
@@ -1032,7 +1022,7 @@ class RenderManager {
         this.bloomRadius = 0.2;
 
         // Debug
-        this.display = DisplayOptions.Default;
+        this.display = DisplayOptions.get('Default');
 
         this.enabled = true;
 
@@ -1223,7 +1213,7 @@ class RenderManager {
 
         this.drawBuffers.update();
 
-        if (this.display === DisplayOptions.Velocity) {
+        if (this.display === DisplayOptions.get('Velocity')) {
             // Debug pass (render to screen)
             this.copyMaterial.uniforms.tMap.value = this.drawBuffers.renderTarget.textures[1];
             this.screen.material = this.copyMaterial;
@@ -1246,28 +1236,28 @@ class RenderManager {
         renderer.setClearColor(this.clearColor, 1);
 
         // Debug override material passes (render to screen)
-        if (this.display === DisplayOptions.Depth) {
+        if (this.display === DisplayOptions.get('Depth')) {
             scene.overrideMaterial = this.depthMaterial;
             renderer.setRenderTarget(null);
             renderer.clear();
             renderer.render(scene, camera);
             this.restoreRendererState();
             return;
-        } else if (this.display === DisplayOptions.Geometry) {
+        } else if (this.display === DisplayOptions.get('Geometry')) {
             scene.overrideMaterial = this.normalMaterial;
             renderer.setRenderTarget(null);
             renderer.clear();
             renderer.render(scene, camera);
             this.restoreRendererState();
             return;
-        } else if (this.display === DisplayOptions.Matcap1) {
+        } else if (this.display === DisplayOptions.get('Matcap1')) {
             scene.overrideMaterial = this.matcap1Material;
             renderer.setRenderTarget(null);
             renderer.clear();
             renderer.render(scene, camera);
             this.restoreRendererState();
             return;
-        } else if (this.display === DisplayOptions.Matcap2) {
+        } else if (this.display === DisplayOptions.get('Matcap2')) {
             scene.overrideMaterial = this.matcap2Material;
             renderer.setRenderTarget(null);
             renderer.clear();
@@ -1286,7 +1276,7 @@ class RenderManager {
         // Extract bright areas
         this.luminosityMaterial.uniforms.tMap.value = renderTargetB.texture;
 
-        if (this.display === DisplayOptions.Luma) {
+        if (this.display === DisplayOptions.get('Luma')) {
             // Debug pass (render to screen)
             this.screen.material = this.blackoutMaterial;
             renderer.setRenderTarget(null);
@@ -1329,7 +1319,7 @@ class RenderManager {
         // Composite all the mips
         this.screen.material = this.bloomCompositeMaterial;
 
-        if (this.display === DisplayOptions.Bloom) {
+        if (this.display === DisplayOptions.get('Bloom')) {
             // Debug pass (render to screen)
             renderer.setRenderTarget(null);
             renderer.clear();
@@ -1384,6 +1374,7 @@ class RenderManager {
     };
 
     static zoomIn = () => {
+        clearTween(this);
         clearTween(this.timeout);
 
         this.timeout = delayedCall(300, () => {
@@ -1392,6 +1383,7 @@ class RenderManager {
     };
 
     static zoomOut = () => {
+        clearTween(this);
         clearTween(this.timeout);
 
         tween(this, { blurAmount: 0 }, 300, 'linear');

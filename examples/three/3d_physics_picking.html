@@ -11,7 +11,7 @@
     <link rel="stylesheet" href="../assets/css/style.css">
 
     <script type="module">
-        import { BasicShadowMap, BloomCompositeMaterial, BoxGeometry, BufferLoader, Color, ColorManagement, DirectionalLight, EnvironmentTextureLoader, Group, HemisphereLight, IcosahedronGeometry, ImageBitmapLoaderThread, LinearSRGBColorSpace, LuminosityMaterial, MathUtils, Mesh, MeshBasicMaterial, MeshPhongMaterial, MeshStandardMaterial, OimoPhysics, OrthographicCamera, PanelItem, PerspectiveCamera, PlaneGeometry, PointLight, Raycaster, Reflector, RepeatWrapping, RigidBodyConfig, RigidBodyType, Scene, SceneCompositeDistortionMaterial, ShaderChunk, ShadowMaterial, Sound3D, SphereGeometry, SphericalJointConfig, TextureLoader, UI, UnrealBloomBlurMaterial, Vector2, Vector3, WebAudio, WebGLRenderTarget, WebGLRenderer, delayedCall, getFullscreenTriangle, getKeyByValue, ticker } from '../../build/alien.three.js';
+        import { BasicShadowMap, BloomCompositeMaterial, BoxGeometry, BufferLoader, Color, ColorManagement, DirectionalLight, EnvironmentTextureLoader, Group, HemisphereLight, IcosahedronGeometry, ImageBitmapLoaderThread, LinearSRGBColorSpace, LuminosityMaterial, MathUtils, Mesh, MeshBasicMaterial, MeshPhongMaterial, MeshStandardMaterial, OimoPhysics, OrthographicCamera, PanelItem, PerspectiveCamera, PlaneGeometry, PointLight, Raycaster, Reflector, RepeatWrapping, RigidBodyConfig, RigidBodyType, Scene, SceneCompositeDistortionMaterial, ShaderChunk, ShadowMaterial, Sound3D, SphereGeometry, SphericalJointConfig, TextureLoader, UI, UnrealBloomBlurMaterial, Vector2, Vector3, WebAudio, WebGLRenderTarget, WebGLRenderer, delayedCall, getFullscreenTriangle, ticker } from '../../build/alien.three.js';
 
         const isDebug = /[?&]debug/.test(location.search);
 
@@ -127,7 +127,7 @@
                     // loadTexture('uv.jpg'),
                     loadTexture('pbr/pitted_metal_basecolor.jpg'),
                     loadTexture('pbr/pitted_metal_normal.jpg'),
-                    // https://occlusion-roughness-metalness.glitch.me/
+                    // https://occlusion-roughness-metalness.cyberspace.app/
                     loadTexture('pbr/pitted_metal_orm.jpg'),
                     loadTexture('pbr/pitted_metal_height.jpg')
                 ]);
@@ -138,8 +138,8 @@
                 thicknessMap.anisotropy = anisotropy;
 
                 const material = new MeshStandardMaterial({
-                    color: new Color().offsetHSL(0, 0, -0.65),
-                    metalness: 0.7,
+                    color: new Color().offsetHSL(0, 0, -0.8),
+                    metalness: 0.5,
                     roughness: 2,
                     map,
                     metalnessMap: ormMap,
@@ -541,11 +541,6 @@
                 const vector3 = new Vector3();
                 const gravity = this.physics.getGravity();
 
-                const physicsOptions = {
-                    Off: false,
-                    Physics: true
-                };
-
                 const items = [
                     {
                         name: 'FPS'
@@ -554,11 +549,11 @@
                         type: 'divider'
                     },
                     {
-                        type: 'list',
-                        list: physicsOptions,
-                        value: getKeyByValue(physicsOptions, SceneController.enabled),
+                        type: 'toggle',
+                        name: 'Physics',
+                        value: SceneController.enabled,
                         callback: value => {
-                            SceneController.enabled = physicsOptions[value];
+                            SceneController.enabled = value;
 
                             // Reset
                             vector3.set(0, 0, 0);
@@ -834,7 +829,7 @@
                 this.raycaster = new Raycaster();
                 this.raycaster.layers.set(layers.picking);
 
-                this.mouse = new Vector2();
+                this.mouse = new Vector2(-1, -1);
                 this.hover = null;
                 this.selected = null;
                 this.body = null;
@@ -895,10 +890,10 @@
                 if (this.selected) {
                     this.raycaster.setFromCamera(this.mouse, this.camera);
 
-                    const intersection = this.raycaster.intersectObject(this.dragPlane);
+                    const hit = this.raycaster.intersectObject(this.dragPlane)[0];
 
-                    if (intersection.length) {
-                        const point = intersection[0].point;
+                    if (hit) {
+                        const point = hit.point;
 
                         this.physics.setPosition(this.body, point);
                     }
@@ -908,17 +903,17 @@
 
                 this.raycaster.setFromCamera(this.mouse, this.camera);
 
-                const intersection = this.raycaster.intersectObjects(this.scene.children);
+                const hit = this.raycaster.intersectObjects(this.scene.children)[0];
 
-                if (intersection.length) {
-                    let object = intersection[0].object;
+                if (hit) {
+                    let object = hit.object;
 
                     if (object.parent.isGroup) {
                         object = object.parent;
                     }
 
                     if (this.isDown && this.selected !== object) {
-                        const point = intersection[0].point;
+                        const point = hit.point;
 
                         const body = new RigidBodyConfig();
                         body.type = RigidBodyType.KINEMATIC;

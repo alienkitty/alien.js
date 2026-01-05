@@ -125,7 +125,7 @@
                     // loadTexture('uv.jpg'),
                     loadTexture('pbr/polished_concrete_basecolor.jpg'),
                     loadTexture('pbr/polished_concrete_normal.jpg'),
-                    // https://occlusion-roughness-metalness.glitch.me/
+                    // https://occlusion-roughness-metalness.cyberspace.app/
                     loadTexture('pbr/polished_concrete_orm.jpg')
                 ]);
 
@@ -142,7 +142,7 @@
                 ormMap.repeat.set(16, 16);
 
                 const material = new MeshStandardMaterial({
-                    color: new Color().offsetHSL(0, 0, -0.65),
+                    color: new Color().offsetHSL(0, 0, -0.8),
                     metalness: 1,
                     roughness: 1,
                     map,
@@ -216,7 +216,7 @@
                         vec2 reflectUv = reflectCoord.xy + reflectCoord.z * reflectNormal.xz * 0.05;
                         vec4 reflectColor = texture2D(reflectMap, reflectUv);
 
-                        // Fresnel term
+                        // Fresnel
                         vec3 toEye = normalize(vToEye);
                         float theta = max(dot(toEye, normal), 0.0);
                         float reflectance = pow((1.0 - theta), 5.0);

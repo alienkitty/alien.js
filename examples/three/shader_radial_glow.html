@@ -11,7 +11,7 @@
     <link rel="stylesheet" href="../assets/css/style.css">
 
     <script type="module">
-        import { BloomCompositeMaterial, Color, ColorManagement, DirectionalLight, EnvironmentTextureLoader, GLSL3, Group, HemisphereLight, IcosahedronGeometry, LightOptions, LightPanelController, LinearSRGBColorSpace, LuminosityMaterial, MaterialPanelController, MathUtils, Mesh, MeshStandardMaterial, NoBlending, OrbitControls, OrthographicCamera, Panel, PanelItem, PerspectiveCamera, Point3D, RawShaderMaterial, RepeatWrapping, Scene, ScenePanel, TextureLoader, UI, UnrealBloomBlurMaterial, Vector2, Vector3, WebGLRenderTarget, WebGLRenderer, getFullscreenTriangle, getKeyByLight, getKeyByValue, ticker, tween } from '../../build/alien.three.js';
+        import { BackgroundPanel, BloomCompositeMaterial, Color, ColorManagement, DirectionalLight, EnvironmentPanel, EnvironmentTextureLoader, GLSL3, Group, HemisphereLight, IcosahedronGeometry, LightOptions, LightPanelController, LinearSRGBColorSpace, LuminosityMaterial, MaterialPanelController, MathUtils, Mesh, MeshStandardMaterial, NoBlending, OrbitControls, OrthographicCamera, Panel, PanelItem, PerspectiveCamera, Point3D, RawShaderMaterial, RepeatWrapping, Scene, TextureLoader, UI, UnrealBloomBlurMaterial, Vector2, Vector3, WebGLRenderTarget, WebGLRenderer, getFullscreenTriangle, getKeyByLight, getKeyByValue, ticker, tween } from '../../build/alien.three.js';
 
         const isOrbit = /[?&]orbit/.test(location.search);
 
@@ -112,7 +112,7 @@
                     // loadTexture('uv.jpg'),
                     loadTexture('pbr/pitted_metal_basecolor.jpg'),
                     loadTexture('pbr/pitted_metal_normal.jpg'),
-                    // https://occlusion-roughness-metalness.glitch.me/
+                    // https://occlusion-roughness-metalness.cyberspace.app/
                     loadTexture('pbr/pitted_metal_orm.jpg')
                 ]);
 
@@ -133,8 +133,8 @@
 
                 const material = new MeshStandardMaterial({
                     name: 'Dark Planet',
-                    color: new Color().offsetHSL(0, 0, -0.65),
-                    metalness: 0.7,
+                    color: new Color().offsetHSL(0, 0, -0.8),
+                    metalness: 0.5,
                     roughness: 2,
                     map,
                     metalnessMap: ormMap,
@@ -266,10 +266,10 @@
             initPanel() {
                 const { luminosityMaterial, bloomCompositeMaterial } = RenderManager;
 
-                const postOptions = {
-                    Off: false,
-                    On: true
-                };
+                const postOptions = new Map([
+                    ['Off', false],
+                    ['Post', true]
+                ]);
 
                 const postItems = [
                     {
@@ -344,7 +344,7 @@
                                 item.setContent(postPanel);
                             }
 
-                            RenderManager.enabled = postOptions[value];
+                            RenderManager.enabled = postOptions.get(value);
 
                             if (RenderManager.enabled) {
                                 item.toggleContent(true);
@@ -387,16 +387,17 @@
             static initPanel() {
                 const { compositeMaterial } = RenderManager;
 
-                const sceneOptions = {
-                    Scene: ScenePanel,
-                    Post: PostPanel
-                };
+                const sceneOptions = new Map([
+                    ['BG', BackgroundPanel],
+                    ['Env', EnvironmentPanel],
+                    ['Post', PostPanel]
+                ]);
 
                 this.scene.traverse(object => {
                     if (object.isLight) {
                         const key = getKeyByLight(LightOptions, object);
 
-                        sceneOptions[key] = [object, LightOptions[key][1]];
+                        sceneOptions.set(key, [object, LightOptions.get(key)[1]]);
 
                         this.lights.push(object);
                     }
@@ -444,12 +445,11 @@
                     {
                         type: 'list',
                         list: sceneOptions,
-                        value: 'Scene',
+                        value: 'BG',
                         callback: (value, item) => {
                             switch (value) {
-                                case 'Scene':
-                                case 'Post': {
-                                    const ScenePanel = sceneOptions[value];
+                                case 'BG': {
+                                    const ScenePanel = sceneOptions.get(value);
 
                                     const scenePanel = new ScenePanel(this.scene, this.ui);
                                     scenePanel.animateIn(true);
@@ -457,8 +457,26 @@
                                     item.setContent(scenePanel);
                                     break;
                                 }
+                                case 'Env': {
+                                    const ScenePanel = sceneOptions.get(value);
+
+                                    const scenePanel = new ScenePanel(this.scene);
+                                    scenePanel.animateIn(true);
+
+                                    item.setContent(scenePanel);
+                                    break;
+                                }
+                                case 'Post': {
+                                    const ScenePanel = sceneOptions.get(value);
+
+                                    const scenePanel = new ScenePanel();
+                                    scenePanel.animateIn(true);
+
+                                    item.setContent(scenePanel);
+                                    break;
+                                }
                                 default: {
-                                    const [light, LightPanel] = sceneOptions[value];
+                                    const [light, LightPanel] = sceneOptions.get(value);
 
                                     const lightPanel = new LightPanel(LightPanelController, light);
                                     lightPanel.animateIn(true);

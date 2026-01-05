@@ -267,7 +267,7 @@ class AbstractCube extends Group {
             // loadTexture('uv.jpg'),
             loadTexture('pbr/pitted_metal_basecolor.jpg'),
             loadTexture('pbr/pitted_metal_normal.jpg'),
-            // https://occlusion-roughness-metalness.glitch.me/
+            // https://occlusion-roughness-metalness.cyberspace.app/
             loadTexture('pbr/pitted_metal_orm.jpg')
         ]);
 
@@ -276,8 +276,8 @@ class AbstractCube extends Group {
         ormMap.anisotropy = anisotropy;
 
         const material = new MeshStandardMaterial({
-            color: new Color().offsetHSL(0, 0, -0.65),
-            metalness: 0.7,
+            color: new Color().offsetHSL(0, 0, -0.8),
+            metalness: 0.5,
             roughness: 0.7,
             map,
             metalnessMap: ormMap,
@@ -365,7 +365,7 @@ class FloatingCrystal extends Group {
             // loadTexture('uv.jpg'),
             loadTexture('pbr/pitted_metal_basecolor.jpg'),
             loadTexture('pbr/pitted_metal_normal.jpg'),
-            // https://occlusion-roughness-metalness.glitch.me/
+            // https://occlusion-roughness-metalness.cyberspace.app/
             loadTexture('pbr/pitted_metal_orm.jpg')
         ]);
 
@@ -385,8 +385,8 @@ class FloatingCrystal extends Group {
         ormMap.repeat.set(2, 2);
 
         const material = new MeshStandardMaterial({
-            color: new Color().offsetHSL(0, 0, -0.65),
-            metalness: 0.7,
+            color: new Color().offsetHSL(0, 0, -0.8),
+            metalness: 0.5,
             roughness: 0.7,
             map,
             metalnessMap: ormMap,
@@ -477,7 +477,7 @@ class DarkPlanet extends Group {
             // loadTexture('uv.jpg'),
             loadTexture('pbr/pitted_metal_basecolor.jpg'),
             loadTexture('pbr/pitted_metal_normal.jpg'),
-            // https://occlusion-roughness-metalness.glitch.me/
+            // https://occlusion-roughness-metalness.cyberspace.app/
             loadTexture('pbr/pitted_metal_orm.jpg')
         ]);
 
@@ -497,8 +497,8 @@ class DarkPlanet extends Group {
         ormMap.repeat.set(2, 1);
 
         const material = new MeshStandardMaterial({
-            color: new Color().offsetHSL(0, 0, -0.65),
-            metalness: 0.7,
+            color: new Color().offsetHSL(0, 0, -0.8),
+            metalness: 0.5,
             roughness: 2,
             map,
             metalnessMap: ormMap,

@@ -1,5 +1,6 @@
 import { Program, Vec2 } from 'ogl';
 
+// eslint-disable-next-line sort-imports
 import { vertexShader, fragmentShader } from '../../shaders/FXAAShader.js';
 
 export class FXAAProgram extends Program {

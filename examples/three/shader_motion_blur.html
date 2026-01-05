@@ -46,7 +46,7 @@
                     // loadTexture('uv.jpg'),
                     loadTexture('pbr/pitted_metal_basecolor.jpg'),
                     loadTexture('pbr/pitted_metal_normal.jpg'),
-                    // https://occlusion-roughness-metalness.glitch.me/
+                    // https://occlusion-roughness-metalness.cyberspace.app/
                     loadTexture('pbr/pitted_metal_orm.jpg'),
                     loadTexture('pbr/pitted_metal_height.jpg')
                 ]);
@@ -72,7 +72,7 @@
                 thicknessMap.repeat.set(2, 1);
 
                 const material = new MeshStandardMaterial({
-                    color: new Color().offsetHSL(0, 0, -0.65),
+                    color: new Color().offsetHSL(0, 0, -0.8),
                     emissive: new Color(0xff0000),
                     metalness: 1.7,
                     roughness: 1.5,
@@ -124,7 +124,7 @@
                     // loadTexture('uv.jpg'),
                     loadTexture('pbr/pitted_metal_basecolor.jpg'),
                     loadTexture('pbr/pitted_metal_normal.jpg'),
-                    // https://occlusion-roughness-metalness.glitch.me/
+                    // https://occlusion-roughness-metalness.cyberspace.app/
                     loadTexture('pbr/pitted_metal_orm.jpg')
                 ]);
 
@@ -245,11 +245,6 @@
             static initPanel() {
                 const { motionBlur, luminosityMaterial, bloomCompositeMaterial, compositeMaterial } = RenderManager;
 
-                const animateOptions = {
-                    Off: false,
-                    Animate: true
-                };
-
                 const items = [
                     {
                         name: 'FPS'
@@ -262,11 +257,20 @@
                         list: DisplayOptions,
                         value: getKeyByValue(DisplayOptions, RenderManager.display),
                         callback: value => {
-                            RenderManager.display = DisplayOptions[value];
+                            RenderManager.display = DisplayOptions.get(value);
                         }
                     },
                     {
                         type: 'divider'
+                    },
+                    {
+                        type: 'toggle',
+                        name: 'Animate',
+                        value: params.animate,
+                        callback: value => {
+                            params.animate = value;
+                            motionBlur.saveState = params.animate;
+                        }
                     },
                     {
                         type: 'slider',
@@ -277,15 +281,6 @@
                         value: params.speed,
                         callback: value => {
                             params.speed = value;
-                        }
-                    },
-                    {
-                        type: 'list',
-                        list: animateOptions,
-                        value: getKeyByValue(animateOptions, params.animate),
-                        callback: value => {
-                            params.animate = animateOptions[value];
-                            motionBlur.saveState = params.animate;
                         }
                     },
                     {
@@ -311,6 +306,28 @@
                         value: motionBlur.smearIntensity,
                         callback: value => {
                             motionBlur.smearIntensity = value;
+                        }
+                    },
+                    {
+                        type: 'slider',
+                        name: 'Near',
+                        min: 0,
+                        max: 40,
+                        step: 0.1,
+                        value: motionBlur.cameraNear,
+                        callback: value => {
+                            motionBlur.cameraNear = value;
+                        }
+                    },
+                    {
+                        type: 'slider',
+                        name: 'Far',
+                        min: 0,
+                        max: 40,
+                        step: 0.1,
+                        value: motionBlur.cameraFar,
+                        callback: value => {
+                            motionBlur.cameraFar = value;
                         }
                     },
                     {
@@ -401,7 +418,7 @@
                 this.bloomDistortion = 1;
 
                 // Debug
-                this.display = DisplayOptions.Default;
+                this.display = DisplayOptions.get('Default');
 
                 this.enabled = true;
 
@@ -443,7 +460,12 @@
                 this.renderTargetA.depthBuffer = true;
 
                 // Motion blur
-                this.motionBlur = new MotionBlur(this.renderer, this.scene, this.camera, layers.velocity);
+                this.motionBlur = new MotionBlur(this.renderer, this.scene, this.camera, layers.velocity, {
+                    // defaults
+                    cameraBlur: true,
+                    cameraNear: this.camera.near,
+                    cameraFar: this.camera.far
+                });
 
                 this.motionBlurCompositeMaterial = new MotionBlurCompositeMaterial(textureLoader, {
                     blueNoisePath: 'blue_noise.png'
@@ -573,28 +595,28 @@
                 renderer.setClearColor(this.clearColor, 1);
 
                 // Debug override material passes (render to screen)
-                if (this.display === DisplayOptions.Depth) {
+                if (this.display === DisplayOptions.get('Depth')) {
                     scene.overrideMaterial = this.depthMaterial;
                     renderer.setRenderTarget(null);
                     renderer.clear();
                     renderer.render(scene, camera);
                     this.restoreRendererState();
                     return;
-                } else if (this.display === DisplayOptions.Geometry) {
+                } else if (this.display === DisplayOptions.get('Geometry')) {
                     scene.overrideMaterial = this.normalMaterial;
                     renderer.setRenderTarget(null);
                     renderer.clear();
                     renderer.render(scene, camera);
                     this.restoreRendererState();
                     return;
-                } else if (this.display === DisplayOptions.Matcap1) {
+                } else if (this.display === DisplayOptions.get('Matcap1')) {
                     scene.overrideMaterial = this.matcap1Material;
                     renderer.setRenderTarget(null);
                     renderer.clear();
                     renderer.render(scene, camera);
                     this.restoreRendererState();
                     return;
-                } else if (this.display === DisplayOptions.Matcap2) {
+                } else if (this.display === DisplayOptions.get('Matcap2')) {
                     scene.overrideMaterial = this.matcap2Material;
                     renderer.setRenderTarget(null);
                     renderer.clear();
@@ -606,7 +628,7 @@
                 // Motion blur layer
                 camera.layers.set(layers.velocity);
 
-                if (this.display === DisplayOptions.Velocity) {
+                if (this.display === DisplayOptions.get('Velocity')) {
                     // Debug pass (render to screen)
                     this.motionBlur.update(null);
                     this.restoreRendererState();
@@ -624,7 +646,7 @@
                 // Extract bright areas
                 this.luminosityMaterial.uniforms.tMap.value = renderTargetB.texture;
 
-                if (this.display === DisplayOptions.Luma) {
+                if (this.display === DisplayOptions.get('Luma')) {
                     // Debug pass (render to screen)
                     this.screen.material = this.blackoutMaterial;
                     renderer.setRenderTarget(null);
@@ -667,7 +689,7 @@
                 // Composite all the mips
                 this.screen.material = this.bloomCompositeMaterial;
 
-                if (this.display === DisplayOptions.Bloom) {
+                if (this.display === DisplayOptions.get('Bloom')) {
                     // Debug pass (render to screen)
                     renderer.setRenderTarget(null);
                     renderer.clear();

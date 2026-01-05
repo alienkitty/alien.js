@@ -11,7 +11,7 @@
     <link rel="stylesheet" href="../assets/css/style.css">
 
     <script type="module">
-        import { AdditiveBlending, BloomCompositeMaterial, BufferGeometry, Color, ColorManagement, CopyMaterial, DepthTexture, DirectionalLight, EnvironmentTextureLoader, Float32BufferAttribute, GLSL3, Group, HemisphereLight, ImageBitmapLoaderThread, LinearSRGBColorSpace, LuminosityMaterial, MathUtils, Mesh, MeshStandardMaterial, NoBlending, OrbitControls, OrthographicCamera, PanelItem, PerspectiveCamera, Points, RawShaderMaterial, RepeatWrapping, Scene, SphereGeometry, TextureLoader, UI, UnrealBloomBlurMaterial, Vector2, WebGLRenderTarget, WebGLRenderer, getFullscreenTriangle, getKeyByValue, ticker } from '../../build/alien.three.js';
+        import { AdditiveBlending, BloomCompositeMaterial, BufferGeometry, Color, ColorManagement, CopyMaterial, DepthTexture, DirectionalLight, EnvironmentTextureLoader, Float32BufferAttribute, GLSL3, Group, HemisphereLight, ImageBitmapLoaderThread, LinearSRGBColorSpace, LuminosityMaterial, MathUtils, Mesh, MeshStandardMaterial, NoBlending, OrbitControls, OrthographicCamera, PanelItem, PerspectiveCamera, Points, RawShaderMaterial, RepeatWrapping, Scene, SphereGeometry, TextureLoader, UI, UnrealBloomBlurMaterial, Vector2, WebGLRenderTarget, WebGLRenderer, getFullscreenTriangle, ticker } from '../../build/alien.three.js';
 
         const isDebug = /[?&]debug/.test(location.search);
 
@@ -261,15 +261,14 @@
                             p.z += snoise(position.zxy + uTime * 0.02);
 
                             vec4 mvPosition = modelViewMatrix * vec4(p, 1.0);
-
-                            gl_PointSize = uScale * (150.0 / -mvPosition.z);
                             gl_Position = projectionMatrix * mvPosition;
+                            gl_PointSize = uScale * (150.0 / -mvPosition.z);
 
                             vec3 worldPosition = (modelMatrix * vec4(p, 1.0)).xyz;
                             float linearDepth = 1.0 / (uCameraFar - uCameraNear);
                             float linearPos = length(cameraPosition - worldPosition) * linearDepth;
 
-                            vFade = 1.0 - linearPos * 0.75;
+                            vFade = clamp(1.0 - linearPos * 0.75, 0.0, 1.0);
                             vFade *= smoothstep(0.09, 0.13, linearPos);
                         }
                     `,
@@ -353,7 +352,7 @@
                     // loadTexture('uv.jpg'),
                     loadTexture('pbr/pitted_metal_basecolor.jpg'),
                     loadTexture('pbr/pitted_metal_normal.jpg'),
-                    // https://occlusion-roughness-metalness.glitch.me/
+                    // https://occlusion-roughness-metalness.cyberspace.app/
                     loadTexture('pbr/pitted_metal_orm.jpg')
                 ]);
 
@@ -404,11 +403,6 @@
             static initPanel() {
                 const { bokehBlurMaterial1, bokehBlurMaterial2, luminosityMaterial, bloomCompositeMaterial } = RenderManager;
 
-                const debugOptions = {
-                    Off: false,
-                    Debug: true
-                };
-
                 const items = [
                     {
                         name: 'FPS'
@@ -441,11 +435,11 @@
                         }
                     },
                     {
-                        type: 'list',
-                        list: debugOptions,
-                        value: getKeyByValue(debugOptions, bokehBlurMaterial2.uniforms.uDebug.value),
+                        type: 'toggle',
+                        name: 'Debug',
+                        value: bokehBlurMaterial2.uniforms.uDebug.value,
                         callback: value => {
-                            bokehBlurMaterial2.uniforms.uDebug.value = debugOptions[value];
+                            bokehBlurMaterial2.uniforms.uDebug.value = value;
                         }
                     },
                     {
@@ -840,6 +834,11 @@
                 this.controls.update();
             };
 
+            static ready = () => Promise.all([
+                this.textureLoader.ready(),
+                this.environmentLoader.ready()
+            ]);
+
             // Global handlers
 
             static getTexture = (path, callback) => this.textureLoader.load(path, callback);
@@ -858,6 +857,8 @@
 
                 this.addListeners();
                 this.onResize();
+
+                await WorldController.ready();
 
                 this.initPanel();
             }

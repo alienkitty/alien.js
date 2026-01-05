@@ -17,14 +17,14 @@
 
         const count = parseInt(location.search.slice(1), 10) || 100;
 
+        const colors = {
+            lightColor: 0xf44336
+        };
+
         const layers = {
             default: 0,
             buffers: 1,
             occlusion: 2
-        };
-
-        const colors = {
-            lightColor: 0xf44336
         };
 
         // Based on https://threejs.org/examples/#webgl_multiple_rendertargets by takahirox
@@ -105,9 +105,9 @@
                                 if (uv.y < 1.0 && uv.x < 1.0) {
                                     FragColor.rgb = vec3(texture(tPosition, mod(uv, 1.0)).a);
                                 } else if (uv.y < 2.0 && uv.x < 1.0) {
-                                    FragColor.rgb = texture(tVelocity, mod(uv, 1.0)).rgb;
-                                } else if (uv.y < 3.0 && uv.x < 1.0) {
                                     FragColor.rgb = texture(tPosition, mod(uv, 1.0)).rgb;
+                                } else if (uv.y < 3.0 && uv.x < 1.0) {
+                                    FragColor.rgb = texture(tVelocity, mod(uv, 1.0)).rgb;
                                 } else if (uv.y < 4.0 && uv.x < 1.0) {
                                     FragColor.rgb = texture(tScene, mod(uv, 1.0)).rgb;
                                 } else if (uv.y < 5.0 && uv.x < 1.0) {
@@ -148,7 +148,7 @@
                     // loadTexture('uv.jpg'),
                     loadTexture('pbr/pitted_metal_basecolor.jpg'),
                     loadTexture('pbr/pitted_metal_normal.jpg'),
-                    // https://occlusion-roughness-metalness.glitch.me/
+                    // https://occlusion-roughness-metalness.cyberspace.app/
                     loadTexture('pbr/pitted_metal_orm.jpg'),
                     loadTexture('pbr/pitted_metal_height.jpg')
                 ]);
@@ -174,8 +174,8 @@
                 thicknessMap.repeat.set(2, 1);
 
                 const material = new MeshStandardMaterial({
-                    color: new Color().offsetHSL(0, 0, -0.65),
-                    metalness: 0.7,
+                    color: new Color().offsetHSL(0, 0, -0.8),
+                    metalness: 0.5,
                     roughness: 2,
                     map,
                     metalnessMap: ormMap,
@@ -197,7 +197,7 @@
                     thicknessMap: { value: thicknessMap },
                     thicknessDistortion: { value: 0.05 },
                     thicknessAmbient: { value: 0 },
-                    thicknessAttenuation: { value: 0.8 },
+                    thicknessAttenuation: { value: 0.5 },
                     thicknessPower: { value: 2 },
                     thicknessScale: { value: 10 }
                 };
@@ -304,7 +304,7 @@
                     // loadTexture('uv.jpg'),
                     loadTexture('pbr/pitted_metal_basecolor.jpg'),
                     loadTexture('pbr/pitted_metal_normal.jpg'),
-                    // https://occlusion-roughness-metalness.glitch.me/
+                    // https://occlusion-roughness-metalness.cyberspace.app/
                     loadTexture('pbr/pitted_metal_orm.jpg'),
                     loadTexture('pbr/pitted_metal_height.jpg')
                 ]);
@@ -331,7 +331,7 @@
 
                 const material = new MeshStandardMaterial({
                     color: new Color(colors.lightColor),
-                    metalness: 0.7,
+                    metalness: 0.5,
                     roughness: 2,
                     map,
                     metalnessMap: ormMap,
@@ -546,26 +546,13 @@
 
                 const gravity = this.physics.getGravity();
 
-                const physicsOptions = {
-                    Off: false,
-                    Physics: true
-                };
-
-                const defaultOptions = {
-                    Off: false,
-                    Targets: true
-                };
-
                 const defaultItems = [
                     {
-                        type: 'divider'
-                    },
-                    {
-                        type: 'list',
-                        list: defaultOptions,
-                        value: getKeyByValue(defaultOptions, compositeMaterial.uniforms.uDebug.value),
+                        type: 'toggle',
+                        name: 'Debug',
+                        value: compositeMaterial.uniforms.uDebug.value,
                         callback: value => {
-                            compositeMaterial.uniforms.uDebug.value = defaultOptions[value];
+                            compositeMaterial.uniforms.uDebug.value = value;
                         }
                     }
                 ];
@@ -593,9 +580,9 @@
                                 item.setContent(defaultPanel);
                             }
 
-                            RenderManager.display = DisplayOptions[value];
+                            RenderManager.display = DisplayOptions.get(value);
 
-                            if (RenderManager.display === DisplayOptions.Default) {
+                            if (RenderManager.display === DisplayOptions.get('Default')) {
                                 item.toggleContent(true);
                             } else {
                                 item.toggleContent(false);
@@ -606,11 +593,11 @@
                         type: 'divider'
                     },
                     {
-                        type: 'list',
-                        list: physicsOptions,
-                        value: getKeyByValue(physicsOptions, SceneController.enabled),
+                        type: 'toggle',
+                        name: 'Physics',
+                        value: SceneController.enabled,
                         callback: value => {
-                            SceneController.enabled = physicsOptions[value];
+                            SceneController.enabled = value;
                             drawBuffers.saveState = SceneController.enabled;
                         }
                     },
@@ -942,8 +929,8 @@
                 this.bloomRadius = 0.2;
 
                 // Debug
-                DisplayOptions.Light = 8;
-                this.display = DisplayOptions.Default;
+                DisplayOptions.set('Light', 8);
+                this.display = DisplayOptions.get('Default');
 
                 this.enabled = true;
 
@@ -1184,7 +1171,7 @@
 
                 this.drawBuffers.update();
 
-                if (this.display === DisplayOptions.Velocity) {
+                if (this.display === DisplayOptions.get('Velocity')) {
                     // Debug pass (render to screen)
                     this.copyMaterial.uniforms.tMap.value = this.drawBuffers.renderTarget.textures[1];
                     this.screen.material = this.copyMaterial;
@@ -1233,7 +1220,7 @@
                 this.setLightPosition();
                 this.screen.material = this.vlMaterial;
 
-                if (this.display === DisplayOptions.Light) {
+                if (this.display === DisplayOptions.get('Light')) {
                     // Debug pass (render to screen)
                     renderer.setRenderTarget(null);
                     renderer.clear();
@@ -1253,7 +1240,7 @@
                 renderer.setClearColor(this.clearColor, 1);
 
                 // Debug override material passes (render to screen)
-                if (this.display === DisplayOptions.Depth) {
+                if (this.display === DisplayOptions.get('Depth')) {
                     scene.traverseVisible(object => {
                         if (object.material) {
                             this.originalMaterials.set(object, object.material);
@@ -1272,7 +1259,7 @@
 
                     this.restoreRendererState();
                     return;
-                } else if (this.display === DisplayOptions.Geometry) {
+                } else if (this.display === DisplayOptions.get('Geometry')) {
                     scene.traverseVisible(object => {
                         if (object.material) {
                             this.originalMaterials.set(object, object.material);
@@ -1291,14 +1278,14 @@
 
                     this.restoreRendererState();
                     return;
-                } else if (this.display === DisplayOptions.Matcap1) {
+                } else if (this.display === DisplayOptions.get('Matcap1')) {
                     scene.overrideMaterial = this.matcap1Material;
                     renderer.setRenderTarget(null);
                     renderer.clear();
                     renderer.render(scene, camera);
                     this.restoreRendererState();
                     return;
-                } else if (this.display === DisplayOptions.Matcap2) {
+                } else if (this.display === DisplayOptions.get('Matcap2')) {
                     scene.overrideMaterial = this.matcap2Material;
                     renderer.setRenderTarget(null);
                     renderer.clear();
@@ -1326,7 +1313,7 @@
                 // Extract bright areas
                 this.luminosityMaterial.uniforms.tMap.value = this.datamosh.read.texture;
 
-                if (this.display === DisplayOptions.Luma) {
+                if (this.display === DisplayOptions.get('Luma')) {
                     // Debug pass (render to screen)
                     this.screen.material = this.blackoutMaterial;
                     renderer.setRenderTarget(null);
@@ -1369,7 +1356,7 @@
                 // Composite all the mips
                 this.screen.material = this.bloomCompositeMaterial;
 
-                if (this.display === DisplayOptions.Bloom) {
+                if (this.display === DisplayOptions.get('Bloom')) {
                     // Debug pass (render to screen)
                     renderer.setRenderTarget(null);
                     renderer.clear();

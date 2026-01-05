@@ -4,57 +4,166 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
 
-    <title>Tilt-shift Post-processing — Alien.js</title>
+    <title>Cyberspace — Alien.js</title>
 
     <link rel="preconnect" href="https://fonts.gstatic.com">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto+Mono">
     <link rel="stylesheet" href="../assets/css/style.css">
 
     <script type="module">
-        import { AdditiveBlending, BloomCompositeMaterial, BufferGeometry, Color, ColorManagement, CopyMaterial, DepthTexture, DirectionalLight, EnvironmentTextureLoader, Float32BufferAttribute, GLSL3, Group, HemisphereLight, ImageBitmapLoaderThread, LinearSRGBColorSpace, LuminosityMaterial, MathUtils, Mesh, MeshStandardMaterial, OrbitControls, OrthographicCamera, PanelItem, PerspectiveCamera, Points, RawShaderMaterial, RepeatWrapping, Scene, SphereGeometry, TextureLoader, TiltShiftMaterial, UI, UnrealBloomBlurMaterial, Vector2, WebGLRenderTarget, WebGLRenderer, getFullscreenTriangle, ticker } from '../../build/alien.three.js';
+        import { AdditiveBlending, AssetLoader, BloomCompositeMaterial, BufferGeometry, Color, ColorManagement, CopyMaterial, Float32BufferAttribute, GLSL3, Group, LinearSRGBColorSpace, LuminosityMaterial, MathUtils, Mesh, NoBlending, OrbitControls, OrthographicCamera, PanelItem, PerspectiveCamera, Point3D, Points, RawShaderMaterial, Scene, TextureLoader, UI, UnrealBloomBlurMaterial, Vector2, Vector3, WebGLRenderTarget, WebGLRenderer, clearTween, delayedCall, getFullscreenTriangle, ticker } from '../../build/alien.three.js';
 
-        import simplex3d from '../../src/shaders/modules/noise/simplex3d.glsl.js';
-        import depth from '../../src/shaders/modules/depth/depth.glsl.js';
+        const isDebug = /[?&]debug/.test(location.search);
 
-        class Dust extends Group {
-            constructor(numParticles) {
+        class CyberspaceStar {
+            constructor() {
+                this.id = 0;
+                this.name = '';
+                this.position = new Vector3();
+                this.color = new Color();
+                this.alpha = 1;
+            }
+        }
+
+        class Data {
+            static init(buffer, geoip) {
+                const view = new DataView(buffer);
+                const decoder = new TextDecoder();
+                let offset = 0;
+
+                const length = view.getUint32(offset, true); offset += 4;
+                const stars = [];
+
+                for (let i = 0; i < length; i++) {
+                    const star = new CyberspaceStar();
+                    star.id = view.getUint32(offset, true); offset += 4;
+                    star.name = decoder.decode(view.buffer.slice(offset, offset + 32)).replace(/\0/g, '') || 'Unknown'; offset += 32;
+                    star.position.x = view.getFloat32(offset, true) * 500; offset += 4;
+                    star.position.y = view.getFloat32(offset, true) * 500; offset += 4;
+                    star.position.z = view.getFloat32(offset, true) * 500; offset += 4;
+                    star.color.r = view.getUint8(offset) / 255; offset += 1;
+                    star.color.g = view.getUint8(offset) / 255; offset += 1;
+                    star.color.b = view.getUint8(offset) / 255; offset += 1;
+                    // star.alpha = view.getUint8(offset) / 255; offset += 1;
+                    star.alpha = MathUtils.mapLinear(view.getUint8(offset) / 255, 0, 1, 0.25, 1); offset += 1;
+                    stars.push(star);
+
+                    if (star.id === geoip.geoname_id) {
+                        this.id = star.id;
+                        this.point = star.position.clone();
+                    }
+                }
+
+                this.stars = stars;
+                this.geoip = geoip;
+            }
+        }
+
+        import blur from '../../src/shaders/modules/blur/radial-blur8-rgbshift.glsl.js';
+        import dither from '../../src/shaders/modules/dither/dither.glsl.js';
+
+        class CompositeMaterial extends RawShaderMaterial {
+            constructor() {
+                super({
+                    glslVersion: GLSL3,
+                    uniforms: {
+                        tMap: { value: null },
+                        uBlurDist: { value: 1 },
+                        uBlurAmount: { value: 2.2 },
+                        uRGBAmount: { value: 1.1 }
+                    },
+                    vertexShader: /* glsl */ `
+                        in vec3 position;
+                        in vec2 uv;
+
+                        out vec2 vUv;
+
+                        void main() {
+                            vUv = uv;
+
+                            gl_Position = vec4(position, 1.0);
+                        }
+                    `,
+                    fragmentShader: /* glsl */ `
+                        precision highp float;
+
+                        uniform sampler2D tMap;
+                        uniform float uBlurDist;
+                        uniform float uBlurAmount;
+                        uniform float uRGBAmount;
+
+                        in vec2 vUv;
+
+                        out vec4 FragColor;
+
+                        ${blur}
+                        ${dither}
+
+                        void main() {
+                            vec2 dir = 0.5 - vUv;
+                            float dist = length(dir);
+                            dist = clamp(smoothstep(0.4, 1.0, dist), 0.0, 1.0);
+                            float angle = atan(dir.y, dir.x);
+                            float amount = 0.002 * dist * uRGBAmount;
+
+                            FragColor = radialBlurRGB(tMap, vUv, 0.1 * dist * uBlurDist, uBlurAmount, angle, amount);
+
+                            FragColor.rgb = dither(FragColor.rgb);
+                            FragColor.a = 1.0;
+                        }
+                    `,
+                    blending: NoBlending,
+                    depthTest: false,
+                    depthWrite: false
+                });
+            }
+        }
+
+        class Stars extends Group {
+            constructor() {
                 super();
-
-                this.numParticles = numParticles;
 
                 this.initPoints();
             }
 
             initPoints() {
-                const { camera, getTexture, resolution, time } = WorldController;
+                const { camera, resolution, time } = WorldController;
 
                 const vertices = [];
+                const colors = [];
+                const indices = [];
 
-                for (let i = 0; i < this.numParticles; i++) {
-                    vertices[i * 3 + 0] = MathUtils.randFloatSpread(camera.far / 2);
-                    vertices[i * 3 + 1] = MathUtils.randFloatSpread(camera.far / 2);
-                    vertices[i * 3 + 2] = MathUtils.randFloatSpread(camera.far / 2);
+                for (let i = 0, l = Data.stars.length; i < l; i++) {
+                    const star = Data.stars[i];
+                    vertices[3 * i + 0] = star.position.x;
+                    vertices[3 * i + 1] = star.position.y;
+                    vertices[3 * i + 2] = star.position.z;
+                    colors[4 * i + 0] = star.color.r;
+                    colors[4 * i + 1] = star.color.g;
+                    colors[4 * i + 2] = star.color.b;
+                    colors[4 * i + 3] = star.alpha;
+                    indices[i] = i;
                 }
 
                 const geometry = new BufferGeometry();
                 geometry.setAttribute('position', new Float32BufferAttribute(vertices, 3));
-
-                // Based on https://jsfiddle.net/m7tvxpbs/ by Mugen87
+                geometry.setAttribute('color', new Float32BufferAttribute(colors, 4));
+                geometry.setIndex(indices);
 
                 const material = new RawShaderMaterial({
                     glslVersion: GLSL3,
                     uniforms: {
-                        tMap: { value: getTexture('particle.png') },
-                        tDepth: { value: null },
                         uScale: { value: window.devicePixelRatio / 2 },
                         uAlpha: { value: 1 },
                         uCameraNear: { value: camera.near },
-                        uCameraFar: { value: camera.far },
+                        // uCameraFar: { value: camera.far },
+                        uCameraFar: { value: 1150 },
                         uResolution: resolution,
                         uTime: time
                     },
                     vertexShader: /* glsl */ `
                         in vec3 position;
+                        in vec4 color;
 
                         uniform mat4 modelMatrix;
                         uniform mat4 modelViewMatrix;
@@ -66,83 +175,57 @@
                         uniform float uCameraFar;
                         uniform float uTime;
 
+                        out vec4 vColor;
                         out float vFade;
 
-                        ${simplex3d}
-
                         void main() {
-                            vec3 p = position;
-                            p.x += snoise(position.xyz + uTime * 0.02);
-                            p.y += snoise(position.yyz + uTime * 0.02);
-                            p.z += snoise(position.zxy + uTime * 0.02);
+                            vColor = color;
 
-                            vec4 mvPosition = modelViewMatrix * vec4(p, 1.0);
+                            vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
                             gl_Position = projectionMatrix * mvPosition;
-                            gl_PointSize = uScale * (150.0 / -mvPosition.z);
+                            gl_PointSize = 11.0 * uScale;
 
-                            vec3 worldPosition = (modelMatrix * vec4(p, 1.0)).xyz;
+                            vec3 worldPosition = (modelMatrix * vec4(position, 1.0)).xyz;
                             float linearDepth = 1.0 / (uCameraFar - uCameraNear);
                             float linearPos = length(cameraPosition - worldPosition) * linearDepth;
 
-                            vFade = clamp(1.0 - linearPos * 0.75, 0.0, 1.0);
-                            vFade *= smoothstep(0.09, 0.13, linearPos);
+                            vFade = clamp(1.0 - linearPos, 0.0, 1.0);
                         }
                     `,
                     fragmentShader: /* glsl */ `
                         precision highp float;
 
-                        #include <packing>
-
-                        uniform sampler2D tMap;
-                        uniform sampler2D tDepth;
                         uniform float uAlpha;
                         uniform float uCameraNear;
                         uniform float uCameraFar;
                         uniform vec2 uResolution;
 
+                        in vec4 vColor;
                         in float vFade;
 
                         out vec4 FragColor;
 
-                        ${depth}
-
-                        float fadeEdge(float particleDepth, float sceneDepth) {
-                            // Margin makes it blend through the solid objects a little bit more,
-                            // creating illusion of density
-                            float extraMargin = 0.015;
-                            float a = (sceneDepth + extraMargin - particleDepth) * 120.0;
-
-                            if (a <= 0.0) return 0.0;
-                            if (a >= 1.0) return 1.0;
-
-                            if (a < 0.5) a = 2.0 * a * a;
-                            else a = -2.0 * pow(a - 1.0, 2.0) + 1.0;
-
-                            return a;
-                        }
-
-                        void main() {
-                            FragColor = texture(tMap, vec2(gl_PointCoord.x, 1.0 - gl_PointCoord.y));
-
-                            vec2 uv = gl_FragCoord.xy / uResolution;
-                            float particleDepth = getDepth(gl_FragCoord.z, uCameraNear, uCameraFar);
-                            float sceneDepth = getDepth(tDepth, uv, uCameraNear, uCameraFar);
-                            float alphaScale = fadeEdge(particleDepth, sceneDepth);
-
-                            FragColor.a *= alphaScale;
+                        void main(void) {
+                            float d = 1.0 - 2.0 * length(gl_PointCoord - 0.5);
+                            float a = pow(d, 5.0);
+                            FragColor.rgb = vColor.rgb;
+                            FragColor.a = vColor.a * 6.0 * a;
                             FragColor.a *= vFade;
                             FragColor.a *= uAlpha;
                         }
                     `,
                     transparent: true,
                     blending: AdditiveBlending,
-                    depthTest: false,
                     depthWrite: false
                 });
 
                 const points = new Points(geometry, material);
+                points.matrixAutoUpdate = false;
+                points.frustumCulled = false;
+                points.renderOrder = -1; // Render first (default is 0)
                 this.add(points);
 
+                this.points = points;
                 this.material = material;
             }
         }
@@ -151,73 +234,83 @@
             constructor() {
                 super();
 
-                this.initMesh();
+                this.initViews();
             }
 
-            async initMesh() {
-                const { anisotropy, loadTexture } = WorldController;
-
-                const geometry = new SphereGeometry(1, 80, 80);
-
-                // Second set of UVs for aoMap and lightMap
-                // https://threejs.org/docs/#api/en/materials/MeshStandardMaterial.aoMap
-                geometry.attributes.uv1 = geometry.attributes.uv;
-
-                // Textures
-                const [map, normalMap, ormMap] = await Promise.all([
-                    // loadTexture('uv.jpg'),
-                    loadTexture('pbr/pitted_metal_basecolor.jpg'),
-                    loadTexture('pbr/pitted_metal_normal.jpg'),
-                    // https://occlusion-roughness-metalness.cyberspace.app/
-                    loadTexture('pbr/pitted_metal_orm.jpg')
-                ]);
-
-                map.anisotropy = anisotropy;
-                map.wrapS = RepeatWrapping;
-                map.wrapT = RepeatWrapping;
-                map.repeat.set(2, 1);
-
-                normalMap.anisotropy = anisotropy;
-                normalMap.wrapS = RepeatWrapping;
-                normalMap.wrapT = RepeatWrapping;
-                normalMap.repeat.set(2, 1);
-
-                ormMap.anisotropy = anisotropy;
-                ormMap.wrapS = RepeatWrapping;
-                ormMap.wrapT = RepeatWrapping;
-                ormMap.repeat.set(2, 1);
-
-                const material = new MeshStandardMaterial({
-                    color: new Color(0x060606),
-                    metalness: 1,
-                    roughness: 1,
-                    map,
-                    metalnessMap: ormMap,
-                    roughnessMap: ormMap,
-                    aoMap: ormMap,
-                    aoMapIntensity: 1,
-                    normalMap,
-                    normalScale: new Vector2(1, 1)
-                });
-
-                // Second channel for aoMap and lightMap
-                // https://threejs.org/docs/#api/en/materials/MeshStandardMaterial.aoMap
-                material.aoMap.channel = 1;
-
-                const mesh = new Mesh(geometry, material);
-                this.add(mesh);
+            initViews() {
+                this.stars = new Stars();
+                this.add(this.stars);
             }
         }
 
-        class PanelController {
-            static init(ui) {
-                this.ui = ui;
+        class ScenePanelController {
+            static init(view) {
+                this.view = view;
 
                 this.initPanel();
+
+                this.addListeners();
             }
 
             static initPanel() {
-                const { hTiltShiftMaterial, vTiltShiftMaterial, luminosityMaterial, bloomCompositeMaterial } = RenderManager;
+                const { stars } = this.view;
+
+                const objects = [stars];
+
+                objects.forEach(object => {
+                    object.point = new Point3D(object.points, {
+                        name: '',
+                        type: '',
+                        noLine: true,
+                        noPoint: true
+                    });
+                    object.add(object.point);
+                });
+            }
+
+            static addListeners() {
+                Point3D.events.on('hover', this.onHover);
+                Point3D.events.on('click', this.onClick);
+            }
+
+            // Event handlers
+
+            static onHover = ({ type, index, target }) => {
+                console.log('onHover', type, index, target, Data.stars[index]);
+                target.setData({ primary: Data.stars[index].name });
+            };
+
+            static onClick = ({ index, target }) => {
+                console.log('onClick', index, target, Data.stars[index]);
+                target.setData({ index, primary: Data.stars[index].name }); // Set label on instance
+                target.setData({ primary: '' });
+                // WorldController.setPoint(Data.stars[index].position);
+            };
+        }
+
+        class PanelController {
+            static init(renderer, scene, camera, view, ui) {
+                this.renderer = renderer;
+                this.scene = scene;
+                this.camera = camera;
+                this.view = view;
+                this.ui = ui;
+
+                this.initControllers();
+                this.initPanel();
+            }
+
+            static initControllers() {
+                Point3D.init(this.renderer, this.scene, this.camera, {
+                    container: this.ui,
+                    debug: isDebug
+                });
+
+                ScenePanelController.init(this.view);
+            }
+
+            static initPanel() {
+                const { luminosityMaterial, bloomCompositeMaterial, compositeMaterial } = RenderManager;
 
                 const items = [
                     {
@@ -228,26 +321,35 @@
                     },
                     {
                         type: 'slider',
-                        name: 'Blur',
+                        name: 'Distance',
                         min: 0,
-                        max: 10,
-                        step: 0.1,
-                        value: hTiltShiftMaterial.uniforms.uBlurAmount.value,
+                        max: 1,
+                        step: 0.01,
+                        value: compositeMaterial.uniforms.uBlurDist.value,
                         callback: value => {
-                            hTiltShiftMaterial.uniforms.uBlurAmount.value = value;
-                            vTiltShiftMaterial.uniforms.uBlurAmount.value = value;
+                            compositeMaterial.uniforms.uBlurDist.value = value;
                         }
                     },
                     {
                         type: 'slider',
-                        name: 'Focus',
+                        name: 'Strength',
                         min: 0,
-                        max: 1,
-                        step: 0.01,
-                        value: hTiltShiftMaterial.uniforms.uFocus.value,
+                        max: 10,
+                        step: 0.1,
+                        value: compositeMaterial.uniforms.uBlurAmount.value,
                         callback: value => {
-                            hTiltShiftMaterial.uniforms.uFocus.value = value;
-                            vTiltShiftMaterial.uniforms.uFocus.value = value;
+                            compositeMaterial.uniforms.uBlurAmount.value = value;
+                        }
+                    },
+                    {
+                        type: 'slider',
+                        name: 'Chroma',
+                        min: 0,
+                        max: 10,
+                        step: 0.1,
+                        value: compositeMaterial.uniforms.uRGBAmount.value,
+                        callback: value => {
+                            compositeMaterial.uniforms.uRGBAmount.value = value;
                         }
                     },
                     {
@@ -305,23 +407,30 @@
                     this.ui.addPanel(new PanelItem(data));
                 });
             }
+
+            // Public methods
+
+            static update = time => {
+                if (!this.ui) {
+                    return;
+                }
+
+                Point3D.update(time);
+            };
         }
 
         const BlurDirectionX = new Vector2(1, 0);
         const BlurDirectionY = new Vector2(0, 1);
 
         class RenderManager {
-            static init(renderer, scene, camera, dust) {
+            static init(renderer, scene, camera) {
                 this.renderer = renderer;
                 this.scene = scene;
                 this.camera = camera;
-                this.dust = dust;
-
-                // Gaussian blur
-                this.blurAmount = 7;
 
                 // Unreal bloom
-                this.luminosityThreshold = 0.1;
+                // this.luminosityThreshold = 0.1;
+                this.luminosityThreshold = 0;
                 this.luminositySmoothing = 1;
                 this.bloomStrength = 0.3;
                 this.bloomRadius = 0.2;
@@ -332,7 +441,7 @@
             }
 
             static initRenderer() {
-                const { screenTriangle, resolution } = WorldController;
+                const { screenTriangle } = WorldController;
 
                 // Manually clear
                 this.renderer.autoClear = false;
@@ -360,16 +469,6 @@
                 }
 
                 this.renderTargetA.depthBuffer = true;
-                this.renderTargetA.depthTexture = new DepthTexture();
-
-                // Tilt-shift Gaussian blur materials
-                this.hTiltShiftMaterial = new TiltShiftMaterial(BlurDirectionX);
-                this.hTiltShiftMaterial.uniforms.uBlurAmount.value = this.blurAmount;
-                this.hTiltShiftMaterial.uniforms.uResolution = resolution;
-
-                this.vTiltShiftMaterial = new TiltShiftMaterial(BlurDirectionY);
-                this.vTiltShiftMaterial.uniforms.uBlurAmount.value = this.blurAmount;
-                this.vTiltShiftMaterial.uniforms.uResolution = resolution;
 
                 // Luminosity high pass material
                 this.luminosityMaterial = new LuminosityMaterial();
@@ -397,14 +496,11 @@
                 // Blend it additively
                 this.bloomCompositeMaterial.blending = AdditiveBlending;
 
-                // Dust scene
-                this.dustScene = new Scene();
-                this.dustScene.add(this.dust);
-
-                this.dust.material.uniforms.tDepth.value = this.renderTargetA.depthTexture;
-
                 // Copy material
                 this.copyMaterial = new CopyMaterial();
+
+                // Composite material
+                this.compositeMaterial = new CompositeMaterial();
             }
 
             static bloomFactors() {
@@ -510,26 +606,9 @@
                 renderer.setRenderTarget(renderTargetB);
                 renderer.render(this.screen, this.screenCamera);
 
-                // Dust scene
-                renderer.setRenderTarget(renderTargetB);
-                renderer.render(this.dustScene, camera);
-
-                // Tilt-shift pass Gaussian blur (horizontal and vertical)
-                this.hTiltShiftMaterial.uniforms.tMap.value = renderTargetB.texture;
-                this.screen.material = this.hTiltShiftMaterial;
-                renderer.setRenderTarget(renderTargetA);
-                renderer.clear();
-                renderer.render(this.screen, this.screenCamera);
-
-                this.vTiltShiftMaterial.uniforms.tMap.value = renderTargetA.texture;
-                this.screen.material = this.vTiltShiftMaterial;
-                renderer.setRenderTarget(renderTargetB);
-                renderer.clear();
-                renderer.render(this.screen, this.screenCamera);
-
-                // Copy pass (render to screen)
-                this.copyMaterial.uniforms.tMap.value = renderTargetB.texture;
-                this.screen.material = this.copyMaterial;
+                // Composite pass (render to screen)
+                this.compositeMaterial.uniforms.tMap.value = renderTargetB.texture;
+                this.screen.material = this.compositeMaterial;
                 renderer.setRenderTarget(null);
                 renderer.clear();
                 renderer.render(this.screen, this.screenCamera);
@@ -538,10 +617,11 @@
 
         class WorldController {
             static init() {
+                this.pointThreshold = 0.1;
+                this.isDown = false;
+
                 this.initWorld();
-                this.initLights();
                 this.initLoaders();
-                this.initEnvironment();
                 this.initControls();
 
                 this.addListeners();
@@ -562,11 +642,11 @@
 
                 // 3D scene
                 this.scene = new Scene();
-                this.scene.background = new Color(0x060606);
+                this.scene.background = new Color(0x000000);
                 this.camera = new PerspectiveCamera(30);
-                this.camera.near = 0.5;
-                this.camera.far = 40;
-                this.camera.position.z = 8;
+                this.camera.near = 0.1;
+                this.camera.far = 10000;
+                this.camera.position.z = 530;
                 this.camera.lookAt(this.scene.position);
 
                 // Global geometries
@@ -583,35 +663,28 @@
                 this.anisotropy = this.renderer.capabilities.getMaxAnisotropy();
             }
 
-            static initLights() {
-                this.scene.add(new HemisphereLight(0x606060, 0x404040, 3));
-
-                const light = new DirectionalLight(0xffffff, 2);
-                light.position.set(0.6, 0.5, 1);
-                this.scene.add(light);
-            }
-
             static initLoaders() {
                 this.textureLoader = new TextureLoader();
                 this.textureLoader.setPath('../assets/textures/');
-
-                this.environmentLoader = new EnvironmentTextureLoader(this.renderer);
-                this.environmentLoader.setPath('../assets/textures/env/');
-            }
-
-            static async initEnvironment() {
-                this.scene.environment = await this.loadEnvironmentTexture('jewelry_black_contrast.jpg');
-                this.scene.environmentIntensity = 0.5;
             }
 
             static initControls() {
                 this.controls = new OrbitControls(this.camera, this.renderer.domElement);
                 this.controls.enableDamping = true;
                 // this.controls.enableZoom = false;
+                // this.controls.rotateSpeed = 0.01;
+                // this.controls.zoomSpeed = 0.01;
+                // this.controls.panSpeed = 0.01;
+                // this.controls.autoRotate = true;
+                // this.controls.autoRotateSpeed = 0.1;
+                this.controls.minDistance = 0.2;
             }
 
             static addListeners() {
                 this.renderer.domElement.addEventListener('touchstart', this.onTouchStart);
+                this.controls.addEventListener('change', this.onChange);
+                this.controls.addEventListener('start', this.onInteraction);
+                this.controls.addEventListener('end', this.onInteraction);
             }
 
             // Event handlers
@@ -620,17 +693,38 @@
                 e.preventDefault();
             };
 
+            static onChange = () => {
+                if (this.isDown) {
+                    Point3D.hoverEnabled = false;
+                }
+            };
+
+            static onInteraction = ({ type }) => {
+                clearTween(this.timeout);
+
+                if (type === 'start') {
+                    this.isDown = true;
+                } else {
+                    this.timeout = delayedCall(300, () => {
+                        this.isDown = false;
+                        Point3D.hoverEnabled = true;
+                    });
+                }
+            };
+
             // Public methods
+
+            static setPoint(point) {
+                // https://discourse.threejs.org/t/solved-rotate-camera-to-face-point-on-sphere/1676
+                const camDistance = this.camera.position.length();
+
+                this.camera.position.copy(point).normalize().multiplyScalar(camDistance);
+                this.controls.target.copy(point);
+            }
 
             static resize = (width, height, dpr) => {
                 this.camera.aspect = width / height;
                 this.camera.updateProjectionMatrix();
-
-                if (width < height) {
-                    this.camera.position.z = 10;
-                } else {
-                    this.camera.position.z = 8;
-                }
 
                 width = Math.round(width * dpr);
                 height = Math.round(height * dpr);
@@ -645,11 +739,20 @@
                 this.frame.value = frame;
 
                 this.controls.update();
+
+                if (Point3D.points && Point3D.points.length) {
+                    Point3D.raycaster.params.Points.threshold = MathUtils.clamp(
+                        MathUtils.mapLinear(this.controls.getDistance(), this.controls.minDistance, 30, 0.005, this.pointThreshold),
+                        0.005,
+                        4
+                    );
+
+                    Point3D.points[0].mesh.scale.setScalar(Point3D.raycaster.params.Points.threshold);
+                }
             };
 
             static ready = () => Promise.all([
-                this.textureLoader.ready(),
-                this.environmentLoader.ready()
+                this.textureLoader.ready()
             ]);
 
             // Global handlers
@@ -657,14 +760,15 @@
             static getTexture = (path, callback) => this.textureLoader.load(path, callback);
 
             static loadTexture = path => this.textureLoader.loadAsync(path);
-
-            static loadEnvironmentTexture = path => this.environmentLoader.loadAsync(path);
         }
 
         class App {
             static async init() {
-                this.initThread();
+                this.initLoader();
                 this.initWorld();
+
+                await this.loadData();
+
                 this.initViews();
                 this.initControllers();
 
@@ -676,8 +780,8 @@
                 this.initPanel();
             }
 
-            static initThread() {
-                ImageBitmapLoaderThread.init();
+            static initLoader() {
+                this.assetLoader = new AssetLoader();
             }
 
             static initWorld() {
@@ -685,11 +789,19 @@
                 document.body.appendChild(WorldController.element);
             }
 
+            static async loadData() {
+                const [buffer, geoip] = await this.assetLoader.loadAllAsync([
+                    'https://cdn.cyberspace.app/cyberspace_names.bin',
+                    'https://api.cyberspace.app/geoip'
+                ]);
+
+                Data.init(buffer, geoip);
+                WorldController.setPoint(Data.point);
+            }
+
             static initViews() {
                 this.view = new SceneView();
                 WorldController.scene.add(this.view);
-
-                this.dust = new Dust(1000);
 
                 this.ui = new UI({ fps: true });
                 this.ui.animateIn();
@@ -699,11 +811,13 @@
             static initControllers() {
                 const { renderer, scene, camera } = WorldController;
 
-                RenderManager.init(renderer, scene, camera, this.dust);
+                RenderManager.init(renderer, scene, camera);
             }
 
             static initPanel() {
-                PanelController.init(this.ui);
+                const { renderer, scene, camera } = WorldController;
+
+                PanelController.init(renderer, scene, camera, this.view, this.ui);
             }
 
             static addListeners() {
@@ -726,6 +840,7 @@
             static onUpdate = (time, delta, frame) => {
                 WorldController.update(time, delta, frame);
                 RenderManager.update(time, delta, frame);
+                PanelController.update(time);
                 this.ui.update();
             };
         }

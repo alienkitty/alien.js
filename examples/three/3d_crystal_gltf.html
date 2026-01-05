@@ -7,11 +7,11 @@
     <title>Crystal — Alien.js</title>
 
     <link rel="preconnect" href="https://fonts.gstatic.com">
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto+Mono&family=Roboto:wght@300&family=Gothic+A1:wght@400;700">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto+Mono&family=Roboto:wght@300&family=Gothic+A1:wght@500;700">
     <link rel="stylesheet" href="../assets/css/style.css">
 
     <script type="module">
-        import { BloomCompositeMaterial, Color, ColorManagement, DirectionalLight, EnvironmentTextureLoader, GLTFLoader, Group, HemisphereLight, LightOptions, LightPanelController, LinearSRGBColorSpace, LuminosityMaterial, MathUtils, Mesh, MeshPhysicalMaterial, OrbitControls, OrthographicCamera, Panel, PanelItem, PerspectiveCamera, PhysicalMaterialPanel, Scene, SceneCompositeDistortionMaterial, ScenePanel, TextureLoader, UI, UnrealBloomBlurMaterial, Vector2, WebGLRenderTarget, WebGLRenderer, getFullscreenTriangle, getKeyByLight, getKeyByValue, ticker } from '../../build/alien.three.js';
+        import { BackgroundPanel, BloomCompositeMaterial, Color, ColorManagement, DirectionalLight, EnvironmentPanel, EnvironmentTextureLoader, GLTFLoader, Group, HemisphereLight, LightOptions, LightPanelController, LinearSRGBColorSpace, LuminosityMaterial, MathUtils, Mesh, MeshPhysicalMaterial, OrbitControls, OrthographicCamera, Panel, PanelItem, PerspectiveCamera, PhysicalMaterialPanel, Scene, SceneCompositeDistortionMaterial, TextureLoader, UI, UnrealBloomBlurMaterial, Vector2, WebGLRenderTarget, WebGLRenderer, getFullscreenTriangle, getKeyByLight, getKeyByValue, ticker } from '../../build/alien.three.js';
 
         class Crystal extends Group {
             constructor() {
@@ -133,10 +133,10 @@
             initPanel() {
                 const { luminosityMaterial, bloomCompositeMaterial, compositeMaterial } = RenderManager;
 
-                const postOptions = {
-                    Off: false,
-                    On: true
-                };
+                const postOptions = new Map([
+                    ['Off', false],
+                    ['Post', true]
+                ]);
 
                 const postItems = [
                     {
@@ -222,7 +222,7 @@
                                 item.setContent(postPanel);
                             }
 
-                            RenderManager.enabled = postOptions[value];
+                            RenderManager.enabled = postOptions.get(value);
 
                             if (RenderManager.enabled) {
                                 item.toggleContent(true);
@@ -260,16 +260,17 @@
             static initPanel() {
                 const { crystal } = this.view;
 
-                const sceneOptions = {
-                    Scene: ScenePanel,
-                    Post: PostPanel
-                };
+                const sceneOptions = new Map([
+                    ['BG', BackgroundPanel],
+                    ['Env', EnvironmentPanel],
+                    ['Post', PostPanel]
+                ]);
 
                 this.scene.traverse(object => {
                     if (object.isLight) {
                         const key = getKeyByLight(LightOptions, object);
 
-                        sceneOptions[key] = [object, LightOptions[key][1]];
+                        sceneOptions.set(key, [object, LightOptions.get(key)[1]]);
 
                         this.lights.push(object);
                     }
@@ -308,12 +309,11 @@
                     {
                         type: 'list',
                         list: sceneOptions,
-                        value: 'Scene',
+                        value: 'BG',
                         callback: (value, item) => {
                             switch (value) {
-                                case 'Scene':
-                                case 'Post': {
-                                    const ScenePanel = sceneOptions[value];
+                                case 'BG': {
+                                    const ScenePanel = sceneOptions.get(value);
 
                                     const scenePanel = new ScenePanel(this.scene, this.ui);
                                     scenePanel.animateIn(true);
@@ -321,8 +321,26 @@
                                     item.setContent(scenePanel);
                                     break;
                                 }
+                                case 'Env': {
+                                    const ScenePanel = sceneOptions.get(value);
+
+                                    const scenePanel = new ScenePanel(this.scene);
+                                    scenePanel.animateIn(true);
+
+                                    item.setContent(scenePanel);
+                                    break;
+                                }
+                                case 'Post': {
+                                    const ScenePanel = sceneOptions.get(value);
+
+                                    const scenePanel = new ScenePanel();
+                                    scenePanel.animateIn(true);
+
+                                    item.setContent(scenePanel);
+                                    break;
+                                }
                                 default: {
-                                    const [light, LightPanel] = sceneOptions[value];
+                                    const [light, LightPanel] = sceneOptions.get(value);
 
                                     const lightPanel = new LightPanel(LightPanelController, light);
                                     lightPanel.animateIn(true);

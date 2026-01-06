@@ -67,7 +67,7 @@ class UIContainer extends Interface {
         });
         this.add(this.title);
 
-        this.link = new Link('Next');
+        this.link = new Link({ title: 'Next' });
         this.link.css({ marginTop: 'auto' });
         this.add(this.link);
     }

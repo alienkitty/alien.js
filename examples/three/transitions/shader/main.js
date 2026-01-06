@@ -65,7 +65,7 @@ class UIContainer extends Interface {
         const next = Data.getNext(data);
         const path = router.getPath(next.path);
 
-        this.link = new Link('Next', `${path}/`);
+        this.link = new Link({ title: 'Next', link: `${path}/` });
         this.link.css({ marginTop: 'auto' });
         this.add(this.link);
     }

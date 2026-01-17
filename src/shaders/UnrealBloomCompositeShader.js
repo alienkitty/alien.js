@@ -43,8 +43,6 @@ void main() {
         lerpBloomFactor(uBloomFactors[4]) * uBloomTintColors[4] * texture(tBlur5, vUv).rgb
     );
 
-    float bloomAlpha = max(bloom.r, max(bloom.g, bloom.b));
-
-    FragColor = vec4(bloom, bloomAlpha);
+    FragColor = vec4(bloom, 1.0);
 }
 `;

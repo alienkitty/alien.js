@@ -35,7 +35,7 @@ float lerpBloomFactor(float factor) {
 }
 
 void main() {
-    vec3 bloom = 3.0 * uBloomStrength * (
+    vec3 bloom = uBloomStrength * (
         lerpBloomFactor(uBloomFactors[0]) * uBloomTintColors[0] * texture(tBlur1, vUv).rgb +
         lerpBloomFactor(uBloomFactors[1]) * uBloomTintColors[1] * texture(tBlur2, vUv).rgb +
         lerpBloomFactor(uBloomFactors[2]) * uBloomTintColors[2] * texture(tBlur3, vUv).rgb +

@@ -30,7 +30,7 @@ out vec4 FragColor;
 ${dither}
 
 void main() {
-    FragColor = 3.0 * (
+    FragColor = (
         uBloomFactors[0] * texture(tBlur1, vUv) +
         uBloomFactors[1] * texture(tBlur2, vUv) +
         uBloomFactors[2] * texture(tBlur3, vUv) +

@@ -1,5 +1,7 @@
 // Based on https://github.com/mrdoob/three.js/blob/dev/examples/jsm/shaders/LuminosityHighPassShader.js by bhouston
 
+import luminance from './modules/luminance/luminance.glsl.js';
+
 export const vertexShader = /* glsl */ `
 in vec3 position;
 in vec2 uv;
@@ -24,10 +26,11 @@ in vec2 vUv;
 
 out vec4 FragColor;
 
+${luminance}
+
 void main() {
     vec4 texel = texture(tMap, vUv);
-    vec3 luma = vec3(0.299, 0.587, 0.114);
-    float v = dot(texel.xyz, luma);
+    float v = luminance(texel.xyz);
     float alpha = smoothstep(uThreshold, uThreshold + uSmoothing, v);
 
     FragColor = mix(vec4(0), texel, alpha);

@@ -7,17 +7,17 @@ import { vertexShader, fragmentShader } from '../../shaders/UnrealBloomBlurShade
  * A separable Gaussian blur pass material based on the bloom from Unreal Engine.
  */
 export class UnrealBloomBlurMaterial extends RawShaderMaterial {
-    constructor(kernelRadius) {
+    constructor(kernelRadius, coefficients) {
         super({
             glslVersion: GLSL3,
             defines: {
-                KERNEL_RADIUS: kernelRadius,
-                SIGMA: kernelRadius
+                KERNEL_RADIUS: kernelRadius
             },
             uniforms: {
                 tMap: { value: null },
                 uDirection: { value: new Vector2(0.5, 0.5) },
-                uResolution: { value: new Vector2() }
+                uCoefficients: { value: coefficients },
+                uTexelSize: { value: new Vector2() }
             },
             vertexShader,
             fragmentShader,

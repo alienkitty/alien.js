@@ -35,10 +35,16 @@ float lerpBloomFactor(float factor) {
 }
 
 void main() {
-    FragColor = uBloomStrength * (lerpBloomFactor(uBloomFactors[0]) * vec4(uBloomTintColors[0], 1.0) * texture(tBlur1, vUv) +
-                                  lerpBloomFactor(uBloomFactors[1]) * vec4(uBloomTintColors[1], 1.0) * texture(tBlur2, vUv) +
-                                  lerpBloomFactor(uBloomFactors[2]) * vec4(uBloomTintColors[2], 1.0) * texture(tBlur3, vUv) +
-                                  lerpBloomFactor(uBloomFactors[3]) * vec4(uBloomTintColors[3], 1.0) * texture(tBlur4, vUv) +
-                                  lerpBloomFactor(uBloomFactors[4]) * vec4(uBloomTintColors[4], 1.0) * texture(tBlur5, vUv));
+    vec3 bloom = 3.0 * uBloomStrength * (
+        lerpBloomFactor(uBloomFactors[0]) * uBloomTintColors[0] * texture(tBlur1, vUv).rgb +
+        lerpBloomFactor(uBloomFactors[1]) * uBloomTintColors[1] * texture(tBlur2, vUv).rgb +
+        lerpBloomFactor(uBloomFactors[2]) * uBloomTintColors[2] * texture(tBlur3, vUv).rgb +
+        lerpBloomFactor(uBloomFactors[3]) * uBloomTintColors[3] * texture(tBlur4, vUv).rgb +
+        lerpBloomFactor(uBloomFactors[4]) * uBloomTintColors[4] * texture(tBlur5, vUv).rgb
+    );
+
+    float bloomAlpha = max(bloom.r, max(bloom.g, bloom.b));
+
+    FragColor = vec4(bloom, bloomAlpha);
 }
 `;

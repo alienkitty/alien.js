@@ -625,6 +625,7 @@
         class WorldController {
             static init() {
                 this.pointThreshold = 0.1;
+                this.multiplier = navigator.maxTouchPoints ? 1.8 : 1;
                 this.isDown = false;
 
                 this.initWorld();
@@ -752,7 +753,7 @@
                         MathUtils.mapLinear(this.controls.getDistance(), this.controls.minDistance, 30, 0.005, this.pointThreshold),
                         0.005,
                         4
-                    );
+                    ) * this.multiplier;
 
                     Point3D.points[0].mesh.scale.setScalar(Point3D.raycaster.params.Points.threshold);
                 }

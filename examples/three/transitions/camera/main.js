@@ -109,7 +109,6 @@ class CompositeMaterial extends RawShaderMaterial {
 }
 
 import blur from '../../../../src/shaders/modules/blur/blur.glsl.js';
-import blueNoise from '../../../../src/shaders/modules/noise/blue-noise.glsl.js';
 
 class BlurMaterial extends RawShaderMaterial {
     constructor(direction = new Vector2(0.5, 0.5)) {
@@ -174,12 +173,11 @@ class BlurMaterial extends RawShaderMaterial {
                 ${smootherstep}
                 ${rotateUV}
                 ${blur}
-                ${blueNoise}
 
                 void main() {
                     float d = abs(uFocus - rotateUV(vUv, uRotation).y);
                     float t = smootherstep(0.0, 1.0, d);
-                    float rnd = getBlueNoise(tBlueNoise, gl_FragCoord.xy, uBlueNoiseResolution, vec2(fract(uTime)));
+                    float rnd = texture(tBlueNoise, gl_FragCoord.xy / uBlueNoiseResolution + vec2(fract(uTime))).r;
 
                     FragColor = blur(tMap, vUv, uResolution, 20.0 * uBlurAmount * t * rot2d(uDirection, rnd));
 

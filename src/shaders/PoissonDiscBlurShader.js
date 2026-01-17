@@ -1,5 +1,4 @@
 import blur from './modules/blur/poisson-disc-blur12.glsl.js';
-import blueNoise from './modules/noise/blue-noise.glsl.js';
 
 export const vertexShader = /* glsl */ `
 in vec3 position;
@@ -34,10 +33,9 @@ vec2 rot2d(vec2 p, float a) {
 }
 
 ${blur}
-${blueNoise}
 
 void main() {
-    float rnd = getBlueNoise(tBlueNoise, gl_FragCoord.xy, uBlueNoiseResolution, vec2(fract(uTime)));
+    float rnd = texture(tBlueNoise, gl_FragCoord.xy / uBlueNoiseResolution + vec2(fract(uTime))).r;
     vec4 basis = vec4(rot2d(vec2(1, 0), rnd), rot2d(vec2(0, 1), rnd));
 
     FragColor = poissonSample(tMap, vUv, uResolution, uRadius, basis);

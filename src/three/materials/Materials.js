@@ -34,6 +34,7 @@ export { BokehBlurMaterial1 } from './BokehBlurMaterial1.js';
 export { BokehBlurMaterial2 } from './BokehBlurMaterial2.js';
 export { TiltShiftMaterial } from './TiltShiftMaterial.js';
 export { ReflectorBlurMaterial } from './ReflectorBlurMaterial.js';
+export { BasicReflectorMaterial } from './BasicReflectorMaterial.js';
 export { ReflectorMaterial } from './ReflectorMaterial.js';
 export { ReflectorDudvMaterial } from './ReflectorDudvMaterial.js';
 export { ChromaticAberrationMaterial } from './ChromaticAberrationMaterial.js';

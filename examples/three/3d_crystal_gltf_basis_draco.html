@@ -32,7 +32,7 @@
 
                 // Crystal mesh
                 // https://threejs.org/docs/index.html#api/en/core/Object3D.getObjectByName
-                // const avatar = gltf.scene.getObjectByName('avatar');
+                // const avatar = model.getObjectByName('avatar');
                 const mesh = model.children[0].children[0].children[0].children[0].children[0];
                 mesh.geometry.center(); // Also needed for Point3D
                 mesh.position.y = 50;

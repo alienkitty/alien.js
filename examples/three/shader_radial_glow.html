@@ -11,7 +11,7 @@
     <link rel="stylesheet" href="../assets/css/style.css">
 
     <script type="module">
-        import { BackgroundPanel, BloomCompositeMaterial, Color, ColorManagement, DirectionalLight, EnvironmentPanel, EnvironmentTextureLoader, GLSL3, Group, HemisphereLight, IcosahedronGeometry, LightOptions, LightPanelController, LinearSRGBColorSpace, LuminosityMaterial, MaterialPanelController, MathUtils, Mesh, MeshStandardMaterial, NoBlending, OrbitControls, OrthographicCamera, Panel, PanelItem, PerspectiveCamera, Point3D, RawShaderMaterial, RepeatWrapping, Scene, TextureLoader, UI, UnrealBloomBlurMaterial, Vector2, Vector3, WebGLRenderTarget, WebGLRenderer, getFullscreenTriangle, getKeyByLight, getKeyByValue, ticker, tween } from '../../build/alien.three.js';
+        import { BackgroundPanel, BloomCompositeMaterial, Color, ColorManagement, DirectionalLight, EnvironmentPanel, EnvironmentTextureLoader, GLSL3, Group, HemisphereLight, IcosahedronGeometry, LightOptions, LightPanelController, LinearSRGBColorSpace, LuminosityMaterial, MaterialsPanel, MathUtils, Mesh, MeshStandardMaterial, NoBlending, OrbitControls, OrthographicCamera, Panel, PanelItem, PerspectiveCamera, Point3D, RawShaderMaterial, RepeatWrapping, Scene, TextureLoader, UI, UnrealBloomBlurMaterial, Vector2, Vector3, WebGLRenderTarget, WebGLRenderer, getFullscreenTriangle, getKeyByLight, getKeyByValue, ticker, tween } from '../../build/alien.three.js';
 
         const isOrbit = /[?&]orbit/.test(location.search);
 
@@ -237,7 +237,10 @@
                     object.point = new Point3D(object.mesh);
                     object.add(object.point);
 
-                    MaterialPanelController.init(object.mesh, object.point);
+                    const materialPanel = new MaterialsPanel(object.mesh, object.point);
+                    materialPanel.animateIn(true);
+
+                    object.point.setContent(materialPanel);
                 });
             }
 

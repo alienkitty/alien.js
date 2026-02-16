@@ -432,7 +432,7 @@ export class OimoPhysicsBuffer {
 
         this.world.step(this.timestep);
 
-        let index = 0;
+        let index;
 
         for (let i = 0, l = this.bodies.length; i < l; i++) {
             const body = this.bodies[i];

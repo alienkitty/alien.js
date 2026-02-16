@@ -217,7 +217,7 @@ npm start
 ### ESLint
 
 ```sh
-npm i -D eslint eslint-plugin-html
+npm i -D eslint eslint-plugin-html @eslint/js globals
 npx eslint src
 npx eslint examples/about/src
 npx eslint examples/ogl/*.html

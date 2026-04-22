@@ -285,9 +285,9 @@
             update = (time, near) => {
                 this.sprites.forEach(sprite => {
                     if (near) {
-                        sprite.wobble.origin.copy(sprite.wobble.position);
-                        // sprite.wobble.update(sprite.random + time);
-                        sprite.wobble.update(time * sprite.random);
+                        sprite.wobble.origin.copy(sprite.wobble.position); // Copy last position
+                        // sprite.wobble.update(sprite.random + time); // underwater
+                        sprite.wobble.update(time * sprite.random); // space
                         sprite.position.copy(sprite.near.copy(sprite.origin).multiplyScalar(this.nearScale));
                     } else {
                         sprite.position.copy(sprite.origin);

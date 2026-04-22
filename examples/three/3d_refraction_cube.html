@@ -11,10 +11,7 @@
     <link rel="stylesheet" href="../assets/css/style.css">
 
     <script type="module">
-        import { AdditiveBlending, BackSide, BlurMaterial, BoxGeometry, Color, ColorManagement, CopyMaterial, CubeCamera, GLSL3, Group, IcosahedronGeometry, ImageBitmapLoaderThread, LinearMipmapLinearFilter, LinearSRGBColorSpace, MathUtils, Mesh, MeshBasicMaterial, NoBlending, OrthographicCamera, PanelItem, PerspectiveCamera, RawShaderMaterial, RefractionBackfaceMaterial, RefractionMaterial, Scene, Sprite, SpriteMaterial, TextureLoader, UI, Vector2, Vector3, WebGLCubeRenderTarget, WebGLRenderTarget, WebGLRenderer, Wobble, getFullscreenTriangle, getKeyByValue, ticker, tween } from '../../build/alien.three.js';
-
-        // Based on https://tympanus.net/codrops/2019/10/29/real-time-multiside-refraction-in-three-steps/ by jespervos
-        // Based on https://blog.maximeheckel.com/posts/refraction-dispersion-and-other-shader-light-effects/
+        import { AdditiveBlending, BackSide, BlurMaterial, BoxGeometry, Color, ColorManagement, CopyMaterial, CubeCamera, GLSL3, Group, IcosahedronGeometry, ImageBitmapLoaderThread, LinearMipmapLinearFilter, LinearSRGBColorSpace, MathUtils, Mesh, MeshBasicMaterial, NoBlending, OrthographicCamera, PanelItem, PerspectiveCamera, RawShaderMaterial, RefractionBackfaceMaterial, RefractionMaterial, Scene, Sprite, SpriteMaterial, TextureLoader, UI, Vector2, WebGLCubeRenderTarget, WebGLRenderTarget, WebGLRenderer, Wobble, getFullscreenTriangle, getKeyByValue, ticker, tween } from '../../build/alien.three.js';
 
         const isDebug = /[?&]debug/.test(location.search);
 
@@ -175,6 +172,9 @@
             }
         }
 
+        // Based on https://tympanus.net/codrops/2019/10/29/real-time-multiside-refraction-in-three-steps/ by jespervos
+        // Based on https://blog.maximeheckel.com/posts/refraction-dispersion-and-other-shader-light-effects/
+
         class AbstractCube extends Group {
             constructor() {
                 super();
@@ -218,7 +218,6 @@
                 this.numParticles = numParticles;
 
                 this.sprites = [];
-                this.nearScale = 0.3;
 
                 this.initSprites();
             }
@@ -235,7 +234,7 @@
                 });
 
                 for (let i = 0; i < this.numParticles; i++) {
-                    const distance = MathUtils.randFloat(10, 40);
+                    const distance = MathUtils.randFloat(3, 12);
 
                     const sprite = new Sprite(material);
                     sprite.position.x = Math.random() * 2 - 1;
@@ -247,13 +246,8 @@
 
                     sprite.random = Math.random();
 
-                    sprite.origin = new Vector3();
-                    sprite.near = new Vector3();
-                    sprite.origin.copy(sprite.position);
-                    sprite.near.copy(sprite.origin).multiplyScalar(this.nearScale);
-
-                    sprite.wobble = new Wobble(sprite.origin);
-                    sprite.wobble.scale = 0.3;
+                    sprite.wobble = new Wobble(sprite.position);
+                    sprite.wobble.scale = 0.09;
 
                     this.add(sprite);
                     this.sprites.push(sprite);
@@ -262,17 +256,8 @@
 
             // Public methods
 
-            update = (time, near) => {
-                this.sprites.forEach(sprite => {
-                    if (near) {
-                        sprite.wobble.origin.copy(sprite.wobble.position);
-                        // sprite.wobble.update(sprite.random + time);
-                        sprite.wobble.update(time * sprite.random);
-                        sprite.position.copy(sprite.near.copy(sprite.origin).multiplyScalar(this.nearScale));
-                    } else {
-                        sprite.position.copy(sprite.origin);
-                    }
-                });
+            update = time => {
+                this.sprites.forEach(sprite => sprite.wobble.update(time * sprite.random));
             };
         }
 
@@ -336,11 +321,7 @@
             // Public methods
 
             update = time => {
-                // this.sphere.visible = false;
-                this.stars.update(time, true);
-                // this.cubeCamera.update(this.renderer, this.scene);
-                // this.stars.update(time, false);
-                // this.sphere.visible = true;
+                this.stars.update(time);
                 this.abstractCube.update();
             };
 

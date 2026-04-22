@@ -1,6 +1,9 @@
 // Based on https://tympanus.net/codrops/2019/10/29/real-time-multiside-refraction-in-three-steps/ by jespervos
 // Based on https://blog.maximeheckel.com/posts/refraction-dispersion-and-other-shader-light-effects/
 
+import saturate from './modules/saturate/saturate.glsl.js';
+import fresnel from './modules/fresnel/fresnel.glsl.js';
+
 export const vertexShader = /* glsl */ `
 in vec3 position;
 in vec3 normal;
@@ -36,21 +39,10 @@ in vec3 eyeVector;
 
 out vec4 FragColor;
 
-float getFresnel(vec3 viewDir, vec3 worldNormal, float power) {
-    return pow(1.0 - abs(dot(viewDir, worldNormal)), power);
-}
+${saturate}
+${fresnel}
 
-vec3 sat(vec3 rgb, float intensity) {
-    vec3 L = vec3(0.2125, 0.7154, 0.0721);
-    vec3 grayscale = vec3(dot(rgb, L));
-    return mix(grayscale, rgb, intensity);
-}
-
-const int LOOP = 16;
-// const float iorRatio = 1.0 / 1.31;
-// const float iorRatio = 1.0 / 1.33; // water
-// const float iorRatio = 1.0 / 1.5;  // glass
-// const float iorRatio = 1.0 / 2.42; // diamond
+const int NUM_SAMPLES = 16;
 const float iorRatioRed = 1.0 / 1.15;
 const float iorRatioGreen = 1.0 / 1.15;
 const float iorRatioBlue = 1.0 / 1.18;
@@ -66,8 +58,8 @@ void main() {
 
     vec3 color = vec3(0.0);
 
-    for (int i = 0; i < LOOP; i++) {
-        float slide = float(i) / float(LOOP) * 0.1;
+    for (int i = 0; i < NUM_SAMPLES; i++) {
+        float slide = float(i) / float(NUM_SAMPLES) * 0.1;
 
         vec3 refractedR = refract(eyeVector, normal, iorRatioRed);
         vec3 refractedG = refract(eyeVector, normal, iorRatioGreen);
@@ -77,10 +69,10 @@ void main() {
         color.g += texture(tMap, uv + refractedG.xy * (0.2 + slide * 1.0) * 0.5).g;
         color.b += texture(tMap, uv + refractedB.xy * (0.2 + slide * 3.0) * 0.5).b;
 
-        color = sat(color, 1.06);
+        color = saturate(color, 1.06);
     }
 
-    color /= float(LOOP);
+    color /= float(NUM_SAMPLES);
 
     float fresnel = getFresnel(eyeVector, normal, 3.0);
     color.rgb = mix(color.rgb, uFresnelColor, fresnel);

@@ -62,6 +62,8 @@ void main() {
     float a = 0.33;
     vec3 normal = worldNormal * (1.0 - a) - backfaceNormal * a;
 
+    uv /= 1.5; // magnify
+
     vec3 color = vec3(0.0);
 
     for (int i = 0; i < LOOP; i++) {

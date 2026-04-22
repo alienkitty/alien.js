@@ -11,7 +11,7 @@
     <link rel="stylesheet" href="../assets/css/style.css">
 
     <script type="module">
-        import { AdditiveBlending, BackSide, BlurMaterial, BoxGeometry, Color, ColorManagement, CopyMaterial, CubeCamera, GLSL3, Group, IcosahedronGeometry, ImageBitmapLoaderThread, LinearMipmapLinearFilter, LinearSRGBColorSpace, MathUtils, Mesh, MeshBasicMaterial, NoBlending, OrthographicCamera, PanelItem, PerspectiveCamera, RawShaderMaterial, RefractionBackfaceMaterial, RefractionMaterial, Scene, Sprite, SpriteMaterial, TextureLoader, UI, Vector2, WebGLCubeRenderTarget, WebGLRenderTarget, WebGLRenderer, Wobble, getFullscreenTriangle, getKeyByValue, ticker, tween } from '../../build/alien.three.js';
+        import { AdditiveBlending, BackSide, BlurMaterial, BoxGeometry, Color, ColorManagement, CopyMaterial, CubeCamera, GLSL3, Group, IcosahedronGeometry, ImageBitmapLoaderThread, LinearMipmapLinearFilter, LinearSRGBColorSpace, MathUtils, Mesh, MeshBasicMaterial, NoBlending, OrthographicCamera, PanelItem, PerspectiveCamera, RawShaderMaterial, RefractionBackfaceMaterial, RefractionMaterial, Scene, Sprite, SpriteMaterial, TextureLoader, UI, Vector2, WebGLCubeRenderTarget, WebGLRenderTarget, WebGLRenderer, Wobble, getFullscreenTriangle, ticker, tween } from '../../build/alien.three.js';
 
         const isDebug = /[?&]debug/.test(location.search);
 
@@ -190,6 +190,16 @@
                 const geometry = new BoxGeometry(this.size, this.size, this.size);
 
                 const material = new RefractionMaterial({
+                    samples: 16,
+                    backfaceAmount: 0.33,
+                    magnify: 0.6,
+                    iorR: 1.5,
+                    iorG: 1.53,
+                    iorB: 1.5,
+                    saturation: 1.02,
+                    refractPower: 0.2,
+                    refractIntensity: 0.5,
+                    fresnelPower: 3,
                     fresnelColor: new Color(colors.fresnelColor)
                 });
                 material.uniforms.uResolution = resolution;
@@ -234,7 +244,7 @@
                 });
 
                 for (let i = 0; i < this.numParticles; i++) {
-                    const distance = MathUtils.randFloat(3, 12);
+                    const distance = MathUtils.randFloat(10, 40);
 
                     const sprite = new Sprite(material);
                     sprite.position.x = Math.random() * 2 - 1;
@@ -242,12 +252,12 @@
                     sprite.position.z = Math.random() * 2 - 1;
                     sprite.position.normalize();
                     sprite.position.multiplyScalar(distance);
-                    sprite.scale.set(0.05, 0.05, 1);
+                    sprite.scale.set(0.3, 0.3, 1);
 
                     sprite.random = Math.random();
 
                     sprite.wobble = new Wobble(sprite.position);
-                    sprite.wobble.scale = 0.09;
+                    sprite.wobble.scale = 0.3;
 
                     this.add(sprite);
                     this.sprites.push(sprite);
@@ -350,7 +360,8 @@
         }
 
         class PanelController {
-            static init(ui) {
+            static init(view, ui) {
+                this.view = view;
                 this.ui = ui;
 
                 this.initPanel();
@@ -359,10 +370,7 @@
             static initPanel() {
                 const { hBlurMaterial, vBlurMaterial, compositeMaterial } = RenderManager;
 
-                const postOptions = new Map([
-                    ['Off', false],
-                    ['Post', true]
-                ]);
+                const { abstractCube } = this.view;
 
                 const items = [
                     {
@@ -372,11 +380,113 @@
                         type: 'divider'
                     },
                     {
-                        type: 'list',
-                        list: postOptions,
-                        value: getKeyByValue(postOptions, RenderManager.enabled),
+                        type: 'slider',
+                        name: 'Backface',
+                        min: 0,
+                        max: 1,
+                        step: 0.01,
+                        value: abstractCube.material.uniforms.uBackfaceAmount.value,
                         callback: value => {
-                            RenderManager.enabled = postOptions.get(value);
+                            abstractCube.material.uniforms.uBackfaceAmount.value = value;
+                        }
+                    },
+                    {
+                        type: 'slider',
+                        name: 'Magnify',
+                        min: -2,
+                        max: 2,
+                        step: 0.01,
+                        value: abstractCube.material.uniforms.uMagnify.value,
+                        callback: value => {
+                            abstractCube.material.uniforms.uMagnify.value = value;
+                        }
+                    },
+                    {
+                        type: 'slider',
+                        name: 'Red',
+                        min: 1,
+                        max: 2.42,
+                        step: 0.01,
+                        value: abstractCube.material.uniforms.uIorR.value,
+                        callback: value => {
+                            abstractCube.material.uniforms.uIorR.value = value;
+                        }
+                    },
+                    {
+                        type: 'slider',
+                        name: 'Green',
+                        min: 1,
+                        max: 2.42,
+                        step: 0.01,
+                        value: abstractCube.material.uniforms.uIorG.value,
+                        callback: value => {
+                            abstractCube.material.uniforms.uIorG.value = value;
+                        }
+                    },
+                    {
+                        type: 'slider',
+                        name: 'Blue',
+                        min: 1,
+                        max: 2.42,
+                        step: 0.01,
+                        value: abstractCube.material.uniforms.uIorB.value,
+                        callback: value => {
+                            abstractCube.material.uniforms.uIorB.value = value;
+                        }
+                    },
+                    {
+                        type: 'slider',
+                        name: 'Saturate',
+                        min: 1,
+                        max: 1.25,
+                        step: 0.01,
+                        value: abstractCube.material.uniforms.uSaturation.value,
+                        callback: value => {
+                            abstractCube.material.uniforms.uSaturation.value = value;
+                        }
+                    },
+                    {
+                        type: 'slider',
+                        name: 'Refract',
+                        min: 0,
+                        max: 1,
+                        step: 0.01,
+                        value: abstractCube.material.uniforms.uRefractPower.value,
+                        callback: value => {
+                            abstractCube.material.uniforms.uRefractPower.value = value;
+                        }
+                    },
+                    {
+                        type: 'slider',
+                        name: 'Int',
+                        min: 0,
+                        max: 1.5,
+                        step: 0.01,
+                        value: abstractCube.material.uniforms.uRefractIntensity.value,
+                        callback: value => {
+                            abstractCube.material.uniforms.uRefractIntensity.value = value;
+                        }
+                    },
+                    {
+                        type: 'slider',
+                        name: 'Fresnel',
+                        min: 0,
+                        max: 8,
+                        step: 0.01,
+                        value: abstractCube.material.uniforms.uFresnelPower.value,
+                        callback: value => {
+                            abstractCube.material.uniforms.uFresnelPower.value = value;
+                        }
+                    },
+                    {
+                        type: 'slider',
+                        name: 'Alpha',
+                        min: 0,
+                        max: 1,
+                        step: 0.01,
+                        value: abstractCube.material.uniforms.uAlpha.value,
+                        callback: value => {
+                            abstractCube.material.uniforms.uAlpha.value = value;
                         }
                     },
                     {
@@ -881,7 +991,7 @@
             }
 
             static initPanel() {
-                PanelController.init(this.ui);
+                PanelController.init(this.view, this.ui);
             }
 
             static addListeners() {

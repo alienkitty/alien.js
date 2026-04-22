@@ -1,6 +1,7 @@
 // Based on https://tympanus.net/codrops/2019/10/29/real-time-multiside-refraction-in-three-steps/ by jespervos
 // Based on https://blog.maximeheckel.com/posts/refraction-dispersion-and-other-shader-light-effects/
 
+import scaleUV from './modules/transformUV/scaleUV.glsl.js';
 import saturate from './modules/saturate/saturate.glsl.js';
 import fresnel from './modules/fresnel/fresnel.glsl.js';
 
@@ -30,6 +31,15 @@ precision highp float;
 
 uniform sampler2D tMap;
 uniform sampler2D tBackfaceMap;
+uniform float uBackfaceAmount;
+uniform float uMagnify;
+uniform float uIorR;
+uniform float uIorG;
+uniform float uIorB;
+uniform float uSaturation;
+uniform float uRefractPower;
+uniform float uRefractIntensity;
+uniform float uFresnelPower;
 uniform vec3 uFresnelColor;
 uniform float uAlpha;
 uniform vec2 uResolution;
@@ -39,22 +49,21 @@ in vec3 eyeVector;
 
 out vec4 FragColor;
 
+${scaleUV}
 ${saturate}
 ${fresnel}
 
-const int NUM_SAMPLES = 16;
-const float iorRatioRed = 1.0 / 1.15;
-const float iorRatioGreen = 1.0 / 1.15;
-const float iorRatioBlue = 1.0 / 1.18;
-
 void main() {
+    float iorRatioRed = 1.0 / uIorR;
+    float iorRatioGreen = 1.0 / uIorG;
+    float iorRatioBlue = 1.0 / uIorB;
+
     vec2 uv = gl_FragCoord.xy / uResolution;
 
     vec3 backfaceNormal = texture(tBackfaceMap, uv).rgb;
-    float a = 0.33;
-    vec3 normal = worldNormal * (1.0 - a) - backfaceNormal * a;
+    vec3 normal = worldNormal * (1.0 - uBackfaceAmount) - backfaceNormal * uBackfaceAmount;
 
-    uv /= 1.5; // magnify
+    uv = scaleUV(uv, uMagnify);
 
     vec3 color = vec3(0.0);
 
@@ -65,16 +74,16 @@ void main() {
         vec3 refractedG = refract(eyeVector, normal, iorRatioGreen);
         vec3 refractedB = refract(eyeVector, normal, iorRatioBlue);
 
-        color.r += texture(tMap, uv + refractedR.xy * (0.2 + slide * 1.0) * 0.3).r;
-        color.g += texture(tMap, uv + refractedG.xy * (0.2 + slide * 1.0) * 0.5).g;
-        color.b += texture(tMap, uv + refractedB.xy * (0.2 + slide * 3.0) * 0.5).b;
+        color.r += texture(tMap, uv + refractedR.xy * (uRefractPower + slide * 1.0) * uRefractIntensity).r;
+        color.g += texture(tMap, uv + refractedG.xy * (uRefractPower + slide * 2.0) * uRefractIntensity).g;
+        color.b += texture(tMap, uv + refractedB.xy * (uRefractPower + slide * 3.0) * uRefractIntensity).b;
 
-        color = saturate(color, 1.06);
+        color = saturate(color, uSaturation);
     }
 
     color /= float(NUM_SAMPLES);
 
-    float fresnel = getFresnel(eyeVector, normal, 3.0);
+    float fresnel = getFresnel(eyeVector, normal, uFresnelPower);
     color.rgb = mix(color.rgb, uFresnelColor, fresnel);
 
     FragColor = vec4(color.rgb, uAlpha);

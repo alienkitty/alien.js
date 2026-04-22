@@ -60,7 +60,6 @@ export { Slider } from '@alienkitty/space.js/src/panels/Slider.js';
 export { Toggle } from '@alienkitty/space.js/src/panels/Toggle.js';
 export { Content } from '@alienkitty/space.js/src/panels/Content.js';
 export { ColorPicker } from '@alienkitty/space.js/src/panels/ColorPicker.js';
-export * from '@alienkitty/space.js/src/three/panels/Custom.js';
 export * from '@alienkitty/space.js/src/three/panels/Options.js';
 export * from '@alienkitty/space.js/src/three/panels/Panels.js';
 export * from '@alienkitty/space.js/src/three/panels/Patches.js';

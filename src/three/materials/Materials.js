@@ -37,6 +37,8 @@ export { ReflectorBlurMaterial } from './ReflectorBlurMaterial.js';
 export { BasicReflectorMaterial } from './BasicReflectorMaterial.js';
 export { ReflectorMaterial } from './ReflectorMaterial.js';
 export { ReflectorDudvMaterial } from './ReflectorDudvMaterial.js';
+export { RefractionBackfaceMaterial } from './RefractionBackfaceMaterial.js';
+export { RefractionMaterial } from './RefractionMaterial.js';
 export { ChromaticAberrationMaterial } from './ChromaticAberrationMaterial.js';
 export { VideoGlitchMaterial } from './VideoGlitchMaterial.js';
 export { AfterimageMaterial } from './AfterimageMaterial.js';

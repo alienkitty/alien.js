@@ -996,7 +996,7 @@ class WorldController {
         // Global 3D camera
         this.camera = new PerspectiveCamera(30);
         this.camera.near = 0.5;
-        this.camera.far = 40;
+        this.camera.far = 50;
         this.camera.position.z = 8;
         this.camera.lookAt(-1.5, 0, -2);
         this.camera.zoom = 1.5;

@@ -205,7 +205,7 @@ class AbstractCube extends Group {
     initCamera() {
         this.camera = new PerspectiveCamera(30);
         this.camera.near = 0.5;
-        this.camera.far = 40;
+        this.camera.far = 50;
         this.camera.position.z = 8;
         this.camera.zoom = 1.5;
         this.camera.lookAt(this.position.x - 1.2, this.position.y, 0);
@@ -302,7 +302,7 @@ class FloatingCrystal extends Group {
     initCamera() {
         this.camera = new PerspectiveCamera(30);
         this.camera.near = 0.5;
-        this.camera.far = 40;
+        this.camera.far = 50;
         this.camera.position.z = 8;
         this.camera.zoom = 1.5;
         this.camera.lookAt(this.position.x - 1.3, this.position.y, 0);
@@ -413,7 +413,7 @@ class DarkPlanet extends Group {
     initCamera() {
         this.camera = new PerspectiveCamera(30);
         this.camera.near = 0.5;
-        this.camera.far = 40;
+        this.camera.far = 50;
         this.camera.position.z = 8;
         this.camera.zoom = 1.5;
         this.camera.lookAt(this.position.x - 1.4, this.position.y, 0);
@@ -1525,7 +1525,7 @@ class WorldController {
         this.scene.background = new Color(0x060606);
         this.camera = new PerspectiveCamera(30);
         this.camera.near = 0.5;
-        this.camera.far = 40;
+        this.camera.far = 50;
         this.camera.position.set(0, 6, 8);
         this.camera.lookAt(this.scene.position);
 

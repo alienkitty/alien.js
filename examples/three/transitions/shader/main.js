@@ -851,7 +851,7 @@ class WorldController {
         this.scene.background = new Color(0x060606);
         this.camera = new PerspectiveCamera(30);
         this.camera.near = 0.5;
-        this.camera.far = 40;
+        this.camera.far = 50;
         this.camera.position.z = 8;
         this.camera.lookAt(this.scene.position);
 

@@ -13,6 +13,8 @@
     <script type="module">
         import { Color, ColorManagement, DirectionalLight, Group, HemisphereLight, LinearSRGBColorSpace, Mesh, MeshStandardMaterial, OrthographicCamera, PanelItem, PerspectiveCamera, SMAABlendMaterial, SMAAEdgesMaterial, SMAAWeightsMaterial, Scene, SphereGeometry, TextureLoader, UI, Vector2, WebGLRenderTarget, WebGLRenderer, getFullscreenTriangle, ticker } from '../../build/alien.three.js';
 
+        const isDebug = /[?&]debug/.test(location.search);
+
         const params = {
             animate: true
         };
@@ -190,8 +192,15 @@
                 // SMAA weights pass
                 this.weightsMaterial.uniforms.tMap.value = renderTargetEdges.texture;
                 this.screen.material = this.weightsMaterial;
-                renderer.setRenderTarget(renderTargetWeights);
-                renderer.render(this.screen, this.screenCamera);
+
+                if (isDebug) {
+                    renderer.setRenderTarget(null);
+                    renderer.render(this.screen, this.screenCamera);
+                    return;
+                } else {
+                    renderer.setRenderTarget(renderTargetWeights);
+                    renderer.render(this.screen, this.screenCamera);
+                }
 
                 // SMAA pass (render to screen)
                 this.smaaMaterial.uniforms.tMap.value = renderTarget.texture;

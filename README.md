@@ -129,7 +129,7 @@ const program = new FXAAProgram(gl);
 [noise](https://alien.js.org/examples/three/shader_noise.html)  
 [fxaa](https://alien.js.org/examples/three/shader_fxaa.html)  
 [fxaa](https://alien.js.org/examples/ogl/shader_fxaa.html) (OGL version)  
-[smaa](https://alien.js.org/examples/three/shader_smaa.html)  
+[smaa](https://alien.js.org/examples/three/shader_smaa.html) ([debug](https://alien.js.org/examples/three/shader_smaa.html?debug))  
 [blur](https://alien.js.org/examples/three/shader_blur.html) (Gaussian blur)  
 [blur](https://alien.js.org/examples/three/shader_single_pass_blur.html) (single pass Gaussian blur sum)  
 [blur](https://alien.js.org/examples/three/shader_poisson_disc_blur.html) (Poisson-disc blur)  

@@ -13,7 +13,7 @@ This library is part of two sibling libraries, [Space.js](https://github.com/ali
 
 ### Usage
 
-Alien.js is divided into three entry points depending on your use case.
+Alien.js is divided into multiple entry points depending on your use case.
 
 The `@alienkitty/alien.js/three` entry point for [three.js](https://github.com/mrdoob/three.js) utilities and materials.
 
@@ -37,6 +37,21 @@ function animate(time) {
 }
 
 requestAnimationFrame(animate);
+```
+
+The `@alienkitty/alien.js/three/meshbvh` entry point for [three-mesh-bvh](https://github.com/gkjohnson/three-mesh-bvh) utilities.
+
+```sh
+npm i three three-mesh-bvh @alienkitty/alien.js
+```
+
+```js
+import { MeshPointsGenerator } from '@alienkitty/alien.js/three/meshbvh';
+
+// ...
+const pointsGenerator = new MeshPointsGenerator(mesh);
+pointsGenerator.sampleCount = count;
+pointsGenerator.build();
 ```
 
 The `@alienkitty/alien.js/three/oimophysics` entry point for [OimoPhysics](https://github.com/saharan/OimoPhysics) utilities.

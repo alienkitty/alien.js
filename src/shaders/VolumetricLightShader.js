@@ -35,15 +35,15 @@ out vec4 FragColor;
 const int samples = 20;
 
 void main() {
-    vec2 texcoord = vUv;
-    vec2 deltaTexCoord = texcoord - uLightPosition;
+    vec2 texCoord = vUv;
+    vec2 deltaTexCoord = texCoord - uLightPosition;
     deltaTexCoord *= 1.0 / float(samples) * uDensity;
     vec4 color = vec4(0);
     float illuminationDecay = 1.0;
 
     for (int i = 0; i < samples; i++) {
-        texcoord -= ((deltaTexCoord.xy * (1.0 - uSwizzle)) + (deltaTexCoord.xx * uSwizzle)) * uScale;
-        vec4 texel = texture(tMap, texcoord);
+        texCoord -= ((deltaTexCoord.xy * (1.0 - uSwizzle)) + (deltaTexCoord.xx * uSwizzle)) * uScale;
+        vec4 texel = texture(tMap, texCoord);
         texel *= illuminationDecay * uWeight;
         color += texel;
         illuminationDecay *= uDecay;

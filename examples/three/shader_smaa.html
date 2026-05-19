@@ -117,7 +117,7 @@
             }
 
             static initRenderer() {
-                const { screenTriangle, texelSize, textureLoader } = WorldController;
+                const { screenTriangle, texelSize } = WorldController;
 
                 // Fullscreen triangle
                 this.screenCamera = new OrthographicCamera(-1, 1, 1, -1, 0, 1);
@@ -139,10 +139,7 @@
                 this.edgesMaterial.uniforms.uTexelSize = texelSize;
 
                 // SMAA weights material
-                this.weightsMaterial = new SMAAWeightsMaterial(textureLoader, {
-                    areaTexturePath: 'smaa/area.png',
-                    searchTexturePath: 'smaa/search.png'
-                });
+                this.weightsMaterial = new SMAAWeightsMaterial();
                 this.weightsMaterial.uniforms.uTexelSize = texelSize;
 
                 // SMAA material

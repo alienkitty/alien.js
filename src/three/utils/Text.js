@@ -5,7 +5,7 @@
  */
 
 /**
- * A class for creating MSDF (Multichannel Signed Distance Fields) text buffers.
+ * A class for creating MSDF (Multichannel Signed Distance Fields) text geometry buffers.
  */
 export class Text {
     constructor({

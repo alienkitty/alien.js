@@ -10,3 +10,4 @@ export { MotionBlur } from './three/utils/MotionBlur.js';
 export { DrawBuffers } from './three/utils/DrawBuffers.js';
 export { SoftShadows } from './three/utils/SoftShadows.js';
 export { Text } from './three/utils/Text.js';
+export { Polyline } from './three/utils/Polyline.js';

@@ -80,9 +80,9 @@ void main() {
 export class Polyline {
     constructor({
         points,
+        color,
         thickness = 1,
-        miter = 1,
-        color
+        miter = 1
     } = {}) {
         this.points = points;
 
@@ -127,9 +127,9 @@ export class Polyline {
         this.material = new RawShaderMaterial({
             glslVersion: GLSL3,
             uniforms: {
+                uColor: { value: color instanceof Color ? color : new Color(color) },
                 uThickness: { value: thickness },
                 uMiter: { value: miter },
-                uColor: { value: color instanceof Color ? color : new Color(color) },
 
                 // User needs to update these
                 uResolution: { value: new Vector2() },

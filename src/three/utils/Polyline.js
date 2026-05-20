@@ -18,7 +18,7 @@ in vec2 uv;
 uniform mat4 modelViewMatrix;
 uniform mat4 projectionMatrix;
 
-uniform float uThickness;
+uniform float uLineWidth;
 uniform float uMiter;
 uniform vec2 uResolution;
 uniform float uDPR;
@@ -46,7 +46,7 @@ vec4 getPosition() {
 
     float pixelWidthRatio = 1.0 / (uResolution.y / uDPR);
     float pixelWidth = current.w * pixelWidthRatio;
-    normal *= pixelWidth * uThickness;
+    normal *= pixelWidth * uLineWidth;
     current.xy -= normal * side;
 
     return current;
@@ -81,7 +81,7 @@ export class Polyline {
     constructor({
         points,
         color,
-        thickness = 1,
+        lineWidth = 1,
         miter = 1
     } = {}) {
         this.points = points;
@@ -128,7 +128,7 @@ export class Polyline {
             glslVersion: GLSL3,
             uniforms: {
                 uColor: { value: color instanceof Color ? color : new Color(color) },
-                uThickness: { value: thickness },
+                uLineWidth: { value: lineWidth },
                 uMiter: { value: miter },
 
                 // User needs to update these

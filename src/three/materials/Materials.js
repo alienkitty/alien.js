@@ -49,3 +49,4 @@ export { LensflareMaterial } from './LensflareMaterial.js';
 export { DepthMaskMaterial } from './DepthMaskMaterial.js';
 export { DiscardMaterial } from './DiscardMaterial.js';
 export { TextMaterial } from './TextMaterial.js';
+export { PolylineMaterial } from './PolylineMaterial.js';

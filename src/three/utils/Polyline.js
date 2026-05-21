@@ -25,7 +25,9 @@ uniform float uDPR;
 
 out vec2 vUv;
 
-vec4 getPosition() {
+void main() {
+    vUv = uv;
+
     mat4 mvp = projectionMatrix * modelViewMatrix;
     vec4 current = mvp * vec4(position, 1);
     vec4 nextPos = mvp * vec4(next, 1);
@@ -49,13 +51,7 @@ vec4 getPosition() {
     normal *= pixelWidth * uLineWidth;
     current.xy -= normal * side;
 
-    return current;
-}
-
-void main() {
-    vUv = uv;
-
-    gl_Position = getPosition();
+    gl_Position = current;
 }
 `;
 
@@ -69,8 +65,7 @@ in vec2 vUv;
 out vec4 FragColor;
 
 void main() {
-    FragColor.rgb = uColor;
-    FragColor.a = 1.0;
+    FragColor = vec4(uColor, 1.0);
 }
 `;
 

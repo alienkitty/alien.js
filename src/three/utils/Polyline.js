@@ -7,8 +7,6 @@
 import { BufferAttribute, BufferGeometry, Color, GLSL3, Mesh, RawShaderMaterial, Vector2, Vector3 } from 'three';
 
 const vertexShader = /* glsl */ `
-precision highp float;
-
 in vec3 position;
 in vec3 next;
 in vec3 prev;

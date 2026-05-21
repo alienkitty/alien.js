@@ -11,7 +11,7 @@
     <link rel="stylesheet" href="../assets/css/style.css">
 
     <script type="module">
-        import { AfterimageMaterial, BloomCompositeMaterial, BufferAttribute, BufferGeometry, Color, ColorManagement, DirectionalLight, Fog, Group, HemisphereLight, LinearFilter, LinearSRGBColorSpace, LuminosityMaterial, MathUtils, Mesh, MeshStandardMaterial, OrthographicCamera, PanelItem, PerspectiveCamera, PlaneGeometry, Reflector, RepeatWrapping, Scene, SceneCompositeMaterial, Text, TextMaterial, TextureLoader, UI, UnrealBloomBlurMaterial, Vector2, Vector3, WebGLRenderTarget, WebGLRenderer, getDoubleRenderTarget, getFullscreenTriangle, getKeyByValue, ticker } from '../../build/alien.three.js';
+        import { AfterimageMaterial, BloomCompositeMaterial, Color, ColorManagement, DirectionalLight, Fog, Group, HemisphereLight, LinearFilter, LinearSRGBColorSpace, LuminosityMaterial, MathUtils, Mesh, MeshStandardMaterial, OrthographicCamera, PanelItem, PerspectiveCamera, PlaneGeometry, Reflector, RepeatWrapping, Scene, SceneCompositeMaterial, Text, TextureLoader, UI, UnrealBloomBlurMaterial, Vector2, Vector3, WebGLRenderTarget, WebGLRenderer, getDoubleRenderTarget, getFullscreenTriangle, getKeyByValue, ticker } from '../../build/alien.three.js';
 
         class Text2D extends Group {
             constructor() {
@@ -30,12 +30,10 @@
                 map.minFilter = LinearFilter;
                 map.generateMipmaps = false;
 
-                const material = new TextMaterial({ map });
-                material.uniforms.uAlpha.value = 0.94;
-
                 const font = await (await fetch('../assets/textures/fonts/Roboto-Bold.json')).json();
 
-                const text = new Text({
+                this.text = new Text({
+                    map,
                     font,
                     text: this.fps.toString(),
                     width: 4,
@@ -44,18 +42,11 @@
                     size: 2,
                     lineHeight: 1.1
                 });
-
-                const geometry = new BufferGeometry();
-
-                const mesh = new Mesh(geometry, material);
-                mesh.frustumCulled = false;
-                mesh.position.set(0, 1.4, -11);
-                mesh.lookAt(camera.position);
-
-                this.add(mesh);
-
-                this.text = text;
-                this.geometry = geometry;
+                this.text.material.uniforms.uAlpha.value = 0.94;
+                this.text.mesh.frustumCulled = false;
+                this.text.mesh.position.set(0, 1.4, -11);
+                this.text.mesh.lookAt(camera.position);
+                this.add(this.text.mesh);
 
                 this.update();
             }
@@ -74,11 +65,6 @@
                 this.count++;
 
                 this.text.update({ text: this.fps.toString() });
-
-                this.geometry.setAttribute('position', new BufferAttribute(this.text.buffers.position, 3));
-                this.geometry.setAttribute('uv', new BufferAttribute(this.text.buffers.uv, 2));
-                this.geometry.setAttribute('id', new BufferAttribute(this.text.buffers.id, 1));
-                this.geometry.setIndex(new BufferAttribute(this.text.buffers.index, 1));
             };
 
             ready = () => this.initMesh();

@@ -4,11 +4,18 @@
  * Based on https://oframe.github.io/ogl/examples/?src=msdf-text.html by gordonnl
  */
 
+import { BufferAttribute, BufferGeometry, Mesh } from 'three';
+
+import { TextMaterial } from '../materials/TextMaterial.js';
+
 /**
- * A class for creating MSDF (Multichannel Signed Distance Fields) text geometry buffers.
+ * A class for a MSDF (Multichannel Signed Distance Fields) text mesh.
  */
 export class Text {
     constructor({
+        material,
+        map,
+        color,
         font,
         text,
         width = Infinity,
@@ -32,13 +39,20 @@ export class Text {
         this.newline = /\n/;
         this.whitespace = /\s/;
 
-        this.parseFont();
-        this.createGeometry();
-    }
-
-    parseFont() {
+        // Parse font
         this.glyphs = {};
         this.font.chars.forEach(d => this.glyphs[d.char] = d);
+
+        this.geometry = new BufferGeometry();
+        this.createGeometry();
+
+        // Text material
+        this.material = material || new TextMaterial({
+            map,
+            color
+        });
+
+        this.mesh = new Mesh(this.geometry, this.material);
     }
 
     createGeometry() {
@@ -52,7 +66,7 @@ export class Text {
         const chars = this.text.replace(/[ \n]/g, '');
         const numChars = chars.length;
 
-        // Create output buffers
+        // Create buffers
         this.buffers = {
             position: new Float32Array(numChars * 4 * 3),
             uv: new Float32Array(numChars * 4 * 2),
@@ -60,16 +74,22 @@ export class Text {
             index: new Uint16Array(numChars * 6)
         };
 
-        // Set values for buffers that don't require calculation
+        // Set static buffers
         for (let i = 0; i < numChars; i++) {
             this.buffers.id.set([i, i, i, i], i * 4);
             this.buffers.index.set([i * 4, i * 4 + 2, i * 4 + 1, i * 4 + 1, i * 4 + 2, i * 4 + 3], i * 6);
         }
 
-        this.layout();
+        this.geometry.setAttribute('position', new BufferAttribute(this.buffers.position, 3));
+        this.geometry.setAttribute('uv', new BufferAttribute(this.buffers.uv, 2));
+        this.geometry.setAttribute('id', new BufferAttribute(this.buffers.id, 1));
+        this.geometry.setIndex(new BufferAttribute(this.buffers.index, 1));
+
+        // Populate dynamic buffers
+        this.updateGeometry();
     }
 
-    layout() {
+    updateGeometry() {
         const lines = [];
 
         let cursor = 0;
@@ -227,6 +247,9 @@ export class Text {
         this.numLines = lines.length;
         this.height = this.numLines * this.size * this.lineHeight;
         this.width = Math.max(...lines.map(line => line.width));
+
+        this.geometry.attributes.position.needsUpdate = true;
+        this.geometry.attributes.uv.needsUpdate = true;
     }
 
     getKernPairOffset(id1, id2) {
@@ -244,12 +267,23 @@ export class Text {
     // Update buffers with new layout
     resize({ width }) {
         this.width = width;
-        this.layout();
+        this.updateGeometry();
     }
 
     // Completely change text (like creating new Text)
     update({ text }) {
         this.text = text;
         this.createGeometry();
+    }
+
+    destroy() {
+        this.material.dispose();
+        this.geometry.dispose();
+
+        for (const prop in this) {
+            this[prop] = null;
+        }
+
+        return null;
     }
 }

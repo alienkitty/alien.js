@@ -59,13 +59,14 @@ const fragmentShader = /* glsl */ `
 precision highp float;
 
 uniform vec3 uColor;
+uniform float uAlpha;
 
 in vec2 vUv;
 
 out vec4 FragColor;
 
 void main() {
-    FragColor = vec4(uColor, 1.0);
+    FragColor = vec4(uColor, uAlpha);
 }
 `;
 
@@ -123,6 +124,7 @@ export class Polyline {
             glslVersion: GLSL3,
             uniforms: {
                 uColor: { value: color instanceof Color ? color : new Color(color) },
+                uAlpha: { value: 1 },
                 uLineWidth: { value: lineWidth },
                 uMiter: { value: miter },
 
@@ -131,7 +133,8 @@ export class Polyline {
                 uDPR: { value: 1 }
             },
             vertexShader,
-            fragmentShader
+            fragmentShader,
+            transparent: true
         });
 
         this.mesh = new Mesh(this.geometry, this.material);

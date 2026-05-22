@@ -48,7 +48,7 @@
 
                 const font = await (await fetch('../assets/textures/fonts/Roboto-Bold.json')).json();
 
-                this.text = new Text({
+                const text = new Text({
                     map,
                     font,
                     text: this.fps.toString(),
@@ -58,11 +58,13 @@
                     size: 2,
                     lineHeight: 1.1
                 });
-                this.text.material.uniforms.uAlpha.value = 0.94;
-                this.text.mesh.frustumCulled = false;
-                this.text.mesh.position.set(0, 1.4, -11);
-                this.text.mesh.lookAt(camera.position);
-                this.add(this.text.mesh);
+                text.material.uniforms.uAlpha.value = 0.94;
+                text.frustumCulled = false;
+                text.position.set(0, 1.4, -11);
+                text.lookAt(camera.position);
+                this.add(text);
+
+                this.text = text;
 
                 this.update();
             }

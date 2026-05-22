@@ -11,7 +11,7 @@ import { TextMaterial } from '../materials/TextMaterial.js';
 /**
  * A class for a MSDF (Multichannel Signed Distance Fields) text mesh.
  */
-export class Text {
+export class Text extends Mesh {
     constructor({
         material,
         map,
@@ -26,6 +26,17 @@ export class Text {
         wordSpacing = 0,
         wordBreak = false
     } = {}) {
+        const geometry = new BufferGeometry();
+
+        if (!material) {
+            material = new TextMaterial({
+                map,
+                color
+            });
+        }
+
+        super(geometry, material);
+
         this.font = font;
         this.text = text;
         this.width = width;
@@ -39,51 +50,41 @@ export class Text {
         this.newline = /\n/;
         this.whitespace = /\s/;
 
-        // Parse font
+        this.parseFont();
+        this.createGeometry();
+    }
+
+    parseFont() {
         this.glyphs = {};
         this.font.chars.forEach(d => this.glyphs[d.char] = d);
-
-        this.geometry = new BufferGeometry();
-        this.createGeometry();
-
-        // Text material
-        this.material = material || new TextMaterial({
-            map,
-            color
-        });
-
-        this.mesh = new Mesh(this.geometry, this.material);
     }
 
     createGeometry() {
-        this.fontHeight = this.font.common.lineHeight;
         this.baseline = this.font.common.base;
 
         // Use baseline so that actual text height is as close to 'size' value as possible
-        this.scale = this.size / this.baseline;
+        this.glyphScale = this.size / this.baseline;
 
         // Strip spaces and newlines to get actual character length for buffers
         const chars = this.text.replace(/[ \n]/g, '');
         const numChars = chars.length;
 
         // Create buffers
-        this.buffers = {
-            position: new Float32Array(numChars * 4 * 3),
-            uv: new Float32Array(numChars * 4 * 2),
-            id: new Float32Array(numChars * 4),
-            index: new Uint16Array(numChars * 6)
-        };
+        const position = new Float32Array(numChars * 4 * 3);
+        const uv = new Float32Array(numChars * 4 * 2);
+        const id = new Float32Array(numChars * 4);
+        const index = new Uint16Array(numChars * 6);
 
         // Set static buffers
         for (let i = 0; i < numChars; i++) {
-            this.buffers.id.set([i, i, i, i], i * 4);
-            this.buffers.index.set([i * 4, i * 4 + 2, i * 4 + 1, i * 4 + 1, i * 4 + 2, i * 4 + 3], i * 6);
+            id.set([i, i, i, i], i * 4);
+            index.set([i * 4, i * 4 + 2, i * 4 + 1, i * 4 + 1, i * 4 + 2, i * 4 + 3], i * 6);
         }
 
-        this.geometry.setAttribute('position', new BufferAttribute(this.buffers.position, 3));
-        this.geometry.setAttribute('uv', new BufferAttribute(this.buffers.uv, 2));
-        this.geometry.setAttribute('id', new BufferAttribute(this.buffers.id, 1));
-        this.geometry.setIndex(new BufferAttribute(this.buffers.index, 1));
+        this.geometry.setAttribute('position', new BufferAttribute(position, 3));
+        this.geometry.setAttribute('uv', new BufferAttribute(uv, 2));
+        this.geometry.setAttribute('id', new BufferAttribute(id, 1));
+        this.geometry.setIndex(new BufferAttribute(index, 1));
 
         // Populate dynamic buffers
         this.updateGeometry();
@@ -136,7 +137,7 @@ export class Text {
             // Find any applicable kern pairs
             if (line.glyphs.length) {
                 const prevGlyph = line.glyphs[line.glyphs.length - 1][0];
-                const kern = this.getKernPairOffset(glyph.id, prevGlyph.id) * this.scale;
+                const kern = this.getKernPairOffset(glyph.id, prevGlyph.id) * this.glyphScale;
                 line.width += kern;
                 wordWidth += kern;
             }
@@ -159,7 +160,7 @@ export class Text {
                 advance += this.letterSpacing * this.size;
             }
 
-            advance += glyph.xadvance * this.scale;
+            advance += glyph.xadvance * this.glyphScale;
 
             line.width += advance;
             wordWidth += advance;
@@ -197,6 +198,9 @@ export class Text {
     }
 
     populateBuffers(lines) {
+        const position = this.geometry.attributes.position.array;
+        const uv = this.geometry.attributes.uv.array;
+
         const texW = this.font.common.scaleW;
         const texH = this.font.common.scaleH;
 
@@ -221,22 +225,22 @@ export class Text {
                 if (this.whitespace.test(glyph.char)) continue;
 
                 // Apply char sprite offsets
-                x += glyph.xoffset * this.scale;
-                y -= glyph.yoffset * this.scale;
+                x += glyph.xoffset * this.glyphScale;
+                y -= glyph.yoffset * this.glyphScale;
 
                 // Each letter is a quad, axis bottom left
-                const w = glyph.width * this.scale;
-                const h = glyph.height * this.scale;
-                this.buffers.position.set([x, y - h, 0, x, y, 0, x + w, y - h, 0, x + w, y, 0], j * 4 * 3);
+                const w = glyph.width * this.glyphScale;
+                const h = glyph.height * this.glyphScale;
+                position.set([x, y - h, 0, x, y, 0, x + w, y - h, 0, x + w, y, 0], j * 4 * 3);
 
                 const u = glyph.x / texW;
                 const uw = glyph.width / texW;
                 const v = 1 - glyph.y / texH;
                 const vh = glyph.height / texH;
-                this.buffers.uv.set([u, v - vh, u, v, u + uw, v - vh, u + uw, v], j * 4 * 2);
+                uv.set([u, v - vh, u, v, u + uw, v - vh, u + uw, v], j * 4 * 2);
 
                 // Reset cursor to baseline
-                y += glyph.yoffset * this.scale;
+                y += glyph.yoffset * this.glyphScale;
 
                 j++;
             }

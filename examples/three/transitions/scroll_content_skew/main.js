@@ -925,6 +925,7 @@ class WorldController {
         this.resolution = { value: new Vector2() };
         this.texelSize = { value: new Vector2() };
         this.aspect = { value: 1 };
+        this.dpr = { value: 1 };
         this.time = { value: 0 };
         this.frame = { value: 0 };
 
@@ -984,6 +985,7 @@ class WorldController {
         this.resolution.value.set(width, height);
         this.texelSize.value.set(1 / width, 1 / height);
         this.aspect.value = width / height;
+        this.dpr.value = dpr;
     };
 
     static update = (time, delta, frame) => {

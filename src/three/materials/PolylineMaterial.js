@@ -10,7 +10,7 @@ export class PolylineMaterial extends RawShaderMaterial {
     constructor({
         color,
         lineWidth = 1,
-        miter = 1
+        miter = true
     } = {}) {
         super({
             glslVersion: GLSL3,
@@ -18,7 +18,7 @@ export class PolylineMaterial extends RawShaderMaterial {
                 uColor: { value: color instanceof Color ? color : new Color(color) },
                 uAlpha: { value: 1 },
                 uLineWidth: { value: lineWidth },
-                uMiter: { value: miter },
+                uMiter: { value: miter ? 1 : 0 },
                 uResolution: { value: new Vector2() },
                 uDPR: { value: 1 }
             },

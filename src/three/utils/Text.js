@@ -252,6 +252,8 @@ export class Text extends Mesh {
         this.height = this.numLines * this.size * this.lineHeight;
         this.width = Math.max(...lines.map(line => line.width));
 
+        this.geometry.computeBoundingSphere();
+
         this.geometry.attributes.position.needsUpdate = true;
         this.geometry.attributes.uv.needsUpdate = true;
     }

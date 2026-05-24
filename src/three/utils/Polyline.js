@@ -109,6 +109,8 @@ export class Polyline extends Mesh {
             }
         });
 
+        this.geometry.computeBoundingSphere();
+
         this.geometry.attributes.position.needsUpdate = true;
         this.geometry.attributes.prev.needsUpdate = true;
         this.geometry.attributes.next.needsUpdate = true;

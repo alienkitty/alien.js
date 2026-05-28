@@ -20,6 +20,11 @@
             lines: 1
         };
 
+        const params = {
+            center: isDebug,
+            lines: true
+        };
+
         class CyberspaceStar {
             constructor() {
                 this.id = 0;
@@ -362,10 +367,11 @@
         }
 
         class PanelController {
-            static init(renderer, scene, camera, view, ui) {
+            static init(renderer, scene, camera, controls, view, ui) {
                 this.renderer = renderer;
                 this.scene = scene;
                 this.camera = camera;
+                this.controls = controls;
                 this.view = view;
                 this.ui = ui;
 
@@ -385,7 +391,9 @@
             static initPanel() {
                 const { luminosityMaterial, bloomCompositeMaterial, compositeMaterial } = RenderManager;
 
-                const { stars } = this.view;
+                const { stars, gridLines } = this.view;
+
+                const center = new Vector3();
 
                 const items = [
                     {
@@ -488,6 +496,33 @@
                         callback: value => {
                             RenderManager.bloomRadius = value;
                             bloomCompositeMaterial.uniforms.uBloomFactors.value = RenderManager.getBloomFactors();
+                        }
+                    },
+                    {
+                        type: 'divider'
+                    },
+                    {
+                        type: 'toggle',
+                        name: 'Center',
+                        value: params.center,
+                        callback: value => {
+                            params.center = value;
+
+                            if (value) {
+                                this.controls.target.copy(center);
+                            } else if (WorldController.lastPoint) {
+                                this.controls.target.copy(WorldController.lastPoint);
+                            }
+                        }
+                    },
+                    {
+                        type: 'toggle',
+                        name: 'Lines',
+                        value: params.lines,
+                        callback: value => {
+                            params.lines = value;
+
+                            gridLines.visible = value;
                         }
                     }
                 ];
@@ -725,6 +760,7 @@
                 this.pointThreshold = 0.1;
                 this.multiplier = navigator.maxTouchPoints ? 1.8 : 1;
                 this.isDown = false;
+                this.lastPoint = null;
 
                 this.initWorld();
                 this.initLoaders();
@@ -828,9 +864,11 @@
                 this.camera.position.copy(point).normalize().multiplyScalar(camDistance);
 
                 // Rotate around point
-                if (!isDebug) {
+                if (!params.center) {
                     this.controls.target.copy(point);
                 }
+
+                this.lastPoint = point;
             }
 
             static resize = (width, height, dpr) => {
@@ -927,9 +965,9 @@
             }
 
             static initPanel() {
-                const { renderer, scene, camera } = WorldController;
+                const { renderer, scene, camera, controls } = WorldController;
 
-                PanelController.init(renderer, scene, camera, this.view, this.ui);
+                PanelController.init(renderer, scene, camera, controls, this.view, this.ui);
             }
 
             static addListeners() {

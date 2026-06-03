@@ -1,9 +1,12 @@
+// Based on https://github.com/mrdoob/three.js/blob/dev/examples/jsm/lines/LineMaterial.js by WestLangley
+// Based on https://github.com/mattdesl/webgl-lines
 // Based on https://oframe.github.io/ogl/examples/?src=polylines.html by gordonnl
+// Based on https://github.com/range-et/PGL
 
 export const vertexShader = /* glsl */ `
 in vec3 position;
-in vec3 next;
-in vec3 prev;
+in vec3 positionStart;
+in vec3 positionEnd;
 in float side;
 in vec2 uv;
 
@@ -11,7 +14,6 @@ uniform mat4 modelViewMatrix;
 uniform mat4 projectionMatrix;
 
 uniform float uLineWidth;
-uniform float uMiter;
 uniform vec2 uResolution;
 uniform float uDPR;
 
@@ -20,30 +22,24 @@ out vec2 vUv;
 void main() {
     vUv = uv;
 
-    mat4 mvp = projectionMatrix * modelViewMatrix;
-    vec4 current = mvp * vec4(position, 1);
-    vec4 nextPos = mvp * vec4(next, 1);
-    vec4 prevPos = mvp * vec4(prev, 1);
+    vec4 clipPos = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+    vec4 clipStart = projectionMatrix * modelViewMatrix * vec4(positionStart, 1.0);
+    vec4 clipEnd = projectionMatrix * modelViewMatrix * vec4(positionEnd, 1.0);
 
     vec2 aspect = vec2(uResolution.x / uResolution.y, 1);
-    vec2 currentScreen = current.xy / current.w * aspect;
-    vec2 nextScreen = nextPos.xy / nextPos.w * aspect;
-    vec2 prevScreen = prevPos.xy / prevPos.w * aspect;
+    vec2 ndcStart = clipStart.xy / clipStart.w * aspect;
+    vec2 ndcEnd = clipEnd.xy / clipEnd.w * aspect;
 
-    vec2 dir1 = normalize(currentScreen - prevScreen);
-    vec2 dir2 = normalize(nextScreen - currentScreen);
-    vec2 dir = normalize(dir1 + dir2);
-
-    vec2 normal = vec2(-dir.y, dir.x);
-    normal /= mix(1.0, max(0.3, dot(normal, vec2(-dir1.y, dir1.x))), uMiter);
-    normal /= aspect;
+    vec2 dir = normalize(ndcEnd - ndcStart);
+    vec2 offset = vec2(-dir.y, dir.x);
+    offset /= aspect;
 
     float pixelWidthRatio = 1.0 / (uResolution.y / uDPR);
-    float pixelWidth = current.w * pixelWidthRatio;
-    normal *= pixelWidth * uLineWidth;
-    current.xy -= normal * side;
+    float pixelWidth = clipPos.w * pixelWidthRatio;
+    offset *= pixelWidth * uLineWidth;
+    clipPos.xy -= offset * side;
 
-    gl_Position = current;
+    gl_Position = clipPos;
 }
 `;
 

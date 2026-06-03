@@ -1,4 +1,4 @@
-import { Color, GLSL3, RawShaderMaterial, Vector2 } from 'three';
+import { Color, DoubleSide, GLSL3, RawShaderMaterial, Vector2 } from 'three';
 
 // eslint-disable-next-line sort-imports
 import { vertexShader, fragmentShader } from '../../shaders/PolylineShader.js';
@@ -9,8 +9,7 @@ import { vertexShader, fragmentShader } from '../../shaders/PolylineShader.js';
 export class PolylineMaterial extends RawShaderMaterial {
     constructor({
         color,
-        lineWidth = 1,
-        miter = true
+        lineWidth = 1
     } = {}) {
         super({
             glslVersion: GLSL3,
@@ -18,12 +17,12 @@ export class PolylineMaterial extends RawShaderMaterial {
                 uColor: { value: color instanceof Color ? color : new Color(color) },
                 uAlpha: { value: 1 },
                 uLineWidth: { value: lineWidth },
-                uMiter: { value: miter ? 1 : 0 },
                 uResolution: { value: new Vector2() },
                 uDPR: { value: 1 }
             },
             vertexShader,
             fragmentShader,
+            side: DoubleSide,
             transparent: true
         });
     }

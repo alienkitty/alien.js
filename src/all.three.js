@@ -139,9 +139,9 @@ export * from './three/utils/meshbvh/SurfaceWalker.js';
 export * from './three/utils/meshbvh/MeshPointsGenerator.js';
 
 // Three OimoPhysics
-export { OimoPhysics, RigidBodyConfig, RigidBodyType, SphericalJointConfig, UniversalJointConfig } from './three/utils/physics/OimoPhysics.js';
-export { OimoPhysicsBuffer } from './three/utils/physics/OimoPhysicsBuffer.js';
-export { OimoPhysicsController } from './three/utils/physics/OimoPhysicsController.js';
+export { OimoPhysics, RigidBodyConfig, RigidBodyType, SphericalJointConfig, UniversalJointConfig } from './three/utils/oimophysics/OimoPhysics.js';
+export { OimoPhysicsBuffer } from './three/utils/oimophysics/OimoPhysicsBuffer.js';
+export { OimoPhysicsController } from './three/utils/oimophysics/OimoPhysicsController.js';
 
 // Three Dependencies
 export * from 'three';

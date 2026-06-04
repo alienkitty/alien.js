@@ -13,7 +13,7 @@
     <script type="module">
         import { AdditiveBlending, BloomCompositeMaterial, BlurMaterial, Color, ColorManagement, CopyMaterial, DepthMaterial, DirectionalLight, DisplayOptions, DrawBuffers, DynamicDrawUsage, EnvironmentTextureLoader, Fog, GLSL3, Group, HemisphereLight, IcosahedronGeometry, ImageBitmapLoaderThread, InstancedMesh, LinearSRGBColorSpace, LuminosityMaterial, MathUtils, Matrix4, Mesh, MeshBasicMaterial, MeshMatcapMaterial, MeshStandardMaterial, MotionBlurCompositeMaterial, NoBlending, NormalMaterial, OrbitControls, OrthographicCamera, Panel, PanelItem, PerspectiveCamera, PointLight, RawShaderMaterial, RepeatWrapping, Scene, ShaderChunk, TextureLoader, UI, UnrealBloomBlurMaterial, Vector2, Vector3, VolumetricLightLensflareMaterial, WebGLRenderTarget, WebGLRenderer, getFibonacciSphere, getFullscreenTriangle, getKeyByValue, ticker } from '../../build/alien.three.js';
 
-        const searchParams = new URL(location.href).searchParams;
+        const searchParams = new URLSearchParams(location.search);
         const isDebug = searchParams.has('debug');
 
         const count = parseInt(location.search.slice(1), 10) || 1000;

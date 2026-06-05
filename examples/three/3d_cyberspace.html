@@ -11,7 +11,7 @@
     <link rel="stylesheet" href="../assets/css/style.css">
 
     <script type="module">
-        import { AdditiveBlending, AssetLoader, BloomCompositeMaterial, BufferGeometry, Color, ColorManagement, Float32BufferAttribute, GLSL3, Group, LinearSRGBColorSpace, LuminosityMaterial, MathUtils, Mesh, NoBlending, OrbitControls, OrthographicCamera, PanelItem, PerspectiveCamera, Point3D, Points, Polyline, PolylineMaterial, RawShaderMaterial, Scene, TextureLoader, TwoPI, UI, UnrealBloomBlurMaterial, Vector2, Vector3, WebGLRenderTarget, WebGLRenderer, clearTween, delayedCall, getFullscreenTriangle, ticker } from '../../build/alien.three.js';
+        import { AdditiveBlending, AssetLoader, BloomCompositeMaterial, BufferGeometry, Color, ColorManagement, Float32BufferAttribute, GLSL3, Group, LinearSRGBColorSpace, LuminosityMaterial, MathUtils, Mesh, NoBlending, OrbitControls, OrthographicCamera, PanelItem, PerspectiveCamera, Point3D, Points, Polyline, PolylineMaterial, RawShaderMaterial, Scene, SphereGeometry, TextureLoader, TwoPI, UI, UnrealBloomBlurMaterial, Vector2, Vector3, WebGLRenderTarget, WebGLRenderer, Wireframe, clearTween, delayedCall, getFullscreenTriangle, ticker } from '../../build/alien.three.js';
 
         const isDebug = /[?&]debug/.test(location.search);
 
@@ -156,37 +156,57 @@
                 material.uniforms.uDPR.value = 2; // Always 2
 
                 // Cyberspatial edge (equator)
-                const points = [];
+                const positions = [];
 
                 for (let i = 0; i <= this.segments; i++) {
                     const angle = (i / this.segments) * TwoPI;
-                    points.push(new Vector3(this.radius * Math.cos(angle), 0, this.radius * Math.sin(angle)));
+                    positions.push(this.radius * Math.cos(angle), 0, this.radius * Math.sin(angle));
                 }
 
-                this.add(new Polyline({ points, material }));
+                let geometry = new Polyline();
+                geometry.setPositions(positions);
+
+                let line = new Mesh(geometry, material);
+                this.add(line);
 
                 // Cyberspatial centre (prime meridian)
-                points.length = 0;
+                positions.length = 0;
 
-                points.push(new Vector3(0, 0, -this.radius));
-                points.push(new Vector3(0, 0, this.radius));
+                positions.push(0, 0, -this.radius);
+                positions.push(0, 0, this.radius);
 
-                this.add(new Polyline({ points, material }));
+                geometry = new Polyline();
+                geometry.setPositions(positions);
+
+                line = new Mesh(geometry, material);
+                this.add(line);
 
                 // Cyberspatial centre (90th meridian)
-                points.length = 0;
+                positions.length = 0;
 
-                points.push(new Vector3(-this.radius, 0, 0));
-                points.push(new Vector3(this.radius, 0, 0));
+                positions.push(-this.radius, 0, 0);
+                positions.push(this.radius, 0, 0);
 
-                this.add(new Polyline({ points, material }));
+                geometry = new Polyline();
+                geometry.setPositions(positions);
+
+                line = new Mesh(geometry, material);
+                this.add(line);
+
+                // https://stackoverflow.com/questions/63652215/three-js-wireframe-sphere-svg/63656217#63656217
+                // https://threejs.org/examples/#webgl_lines_fat_wireframe
+
+                geometry = new Wireframe(new SphereGeometry(this.radius, 32, 16));
+
+                line = new Mesh(geometry, material);
+                this.add(line);
 
                 this.children.forEach(object => {
                     object.layers.set(layers.lines);
                 });
 
                 // Cleanup
-                points.length = 0;
+                positions.length = 0;
             }
         }
 

@@ -11,7 +11,7 @@
     <link rel="stylesheet" href="../assets/css/style.css">
 
     <script type="module">
-        import { AdditiveBlending, AssetLoader, BloomCompositeMaterial, BufferGeometry, Color, ColorManagement, Float32BufferAttribute, GLSL3, Group, LinearSRGBColorSpace, LuminosityMaterial, MathUtils, Mesh, NoBlending, OrbitControls, OrthographicCamera, PanelItem, PerspectiveCamera, Point3D, Points, Polyline, PolylineMaterial, RawShaderMaterial, Scene, SphereGeometry, TextureLoader, TwoPI, UI, UnrealBloomBlurMaterial, Vector2, Vector3, WebGLRenderTarget, WebGLRenderer, Wireframe, clearTween, delayedCall, getFullscreenTriangle, ticker } from '../../build/alien.three.js';
+        import { AdditiveBlending, AssetLoader, BloomCompositeMaterial, BufferGeometry, Color, ColorManagement, Float32BufferAttribute, GLSL3, Group, LinearSRGBColorSpace, LuminosityMaterial, MathUtils, Mesh, NoBlending, OrbitControls, OrthographicCamera, PanelItem, PerspectiveCamera, Point3D, Points, Polyline, PolylineMaterial, RawShaderMaterial, Scene, TextureLoader, TwoPI, UI, UnrealBloomBlurMaterial, Vector2, Vector3, WebGLRenderTarget, WebGLRenderer, clearTween, delayedCall, getFullscreenTriangle, ticker } from '../../build/alien.three.js';
 
         const isDebug = /[?&]debug/.test(location.search);
 
@@ -152,8 +152,6 @@
                     lineWidth: 1.2
                 });
                 material.depthWrite = false;
-                material.blending = AdditiveBlending;
-                // material.uniforms.uAlpha.value = 0.3;
                 material.uniforms.uResolution = resolution;
                 // material.uniforms.uDPR = dpr;
                 material.uniforms.uDPR.value = 2; // Always 2
@@ -183,14 +181,6 @@
                 positions.push(this.radius, 0, 0);
 
                 this.add(new Polyline({ positions, material }));
-
-                // https://stackoverflow.com/questions/63652215/three-js-wireframe-sphere-svg/63656217#63656217
-                // https://threejs.org/examples/#webgl_lines_fat_wireframe
-                // https://oframe.github.io/ogl/examples/?src=wire-mesh.html
-
-                const geometry = new SphereGeometry(this.radius, 32, 16);
-
-                this.add(new Wireframe({ geometry, material }));
 
                 this.children.forEach(object => {
                     object.layers.set(layers.lines);

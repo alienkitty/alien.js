@@ -10,6 +10,7 @@ import { MeshBVH } from 'three-mesh-bvh';
 
 /**
  * A short implementation of blue noise sampling for triangle meshes.
+ *
  * @see {@link https://github.com/marmakoide/mesh-blue-noise-sampling | Mesh Blue Noise Sampling}
  */
 export class MeshPointsGenerator {

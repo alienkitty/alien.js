@@ -271,14 +271,16 @@ export class Text extends Mesh {
     }
 
     // Update buffers with new layout
-    resize({ width }) {
+    setWidth(width) {
         this.width = width;
+
         this.updateGeometry();
     }
 
     // Completely change text (like creating new Text)
-    update({ text }) {
+    setText(text) {
         this.text = text;
+
         this.createGeometry();
     }
 

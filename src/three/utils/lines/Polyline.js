@@ -1,12 +1,46 @@
+/**
+ * @author pschroen / https://ufo.ai/
+ */
+
+import { Mesh } from 'three';
+
 import { PolylineGeometry } from './PolylineGeometry.js';
+import { PolylineMaterial } from '../../materials/PolylineMaterial.js';
 
 /**
- * A chain of vertices, forming an instanced "fat" polyline.
+ * An instanced polyline mesh.
  *
  * @see {@link https://threejs.org/examples/#webgl_lines_fat | three.js - Fat Lines Example}
  * @see {@link https://github.com/mrdoob/three.js/blob/dev/examples/jsm/lines/LineGeometry.js | three.js - LineGeometry Source}
+ * @see {@link https://github.com/mrdoob/three.js/blob/dev/examples/jsm/lines/LineSegments2.js | three.js - LineSegments2 Source}
+ * @see {@link https://github.com/mrdoob/three.js/blob/dev/examples/jsm/lines/Line2.js | three.js - Line2 Source}
  */
-export class Polyline extends PolylineGeometry {
+export class Polyline extends Mesh {
+    constructor({
+        geometry,
+        material,
+        positions,
+        color,
+        lineWidth
+    } = {}) {
+        if (!geometry) {
+            geometry = new PolylineGeometry();
+        }
+
+        if (!material) {
+            material = new PolylineMaterial({
+                color,
+                lineWidth
+            });
+        }
+
+        super(geometry, material);
+
+        if (positions) {
+            this.setPositions(positions);
+        }
+    }
+
     setPositions(array) {
         // Convert to vertex pairs (start, end)
         const length = array.length - 3;
@@ -22,7 +56,7 @@ export class Polyline extends PolylineGeometry {
             points[2 * i + 5] = array[i + 5];
         }
 
-        super.setPositions(points);
+        this.geometry.setPositions(points);
 
         return this;
     }

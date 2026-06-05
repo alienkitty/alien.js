@@ -4,7 +4,7 @@ import { Color, GLSL3, RawShaderMaterial, Vector2 } from 'three';
 import { vertexShader, fragmentShader } from '../../shaders/PolylineShader.js';
 
 /**
- * An instanced "fat" polyline material with alpha channel.
+ * An instanced polyline material with alpha channel.
  *
  * @see {@link https://github.com/mrdoob/three.js/blob/dev/examples/jsm/lines/LineMaterial.js | three.js - LineMaterial Source}
  */

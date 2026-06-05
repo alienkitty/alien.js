@@ -166,11 +166,7 @@
                     positions.push(this.radius * Math.cos(angle), 0, this.radius * Math.sin(angle));
                 }
 
-                let geometry = new Polyline();
-                geometry.setPositions(positions);
-
-                let line = new Mesh(geometry, material);
-                this.add(line);
+                this.add(new Polyline({ positions, material }));
 
                 // Cyberspatial centre (prime meridian)
                 positions.length = 0;
@@ -178,11 +174,7 @@
                 positions.push(0, 0, -this.radius);
                 positions.push(0, 0, this.radius);
 
-                geometry = new Polyline();
-                geometry.setPositions(positions);
-
-                line = new Mesh(geometry, material);
-                this.add(line);
+                this.add(new Polyline({ positions, material }));
 
                 // Cyberspatial centre (90th meridian)
                 positions.length = 0;
@@ -190,19 +182,15 @@
                 positions.push(-this.radius, 0, 0);
                 positions.push(this.radius, 0, 0);
 
-                geometry = new Polyline();
-                geometry.setPositions(positions);
-
-                line = new Mesh(geometry, material);
-                this.add(line);
+                this.add(new Polyline({ positions, material }));
 
                 // https://stackoverflow.com/questions/63652215/three-js-wireframe-sphere-svg/63656217#63656217
                 // https://threejs.org/examples/#webgl_lines_fat_wireframe
+                // https://oframe.github.io/ogl/examples/?src=wire-mesh.html
 
-                geometry = new Wireframe(new SphereGeometry(this.radius, 32, 16));
+                const geometry = new SphereGeometry(this.radius, 32, 16);
 
-                line = new Mesh(geometry, material);
-                this.add(line);
+                this.add(new Wireframe({ geometry, material }));
 
                 this.children.forEach(object => {
                     object.layers.set(layers.lines);

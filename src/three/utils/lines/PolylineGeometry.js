@@ -1,3 +1,7 @@
+/**
+ * @author pschroen / https://ufo.ai/
+ */
+
 import {
     Box3,
     Float32BufferAttribute,
@@ -12,7 +16,7 @@ const box = new Box3();
 const vector = new Vector3();
 
 /**
- * A series of vertex pairs, forming line segments for an instanced "fat" polyline.
+ * A series of vertex pairs, forming line segments for an instanced polyline.
  *
  * @see {@link https://github.com/mrdoob/three.js/blob/dev/examples/jsm/lines/LineSegmentsGeometry.js | three.js - LineSegmentsGeometry Source}
  */

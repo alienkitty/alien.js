@@ -1,18 +1,27 @@
-import { Vector3 } from 'three';
+/**
+ * @author pschroen / https://ufo.ai/
+ */
+
+import { Mesh, Vector3 } from 'three';
 
 import { PolylineGeometry } from './PolylineGeometry.js';
+import { PolylineMaterial } from '../../materials/PolylineMaterial.js';
 
 /**
- * A helper object to visualize a geometry as an instanced "fat" line wireframe.
+ * An instanced polyline wireframe mesh.
  *
  * @see {@link https://threejs.org/examples/#webgl_lines_fat_wireframe | three.js - Fat Lines Wireframe Example}
  * @see {@link https://github.com/mrdoob/three.js/blob/dev/src/geometries/WireframeGeometry.js | three.js - WireframeGeometry Source}
  * @see {@link https://github.com/mrdoob/three.js/blob/dev/examples/jsm/lines/WireframeGeometry2.js | three.js - WireframeGeometry2 Source}
+ * @see {@link https://github.com/mrdoob/three.js/blob/dev/examples/jsm/lines/Wireframe.js | three.js - Wireframe Source}
  */
-export class Wireframe extends PolylineGeometry {
-    constructor(geometry) {
-        super();
-
+export class Wireframe extends Mesh {
+    constructor({
+        geometry,
+        material,
+        color,
+        lineWidth
+    } = {}) {
         if (geometry) {
             // Buffer
             const vertices = [];
@@ -72,8 +81,18 @@ export class Wireframe extends PolylineGeometry {
                 }
             }
 
-            super.setPositions(vertices);
+            geometry = new PolylineGeometry();
+            geometry.setPositions(vertices);
         }
+
+        if (!material) {
+            material = new PolylineMaterial({
+                color,
+                lineWidth
+            });
+        }
+
+        super(geometry, material);
     }
 }
 

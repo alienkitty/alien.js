@@ -147,7 +147,10 @@
             initLines() {
                 const { resolution/* , dpr */ } = WorldController;
 
-                const material = new PolylineMaterial();
+                const material = new PolylineMaterial({
+                    color: 0xffffff,
+                    lineWidth: 1.2
+                });
                 material.depthWrite = false;
                 material.blending = AdditiveBlending;
                 // material.uniforms.uAlpha.value = 0.3;
@@ -596,24 +599,25 @@
                 this.screen.frustumCulled = false;
 
                 // Render targets
-                this.renderTargetA = new WebGLRenderTarget(1, 1, {
+                this.renderTarget = new WebGLRenderTarget(1, 1, {
                     depthBuffer: false
                 });
 
-                this.renderTargetB = this.renderTargetA.clone();
+                this.renderTargetLines = this.renderTarget.clone();
+                this.renderTargetLines.samples = 4;
 
-                this.renderTargetBright = this.renderTargetA.clone();
+                this.renderTargetBright = this.renderTarget.clone();
 
                 this.renderTargetsHorizontal = [];
                 this.renderTargetsVertical = [];
                 this.nMips = 5;
 
                 for (let i = 0, l = this.nMips; i < l; i++) {
-                    this.renderTargetsHorizontal.push(this.renderTargetA.clone());
-                    this.renderTargetsVertical.push(this.renderTargetA.clone());
+                    this.renderTargetsHorizontal.push(this.renderTarget.clone());
+                    this.renderTargetsVertical.push(this.renderTarget.clone());
                 }
 
-                this.renderTargetA.depthBuffer = true;
+                this.renderTarget.depthBuffer = true;
 
                 // Luminosity high pass material
                 this.luminosityMaterial = new LuminosityMaterial();
@@ -676,8 +680,8 @@
                 width = Math.round(width * dpr);
                 height = Math.round(height * dpr);
 
-                this.renderTargetA.setSize(width, height);
-                this.renderTargetB.setSize(width, height);
+                this.renderTarget.setSize(width, height);
+                this.renderTargetLines.setSize(width, height);
 
                 // Unreal bloom
                 width = Math.round(width / 2);
@@ -708,8 +712,8 @@
                     return;
                 }
 
-                const renderTargetA = this.renderTargetA;
-                const renderTargetB = this.renderTargetB;
+                const renderTarget = this.renderTarget;
+                const renderTargetLines = this.renderTargetLines;
                 const renderTargetBright = this.renderTargetBright;
                 const renderTargetsHorizontal = this.renderTargetsHorizontal;
                 const renderTargetsVertical = this.renderTargetsVertical;
@@ -721,19 +725,19 @@
                     camera.layers.enable(31); // Last layer for helper
                 }
 
-                renderer.setRenderTarget(renderTargetA);
+                renderer.setRenderTarget(renderTarget);
                 renderer.clear();
                 renderer.render(scene, camera);
 
                 // Lines layer
                 camera.layers.set(layers.lines);
 
-                renderer.setRenderTarget(renderTargetB);
+                renderer.setRenderTarget(renderTargetLines);
                 renderer.clear();
                 renderer.render(scene, camera);
 
                 // Extract bright areas
-                this.luminosityMaterial.uniforms.tMap.value = renderTargetA.texture;
+                this.luminosityMaterial.uniforms.tMap.value = renderTarget.texture;
                 this.screen.material = this.luminosityMaterial;
                 renderer.setRenderTarget(renderTargetBright);
                 renderer.clear();
@@ -762,12 +766,12 @@
 
                 // Composite all the mips
                 this.screen.material = this.bloomCompositeMaterial;
-                renderer.setRenderTarget(renderTargetA);
+                renderer.setRenderTarget(renderTarget);
                 renderer.render(this.screen, this.screenCamera);
 
                 // Composite pass (render to screen)
-                this.compositeMaterial.uniforms.tMap.value = renderTargetA.texture;
-                this.compositeMaterial.uniforms.tLines.value = renderTargetB.texture;
+                this.compositeMaterial.uniforms.tMap.value = renderTarget.texture;
+                this.compositeMaterial.uniforms.tLines.value = renderTargetLines.texture;
                 this.screen.material = this.compositeMaterial;
                 renderer.setRenderTarget(null);
                 renderer.clear();

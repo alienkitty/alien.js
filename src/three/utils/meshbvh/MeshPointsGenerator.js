@@ -32,7 +32,7 @@ export class MeshPointsGenerator {
     }
 
     generate(outputFaceIndices = []) {
-        if (this.sampler.distribution === null) {
+        if (!this.sampler.distribution) {
             this.build();
         }
 

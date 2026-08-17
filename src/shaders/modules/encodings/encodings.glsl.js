@@ -1,5 +1,6 @@
-// From https://github.com/mrdoob/three.js/blob/dev/examples/jsm/shaders/ACESFilmicToneMappingShader.js by WestLangley
-// From https://oframe.github.io/ogl/examples/?src=pbr.html by gordonnl
+// From https://github.com/mrdoob/three.js/blob/dev/examples/jsm/shaders/ACESFilmicToneMappingShader.js
+// From https://github.com/mrdoob/three.js/blob/dev/src/renderers/shaders/ShaderChunk/colorspace_pars_fragment.glsl.js
+// From https://github.com/pmndrs/postprocessing/blob/main/src/materials/glsl/effect.frag
 
 export default /* glsl */ `
 vec3 RRTAndODTFit(vec3 v) {
@@ -34,17 +35,51 @@ vec3 ACESFilmicToneMapping(vec3 color) {
     return clamp(color, 0.0, 1.0);
 }
 
-vec4 SRGBtoLinear(vec4 srgb) {
-    vec3 linOut = pow(srgb.xyz, vec3(2.2));
-    return vec4(linOut, srgb.w);;
+vec4 LinearTransferOETF(vec4 value) {
+    return value;
 }
 
-vec4 RGBMToLinear(vec4 value) {
-    float maxRange = 6.0;
-    return vec4(value.xyz * value.w * maxRange, 1.0);
+vec4 sRGBTransferEOTF(vec4 value) {
+    return vec4(mix(pow(value.rgb * 0.9478672986 + vec3(0.0521327014), vec3(2.4)), value.rgb * 0.0773993808, vec3(lessThanEqual(value.rgb, vec3(0.04045)))), value.a);
 }
 
-vec3 linearToSRGB(vec3 color) {
-    return pow(color, vec3(1.0 / 2.2));
+vec4 sRGBTransferOETF(vec4 value) {
+    return vec4(mix(pow(value.rgb, vec3(0.41666)) * 1.055 - vec3(0.055), value.rgb * 12.92, vec3(lessThanEqual(value.rgb, vec3(0.0031308)))), value.a);
+}
+
+vec4 sRGBToLinear(vec4 value) {
+    return vec4(mix(
+        pow(value.rgb * 0.9478672986 + vec3(0.0521327014), vec3(2.4)),
+        value.rgb * 0.0773993808,
+        vec3(lessThanEqual(value.rgb, vec3(0.04045)))
+    ), value.a);
+}
+
+vec3 RGBToHCV(vec3 RGB) {
+    vec4 P = mix(vec4(RGB.bg, -1.0, 2.0 / 3.0), vec4(RGB.gb, 0.0, -1.0 / 3.0), step(RGB.b, RGB.g));
+    vec4 Q = mix(vec4(P.xyw, RGB.r), vec4(RGB.r, P.yzx), step(P.x, RGB.r));
+    float C = Q.x - min(Q.w, Q.y);
+    float H = abs((Q.w - Q.y) / (6.0 * C + EPSILON) + Q.z);
+    return vec3(H, C, Q.x);
+}
+
+vec3 RGBToHSL(vec3 RGB) {
+    vec3 HCV = RGBToHCV(RGB);
+    float L = HCV.z - HCV.y * 0.5;
+    float S = HCV.y / (1.0 - abs(L * 2.0 - 1.0) + EPSILON);
+    return vec3(HCV.x, S, L);
+}
+
+vec3 HueToRGB(float H) {
+    float R = abs(H * 6.0 - 3.0) - 1.0;
+    float G = 2.0 - abs(H * 6.0 - 2.0);
+    float B = 2.0 - abs(H * 6.0 - 4.0);
+    return clamp(vec3(R, G, B), 0.0, 1.0);
+}
+
+vec3 HSLToRGB(vec3 HSL) {
+    vec3 RGB = HueToRGB(HSL.x);
+    float C = (1.0 - abs(2.0 * HSL.z - 1.0)) * HSL.y;
+    return (RGB - 0.5) * C + HSL.z;
 }
 `;

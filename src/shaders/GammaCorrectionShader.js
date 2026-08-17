@@ -29,6 +29,6 @@ ${encodings}
 void main() {
     FragColor = texture(tMap, vUv);
 
-    FragColor = vec4(linearToSRGB(FragColor.rgb), FragColor.a);
+    FragColor = sRGBTransferOETF(FragColor);
 }
 `;

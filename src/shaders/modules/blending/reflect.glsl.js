@@ -1,12 +1,9 @@
 // Based on https://github.com/pmndrs/postprocessing by vanruesc
 
 export default /* glsl */ `
-float blendReflect(float x, float y) {
-    return (y == 1.0) ? y : min(x * x / (1.0 - y), 1.0);
-}
-
-vec4 blendReflect(vec4 x, vec4 y, float opacity) {
-    vec4 z = vec4(blendReflect(x.r, y.r), blendReflect(x.g, y.g), blendReflect(x.b, y.b), blendReflect(x.a, y.a));
-    return z * opacity + x * (1.0 - opacity);
+vec4 blendReflect(vec4 dst, vec4 src, float opacity) {
+	vec3 a = min(dst.rgb * dst.rgb / max(1.0 - src.rgb, 1e-9), 1.0);
+	vec3 c = mix(a, src.rgb, step(1.0, src.rgb));
+	return mix(dst, vec4(c, max(dst.a, src.a)), opacity);
 }
 `;

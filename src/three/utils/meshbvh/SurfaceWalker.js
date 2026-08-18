@@ -99,6 +99,8 @@ export class TriangleFrame extends Triangle {
         this.normal.copy(source.normal);
         this.transform.copy(source.transform);
         this.invTransform.copy(source.invTransform);
+
+        return this;
     }
 }
 

@@ -134,6 +134,9 @@
             }
         }
 
+        const _vector = new Vector3();
+        const _matrix = new Matrix4();
+
         // Based on https://stackoverflow.com/questions/60578028/how-can-i-achieve-an-even-distribution-of-sprites-across-the-surface-of-a-sphere/60579136#60579136
 
         class Sphere extends Group {
@@ -144,9 +147,6 @@
                 this.numPoints = count;
                 this.radius = 2;
                 this.pointSize = 0.025;
-
-                this.v = new Vector3();
-                this.matrix = new Matrix4();
             }
 
             async initMesh() {
@@ -262,10 +262,10 @@
 
                 // Start with a scale of 0 for all possible points
                 for (let i = 0; i < maxPoints; i++) {
-                    this.v.setScalar(0);
-                    this.matrix.scale(this.v);
+                    _vector.setScalar(0);
+                    _matrix.scale(_vector);
 
-                    spheres.setMatrixAt(i, this.matrix);
+                    spheres.setMatrixAt(i, _matrix);
                 }
 
                 this.uniforms = uniforms;
@@ -300,10 +300,10 @@
                 this.spheres.rotation.y += 0.0003;
 
                 for (let i = 0, l = this.spheres.count; i < l; i++) {
-                    this.v.setScalar(this.pointSize);
-                    this.matrix.makeTranslation(this.points[i]).scale(this.v);
+                    _vector.setScalar(this.pointSize);
+                    _matrix.makeTranslation(this.points[i]).scale(_vector);
 
-                    this.spheres.setMatrixAt(i, this.matrix);
+                    this.spheres.setMatrixAt(i, _matrix);
                 }
 
                 this.spheres.instanceMatrix.needsUpdate = true;

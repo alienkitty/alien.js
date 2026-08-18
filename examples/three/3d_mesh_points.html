@@ -127,6 +127,9 @@
             }
         }
 
+        const _vector = new Vector3();
+        const _matrix = new Matrix4();
+
         // Based on https://gkjohnson.github.io/three-sketches/blue-surface-sample/blueSpacing.html
 
         class Sphere extends Group {
@@ -142,9 +145,6 @@
                 this.pointSize = 0.025;
                 this.targetDistanceMultiplier = MathUtils.mapLinear(count, 10, 1000, 1, 4.5);
                 this.falloffDistanceMultiplier = MathUtils.mapLinear(count, 10, 1000, 2, 2.5);
-
-                this.v = new Vector3();
-                this.matrix = new Matrix4();
 
                 this.addListeners();
             }
@@ -369,10 +369,10 @@
 
                     p.copy(surfacePoint);
 
-                    this.v.setScalar(this.pointSize);
-                    this.matrix.makeTranslation(p).scale(this.v);
+                    _vector.setScalar(this.pointSize);
+                    _matrix.makeTranslation(p).scale(_vector);
 
-                    this.spheres.setMatrixAt(i, this.matrix);
+                    this.spheres.setMatrixAt(i, _matrix);
                 }
 
                 this.spheres.instanceMatrix.needsUpdate = true;

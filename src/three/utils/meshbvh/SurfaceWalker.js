@@ -8,19 +8,19 @@ import { Matrix4, Plane, Ray, Triangle, Vector3 } from 'three';
 
 import { HalfEdgeMap } from './HalfEdgeMap.js';
 
-const vec0 = new Vector3();
-const vec1 = new Vector3();
-const ray = new Ray();
+const _vector0 = new Vector3();
+const _vector1 = new Vector3();
+const _ray = new Ray();
 
-const plane = new Plane();
-const mat = new Matrix4();
-const planeNormal = new Vector3();
+const _plane = new Plane();
+const _matrix = new Matrix4();
+const _planeNormal = new Vector3();
 
 function rotationBetweenTriangles(fromTri, toTri, target) {
-    vec0.crossVectors(fromTri.normal, toTri.normal).normalize();
+    _vector0.crossVectors(fromTri.normal, toTri.normal).normalize();
 
     const angle = fromTri.normal.angleTo(toTri.normal);
-    target.makeRotationAxis(vec0, angle);
+    target.makeRotationAxis(_vector0, angle);
 
     return target;
 }
@@ -37,10 +37,10 @@ export class TriangleFrame extends Triangle {
 
     update() {
         this.getNormal(this.normal);
-        vec0.subVectors(this.b, this.a).normalize();
-        vec1.crossVectors(vec0, this.normal).normalize();
+        _vector0.subVectors(this.b, this.a).normalize();
+        _vector1.crossVectors(_vector0, this.normal).normalize();
 
-        this.transform.makeBasis(vec0, vec1, this.normal).setPosition(this.a);
+        this.transform.makeBasis(_vector0, _vector1, this.normal).setPosition(this.a);
         this.invTransform.copy(this.transform).invert();
     }
 
@@ -71,16 +71,16 @@ export class TriangleFrame extends Triangle {
             const v0 = this.vertices[i0];
             const v1 = this.vertices[i1];
 
-            vec0.addVectors(v0, this.normal);
-            plane.setFromCoplanarPoints(v0, v1, vec0);
+            _vector0.addVectors(v0, this.normal);
+            _plane.setFromCoplanarPoints(v0, v1, _vector0);
 
-            const side = Math.sign(plane.distanceToPoint(ray.origin));
+            const side = Math.sign(_plane.distanceToPoint(ray.origin));
 
             if (side !== -1) {
                 continue;
             }
 
-            const planeDist = ray.distanceToPlane(plane);
+            const planeDist = ray.distanceToPlane(_plane);
 
             if (planeDist !== null && planeDist < dist) {
                 dist = planeDist;
@@ -112,8 +112,8 @@ export class SurfacePoint extends Vector3 {
     }
 }
 
-const frame0 = new TriangleFrame();
-const frame1 = new TriangleFrame();
+const _frame0 = new TriangleFrame();
+const _frame1 = new TriangleFrame();
 
 /**
  * A class to walk along a mesh surface using a half-edge geometry structure.
@@ -147,63 +147,63 @@ export class SurfaceWalker {
     }
 
     movePoint(p, dir, targetPoint, targetDir, targetNormal, edgeHitCallback) {
-        this.getFrame(p.index, frame0);
+        this.getFrame(p.index, _frame0);
 
         let dist = dir.length();
-        ray.direction.copy(dir);
-        ray.origin.copy(p);
+        _ray.direction.copy(dir);
+        _ray.origin.copy(p);
 
-        frame0.projectDirection(ray.direction);
-        frame0.projectPoint(ray.origin);
+        _frame0.projectDirection(_ray.direction);
+        _frame0.projectPoint(_ray.origin);
 
         targetPoint.index = p.index;
 
         while (dist > 0) {
-            const edgeIndex = frame0.intersectEdge(ray, targetPoint);
+            const edgeIndex = _frame0.intersectEdge(_ray, targetPoint);
 
             if (edgeIndex === -1) {
                 break;
             }
 
             const index = this.halfEdgeMap.getSiblingTriangleIndex(targetPoint.index, edgeIndex);
-            const hitDist = ray.origin.distanceTo(targetPoint);
+            const hitDist = _ray.origin.distanceTo(targetPoint);
 
             if (hitDist < dist) {
                 dist -= hitDist;
 
-                this.getFrame(index, frame1);
+                this.getFrame(index, _frame1);
                 targetPoint.index = index;
 
                 if (this.planarWalk) {
-                    planeNormal.crossVectors(ray.direction, frame0.normal);
+                    _planeNormal.crossVectors(_ray.direction, _frame0.normal);
                 }
 
-                rotationBetweenTriangles(frame0, frame1, mat);
-                ray.direction.transformDirection(mat);
-                ray.origin.copy(targetPoint);
+                rotationBetweenTriangles(_frame0, _frame1, _matrix);
+                _ray.direction.transformDirection(_matrix);
+                _ray.origin.copy(targetPoint);
 
                 if (this.planarWalk) {
-                    const v = planeNormal.dot(ray.direction);
-                    ray.direction.addScaledVector(planeNormal, -v);
+                    const v = _planeNormal.dot(_ray.direction);
+                    _ray.direction.addScaledVector(_planeNormal, -v);
                 }
 
-                frame0.copy(frame1);
+                _frame0.copy(_frame1);
 
                 if (edgeHitCallback) {
-                    edgeHitCallback(ray.origin);
+                    edgeHitCallback(_ray.origin);
                 }
             } else {
-                ray.at(dist, targetPoint);
+                _ray.at(dist, targetPoint);
                 break;
             }
         }
 
         if (targetDir) {
-            targetDir.copy(ray.direction);
+            targetDir.copy(_ray.direction);
         }
 
         if (targetNormal) {
-            targetNormal.copy(frame0.normal);
+            targetNormal.copy(_frame0.normal);
         }
     }
 }

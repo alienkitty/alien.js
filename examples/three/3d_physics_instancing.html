@@ -294,8 +294,6 @@
 
                 // Based on https://threejs.org/examples/#physics_oimo_instancing by VBT-YTokan
 
-                const matrix = new Matrix4();
-
                 // Boxes
                 const geometryBox = new BoxGeometry(0.1, 0.1, 0.1);
 
@@ -308,6 +306,8 @@
                 boxes.castShadow = true;
                 boxes.receiveShadow = true;
                 this.add(boxes);
+
+                const matrix = new Matrix4();
 
                 for (let i = 0; i < boxes.count; i++) {
                     matrix.setPosition(Math.random() - 0.5, Math.random() * 2, Math.random() - 0.5);

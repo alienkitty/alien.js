@@ -8,7 +8,7 @@ import { Vector3 } from 'three';
 
 const HASH_MULTIPLIER = (1 + 1e-7) * 1e6;
 
-const vertices = [new Vector3(), new Vector3(), new Vector3()];
+const _vertices = [new Vector3(), new Vector3(), new Vector3()];
 
 function hashNumber(v) {
     return ~~(v * HASH_MULTIPLIER);
@@ -92,13 +92,13 @@ export class HalfEdgeMap {
                     i0 = indexAttr.getX(i0);
                 }
 
-                vertices[e].fromBufferAttribute(posAttr, i0);
+                _vertices[e].fromBufferAttribute(posAttr, i0);
             }
 
             for (let e = 0; e < 3; e++) {
                 const nextE = (e + 1) % 3;
-                const vec0 = vertices[e];
-                const vec1 = vertices[nextE];
+                const vec0 = _vertices[e];
+                const vec1 = _vertices[nextE];
 
                 const vh0 = hashVertex(vec0);
                 const vh1 = hashVertex(vec1);

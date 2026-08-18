@@ -158,11 +158,11 @@ function generatePointsProxyGeometry(points) {
     return geometry;
 }
 
+const _vector = new Vector3();
+
 export class PointsBVH extends MeshBVH {
     constructor(points, options) {
         super(generatePointsProxyGeometry(points), options);
-
-        this.v = new Vector3();
     }
 
     queryBallPoint(point, dist) {
@@ -171,7 +171,7 @@ export class PointsBVH extends MeshBVH {
 
         this.shapecast({
             intersectsBounds: box => {
-                const closestPoint = this.v.copy(point).clamp(box.min, box.max);
+                const closestPoint = _vector.copy(point).clamp(box.min, box.max);
 
                 return point.distanceToSquared(closestPoint) < distSq;
             },

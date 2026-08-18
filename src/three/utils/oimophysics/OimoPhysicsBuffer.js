@@ -61,6 +61,9 @@ export const ContactCallback = oimo.dynamics.callback.ContactCallback;
 // Defaults
 Setting.defaultGJKMargin = 0.0001;
 
+const _vector = new Vec3();
+const _quaternion = new Quat();
+
 /**
  * A class for using the OimoPhysics 3D physics engine with an array buffer.
  */
@@ -82,10 +85,6 @@ export class OimoPhysicsBuffer {
         this.bodies = [];
         this.map = new Map();
         this.array = new Float32Array();
-
-        this.v1 = new Vec3();
-        this.v2 = new Vec3();
-        this.q = new Quat();
     }
 
     getShape({
@@ -350,19 +349,19 @@ export class OimoPhysicsBuffer {
     }
 
     setGravity(gravity) {
-        this.world.setGravity(this.v1.init(gravity[0], gravity[1], gravity[2]));
+        this.world.setGravity(_vector.init(gravity[0], gravity[1], gravity[2]));
     }
 
     setPosition(name, position) {
         const body = this.map.get(name);
 
-        body.setPosition(this.v1.init(position[0], position[1], position[2]));
+        body.setPosition(_vector.init(position[0], position[1], position[2]));
     }
 
     setOrientation(name, orientation) {
         const body = this.map.get(name);
 
-        body.setOrientation(this.q.init(orientation[0], orientation[1], orientation[2], orientation[3]));
+        body.setOrientation(_quaternion.init(orientation[0], orientation[1], orientation[2], orientation[3]));
     }
 
     setGravityScale(name, gravityScale) {
@@ -374,25 +373,25 @@ export class OimoPhysicsBuffer {
     setLinearVelocity(name, linearVelocity) {
         const body = this.map.get(name);
 
-        body.setLinearVelocity(this.v1.init(linearVelocity[0], linearVelocity[1], linearVelocity[2]));
+        body.setLinearVelocity(_vector.init(linearVelocity[0], linearVelocity[1], linearVelocity[2]));
     }
 
     setAngularVelocity(name, angularVelocity) {
         const body = this.map.get(name);
 
-        body.setAngularVelocity(this.v1.init(angularVelocity[0], angularVelocity[1], angularVelocity[2]));
+        body.setAngularVelocity(_vector.init(angularVelocity[0], angularVelocity[1], angularVelocity[2]));
     }
 
     setLinearDamping(name, linearDamping) {
         const body = this.map.get(name);
 
-        body.setLinearDamping(this.v1.init(linearDamping[0], linearDamping[1], linearDamping[2]));
+        body.setLinearDamping(_vector.init(linearDamping[0], linearDamping[1], linearDamping[2]));
     }
 
     setAngularDamping(name, angularDamping) {
         const body = this.map.get(name);
 
-        body.setAngularDamping(this.v1.init(angularDamping[0], angularDamping[1], angularDamping[2]));
+        body.setAngularDamping(_vector.init(angularDamping[0], angularDamping[1], angularDamping[2]));
     }
 
     setContactCallback(name, callback) {
@@ -412,7 +411,10 @@ export class OimoPhysicsBuffer {
     applyImpulse(name, impulse, positionInWorld) {
         const body = this.map.get(name);
 
-        body.applyImpulse(this.v1.init(impulse[0], impulse[1], impulse[2]), this.v2.init(positionInWorld[0], positionInWorld[1], positionInWorld[2]));
+        body.applyImpulse(
+            _vector.init(impulse[0], impulse[1], impulse[2]),
+            _vector.init(positionInWorld[0], positionInWorld[1], positionInWorld[2])
+        );
     }
 
     wakeUp(name) {

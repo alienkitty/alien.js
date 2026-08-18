@@ -12,8 +12,8 @@ import {
     Vector3
 } from 'three';
 
-const box = new Box3();
-const vector = new Vector3();
+const _box = new Box3();
+const _vector = new Vector3();
 
 /**
  * A series of vertex pairs, forming line segments for an instanced polyline.
@@ -66,9 +66,9 @@ export class PolylineGeometry extends InstancedBufferGeometry {
         if (start !== undefined && end !== undefined) {
             this.boundingBox.setFromBufferAttribute(start);
 
-            box.setFromBufferAttribute(end);
+            _box.setFromBufferAttribute(end);
 
-            this.boundingBox.union(box);
+            this.boundingBox.union(_box);
         }
     }
 
@@ -92,11 +92,11 @@ export class PolylineGeometry extends InstancedBufferGeometry {
             let maxRadiusSq = 0;
 
             for (let i = 0, l = start.count; i < l; i++) {
-                vector.fromBufferAttribute(start, i);
-                maxRadiusSq = Math.max(maxRadiusSq, center.distanceToSquared(vector));
+                _vector.fromBufferAttribute(start, i);
+                maxRadiusSq = Math.max(maxRadiusSq, center.distanceToSquared(_vector));
 
-                vector.fromBufferAttribute(end, i);
-                maxRadiusSq = Math.max(maxRadiusSq, center.distanceToSquared(vector));
+                _vector.fromBufferAttribute(end, i);
+                maxRadiusSq = Math.max(maxRadiusSq, center.distanceToSquared(_vector));
             }
 
             this.boundingSphere.radius = Math.sqrt(maxRadiusSq);

@@ -16,6 +16,7 @@ export { SMAAEdgesMaterial } from './SMAAEdgesMaterial.js';
 export { SMAAWeightsMaterial } from './SMAAWeightsMaterial.js';
 export { BadTVMaterial } from './BadTVMaterial.js';
 export { RGBMaterial } from './RGBMaterial.js';
+export { LUTMaterial } from './LUTMaterial.js';
 export { BlurMaterial } from './BlurMaterial.js';
 export { SinglePassBlurMaterial } from './SinglePassBlurMaterial.js';
 export { FastGaussianBlurMaterial } from './FastGaussianBlurMaterial.js';

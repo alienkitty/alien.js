@@ -223,7 +223,7 @@ Clone this repository and install its dependencies:
 ```sh
 git clone https://github.com/alienkitty/alien.js
 cd alien.js
-npm i three three-mesh-bvh saharan/OimoPhysics
+npm i three three-mesh-bvh saharan/OimoPhysics --allow-git=root
 cd examples
 npm i
 npm run build
@@ -233,7 +233,7 @@ npm start
 ### ESLint
 
 ```sh
-npm i -D eslint eslint-plugin-html @eslint/js globals
+npm i -D eslint eslint-plugin-html @eslint/js globals --allow-git=root
 npx eslint src
 npx eslint examples/about/src
 npx eslint examples/ogl/*.html

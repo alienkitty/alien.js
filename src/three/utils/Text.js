@@ -8,9 +8,6 @@ import { BufferAttribute, BufferGeometry, Mesh } from 'three';
 
 import { TextMaterial } from '../materials/TextMaterial.js';
 
-/**
- * A class for a MSDF (Multichannel Signed Distance Fields) text mesh.
- */
 export class Text extends Mesh {
     constructor({
         material,

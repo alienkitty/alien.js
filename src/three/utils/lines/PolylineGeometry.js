@@ -1,5 +1,7 @@
 /**
  * @author pschroen / https://ufo.ai/
+ *
+ * Based on https://github.com/mrdoob/three.js/blob/dev/examples/jsm/lines/LineSegmentsGeometry.js
  */
 
 import {
@@ -15,11 +17,6 @@ import {
 const _box = new Box3();
 const _vector = new Vector3();
 
-/**
- * A series of vertex pairs, forming line segments for an instanced polyline.
- *
- * @see {@link https://github.com/mrdoob/three.js/blob/dev/examples/jsm/lines/LineSegmentsGeometry.js | three.js - LineSegmentsGeometry Source}
- */
 export class PolylineGeometry extends InstancedBufferGeometry {
     constructor() {
         super();

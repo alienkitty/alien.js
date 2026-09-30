@@ -3,9 +3,6 @@ import { Color, GLSL3, RawShaderMaterial, Vector2 } from 'three';
 // eslint-disable-next-line sort-imports
 import { vertexShader, fragmentShader } from '../../shaders/RefractionShader.js';
 
-/**
- * A multiside refraction material.
- */
 export class RefractionMaterial extends RawShaderMaterial {
     constructor({
         samples = 16,

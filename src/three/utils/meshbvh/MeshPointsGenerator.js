@@ -8,11 +8,6 @@ import { BufferAttribute, BufferGeometry, Vector3 } from 'three';
 import { MeshSurfaceSampler } from 'three/addons/math/MeshSurfaceSampler.js';
 import { MeshBVH } from 'three-mesh-bvh';
 
-/**
- * A short implementation of blue noise sampling for triangle meshes.
- *
- * @see {@link https://github.com/marmakoide/mesh-blue-noise-sampling | Mesh Blue Noise Sampling}
- */
 export class MeshPointsGenerator {
     constructor(mesh) {
         this.sampler = new MeshSurfaceSampler(mesh);

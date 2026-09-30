@@ -3,9 +3,6 @@ import { GLSL3, NoBlending, RawShaderMaterial, Vector2 } from 'three';
 // eslint-disable-next-line sort-imports
 import { vertexShader, fragmentShader } from '../../shaders/VolumetricLightLensflareShader.js';
 
-/**
- * A volumetric light pass material with lens flare.
- */
 export class VolumetricLightLensflareMaterial extends RawShaderMaterial {
     constructor() {
         super({

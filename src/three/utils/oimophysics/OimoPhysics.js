@@ -10,6 +10,7 @@ import { Group, Matrix4, Quaternion, Vector3 } from 'three';
 import { oimo } from 'oimophysics';
 
 // Dynamics
+export const Contact = oimo.dynamics.Contact;
 export const World = oimo.dynamics.World;
 export const RigidBodyType = oimo.dynamics.rigidbody.RigidBodyType;
 export const RigidBodyConfig = oimo.dynamics.rigidbody.RigidBodyConfig;
@@ -67,9 +68,6 @@ const _quaternion = new Quaternion();
 const _object = new Group();
 const _matrix = new Matrix4();
 
-/**
- * A class for using the OimoPhysics 3D physics engine.
- */
 export class OimoPhysics {
     constructor({
         fps = 60,

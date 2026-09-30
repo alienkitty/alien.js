@@ -3,9 +3,6 @@ import { GLSL3, NoBlending, RawShaderMaterial } from 'three';
 // eslint-disable-next-line sort-imports
 import { vertexShader, fragmentShader } from '../../shaders/GammaCorrectionShader.js';
 
-/**
- * A gamma correction pass material.
- */
 export class GammaCorrectionMaterial extends RawShaderMaterial {
     constructor() {
         super({

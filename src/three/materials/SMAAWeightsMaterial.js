@@ -11,9 +11,6 @@ function getSearchTexture() {
     return 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEIAAAAhCAAAAABIXyLAAAAAOElEQVRIx2NgGAWjYBSMglEwEICREYRgFBZBqDCSLA2MGPUIVQETE9iNUAqLR5gIeoQKRgwXjwAAGn4AtaFeYLEAAAAASUVORK5CYII=';
 }
 
-/**
- * An SMAA weights pass material.
- */
 export class SMAAWeightsMaterial extends RawShaderMaterial {
     constructor() {
         const areaTexture = new Texture();

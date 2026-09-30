@@ -3,9 +3,6 @@ import { GLSL3, NoBlending, RawShaderMaterial } from 'three';
 // eslint-disable-next-line sort-imports
 import { vertexShader, fragmentShader } from '../../shaders/SceneCompositeAddShader.js';
 
-/**
- * A composite pass material for a scene with bloom and additional texture added.
- */
 export class SceneCompositeAddMaterial extends RawShaderMaterial {
     constructor({
         dithering = false

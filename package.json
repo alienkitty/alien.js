@@ -4,12 +4,24 @@
   "description": "MVC design pattern and render pipeline",
   "type": "module",
   "exports": {
-    "./ogl": "./src/ogl.js",
-    "./three": "./src/three.js",
-    "./three/meshbvh": "./src/three.meshbvh.js",
-    "./three/oimophysics": "./src/three.oimophysics.js",
-    "./all/three": "./src/all.three.js",
-    "./src/*": "./src/*"
+    "./three": {
+      "import": "./src/three.js",
+      "types": "./types/three.d.ts"
+    },
+    "./three/meshbvh": {
+      "import": "./src/three.meshbvh.js",
+      "types": "./types/three.meshbvh.d.ts"
+    },
+    "./three/oimophysics": {
+      "import": "./src/three.oimophysics.js",
+      "types": "./types/three.oimophysics.d.ts"
+    },
+    "./ogl": {
+      "import": "./src/ogl.js",
+      "types": "./types/ogl.d.ts"
+    },
+    "./src/*": "./src/*",
+    "./types/*": "./types/*"
   },
   "sideEffects": false,
   "repository": {

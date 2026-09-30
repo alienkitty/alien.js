@@ -1,5 +1,10 @@
 /**
  * @author pschroen / https://ufo.ai/
+ *
+ * Based on https://threejs.org/examples/#webgl_lines_fat_wireframe
+ * Based on https://github.com/mrdoob/three.js/blob/dev/src/geometries/WireframeGeometry.js
+ * Based on https://github.com/mrdoob/three.js/blob/dev/examples/jsm/lines/WireframeGeometry2.js
+ * Based on https://github.com/mrdoob/three.js/blob/dev/examples/jsm/lines/Wireframe.js
  */
 
 import { Mesh, Vector3 } from 'three';
@@ -7,14 +12,6 @@ import { Mesh, Vector3 } from 'three';
 import { PolylineGeometry } from './PolylineGeometry.js';
 import { PolylineMaterial } from '../../materials/PolylineMaterial.js';
 
-/**
- * An instanced polyline wireframe mesh.
- *
- * @see {@link https://threejs.org/examples/#webgl_lines_fat_wireframe | three.js - Fat Lines Wireframe Example}
- * @see {@link https://github.com/mrdoob/three.js/blob/dev/src/geometries/WireframeGeometry.js | three.js - WireframeGeometry Source}
- * @see {@link https://github.com/mrdoob/three.js/blob/dev/examples/jsm/lines/WireframeGeometry2.js | three.js - WireframeGeometry2 Source}
- * @see {@link https://github.com/mrdoob/three.js/blob/dev/examples/jsm/lines/Wireframe.js | three.js - Wireframe Source}
- */
 export class Wireframe extends Mesh {
     constructor({
         geometry,

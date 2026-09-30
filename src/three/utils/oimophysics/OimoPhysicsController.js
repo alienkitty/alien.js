@@ -11,9 +11,6 @@ import { Group, MathUtils, Matrix4 } from 'three';
 const _object = new Group();
 const _matrix = new Matrix4();
 
-/**
- * A controller class for using the {@link OimoPhysicsBuffer | OimoPhysicsBuffer}.
- */
 export class OimoPhysicsController {
     constructor() {
         this.shapes = [];

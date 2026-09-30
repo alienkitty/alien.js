@@ -3,9 +3,6 @@ import { GLSL3, NoBlending, RawShaderMaterial } from 'three';
 // eslint-disable-next-line sort-imports
 import { vertexShader, fragmentShader } from '../../shaders/AfterimageShader.js';
 
-/**
- * An afterimage pass material with damping parameter.
- */
 export class AfterimageMaterial extends RawShaderMaterial {
     constructor() {
         super({

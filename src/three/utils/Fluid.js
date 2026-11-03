@@ -1,5 +1,5 @@
 /**
- * @author pschroen / https://ufo.ai/
+ * @author pschroen / https://alienkitty.com/
  *
  * Based on https://github.com/PavelDoGreat/WebGL-Fluid-Simulation
  * Based on https://oframe.github.io/ogl/examples/?src=post-fluid-distortion.html by gordonnl

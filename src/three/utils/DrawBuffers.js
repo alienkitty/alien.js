@@ -1,5 +1,5 @@
 /**
- * @author pschroen / https://ufo.ai/
+ * @author pschroen / https://alienkitty.com/
  *
  * Based on https://threejs.org/examples/#webgl_multiple_rendertargets by takahirox
  * Based on https://oframe.github.io/ogl/examples/?src=mrt.html by gordonnl

@@ -1,5 +1,5 @@
 /**
- * @author pschroen / https://ufo.ai/
+ * @author pschroen / https://alienkitty.com/
  *
  * Based on https://github.com/gkjohnson/threejs-sandbox/tree/master/motionBlurPass
  * Based on https://github.com/gkjohnson/threejs-sandbox/tree/master/shader-replacement

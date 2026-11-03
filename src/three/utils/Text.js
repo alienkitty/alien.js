@@ -1,5 +1,5 @@
 /**
- * @author pschroen / https://ufo.ai/
+ * @author pschroen / https://alienkitty.com/
  *
  * Based on https://oframe.github.io/ogl/examples/?src=msdf-text.html by gordonnl
  */

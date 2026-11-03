@@ -60,7 +60,6 @@ export { Slider } from '@alienkitty/space.js/src/panels/Slider.js';
 export { Toggle } from '@alienkitty/space.js/src/panels/Toggle.js';
 export { Content } from '@alienkitty/space.js/src/panels/Content.js';
 export { ColorPicker } from '@alienkitty/space.js/src/panels/ColorPicker.js';
-export * from '@alienkitty/space.js/src/three/panels/Custom.js';
 export * from '@alienkitty/space.js/src/three/panels/Options.js';
 export * from '@alienkitty/space.js/src/three/panels/Panels.js';
 export * from '@alienkitty/space.js/src/three/panels/Patches.js';
@@ -120,8 +119,10 @@ export { SmoothSkew } from '@alienkitty/space.js/src/extras/SmoothSkew.js';
 export { SmoothViews } from '@alienkitty/space.js/src/extras/SmoothViews.js';
 export { Magnetic } from '@alienkitty/space.js/src/extras/Magnetic.js';
 
-// Three
+// Three Materials
 export * from './three/materials/Materials.js';
+
+// Three Utils
 export { Wobble } from './three/utils/Wobble.js';
 export { Flowmap } from './three/utils/Flowmap.js';
 export { Fluid } from './three/utils/Fluid.js';
@@ -130,18 +131,21 @@ export { MotionBlur } from './three/utils/MotionBlur.js';
 export { DrawBuffers } from './three/utils/DrawBuffers.js';
 export { SoftShadows } from './three/utils/SoftShadows.js';
 export { Text } from './three/utils/Text.js';
+export { PolylineGeometry } from './three/utils/lines/PolylineGeometry.js';
+export { Polyline } from './three/utils/lines/Polyline.js';
+export { Wireframe } from './three/utils/lines/Wireframe.js';
 
-// Mesh BVH
-export { HalfEdgeMap } from './three/utils/HalfEdgeMap.js';
-export * from './three/utils/SurfaceWalker.js';
-export * from './three/utils/MeshPointsGenerator.js';
+// Three Mesh BVH
+export { HalfEdgeMap } from './three/utils/meshbvh/HalfEdgeMap.js';
+export * from './three/utils/meshbvh/SurfaceWalker.js';
+export * from './three/utils/meshbvh/MeshPointsGenerator.js';
 
-// Physics
-export { OimoPhysics, RigidBodyConfig, RigidBodyType, SphericalJointConfig, UniversalJointConfig } from './three/utils/physics/OimoPhysics.js';
-export { OimoPhysicsBuffer } from './three/utils/physics/OimoPhysicsBuffer.js';
-export { OimoPhysicsController } from './three/utils/physics/OimoPhysicsController.js';
+// Three OimoPhysics
+export { OimoPhysics, RigidBodyConfig, RigidBodyType, SphericalJointConfig, UniversalJointConfig } from './three/utils/oimophysics/OimoPhysics.js';
+export { OimoPhysicsBuffer } from './three/utils/oimophysics/OimoPhysicsBuffer.js';
+export { OimoPhysicsController } from './three/utils/oimophysics/OimoPhysicsController.js';
 
-// Dependencies
+// Three Dependencies
 export * from 'three';
 export { SVGLoader } from 'three/addons/loaders/SVGLoader.js';
 export { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';

@@ -901,7 +901,7 @@ class WorldController {
         this.scene.background = new Color(0x060606);
         this.camera = new PerspectiveCamera(30);
         this.camera.near = 0.5;
-        this.camera.far = 40;
+        this.camera.far = 50;
         this.camera.position.z = 8;
         this.camera.lookAt(-1.5, 0, -2);
         this.camera.zoom = 1.5;
@@ -913,6 +913,7 @@ class WorldController {
         this.resolution = { value: new Vector2() };
         this.texelSize = { value: new Vector2() };
         this.aspect = { value: 1 };
+        this.dpr = { value: 1 };
         this.time = { value: 0 };
         this.frame = { value: 0 };
 
@@ -972,6 +973,7 @@ class WorldController {
         this.resolution.value.set(width, height);
         this.texelSize.value.set(1 / width, 1 / height);
         this.aspect.value = width / height;
+        this.dpr.value = dpr;
     };
 
     static update = (time, delta, frame) => {

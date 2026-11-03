@@ -13,7 +13,7 @@ This library is part of two sibling libraries, [Space.js](https://github.com/ali
 
 ### Usage
 
-Alien.js is divided into three entry points depending on your use case.
+Alien.js is divided into multiple entry points depending on your use case.
 
 The `@alienkitty/alien.js/three` entry point for [three.js](https://github.com/mrdoob/three.js) utilities and materials.
 
@@ -37,6 +37,21 @@ function animate(time) {
 }
 
 requestAnimationFrame(animate);
+```
+
+The `@alienkitty/alien.js/three/meshbvh` entry point for [three-mesh-bvh](https://github.com/gkjohnson/three-mesh-bvh) utilities.
+
+```sh
+npm i three three-mesh-bvh @alienkitty/alien.js
+```
+
+```js
+import { MeshPointsGenerator } from '@alienkitty/alien.js/three/meshbvh';
+
+// ...
+const pointsGenerator = new MeshPointsGenerator(mesh);
+pointsGenerator.sampleCount = count;
+pointsGenerator.build();
 ```
 
 The `@alienkitty/alien.js/three/oimophysics` entry point for [OimoPhysics](https://github.com/saharan/OimoPhysics) utilities.
@@ -95,6 +110,7 @@ const program = new FXAAProgram(gl);
 [crystal gltf](https://alien.js.org/examples/three/3d_crystal_gltf_basis_draco.html) (ktx2 basis and draco compressed)  
 [cubecamera](https://alien.js.org/examples/three/3d_cubecamera.html) (orbit camera, [debug](https://alien.js.org/examples/three/3d_cubecamera.html?debug))  
 [cubecamera rainbow](https://alien.js.org/examples/three/3d_cubecamera_rainbow.html) (orbit camera, [debug](https://alien.js.org/examples/three/3d_cubecamera_rainbow.html?debug))  
+[refraction cube](https://alien.js.org/examples/three/3d_refraction_cube.html) (orbit camera, [debug](https://alien.js.org/examples/three/3d_refraction_cube.html?debug))  
 [wobble](https://alien.js.org/examples/three/3d_wobble.html)  
 [camera wobble](https://alien.js.org/examples/three/3d_camera_wobble.html)  
 [input manager](https://alien.js.org/examples/three/3d_input_manager.html)  
@@ -113,7 +129,7 @@ const program = new FXAAProgram(gl);
 [noise](https://alien.js.org/examples/three/shader_noise.html)  
 [fxaa](https://alien.js.org/examples/three/shader_fxaa.html)  
 [fxaa](https://alien.js.org/examples/ogl/shader_fxaa.html) (OGL version)  
-[smaa](https://alien.js.org/examples/three/shader_smaa.html)  
+[smaa](https://alien.js.org/examples/three/shader_smaa.html) ([debug](https://alien.js.org/examples/three/shader_smaa.html?debug))  
 [blur](https://alien.js.org/examples/three/shader_blur.html) (Gaussian blur)  
 [blur](https://alien.js.org/examples/three/shader_single_pass_blur.html) (single pass Gaussian blur sum)  
 [blur](https://alien.js.org/examples/three/shader_poisson_disc_blur.html) (Poisson-disc blur)  
@@ -207,7 +223,7 @@ Clone this repository and install its dependencies:
 ```sh
 git clone https://github.com/alienkitty/alien.js
 cd alien.js
-npm i three three-mesh-bvh saharan/OimoPhysics
+npm i three three-mesh-bvh saharan/OimoPhysics --allow-git=root
 cd examples
 npm i
 npm run build
@@ -217,7 +233,7 @@ npm start
 ### ESLint
 
 ```sh
-npm i -D eslint eslint-plugin-html @eslint/js globals
+npm i -D eslint eslint-plugin-html @eslint/js globals --allow-git=root
 npx eslint src
 npx eslint examples/about/src
 npx eslint examples/ogl/*.html

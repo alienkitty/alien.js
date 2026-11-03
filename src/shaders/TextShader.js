@@ -39,7 +39,6 @@ void main() {
         discard;
     }
 
-    FragColor.rgb = uColor;
-    FragColor.a = alpha;
+    FragColor = vec4(uColor, alpha);
 }
 `;

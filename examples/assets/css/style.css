@@ -52,7 +52,7 @@
     --ui-color-range-4: #fde725;
 }
 
-*, :after, :before {
+*, ::before, ::after {
     box-sizing: border-box;
     margin: 0;
     padding: 0;

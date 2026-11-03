@@ -1,4 +1,3 @@
-// Based on https://github.com/pmndrs/postprocessing by vanruesc
 // Based on https://github.com/mrdoob/three.js/blob/dev/examples/jsm/postprocessing/SMAAPass.js by mpk
 
 export const vertexShader = /* glsl */ `
@@ -10,9 +9,9 @@ uniform vec2 uTexelSize;
 out vec2 vUv;
 out vec4 vOffset[2];
 
-void SMAANeighborhoodBlendingVS(vec2 texCoord) {
-    vOffset[0] = texCoord.xyxy + uTexelSize.xyxy * vec4(-1.0, 0.0, 0.0, 1.0);
-    vOffset[1] = texCoord.xyxy + uTexelSize.xyxy * vec4(1.0, 0.0, 0.0, -1.0);
+void SMAANeighborhoodBlendingVS(vec2 texcoord) {
+    vOffset[0] = texcoord.xyxy + uTexelSize.xyxy * vec4(-1.0, 0.0, 0.0, 1.0);
+    vOffset[1] = texcoord.xyxy + uTexelSize.xyxy * vec4(1.0, 0.0, 0.0, -1.0);
 }
 
 void main() {
@@ -36,16 +35,16 @@ in vec4 vOffset[2];
 
 out vec4 FragColor;
 
-vec4 SMAANeighborhoodBlendingPS(vec2 texCoord, vec4 offset[2], sampler2D colorTex, sampler2D blendTex) {
+vec4 SMAANeighborhoodBlendingPS(vec2 texcoord, vec4 offset[2], sampler2D colorTex, sampler2D blendTex) {
     // Fetch the blending weights for the current pixel
     vec4 a;
-    a.xz = texture(blendTex, texCoord).xz;
+    a.xz = texture(blendTex, texcoord).xz;
     a.y = texture(blendTex, offset[1].zw).g;
     a.w = texture(blendTex, offset[1].xy).a;
 
     // Ignore tiny blending weights
     if (dot(a, vec4(1.0)) < 1e-5) {
-        return texture(colorTex, texCoord);
+        return texture(colorTex, texcoord);
     } else {
         // Up to 4 lines can be crossing a pixel (one through each edge). We
         // favor blending by choosing the line with the maximum weight for each
@@ -62,9 +61,9 @@ vec4 SMAANeighborhoodBlendingPS(vec2 texCoord, vec4 offset[2], sampler2D colorTe
         }
 
         // Fetch the opposite color and lerp by hand
-        vec4 c = texture(colorTex, texCoord);
-        texCoord += sign(offset) * uTexelSize;
-        vec4 cOp = texture(colorTex, texCoord);
+        vec4 c = texture(colorTex, texcoord);
+        texcoord += sign(offset) * uTexelSize;
+        vec4 cOp = texture(colorTex, texcoord);
         float s = abs(offset.x) > abs(offset.y) ? abs(offset.x) : abs(offset.y);
 
         // Gamma correction

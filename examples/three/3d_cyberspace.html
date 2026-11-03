@@ -11,9 +11,19 @@
     <link rel="stylesheet" href="../assets/css/style.css">
 
     <script type="module">
-        import { AdditiveBlending, AssetLoader, BloomCompositeMaterial, BufferGeometry, Color, ColorManagement, CopyMaterial, Float32BufferAttribute, GLSL3, Group, LinearSRGBColorSpace, LuminosityMaterial, MathUtils, Mesh, NoBlending, OrbitControls, OrthographicCamera, PanelItem, PerspectiveCamera, Point3D, Points, RawShaderMaterial, Scene, TextureLoader, UI, UnrealBloomBlurMaterial, Vector2, Vector3, WebGLRenderTarget, WebGLRenderer, clearTween, delayedCall, getFullscreenTriangle, ticker } from '../../build/alien.three.js';
+        import { AdditiveBlending, AssetLoader, BloomCompositeMaterial, BufferGeometry, Color, ColorManagement, Float32BufferAttribute, GLSL3, Group, LinearSRGBColorSpace, LuminosityMaterial, MathUtils, Mesh, NoBlending, OrbitControls, OrthographicCamera, PanelItem, PerspectiveCamera, Point3D, Points, Polyline, PolylineMaterial, RawShaderMaterial, Scene, TextureLoader, TwoPI, UI, UnrealBloomBlurMaterial, Vector2, Vector3, WebGLRenderTarget, WebGLRenderer, clearTween, delayedCall, getFullscreenTriangle, ticker } from '../../build/alien.three.js';
 
         const isDebug = /[?&]debug/.test(location.search);
+
+        const layers = {
+            default: 0,
+            lines: 1
+        };
+
+        const params = {
+            center: isDebug,
+            lines: true
+        };
 
         class CyberspaceStar {
             constructor() {
@@ -68,6 +78,7 @@
                     glslVersion: GLSL3,
                     uniforms: {
                         tMap: { value: null },
+                        tLines: { value: null },
                         uBlurDist: { value: 1 },
                         uBlurAmount: { value: 2.2 },
                         uRGBAmount: { value: 1.1 }
@@ -88,6 +99,7 @@
                         precision highp float;
 
                         uniform sampler2D tMap;
+                        uniform sampler2D tLines;
                         uniform float uBlurDist;
                         uniform float uBlurAmount;
                         uniform float uRGBAmount;
@@ -108,6 +120,9 @@
 
                             FragColor = radialBlurRGB(tMap, vUv, 0.1 * dist * uBlurDist, uBlurAmount, angle, amount);
 
+                            // Additive blend lines
+                            FragColor.rgb += texture(tLines, vUv).rgb * 0.3;
+
                             FragColor.rgb = dither(FragColor.rgb);
                             FragColor.a = 1.0;
                         }
@@ -116,6 +131,63 @@
                     depthTest: false,
                     depthWrite: false
                 });
+            }
+        }
+
+        class GridLines extends Group {
+            constructor(radius = 1, segments = 64) {
+                super();
+
+                this.radius = radius;
+                this.segments = segments;
+
+                this.initLines();
+            }
+
+            initLines() {
+                const { resolution/* , dpr */ } = WorldController;
+
+                const material = new PolylineMaterial({
+                    color: 0xffffff,
+                    lineWidth: 1.2
+                });
+                material.depthWrite = false;
+                material.uniforms.uResolution = resolution;
+                // material.uniforms.uDPR = dpr;
+                material.uniforms.uDPR.value = 2; // Always 2
+
+                // Cyberspatial edge (equator)
+                const positions = [];
+
+                for (let i = 0; i <= this.segments; i++) {
+                    const angle = (i / this.segments) * TwoPI;
+                    positions.push(this.radius * Math.cos(angle), 0, this.radius * Math.sin(angle));
+                }
+
+                this.add(new Polyline({ positions, material }));
+
+                // Cyberspatial centre (prime meridian)
+                positions.length = 0;
+
+                positions.push(0, 0, -this.radius);
+                positions.push(0, 0, this.radius);
+
+                this.add(new Polyline({ positions, material }));
+
+                // Cyberspatial centre (90th meridian)
+                positions.length = 0;
+
+                positions.push(-this.radius, 0, 0);
+                positions.push(this.radius, 0, 0);
+
+                this.add(new Polyline({ positions, material }));
+
+                this.children.forEach(object => {
+                    object.layers.set(layers.lines);
+                });
+
+                // Cleanup
+                positions.length = 0;
             }
         }
 
@@ -157,7 +229,7 @@
                         uAlpha: { value: 1 },
                         uCameraNear: { value: camera.near },
                         // uCameraFar: { value: camera.far },
-                        uCameraFar: { value: 1150 },
+                        uCameraFar: { value: isDebug ? 0 : 1150 },
                         uResolution: resolution,
                         uTime: time
                     },
@@ -220,9 +292,6 @@
                 });
 
                 const points = new Points(geometry, material);
-                points.matrixAutoUpdate = false;
-                points.frustumCulled = false;
-                points.renderOrder = -1; // Render first (default is 0)
                 this.add(points);
 
                 this.points = points;
@@ -240,6 +309,9 @@
             initViews() {
                 this.stars = new Stars();
                 this.add(this.stars);
+
+                this.gridLines = new GridLines(500, 128);
+                this.add(this.gridLines);
             }
         }
 
@@ -296,10 +368,11 @@
         }
 
         class PanelController {
-            static init(renderer, scene, camera, view, ui) {
+            static init(renderer, scene, camera, controls, view, ui) {
                 this.renderer = renderer;
                 this.scene = scene;
                 this.camera = camera;
+                this.controls = controls;
                 this.view = view;
                 this.ui = ui;
 
@@ -319,12 +392,41 @@
             static initPanel() {
                 const { luminosityMaterial, bloomCompositeMaterial, compositeMaterial } = RenderManager;
 
+                const { stars, gridLines } = this.view;
+
+                const center = new Vector3();
+
                 const items = [
                     {
                         name: 'FPS'
                     },
                     {
                         type: 'divider'
+                    },
+                    {
+                        type: 'slider',
+                        name: 'Aperture',
+                        min: 0,
+                        max: 1,
+                        step: 0.01,
+                        value: stars.material.uniforms.uCameraFar.value / this.camera.far,
+                        callback: value => {
+                            stars.material.uniforms.uCameraFar.value = value * this.camera.far;
+                        }
+                    },
+                    {
+                        type: 'divider'
+                    },
+                    {
+                        type: 'slider',
+                        name: 'Blur',
+                        min: 0,
+                        max: 10,
+                        step: 0.1,
+                        value: compositeMaterial.uniforms.uBlurAmount.value,
+                        callback: value => {
+                            compositeMaterial.uniforms.uBlurAmount.value = value;
+                        }
                     },
                     {
                         type: 'slider',
@@ -335,17 +437,6 @@
                         value: compositeMaterial.uniforms.uBlurDist.value,
                         callback: value => {
                             compositeMaterial.uniforms.uBlurDist.value = value;
-                        }
-                    },
-                    {
-                        type: 'slider',
-                        name: 'Strength',
-                        min: 0,
-                        max: 10,
-                        step: 0.1,
-                        value: compositeMaterial.uniforms.uBlurAmount.value,
-                        callback: value => {
-                            compositeMaterial.uniforms.uBlurAmount.value = value;
                         }
                     },
                     {
@@ -407,6 +498,33 @@
                             RenderManager.bloomRadius = value;
                             bloomCompositeMaterial.uniforms.uBloomFactors.value = RenderManager.getBloomFactors();
                         }
+                    },
+                    {
+                        type: 'divider'
+                    },
+                    {
+                        type: 'toggle',
+                        name: 'Center',
+                        value: params.center,
+                        callback: value => {
+                            params.center = value;
+
+                            if (value) {
+                                this.controls.target.copy(center);
+                            } else if (WorldController.lastPoint) {
+                                this.controls.target.copy(WorldController.lastPoint);
+                            }
+                        }
+                    },
+                    {
+                        type: 'toggle',
+                        name: 'Lines',
+                        value: params.lines,
+                        callback: value => {
+                            params.lines = value;
+
+                            gridLines.visible = value;
+                        }
                     }
                 ];
 
@@ -459,24 +577,25 @@
                 this.screen.frustumCulled = false;
 
                 // Render targets
-                this.renderTargetA = new WebGLRenderTarget(1, 1, {
+                this.renderTarget = new WebGLRenderTarget(1, 1, {
                     depthBuffer: false
                 });
 
-                this.renderTargetB = this.renderTargetA.clone();
+                this.renderTargetLines = this.renderTarget.clone();
+                this.renderTargetLines.samples = 4;
 
-                this.renderTargetBright = this.renderTargetA.clone();
+                this.renderTargetBright = this.renderTarget.clone();
 
                 this.renderTargetsHorizontal = [];
                 this.renderTargetsVertical = [];
                 this.nMips = 5;
 
                 for (let i = 0, l = this.nMips; i < l; i++) {
-                    this.renderTargetsHorizontal.push(this.renderTargetA.clone());
-                    this.renderTargetsVertical.push(this.renderTargetA.clone());
+                    this.renderTargetsHorizontal.push(this.renderTarget.clone());
+                    this.renderTargetsVertical.push(this.renderTarget.clone());
                 }
 
-                this.renderTargetA.depthBuffer = true;
+                this.renderTarget.depthBuffer = true;
 
                 // Luminosity high pass material
                 this.luminosityMaterial = new LuminosityMaterial();
@@ -503,9 +622,6 @@
 
                 // Blend it additively
                 this.bloomCompositeMaterial.blending = AdditiveBlending;
-
-                // Copy material
-                this.copyMaterial = new CopyMaterial();
 
                 // Composite material
                 this.compositeMaterial = new CompositeMaterial();
@@ -542,8 +658,8 @@
                 width = Math.round(width * dpr);
                 height = Math.round(height * dpr);
 
-                this.renderTargetA.setSize(width, height);
-                this.renderTargetB.setSize(width, height);
+                this.renderTarget.setSize(width, height);
+                this.renderTargetLines.setSize(width, height);
 
                 // Unreal bloom
                 width = Math.round(width / 2);
@@ -574,26 +690,32 @@
                     return;
                 }
 
-                const renderTargetA = this.renderTargetA;
-                const renderTargetB = this.renderTargetB;
+                const renderTarget = this.renderTarget;
+                const renderTargetLines = this.renderTargetLines;
                 const renderTargetBright = this.renderTargetBright;
                 const renderTargetsHorizontal = this.renderTargetsHorizontal;
                 const renderTargetsVertical = this.renderTargetsVertical;
 
-                // Scene pass
-                renderer.setRenderTarget(renderTargetA);
+                // Scene layer
+                camera.layers.set(layers.default);
+
+                if (isDebug) {
+                    camera.layers.enable(31); // Last layer for helper
+                }
+
+                renderer.setRenderTarget(renderTarget);
                 renderer.clear();
                 renderer.render(scene, camera);
 
-                // Copy pass
-                this.copyMaterial.uniforms.tMap.value = renderTargetA.texture;
-                this.screen.material = this.copyMaterial;
-                renderer.setRenderTarget(renderTargetB);
+                // Lines layer
+                camera.layers.set(layers.lines);
+
+                renderer.setRenderTarget(renderTargetLines);
                 renderer.clear();
-                renderer.render(this.screen, this.screenCamera);
+                renderer.render(scene, camera);
 
                 // Extract bright areas
-                this.luminosityMaterial.uniforms.tMap.value = renderTargetB.texture;
+                this.luminosityMaterial.uniforms.tMap.value = renderTarget.texture;
                 this.screen.material = this.luminosityMaterial;
                 renderer.setRenderTarget(renderTargetBright);
                 renderer.clear();
@@ -622,11 +744,12 @@
 
                 // Composite all the mips
                 this.screen.material = this.bloomCompositeMaterial;
-                renderer.setRenderTarget(renderTargetB);
+                renderer.setRenderTarget(renderTarget);
                 renderer.render(this.screen, this.screenCamera);
 
                 // Composite pass (render to screen)
-                this.compositeMaterial.uniforms.tMap.value = renderTargetB.texture;
+                this.compositeMaterial.uniforms.tMap.value = renderTarget.texture;
+                this.compositeMaterial.uniforms.tLines.value = renderTargetLines.texture;
                 this.screen.material = this.compositeMaterial;
                 renderer.setRenderTarget(null);
                 renderer.clear();
@@ -639,6 +762,7 @@
                 this.pointThreshold = 0.1;
                 this.multiplier = navigator.maxTouchPoints ? 1.8 : 1;
                 this.isDown = false;
+                this.lastPoint = null;
 
                 this.initWorld();
                 this.initLoaders();
@@ -676,6 +800,7 @@
                 this.resolution = { value: new Vector2() };
                 this.texelSize = { value: new Vector2() };
                 this.aspect = { value: 1 };
+                this.dpr = { value: 1 };
                 this.time = { value: 0 };
                 this.frame = { value: 0 };
 
@@ -739,7 +864,13 @@
                 const camDistance = this.camera.position.length();
 
                 this.camera.position.copy(point).normalize().multiplyScalar(camDistance);
-                this.controls.target.copy(point);
+
+                // Rotate around point
+                if (!params.center) {
+                    this.controls.target.copy(point);
+                }
+
+                this.lastPoint = point;
             }
 
             static resize = (width, height, dpr) => {
@@ -752,6 +883,7 @@
                 this.resolution.value.set(width, height);
                 this.texelSize.value.set(1 / width, 1 / height);
                 this.aspect.value = width / height;
+                this.dpr.value = dpr;
             };
 
             static update = (time, delta, frame) => {
@@ -835,9 +967,9 @@
             }
 
             static initPanel() {
-                const { renderer, scene, camera } = WorldController;
+                const { renderer, scene, camera, controls } = WorldController;
 
-                PanelController.init(renderer, scene, camera, this.view, this.ui);
+                PanelController.init(renderer, scene, camera, controls, this.view, this.ui);
             }
 
             static addListeners() {

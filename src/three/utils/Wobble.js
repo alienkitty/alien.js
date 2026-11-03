@@ -3,7 +3,6 @@
  */
 
 import { Vector3 } from 'three';
-
 import { ImprovedNoise } from 'three/addons/math/ImprovedNoise.js';
 
 /**

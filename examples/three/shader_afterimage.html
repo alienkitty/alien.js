@@ -11,7 +11,7 @@
     <link rel="stylesheet" href="../assets/css/style.css">
 
     <script type="module">
-        import { AfterimageMaterial, BloomCompositeMaterial, BufferAttribute, BufferGeometry, Color, ColorManagement, DirectionalLight, Fog, Group, HemisphereLight, LinearFilter, LinearSRGBColorSpace, LuminosityMaterial, MathUtils, Mesh, MeshStandardMaterial, OrthographicCamera, PanelItem, PerspectiveCamera, PlaneGeometry, Reflector, RepeatWrapping, Scene, SceneCompositeMaterial, Text, TextMaterial, TextureLoader, UI, UnrealBloomBlurMaterial, Vector2, Vector3, WebGLRenderTarget, WebGLRenderer, getDoubleRenderTarget, getFullscreenTriangle, getKeyByValue, ticker } from '../../build/alien.three.js';
+        import { AfterimageMaterial, BloomCompositeMaterial, Color, ColorManagement, DirectionalLight, Fog, Group, HemisphereLight, LinearFilter, LinearSRGBColorSpace, LuminosityMaterial, MathUtils, Mesh, MeshStandardMaterial, OrthographicCamera, PanelItem, PerspectiveCamera, PlaneGeometry, Reflector, RepeatWrapping, Scene, SceneCompositeMaterial, Text, TextureLoader, UI, UnrealBloomBlurMaterial, Vector2, Vector3, WebGLRenderTarget, WebGLRenderer, getDoubleRenderTarget, getFullscreenTriangle, getKeyByValue, ticker } from '../../build/alien.three.js';
 
         class Text2D extends Group {
             constructor() {
@@ -30,12 +30,10 @@
                 map.minFilter = LinearFilter;
                 map.generateMipmaps = false;
 
-                const material = new TextMaterial({ map });
-                material.uniforms.uAlpha.value = 0.94;
-
                 const font = await (await fetch('../assets/textures/fonts/Roboto-Bold.json')).json();
 
                 const text = new Text({
+                    map,
                     font,
                     text: this.fps.toString(),
                     width: 4,
@@ -44,18 +42,13 @@
                     size: 2,
                     lineHeight: 1.1
                 });
-
-                const geometry = new BufferGeometry();
-
-                const mesh = new Mesh(geometry, material);
-                mesh.frustumCulled = false;
-                mesh.position.set(0, 1.4, -11);
-                mesh.lookAt(camera.position);
-
-                this.add(mesh);
+                text.material.uniforms.uAlpha.value = 0.94;
+                text.frustumCulled = false;
+                text.position.set(0, 1.4, -11);
+                text.lookAt(camera.position);
+                this.add(text);
 
                 this.text = text;
-                this.geometry = geometry;
 
                 this.update();
             }
@@ -73,12 +66,7 @@
 
                 this.count++;
 
-                this.text.update({ text: this.fps.toString() });
-
-                this.geometry.setAttribute('position', new BufferAttribute(this.text.buffers.position, 3));
-                this.geometry.setAttribute('uv', new BufferAttribute(this.text.buffers.uv, 2));
-                this.geometry.setAttribute('id', new BufferAttribute(this.text.buffers.id, 1));
-                this.geometry.setIndex(new BufferAttribute(this.text.buffers.index, 1));
+                this.text.setText(this.fps.toString());
             };
 
             ready = () => this.initMesh();
@@ -682,7 +670,7 @@
                 this.scene.fog = new Fog(this.scene.background, 1, 100);
                 this.camera = new PerspectiveCamera(30);
                 this.camera.near = 0.5;
-                this.camera.far = 40;
+                this.camera.far = 50;
                 this.camera.position.z = 10;
                 this.camera.lookAt(this.scene.position);
 
@@ -693,6 +681,7 @@
                 this.resolution = { value: new Vector2() };
                 this.texelSize = { value: new Vector2() };
                 this.aspect = { value: 1 };
+                this.dpr = { value: 1 };
                 this.time = { value: 0 };
                 this.frame = { value: 0 };
             }
@@ -729,6 +718,7 @@
                 this.resolution.value.set(width, height);
                 this.texelSize.value.set(1 / width, 1 / height);
                 this.aspect.value = width / height;
+                this.dpr.value = dpr;
             };
 
             static update = (time, delta, frame) => {

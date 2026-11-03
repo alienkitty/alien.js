@@ -8,6 +8,9 @@
 
 import { Group, MathUtils, Matrix4 } from 'three';
 
+const _object = new Group();
+const _matrix = new Matrix4();
+
 /**
  * A controller class for using the {@link OimoPhysicsBuffer | OimoPhysicsBuffer}.
  */
@@ -16,9 +19,6 @@ export class OimoPhysicsController {
         this.shapes = [];
         this.objects = [];
         this.map = new WeakMap();
-
-        this.object = new Group();
-        this.matrix = new Matrix4();
     }
 
     getObject(position, quaternion, scale, geometry, {
@@ -236,10 +236,10 @@ export class OimoPhysicsController {
         const name = props.name || MathUtils.generateUUID();
 
         for (let i = 0; i < object.count; i++) {
-            const { position, quaternion, scale } = this.object;
+            const { position, quaternion, scale } = _object;
 
-            object.getMatrixAt(i, this.matrix);
-            this.matrix.decompose(position, quaternion, scale);
+            object.getMatrixAt(i, _matrix);
+            _matrix.decompose(position, quaternion, scale);
 
             props.name = `${name}_${i}`;
 
@@ -269,11 +269,11 @@ export class OimoPhysicsController {
 
                 for (let j = 0, jl = bodies.length; j < jl; j++) {
                     if (array[index + 7] !== 1) {
-                        this.object.position.fromArray(array, index);
-                        this.object.quaternion.fromArray(array, index + 3);
-                        this.object.updateMatrix();
+                        _object.position.fromArray(array, index);
+                        _object.quaternion.fromArray(array, index + 3);
+                        _object.updateMatrix();
 
-                        object.setMatrixAt(j, this.object.matrix);
+                        object.setMatrixAt(j, _object.matrix);
                     }
 
                     index += 8;

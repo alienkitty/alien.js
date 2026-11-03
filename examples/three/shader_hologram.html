@@ -223,10 +223,10 @@
                 wireframe.layers.set(layers.hologram);
                 glowMesh.add(wireframe);
 
+                this.uniforms = uniforms;
                 this.mesh = mesh;
                 this.glowMesh = glowMesh;
                 this.wireframe = wireframe;
-                this.uniforms = uniforms;
             }
 
             // Public methods
@@ -393,10 +393,10 @@
                 wireframe.layers.disable(layers.hologram); // Off
                 glowMesh.add(wireframe);
 
+                this.uniforms = uniforms;
                 this.mesh = mesh;
                 this.glowMesh = glowMesh;
                 this.wireframe = wireframe;
-                this.uniforms = uniforms;
             }
 
             // Public methods
@@ -562,10 +562,10 @@
                 wireframe.layers.set(layers.hologram);
                 glowMesh.add(wireframe);
 
+                this.uniforms = uniforms;
                 this.mesh = mesh;
                 this.glowMesh = glowMesh;
                 this.wireframe = wireframe;
-                this.uniforms = uniforms;
             }
 
             // Public methods
@@ -1327,7 +1327,7 @@
                 this.scene.background = new Color(colors.backgroundColor);
                 this.camera = new PerspectiveCamera(30);
                 this.camera.near = 1;
-                this.camera.far = 40;
+                this.camera.far = 50;
                 this.camera.position.set(0, 6, 8);
                 this.camera.lookAt(this.scene.position);
 
@@ -1338,6 +1338,7 @@
                 this.resolution = { value: new Vector2() };
                 this.texelSize = { value: new Vector2() };
                 this.aspect = { value: 1 };
+                this.dpr = { value: 1 };
                 this.time = { value: 0 };
                 this.frame = { value: 0 };
 
@@ -1402,6 +1403,7 @@
                 this.resolution.value.set(width, height);
                 this.texelSize.value.set(1 / width, 1 / height);
                 this.aspect.value = width / height;
+                this.dpr.value = dpr;
             };
 
             static update = (time, delta, frame) => {

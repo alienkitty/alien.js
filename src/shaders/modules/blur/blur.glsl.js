@@ -2,9 +2,9 @@
 
 export default /* glsl */ `
 vec4 blur(sampler2D image, vec2 uv, vec2 resolution, vec2 direction) {
-    vec4 sum = vec4(0.0);
-
     vec2 texcoord = 1.0 / resolution;
+
+    vec4 sum = vec4(0.0);
 
     sum += texture(image, uv - 4.0 * texcoord * direction) * 0.051;
     sum += texture(image, uv - 3.0 * texcoord * direction) * 0.0918;

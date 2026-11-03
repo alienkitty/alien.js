@@ -1,4 +1,7 @@
+// Three Materials
 export * from './three/materials/Materials.js';
+
+// Three Utils
 export { Wobble } from './three/utils/Wobble.js';
 export { Flowmap } from './three/utils/Flowmap.js';
 export { Fluid } from './three/utils/Fluid.js';
@@ -7,3 +10,6 @@ export { MotionBlur } from './three/utils/MotionBlur.js';
 export { DrawBuffers } from './three/utils/DrawBuffers.js';
 export { SoftShadows } from './three/utils/SoftShadows.js';
 export { Text } from './three/utils/Text.js';
+export { PolylineGeometry } from './three/utils/lines/PolylineGeometry.js';
+export { Polyline } from './three/utils/lines/Polyline.js';
+export { Wireframe } from './three/utils/lines/Wireframe.js';

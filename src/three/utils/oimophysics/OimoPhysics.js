@@ -62,6 +62,11 @@ export const ContactCallback = oimo.dynamics.callback.ContactCallback;
 // Defaults
 Setting.defaultGJKMargin = 0.0001;
 
+const _vector = new Vector3();
+const _quaternion = new Quaternion();
+const _object = new Group();
+const _matrix = new Matrix4();
+
 /**
  * A class for using the OimoPhysics 3D physics engine.
  */
@@ -82,11 +87,6 @@ export class OimoPhysics {
 
         this.objects = [];
         this.map = new WeakMap();
-
-        this.v = new Vector3();
-        this.q = new Quaternion();
-        this.object = new Group();
-        this.matrix = new Matrix4();
     }
 
     getShape(position, quaternion, scale, geometry, {
@@ -369,10 +369,10 @@ export class OimoPhysics {
         const bodies = [];
 
         for (let i = 0; i < object.count; i++) {
-            const { position, quaternion, scale } = this.object;
+            const { position, quaternion, scale } = _object;
 
-            object.getMatrixAt(i, this.matrix);
-            this.matrix.decompose(position, quaternion, scale);
+            object.getMatrixAt(i, _matrix);
+            _matrix.decompose(position, quaternion, scale);
 
             const body = this.getBody(position, quaternion, scale, geometry, props);
             this.world.addRigidBody(body);
@@ -400,7 +400,7 @@ export class OimoPhysics {
     getPosition(object, index) {
         const body = this.getObjectBody(object, index);
 
-        return this.v.copy(body.getPosition()).clone();
+        return _vector.copy(body.getPosition()).clone();
     }
 
     setPosition(object, position, index) {
@@ -412,7 +412,7 @@ export class OimoPhysics {
     getOrientation(object, index) {
         const body = this.getObjectBody(object, index);
 
-        return this.q.copy(body.getOrientation()).clone();
+        return _quaternion.copy(body.getOrientation()).clone();
     }
 
     setOrientation(object, orientation, index) {
@@ -436,7 +436,7 @@ export class OimoPhysics {
     getLinearVelocity(object, index) {
         const body = this.getObjectBody(object, index);
 
-        return this.v.copy(body.getLinearVelocity()).clone();
+        return _vector.copy(body.getLinearVelocity()).clone();
     }
 
     setLinearVelocity(object, linearVelocity, index) {
@@ -448,7 +448,7 @@ export class OimoPhysics {
     getAngularVelocity(object, index) {
         const body = this.getObjectBody(object, index);
 
-        return this.v.copy(body.getAngularVelocity()).clone();
+        return _vector.copy(body.getAngularVelocity()).clone();
     }
 
     setAngularVelocity(object, angularVelocity, index) {
@@ -460,7 +460,7 @@ export class OimoPhysics {
     getLinearDamping(object, index) {
         const body = this.getObjectBody(object, index);
 
-        return this.v.copy(body.getLinearDamping()).clone();
+        return _vector.copy(body.getLinearDamping()).clone();
     }
 
     setLinearDamping(object, linearDamping, index) {
@@ -472,7 +472,7 @@ export class OimoPhysics {
     getAngularDamping(object, index) {
         const body = this.getObjectBody(object, index);
 
-        return this.v.copy(body.getAngularDamping()).clone();
+        return _vector.copy(body.getAngularDamping()).clone();
     }
 
     setAngularDamping(object, angularDamping, index) {
@@ -525,11 +525,11 @@ export class OimoPhysics {
                 for (let j = 0, jl = bodies.length; j < jl; j++) {
                     const body = bodies[j];
 
-                    this.object.position.copy(body.getPosition());
-                    this.object.quaternion.copy(body.getOrientation());
-                    this.object.updateMatrix();
+                    _object.position.copy(body.getPosition());
+                    _object.quaternion.copy(body.getOrientation());
+                    _object.updateMatrix();
 
-                    object.setMatrixAt(j, this.object.matrix);
+                    object.setMatrixAt(j, _object.matrix);
                 }
 
                 object.instanceMatrix.needsUpdate = true;

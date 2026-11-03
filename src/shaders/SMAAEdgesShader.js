@@ -1,4 +1,3 @@
-// Based on https://github.com/pmndrs/postprocessing by vanruesc
 // Based on https://github.com/mrdoob/three.js/blob/dev/examples/jsm/postprocessing/SMAAPass.js by mpk
 
 export const vertexShader = /* glsl */ `
@@ -10,10 +9,10 @@ uniform vec2 uTexelSize;
 out vec2 vUv;
 out vec4 vOffset[3];
 
-void SMAAEdgeDetectionVS(vec2 texCoord) {
-    vOffset[0] = texCoord.xyxy + uTexelSize.xyxy * vec4(-1.0, 0.0, 0.0, 1.0);
-    vOffset[1] = texCoord.xyxy + uTexelSize.xyxy * vec4(1.0, 0.0, 0.0, -1.0);
-    vOffset[2] = texCoord.xyxy + uTexelSize.xyxy * vec4(-2.0, 0.0, 0.0, 2.0);
+void SMAAEdgeDetectionVS(vec2 texcoord) {
+    vOffset[0] = texcoord.xyxy + uTexelSize.xyxy * vec4(-1.0, 0.0, 0.0, 1.0);
+    vOffset[1] = texcoord.xyxy + uTexelSize.xyxy * vec4(1.0, 0.0, 0.0, -1.0);
+    vOffset[2] = texcoord.xyxy + uTexelSize.xyxy * vec4(-2.0, 0.0, 0.0, 2.0);
 }
 
 void main() {
@@ -35,12 +34,12 @@ in vec4 vOffset[3];
 
 out vec4 FragColor;
 
-vec4 SMAAColorEdgeDetectionPS(vec2 texCoord, vec4 offset[3], sampler2D colorTex) {
+vec4 SMAAColorEdgeDetectionPS(vec2 texcoord, vec4 offset[3], sampler2D colorTex) {
     vec2 threshold = vec2(SMAA_THRESHOLD);
 
-    // Color-based edge detection
+    // Calculate color deltas
     vec4 delta;
-    vec3 c = texture(colorTex, texCoord).rgb;
+    vec3 c = texture(colorTex, texcoord).rgb;
 
     vec3 cLeft = texture(colorTex, offset[0].xy).rgb;
     vec3 t = abs(c - cLeft);

@@ -3,9 +3,6 @@ import { GLSL3, NoBlending, RawShaderMaterial } from 'three';
 // eslint-disable-next-line sort-imports
 import { vertexShader, fragmentShader } from '../../shaders/BadTVShader.js';
 
-/**
- * A TV-style glitch pass material with distortion and speed parameters.
- */
 export class BadTVMaterial extends RawShaderMaterial {
     constructor() {
         super({

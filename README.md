@@ -241,6 +241,13 @@ npx eslint examples/three/*.html
 npx eslint examples/three/transitions
 ```
 
+### Types
+
+```sh
+npm i three three-mesh-bvh saharan/OimoPhysics --allow-git=root
+npm i -D @types/three
+```
+
 ### Resources
 
 * [The Wiki](https://github.com/alienkitty/alien.js/wiki)

@@ -3,9 +3,6 @@ import { GLSL3, Matrix4, RawShaderMaterial } from 'three';
 // eslint-disable-next-line sort-imports
 import { vertexShader, fragmentShader } from '../../shaders/DrawBuffersShader.js';
 
-/**
- * A draw buffers pass material with instancing support.
- */
 export class DrawBuffersMaterial extends RawShaderMaterial {
     constructor({
         cameraNear = null,

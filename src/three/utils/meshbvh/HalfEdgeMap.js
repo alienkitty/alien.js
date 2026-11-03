@@ -18,9 +18,6 @@ function hashVertex(v) {
     return `${hashNumber(v.x)},${hashNumber(v.y)},${hashNumber(v.z)}`;
 }
 
-/**
- * A class for a half-edge geometry structure.
- */
 export class HalfEdgeMap {
     constructor(geometry) {
         this.data = null;

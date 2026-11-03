@@ -3,9 +3,6 @@ import { Color, GLSL3, Matrix3, Matrix4, NoBlending, RawShaderMaterial, Vector2 
 // eslint-disable-next-line sort-imports
 import { vertexShader, fragmentShader } from '../../shaders/ReflectorShader.js';
 
-/**
- * A reflection material.
- */
 export class ReflectorMaterial extends RawShaderMaterial {
     constructor({
         color = new Color(0x101010),

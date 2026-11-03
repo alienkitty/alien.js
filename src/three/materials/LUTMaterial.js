@@ -3,9 +3,6 @@ import { GLSL3, NoBlending, RawShaderMaterial } from 'three';
 // eslint-disable-next-line sort-imports
 import { vertexShader, fragmentShader } from '../../shaders/LUTShader.js';
 
-/**
- * A color grading via lookup tables pass material.
- */
 export class LUTMaterial extends RawShaderMaterial {
     constructor() {
         super({

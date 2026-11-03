@@ -3,9 +3,6 @@ import { AdditiveBlending, GLSL3, RawShaderMaterial, Vector2 } from 'three';
 // eslint-disable-next-line sort-imports
 import { vertexShader, fragmentShader } from '../../shaders/LensflareShader.js';
 
-/**
- * A lens flare pass material with position-based lighting.
- */
 export class LensflareMaterial extends RawShaderMaterial {
     constructor() {
         super({

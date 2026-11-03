@@ -3,9 +3,6 @@ import { GLSL3, NoBlending, RawShaderMaterial } from 'three';
 // eslint-disable-next-line sort-imports
 import { vertexShader, fragmentShader } from '../../shaders/UnrealBloomCompositeShader.js';
 
-/**
- * A bloom composite pass material based on the bloom from Unreal Engine.
- */
 export class UnrealBloomCompositeMaterial extends RawShaderMaterial {
     constructor(nMips) {
         super({

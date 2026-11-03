@@ -3,9 +3,6 @@ import { GLSL3, NoBlending, RawShaderMaterial } from 'three';
 // eslint-disable-next-line sort-imports
 import { vertexShader, fragmentShader } from '../../shaders/CopyShader.js';
 
-/**
- * A blit pass material.
- */
 export class CopyMaterial extends RawShaderMaterial {
     constructor() {
         super({

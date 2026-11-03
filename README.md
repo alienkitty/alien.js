@@ -248,6 +248,13 @@ npm i three three-mesh-bvh saharan/OimoPhysics --allow-git=root
 npm i -D @types/three
 ```
 
+### Example Projects
+
+```sh
+cd examples/about
+npm i --allow-git=all
+```
+
 ### Resources
 
 * [The Wiki](https://github.com/alienkitty/alien.js/wiki)

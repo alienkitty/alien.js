@@ -1,5 +1,5 @@
 /**
- * @author pschroen / https://ufo.ai/
+ * @author pschroen / https://alienkitty.com/
  *
  * Based on https://threejs.org/examples/#webgl_shadowmap_pcss by spidersharma03
  */

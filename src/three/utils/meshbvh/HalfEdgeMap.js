@@ -1,5 +1,5 @@
 /**
- * @author pschroen / https://ufo.ai/
+ * @author pschroen / https://alienkitty.com/
  *
  * Based on https://github.com/gkjohnson/three-sketches/blob/main/surface-flow/src/HalfEdgeMap.js
  */

@@ -3,6 +3,10 @@
 // From https://github.com/pmndrs/postprocessing/blob/main/src/materials/glsl/effect.frag
 
 export default /* glsl */ `
+#ifndef EPSILON
+#define EPSILON 1e-6
+#endif
+
 vec3 RRTAndODTFit(vec3 v) {
     vec3 a = v * (v + 0.0245786) - 0.000090537;
     vec3 b = v * (0.983729 * v + 0.4329510) + 0.238081;

@@ -3,10 +3,6 @@ import { GLSL3, Matrix3, RawShaderMaterial, Vector3 } from 'three';
 // eslint-disable-next-line sort-imports
 import { vertexShader, fragmentShader } from '../../shaders/BasicLightingShader.js';
 
-/**
- * A basic texture map material with position-based lighting,
- * intensity and alpha parameters plus instancing support.
- */
 export class BasicLightingMaterial extends RawShaderMaterial {
     constructor({
         map = null,

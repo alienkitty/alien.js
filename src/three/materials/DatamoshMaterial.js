@@ -3,9 +3,6 @@ import { GLSL3, NoBlending, RawShaderMaterial, Vector2 } from 'three';
 // eslint-disable-next-line sort-imports
 import { vertexShader, fragmentShader } from '../../shaders/DatamoshShader.js';
 
-/**
- * A data moshing pass material with damping parameter.
- */
 export class DatamoshMaterial extends RawShaderMaterial {
     constructor() {
         super({

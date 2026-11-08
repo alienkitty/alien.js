@@ -11,10 +11,6 @@ import { Color, HalfFloatType, InstancedBufferAttribute, Matrix4, WebGLRenderTar
 
 import { DrawBuffersMaterial } from '../materials/DrawBuffersMaterial.js';
 
-/**
- * A class for rendering world positions, depth, and velocities in
- * screen UV space to draw buffers with MRT (Multiple Render Targets).
- */
 export class DrawBuffers {
     constructor(renderer, scene, camera, channel, {
         interpolateGeometry = 1,

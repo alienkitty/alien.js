@@ -115,9 +115,6 @@ export class SurfacePoint extends Vector3 {
 const _frame0 = new TriangleFrame();
 const _frame1 = new TriangleFrame();
 
-/**
- * A class to walk along a mesh surface using a half-edge geometry structure.
- */
 export class SurfaceWalker {
     constructor(geometry) {
         this.halfEdgeMap = new HalfEdgeMap(geometry);

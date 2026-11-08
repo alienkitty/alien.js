@@ -3,9 +3,6 @@ import { GLSL3, NoBlending, RawShaderMaterial, Vector2 } from 'three';
 // eslint-disable-next-line sort-imports
 import { vertexShader, fragmentShader } from '../../shaders/BlurShader.js';
 
-/**
- * A separable Gaussian blur pass material.
- */
 export class BlurMaterial extends RawShaderMaterial {
     constructor(direction = new Vector2(0.5, 0.5)) {
         super({

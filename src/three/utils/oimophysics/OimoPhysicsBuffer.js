@@ -9,6 +9,7 @@
 import { oimo } from 'oimophysics';
 
 // Dynamics
+export const Contact = oimo.dynamics.Contact;
 export const World = oimo.dynamics.World;
 export const RigidBodyType = oimo.dynamics.rigidbody.RigidBodyType;
 export const RigidBodyConfig = oimo.dynamics.rigidbody.RigidBodyConfig;
@@ -64,9 +65,6 @@ Setting.defaultGJKMargin = 0.0001;
 const _vector = new Vec3();
 const _quaternion = new Quat();
 
-/**
- * A class for using the OimoPhysics 3D physics engine with an array buffer.
- */
 export class OimoPhysicsBuffer {
     constructor({
         fps = 60,

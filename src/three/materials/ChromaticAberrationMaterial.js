@@ -3,9 +3,6 @@ import { GLSL3, NoBlending, RawShaderMaterial } from 'three';
 // eslint-disable-next-line sort-imports
 import { vertexShader, fragmentShader } from '../../shaders/ChromaticAberrationShader.js';
 
-/**
- * A chromatic aberration pass material with RGB offset parameters.
- */
 export class ChromaticAberrationMaterial extends RawShaderMaterial {
     constructor() {
         super({

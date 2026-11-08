@@ -20,9 +20,6 @@ import { getDoubleRenderTarget, getFullscreenTriangle } from '@alienkitty/space.
 
 import { ReflectorBlurMaterial } from '../materials/ReflectorBlurMaterial.js';
 
-/**
- * A class for reflections.
- */
 export class Reflector extends Group {
     constructor({
         width = 512,

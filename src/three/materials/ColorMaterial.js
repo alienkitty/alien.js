@@ -3,9 +3,6 @@ import { Color, GLSL3, RawShaderMaterial } from 'three';
 // eslint-disable-next-line sort-imports
 import { vertexShader, fragmentShader } from '../../shaders/ColorShader.js';
 
-/**
- * A basic color material with alpha parameter and instancing support.
- */
 export class ColorMaterial extends RawShaderMaterial {
     constructor({
         color,
